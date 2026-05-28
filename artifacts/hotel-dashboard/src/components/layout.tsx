@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Calendar, DoorOpen, LineChart, LogOut, Bell, Search, Menu } from "lucide-react";
+import { LayoutDashboard, Calendar, DoorOpen, LineChart, LogOut, Bell, Search, Menu, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,6 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/bookings", label: "Bookings", icon: Calendar },
     { href: "/rooms", label: "Rooms", icon: DoorOpen },
+    { href: "/guests", label: "Guests", icon: Users },
     { href: "/income", label: "Income", icon: LineChart },
   ];
 

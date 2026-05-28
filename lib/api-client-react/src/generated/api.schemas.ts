@@ -115,8 +115,50 @@ export interface OccupancyStat {
   occupancyRate: number;
 }
 
+export interface Guest {
+  guestName: string;
+  guestEmail: string;
+  /** @nullable */
+  guestPhone?: string | null;
+  totalBookings: number;
+  totalSpent: number;
+  /** @nullable */
+  lastStay: string | null;
+  /** @nullable */
+  firstStay: string | null;
+  /** @nullable */
+  lastRoomType?: string | null;
+  /** @nullable */
+  lastStatus?: string | null;
+}
+
+export interface GuestProfile {
+  guestName: string;
+  guestEmail: string;
+  /** @nullable */
+  guestPhone?: string | null;
+  totalBookings: number;
+  totalSpent: number;
+  /** @nullable */
+  lastStay: string | null;
+  /** @nullable */
+  firstStay: string | null;
+  /** @nullable */
+  lastRoomType?: string | null;
+  /** @nullable */
+  lastStatus?: string | null;
+  bookings: Booking[];
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
+};
+
+export type ListGuestsParams = {
+/**
+ * Search by name, email, or phone
+ */
+search?: string;
 };
 

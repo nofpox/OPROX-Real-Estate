@@ -23,8 +23,11 @@ import type {
   Booking,
   BookingInput,
   BookingUpdate,
+  Guest,
+  GuestProfile,
   HealthStatus,
   ListBookingsParams,
+  ListGuestsParams,
   MonthlyIncome,
   OccupancyStat,
   Room,
@@ -1153,6 +1156,167 @@ export function useGetOccupancyStats<TData = Awaited<ReturnType<typeof getOccupa
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetOccupancyStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListGuestsUrl = (params?: ListGuestsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/guests?${stringifiedParams}` : `/api/guests`
+}
+
+/**
+ * @summary List all unique guests with their booking history
+ */
+export const listGuests = async (params?: ListGuestsParams, options?: RequestInit): Promise<Guest[]> => {
+
+  return customFetch<Guest[]>(getListGuestsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListGuestsQueryKey = (params?: ListGuestsParams,) => {
+    return [
+    `/api/guests`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListGuestsQueryOptions = <TData = Awaited<ReturnType<typeof listGuests>>, TError = ErrorType<unknown>>(params?: ListGuestsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGuests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListGuestsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listGuests>>> = ({ signal }) => listGuests(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listGuests>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListGuestsQueryResult = NonNullable<Awaited<ReturnType<typeof listGuests>>>
+export type ListGuestsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all unique guests with their booking history
+ */
+
+export function useListGuests<TData = Awaited<ReturnType<typeof listGuests>>, TError = ErrorType<unknown>>(
+ params?: ListGuestsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGuests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListGuestsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetGuestUrl = (email: string,) => {
+
+
+
+
+  return `/api/guests/${email}`
+}
+
+/**
+ * @summary Get guest profile by email with full booking history
+ */
+export const getGuest = async (email: string, options?: RequestInit): Promise<GuestProfile> => {
+
+  return customFetch<GuestProfile>(getGetGuestUrl(email),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGuestQueryKey = (email: string,) => {
+    return [
+    `/api/guests/${email}`
+    ] as const;
+    }
+
+
+export const getGetGuestQueryOptions = <TData = Awaited<ReturnType<typeof getGuest>>, TError = ErrorType<void>>(email: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGuest>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGuestQueryKey(email);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGuest>>> = ({ signal }) => getGuest(email, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(email), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGuest>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGuestQueryResult = NonNullable<Awaited<ReturnType<typeof getGuest>>>
+export type GetGuestQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get guest profile by email with full booking history
+ */
+
+export function useGetGuest<TData = Awaited<ReturnType<typeof getGuest>>, TError = ErrorType<void>>(
+ email: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGuest>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGuestQueryOptions(email,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

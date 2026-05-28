@@ -16,6 +16,8 @@ tags:
     description: Room operations
   - name: stats
     description: Dashboard statistics
+  - name: guests
+    description: Guest contact management
 paths:
   /healthz:
     get:
@@ -282,6 +284,49 @@ paths:
                 items:
                   $ref: "#/components/schemas/OccupancyStat"
 
+  /guests:
+    get:
+      operationId: listGuests
+      tags: [guests]
+      summary: List all unique guests with their booking history
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search by name, email, or phone
+      responses:
+        "200":
+          description: List of guests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Guest"
+
+  /guests/{email}:
+    get:
+      operationId: getGuest
+      tags: [guests]
+      summary: Get guest profile by email with full booking history
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Guest profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestProfile"
+        "404":
+          description: Not found
+
   /stats/recent-bookings:
     get:
       operationId: getRecentBookings
@@ -492,3 +537,53 @@ components:
           type: integer
         occupancyRate:
           type: number
+
+    Guest:
+      type: object
+      required: [guestName, guestEmail, totalBookings, totalSpent, lastStay, firstStay]
+      properties:
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        guestPhone:
+          type: ["string", "null"]
+        totalBookings:
+          type: integer
+        totalSpent:
+          type: number
+        lastStay:
+          type: ["string", "null"]
+        firstStay:
+          type: ["string", "null"]
+        lastRoomType:
+          type: ["string", "null"]
+        lastStatus:
+          type: ["string", "null"]
+
+    GuestProfile:
+      type: object
+      required: [guestName, guestEmail, totalBookings, totalSpent, lastStay, firstStay, bookings]
+      properties:
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        guestPhone:
+          type: ["string", "null"]
+        totalBookings:
+          type: integer
+        totalSpent:
+          type: number
+        lastStay:
+          type: ["string", "null"]
+        firstStay:
+          type: ["string", "null"]
+        lastRoomType:
+          type: ["string", "null"]
+        lastStatus:
+          type: ["string", "null"]
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"

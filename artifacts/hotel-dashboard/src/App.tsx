@@ -9,6 +9,8 @@ import NewBooking from "@/pages/booking-new";
 import BookingDetail from "@/pages/booking-detail";
 import Rooms from "@/pages/rooms";
 import Income from "@/pages/income";
+import Guests from "@/pages/guests";
+import GuestProfile from "@/pages/guest-profile";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -29,6 +31,8 @@ function Router() {
       <Route path="/bookings/:id" component={BookingDetail} />
       <Route path="/rooms" component={Rooms} />
       <Route path="/income" component={Income} />
+      <Route path="/guests" component={Guests} />
+      <Route path="/guests/:email" component={GuestProfile} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -280,6 +280,62 @@ export const GetOccupancyStatsResponse = zod.array(GetOccupancyStatsResponseItem
 
 
 /**
+ * @summary List all unique guests with their booking history
+ */
+export const ListGuestsQueryParams = zod.object({
+  "search": zod.coerce.string().optional().describe('Search by name, email, or phone')
+})
+
+export const ListGuestsResponseItem = zod.object({
+  "guestName": zod.string(),
+  "guestEmail": zod.string(),
+  "guestPhone": zod.string().nullish(),
+  "totalBookings": zod.number(),
+  "totalSpent": zod.number(),
+  "lastStay": zod.string().nullable(),
+  "firstStay": zod.string().nullable(),
+  "lastRoomType": zod.string().nullish(),
+  "lastStatus": zod.string().nullish()
+})
+export const ListGuestsResponse = zod.array(ListGuestsResponseItem)
+
+
+/**
+ * @summary Get guest profile by email with full booking history
+ */
+export const GetGuestParams = zod.object({
+  "email": zod.coerce.string()
+})
+
+export const GetGuestResponse = zod.object({
+  "guestName": zod.string(),
+  "guestEmail": zod.string(),
+  "guestPhone": zod.string().nullish(),
+  "totalBookings": zod.number(),
+  "totalSpent": zod.number(),
+  "lastStay": zod.string().nullable(),
+  "firstStay": zod.string().nullable(),
+  "lastRoomType": zod.string().nullish(),
+  "lastStatus": zod.string().nullish(),
+  "bookings": zod.array(zod.object({
+  "id": zod.number(),
+  "guestName": zod.string(),
+  "guestEmail": zod.string(),
+  "guestPhone": zod.string().nullish(),
+  "roomId": zod.number(),
+  "roomName": zod.string().nullish(),
+  "roomType": zod.string().nullish(),
+  "checkIn": zod.string(),
+  "checkOut": zod.string(),
+  "status": zod.string().describe('confirmed, checked-in, checked-out, cancelled'),
+  "totalAmount": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+}))
+})
+
+
+/**
  * @summary Get recent bookings for activity feed
  */
 export const GetRecentBookingsResponseItem = zod.object({
