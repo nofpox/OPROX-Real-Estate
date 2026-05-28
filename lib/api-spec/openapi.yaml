@@ -3,13 +3,19 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Hotel Booking Management API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: bookings
+    description: Booking operations
+  - name: rooms
+    description: Room operations
+  - name: stats
+    description: Dashboard statistics
 paths:
   /healthz:
     get:
@@ -24,6 +30,273 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /rooms:
+    get:
+      operationId: listRooms
+      tags: [rooms]
+      summary: List all rooms
+      responses:
+        "200":
+          description: List of rooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Room"
+    post:
+      operationId: createRoom
+      tags: [rooms]
+      summary: Create a room
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoomInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+
+  /rooms/{id}:
+    get:
+      operationId: getRoom
+      tags: [rooms]
+      summary: Get a room by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Room found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateRoom
+      tags: [rooms]
+      summary: Update a room
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoomUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+    delete:
+      operationId: deleteRoom
+      tags: [rooms]
+      summary: Delete a room
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: roomId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get a booking by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    delete:
+      operationId: deleteBooking
+      tags: [bookings]
+      summary: Delete a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /bookings/{id}/cancel:
+    patch:
+      operationId: cancelBooking
+      tags: [bookings]
+      summary: Cancel a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /stats/overview:
+    get:
+      operationId: getStatsOverview
+      tags: [stats]
+      summary: Get dashboard overview statistics
+      responses:
+        "200":
+          description: Overview stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsOverview"
+
+  /stats/income:
+    get:
+      operationId: getIncomeStats
+      tags: [stats]
+      summary: Get monthly income breakdown
+      responses:
+        "200":
+          description: Monthly income stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyIncome"
+
+  /stats/occupancy:
+    get:
+      operationId: getOccupancyStats
+      tags: [stats]
+      summary: Get room occupancy by type
+      responses:
+        "200":
+          description: Occupancy stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OccupancyStat"
+
+  /stats/recent-bookings:
+    get:
+      operationId: getRecentBookings
+      tags: [stats]
+      summary: Get recent bookings for activity feed
+      responses:
+        "200":
+          description: Recent bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +307,188 @@ components:
       required:
         - status
 
+    Room:
+      type: object
+      required: [id, name, type, pricePerNight, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          description: "e.g. Standard, Deluxe, Suite, Presidential"
+        pricePerNight:
+          type: number
+        status:
+          type: string
+          description: "available, occupied, maintenance"
+        description:
+          type: ["string", "null"]
+        capacity:
+          type: integer
+        amenities:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    RoomInput:
+      type: object
+      required: [name, type, pricePerNight, status]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        pricePerNight:
+          type: number
+        status:
+          type: string
+        description:
+          type: string
+        capacity:
+          type: integer
+        amenities:
+          type: string
+
+    RoomUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        pricePerNight:
+          type: number
+        status:
+          type: string
+        description:
+          type: string
+        capacity:
+          type: integer
+        amenities:
+          type: string
+
+    Booking:
+      type: object
+      required: [id, guestName, guestEmail, roomId, checkIn, checkOut, status, totalAmount, createdAt]
+      properties:
+        id:
+          type: integer
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        guestPhone:
+          type: ["string", "null"]
+        roomId:
+          type: integer
+        roomName:
+          type: ["string", "null"]
+        roomType:
+          type: ["string", "null"]
+        checkIn:
+          type: string
+        checkOut:
+          type: string
+        status:
+          type: string
+          description: "confirmed, checked-in, checked-out, cancelled"
+        totalAmount:
+          type: number
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    BookingInput:
+      type: object
+      required: [guestName, guestEmail, roomId, checkIn, checkOut, totalAmount]
+      properties:
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        guestPhone:
+          type: string
+        roomId:
+          type: integer
+        checkIn:
+          type: string
+        checkOut:
+          type: string
+        status:
+          type: string
+        totalAmount:
+          type: number
+        notes:
+          type: string
+
+    BookingUpdate:
+      type: object
+      properties:
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        guestPhone:
+          type: string
+        roomId:
+          type: integer
+        checkIn:
+          type: string
+        checkOut:
+          type: string
+        status:
+          type: string
+        totalAmount:
+          type: number
+        notes:
+          type: string
+
+    StatsOverview:
+      type: object
+      required: [totalBookings, activeBookings, totalRooms, availableRooms, totalRevenue, monthlyRevenue, occupancyRate, pendingCheckIns, pendingCheckOuts]
+      properties:
+        totalBookings:
+          type: integer
+        activeBookings:
+          type: integer
+        totalRooms:
+          type: integer
+        availableRooms:
+          type: integer
+        totalRevenue:
+          type: number
+        monthlyRevenue:
+          type: number
+        occupancyRate:
+          type: number
+        pendingCheckIns:
+          type: integer
+        pendingCheckOuts:
+          type: integer
+
+    MonthlyIncome:
+      type: object
+      required: [month, revenue, bookings]
+      properties:
+        month:
+          type: string
+        revenue:
+          type: number
+        bookings:
+          type: integer
+
+    OccupancyStat:
+      type: object
+      required: [type, total, occupied, occupancyRate]
+      properties:
+        type:
+          type: string
+        total:
+          type: integer
+        occupied:
+          type: integer
+        occupancyRate:
+          type: number
