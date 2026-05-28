@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Calendar, DoorOpen, LineChart, LogOut, Bell, Search, Menu, Users } from "lucide-react";
+import { LayoutDashboard, Calendar, DoorOpen, LogOut, Bell, Search, Menu, Users, Building2, BarChart3, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,13 +16,38 @@ import {
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
 
-  const navItems = [
+  const mainNavItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/bookings", label: "Bookings", icon: Calendar },
+    { href: "/properties", label: "Properties", icon: Building2 },
     { href: "/rooms", label: "Rooms", icon: DoorOpen },
     { href: "/guests", label: "Guests", icon: Users },
-    { href: "/income", label: "Income", icon: LineChart },
   ];
+
+  const operationsNavItems = [
+    { href: "/finance", label: "Finance", icon: BarChart3 },
+    { href: "/maintenance", label: "Maintenance", icon: Wrench },
+  ];
+
+  const renderNavItem = (item: any) => {
+    const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+    const Icon = item.icon;
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={`flex items-center gap-3 rounded-md px-3 py-2.5 transition-all ${
+          isActive
+            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+        }`}
+        data-testid={`nav-${item.label.toLowerCase()}`}
+      >
+        <Icon className="h-5 w-5" />
+        {item.label}
+      </Link>
+    );
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/30 lg:flex-row">
@@ -36,25 +61,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="flex-1 overflow-auto py-4">
           <nav className="grid items-start px-4 text-sm font-medium gap-1">
-            {navItems.map((item) => {
-              const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 transition-all ${
-                    isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                  }`}
-                  data-testid={`nav-${item.label.toLowerCase()}`}
-                >
-                  <Icon className="h-5 w-5" />
-                  {item.label}
-                </Link>
-              );
-            })}
+            {mainNavItems.map(renderNavItem)}
+            
+            <div className="text-xs font-semibold uppercase tracking-widest text-sidebar-foreground/40 px-3 py-2 mt-4">
+              Operations
+            </div>
+            
+            {operationsNavItems.map(renderNavItem)}
           </nav>
         </div>
         <div className="p-4 border-t border-sidebar-border">

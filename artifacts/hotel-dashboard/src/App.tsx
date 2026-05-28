@@ -12,6 +12,10 @@ import Income from "@/pages/income";
 import Guests from "@/pages/guests";
 import GuestProfile from "@/pages/guest-profile";
 import NotFound from "@/pages/not-found";
+import Properties from "@/pages/properties";
+import PropertyDetail from "@/pages/property-detail";
+import Finance from "@/pages/finance";
+import Maintenance from "@/pages/maintenance";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +37,10 @@ function Router() {
       <Route path="/income" component={Income} />
       <Route path="/guests" component={Guests} />
       <Route path="/guests/:email" component={GuestProfile} />
+      <Route path="/properties" component={Properties} />
+      <Route path="/properties/:id" component={PropertyDetail} />
+      <Route path="/finance" component={Finance} />
+      <Route path="/maintenance" component={Maintenance} />
       <Route component={NotFound} />
     </Switch>
   );

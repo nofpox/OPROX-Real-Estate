@@ -18,6 +18,12 @@ tags:
     description: Dashboard statistics
   - name: guests
     description: Guest contact management
+  - name: properties
+    description: Property management
+  - name: expenses
+    description: Finance and expense tracking
+  - name: workOrders
+    description: Maintenance work orders
 paths:
   /healthz:
     get:
@@ -284,6 +290,341 @@ paths:
                 items:
                   $ref: "#/components/schemas/OccupancyStat"
 
+  /properties:
+    get:
+      operationId: listProperties
+      tags: [properties]
+      summary: List all properties
+      responses:
+        "200":
+          description: List of properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Property"
+    post:
+      operationId: createProperty
+      tags: [properties]
+      summary: Create a property
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PropertyInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+
+  /properties/{id}:
+    get:
+      operationId: getProperty
+      tags: [properties]
+      summary: Get a property by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Property found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateProperty
+      tags: [properties]
+      summary: Update a property
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PropertyUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+    delete:
+      operationId: deleteProperty
+      tags: [properties]
+      summary: Delete a property
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /properties/{id}/stats:
+    get:
+      operationId: getPropertyStats
+      tags: [properties]
+      summary: Get stats for a single property (units, revenue, expenses, bookings)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Property stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyStats"
+
+  /expenses:
+    get:
+      operationId: listExpenses
+      tags: [expenses]
+      summary: List expenses
+      parameters:
+        - name: propertyId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: unitId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of expenses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Expense"
+    post:
+      operationId: createExpense
+      tags: [expenses]
+      summary: Create an expense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+
+  /expenses/{id}:
+    patch:
+      operationId: updateExpense
+      tags: [expenses]
+      summary: Update an expense
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+    delete:
+      operationId: deleteExpense
+      tags: [expenses]
+      summary: Delete an expense
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /finance/summary:
+    get:
+      operationId: getFinanceSummary
+      tags: [expenses]
+      summary: Get finance summary (revenue vs expenses) per property
+      responses:
+        "200":
+          description: Finance summary
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FinanceSummary"
+
+  /finance/monthly:
+    get:
+      operationId: getFinanceMonthly
+      tags: [expenses]
+      summary: Get monthly revenue vs expenses breakdown
+      parameters:
+        - name: propertyId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Monthly finance breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyFinance"
+
+  /work-orders:
+    get:
+      operationId: listWorkOrders
+      tags: [workOrders]
+      summary: List work orders
+      parameters:
+        - name: propertyId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: priority
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of work orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkOrder"
+    post:
+      operationId: createWorkOrder
+      tags: [workOrders]
+      summary: Create a work order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkOrderInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+
+  /work-orders/{id}:
+    get:
+      operationId: getWorkOrder
+      tags: [workOrders]
+      summary: Get a work order by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Work order found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateWorkOrder
+      tags: [workOrders]
+      summary: Update a work order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkOrderUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+    delete:
+      operationId: deleteWorkOrder
+      tags: [workOrders]
+      summary: Delete a work order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /guests:
     get:
       operationId: listGuests
@@ -537,6 +878,263 @@ components:
           type: integer
         occupancyRate:
           type: number
+
+    Property:
+      type: object
+      required: [id, name, type, address, city, country, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          description: "Hotel, Apartment, Compound"
+        address:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          description: "active, inactive"
+        unitCount:
+          type: integer
+        createdAt:
+          type: string
+
+    PropertyInput:
+      type: object
+      required: [name, type, address, city]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+
+    PropertyUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+
+    PropertyStats:
+      type: object
+      required: [propertyId, unitCount, activeBookings, totalRevenue, totalExpenses, netIncome, openWorkOrders]
+      properties:
+        propertyId:
+          type: integer
+        unitCount:
+          type: integer
+        activeBookings:
+          type: integer
+        totalRevenue:
+          type: number
+        totalExpenses:
+          type: number
+        netIncome:
+          type: number
+        openWorkOrders:
+          type: integer
+
+    Expense:
+      type: object
+      required: [id, propertyId, title, category, amount, expenseDate, createdAt]
+      properties:
+        id:
+          type: integer
+        propertyId:
+          type: integer
+        propertyName:
+          type: ["string", "null"]
+        unitId:
+          type: ["integer", "null"]
+        unitName:
+          type: ["string", "null"]
+        title:
+          type: string
+        category:
+          type: string
+        amount:
+          type: number
+        expenseDate:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    ExpenseInput:
+      type: object
+      required: [propertyId, title, category, amount, expenseDate]
+      properties:
+        propertyId:
+          type: integer
+        unitId:
+          type: integer
+        title:
+          type: string
+        category:
+          type: string
+        amount:
+          type: number
+        expenseDate:
+          type: string
+        notes:
+          type: string
+
+    ExpenseUpdate:
+      type: object
+      properties:
+        propertyId:
+          type: integer
+        unitId:
+          type: integer
+        title:
+          type: string
+        category:
+          type: string
+        amount:
+          type: number
+        expenseDate:
+          type: string
+        notes:
+          type: string
+
+    FinanceSummary:
+      type: object
+      required: [propertyId, propertyName, totalRevenue, totalExpenses, netIncome, bookingCount, expenseCount]
+      properties:
+        propertyId:
+          type: integer
+        propertyName:
+          type: string
+        propertyType:
+          type: string
+        totalRevenue:
+          type: number
+        totalExpenses:
+          type: number
+        netIncome:
+          type: number
+        bookingCount:
+          type: integer
+        expenseCount:
+          type: integer
+
+    MonthlyFinance:
+      type: object
+      required: [month, revenue, expenses, netIncome]
+      properties:
+        month:
+          type: string
+        revenue:
+          type: number
+        expenses:
+          type: number
+        netIncome:
+          type: number
+
+    WorkOrder:
+      type: object
+      required: [id, propertyId, title, priority, status, createdAt]
+      properties:
+        id:
+          type: integer
+        propertyId:
+          type: integer
+        propertyName:
+          type: ["string", "null"]
+        unitId:
+          type: ["integer", "null"]
+        unitName:
+          type: ["string", "null"]
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        priority:
+          type: string
+          description: "low, medium, high, urgent"
+        status:
+          type: string
+          description: "open, in-progress, on-hold, completed"
+        assignedTo:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+        completedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    WorkOrderInput:
+      type: object
+      required: [propertyId, title, priority]
+      properties:
+        propertyId:
+          type: integer
+        unitId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+        status:
+          type: string
+        assignedTo:
+          type: string
+        dueDate:
+          type: string
+
+    WorkOrderUpdate:
+      type: object
+      properties:
+        propertyId:
+          type: integer
+        unitId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+        status:
+          type: string
+        assignedTo:
+          type: string
+        dueDate:
+          type: string
+        completedAt:
+          type: string
 
     Guest:
       type: object

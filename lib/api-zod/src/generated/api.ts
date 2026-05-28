@@ -280,6 +280,337 @@ export const GetOccupancyStatsResponse = zod.array(GetOccupancyStatsResponseItem
 
 
 /**
+ * @summary List all properties
+ */
+export const ListPropertiesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.string().describe('Hotel, Apartment, Compound'),
+  "address": zod.string(),
+  "city": zod.string(),
+  "country": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.string().describe('active, inactive'),
+  "unitCount": zod.number().optional(),
+  "createdAt": zod.string()
+})
+export const ListPropertiesResponse = zod.array(ListPropertiesResponseItem)
+
+
+/**
+ * @summary Create a property
+ */
+export const CreatePropertyBody = zod.object({
+  "name": zod.string(),
+  "type": zod.string(),
+  "address": zod.string(),
+  "city": zod.string(),
+  "country": zod.string().optional(),
+  "description": zod.string().optional(),
+  "status": zod.string().optional()
+})
+
+
+/**
+ * @summary Get a property by ID
+ */
+export const GetPropertyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetPropertyResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.string().describe('Hotel, Apartment, Compound'),
+  "address": zod.string(),
+  "city": zod.string(),
+  "country": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.string().describe('active, inactive'),
+  "unitCount": zod.number().optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a property
+ */
+export const UpdatePropertyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePropertyBody = zod.object({
+  "name": zod.string().optional(),
+  "type": zod.string().optional(),
+  "address": zod.string().optional(),
+  "city": zod.string().optional(),
+  "country": zod.string().optional(),
+  "description": zod.string().optional(),
+  "status": zod.string().optional()
+})
+
+export const UpdatePropertyResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.string().describe('Hotel, Apartment, Compound'),
+  "address": zod.string(),
+  "city": zod.string(),
+  "country": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.string().describe('active, inactive'),
+  "unitCount": zod.number().optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a property
+ */
+export const DeletePropertyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get stats for a single property (units, revenue, expenses, bookings)
+ */
+export const GetPropertyStatsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetPropertyStatsResponse = zod.object({
+  "propertyId": zod.number(),
+  "unitCount": zod.number(),
+  "activeBookings": zod.number(),
+  "totalRevenue": zod.number(),
+  "totalExpenses": zod.number(),
+  "netIncome": zod.number(),
+  "openWorkOrders": zod.number()
+})
+
+
+/**
+ * @summary List expenses
+ */
+export const ListExpensesQueryParams = zod.object({
+  "propertyId": zod.coerce.number().optional(),
+  "unitId": zod.coerce.number().optional(),
+  "category": zod.coerce.string().optional()
+})
+
+export const ListExpensesResponseItem = zod.object({
+  "id": zod.number(),
+  "propertyId": zod.number(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "amount": zod.number(),
+  "expenseDate": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListExpensesResponse = zod.array(ListExpensesResponseItem)
+
+
+/**
+ * @summary Create an expense
+ */
+export const CreateExpenseBody = zod.object({
+  "propertyId": zod.number(),
+  "unitId": zod.number().optional(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "amount": zod.number(),
+  "expenseDate": zod.string(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Update an expense
+ */
+export const UpdateExpenseParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateExpenseBody = zod.object({
+  "propertyId": zod.number().optional(),
+  "unitId": zod.number().optional(),
+  "title": zod.string().optional(),
+  "category": zod.string().optional(),
+  "amount": zod.number().optional(),
+  "expenseDate": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateExpenseResponse = zod.object({
+  "id": zod.number(),
+  "propertyId": zod.number(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "amount": zod.number(),
+  "expenseDate": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete an expense
+ */
+export const DeleteExpenseParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get finance summary (revenue vs expenses) per property
+ */
+export const GetFinanceSummaryResponseItem = zod.object({
+  "propertyId": zod.number(),
+  "propertyName": zod.string(),
+  "propertyType": zod.string().optional(),
+  "totalRevenue": zod.number(),
+  "totalExpenses": zod.number(),
+  "netIncome": zod.number(),
+  "bookingCount": zod.number(),
+  "expenseCount": zod.number()
+})
+export const GetFinanceSummaryResponse = zod.array(GetFinanceSummaryResponseItem)
+
+
+/**
+ * @summary Get monthly revenue vs expenses breakdown
+ */
+export const GetFinanceMonthlyQueryParams = zod.object({
+  "propertyId": zod.coerce.number().optional()
+})
+
+export const GetFinanceMonthlyResponseItem = zod.object({
+  "month": zod.string(),
+  "revenue": zod.number(),
+  "expenses": zod.number(),
+  "netIncome": zod.number()
+})
+export const GetFinanceMonthlyResponse = zod.array(GetFinanceMonthlyResponseItem)
+
+
+/**
+ * @summary List work orders
+ */
+export const ListWorkOrdersQueryParams = zod.object({
+  "propertyId": zod.coerce.number().optional(),
+  "status": zod.coerce.string().optional(),
+  "priority": zod.coerce.string().optional()
+})
+
+export const ListWorkOrdersResponseItem = zod.object({
+  "id": zod.number(),
+  "propertyId": zod.number(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('open, in-progress, on-hold, completed'),
+  "assignedTo": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListWorkOrdersResponse = zod.array(ListWorkOrdersResponseItem)
+
+
+/**
+ * @summary Create a work order
+ */
+export const CreateWorkOrderBody = zod.object({
+  "propertyId": zod.number(),
+  "unitId": zod.number().optional(),
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "priority": zod.string(),
+  "status": zod.string().optional(),
+  "assignedTo": zod.string().optional(),
+  "dueDate": zod.string().optional()
+})
+
+
+/**
+ * @summary Get a work order by ID
+ */
+export const GetWorkOrderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetWorkOrderResponse = zod.object({
+  "id": zod.number(),
+  "propertyId": zod.number(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('open, in-progress, on-hold, completed'),
+  "assignedTo": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a work order
+ */
+export const UpdateWorkOrderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateWorkOrderBody = zod.object({
+  "propertyId": zod.number().optional(),
+  "unitId": zod.number().optional(),
+  "title": zod.string().optional(),
+  "description": zod.string().optional(),
+  "priority": zod.string().optional(),
+  "status": zod.string().optional(),
+  "assignedTo": zod.string().optional(),
+  "dueDate": zod.string().optional(),
+  "completedAt": zod.string().optional()
+})
+
+export const UpdateWorkOrderResponse = zod.object({
+  "id": zod.number(),
+  "propertyId": zod.number(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('open, in-progress, on-hold, completed'),
+  "assignedTo": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a work order
+ */
+export const DeleteWorkOrderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary List all unique guests with their booking history
  */
 export const ListGuestsQueryParams = zod.object({

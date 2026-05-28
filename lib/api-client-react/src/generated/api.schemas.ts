@@ -115,6 +115,156 @@ export interface OccupancyStat {
   occupancyRate: number;
 }
 
+export interface Property {
+  id: number;
+  name: string;
+  /** Hotel, Apartment, Compound */
+  type: string;
+  address: string;
+  city: string;
+  country: string;
+  /** @nullable */
+  description?: string | null;
+  /** active, inactive */
+  status: string;
+  unitCount?: number;
+  createdAt: string;
+}
+
+export interface PropertyInput {
+  name: string;
+  type: string;
+  address: string;
+  city: string;
+  country?: string;
+  description?: string;
+  status?: string;
+}
+
+export interface PropertyUpdate {
+  name?: string;
+  type?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  description?: string;
+  status?: string;
+}
+
+export interface PropertyStats {
+  propertyId: number;
+  unitCount: number;
+  activeBookings: number;
+  totalRevenue: number;
+  totalExpenses: number;
+  netIncome: number;
+  openWorkOrders: number;
+}
+
+export interface Expense {
+  id: number;
+  propertyId: number;
+  /** @nullable */
+  propertyName?: string | null;
+  /** @nullable */
+  unitId?: number | null;
+  /** @nullable */
+  unitName?: string | null;
+  title: string;
+  category: string;
+  amount: number;
+  expenseDate: string;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface ExpenseInput {
+  propertyId: number;
+  unitId?: number;
+  title: string;
+  category: string;
+  amount: number;
+  expenseDate: string;
+  notes?: string;
+}
+
+export interface ExpenseUpdate {
+  propertyId?: number;
+  unitId?: number;
+  title?: string;
+  category?: string;
+  amount?: number;
+  expenseDate?: string;
+  notes?: string;
+}
+
+export interface FinanceSummary {
+  propertyId: number;
+  propertyName: string;
+  propertyType?: string;
+  totalRevenue: number;
+  totalExpenses: number;
+  netIncome: number;
+  bookingCount: number;
+  expenseCount: number;
+}
+
+export interface MonthlyFinance {
+  month: string;
+  revenue: number;
+  expenses: number;
+  netIncome: number;
+}
+
+export interface WorkOrder {
+  id: number;
+  propertyId: number;
+  /** @nullable */
+  propertyName?: string | null;
+  /** @nullable */
+  unitId?: number | null;
+  /** @nullable */
+  unitName?: string | null;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  /** low, medium, high, urgent */
+  priority: string;
+  /** open, in-progress, on-hold, completed */
+  status: string;
+  /** @nullable */
+  assignedTo?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
+  /** @nullable */
+  completedAt?: string | null;
+  createdAt: string;
+}
+
+export interface WorkOrderInput {
+  propertyId: number;
+  unitId?: number;
+  title: string;
+  description?: string;
+  priority: string;
+  status?: string;
+  assignedTo?: string;
+  dueDate?: string;
+}
+
+export interface WorkOrderUpdate {
+  propertyId?: number;
+  unitId?: number;
+  title?: string;
+  description?: string;
+  priority?: string;
+  status?: string;
+  assignedTo?: string;
+  dueDate?: string;
+  completedAt?: string;
+}
+
 export interface Guest {
   guestName: string;
   guestEmail: string;
@@ -153,6 +303,22 @@ export interface GuestProfile {
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
+};
+
+export type ListExpensesParams = {
+propertyId?: number;
+unitId?: number;
+category?: string;
+};
+
+export type GetFinanceMonthlyParams = {
+propertyId?: number;
+};
+
+export type ListWorkOrdersParams = {
+propertyId?: number;
+status?: string;
+priority?: string;
 };
 
 export type ListGuestsParams = {

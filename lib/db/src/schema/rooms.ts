@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const roomsTable = pgTable("rooms", {
   id: serial("id").primaryKey(),
+  propertyId: integer("property_id"),
   name: text("name").notNull(),
   type: text("type").notNull(),
   pricePerNight: numeric("price_per_night", { precision: 10, scale: 2 }).notNull(),
