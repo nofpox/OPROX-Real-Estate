@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Calendar, DoorOpen, LogOut, Bell, Search, Menu, Users, Building2, BarChart3, Wrench } from "lucide-react";
+import { LayoutDashboard, Calendar, DoorOpen, Bell, Search, Menu, Users, Building2, BarChart3, Wrench, UserCog, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { NotificationBell } from "@/components/notification-bell";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -27,6 +28,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const operationsNavItems = [
     { href: "/finance", label: "Finance", icon: BarChart3 },
     { href: "/maintenance", label: "Maintenance", icon: Wrench },
+    { href: "/staff", label: "Staff", icon: UserCog },
+    { href: "/tasks", label: "Tasks", icon: ClipboardList },
   ];
 
   const renderNavItem = (item: any) => {
@@ -62,11 +65,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex-1 overflow-auto py-4">
           <nav className="grid items-start px-4 text-sm font-medium gap-1">
             {mainNavItems.map(renderNavItem)}
-            
+
             <div className="text-xs font-semibold uppercase tracking-widest text-sidebar-foreground/40 px-3 py-2 mt-4">
               Operations
             </div>
-            
+
             {operationsNavItems.map(renderNavItem)}
           </nav>
         </div>
@@ -97,7 +100,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               Grand
             </Link>
           </div>
-          
+
           <div className="w-full flex-1 md:w-auto md:flex-none">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -108,14 +111,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
               />
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4 ml-auto">
-            <Button variant="ghost" size="icon" className="relative rounded-full">
-              <Bell className="h-5 w-5" />
-              <span className="absolute right-1 top-1 flex h-2 w-2 rounded-full bg-destructive"></span>
-              <span className="sr-only">Toggle notifications</span>
-            </Button>
-            
+            <NotificationBell />
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full lg:hidden">

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './appNotification';
 export * from './booking';
 export * from './bookingInput';
 export * from './bookingUpdate';
@@ -13,6 +14,7 @@ export * from './expense';
 export * from './expenseInput';
 export * from './expenseUpdate';
 export * from './financeSummary';
+export * from './generateNotificationsResult';
 export * from './getFinanceMonthlyParams';
 export * from './guest';
 export * from './guestProfile';
@@ -20,6 +22,9 @@ export * from './healthStatus';
 export * from './listBookingsParams';
 export * from './listExpensesParams';
 export * from './listGuestsParams';
+export * from './listNotificationsParams';
+export * from './listStaffParams';
+export * from './listTasksParams';
 export * from './listWorkOrdersParams';
 export * from './monthlyFinance';
 export * from './monthlyIncome';
@@ -31,7 +36,13 @@ export * from './propertyUpdate';
 export * from './room';
 export * from './roomInput';
 export * from './roomUpdate';
+export * from './staffInput';
+export * from './staffMember';
+export * from './staffUpdate';
 export * from './statsOverview';
+export * from './task';
+export * from './taskInput';
+export * from './taskUpdate';
 export * from './workOrder';
 export * from './workOrderInput';
 export * from './workOrderUpdate';

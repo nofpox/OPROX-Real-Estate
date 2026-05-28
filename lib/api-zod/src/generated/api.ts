@@ -22,6 +22,7 @@ export const HealthCheckResponse = zod.object({
  */
 export const ListRoomsResponseItem = zod.object({
   "id": zod.number(),
+  "propertyId": zod.number().optional(),
   "name": zod.string(),
   "type": zod.string().describe('e.g. Standard, Deluxe, Suite, Presidential'),
   "pricePerNight": zod.number(),
@@ -57,6 +58,7 @@ export const GetRoomParams = zod.object({
 
 export const GetRoomResponse = zod.object({
   "id": zod.number(),
+  "propertyId": zod.number().optional(),
   "name": zod.string(),
   "type": zod.string().describe('e.g. Standard, Deluxe, Suite, Presidential'),
   "pricePerNight": zod.number(),
@@ -87,6 +89,7 @@ export const UpdateRoomBody = zod.object({
 
 export const UpdateRoomResponse = zod.object({
   "id": zod.number(),
+  "propertyId": zod.number().optional(),
   "name": zod.string(),
   "type": zod.string().describe('e.g. Standard, Deluxe, Suite, Presidential'),
   "pricePerNight": zod.number(),
@@ -518,8 +521,9 @@ export const ListWorkOrdersResponseItem = zod.object({
   "title": zod.string(),
   "description": zod.string().nullish(),
   "priority": zod.string().describe('low, medium, high, urgent'),
-  "status": zod.string().describe('open, in-progress, on-hold, completed'),
+  "status": zod.string().describe('pending, in-progress, on-hold, completed'),
   "assignedTo": zod.string().nullish(),
+  "cost": zod.number().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
@@ -538,6 +542,7 @@ export const CreateWorkOrderBody = zod.object({
   "priority": zod.string(),
   "status": zod.string().optional(),
   "assignedTo": zod.string().optional(),
+  "cost": zod.number().optional(),
   "dueDate": zod.string().optional()
 })
 
@@ -558,8 +563,9 @@ export const GetWorkOrderResponse = zod.object({
   "title": zod.string(),
   "description": zod.string().nullish(),
   "priority": zod.string().describe('low, medium, high, urgent'),
-  "status": zod.string().describe('open, in-progress, on-hold, completed'),
+  "status": zod.string().describe('pending, in-progress, on-hold, completed'),
   "assignedTo": zod.string().nullish(),
+  "cost": zod.number().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
@@ -581,6 +587,7 @@ export const UpdateWorkOrderBody = zod.object({
   "priority": zod.string().optional(),
   "status": zod.string().optional(),
   "assignedTo": zod.string().optional(),
+  "cost": zod.number().optional(),
   "dueDate": zod.string().optional(),
   "completedAt": zod.string().optional()
 })
@@ -594,8 +601,9 @@ export const UpdateWorkOrderResponse = zod.object({
   "title": zod.string(),
   "description": zod.string().nullish(),
   "priority": zod.string().describe('low, medium, high, urgent'),
-  "status": zod.string().describe('open, in-progress, on-hold, completed'),
+  "status": zod.string().describe('pending, in-progress, on-hold, completed'),
   "assignedTo": zod.string().nullish(),
+  "cost": zod.number().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
@@ -607,6 +615,219 @@ export const UpdateWorkOrderResponse = zod.object({
  */
 export const DeleteWorkOrderParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List all staff members
+ */
+export const ListStaffQueryParams = zod.object({
+  "propertyId": zod.coerce.number().optional(),
+  "role": zod.coerce.string().optional()
+})
+
+export const ListStaffResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "status": zod.string().describe('active, inactive'),
+  "createdAt": zod.string()
+})
+export const ListStaffResponse = zod.array(ListStaffResponseItem)
+
+
+/**
+ * @summary Create a staff member
+ */
+export const CreateStaffBody = zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().optional(),
+  "propertyId": zod.number().optional(),
+  "status": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a staff member
+ */
+export const UpdateStaffParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateStaffBody = zod.object({
+  "name": zod.string().optional(),
+  "role": zod.string().optional(),
+  "email": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "propertyId": zod.number().optional(),
+  "status": zod.string().optional()
+})
+
+export const UpdateStaffResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "status": zod.string().describe('active, inactive'),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a staff member
+ */
+export const DeleteStaffParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List tasks
+ */
+export const ListTasksQueryParams = zod.object({
+  "propertyId": zod.coerce.number().optional(),
+  "assignedToId": zod.coerce.number().optional(),
+  "status": zod.coerce.string().optional(),
+  "date": zod.coerce.string().optional().describe('Filter by due date (YYYY-MM-DD)')
+})
+
+export const ListTasksResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string().describe('housekeeping, reception, maintenance, security, general'),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "assignedToId": zod.number().nullish(),
+  "assigneeName": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('pending, in-progress, completed'),
+  "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListTasksResponse = zod.array(ListTasksResponseItem)
+
+
+/**
+ * @summary Create a task
+ */
+export const CreateTaskBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "category": zod.string(),
+  "propertyId": zod.number().optional(),
+  "unitId": zod.number().optional(),
+  "assignedToId": zod.number().optional(),
+  "priority": zod.string(),
+  "status": zod.string().optional(),
+  "dueDate": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a task
+ */
+export const UpdateTaskParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateTaskBody = zod.object({
+  "title": zod.string().optional(),
+  "description": zod.string().optional(),
+  "category": zod.string().optional(),
+  "propertyId": zod.number().optional(),
+  "unitId": zod.number().optional(),
+  "assignedToId": zod.number().optional(),
+  "priority": zod.string().optional(),
+  "status": zod.string().optional(),
+  "dueDate": zod.string().optional(),
+  "completedAt": zod.string().optional()
+})
+
+export const UpdateTaskResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string().describe('housekeeping, reception, maintenance, security, general'),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "assignedToId": zod.number().nullish(),
+  "assigneeName": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('pending, in-progress, completed'),
+  "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a task
+ */
+export const DeleteTaskParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List notifications (optionally unread only)
+ */
+export const ListNotificationsQueryParams = zod.object({
+  "unreadOnly": zod.coerce.boolean().optional()
+})
+
+export const ListNotificationsResponseItem = zod.object({
+  "id": zod.number(),
+  "type": zod.string().describe('check-in, check-out, maintenance-alert'),
+  "title": zod.string(),
+  "message": zod.string(),
+  "isRead": zod.boolean(),
+  "relatedId": zod.number().nullish(),
+  "relatedType": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListNotificationsResponse = zod.array(ListNotificationsResponseItem)
+
+
+/**
+ * @summary Generate automated daily notifications (check-ins, check-outs, urgent maintenance)
+ */
+export const GenerateNotificationsResponse = zod.object({
+  "generated": zod.number(),
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Mark a notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const MarkNotificationReadResponse = zod.object({
+  "id": zod.number(),
+  "type": zod.string().describe('check-in, check-out, maintenance-alert'),
+  "title": zod.string(),
+  "message": zod.string(),
+  "isRead": zod.boolean(),
+  "relatedId": zod.number().nullish(),
+  "relatedType": zod.string().nullish(),
+  "createdAt": zod.string()
 })
 
 

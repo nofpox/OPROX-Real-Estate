@@ -14,5 +14,6 @@ export interface WorkOrderInput {
   priority: string;
   status?: string;
   assignedTo?: string;
+  cost?: number;
   dueDate?: string;
 }

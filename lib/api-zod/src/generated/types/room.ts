@@ -8,6 +8,7 @@
 
 export interface Room {
   id: number;
+  propertyId?: number;
   name: string;
   /** e.g. Standard, Deluxe, Suite, Presidential */
   type: string;

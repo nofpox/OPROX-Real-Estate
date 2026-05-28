@@ -60,7 +60,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Room } from "@workspace/api-client-react/src/generated/api.schemas";
+import { type Room } from "@workspace/api-client-react";
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("en-US", {

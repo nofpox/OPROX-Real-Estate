@@ -16,6 +16,8 @@ import Properties from "@/pages/properties";
 import PropertyDetail from "@/pages/property-detail";
 import Finance from "@/pages/finance";
 import Maintenance from "@/pages/maintenance";
+import Staff from "@/pages/staff";
+import Tasks from "@/pages/tasks";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,6 +43,8 @@ function Router() {
       <Route path="/properties/:id" component={PropertyDetail} />
       <Route path="/finance" component={Finance} />
       <Route path="/maintenance" component={Maintenance} />
+      <Route path="/staff" component={Staff} />
+      <Route path="/tasks" component={Tasks} />
       <Route component={NotFound} />
     </Switch>
   );

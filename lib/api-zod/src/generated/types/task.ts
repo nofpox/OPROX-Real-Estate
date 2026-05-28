@@ -6,26 +6,29 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface WorkOrder {
+export interface Task {
   id: number;
-  propertyId: number;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  /** housekeeping, reception, maintenance, security, general */
+  category: string;
+  /** @nullable */
+  propertyId?: number | null;
   /** @nullable */
   propertyName?: string | null;
   /** @nullable */
   unitId?: number | null;
   /** @nullable */
   unitName?: string | null;
-  title: string;
   /** @nullable */
-  description?: string | null;
+  assignedToId?: number | null;
+  /** @nullable */
+  assigneeName?: string | null;
   /** low, medium, high, urgent */
   priority: string;
-  /** pending, in-progress, on-hold, completed */
+  /** pending, in-progress, completed */
   status: string;
-  /** @nullable */
-  assignedTo?: string | null;
-  /** @nullable */
-  cost?: number | null;
   /** @nullable */
   dueDate?: string | null;
   /** @nullable */

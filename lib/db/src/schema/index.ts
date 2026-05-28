@@ -3,3 +3,6 @@ export * from "./bookings";
 export * from "./properties";
 export * from "./expenses";
 export * from "./workOrders";
+export * from "./staff";
+export * from "./tasks";
+export * from "./notifications";

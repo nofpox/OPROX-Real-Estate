@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, date, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, numeric, integer, date, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -9,8 +9,9 @@ export const workOrdersTable = pgTable("work_orders", {
   title: text("title").notNull(),
   description: text("description"),
   priority: text("priority").notNull().default("medium"),
-  status: text("status").notNull().default("open"),
+  status: text("status").notNull().default("pending"),
   assignedTo: text("assigned_to"),
+  cost: numeric("cost", { precision: 10, scale: 2 }),
   dueDate: date("due_date"),
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

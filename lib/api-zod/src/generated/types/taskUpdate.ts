@@ -6,15 +6,15 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface WorkOrderUpdate {
-  propertyId?: number;
-  unitId?: number;
+export interface TaskUpdate {
   title?: string;
   description?: string;
+  category?: string;
+  propertyId?: number;
+  unitId?: number;
+  assignedToId?: number;
   priority?: string;
   status?: string;
-  assignedTo?: string;
-  cost?: number;
   dueDate?: string;
   completedAt?: string;
 }

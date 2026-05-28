@@ -11,6 +11,7 @@ export interface HealthStatus {
 
 export interface Room {
   id: number;
+  propertyId?: number;
   name: string;
   /** e.g. Standard, Deluxe, Suite, Presidential */
   type: string;
@@ -231,10 +232,12 @@ export interface WorkOrder {
   description?: string | null;
   /** low, medium, high, urgent */
   priority: string;
-  /** open, in-progress, on-hold, completed */
+  /** pending, in-progress, on-hold, completed */
   status: string;
   /** @nullable */
   assignedTo?: string | null;
+  /** @nullable */
+  cost?: number | null;
   /** @nullable */
   dueDate?: string | null;
   /** @nullable */
@@ -250,6 +253,7 @@ export interface WorkOrderInput {
   priority: string;
   status?: string;
   assignedTo?: string;
+  cost?: number;
   dueDate?: string;
 }
 
@@ -261,8 +265,117 @@ export interface WorkOrderUpdate {
   priority?: string;
   status?: string;
   assignedTo?: string;
+  cost?: number;
   dueDate?: string;
   completedAt?: string;
+}
+
+export interface StaffMember {
+  id: number;
+  name: string;
+  role: string;
+  email: string;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  propertyId?: number | null;
+  /** @nullable */
+  propertyName?: string | null;
+  /** active, inactive */
+  status: string;
+  createdAt: string;
+}
+
+export interface StaffInput {
+  name: string;
+  role: string;
+  email: string;
+  phone?: string;
+  propertyId?: number;
+  status?: string;
+}
+
+export interface StaffUpdate {
+  name?: string;
+  role?: string;
+  email?: string;
+  phone?: string;
+  propertyId?: number;
+  status?: string;
+}
+
+export interface Task {
+  id: number;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  /** housekeeping, reception, maintenance, security, general */
+  category: string;
+  /** @nullable */
+  propertyId?: number | null;
+  /** @nullable */
+  propertyName?: string | null;
+  /** @nullable */
+  unitId?: number | null;
+  /** @nullable */
+  unitName?: string | null;
+  /** @nullable */
+  assignedToId?: number | null;
+  /** @nullable */
+  assigneeName?: string | null;
+  /** low, medium, high, urgent */
+  priority: string;
+  /** pending, in-progress, completed */
+  status: string;
+  /** @nullable */
+  dueDate?: string | null;
+  /** @nullable */
+  completedAt?: string | null;
+  createdAt: string;
+}
+
+export interface TaskInput {
+  title: string;
+  description?: string;
+  category: string;
+  propertyId?: number;
+  unitId?: number;
+  assignedToId?: number;
+  priority: string;
+  status?: string;
+  dueDate?: string;
+}
+
+export interface TaskUpdate {
+  title?: string;
+  description?: string;
+  category?: string;
+  propertyId?: number;
+  unitId?: number;
+  assignedToId?: number;
+  priority?: string;
+  status?: string;
+  dueDate?: string;
+  completedAt?: string;
+}
+
+export interface AppNotification {
+  id: number;
+  /** check-in, check-out, maintenance-alert */
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  /** @nullable */
+  relatedId?: number | null;
+  /** @nullable */
+  relatedType?: string | null;
+  createdAt: string;
+}
+
+export interface GenerateNotificationsResult {
+  generated: number;
+  message: string;
 }
 
 export interface Guest {
@@ -319,6 +432,25 @@ export type ListWorkOrdersParams = {
 propertyId?: number;
 status?: string;
 priority?: string;
+};
+
+export type ListStaffParams = {
+propertyId?: number;
+role?: string;
+};
+
+export type ListTasksParams = {
+propertyId?: number;
+assignedToId?: number;
+status?: string;
+/**
+ * Filter by due date (YYYY-MM-DD)
+ */
+date?: string;
+};
+
+export type ListNotificationsParams = {
+unreadOnly?: boolean;
 };
 
 export type ListGuestsParams = {
