@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Users, DoorOpen, DollarSign, Percent, ArrowUpRight, CalendarDays, Clock, LineChart, LayoutGrid } from "lucide-react";
 import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/language-context";
 
 const TYPE_BADGE: Record<string, string> = {
   Hotel: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
@@ -33,6 +34,8 @@ const getStatusColor = (status: string) => {
 
 export default function Dashboard() {
   const { t } = useTranslation();
+  const { lang } = useLanguage();
+  const locale = lang === "ar" ? "ar-EG" : "en-US";
   const [selectedType, setSelectedType] = useState("all");
 
   const PROPERTY_TYPES = [
@@ -205,14 +208,14 @@ export default function Dashboard() {
                       <div>
                         <p className="text-sm font-medium leading-none text-foreground">{booking.guestName}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {booking.roomName} • {new Date(booking.checkIn + "T00:00:00").toLocaleDateString()} → {new Date(booking.checkOut + "T00:00:00").toLocaleDateString()}
+                          {booking.roomName} • {new Date(booking.checkIn + "T00:00:00").toLocaleDateString(locale)} – {new Date(booking.checkOut + "T00:00:00").toLocaleDateString(locale)}
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <span className="text-sm font-semibold">{formatCurrency(booking.totalAmount)}</span>
                       <Badge variant="outline" className={`text-[10px] px-2 py-0 h-5 border-0 ${getStatusColor(booking.status)}`}>
-                        {booking.status}
+                        {t(`status.${booking.status}`, booking.status)}
                       </Badge>
                     </div>
                   </div>

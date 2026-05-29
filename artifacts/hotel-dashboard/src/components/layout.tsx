@@ -109,7 +109,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${ROLE_ICON_COLORS[role.id]}`}>
                     <Shield className="h-3 w-3" />
                   </span>
-                  <span className="flex-1 text-left text-sidebar-foreground">{t(`roles.${role.id}`)}</span>
+                  <span className="flex-1 text-start text-sidebar-foreground">{t(`roles.${role.id}`)}</span>
                   <ChevronDown className="h-3.5 w-3.5 text-sidebar-foreground/50 shrink-0" />
                 </button>
               </DropdownMenuTrigger>

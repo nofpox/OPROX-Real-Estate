@@ -3,9 +3,8 @@ import { useGetOccupancyHeatmap, type OccupancyHeatmapEntry } from "@workspace/a
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-
-const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const DAY_SHORT = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/language-context";
 
 function getOccupancyBg(pct: number): string {
   if (pct === 0) return "bg-muted/40";
@@ -39,6 +38,10 @@ interface OccupancyHeatmapProps {
 }
 
 export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
+  const { t } = useTranslation();
+  const { lang } = useLanguage();
+  const locale = lang === "ar" ? "ar-EG" : "en-US";
+
   const { data: rawData, isLoading } = useGetOccupancyHeatmap({ days: 42 });
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
@@ -48,7 +51,6 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
     return d.toISOString().split("T")[0];
   }, []);
 
-  // Build structured data, filtered by propertyType if provided
   const properties = useMemo(() => {
     if (!rawData) return [];
     const filtered = propertyType
@@ -64,7 +66,6 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
     return Array.from(map.values()).sort((a, b) => a.id - b.id);
   }, [rawData, propertyType]);
 
-  // Build the sorted list of all dates from the full dataset (keeps columns stable)
   const dates = useMemo(() => {
     if (!rawData || rawData.length === 0) return [];
     const seen = new Set<string>();
@@ -75,33 +76,35 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
     return result.sort();
   }, [rawData]);
 
-  // Group dates by month for column headers
+  // Group dates by month for column headers — locale-aware month names
   const weeks = useMemo(() => {
     const groups: { label: string; dates: string[] }[] = [];
     let currentGroup: string[] = [];
-    let currentMonth = "";
+    let currentMonthKey = "";
     for (const d of dates) {
       const dateObj = new Date(d + "T00:00:00");
-      const month = MONTH_SHORT[dateObj.getMonth()];
-      if (currentMonth !== month && currentGroup.length > 0) {
-        groups.push({ label: currentMonth, dates: currentGroup });
+      const monthKey = `${dateObj.getFullYear()}-${dateObj.getMonth()}`;
+      const monthLabel = dateObj.toLocaleDateString(locale, { month: "short" });
+      if (currentMonthKey !== monthKey && currentGroup.length > 0) {
+        const prevDate = new Date(currentGroup[0] + "T00:00:00");
+        groups.push({ label: prevDate.toLocaleDateString(locale, { month: "short" }), dates: currentGroup });
         currentGroup = [];
       }
-      currentMonth = month;
+      currentMonthKey = monthKey;
       currentGroup.push(d);
     }
-    if (currentGroup.length > 0) groups.push({ label: currentMonth, dates: currentGroup });
+    if (currentGroup.length > 0) {
+      const lastDate = new Date(currentGroup[0] + "T00:00:00");
+      groups.push({ label: lastDate.toLocaleDateString(locale, { month: "short" }), dates: currentGroup });
+    }
     return groups;
-  }, [dates]);
+  }, [dates, locale]);
 
-  // Average occupancy across filtered properties for today
   const avgOccupancy = useMemo(() => {
     if (!rawData || rawData.length === 0) return 0;
     const todayEntries = rawData.filter((e) => {
       if (e.date !== today) return false;
-      if (propertyType) {
-        return (e as OccupancyHeatmapEntry & { propertyType?: string }).propertyType === propertyType;
-      }
+      if (propertyType) return (e as OccupancyHeatmapEntry & { propertyType?: string }).propertyType === propertyType;
       return true;
     });
     if (todayEntries.length === 0) return 0;
@@ -121,33 +124,35 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
     });
   };
 
+  const LEGEND_ITEMS = [
+    { label: t("dashboard.heatmap.empty"), bg: "bg-muted/40" },
+    { label: "≤20%", bg: "bg-emerald-100 dark:bg-emerald-950/50" },
+    { label: "≤40%", bg: "bg-emerald-200 dark:bg-emerald-900/60" },
+    { label: "≤60%", bg: "bg-amber-200 dark:bg-amber-900/60" },
+    { label: "≤80%", bg: "bg-orange-300 dark:bg-orange-900/70" },
+    { label: t("dashboard.heatmap.full"), bg: "bg-red-400 dark:bg-red-900/80" },
+  ];
+
   return (
     <Card className="shadow-sm border-border/50">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="font-serif text-base">Occupancy Heatmap</CardTitle>
+            <CardTitle className="font-serif text-base">{t("dashboard.heatmap.title")}</CardTitle>
             <CardDescription className="text-xs mt-0.5">
-              Rolling 42-day view — past 7 days to next 35 days
-              {propertyType && <span className="ml-1 font-medium text-foreground/70">· {propertyType}</span>}
+              {t("dashboard.heatmap.subtitle")}
+              {propertyType && <span className="ms-1 font-medium text-foreground/70">· {t(`propertyType.${propertyType}`, propertyType)}</span>}
             </CardDescription>
           </div>
-          <Badge variant="outline" className="text-xs font-normal">
-            Today: <span className="font-semibold ml-1">{avgOccupancy}% avg</span>
+          <Badge variant="outline" className="text-xs font-normal whitespace-nowrap">
+            {t("dashboard.heatmap.todayAvg", { pct: avgOccupancy })}
           </Badge>
         </div>
 
         {/* Legend */}
         <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-          <span className="text-[11px] text-muted-foreground mr-1">Occupancy:</span>
-          {[
-            { label: "Empty", bg: "bg-muted/40" },
-            { label: "≤20%", bg: "bg-emerald-100 dark:bg-emerald-950/50" },
-            { label: "≤40%", bg: "bg-emerald-200 dark:bg-emerald-900/60" },
-            { label: "≤60%", bg: "bg-amber-200 dark:bg-amber-900/60" },
-            { label: "≤80%", bg: "bg-orange-300 dark:bg-orange-900/70" },
-            { label: "Full", bg: "bg-red-400 dark:bg-red-900/80" },
-          ].map(({ label, bg }) => (
+          <span className="text-[11px] text-muted-foreground me-1">{t("dashboard.heatmap.occupancy")}</span>
+          {LEGEND_ITEMS.map(({ label, bg }) => (
             <div key={label} className="flex items-center gap-1">
               <span className={`h-3.5 w-5 rounded-sm border border-border/30 ${bg}`} />
               <span className="text-[10px] text-muted-foreground">{label}</span>
@@ -168,10 +173,13 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
           </div>
         ) : properties.length === 0 ? (
           <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
-            No properties found{propertyType ? ` for type "${propertyType}"` : ""}.
+            {propertyType
+              ? t("dashboard.heatmap.noDataFiltered", { type: t(`propertyType.${propertyType}`, propertyType) })
+              : t("dashboard.heatmap.noData")}
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          /* Always render heatmap grid LTR — date progression is always left-to-right universally */
+          <div className="overflow-x-auto" dir="ltr">
             <div className="min-w-max">
               {/* Month labels row */}
               <div className="flex gap-[2px] mb-1 pl-[136px]">
@@ -190,8 +198,11 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
               <div className="flex gap-[2px] mb-2 pl-[136px]">
                 {dates.map((d) => {
                   const dateObj = new Date(d + "T00:00:00");
-                  const dow = DAY_SHORT[dateObj.getDay()];
                   const isToday = d === today;
+                  // Show date number on 1st of month or today; otherwise show narrow weekday
+                  const label = dateObj.getDate() === 1 || isToday
+                    ? dateObj.getDate().toString()
+                    : dateObj.toLocaleDateString("en-US", { weekday: "narrow" }); // keep weekday letters always Latin (2-char)
                   return (
                     <div
                       key={d}
@@ -199,7 +210,7 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
                         isToday ? "text-primary font-bold" : "text-muted-foreground/50"
                       }`}
                     >
-                      {dateObj.getDate() === 1 || isToday ? dateObj.getDate() : dow}
+                      {label}
                     </div>
                   );
                 })}
@@ -208,7 +219,7 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
               {/* Property rows */}
               {properties.map((property) => (
                 <div key={property.id} className="flex items-center gap-[2px] mb-1.5">
-                  <div className="w-[130px] shrink-0 pr-2 text-right">
+                  <div className="w-[130px] shrink-0 pe-2 text-end">
                     <span className="text-[11px] font-medium text-foreground/80 leading-none truncate block">
                       {property.name}
                     </span>
@@ -255,18 +266,18 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
           className="fixed z-50 pointer-events-none"
           style={{ left: tooltip.x, top: tooltip.y, transform: "translate(-50%, -100%)" }}
         >
-          <div className="bg-popover text-popover-foreground border border-border rounded-lg shadow-xl px-3 py-2.5 text-xs min-w-[160px]">
+          <div className="bg-popover text-popover-foreground border border-border rounded-lg shadow-xl px-3 py-2.5 text-xs min-w-[160px]" dir="ltr">
             <p className="font-semibold text-sm mb-1">{tooltip.propertyName}</p>
             <p className="text-muted-foreground">
-              {new Date(tooltip.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+              {new Date(tooltip.date + "T00:00:00").toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric" })}
             </p>
             <div className="mt-2 space-y-1">
               <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">Occupied</span>
+                <span className="text-muted-foreground">{t("dashboard.heatmap.tooltipOccupied")}</span>
                 <span className="font-semibold">{tooltip.occupiedRooms} / {tooltip.totalRooms}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">Occupancy</span>
+                <span className="text-muted-foreground">{t("dashboard.heatmap.tooltipOccupancy")}</span>
                 <span className={`font-bold ${
                   tooltip.occupancyPct >= 80 ? "text-red-600 dark:text-red-400"
                   : tooltip.occupancyPct >= 60 ? "text-orange-600 dark:text-orange-400"

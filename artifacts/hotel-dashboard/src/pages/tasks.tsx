@@ -21,6 +21,7 @@ import { Plus, ClipboardList, CheckCircle2, Clock, AlertCircle, Trash2, CheckChe
 import { useToast } from "@/hooks/use-toast";
 import { useRole } from "@/contexts/role-context";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/language-context";
 
 const CATEGORIES = ["housekeeping", "reception", "maintenance", "security", "general"];
 
@@ -68,6 +69,8 @@ function getInitials(name: string) {
 
 export default function Tasks() {
   const { t } = useTranslation();
+  const { lang } = useLanguage();
+  const locale = lang === "ar" ? "ar-EG" : "en-US";
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
@@ -165,7 +168,7 @@ export default function Tasks() {
           </div>
           {task.dueDate && (
             <span className={isOverdue ? "text-red-500 font-medium" : ""}>
-              {new Date(task.dueDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              {new Date(task.dueDate + "T00:00:00").toLocaleDateString(locale, { month: "short", day: "numeric" })}
             </span>
           )}
         </div>
