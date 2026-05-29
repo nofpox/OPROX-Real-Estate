@@ -2,7 +2,7 @@ import React, { useState } from "react";
   import { Link, useLocation } from "wouter";
   import {
     LayoutDashboard, Calendar, DoorOpen, Menu, Users, Building2,
-    BarChart3, Wrench, UserCog, ClipboardList, ChevronDown, Shield,
+    Wrench, UserCog, ClipboardList, ChevronDown, Shield,
     MapPin, InboxIcon, History, Settings, Dumbbell,
   } from "lucide-react";
   import { Button } from "@/components/ui/button";
@@ -27,7 +27,6 @@ import React, { useState } from "react";
     { href: "/guests",        labelKey: "nav.guests",         icon: Users,           section: "main",       featureKey: "guests" },
     { href: "/bookings",      labelKey: "nav.bookings",       icon: Calendar,        section: "main",       featureKey: "bookings" },
     { href: "/unit-map",      labelKey: "nav.unitMap",        icon: MapPin,          section: "main",       featureKey: "unitMap" },
-    { href: "/finance",       labelKey: "nav.finance",        icon: BarChart3,       section: "operations", featureKey: "finance" },
     { href: "/maintenance",   labelKey: "nav.maintenance",    icon: Wrench,          section: "operations", featureKey: "maintenance" },
     { href: "/facilities",    labelKey: "nav.facilities",     icon: Dumbbell,        section: "operations", featureKey: "facilities" },
     { href: "/staff",         labelKey: "nav.staff",          icon: UserCog,         section: "operations", featureKey: "staff" },

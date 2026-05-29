@@ -18,8 +18,7 @@ import "@/i18n";
   import NotFound from "@/pages/not-found";
   import Properties from "@/pages/properties";
   import PropertyDetail from "@/pages/property-detail";
-  import Finance from "@/pages/finance";
-  import Maintenance from "@/pages/maintenance";
+    import Maintenance from "@/pages/maintenance";
 import Facilities from "@/pages/facilities";
   import Staff from "@/pages/staff";
   import Tasks from "@/pages/tasks";
@@ -51,7 +50,6 @@ import Facilities from "@/pages/facilities";
         <Route path="/guests/:email" component={GuestProfile} />
         <Route path="/properties" component={Properties} />
         <Route path="/properties/:id" component={PropertyDetail} />
-        <Route path="/finance" component={Finance} />
         <Route path="/maintenance" component={Maintenance} />
         <Route path="/facilities" component={Facilities} />
         <Route path="/staff" component={Staff} />

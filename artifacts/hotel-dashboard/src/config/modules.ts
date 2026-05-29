@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Calendar, BarChart3, MapPin, Wrench, Sparkles, Dumbbell, InboxIcon,
+  Calendar, MapPin, Wrench, Sparkles, Dumbbell, InboxIcon,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,15 +36,6 @@ export const MODULE_REGISTRY: ModuleDef[] = [
     description: "Reservation lifecycle — check-in, check-out, availability calendar",
     icon: Calendar,
     navKeys: ["bookings", "guests"],
-    taskCategories: [],
-  },
-  {
-    id: "finance",
-    group: "operational",
-    label: "Finance & Reporting",
-    description: "Revenue tracking, expense management, and P&L reporting",
-    icon: BarChart3,
-    navKeys: ["finance"],
     taskCategories: [],
   },
   {
@@ -102,7 +93,7 @@ export const MODULE_REGISTRY: ModuleDef[] = [
 // Admins can always override individual modules after applying a preset.
 
 export const MODE_MODULE_DEFAULTS: Record<BusinessMode, string[]> = {
-  hotel: ["bookings", "finance", "maintenance", "housekeeping", "serviceRequests"],
+  hotel: ["bookings", "maintenance", "housekeeping", "serviceRequests"],
   compound: ["maintenance", "housekeeping", "unitMap", "serviceRequests"],
   tower: ["bookings", "maintenance", "housekeeping", "facility", "serviceRequests"],
   "serviced-apartments": ["bookings", "housekeeping", "serviceRequests"],
