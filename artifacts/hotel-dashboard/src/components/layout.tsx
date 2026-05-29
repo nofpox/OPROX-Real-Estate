@@ -1,7 +1,7 @@
 import React, { useState } from "react";
   import { Link, useLocation } from "wouter";
   import {
-    LayoutDashboard, Calendar, DoorOpen, Menu, Users, Building2,
+    LayoutDashboard, Calendar, DoorOpen, Menu, Building2,
     Wrench, UserCog, ClipboardList, ChevronDown, Shield,
     MapPin, InboxIcon, History, Settings, Dumbbell,
   } from "lucide-react";
@@ -24,7 +24,7 @@ import React, { useState } from "react";
     { href: "/",              labelKey: "nav.dashboard",      icon: LayoutDashboard, section: "main",       featureKey: null },
     { href: "/properties",    labelKey: "nav.properties",     icon: Building2,       section: "main",       featureKey: "properties" },
     { href: "/rooms",         labelKey: "nav.rooms",          icon: DoorOpen,        section: "main",       featureKey: "rooms" },
-    { href: "/guests",        labelKey: "nav.guests",         icon: Users,           section: "main",       featureKey: "guests" },
+
     { href: "/bookings",      labelKey: "nav.bookings",       icon: Calendar,        section: "main",       featureKey: "bookings" },
     { href: "/unit-map",      labelKey: "nav.unitMap",        icon: MapPin,          section: "main",       featureKey: "unitMap" },
     { href: "/maintenance",   labelKey: "nav.maintenance",    icon: Wrench,          section: "operations", featureKey: "maintenance" },

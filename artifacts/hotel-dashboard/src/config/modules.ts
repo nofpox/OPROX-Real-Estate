@@ -35,7 +35,7 @@ export const MODULE_REGISTRY: ModuleDef[] = [
     label: "Bookings",
     description: "Reservation lifecycle — check-in, check-out, availability calendar",
     icon: Calendar,
-    navKeys: ["bookings", "guests"],
+    navKeys: ["bookings"],
     taskCategories: [],
   },
   {
