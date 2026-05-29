@@ -1,19 +1,18 @@
 import React from "react";
 import { Link } from "wouter";
 import { useListRooms, useListWorkOrders, useListTasks, useListGuestRequests } from "@workspace/api-client-react";
-import { OccupancyHeatmap } from "@/components/occupancy-heatmap";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  DoorOpen, Percent, Wrench, MapPin, Building2, Building,
-  Sparkles, InboxIcon, Users, Dumbbell, Calendar,
+  DoorOpen, Wrench, Sparkles, InboxIcon, Building, Building2, MapPin,
+  ClipboardList, Dumbbell, Calendar, ShieldAlert, CheckCircle2,
 } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
 import type { BusinessMode } from "@/config/modules";
 
-// ─── Mode identity config ─────────────────────────────────────────────────────
+// ─── Mode identity ────────────────────────────────────────────────────────────
 
 const MODE_CONFIG: Record<BusinessMode, {
   modeLabel: string;
@@ -24,151 +23,30 @@ const MODE_CONFIG: Record<BusinessMode, {
   hotel: {
     modeLabel: "Hotel",
     badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-    subtitle: "Room availability, maintenance, and guest services",
+    subtitle: "Real-time operational status — what needs attention right now",
     unitLabel: "Rooms",
   },
   compound: {
     modeLabel: "Compound",
     badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
-    subtitle: "Unit status, maintenance, and resident services",
+    subtitle: "Real-time operational status — what needs attention right now",
     unitLabel: "Units",
   },
   tower: {
     modeLabel: "Residential Tower",
     badgeColor: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400",
-    subtitle: "Building systems, facility management, and resident services",
+    subtitle: "Real-time operational status — what needs attention right now",
     unitLabel: "Residential Units",
   },
   "serviced-apartments": {
     modeLabel: "Serviced Apartments",
     badgeColor: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400",
-    subtitle: "Unit readiness, cleaning workflows, and resident support",
+    subtitle: "Real-time operational status — what needs attention right now",
     unitLabel: "Apartments",
   },
 };
 
-// ─── Mode-specific KPI definitions ───────────────────────────────────────────
-
-interface KPIDef {
-  label: string;
-  value: string;
-  sub: string;
-  icon: React.ElementType;
-  iconColor: string;
-  iconBg: string;
-}
-
-interface OperationalData {
-  occupiedCount: number;
-  availableCount: number;
-  totalCount: number;
-  occupancyPct: number;
-  openMaintenance: number;
-  cleaningPending: number;
-  serviceRequests: number;
-}
-
-function getKPIs(mode: BusinessMode, d: OperationalData): KPIDef[] {
-  switch (mode) {
-    case "hotel":
-      return [
-        {
-          label: "Available Rooms", value: String(d.availableCount),
-          sub: `of ${d.totalCount} total rooms`,
-          icon: DoorOpen, iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10",
-        },
-        {
-          label: "Occupancy Rate", value: `${d.occupancyPct}%`,
-          sub: `${d.occupiedCount} rooms currently occupied`,
-          icon: Percent, iconColor: "text-blue-500", iconBg: "bg-blue-500/10",
-        },
-        {
-          label: "Maintenance Tickets", value: String(d.openMaintenance),
-          sub: "open work orders",
-          icon: Wrench, iconColor: "text-amber-500", iconBg: "bg-amber-500/10",
-        },
-        {
-          label: "Service Requests", value: String(d.serviceRequests),
-          sub: "pending resolution",
-          icon: InboxIcon, iconColor: "text-violet-500", iconBg: "bg-violet-500/10",
-        },
-      ];
-
-    case "compound":
-      return [
-        {
-          label: "Units Occupied", value: `${d.occupiedCount} / ${d.totalCount}`,
-          sub: `${d.occupancyPct}% occupancy`,
-          icon: Building2, iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10",
-        },
-        {
-          label: "Maintenance Tickets", value: String(d.openMaintenance),
-          sub: "open work orders",
-          icon: Wrench, iconColor: "text-amber-500", iconBg: "bg-amber-500/10",
-        },
-        {
-          label: "Cleaning Pending", value: String(d.cleaningPending),
-          sub: "housekeeping tasks",
-          icon: Sparkles, iconColor: "text-sky-500", iconBg: "bg-sky-500/10",
-        },
-        {
-          label: "Service Requests", value: String(d.serviceRequests),
-          sub: "pending resolution",
-          icon: InboxIcon, iconColor: "text-violet-500", iconBg: "bg-violet-500/10",
-        },
-      ];
-
-    case "tower":
-      return [
-        {
-          label: "Resident Occupancy", value: `${d.occupancyPct}%`,
-          sub: `${d.occupiedCount} of ${d.totalCount} units occupied`,
-          icon: Users, iconColor: "text-teal-500", iconBg: "bg-teal-500/10",
-        },
-        {
-          label: "Maintenance Tickets", value: String(d.openMaintenance),
-          sub: "open work orders",
-          icon: Wrench, iconColor: "text-amber-500", iconBg: "bg-amber-500/10",
-        },
-        {
-          label: "Cleaning Pending", value: String(d.cleaningPending),
-          sub: "housekeeping tasks",
-          icon: Sparkles, iconColor: "text-sky-500", iconBg: "bg-sky-500/10",
-        },
-        {
-          label: "Service Requests", value: String(d.serviceRequests),
-          sub: "pending resolution",
-          icon: InboxIcon, iconColor: "text-violet-500", iconBg: "bg-violet-500/10",
-        },
-      ];
-
-    case "serviced-apartments":
-      return [
-        {
-          label: "Units Ready", value: String(d.availableCount),
-          sub: `of ${d.totalCount} apartments`,
-          icon: DoorOpen, iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10",
-        },
-        {
-          label: "Cleaning Tasks", value: String(d.cleaningPending),
-          sub: "pending today",
-          icon: Sparkles, iconColor: "text-sky-500", iconBg: "bg-sky-500/10",
-        },
-        {
-          label: "Maintenance Tickets", value: String(d.openMaintenance),
-          sub: "open work orders",
-          icon: Wrench, iconColor: "text-amber-500", iconBg: "bg-amber-500/10",
-        },
-        {
-          label: "Service Requests", value: String(d.serviceRequests),
-          sub: "pending resolution",
-          icon: InboxIcon, iconColor: "text-violet-500", iconBg: "bg-violet-500/10",
-        },
-      ];
-  }
-}
-
-// ─── Mode-specific quick actions ──────────────────────────────────────────────
+// ─── Quick actions (mode-specific) ────────────────────────────────────────────
 
 interface ActionDef {
   label: string;
@@ -182,54 +60,58 @@ function getQuickActions(mode: BusinessMode, enabledModules: string[]): ActionDe
   switch (mode) {
     case "hotel":
       return [
-        { label: "Manage Rooms",    href: "/rooms",           icon: DoorOpen,  color: "text-emerald-500" },
-        ...(has("bookings")        ? [{ label: "New Booking",      href: "/bookings/new",   icon: Calendar,  color: "text-blue-500"   }] : []),
-        ...(has("maintenance")     ? [{ label: "Maintenance",       href: "/maintenance",    icon: Wrench,    color: "text-amber-500"  }] : []),
-        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks",    href: "/tasks",          icon: Sparkles,  color: "text-sky-500"    }] : []),
-        ...(has("serviceRequests") ? [{ label: "Guest Requests",    href: "/guest-requests", icon: InboxIcon, color: "text-violet-500" }] : []),
+        { label: "Manage Rooms",       href: "/rooms",           icon: DoorOpen,       color: "text-emerald-500" },
+        ...(has("bookings")        ? [{ label: "New Booking",    href: "/bookings/new", icon: Calendar,       color: "text-blue-500"   }] : []),
+        ...(has("maintenance")     ? [{ label: "Maintenance",    href: "/maintenance",  icon: Wrench,         color: "text-amber-500"  }] : []),
+        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks", href: "/tasks",        icon: Sparkles,       color: "text-sky-500"    }] : []),
+        ...(has("serviceRequests") ? [{ label: "Requests",       href: "/guest-requests", icon: InboxIcon,  color: "text-violet-500" }] : []),
       ];
-
     case "tower":
       return [
-        { label: "Residential Units", href: "/rooms",           icon: Building,  color: "text-teal-500"   },
-        ...(has("facility")        ? [{ label: "Facility Booking",  href: "/facilities",     icon: Dumbbell,  color: "text-orange-500" }] : []),
-        ...(has("maintenance")     ? [{ label: "Maintenance",       href: "/maintenance",    icon: Wrench,    color: "text-amber-500"  }] : []),
-        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks",    href: "/tasks",          icon: Sparkles,  color: "text-sky-500"    }] : []),
-        ...(has("serviceRequests") ? [{ label: "Service Requests",  href: "/guest-requests", icon: InboxIcon, color: "text-violet-500" }] : []),
+        { label: "Residential Units",  href: "/rooms",           icon: Building,       color: "text-teal-500"   },
+        ...(has("facility")        ? [{ label: "Facility Booking", href: "/facilities", icon: Dumbbell,       color: "text-orange-500" }] : []),
+        ...(has("maintenance")     ? [{ label: "Maintenance",    href: "/maintenance",  icon: Wrench,         color: "text-amber-500"  }] : []),
+        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks", href: "/tasks",        icon: Sparkles,       color: "text-sky-500"    }] : []),
+        ...(has("serviceRequests") ? [{ label: "Requests",       href: "/guest-requests", icon: InboxIcon,  color: "text-violet-500" }] : []),
       ];
-
     case "compound":
       return [
-        ...(has("unitMap")         ? [{ label: "Unit Map",          href: "/unit-map",       icon: MapPin,    color: "text-indigo-500" }] : []),
-        { label: "All Units",         href: "/rooms",           icon: Building2, color: "text-emerald-500" },
-        ...(has("maintenance")     ? [{ label: "Maintenance",       href: "/maintenance",    icon: Wrench,    color: "text-amber-500"  }] : []),
-        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks",    href: "/tasks",          icon: Sparkles,  color: "text-sky-500"    }] : []),
-        ...(has("serviceRequests") ? [{ label: "Service Requests",  href: "/guest-requests", icon: InboxIcon, color: "text-violet-500" }] : []),
+        ...(has("unitMap")         ? [{ label: "Unit Map",       href: "/unit-map",     icon: MapPin,         color: "text-indigo-500" }] : []),
+        { label: "All Units",          href: "/rooms",           icon: Building2,      color: "text-emerald-500" },
+        ...(has("maintenance")     ? [{ label: "Maintenance",    href: "/maintenance",  icon: Wrench,         color: "text-amber-500"  }] : []),
+        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks", href: "/tasks",        icon: Sparkles,       color: "text-sky-500"    }] : []),
+        ...(has("serviceRequests") ? [{ label: "Requests",       href: "/guest-requests", icon: InboxIcon,  color: "text-violet-500" }] : []),
       ];
-
-    case "serviced-apartments":
     default:
       return [
-        { label: "Manage Apartments", href: "/rooms",           icon: DoorOpen,  color: "text-emerald-500" },
-        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks",    href: "/tasks",          icon: Sparkles,  color: "text-sky-500"    }] : []),
-        ...(has("maintenance")     ? [{ label: "Maintenance",       href: "/maintenance",    icon: Wrench,    color: "text-amber-500"  }] : []),
-        ...(has("serviceRequests") ? [{ label: "Service Requests",  href: "/guest-requests", icon: InboxIcon, color: "text-violet-500" }] : []),
+        { label: "Manage Apartments",  href: "/rooms",           icon: DoorOpen,       color: "text-emerald-500" },
+        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks", href: "/tasks",        icon: Sparkles,       color: "text-sky-500"    }] : []),
+        ...(has("maintenance")     ? [{ label: "Maintenance",    href: "/maintenance",  icon: Wrench,         color: "text-amber-500"  }] : []),
+        ...(has("serviceRequests") ? [{ label: "Requests",       href: "/guest-requests", icon: InboxIcon,  color: "text-violet-500" }] : []),
       ];
   }
 }
 
-// ─── Room status colours ──────────────────────────────────────────────────────
+// ─── Status colours ───────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
-  occupied:    "bg-red-100    text-red-700    border-red-200    dark:bg-red-900/20    dark:text-red-400",
+  occupied:    "bg-slate-100  text-slate-700  border-slate-200  dark:bg-slate-800   dark:text-slate-400",
   available:   "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400",
   maintenance: "bg-amber-100  text-amber-700  border-amber-200  dark:bg-amber-900/20  dark:text-amber-400",
   cleaning:    "bg-sky-100    text-sky-700    border-sky-200    dark:bg-sky-900/20    dark:text-sky-400",
 };
-
 const STATUS_DOT: Record<string, string> = {
-  occupied: "bg-red-500", available: "bg-emerald-500", maintenance: "bg-amber-500", cleaning: "bg-sky-500",
+  occupied: "bg-slate-400", available: "bg-emerald-500", maintenance: "bg-amber-500", cleaning: "bg-sky-500",
 };
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function daysUntil(dateStr: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(dateStr + "T00:00:00");
+  return Math.ceil((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -239,26 +121,81 @@ export default function Dashboard() {
   const cfg = MODE_CONFIG[mode] ?? MODE_CONFIG.hotel;
 
   const { data: rooms,        isLoading: roomsLoading } = useListRooms();
-  const { data: workOrders                             } = useListWorkOrders({ status: "open" });
-  const { data: pendingTasks                           } = useListTasks({ status: "pending" } as any);
-  const { data: guestRequests                          } = useListGuestRequests();
+  const { data: openOrders                            } = useListWorkOrders({ status: "open" });
+  const { data: allTasks                              } = useListTasks();
+  const { data: guestRequests                         } = useListGuestRequests();
 
-  const allRooms       = rooms ?? [];
-  const occupiedCount  = allRooms.filter((r) => r.status === "occupied").length;
-  const availableCount = allRooms.filter((r) => r.status === "available").length;
+  // ── Derived counts ───────────────────────────────────────────────────────
+  const allRooms        = rooms ?? [];
+  const totalCount      = allRooms.length;
+  const availableCount  = allRooms.filter((r) => r.status === "available").length;
   const maintenanceRooms = allRooms.filter((r) => r.status === "maintenance").length;
-  const cleaningRooms  = allRooms.filter((r) => r.status === "cleaning").length;
-  const totalCount     = allRooms.length;
-  const occupancyPct   = totalCount > 0 ? Math.round((occupiedCount  / totalCount) * 100) : 0;
-  const readyPct       = totalCount > 0 ? Math.round((availableCount / totalCount) * 100) : 0;
+  const cleaningRooms   = allRooms.filter((r) => r.status === "cleaning").length;
+  const occupiedCount   = allRooms.filter((r) => r.status === "occupied").length;
+  const operationalCount = totalCount - maintenanceRooms;
 
-  const openMaintenance = workOrders?.length ?? 0;
-  const cleaningPending = (pendingTasks as any[])?.filter((t: any) => t.category === "housekeeping").length ?? 0;
-  const serviceRequests = guestRequests?.filter((r) => r.status !== "completed" && r.status !== "resolved").length ?? 0;
+  const openMaintenance  = openOrders?.length ?? 0;
+  const overdueOrders    = openOrders?.filter((w) => w.dueDate && daysUntil(w.dueDate) < 0) ?? [];
+  const cleaningTasks    = (allTasks as any[] | undefined)?.filter((t: any) => t.category === "housekeeping" && t.status !== "completed") ?? [];
+  const activeTasks      = (allTasks as any[] | undefined)?.filter((t: any) => t.status === "pending" || t.status === "in-progress") ?? [];
+  const serviceRequests  = guestRequests?.filter((r) => r.status !== "completed" && r.status !== "resolved").length ?? 0;
 
-  const kpis         = getKPIs(mode, { occupiedCount, availableCount, totalCount, occupancyPct, openMaintenance, cleaningPending, serviceRequests });
+  // ── Next upcoming maintenance ────────────────────────────────────────────
+  const upcoming = openOrders
+    ?.filter((w) => w.dueDate)
+    .sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : 1))
+    .find((w) => daysUntil(w.dueDate!) >= -7) ?? null;
+
+  const upcomingDays = upcoming?.dueDate ? daysUntil(upcoming.dueDate) : null;
+  const upcomingLabel =
+    upcomingDays === null     ? "No upcoming scheduled maintenance"
+    : upcomingDays < 0        ? `${upcoming!.title} — ${Math.abs(upcomingDays)}d overdue`
+    : upcomingDays === 0      ? `${upcoming!.title} — due today`
+    : upcomingDays === 1      ? `${upcoming!.title} — due tomorrow`
+    :                           `${upcoming!.title} — in ${upcomingDays} days`;
+  const upcomingUrgent = upcomingDays !== null && upcomingDays <= 2;
+
   const quickActions = getQuickActions(mode, settings.enabledModules);
-  const showHeatmap  = settings.enabledModules.includes("bookings");
+
+  // ── Operational KPIs ─────────────────────────────────────────────────────
+  const kpis = [
+    {
+      label: "Open Maintenance",
+      value: openMaintenance,
+      sub: overdueOrders.length > 0 ? `${overdueOrders.length} overdue` : "work orders",
+      icon: Wrench,
+      iconColor: openMaintenance > 0 ? "text-amber-500" : "text-muted-foreground",
+      iconBg:    openMaintenance > 0 ? "bg-amber-500/10" : "bg-muted/50",
+      urgent:    overdueOrders.length > 0,
+    },
+    {
+      label: "Cleaning Tasks",
+      value: cleaningTasks.length,
+      sub: cleaningRooms > 0 ? `${cleaningRooms} units in cleaning` : "pending tasks",
+      icon: Sparkles,
+      iconColor: cleaningTasks.length > 0 ? "text-sky-500" : "text-muted-foreground",
+      iconBg:    cleaningTasks.length > 0 ? "bg-sky-500/10" : "bg-muted/50",
+      urgent:    false,
+    },
+    {
+      label: "Service Requests",
+      value: serviceRequests,
+      sub: "pending resolution",
+      icon: InboxIcon,
+      iconColor: serviceRequests > 0 ? "text-violet-500" : "text-muted-foreground",
+      iconBg:    serviceRequests > 0 ? "bg-violet-500/10" : "bg-muted/50",
+      urgent:    false,
+    },
+    {
+      label: "Active Tasks",
+      value: activeTasks.length,
+      sub: `${activeTasks.filter((t: any) => t.status === "in-progress").length} in progress`,
+      icon: ClipboardList,
+      iconColor: activeTasks.length > 0 ? "text-indigo-500" : "text-muted-foreground",
+      iconBg:    activeTasks.length > 0 ? "bg-indigo-500/10" : "bg-muted/50",
+      urgent:    false,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -276,12 +213,12 @@ export default function Dashboard() {
         </Badge>
       </div>
 
-      {/* ── KPI Cards ──────────────────────────────────────────────────────── */}
+      {/* ── Operational KPI Cards ───────────────────────────────────────────── */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <Card key={kpi.label} className="shadow-sm border-border/50">
+            <Card key={kpi.label} className={`shadow-sm border-border/50 ${kpi.urgent ? "ring-1 ring-amber-400/60 dark:ring-amber-500/40" : ""}`}>
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground leading-tight">
                   {kpi.label}
@@ -292,37 +229,126 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 {roomsLoading
-                  ? <Skeleton className="h-8 w-20" />
+                  ? <Skeleton className="h-8 w-16" />
                   : <div className="text-2xl font-bold text-foreground">{kpi.value}</div>
                 }
-                <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
+                <p className={`text-xs mt-1 ${kpi.urgent ? "text-amber-600 dark:text-amber-400 font-medium" : "text-muted-foreground"}`}>
+                  {kpi.sub}
+                </p>
               </CardContent>
             </Card>
           );
         })}
       </div>
 
-      {/* ── Unit Readiness Bar ─────────────────────────────────────────────── */}
+      {/* ── Asset Health ────────────────────────────────────────────────────── */}
       <Card className="shadow-sm border-border/50">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium font-serif">{cfg.unitLabel} Readiness</CardTitle>
-            <span className="text-xs text-muted-foreground">{readyPct}% ready</span>
+            <CardTitle className="font-serif text-base">Asset Health</CardTitle>
+            <Link href="/maintenance">
+              <Button variant="ghost" size="sm" className="text-xs h-7 text-muted-foreground">View all →</Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Systems online */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-md ${maintenanceRooms === 0 ? "bg-emerald-500/10" : "bg-amber-500/10"}`}>
+                {maintenanceRooms === 0
+                  ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  : <ShieldAlert className="h-4 w-4 text-amber-500" />
+                }
+              </div>
+              <div>
+                <p className="text-sm font-medium">
+                  {roomsLoading
+                    ? <Skeleton className="h-4 w-32 inline-block" />
+                    : `${operationalCount} / ${totalCount} units fully operational`
+                  }
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {maintenanceRooms === 0
+                    ? "All units clear — no active maintenance blocks"
+                    : `${maintenanceRooms} unit${maintenanceRooms > 1 ? "s" : ""} currently under maintenance`}
+                </p>
+              </div>
+            </div>
+            <span className={`text-sm font-bold ${maintenanceRooms === 0 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+              {totalCount > 0 ? `${Math.round((operationalCount / totalCount) * 100)}%` : "—"}
+            </span>
+          </div>
+
+          <div className="h-px bg-border/50" />
+
+          {/* Next scheduled maintenance */}
+          <div className="flex items-start gap-3">
+            <div className={`p-2 rounded-md mt-0.5 shrink-0 ${upcomingUrgent ? "bg-red-500/10" : "bg-muted/50"}`}>
+              <Wrench className={`h-4 w-4 ${upcomingUrgent ? "text-red-500" : "text-muted-foreground"}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Next Scheduled Maintenance</p>
+              <p className={`text-xs mt-0.5 truncate ${upcomingUrgent ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"}`}>
+                {upcomingLabel}
+              </p>
+            </div>
+            {upcoming && (
+              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-5 shrink-0 ${
+                upcomingDays !== null && upcomingDays < 0 ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400" :
+                upcomingUrgent ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400" :
+                "bg-muted text-muted-foreground"
+              }`}>
+                {upcomingDays !== null && upcomingDays < 0 ? "OVERDUE" : upcomingDays === 0 ? "TODAY" : `${upcomingDays}d`}
+              </Badge>
+            )}
+          </div>
+
+          {/* Overdue list (collapsed if none) */}
+          {overdueOrders.length > 0 && (
+            <div className="rounded-md bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 px-3 py-2">
+              <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-1.5">
+                {overdueOrders.length} overdue work order{overdueOrders.length > 1 ? "s" : ""}
+              </p>
+              <ul className="space-y-1">
+                {overdueOrders.slice(0, 3).map((w) => (
+                  <li key={w.id} className="text-xs text-red-600 dark:text-red-400 flex justify-between">
+                    <span className="truncate me-2">{w.title}</span>
+                    <span className="shrink-0 font-medium">{Math.abs(daysUntil(w.dueDate!))}d overdue</span>
+                  </li>
+                ))}
+                {overdueOrders.length > 3 && (
+                  <li className="text-xs text-red-500 dark:text-red-500">+{overdueOrders.length - 3} more…</li>
+                )}
+              </ul>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Operational Status bar ──────────────────────────────────────────── */}
+      <Card className="shadow-sm border-border/50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium font-serif">Operational Status</CardTitle>
+            <span className="text-xs text-muted-foreground">
+              {availableCount} of {totalCount} {cfg.unitLabel.toLowerCase()} ready
+            </span>
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex gap-1 h-3 w-full rounded-full overflow-hidden bg-muted/30">
-            {occupiedCount    > 0 && <div className="bg-red-500   transition-all" style={{ width: `${(occupiedCount    / Math.max(totalCount, 1)) * 100}%` }} />}
             {maintenanceRooms > 0 && <div className="bg-amber-500 transition-all" style={{ width: `${(maintenanceRooms / Math.max(totalCount, 1)) * 100}%` }} />}
             {cleaningRooms    > 0 && <div className="bg-sky-500   transition-all" style={{ width: `${(cleaningRooms    / Math.max(totalCount, 1)) * 100}%` }} />}
+            {occupiedCount    > 0 && <div className="bg-slate-400 transition-all" style={{ width: `${(occupiedCount    / Math.max(totalCount, 1)) * 100}%` }} />}
             {availableCount   > 0 && <div className="bg-emerald-500 transition-all" style={{ width: `${(availableCount / Math.max(totalCount, 1)) * 100}%` }} />}
           </div>
           <div className="flex items-center gap-4 mt-2 flex-wrap">
             {[
-              { label: "Occupied",     color: "bg-red-500",     count: occupiedCount    },
-              { label: "Maintenance",  color: "bg-amber-500",   count: maintenanceRooms },
-              { label: "Cleaning",     color: "bg-sky-500",     count: cleaningRooms    },
-              { label: "Available",    color: "bg-emerald-500", count: availableCount   },
+              { label: "Under Maintenance", color: "bg-amber-500",   count: maintenanceRooms },
+              { label: "Cleaning",           color: "bg-sky-500",     count: cleaningRooms    },
+              { label: "Occupied",           color: "bg-slate-400",   count: occupiedCount    },
+              { label: "Available",          color: "bg-emerald-500", count: availableCount   },
             ].map(({ label, color, count }) => (
               <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span className={`h-2 w-2 rounded-full ${color}`} />
@@ -333,22 +359,28 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* ── Occupancy heatmap — only when bookings module is active ─────────── */}
-      {showHeatmap && <OccupancyHeatmap />}
-
-      {/* ── Unit grid + Quick actions ─────────────────────────────────────── */}
+      {/* ── Unit grid + Quick actions ──────────────────────────────────────── */}
       <div className="grid gap-6 md:grid-cols-7">
 
-        {/* Unit Status Grid */}
+        {/* Unit status grid */}
         <Card className="md:col-span-5 shadow-sm border-border/50">
           <CardHeader>
-            <CardTitle className="font-serif">{cfg.unitLabel}</CardTitle>
-            <p className="text-sm text-muted-foreground">Live status of all {cfg.unitLabel.toLowerCase()}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="font-serif">{cfg.unitLabel} — Operational Status</CardTitle>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Live status of every unit — maintenance and cleaning issues highlighted
+                </p>
+              </div>
+              <Link href="/rooms">
+                <Button variant="outline" size="sm" className="text-xs h-7">Manage →</Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             {roomsLoading ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                {Array.from({ length: 10 }).map((_, i) => (
+                {Array.from({ length: 12 }).map((_, i) => (
                   <Skeleton key={i} className="h-16 w-full rounded-lg" />
                 ))}
               </div>
@@ -359,20 +391,27 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                {allRooms.map((room) => {
-                  const status     = (room.status ?? "available").toLowerCase();
-                  const colorClass = STATUS_COLORS[status] ?? STATUS_COLORS["available"];
-                  const dotClass   = STATUS_DOT[status]   ?? STATUS_DOT["available"];
-                  return (
-                    <Link key={room.id} href="/rooms">
-                      <div className={`group relative rounded-lg border p-2.5 cursor-pointer hover:shadow-md transition-all ${colorClass}`}>
-                        <span className={`h-2 w-2 rounded-full block mb-1 ${dotClass}`} />
-                        <p className="text-xs font-semibold leading-tight truncate">{room.name}</p>
-                        <p className="text-[10px] opacity-70 capitalize mt-0.5">{status}</p>
-                      </div>
-                    </Link>
-                  );
-                })}
+                {/* Sort: maintenance first, then cleaning, then occupied, then available */}
+                {[...allRooms]
+                  .sort((a, b) => {
+                    const order: Record<string, number> = { maintenance: 0, cleaning: 1, occupied: 2, available: 3 };
+                    return (order[a.status ?? "available"] ?? 3) - (order[b.status ?? "available"] ?? 3);
+                  })
+                  .map((room) => {
+                    const status     = (room.status ?? "available").toLowerCase();
+                    const colorClass = STATUS_COLORS[status] ?? STATUS_COLORS["available"];
+                    const dotClass   = STATUS_DOT[status]   ?? STATUS_DOT["available"];
+                    const isAlert    = status === "maintenance" || status === "cleaning";
+                    return (
+                      <Link key={room.id} href="/rooms">
+                        <div className={`group relative rounded-lg border p-2.5 cursor-pointer transition-all hover:shadow-md ${colorClass} ${isAlert ? "ring-1 ring-current/30" : ""}`}>
+                          <span className={`h-2 w-2 rounded-full block mb-1 ${dotClass}`} />
+                          <p className="text-xs font-semibold leading-tight truncate">{room.name}</p>
+                          <p className="text-[10px] opacity-70 capitalize mt-0.5">{status}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
               </div>
             )}
           </CardContent>
@@ -382,7 +421,7 @@ export default function Dashboard() {
         <Card className="md:col-span-2 shadow-sm border-border/50">
           <CardHeader>
             <CardTitle className="font-serif">Quick Actions</CardTitle>
-            <p className="text-sm text-muted-foreground">Common operations</p>
+            <p className="text-sm text-muted-foreground">Jump to operational tasks</p>
           </CardHeader>
           <CardContent className="grid gap-2">
             {quickActions.map((action) => {
