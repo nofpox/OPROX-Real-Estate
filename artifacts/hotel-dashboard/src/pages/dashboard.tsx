@@ -18,7 +18,6 @@ import React, { useState } from "react";
     Hotel: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
     Compound: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
     "Furnished Apartments": "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400",
-    Apartment: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   };
 
   const STATUS_COLORS: Record<string, string> = {
@@ -48,12 +47,11 @@ import React, { useState } from "react";
       { value: "Hotel", label: t("propertyType.Hotel") },
       { value: "Compound", label: t("propertyType.Compound") },
       { value: "Furnished Apartments", label: t("propertyType.Furnished Apartments") },
-      { value: "Apartment", label: t("propertyType.Apartment") },
     ];
 
     const typeParam = selectedType === "all" ? undefined : selectedType;
     const { data: stats, isLoading: statsLoading } = useGetStatsOverview(typeParam ? { propertyType: typeParam } : undefined);
-    const { data: rooms, isLoading: roomsLoading } = useListRooms(typeParam ? { propertyId: undefined } : undefined);
+    const { data: rooms, isLoading: roomsLoading } = useListRooms();
     const { data: workOrders } = useListWorkOrders({ status: "open" });
 
     const selectedLabel = PROPERTY_TYPES.find((ty) => ty.value === selectedType)?.label ?? t("propertyType.all");

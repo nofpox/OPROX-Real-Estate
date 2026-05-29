@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
   import { Link, useLocation } from "wouter";
   import {
     LayoutDashboard, Calendar, DoorOpen, Menu, Users, Building2,
@@ -50,6 +50,7 @@ import React from "react";
 
   export function Layout({ children, authUser, onLogout }: LayoutProps) {
     const [location] = useLocation();
+    const [mobileOpen, setMobileOpen] = useState(false);
     const { role, setRoleId, can } = useRole();
     const { isRTL } = useLanguage();
     const { t } = useTranslation();
@@ -88,6 +89,42 @@ import React from "react";
 
     return (
       <div className="flex min-h-screen w-full flex-col bg-muted/30 lg:flex-row">
+
+        {/* Mobile overlay backdrop */}
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 z-20 bg-black/50 lg:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+
+        {/* Mobile slide-in drawer */}
+        <aside className={`fixed inset-y-0 z-30 w-72 flex flex-col bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-in-out lg:hidden ${sidebarSide} ${sidebarBorder} ${
+          mobileOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"
+        }`}>
+          <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-sidebar-border">
+            <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
+              <span className="text-xl">Grand</span>
+              <span className="text-sidebar-foreground font-sans font-medium text-lg">PMS</span>
+            </Link>
+            <button onClick={() => setMobileOpen(false)} className="rounded p-1 text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors">✕</button>
+          </div>
+          <div className="flex-1 overflow-auto py-4">
+            <nav className="grid items-start px-4 gap-1" onClick={() => setMobileOpen(false)}>
+              {mainNav.map(renderNavItem)}
+              {showOpsSection && (
+                <>
+                  <div className="text-xs font-semibold uppercase tracking-widest text-sidebar-foreground/40 px-3 py-2 mt-4">
+                    {t("nav.operations")}
+                  </div>
+                  {opsNav.map(renderNavItem)}
+                </>
+              )}
+            </nav>
+          </div>
+        </aside>
+
+        {/* Desktop sidebar */}
         <aside className={`hidden w-64 flex-col bg-sidebar text-sidebar-foreground lg:flex fixed inset-y-0 z-10 ${sidebarSide} ${sidebarBorder}`}>
           <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border">
             <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
@@ -179,7 +216,7 @@ import React from "react";
         <div className={`flex flex-1 flex-col ${mainPadding}`}>
           <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6 sticky top-0 z-10">
             <div className="flex items-center gap-4 lg:hidden">
-              <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}><Menu className="h-5 w-5" /></Button>
               <Link href="/" className="font-serif text-lg font-bold">Grand PMS</Link>
             </div>
             <div className="hidden lg:flex items-center">
