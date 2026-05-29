@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "wouter";
 import { useGetStatsOverview, useGetRecentBookings } from "@workspace/api-client-react";
+import { OccupancyHeatmap } from "@/components/occupancy-heatmap";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -146,6 +147,8 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <OccupancyHeatmap />
 
       <div className="grid gap-6 md:grid-cols-7 lg:grid-cols-7">
         <Card className="md:col-span-4 lg:col-span-5 shadow-sm border-border/50">

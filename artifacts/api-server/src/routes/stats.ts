@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, bookingsTable, roomsTable } from "@workspace/db";
+import { db, bookingsTable, roomsTable, propertiesTable } from "@workspace/db";
 import { eq, sql, and, gte, lte } from "drizzle-orm";
 
 const router = Router();
@@ -63,6 +63,75 @@ router.get("/stats/income", async (req, res) => {
       bookings: r.bookings,
     }))
   );
+});
+
+router.get("/stats/occupancy-heatmap", async (req, res) => {
+  const daysParam = parseInt((req.query.days as string) || "42");
+  const days = Math.max(7, Math.min(daysParam, 90));
+
+  // Build date range: past 7 days → next (days - 7) days
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const startDate = new Date(today);
+  startDate.setDate(today.getDate() - 7);
+  const endDate = new Date(today);
+  endDate.setDate(today.getDate() + (days - 7));
+
+  const startStr = startDate.toISOString().split("T")[0];
+  const endStr = endDate.toISOString().split("T")[0];
+
+  // Count total rooms per property
+  const roomCounts = await db
+    .select({
+      propertyId: roomsTable.propertyId,
+      propertyName: propertiesTable.name,
+      totalRooms: sql<number>`count(*)::int`,
+    })
+    .from(roomsTable)
+    .leftJoin(propertiesTable, eq(roomsTable.propertyId, propertiesTable.id))
+    .groupBy(roomsTable.propertyId, propertiesTable.name);
+
+  // Get bookings that overlap with this date range (active + confirmed + checked-in)
+  const bookings = await db
+    .select({
+      checkIn: bookingsTable.checkIn,
+      checkOut: bookingsTable.checkOut,
+      propertyId: roomsTable.propertyId,
+    })
+    .from(bookingsTable)
+    .leftJoin(roomsTable, eq(bookingsTable.roomId, roomsTable.id))
+    .where(
+      and(
+        sql`${bookingsTable.status} in ('confirmed', 'checked-in', 'checked-out')`,
+        sql`${bookingsTable.checkOut} >= ${startStr}`,
+        sql`${bookingsTable.checkIn} <= ${endStr}`
+      )
+    );
+
+  // Build heatmap: for each property × day, count overlapping bookings
+  const result: { propertyId: number; propertyName: string; date: string; occupiedRooms: number; totalRooms: number; occupancyPct: number }[] = [];
+
+  for (const { propertyId, propertyName, totalRooms } of roomCounts) {
+    const d = new Date(startDate);
+    while (d <= endDate) {
+      const dateStr = d.toISOString().split("T")[0];
+      const occupied = bookings.filter((b) => {
+        if (b.propertyId !== propertyId) return false;
+        return b.checkIn <= dateStr && b.checkOut > dateStr;
+      }).length;
+      result.push({
+        propertyId: propertyId!,
+        propertyName: propertyName ?? "Unknown",
+        date: dateStr,
+        occupiedRooms: occupied,
+        totalRooms,
+        occupancyPct: totalRooms > 0 ? Math.round((occupied / totalRooms) * 100) : 0,
+      });
+      d.setDate(d.getDate() + 1);
+    }
+  }
+
+  res.json(result);
 });
 
 router.get("/stats/occupancy", async (req, res) => {

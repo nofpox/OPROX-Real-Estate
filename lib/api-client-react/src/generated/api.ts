@@ -30,6 +30,7 @@ import type {
   FinanceSummary,
   GenerateNotificationsResult,
   GetFinanceMonthlyParams,
+  GetOccupancyHeatmapParams,
   Guest,
   GuestProfile,
   HealthStatus,
@@ -43,6 +44,7 @@ import type {
   ListWorkOrdersParams,
   MonthlyFinance,
   MonthlyIncome,
+  OccupancyHeatmapEntry,
   OccupancyStat,
   Property,
   PropertyInput,
@@ -1109,6 +1111,90 @@ export function useGetIncomeStats<TData = Awaited<ReturnType<typeof getIncomeSta
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetIncomeStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetOccupancyHeatmapUrl = (params?: GetOccupancyHeatmapParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/stats/occupancy-heatmap?${stringifiedParams}` : `/api/stats/occupancy-heatmap`
+}
+
+/**
+ * @summary Get daily occupancy heatmap data per property
+ */
+export const getOccupancyHeatmap = async (params?: GetOccupancyHeatmapParams, options?: RequestInit): Promise<OccupancyHeatmapEntry[]> => {
+
+  return customFetch<OccupancyHeatmapEntry[]>(getGetOccupancyHeatmapUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOccupancyHeatmapQueryKey = (params?: GetOccupancyHeatmapParams,) => {
+    return [
+    `/api/stats/occupancy-heatmap`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetOccupancyHeatmapQueryOptions = <TData = Awaited<ReturnType<typeof getOccupancyHeatmap>>, TError = ErrorType<unknown>>(params?: GetOccupancyHeatmapParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOccupancyHeatmap>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOccupancyHeatmapQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOccupancyHeatmap>>> = ({ signal }) => getOccupancyHeatmap(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOccupancyHeatmap>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetOccupancyHeatmapQueryResult = NonNullable<Awaited<ReturnType<typeof getOccupancyHeatmap>>>
+export type GetOccupancyHeatmapQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get daily occupancy heatmap data per property
+ */
+
+export function useGetOccupancyHeatmap<TData = Awaited<ReturnType<typeof getOccupancyHeatmap>>, TError = ErrorType<unknown>>(
+ params?: GetOccupancyHeatmapParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOccupancyHeatmap>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetOccupancyHeatmapQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

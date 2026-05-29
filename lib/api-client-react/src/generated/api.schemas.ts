@@ -109,6 +109,15 @@ export interface MonthlyIncome {
   bookings: number;
 }
 
+export interface OccupancyHeatmapEntry {
+  propertyId: number;
+  propertyName: string;
+  date: string;
+  occupiedRooms: number;
+  totalRooms: number;
+  occupancyPct: number;
+}
+
 export interface OccupancyStat {
   type: string;
   total: number;
@@ -456,6 +465,13 @@ export interface ShiftUpdate {
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
+};
+
+export type GetOccupancyHeatmapParams = {
+/**
+ * Number of days in range (default 42)
+ */
+days?: number;
 };
 
 export type ListExpensesParams = {

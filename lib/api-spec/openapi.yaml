@@ -283,6 +283,28 @@ paths:
                 items:
                   $ref: "#/components/schemas/MonthlyIncome"
 
+  /stats/occupancy-heatmap:
+    get:
+      operationId: getOccupancyHeatmap
+      tags: [stats]
+      summary: Get daily occupancy heatmap data per property
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Number of days in range (default 42)
+      responses:
+        "200":
+          description: Occupancy heatmap data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OccupancyHeatmapEntry"
+
   /stats/occupancy:
     get:
       operationId: getOccupancyStats
@@ -1202,6 +1224,23 @@ components:
         revenue:
           type: number
         bookings:
+          type: integer
+
+    OccupancyHeatmapEntry:
+      type: object
+      required: [propertyId, propertyName, date, occupiedRooms, totalRooms, occupancyPct]
+      properties:
+        propertyId:
+          type: integer
+        propertyName:
+          type: string
+        date:
+          type: string
+        occupiedRooms:
+          type: integer
+        totalRooms:
+          type: integer
+        occupancyPct:
           type: integer
 
     OccupancyStat:

@@ -271,6 +271,24 @@ export const GetIncomeStatsResponse = zod.array(GetIncomeStatsResponseItem)
 
 
 /**
+ * @summary Get daily occupancy heatmap data per property
+ */
+export const GetOccupancyHeatmapQueryParams = zod.object({
+  "days": zod.coerce.number().optional().describe('Number of days in range (default 42)')
+})
+
+export const GetOccupancyHeatmapResponseItem = zod.object({
+  "propertyId": zod.number(),
+  "propertyName": zod.string(),
+  "date": zod.string(),
+  "occupiedRooms": zod.number(),
+  "totalRooms": zod.number(),
+  "occupancyPct": zod.number()
+})
+export const GetOccupancyHeatmapResponse = zod.array(GetOccupancyHeatmapResponseItem)
+
+
+/**
  * @summary Get room occupancy by type
  */
 export const GetOccupancyStatsResponseItem = zod.object({
