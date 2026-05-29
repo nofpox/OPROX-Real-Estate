@@ -60,13 +60,15 @@ const formatCurrency = (value: number) => {
 
 const PropertyTypeBadge = ({ type }: { type: string }) => {
   switch (type.toLowerCase()) {
-    case 'hotel': 
+    case 'hotel':
       return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-0 dark:bg-blue-900/30 dark:text-blue-400">{type}</Badge>;
-    case 'apartment': 
+    case 'apartment':
       return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-0 dark:bg-amber-900/30 dark:text-amber-400">{type}</Badge>;
-    case 'compound': 
+    case 'compound':
       return <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-0 dark:bg-green-900/30 dark:text-green-400">{type}</Badge>;
-    default: 
+    case 'furnished apartments':
+      return <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-100 border-0 dark:bg-indigo-900/30 dark:text-indigo-400">{type}</Badge>;
+    default:
       return <Badge variant="outline">{type}</Badge>;
   }
 };
@@ -239,6 +241,7 @@ export default function Properties() {
                             <SelectItem value="Hotel">Hotel</SelectItem>
                             <SelectItem value="Apartment">Apartment</SelectItem>
                             <SelectItem value="Compound">Compound</SelectItem>
+                            <SelectItem value="Furnished Apartments">Furnished Apartments</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />

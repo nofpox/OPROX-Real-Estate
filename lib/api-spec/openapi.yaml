@@ -1266,7 +1266,7 @@ components:
           type: string
         type:
           type: string
-          description: "Hotel, Apartment, Compound"
+          description: "Hotel, Apartment, Compound, Furnished Apartments"
         address:
           type: string
         city:

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useGetOccupancyHeatmap } from "@workspace/api-client-react";
+import { useGetOccupancyHeatmap, type OccupancyHeatmapEntry } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -102,7 +102,7 @@ export function OccupancyHeatmap() {
     return Math.round(todayEntries.reduce((s, e) => s + e.occupancyPct, 0) / todayEntries.length);
   }, [rawData, today]);
 
-  const handleMouseEnter = (e: React.MouseEvent, entry: typeof rawData extends undefined ? never : typeof rawData[0], propertyName: string) => {
+  const handleMouseEnter = (e: React.MouseEvent, entry: OccupancyHeatmapEntry, propertyName: string) => {
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     setTooltip({
       x: rect.left + rect.width / 2,
