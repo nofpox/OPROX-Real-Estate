@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { useSettings } from "@/hooks/use-settings";
 
 interface LoginProps {
   onLogin: (user: unknown) => void;
@@ -16,6 +17,7 @@ export default function Login({ onLogin }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const settings = useSettings();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +46,7 @@ export default function Login({ onLogin }: LoginProps) {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-serif">Grand PMS</CardTitle>
+          <CardTitle className="text-2xl font-serif">{settings.propertyName}</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>

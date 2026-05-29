@@ -5,6 +5,24 @@
  * Hotel Booking Management API
  * OpenAPI spec version: 0.1.0
  */
+export interface Settings {
+  /** Display name shown as the dashboard heading and sidebar logo */
+  propertyName: string;
+  /** Hotel | Compound | Furnished Apartments | all */
+  propertyType: string;
+  /** Large serif word in the sidebar logo */
+  logoText: string;
+  /** Smaller sans-serif word in the sidebar logo */
+  logoSub: string;
+}
+
+export interface SettingsInput {
+  propertyName?: string;
+  propertyType?: string;
+  logoText?: string;
+  logoSub?: string;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -462,6 +480,148 @@ export interface ShiftUpdate {
   notes?: string;
 }
 
+export interface AuthCredentials {
+  username: string;
+  password: string;
+}
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  displayName: string;
+  email?: string | null;
+  role: string;
+  permissions: string[];
+  isActive: boolean;
+  createdAt?: string;
+}
+
+export interface PmsUser {
+  id: number;
+  username: string;
+  displayName: string;
+  email?: string | null;
+  role: string;
+  permissions: string[];
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface UserInput {
+  username: string;
+  displayName: string;
+  email?: string;
+  password: string;
+  role: string;
+  permissions?: string[];
+  isActive?: boolean;
+}
+
+export type GuestUnitUnit = {
+  id?: number;
+  name?: string;
+  type?: string;
+  propertyId?: number;
+  propertyName?: string | null;
+  propertyType?: string | null;
+};
+
+export type GuestUnitFinancial = {
+  dueDate?: string | null;
+  amountDue?: number | null;
+  status?: string;
+  checkIn?: string | null;
+  checkOut?: string | null;
+} | null;
+
+export interface GuestUnit {
+  unit?: GuestUnitUnit;
+  financial?: GuestUnitFinancial;
+}
+
+export interface GuestRequest {
+  id: number;
+  roomId: number;
+  unitName?: string | null;
+  propertyName?: string | null;
+  type: string;
+  description: string;
+  facilityName?: string | null;
+  scheduledAt?: string | null;
+  visitorName?: string | null;
+  visitorPhone?: string | null;
+  status: string;
+  refCode: string;
+  createdAt: string;
+}
+
+export interface GuestRequestInput {
+  roomId: number;
+  type: string;
+  description: string;
+  facilityName?: string;
+  scheduledAt?: string;
+  visitorName?: string;
+  visitorPhone?: string;
+}
+
+export interface GuestFeedback {
+  id: number;
+  roomId: number;
+  rating: string;
+  comment?: string | null;
+  createdAt: string;
+}
+
+export interface GuestFeedbackInput {
+  roomId: number;
+  rating: string;
+  comment?: string;
+}
+
+export interface UnitFinancial {
+  roomId: number;
+  unitName?: string | null;
+  propertyName?: string | null;
+  propertyType?: string | null;
+  status: string;
+  dueDate?: string | null;
+  amountDue?: number | null;
+  checkIn?: string | null;
+  checkOut?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string;
+}
+
+export interface UnitFinancialUpdate {
+  status?: string;
+  dueDate?: string;
+  amountDue?: number;
+  checkIn?: string;
+  checkOut?: string;
+}
+
+export interface ActivityLog {
+  id: number;
+  username?: string | null;
+  action: string;
+  entityType: string;
+  entityId?: number | null;
+  details?: string | null;
+  ipAddress?: string | null;
+  createdAt: string;
+}
+
+export interface MaintenanceRequestInput {
+  roomId?: number;
+  propertyId?: number;
+  /** electrical | plumbing | ac | emergency | general */
+  category?: string;
+  description: string;
+  /** guest_portal | staff_report */
+  source?: string;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
@@ -541,5 +701,18 @@ export type GetRecentBookingsParams = {
  * Filter by property type. Omit for all.
  */
 propertyType?: string;
+};
+
+export type ListGuestRequestsParams = {
+roomId?: number;
+status?: string;
+};
+
+export type UpdateGuestRequestBody = {
+  status?: string;
+};
+
+export type ListActivityLogsParams = {
+limit?: number;
 };
 

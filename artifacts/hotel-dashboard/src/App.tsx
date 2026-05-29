@@ -81,19 +81,21 @@ import "@/i18n";
       );
     }
 
-    if (!authUser) {
-      return (
-        <LanguageProvider>
-          <Toaster />
-          <Login onLogin={(user) => setAuthUser(user as AuthUser)} />
-        </LanguageProvider>
-      );
-    }
-
     function handleLogout() {
       fetch("/api/auth/logout", { method: "POST", credentials: "include" }).finally(() => {
         setAuthUser(null);
       });
+    }
+
+    if (!authUser) {
+      return (
+        <LanguageProvider>
+          <QueryClientProvider client={queryClient}>
+            <Toaster />
+            <Login onLogin={(user) => setAuthUser(user as AuthUser)} />
+          </QueryClientProvider>
+        </LanguageProvider>
+      );
     }
 
     return (

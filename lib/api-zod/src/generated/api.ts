@@ -9,6 +9,35 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Get all property settings
+ */
+export const GetSettingsResponse = zod.object({
+  "propertyName": zod.string().describe('Display name shown as the dashboard heading and sidebar logo'),
+  "propertyType": zod.string().describe('Hotel | Compound | Furnished Apartments | all'),
+  "logoText": zod.string().describe('Large serif word in the sidebar logo'),
+  "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo')
+})
+
+
+/**
+ * @summary Update one or more settings
+ */
+export const UpdateSettingsBody = zod.object({
+  "propertyName": zod.string().optional(),
+  "propertyType": zod.string().optional(),
+  "logoText": zod.string().optional(),
+  "logoSub": zod.string().optional()
+})
+
+export const UpdateSettingsResponse = zod.object({
+  "propertyName": zod.string().describe('Display name shown as the dashboard heading and sidebar logo'),
+  "propertyType": zod.string().describe('Hotel | Compound | Furnished Apartments | all'),
+  "logoText": zod.string().describe('Large serif word in the sidebar logo'),
+  "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo')
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */
@@ -1014,5 +1043,292 @@ export const GetRecentBookingsResponseItem = zod.object({
   "createdAt": zod.string()
 })
 export const GetRecentBookingsResponse = zod.array(GetRecentBookingsResponseItem)
+
+
+/**
+ * @summary Authenticate user
+ */
+export const LoginBody = zod.object({
+  "username": zod.string(),
+  "password": zod.string()
+})
+
+export const LoginResponse = zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "email": zod.string().nullish(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Get current session user
+ */
+export const GetMeResponse = zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "email": zod.string().nullish(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string().optional()
+})
+
+
+/**
+ * @summary List all users
+ */
+export const ListUsersResponseItem = zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "email": zod.string().nullish(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const ListUsersResponse = zod.array(ListUsersResponseItem)
+
+
+/**
+ * @summary Create a user
+ */
+export const CreateUserBody = zod.object({
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "email": zod.string().optional(),
+  "password": zod.string(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()).optional(),
+  "isActive": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Update a user
+ */
+export const UpdateUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateUserBody = zod.object({
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "email": zod.string().optional(),
+  "password": zod.string(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()).optional(),
+  "isActive": zod.boolean().optional()
+})
+
+export const UpdateUserResponse = zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "email": zod.string().nullish(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a user
+ */
+export const DeleteUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get unit info for guest portal
+ */
+export const GetGuestUnitParams = zod.object({
+  "unitId": zod.coerce.number()
+})
+
+export const GetGuestUnitResponse = zod.object({
+  "unit": zod.object({
+  "id": zod.number().optional(),
+  "name": zod.string().optional(),
+  "type": zod.string().optional(),
+  "propertyId": zod.number().optional(),
+  "propertyName": zod.string().nullish(),
+  "propertyType": zod.string().nullish()
+}).optional(),
+  "financial": zod.object({
+  "dueDate": zod.string().nullish(),
+  "amountDue": zod.number().nullish(),
+  "status": zod.string().optional(),
+  "checkIn": zod.string().nullish(),
+  "checkOut": zod.string().nullish()
+}).nullish()
+})
+
+
+/**
+ * @summary List guest requests
+ */
+export const ListGuestRequestsQueryParams = zod.object({
+  "roomId": zod.coerce.number().optional(),
+  "status": zod.coerce.string().optional()
+})
+
+export const ListGuestRequestsResponseItem = zod.object({
+  "id": zod.number(),
+  "roomId": zod.number(),
+  "unitName": zod.string().nullish(),
+  "propertyName": zod.string().nullish(),
+  "type": zod.string(),
+  "description": zod.string(),
+  "facilityName": zod.string().nullish(),
+  "scheduledAt": zod.string().nullish(),
+  "visitorName": zod.string().nullish(),
+  "visitorPhone": zod.string().nullish(),
+  "status": zod.string(),
+  "refCode": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListGuestRequestsResponse = zod.array(ListGuestRequestsResponseItem)
+
+
+/**
+ * @summary Submit a guest request
+ */
+export const CreateGuestRequestBody = zod.object({
+  "roomId": zod.number(),
+  "type": zod.string(),
+  "description": zod.string(),
+  "facilityName": zod.string().optional(),
+  "scheduledAt": zod.string().optional(),
+  "visitorName": zod.string().optional(),
+  "visitorPhone": zod.string().optional()
+})
+
+
+/**
+ * @summary Update guest request status
+ */
+export const UpdateGuestRequestParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateGuestRequestBody = zod.object({
+  "status": zod.string().optional()
+})
+
+export const UpdateGuestRequestResponse = zod.object({
+  "id": zod.number(),
+  "roomId": zod.number(),
+  "unitName": zod.string().nullish(),
+  "propertyName": zod.string().nullish(),
+  "type": zod.string(),
+  "description": zod.string(),
+  "facilityName": zod.string().nullish(),
+  "scheduledAt": zod.string().nullish(),
+  "visitorName": zod.string().nullish(),
+  "visitorPhone": zod.string().nullish(),
+  "status": zod.string(),
+  "refCode": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Submit guest satisfaction feedback
+ */
+export const CreateGuestFeedbackBody = zod.object({
+  "roomId": zod.number(),
+  "rating": zod.string(),
+  "comment": zod.string().optional()
+})
+
+
+/**
+ * @summary List unit financials
+ */
+export const ListUnitFinancialsResponseItem = zod.object({
+  "roomId": zod.number(),
+  "unitName": zod.string().nullish(),
+  "propertyName": zod.string().nullish(),
+  "propertyType": zod.string().nullish(),
+  "status": zod.string(),
+  "dueDate": zod.string().nullish(),
+  "amountDue": zod.number().nullish(),
+  "checkIn": zod.string().nullish(),
+  "checkOut": zod.string().nullish(),
+  "updatedAt": zod.string().nullish(),
+  "createdAt": zod.string().optional()
+})
+export const ListUnitFinancialsResponse = zod.array(ListUnitFinancialsResponseItem)
+
+
+/**
+ * @summary Update unit status and financial data
+ */
+export const UpdateUnitFinancialParams = zod.object({
+  "roomId": zod.coerce.number()
+})
+
+export const UpdateUnitFinancialBody = zod.object({
+  "status": zod.string().optional(),
+  "dueDate": zod.string().optional(),
+  "amountDue": zod.number().optional(),
+  "checkIn": zod.string().optional(),
+  "checkOut": zod.string().optional()
+})
+
+export const UpdateUnitFinancialResponse = zod.object({
+  "roomId": zod.number(),
+  "unitName": zod.string().nullish(),
+  "propertyName": zod.string().nullish(),
+  "propertyType": zod.string().nullish(),
+  "status": zod.string(),
+  "dueDate": zod.string().nullish(),
+  "amountDue": zod.number().nullish(),
+  "checkIn": zod.string().nullish(),
+  "checkOut": zod.string().nullish(),
+  "updatedAt": zod.string().nullish(),
+  "createdAt": zod.string().optional()
+})
+
+
+/**
+ * @summary List activity audit logs
+ */
+export const ListActivityLogsQueryParams = zod.object({
+  "limit": zod.coerce.number().optional()
+})
+
+export const ListActivityLogsResponseItem = zod.object({
+  "id": zod.number(),
+  "username": zod.string().nullish(),
+  "action": zod.string(),
+  "entityType": zod.string(),
+  "entityId": zod.number().nullish(),
+  "details": zod.string().nullish(),
+  "ipAddress": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListActivityLogsResponse = zod.array(ListActivityLogsResponseItem)
+
+
+/**
+ * @summary Submit a maintenance request (guest or staff)
+ */
+export const CreateMaintenanceRequestBody = zod.object({
+  "roomId": zod.number().optional(),
+  "propertyId": zod.number().optional(),
+  "category": zod.string().optional().describe('electrical | plumbing | ac | emergency | general'),
+  "description": zod.string(),
+  "source": zod.string().optional().describe('guest_portal | staff_report')
+})
 
 

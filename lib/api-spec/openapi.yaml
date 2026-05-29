@@ -32,7 +32,39 @@ tags:
     description: System notifications and alerts
   - name: shifts
     description: Staff shift scheduling
+  - name: settings
+    description: Client/property configuration settings
 paths:
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get all property settings
+      responses:
+        "200":
+          description: Current settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update one or more settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsInput"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+
   /healthz:
     get:
       operationId: healthCheck
@@ -1055,312 +1087,341 @@ paths:
                 items:
                   $ref: "#/components/schemas/Booking"
 
-    /auth/login:
-      post:
-        operationId: login
-        summary: Authenticate user
-        tags: [auth]
-        requestBody:
-          required: true
+  /auth/login:
+    post:
+      operationId: login
+      summary: Authenticate user
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthCredentials"
+      responses:
+        "200":
+          description: Authenticated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthCredentials"
-        responses:
-          "200":
-            description: Authenticated
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/AuthUser"
-          "401":
-            description: Invalid credentials
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Invalid credentials
 
-    /auth/logout:
-      post:
-        operationId: logout
-        summary: Log out
-        tags: [auth]
-        responses:
-          "200":
-            description: Logged out
+  /auth/logout:
+    post:
+      operationId: logout
+      summary: Log out
+      tags: [auth]
+      responses:
+        "200":
+          description: Logged out
 
-    /auth/me:
-      get:
-        operationId: getMe
-        summary: Get current session user
-        tags: [auth]
-        responses:
-          "200":
-            description: Current user
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/AuthUser"
-          "401":
-            description: Not authenticated
-
-    /users:
-      get:
-        operationId: listUsers
-        summary: List all users
-        tags: [users]
-        responses:
-          "200":
-            description: Users list
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/PmsUser"
-      post:
-        operationId: createUser
-        summary: Create a user
-        tags: [users]
-        requestBody:
-          required: true
+  /auth/me:
+    get:
+      operationId: getMe
+      summary: Get current session user
+      tags: [auth]
+      responses:
+        "200":
+          description: Current user
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserInput"
-        responses:
-          "201":
-            description: Created
-            content:
-              application/json:
-                schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Not authenticated
+
+  /users:
+    get:
+      operationId: listUsers
+      summary: List all users
+      tags: [users]
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
                   $ref: "#/components/schemas/PmsUser"
-
-    /users/{id}:
-      patch:
-        operationId: updateUser
-        summary: Update a user
-        tags: [users]
-        parameters:
-          - name: id
-            in: path
-            required: true
+    post:
+      operationId: createUser
+      summary: Create a user
+      tags: [users]
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: integer
-        requestBody:
-          required: true
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserInput"
-        responses:
-          "200":
-            description: Updated
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/PmsUser"
-      delete:
-        operationId: deleteUser
-        summary: Delete a user
-        tags: [users]
-        parameters:
-          - name: id
-            in: path
-            required: true
-            schema:
-              type: integer
-        responses:
-          "204":
-            description: Deleted
+                $ref: "#/components/schemas/PmsUser"
 
-    /guest/units/{unitId}:
-      get:
-        operationId: getGuestUnit
-        summary: Get unit info for guest portal
-        tags: [guest]
-        parameters:
-          - name: unitId
-            in: path
-            required: true
-            schema:
-              type: integer
-        responses:
-          "200":
-            description: Unit info
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/GuestUnit"
-          "404":
-            description: Not found
-
-    /guest/requests:
-      get:
-        operationId: listGuestRequests
-        summary: List guest requests
-        tags: [guest]
-        parameters:
-          - name: roomId
-            in: query
-            schema:
-              type: integer
-          - name: status
-            in: query
-            schema:
-              type: string
-        responses:
-          "200":
-            description: Requests
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/GuestRequest"
-      post:
-        operationId: createGuestRequest
-        summary: Submit a guest request
-        tags: [guest]
-        requestBody:
+  /users/{id}:
+    patch:
+      operationId: updateUser
+      summary: Update a user
+      tags: [users]
+      parameters:
+        - name: id
+          in: path
           required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "200":
+          description: Updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GuestRequestInput"
-        responses:
-          "201":
-            description: Created
-            content:
-              application/json:
-                schema:
+                $ref: "#/components/schemas/PmsUser"
+    delete:
+      operationId: deleteUser
+      summary: Delete a user
+      tags: [users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /guest/units/{unitId}:
+    get:
+      operationId: getGuestUnit
+      summary: Get unit info for guest portal
+      tags: [guest]
+      parameters:
+        - name: unitId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unit info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestUnit"
+        "404":
+          description: Not found
+
+  /guest/requests:
+    get:
+      operationId: listGuestRequests
+      summary: List guest requests
+      tags: [guest]
+      parameters:
+        - name: roomId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
                   $ref: "#/components/schemas/GuestRequest"
-
-    /guest/requests/{id}:
-      patch:
-        operationId: updateGuestRequest
-        summary: Update guest request status
-        tags: [guest]
-        parameters:
-          - name: id
-            in: path
-            required: true
+    post:
+      operationId: createGuestRequest
+      summary: Submit a guest request
+      tags: [guest]
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: integer
-        requestBody:
-          required: true
+              $ref: "#/components/schemas/GuestRequestInput"
+      responses:
+        "201":
+          description: Created
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-        responses:
-          "200":
-            description: Updated
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/GuestRequest"
+                $ref: "#/components/schemas/GuestRequest"
 
-    /guest/feedback:
-      post:
-        operationId: createGuestFeedback
-        summary: Submit guest satisfaction feedback
-        tags: [guest]
-        requestBody:
+  /guest/requests/{id}:
+    patch:
+      operationId: updateGuestRequest
+      summary: Update guest request status
+      tags: [guest]
+      parameters:
+        - name: id
+          in: path
           required: true
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GuestFeedbackInput"
-        responses:
-          "201":
-            description: Recorded
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/GuestFeedback"
-
-    /unit-financials:
-      get:
-        operationId: listUnitFinancials
-        summary: List unit financials
-        tags: [unit-financials]
-        responses:
-          "200":
-            description: List
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/UnitFinancial"
-
-    /unit-financials/{roomId}:
-      patch:
-        operationId: updateUnitFinancial
-        summary: Update unit status and financial data
-        tags: [unit-financials]
-        parameters:
-          - name: roomId
-            in: path
-            required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: integer
-        requestBody:
-          required: true
+              type: object
+              properties:
+                status:
+                  type: string
+      responses:
+        "200":
+          description: Updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UnitFinancialUpdate"
-        responses:
-          "200":
-            description: Updated
-            content:
-              application/json:
-                schema:
+                $ref: "#/components/schemas/GuestRequest"
+
+  /guest/feedback:
+    post:
+      operationId: createGuestFeedback
+      summary: Submit guest satisfaction feedback
+      tags: [guest]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuestFeedbackInput"
+      responses:
+        "201":
+          description: Recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestFeedback"
+
+  /unit-financials:
+    get:
+      operationId: listUnitFinancials
+      summary: List unit financials
+      tags: [unit-financials]
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
                   $ref: "#/components/schemas/UnitFinancial"
 
-    /activity-logs:
-      get:
-        operationId: listActivityLogs
-        summary: List activity audit logs
-        tags: [activity-logs]
-        parameters:
-          - name: limit
-            in: query
-            schema:
-              type: integer
-        responses:
-          "200":
-            description: Logs
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/ActivityLog"
-
-    /maintenance-requests:
-      post:
-        operationId: createMaintenanceRequest
-        summary: Submit a maintenance request (guest or staff)
-        tags: [maintenance]
-        requestBody:
+  /unit-financials/{roomId}:
+    patch:
+      operationId: updateUnitFinancial
+      summary: Update unit status and financial data
+      tags: [unit-financials]
+      parameters:
+        - name: roomId
+          in: path
           required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnitFinancialUpdate"
+      responses:
+        "200":
+          description: Updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceRequestInput"
-        responses:
-          "201":
-            description: Work order created
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/WorkOrder"
+                $ref: "#/components/schemas/UnitFinancial"
+
+  /activity-logs:
+    get:
+      operationId: listActivityLogs
+      summary: List activity audit logs
+      tags: [activity-logs]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityLog"
+
+  /maintenance-requests:
+    post:
+      operationId: createMaintenanceRequest
+      summary: Submit a maintenance request (guest or staff)
+      tags: [maintenance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceRequestInput"
+      responses:
+        "201":
+          description: Work order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
 
   
 components:
   schemas:
+    Settings:
+      type: object
+      required: [propertyName, propertyType, logoText, logoSub]
+      properties:
+        propertyName:
+          type: string
+          description: Display name shown as the dashboard heading and sidebar logo
+        propertyType:
+          type: string
+          description: "Hotel | Compound | Furnished Apartments | all"
+        logoText:
+          type: string
+          description: Large serif word in the sidebar logo
+        logoSub:
+          type: string
+          description: Smaller sans-serif word in the sidebar logo
+
+    SettingsInput:
+      type: object
+      properties:
+        propertyName:
+          type: string
+        propertyType:
+          type: string
+        logoText:
+          type: string
+        logoSub:
+          type: string
+
     HealthStatus:
       type: object
       properties:
@@ -2127,294 +2188,293 @@ components:
         notes:
           type: string
 
-      AuthCredentials:
-        type: object
-        required: [username, password]
-        properties:
-          username:
-            type: string
-          password:
-            type: string
+    AuthCredentials:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
 
-      AuthUser:
-        type: object
-        required: [id, username, displayName, role, permissions, isActive]
-        properties:
-          id:
-            type: integer
-          username:
+    AuthUser:
+      type: object
+      required: [id, username, displayName, role, permissions, isActive]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+          nullable: true
+        role:
+          type: string
+        permissions:
+          type: array
+          items:
             type: string
-          displayName:
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+
+    PmsUser:
+      type: object
+      required: [id, username, displayName, role, permissions, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+          nullable: true
+        role:
+          type: string
+        permissions:
+          type: array
+          items:
             type: string
-          email:
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+
+    UserInput:
+      type: object
+      required: [username, displayName, password, role]
+      properties:
+        username:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+        permissions:
+          type: array
+          items:
             type: string
-            nullable: true
-          role:
-            type: string
-          permissions:
-            type: array
-            items:
+        isActive:
+          type: boolean
+
+    GuestUnit:
+      type: object
+      properties:
+        unit:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
               type: string
-          isActive:
-            type: boolean
-          createdAt:
-            type: string
-
-      PmsUser:
-        type: object
-        required: [id, username, displayName, role, permissions, isActive, createdAt]
-        properties:
-          id:
-            type: integer
-          username:
-            type: string
-          displayName:
-            type: string
-          email:
-            type: string
-            nullable: true
-          role:
-            type: string
-          permissions:
-            type: array
-            items:
+            type:
               type: string
-          isActive:
-            type: boolean
-          createdAt:
-            type: string
-
-      UserInput:
-        type: object
-        required: [username, displayName, password, role]
-        properties:
-          username:
-            type: string
-          displayName:
-            type: string
-          email:
-            type: string
-          password:
-            type: string
-          role:
-            type: string
-          permissions:
-            type: array
-            items:
+            propertyId:
+              type: integer
+            propertyName:
               type: string
-          isActive:
-            type: boolean
+              nullable: true
+            propertyType:
+              type: string
+              nullable: true
+        financial:
+          nullable: true
+          type: object
+          properties:
+            dueDate:
+              type: string
+              nullable: true
+            amountDue:
+              type: number
+              nullable: true
+            status:
+              type: string
+            checkIn:
+              type: string
+              nullable: true
+            checkOut:
+              type: string
+              nullable: true
 
-      GuestUnit:
-        type: object
-        properties:
-          unit:
-            type: object
-            properties:
-              id:
-                type: integer
-              name:
-                type: string
-              type:
-                type: string
-              propertyId:
-                type: integer
-              propertyName:
-                type: string
-                nullable: true
-              propertyType:
-                type: string
-                nullable: true
-          financial:
-            nullable: true
-            type: object
-            properties:
-              dueDate:
-                type: string
-                nullable: true
-              amountDue:
-                type: number
-                nullable: true
-              status:
-                type: string
-              checkIn:
-                type: string
-                nullable: true
-              checkOut:
-                type: string
-                nullable: true
+    GuestRequest:
+      type: object
+      required: [id, roomId, type, description, status, refCode, createdAt]
+      properties:
+        id:
+          type: integer
+        roomId:
+          type: integer
+        unitName:
+          type: string
+          nullable: true
+        propertyName:
+          type: string
+          nullable: true
+        type:
+          type: string
+        description:
+          type: string
+        facilityName:
+          type: string
+          nullable: true
+        scheduledAt:
+          type: string
+          nullable: true
+        visitorName:
+          type: string
+          nullable: true
+        visitorPhone:
+          type: string
+          nullable: true
+        status:
+          type: string
+        refCode:
+          type: string
+        createdAt:
+          type: string
 
-      GuestRequest:
-        type: object
-        required: [id, roomId, type, description, status, refCode, createdAt]
-        properties:
-          id:
-            type: integer
-          roomId:
-            type: integer
-          unitName:
-            type: string
-            nullable: true
-          propertyName:
-            type: string
-            nullable: true
-          type:
-            type: string
-          description:
-            type: string
-          facilityName:
-            type: string
-            nullable: true
-          scheduledAt:
-            type: string
-            nullable: true
-          visitorName:
-            type: string
-            nullable: true
-          visitorPhone:
-            type: string
-            nullable: true
-          status:
-            type: string
-          refCode:
-            type: string
-          createdAt:
-            type: string
+    GuestRequestInput:
+      type: object
+      required: [roomId, type, description]
+      properties:
+        roomId:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        facilityName:
+          type: string
+        scheduledAt:
+          type: string
+        visitorName:
+          type: string
+        visitorPhone:
+          type: string
 
-      GuestRequestInput:
-        type: object
-        required: [roomId, type, description]
-        properties:
-          roomId:
-            type: integer
-          type:
-            type: string
-          description:
-            type: string
-          facilityName:
-            type: string
-          scheduledAt:
-            type: string
-          visitorName:
-            type: string
-          visitorPhone:
-            type: string
+    GuestFeedback:
+      type: object
+      required: [id, roomId, rating, createdAt]
+      properties:
+        id:
+          type: integer
+        roomId:
+          type: integer
+        rating:
+          type: string
+        comment:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
 
-      GuestFeedback:
-        type: object
-        required: [id, roomId, rating, createdAt]
-        properties:
-          id:
-            type: integer
-          roomId:
-            type: integer
-          rating:
-            type: string
-          comment:
-            type: string
-            nullable: true
-          createdAt:
-            type: string
+    GuestFeedbackInput:
+      type: object
+      required: [roomId, rating]
+      properties:
+        roomId:
+          type: integer
+        rating:
+          type: string
+        comment:
+          type: string
 
-      GuestFeedbackInput:
-        type: object
-        required: [roomId, rating]
-        properties:
-          roomId:
-            type: integer
-          rating:
-            type: string
-          comment:
-            type: string
+    UnitFinancial:
+      type: object
+      required: [roomId, status]
+      properties:
+        roomId:
+          type: integer
+        unitName:
+          type: string
+          nullable: true
+        propertyName:
+          type: string
+          nullable: true
+        propertyType:
+          type: string
+          nullable: true
+        status:
+          type: string
+        dueDate:
+          type: string
+          nullable: true
+        amountDue:
+          type: number
+          nullable: true
+        checkIn:
+          type: string
+          nullable: true
+        checkOut:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
 
-      UnitFinancial:
-        type: object
-        required: [roomId, status]
-        properties:
-          roomId:
-            type: integer
-          unitName:
-            type: string
-            nullable: true
-          propertyName:
-            type: string
-            nullable: true
-          propertyType:
-            type: string
-            nullable: true
-          status:
-            type: string
-          dueDate:
-            type: string
-            nullable: true
-          amountDue:
-            type: number
-            nullable: true
-          checkIn:
-            type: string
-            nullable: true
-          checkOut:
-            type: string
-            nullable: true
-          updatedAt:
-            type: string
-            nullable: true
-          createdAt:
-            type: string
+    UnitFinancialUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        dueDate:
+          type: string
+        amountDue:
+          type: number
+        checkIn:
+          type: string
+        checkOut:
+          type: string
 
-      UnitFinancialUpdate:
-        type: object
-        properties:
-          status:
-            type: string
-          dueDate:
-            type: string
-          amountDue:
-            type: number
-          checkIn:
-            type: string
-          checkOut:
-            type: string
+    ActivityLog:
+      type: object
+      required: [id, action, entityType, createdAt]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+          nullable: true
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: integer
+          nullable: true
+        details:
+          type: string
+          nullable: true
+        ipAddress:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
 
-      ActivityLog:
-        type: object
-        required: [id, action, entityType, createdAt]
-        properties:
-          id:
-            type: integer
-          username:
-            type: string
-            nullable: true
-          action:
-            type: string
-          entityType:
-            type: string
-          entityId:
-            type: integer
-            nullable: true
-          details:
-            type: string
-            nullable: true
-          ipAddress:
-            type: string
-            nullable: true
-          createdAt:
-            type: string
-
-      MaintenanceRequestInput:
-        type: object
-        required: [description]
-        properties:
-          roomId:
-            type: integer
-          propertyId:
-            type: integer
-          category:
-            type: string
-            description: "electrical | plumbing | ac | emergency | general"
-          description:
-            type: string
-          source:
-            type: string
-            description: "guest_portal | staff_report"
-  
+    MaintenanceRequestInput:
+      type: object
+      required: [description]
+      properties:
+        roomId:
+          type: integer
+        propertyId:
+          type: integer
+        category:
+          type: string
+          description: "electrical | plumbing | ac | emergency | general"
+        description:
+          type: string
+        source:
+          type: string
+          description: "guest_portal | staff_report"

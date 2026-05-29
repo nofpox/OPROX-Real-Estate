@@ -10,7 +10,7 @@ import React from "react";
     DoorOpen, Percent, Wrench, MapPin, CheckCircle2, Settings,
   } from "lucide-react";
   import { useTranslation } from "react-i18next";
-  import branding from "@/config/branding";
+  import { useSettings } from "@/hooks/use-settings";
 
   const TYPE_BADGE: Record<string, string> = {
     Hotel: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
@@ -34,8 +34,9 @@ import React from "react";
 
   export default function Dashboard() {
     const { t } = useTranslation();
+    const settings = useSettings();
 
-    const typeParam = branding.propertyType === "all" ? undefined : branding.propertyType;
+    const typeParam = settings.propertyType === "all" ? undefined : settings.propertyType;
     const { data: stats, isLoading: statsLoading } = useGetStatsOverview(typeParam ? { propertyType: typeParam } : undefined);
     const { data: rooms, isLoading: roomsLoading } = useListRooms();
     const { data: workOrders } = useListWorkOrders({ status: "open" });
@@ -58,7 +59,7 @@ import React from "react";
         {/* Header */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{branding.propertyName}</h1>
+            <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{settings.propertyName}</h1>
             <p className="text-muted-foreground mt-1">{t("dashboard.subtitle")}</p>
           </div>
           {typeParam && (

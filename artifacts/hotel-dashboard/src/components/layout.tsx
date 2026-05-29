@@ -17,7 +17,7 @@ import React, { useState } from "react";
   import { useLanguage } from "@/contexts/language-context";
   import { useTranslation } from "react-i18next";
   import type { AuthUser } from "@/App";
-  import branding from "@/config/branding";
+  import { useSettings } from "@/hooks/use-settings";
 
   const NAV_ITEMS = [
     { href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard, section: "main" },
@@ -55,6 +55,7 @@ import React, { useState } from "react";
     const { role, setRoleId, can } = useRole();
     const { isRTL } = useLanguage();
     const { t } = useTranslation();
+    const settings = useSettings();
 
     const visibleNavItems = NAV_ITEMS.filter((item) => can(item.href));
     const mainNav = visibleNavItems.filter((i) => i.section === "main");
@@ -105,8 +106,8 @@ import React, { useState } from "react";
         }`}>
           <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-sidebar-border">
             <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
-              <span className="text-xl">{branding.logoText}</span>
-              <span className="text-sidebar-foreground font-sans font-medium text-lg">{branding.logoSub}</span>
+              <span className="text-xl">{settings.logoText}</span>
+              <span className="text-sidebar-foreground font-sans font-medium text-lg">{settings.logoSub}</span>
             </Link>
             <button onClick={() => setMobileOpen(false)} className="rounded p-1 text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors">✕</button>
           </div>
@@ -129,8 +130,8 @@ import React, { useState } from "react";
         <aside className={`hidden w-64 flex-col bg-sidebar text-sidebar-foreground lg:flex fixed inset-y-0 z-10 ${sidebarSide} ${sidebarBorder}`}>
           <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border">
             <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
-              <span className="text-xl">{branding.logoText}</span>
-              <span className="text-sidebar-foreground font-sans font-medium text-lg">{branding.logoSub}</span>
+              <span className="text-xl">{settings.logoText}</span>
+              <span className="text-sidebar-foreground font-sans font-medium text-lg">{settings.logoSub}</span>
             </Link>
           </div>
 
@@ -218,7 +219,7 @@ import React, { useState } from "react";
           <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6 sticky top-0 z-10">
             <div className="flex items-center gap-4 lg:hidden">
               <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}><Menu className="h-5 w-5" /></Button>
-              <Link href="/" className="font-serif text-lg font-bold">{branding.logoText} {branding.logoSub}</Link>
+              <Link href="/" className="font-serif text-lg font-bold">{settings.logoText} {settings.logoSub}</Link>
             </div>
             <div className="hidden lg:flex items-center">
               <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_ICON_COLORS[role.id]}`}>
