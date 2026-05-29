@@ -15,7 +15,9 @@ export const GetSettingsResponse = zod.object({
   "propertyName": zod.string().describe('Display name shown as the dashboard heading and sidebar logo'),
   "propertyType": zod.string().describe('Hotel | Compound | Furnished Apartments | all'),
   "logoText": zod.string().describe('Large serif word in the sidebar logo'),
-  "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo')
+  "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
+  "businessMode": zod.string().describe('hotel | compound | serviced-apartments'),
+  "enabledFeatures": zod.array(zod.string()).describe('List of enabled feature keys for this client')
 })
 
 
@@ -26,14 +28,18 @@ export const UpdateSettingsBody = zod.object({
   "propertyName": zod.string().optional(),
   "propertyType": zod.string().optional(),
   "logoText": zod.string().optional(),
-  "logoSub": zod.string().optional()
+  "logoSub": zod.string().optional(),
+  "businessMode": zod.string().optional(),
+  "enabledFeatures": zod.array(zod.string()).optional()
 })
 
 export const UpdateSettingsResponse = zod.object({
   "propertyName": zod.string().describe('Display name shown as the dashboard heading and sidebar logo'),
   "propertyType": zod.string().describe('Hotel | Compound | Furnished Apartments | all'),
   "logoText": zod.string().describe('Large serif word in the sidebar logo'),
-  "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo')
+  "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
+  "businessMode": zod.string().describe('hotel | compound | serviced-apartments'),
+  "enabledFeatures": zod.array(zod.string()).describe('List of enabled feature keys for this client')
 })
 
 

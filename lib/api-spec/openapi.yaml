@@ -1395,7 +1395,7 @@ components:
   schemas:
     Settings:
       type: object
-      required: [propertyName, propertyType, logoText, logoSub]
+      required: [propertyName, propertyType, logoText, logoSub, businessMode, enabledFeatures]
       properties:
         propertyName:
           type: string
@@ -1409,6 +1409,14 @@ components:
         logoSub:
           type: string
           description: Smaller sans-serif word in the sidebar logo
+        businessMode:
+          type: string
+          description: "hotel | compound | serviced-apartments"
+        enabledFeatures:
+          type: array
+          items:
+            type: string
+          description: List of enabled feature keys for this client
 
     SettingsInput:
       type: object
@@ -1421,6 +1429,12 @@ components:
           type: string
         logoSub:
           type: string
+        businessMode:
+          type: string
+        enabledFeatures:
+          type: array
+          items:
+            type: string
 
     HealthStatus:
       type: object

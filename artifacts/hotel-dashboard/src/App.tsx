@@ -27,6 +27,7 @@ import "@/i18n";
   import ActivityLog from "@/pages/activity-log";
   import UnitMap from "@/pages/unit-map";
   import Login from "@/pages/login";
+  import SuperAdmin from "@/pages/super-admin";
 
   const queryClient = new QueryClient({
     defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
@@ -104,12 +105,17 @@ import "@/i18n";
           <TooltipProvider>
             <RoleProvider>
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <Layout authUser={authUser} onLogout={handleLogout}>
-                  <Router />
-                </Layout>
+                <Switch>
+                  <Route path="/super-admin" component={SuperAdmin} />
+                  <Route>
+                    <Layout authUser={authUser} onLogout={handleLogout}>
+                      <Router />
+                    </Layout>
+                    <Toaster />
+                  </Route>
+                </Switch>
               </WouterRouter>
             </RoleProvider>
-            <Toaster />
           </TooltipProvider>
         </QueryClientProvider>
       </LanguageProvider>

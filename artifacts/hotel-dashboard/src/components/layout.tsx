@@ -20,19 +20,19 @@ import React, { useState } from "react";
   import { useSettings } from "@/hooks/use-settings";
 
   const NAV_ITEMS = [
-    { href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard, section: "main" },
-    { href: "/properties", labelKey: "nav.properties", icon: Building2, section: "main" },
-    { href: "/rooms", labelKey: "nav.rooms", icon: DoorOpen, section: "main" },
-    { href: "/guests", labelKey: "nav.guests", icon: Users, section: "main" },
-    { href: "/bookings", labelKey: "nav.bookings", icon: Calendar, section: "main" },
-    { href: "/unit-map", labelKey: "nav.unitMap", icon: MapPin, section: "main" },
-    { href: "/finance", labelKey: "nav.finance", icon: BarChart3, section: "operations" },
-    { href: "/maintenance", labelKey: "nav.maintenance", icon: Wrench, section: "operations" },
-    { href: "/staff", labelKey: "nav.staff", icon: UserCog, section: "operations" },
-    { href: "/tasks", labelKey: "nav.tasks", icon: ClipboardList, section: "operations" },
-    { href: "/guest-requests", labelKey: "nav.guestRequests", icon: InboxIcon, section: "operations" },
-    { href: "/activity-log", labelKey: "nav.activityLog", icon: History, section: "operations" },
-    { href: "/user-management", labelKey: "nav.userManagement", icon: Settings, section: "operations" },
+    { href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard, section: "main", featureKey: null },
+    { href: "/properties", labelKey: "nav.properties", icon: Building2, section: "main", featureKey: "properties" },
+    { href: "/rooms", labelKey: "nav.rooms", icon: DoorOpen, section: "main", featureKey: "rooms" },
+    { href: "/guests", labelKey: "nav.guests", icon: Users, section: "main", featureKey: "guests" },
+    { href: "/bookings", labelKey: "nav.bookings", icon: Calendar, section: "main", featureKey: "bookings" },
+    { href: "/unit-map", labelKey: "nav.unitMap", icon: MapPin, section: "main", featureKey: "unitMap" },
+    { href: "/finance", labelKey: "nav.finance", icon: BarChart3, section: "operations", featureKey: "finance" },
+    { href: "/maintenance", labelKey: "nav.maintenance", icon: Wrench, section: "operations", featureKey: "maintenance" },
+    { href: "/staff", labelKey: "nav.staff", icon: UserCog, section: "operations", featureKey: "staff" },
+    { href: "/tasks", labelKey: "nav.tasks", icon: ClipboardList, section: "operations", featureKey: "tasks" },
+    { href: "/guest-requests", labelKey: "nav.guestRequests", icon: InboxIcon, section: "operations", featureKey: "guestRequests" },
+    { href: "/activity-log", labelKey: "nav.activityLog", icon: History, section: "operations", featureKey: "activityLog" },
+    { href: "/user-management", labelKey: "nav.userManagement", icon: Settings, section: "operations", featureKey: "userManagement" },
   ];
 
   const ROLE_ICON_COLORS: Record<string, string> = {
@@ -57,7 +57,13 @@ import React, { useState } from "react";
     const { t } = useTranslation();
     const settings = useSettings();
 
-    const visibleNavItems = NAV_ITEMS.filter((item) => can(item.href));
+    const visibleNavItems = NAV_ITEMS.filter((item) => {
+      if (!can(item.href)) return false;
+      if (item.featureKey && settings.enabledFeatures.length > 0) {
+        return settings.enabledFeatures.includes(item.featureKey);
+      }
+      return true;
+    });
     const mainNav = visibleNavItems.filter((i) => i.section === "main");
     const opsNav = visibleNavItems.filter((i) => i.section === "operations");
     const showOpsSection = opsNav.length > 0;
