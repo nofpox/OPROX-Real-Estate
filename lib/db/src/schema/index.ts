@@ -13,3 +13,4 @@ export * from "./guestFeedback";
 export * from "./activityLogs";
 export * from "./unitFinancials";
 export * from "./settings";
+export * from "./fieldUsers";

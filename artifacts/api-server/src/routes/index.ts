@@ -18,6 +18,7 @@ import { Router, type IRouter } from "express";
   import activityLogsRouter from "./activityLogs";
   import maintenanceRequestsRouter from "./maintenanceRequests";
 import settingsRouter from "./settings";
+import fieldUsersRouter from "./fieldUsers";
 
   const router: IRouter = Router();
 
@@ -40,6 +41,7 @@ import settingsRouter from "./settings";
   router.use(notificationsRouter);
   router.use(shiftsRouter);
   router.use(settingsRouter);
+  router.use(fieldUsersRouter);
 
   export default router;
   

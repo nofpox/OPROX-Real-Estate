@@ -628,6 +628,30 @@ export interface MaintenanceRequestInput {
   source?: string;
 }
 
+export interface FieldUser {
+  id: number;
+  name: string;
+  role: string;
+  email?: string | null;
+  phone?: string | null;
+  propertyId?: number | null;
+  propertyName?: string | null;
+  status: string;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FieldUserInput {
+  name: string;
+  role: string;
+  email?: string;
+  phone?: string;
+  propertyId?: number;
+  status?: string;
+  notes?: string;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
@@ -720,5 +744,11 @@ export type UpdateGuestRequestBody = {
 
 export type ListActivityLogsParams = {
 limit?: number;
+};
+
+export type ListFieldUsersParams = {
+propertyId?: number;
+role?: string;
+status?: string;
 };
 

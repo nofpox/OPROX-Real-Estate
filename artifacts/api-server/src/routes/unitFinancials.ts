@@ -51,7 +51,7 @@ import { Router } from "express";
     if (existing.length > 0) {
       await db.update(unitFinancialsTable).set(update).where(eq(unitFinancialsTable.roomId, roomId));
     } else {
-      await db.insert(unitFinancialsTable).values({ roomId, ...update } as Parameters<typeof db.insert>[1] extends infer T ? any : any);
+      await db.insert(unitFinancialsTable).values({ roomId, ...update } as any);
     }
     const [row] = await db
       .select({ fin: unitFinancialsTable, room: roomsTable, property: propertiesTable })

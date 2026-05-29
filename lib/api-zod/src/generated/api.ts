@@ -1338,3 +1338,82 @@ export const CreateMaintenanceRequestBody = zod.object({
 })
 
 
+/**
+ * @summary List field operations users
+ */
+export const ListFieldUsersQueryParams = zod.object({
+  "propertyId": zod.coerce.number().optional(),
+  "role": zod.coerce.string().optional(),
+  "status": zod.coerce.string().optional()
+})
+
+export const ListFieldUsersResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "email": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListFieldUsersResponse = zod.array(ListFieldUsersResponseItem)
+
+
+/**
+ * @summary Create a field user
+ */
+export const CreateFieldUserBody = zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "email": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "propertyId": zod.number().optional(),
+  "status": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a field user
+ */
+export const UpdateFieldUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateFieldUserBody = zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "email": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "propertyId": zod.number().optional(),
+  "status": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateFieldUserResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "email": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a field user
+ */
+export const DeleteFieldUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
