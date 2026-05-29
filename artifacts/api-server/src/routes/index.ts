@@ -10,6 +10,7 @@ import workOrdersRouter from "./workOrders";
 import staffRouter from "./staff";
 import tasksRouter from "./tasks";
 import notificationsRouter from "./notifications";
+import shiftsRouter from "./shifts";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(workOrdersRouter);
 router.use(staffRouter);
 router.use(tasksRouter);
 router.use(notificationsRouter);
+router.use(shiftsRouter);
 
 export default router;

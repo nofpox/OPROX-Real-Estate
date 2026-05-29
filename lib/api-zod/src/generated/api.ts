@@ -832,6 +832,88 @@ export const MarkNotificationReadResponse = zod.object({
 
 
 /**
+ * @summary List shifts
+ */
+export const ListShiftsQueryParams = zod.object({
+  "propertyId": zod.coerce.number().optional(),
+  "staffId": zod.coerce.number().optional(),
+  "startDate": zod.coerce.string().optional().describe('YYYY-MM-DD'),
+  "endDate": zod.coerce.string().optional().describe('YYYY-MM-DD')
+})
+
+export const ListShiftsResponseItem = zod.object({
+  "id": zod.number(),
+  "staffId": zod.number(),
+  "staffName": zod.string().nullish(),
+  "staffRole": zod.string().nullish(),
+  "propertyId": zod.number(),
+  "propertyName": zod.string().nullish(),
+  "date": zod.string(),
+  "shiftType": zod.string().describe('morning, afternoon, evening, night'),
+  "startTime": zod.string(),
+  "endTime": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListShiftsResponse = zod.array(ListShiftsResponseItem)
+
+
+/**
+ * @summary Create a shift
+ */
+export const CreateShiftBody = zod.object({
+  "staffId": zod.number(),
+  "propertyId": zod.number(),
+  "date": zod.string(),
+  "shiftType": zod.string(),
+  "startTime": zod.string(),
+  "endTime": zod.string(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a shift
+ */
+export const UpdateShiftParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateShiftBody = zod.object({
+  "staffId": zod.number().optional(),
+  "propertyId": zod.number().optional(),
+  "date": zod.string().optional(),
+  "shiftType": zod.string().optional(),
+  "startTime": zod.string().optional(),
+  "endTime": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateShiftResponse = zod.object({
+  "id": zod.number(),
+  "staffId": zod.number(),
+  "staffName": zod.string().nullish(),
+  "staffRole": zod.string().nullish(),
+  "propertyId": zod.number(),
+  "propertyName": zod.string().nullish(),
+  "date": zod.string(),
+  "shiftType": zod.string().describe('morning, afternoon, evening, night'),
+  "startTime": zod.string(),
+  "endTime": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a shift
+ */
+export const DeleteShiftParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary List all unique guests with their booking history
  */
 export const ListGuestsQueryParams = zod.object({

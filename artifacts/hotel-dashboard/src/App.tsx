@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
+import { RoleProvider } from "@/contexts/role-context";
 import Dashboard from "@/pages/dashboard";
 import Bookings from "@/pages/bookings";
 import NewBooking from "@/pages/booking-new";
@@ -21,10 +22,7 @@ import Tasks from "@/pages/tasks";
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: false,
-    },
+    queries: { refetchOnWindowFocus: false, retry: false },
   },
 });
 
@@ -54,11 +52,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Layout>
-            <Router />
-          </Layout>
-        </WouterRouter>
+        <RoleProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Layout>
+              <Router />
+            </Layout>
+          </WouterRouter>
+        </RoleProvider>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

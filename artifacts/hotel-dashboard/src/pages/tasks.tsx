@@ -50,9 +50,10 @@ import {
   AlertCircle,
   Trash2,
   CheckCheck,
-  ChevronRight,
+  Shield,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useRole } from "@/contexts/role-context";
 
 const CATEGORIES = ["housekeeping", "reception", "maintenance", "security", "general"];
 
@@ -117,6 +118,7 @@ export default function Tasks() {
   const deleteTask = useDeleteTask();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { role, allowedTaskCategories } = useRole();
 
   const form = useForm<z.infer<typeof taskSchema>>({
     resolver: zodResolver(taskSchema),
@@ -141,6 +143,7 @@ export default function Tasks() {
   }) || [];
 
   const filteredTasks = tasks?.filter((t) => {
+    if (allowedTaskCategories !== null && !allowedTaskCategories.includes(t.category)) return false;
     if (categoryFilter !== "all" && t.category !== categoryFilter) return false;
     return true;
   }) || [];

@@ -30,6 +30,8 @@ tags:
     description: Staff task assignment
   - name: notifications
     description: System notifications and alerts
+  - name: shifts
+    description: Staff shift scheduling
 paths:
   /healthz:
     get:
@@ -866,6 +868,99 @@ paths:
         "200":
           description: All marked read
 
+  /shifts:
+    get:
+      operationId: listShifts
+      tags: [shifts]
+      summary: List shifts
+      parameters:
+        - name: propertyId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: staffId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "YYYY-MM-DD"
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "YYYY-MM-DD"
+      responses:
+        "200":
+          description: List of shifts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Shift"
+    post:
+      operationId: createShift
+      tags: [shifts]
+      summary: Create a shift
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShiftInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shift"
+
+  /shifts/{id}:
+    patch:
+      operationId: updateShift
+      tags: [shifts]
+      summary: Update a shift
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShiftUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shift"
+    delete:
+      operationId: deleteShift
+      tags: [shifts]
+      summary: Delete a shift
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /guests:
     get:
       operationId: listGuests
@@ -1607,3 +1702,70 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Booking"
+
+    Shift:
+      type: object
+      required: [id, staffId, propertyId, date, shiftType, startTime, endTime, createdAt]
+      properties:
+        id:
+          type: integer
+        staffId:
+          type: integer
+        staffName:
+          type: ["string", "null"]
+        staffRole:
+          type: ["string", "null"]
+        propertyId:
+          type: integer
+        propertyName:
+          type: ["string", "null"]
+        date:
+          type: string
+        shiftType:
+          type: string
+          description: "morning, afternoon, evening, night"
+        startTime:
+          type: string
+        endTime:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    ShiftInput:
+      type: object
+      required: [staffId, propertyId, date, shiftType, startTime, endTime]
+      properties:
+        staffId:
+          type: integer
+        propertyId:
+          type: integer
+        date:
+          type: string
+        shiftType:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        notes:
+          type: string
+
+    ShiftUpdate:
+      type: object
+      properties:
+        staffId:
+          type: integer
+        propertyId:
+          type: integer
+        date:
+          type: string
+        shiftType:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        notes:
+          type: string

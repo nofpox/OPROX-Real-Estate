@@ -6,3 +6,4 @@ export * from "./workOrders";
 export * from "./staff";
 export * from "./tasks";
 export * from "./notifications";
+export * from "./shifts";

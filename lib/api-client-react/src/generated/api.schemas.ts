@@ -413,6 +413,46 @@ export interface GuestProfile {
   bookings: Booking[];
 }
 
+export interface Shift {
+  id: number;
+  staffId: number;
+  /** @nullable */
+  staffName?: string | null;
+  /** @nullable */
+  staffRole?: string | null;
+  propertyId: number;
+  /** @nullable */
+  propertyName?: string | null;
+  date: string;
+  /** morning, afternoon, evening, night */
+  shiftType: string;
+  startTime: string;
+  endTime: string;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface ShiftInput {
+  staffId: number;
+  propertyId: number;
+  date: string;
+  shiftType: string;
+  startTime: string;
+  endTime: string;
+  notes?: string;
+}
+
+export interface ShiftUpdate {
+  staffId?: number;
+  propertyId?: number;
+  date?: string;
+  shiftType?: string;
+  startTime?: string;
+  endTime?: string;
+  notes?: string;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
@@ -451,6 +491,19 @@ date?: string;
 
 export type ListNotificationsParams = {
 unreadOnly?: boolean;
+};
+
+export type ListShiftsParams = {
+propertyId?: number;
+staffId?: number;
+/**
+ * YYYY-MM-DD
+ */
+startDate?: string;
+/**
+ * YYYY-MM-DD
+ */
+endDate?: string;
 };
 
 export type ListGuestsParams = {
