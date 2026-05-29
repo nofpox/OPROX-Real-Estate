@@ -14,7 +14,7 @@ import { Router } from "express";
     return crypto.createHash("sha256").update(`grand-pms::${password}`).digest("hex");
   }
 
-  async function ensureAdmin() {
+  export async function ensureAdmin() {
     try {
       const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.username, "admin"));
       if (existing.length === 0) {
@@ -24,9 +24,10 @@ import { Router } from "express";
           permissions: JSON.stringify(["all"]), isActive: true,
         });
       }
-    } catch { /* DB not ready yet */ }
+    } catch (err: any) {
+      // table may not exist yet — will be called again after migrations
+    }
   }
-  ensureAdmin();
 
   const router = Router();
 

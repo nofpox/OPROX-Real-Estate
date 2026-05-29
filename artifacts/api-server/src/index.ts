@@ -1,6 +1,7 @@
 import app from "./app";
   import { logger } from "./lib/logger";
   import { runMigrations } from "./lib/migrate";
+  import { ensureAdmin } from "./routes/auth";
 
   const rawPort = process.env["PORT"];
 
@@ -16,8 +17,9 @@ import app from "./app";
     throw new Error(`Invalid PORT value: "${rawPort}"`);
   }
 
-  // Run migrations then start server
+  // Run migrations, seed admin, then start server
   runMigrations()
+    .then(() => ensureAdmin())
     .then(() => {
       app.listen(port, (err) => {
         if (err) {
