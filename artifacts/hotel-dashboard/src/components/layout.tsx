@@ -1,202 +1,204 @@
 import React from "react";
-import { Link, useLocation } from "wouter";
-import {
-  LayoutDashboard, Calendar, DoorOpen, Menu, Users, Building2,
-  BarChart3, Wrench, UserCog, ClipboardList, ChevronDown, Shield,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { NotificationBell } from "@/components/notification-bell";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { useRole, ROLES, type AppRole } from "@/contexts/role-context";
-import { useLanguage } from "@/contexts/language-context";
-import { useTranslation } from "react-i18next";
+  import { Link, useLocation } from "wouter";
+  import {
+    LayoutDashboard, Calendar, DoorOpen, Menu, Users, Building2,
+    BarChart3, Wrench, UserCog, ClipboardList, ChevronDown, Shield,
+    MapPin, InboxIcon, History, Settings,
+  } from "lucide-react";
+  import { Button } from "@/components/ui/button";
+  import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+  import {
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+    DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  } from "@/components/ui/dropdown-menu";
+  import { NotificationBell } from "@/components/notification-bell";
+  import { LanguageSwitcher } from "@/components/language-switcher";
+  import { useRole, ROLES, type AppRole } from "@/contexts/role-context";
+  import { useLanguage } from "@/contexts/language-context";
+  import { useTranslation } from "react-i18next";
+  import type { AuthUser } from "@/App";
 
-const NAV_ITEMS = [
-  { href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard, section: "main" },
-  { href: "/bookings", labelKey: "nav.bookings", icon: Calendar, section: "main" },
-  { href: "/properties", labelKey: "nav.properties", icon: Building2, section: "main" },
-  { href: "/rooms", labelKey: "nav.rooms", icon: DoorOpen, section: "main" },
-  { href: "/guests", labelKey: "nav.guests", icon: Users, section: "main" },
-  { href: "/finance", labelKey: "nav.finance", icon: BarChart3, section: "operations" },
-  { href: "/maintenance", labelKey: "nav.maintenance", icon: Wrench, section: "operations" },
-  { href: "/staff", labelKey: "nav.staff", icon: UserCog, section: "operations" },
-  { href: "/tasks", labelKey: "nav.tasks", icon: ClipboardList, section: "operations" },
-];
+  const NAV_ITEMS = [
+    { href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard, section: "main" },
+    { href: "/properties", labelKey: "nav.properties", icon: Building2, section: "main" },
+    { href: "/rooms", labelKey: "nav.rooms", icon: DoorOpen, section: "main" },
+    { href: "/guests", labelKey: "nav.guests", icon: Users, section: "main" },
+    { href: "/bookings", labelKey: "nav.bookings", icon: Calendar, section: "main" },
+    { href: "/unit-map", labelKey: "nav.unitMap", icon: MapPin, section: "main" },
+    { href: "/finance", labelKey: "nav.finance", icon: BarChart3, section: "operations" },
+    { href: "/maintenance", labelKey: "nav.maintenance", icon: Wrench, section: "operations" },
+    { href: "/staff", labelKey: "nav.staff", icon: UserCog, section: "operations" },
+    { href: "/tasks", labelKey: "nav.tasks", icon: ClipboardList, section: "operations" },
+    { href: "/guest-requests", labelKey: "nav.guestRequests", icon: InboxIcon, section: "operations" },
+    { href: "/activity-log", labelKey: "nav.activityLog", icon: History, section: "operations" },
+    { href: "/user-management", labelKey: "nav.userManagement", icon: Settings, section: "operations" },
+  ];
 
-const ROLE_ICON_COLORS: Record<string, string> = {
-  manager: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  "front-desk": "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  housekeeping: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  maintenance: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  security: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-};
-
-export function Layout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
-  const { role, setRoleId, can } = useRole();
-  const { isRTL } = useLanguage();
-  const { t } = useTranslation();
-
-  const visibleNavItems = NAV_ITEMS.filter((item) => can(item.href));
-  const mainNav = visibleNavItems.filter((i) => i.section === "main");
-  const opsNav = visibleNavItems.filter((i) => i.section === "operations");
-  const showOpsSection = opsNav.length > 0;
-
-  const renderNavItem = (item: (typeof NAV_ITEMS)[0]) => {
-    const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
-    const Icon = item.icon;
-    return (
-      <Link
-        key={item.href}
-        href={item.href}
-        className={`flex items-center gap-3 rounded-md px-3 py-2.5 transition-all text-sm font-medium ${
-          isActive
-            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-        }`}
-        data-testid={`nav-${item.href.replace("/", "") || "dashboard"}`}
-      >
-        <Icon className="h-5 w-5 shrink-0" />
-        {t(item.labelKey)}
-      </Link>
-    );
+  const ROLE_ICON_COLORS: Record<string, string> = {
+    manager: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+    "front-desk": "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    housekeeping: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    maintenance: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+    security: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   };
 
-  const sidebarSide = isRTL ? "right-0" : "left-0";
-  const sidebarBorder = isRTL ? "border-l" : "border-r";
-  const mainPadding = isRTL ? "lg:pr-64" : "lg:pl-64";
+  interface LayoutProps {
+    children: React.ReactNode;
+    authUser: AuthUser;
+    onLogout: () => void;
+  }
 
-  return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/30 lg:flex-row">
-      {/* Sidebar */}
-      <aside className={`hidden w-64 flex-col bg-sidebar text-sidebar-foreground lg:flex fixed inset-y-0 z-10 ${sidebarSide} ${sidebarBorder}`}>
-        <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border">
-          <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
-            <span className="text-xl">Grand</span>
-            <span className="text-sidebar-foreground font-sans font-medium text-lg">PMS</span>
-          </Link>
-        </div>
+  export function Layout({ children, authUser, onLogout }: LayoutProps) {
+    const [location] = useLocation();
+    const { role, setRoleId, can } = useRole();
+    const { isRTL } = useLanguage();
+    const { t } = useTranslation();
 
-        <div className="flex-1 overflow-auto py-4">
-          <nav className="grid items-start px-4 gap-1">
-            {mainNav.map(renderNavItem)}
+    const visibleNavItems = NAV_ITEMS.filter((item) => can(item.href));
+    const mainNav = visibleNavItems.filter((i) => i.section === "main");
+    const opsNav = visibleNavItems.filter((i) => i.section === "operations");
+    const showOpsSection = opsNav.length > 0;
 
-            {showOpsSection && (
-              <>
-                <div className="text-xs font-semibold uppercase tracking-widest text-sidebar-foreground/40 px-3 py-2 mt-4">
-                  {t("nav.operations")}
-                </div>
-                {opsNav.map(renderNavItem)}
-              </>
-            )}
-          </nav>
-        </div>
+    const displayName = authUser?.displayName ?? "User";
+    const initials = displayName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase();
 
-        {/* Role Switcher + User */}
-        <div className="border-t border-sidebar-border">
-          <div className="px-4 pt-3 pb-2">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40 mb-1.5 px-1">
-              {t("roles.viewingAs")}
-            </p>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 bg-sidebar-accent/40 hover:bg-sidebar-accent/70 transition-colors text-sm font-medium">
-                  <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${ROLE_ICON_COLORS[role.id]}`}>
-                    <Shield className="h-3 w-3" />
-                  </span>
-                  <span className="flex-1 text-start text-sidebar-foreground">{t(`roles.${role.id}`)}</span>
-                  <ChevronDown className="h-3.5 w-3.5 text-sidebar-foreground/50 shrink-0" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-56 mb-1">
-                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{t("roles.switchRole")}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {ROLES.map((r) => (
-                  <DropdownMenuItem
-                    key={r.id}
-                    onClick={() => setRoleId(r.id as AppRole)}
-                    className={`flex flex-col items-start gap-0.5 ${role.id === r.id ? "bg-accent" : ""}`}
-                  >
-                    <div className="flex items-center gap-2 w-full">
-                      <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${ROLE_ICON_COLORS[r.id]}`}>
-                        <Shield className="h-3 w-3" />
-                      </span>
-                      <span className="font-medium">{t(`roles.${r.id}`)}</span>
-                      {role.id === r.id && <span className="ml-auto text-[10px] text-muted-foreground">{t("roles.active")}</span>}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground ps-7">{t(`roles.desc.${r.id}`)}</p>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+    const renderNavItem = (item: (typeof NAV_ITEMS)[0]) => {
+      const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+      const Icon = item.icon;
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={`flex items-center gap-3 rounded-md px-3 py-2.5 transition-all text-sm font-medium ${
+            isActive
+              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+          }`}
+          data-testid={`nav-${item.href.replace("/", "") || "dashboard"}`}
+        >
+          <Icon className="h-5 w-5 shrink-0" />
+          {t(item.labelKey)}
+        </Link>
+      );
+    };
+
+    const sidebarSide = isRTL ? "right-0" : "left-0";
+    const sidebarBorder = isRTL ? "border-l" : "border-r";
+    const mainPadding = isRTL ? "lg:pr-64" : "lg:pl-64";
+
+    return (
+      <div className="flex min-h-screen w-full flex-col bg-muted/30 lg:flex-row">
+        <aside className={`hidden w-64 flex-col bg-sidebar text-sidebar-foreground lg:flex fixed inset-y-0 z-10 ${sidebarSide} ${sidebarBorder}`}>
+          <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border">
+            <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
+              <span className="text-xl">Grand</span>
+              <span className="text-sidebar-foreground font-sans font-medium text-lg">PMS</span>
+            </Link>
           </div>
 
-          {/* User info */}
-          <div className="px-4 pb-4">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-md">
-              <Avatar className="h-9 w-9 border border-sidebar-border">
-                <AvatarImage src="" alt="Manager" />
-                <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground font-semibold">AM</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-medium truncate">Alex Morgan</span>
-                <span className="text-xs text-sidebar-foreground/60 truncate">{t(`roles.${role.id}`)}</span>
-              </div>
+          <div className="flex-1 overflow-auto py-4">
+            <nav className="grid items-start px-4 gap-1">
+              {mainNav.map(renderNavItem)}
+              {showOpsSection && (
+                <>
+                  <div className="text-xs font-semibold uppercase tracking-widest text-sidebar-foreground/40 px-3 py-2 mt-4">
+                    {t("nav.operations")}
+                  </div>
+                  {opsNav.map(renderNavItem)}
+                </>
+              )}
+            </nav>
+          </div>
+
+          <div className="border-t border-sidebar-border">
+            <div className="px-4 pt-3 pb-2">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40 mb-1.5 px-1">
+                {t("roles.viewingAs")}
+              </p>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 bg-sidebar-accent/40 hover:bg-sidebar-accent/70 transition-colors text-sm font-medium">
+                    <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${ROLE_ICON_COLORS[role.id]}`}>
+                      <Shield className="h-3 w-3" />
+                    </span>
+                    <span className="flex-1 text-start text-sidebar-foreground">{t(`roles.${role.id}`)}</span>
+                    <ChevronDown className="h-3.5 w-3.5 text-sidebar-foreground/50 shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="start" className="w-56 mb-1">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{t("roles.switchRole")}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {ROLES.map((r) => (
+                    <DropdownMenuItem
+                      key={r.id}
+                      onClick={() => setRoleId(r.id as AppRole)}
+                      className={`flex flex-col items-start gap-0.5 ${role.id === r.id ? "bg-accent" : ""}`}
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${ROLE_ICON_COLORS[r.id]}`}>
+                          <Shield className="h-3 w-3" />
+                        </span>
+                        <span className="font-medium">{t(`roles.${r.id}`)}</span>
+                        {role.id === r.id && <span className="ml-auto text-[10px] text-muted-foreground">{t("roles.active")}</span>}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground ps-7">{t(`roles.desc.${r.id}`)}</p>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <div className="px-4 pb-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-sidebar-accent/40 cursor-pointer transition-colors">
+                    <Avatar className="h-9 w-9 border border-sidebar-border">
+                      <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground font-semibold text-sm">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-sm font-medium truncate">{displayName}</span>
+                      <span className="text-xs text-sidebar-foreground/60 truncate capitalize">{authUser?.role ?? "staff"}</span>
+                    </div>
+                    <ChevronDown className="h-3.5 w-3.5 text-sidebar-foreground/50 shrink-0" />
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="start" className="w-52 mb-1">
+                  <DropdownMenuLabel className="text-sm">{displayName}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onLogout} className="text-destructive focus:text-destructive">
+                    {t("header.logout")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
+        </aside>
+
+        <div className={`flex flex-1 flex-col ${mainPadding}`}>
+          <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6 sticky top-0 z-10">
+            <div className="flex items-center gap-4 lg:hidden">
+              <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
+              <Link href="/" className="font-serif text-lg font-bold">Grand PMS</Link>
+            </div>
+            <div className="hidden lg:flex items-center">
+              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_ICON_COLORS[role.id]}`}>
+                <Shield className="h-3 w-3" />
+                {t(`roles.${role.id}`)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 ms-auto">
+              <LanguageSwitcher />
+              <NotificationBell />
+            </div>
+          </header>
+
+          <main className="flex-1 p-4 md:p-6 lg:p-8">
+            {children}
+          </main>
         </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className={`flex flex-1 flex-col ${mainPadding}`}>
-        {/* Topbar */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6 sticky top-0 z-10">
-          <div className="flex items-center gap-4 lg:hidden">
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-            </Button>
-            <Link href="/" className="font-serif text-lg font-bold">Grand PMS</Link>
-          </div>
-
-          {/* Role pill */}
-          <div className="hidden lg:flex items-center">
-            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_ICON_COLORS[role.id]}`}>
-              <Shield className="h-3 w-3" />
-              {t(`roles.${role.id}`)}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 ms-auto">
-            <LanguageSwitcher />
-            <NotificationBell />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full lg:hidden">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary text-primary-foreground">AM</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{t("header.myAccount")}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>{t("header.settings")}</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>{t("header.logout")}</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
-
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-          {children}
-        </main>
       </div>
-    </div>
-  );
-}
+    );
+  }
+  

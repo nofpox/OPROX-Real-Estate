@@ -1,267 +1,319 @@
 import React, { useState } from "react";
-import { Link } from "wouter";
-import { useGetStatsOverview, useGetRecentBookings } from "@workspace/api-client-react";
-import { OccupancyHeatmap } from "@/components/occupancy-heatmap";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, DoorOpen, DollarSign, Percent, ArrowUpRight, CalendarDays, Clock, LineChart, LayoutGrid } from "lucide-react";
-import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
-import { useTranslation } from "react-i18next";
-import { useLanguage } from "@/contexts/language-context";
+  import { Link } from "wouter";
+  import { useGetStatsOverview, useListRooms, useListWorkOrders } from "@workspace/api-client-react";
+  import { OccupancyHeatmap } from "@/components/occupancy-heatmap";
+  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+  import { Button } from "@/components/ui/button";
+  import { Badge } from "@/components/ui/badge";
+  import { Skeleton } from "@/components/ui/skeleton";
+  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+  import {
+    DoorOpen, DollarSign, Percent, Wrench, ArrowUpRight,
+    LineChart, LayoutGrid, MapPin, CheckCircle2, Settings,
+  } from "lucide-react";
+  import { useTranslation } from "react-i18next";
+  import { useLanguage } from "@/contexts/language-context";
 
-const TYPE_BADGE: Record<string, string> = {
-  Hotel: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  Compound: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-  "Furnished Apartments": "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400",
-  Apartment: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-};
+  const TYPE_BADGE: Record<string, string> = {
+    Hotel: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+    Compound: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+    "Furnished Apartments": "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400",
+    Apartment: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+  };
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+  const STATUS_COLORS: Record<string, string> = {
+    occupied: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400",
+    available: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400",
+    maintenance: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400",
+    cleaning: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400",
+  };
 
-const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "confirmed": return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-    case "checked-in": return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-    case "checked-out": return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400";
-    case "cancelled": return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
-    default: return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400";
-  }
-};
+  const UNIT_DOT: Record<string, string> = {
+    occupied: "bg-red-500",
+    available: "bg-emerald-500",
+    maintenance: "bg-amber-500",
+    cleaning: "bg-blue-500",
+  };
 
-export default function Dashboard() {
-  const { t } = useTranslation();
-  const { lang } = useLanguage();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
-  const [selectedType, setSelectedType] = useState("all");
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
-  const PROPERTY_TYPES = [
-    { value: "all", label: t("propertyType.all") },
-    { value: "Hotel", label: t("propertyType.Hotel") },
-    { value: "Compound", label: t("propertyType.Compound") },
-    { value: "Furnished Apartments", label: t("propertyType.Furnished Apartments") },
-    { value: "Apartment", label: t("propertyType.Apartment") },
-  ];
+  export default function Dashboard() {
+    const { t } = useTranslation();
+    const { lang } = useLanguage();
+    const [selectedType, setSelectedType] = useState("all");
 
-  const typeParam = selectedType === "all" ? undefined : selectedType;
+    const PROPERTY_TYPES = [
+      { value: "all", label: t("propertyType.all") },
+      { value: "Hotel", label: t("propertyType.Hotel") },
+      { value: "Compound", label: t("propertyType.Compound") },
+      { value: "Furnished Apartments", label: t("propertyType.Furnished Apartments") },
+      { value: "Apartment", label: t("propertyType.Apartment") },
+    ];
 
-  const { data: stats, isLoading: statsLoading } = useGetStatsOverview(typeParam ? { propertyType: typeParam } : undefined);
-  const { data: recentBookings, isLoading: bookingsLoading } = useGetRecentBookings(typeParam ? { propertyType: typeParam } : undefined);
+    const typeParam = selectedType === "all" ? undefined : selectedType;
+    const { data: stats, isLoading: statsLoading } = useGetStatsOverview(typeParam ? { propertyType: typeParam } : undefined);
+    const { data: rooms, isLoading: roomsLoading } = useListRooms(typeParam ? { propertyId: undefined } : undefined);
+    const { data: workOrders } = useListWorkOrders({ status: "open" });
 
-  const selectedLabel = PROPERTY_TYPES.find((ty) => ty.value === selectedType)?.label ?? t("propertyType.all");
+    const selectedLabel = PROPERTY_TYPES.find((ty) => ty.value === selectedType)?.label ?? t("propertyType.all");
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{t("dashboard.title")}</h1>
-          <p className="text-muted-foreground mt-1">
-            {selectedType === "all"
-              ? t("dashboard.subtitle")
-              : t("dashboard.subtitleFiltered", { type: selectedLabel })}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-lg px-3 py-1.5">
-            <LayoutGrid className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">{t("dashboard.propertyType")}:</span>
-            <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="h-7 border-0 bg-transparent shadow-none focus:ring-0 px-1 text-sm font-semibold min-w-[160px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PROPERTY_TYPES.map((ty) => (
-                  <SelectItem key={ty.value} value={ty.value}>
-                    <div className="flex items-center gap-2">
-                      {ty.value !== "all" && (
-                        <span className={`inline-block h-2 w-2 rounded-full ${
-                          ty.value === "Hotel" ? "bg-blue-500"
-                          : ty.value === "Compound" ? "bg-green-500"
-                          : ty.value === "Furnished Apartments" ? "bg-indigo-500"
-                          : "bg-amber-500"
-                        }`} />
-                      )}
-                      {ty.label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+    // Compute operational counts from rooms
+    const allRooms = rooms ?? [];
+    const filteredRooms = typeParam
+      ? allRooms // already filtered by API if propertyId passed; for type filter we do client-side
+      : allRooms;
+    const occupiedCount = filteredRooms.filter((r) => r.status === "occupied").length;
+    const availableCount = filteredRooms.filter((r) => r.status === "available").length;
+    const maintenanceCount = filteredRooms.filter((r) => r.status === "maintenance").length;
+    const cleaningCount = filteredRooms.filter((r) => r.status === "cleaning").length;
+    const totalCount = filteredRooms.length;
+    const readyPct = totalCount > 0 ? Math.round((availableCount / totalCount) * 100) : 0;
 
-          {selectedType !== "all" && (
-            <Badge className={`${TYPE_BADGE[selectedType] ?? ""} border-0 text-xs font-medium`}>
-              {selectedLabel}
-            </Badge>
-          )}
+    // Open work orders count (maintenance requests)
+    const openWorkOrders = workOrders?.length ?? 0;
 
-          <Link href="/bookings/new">
-            <Button className="font-semibold shadow-sm">
-              <CalendarDays className="me-2 h-4 w-4" />
-              {t("dashboard.newBooking")}
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* KPI cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="shadow-sm border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.totalRevenue")}</CardTitle>
-            <div className="p-2 bg-primary/10 rounded-md"><DollarSign className="h-4 w-4 text-primary" /></div>
-          </CardHeader>
-          <CardContent>
-            {statsLoading ? <Skeleton className="h-8 w-24" /> : (
-              <div className="text-2xl font-bold text-foreground">{formatCurrency(stats?.monthlyRevenue || 0)}</div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <ArrowUpRight className="h-3 w-3 text-green-500" />
-              <span className="text-green-500 font-medium">12.5%</span> {t("dashboard.fromLastMonth")}
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{t("dashboard.title")}</h1>
+            <p className="text-muted-foreground mt-1">
+              {selectedType === "all" ? t("dashboard.subtitle") : t("dashboard.subtitleFiltered", { type: selectedLabel })}
             </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-lg px-3 py-1.5">
+              <LayoutGrid className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">{t("dashboard.propertyType")}:</span>
+              <Select value={selectedType} onValueChange={setSelectedType}>
+                <SelectTrigger className="h-7 border-0 bg-transparent shadow-none focus:ring-0 px-1 text-sm font-semibold min-w-[160px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROPERTY_TYPES.map((ty) => (
+                    <SelectItem key={ty.value} value={ty.value}>
+                      <div className="flex items-center gap-2">
+                        {ty.value !== "all" && (
+                          <span className={`inline-block h-2 w-2 rounded-full ${
+                            ty.value === "Hotel" ? "bg-blue-500"
+                            : ty.value === "Compound" ? "bg-green-500"
+                            : ty.value === "Furnished Apartments" ? "bg-indigo-500"
+                            : "bg-amber-500"
+                          }`} />
+                        )}
+                        {ty.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedType !== "all" && (
+              <Badge className={`${TYPE_BADGE[selectedType] ?? ""} border-0 text-xs font-medium`}>
+                {selectedLabel}
+              </Badge>
+            )}
+          </div>
+        </div>
 
-        <Card className="shadow-sm border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.availableRooms")}</CardTitle>
-            <div className="p-2 bg-blue-500/10 rounded-md"><DoorOpen className="h-4 w-4 text-blue-500" /></div>
-          </CardHeader>
-          <CardContent>
-            {statsLoading ? <Skeleton className="h-8 w-16" /> : (
-              <div className="text-2xl font-bold text-foreground">
-                {stats?.availableRooms || 0}{" "}
-                <span className="text-sm font-normal text-muted-foreground">/ {stats?.totalRooms || 0}</span>
+        {/* KPI Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* Revenue */}
+          <Card className="shadow-sm border-border/50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.totalRevenue")}</CardTitle>
+              <div className="p-2 bg-primary/10 rounded-md"><DollarSign className="h-4 w-4 text-primary" /></div>
+            </CardHeader>
+            <CardContent>
+              {statsLoading ? <Skeleton className="h-8 w-24" /> : (
+                <div className="text-2xl font-bold text-foreground">{formatCurrency(stats?.monthlyRevenue || 0)}</div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                <ArrowUpRight className="h-3 w-3 text-green-500" />
+                <span className="text-green-500 font-medium">12.5%</span> {t("dashboard.fromLastMonth")}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Available Units */}
+          <Card className="shadow-sm border-border/50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.availableUnits")}</CardTitle>
+              <div className="p-2 bg-emerald-500/10 rounded-md"><DoorOpen className="h-4 w-4 text-emerald-500" /></div>
+            </CardHeader>
+            <CardContent>
+              {roomsLoading ? <Skeleton className="h-8 w-16" /> : (
+                <div className="text-2xl font-bold text-foreground">
+                  {availableCount} <span className="text-sm font-normal text-muted-foreground">/ {totalCount}</span>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">{t("dashboard.readyForOccupancy")}</p>
+            </CardContent>
+          </Card>
+
+          {/* Occupancy Rate */}
+          <Card className="shadow-sm border-border/50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.occupancyRate")}</CardTitle>
+              <div className="p-2 bg-indigo-500/10 rounded-md"><Percent className="h-4 w-4 text-indigo-500" /></div>
+            </CardHeader>
+            <CardContent>
+              {statsLoading ? <Skeleton className="h-8 w-16" /> : (
+                <div className="text-2xl font-bold text-foreground">{stats?.occupancyRate || 0}%</div>
+              )}
+              <div className="mt-2 h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full" style={{ width: `${stats?.occupancyRate || 0}%` }} />
               </div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">{t("dashboard.readyForCheckIn")}</p>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
+          {/* Maintenance */}
+          <Card className="shadow-sm border-border/50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.maintenanceAlert")}</CardTitle>
+              <div className="p-2 bg-amber-500/10 rounded-md"><Wrench className="h-4 w-4 text-amber-500" /></div>
+            </CardHeader>
+            <CardContent>
+              {roomsLoading ? <Skeleton className="h-8 w-16" /> : (
+                <div className="text-2xl font-bold text-foreground">{maintenanceCount + openWorkOrders}</div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                {maintenanceCount} {t("dashboard.unitsInMaintenance")} · {openWorkOrders} {t("dashboard.openOrders")}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Unit Readiness Bar */}
         <Card className="shadow-sm border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.occupancyRate")}</CardTitle>
-            <div className="p-2 bg-indigo-500/10 rounded-md"><Percent className="h-4 w-4 text-indigo-500" /></div>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium font-serif">{t("dashboard.unitReadiness")}</CardTitle>
+              <span className="text-xs text-muted-foreground">{readyPct}% {t("dashboard.ready")}</span>
+            </div>
           </CardHeader>
           <CardContent>
-            {statsLoading ? <Skeleton className="h-8 w-16" /> : (
-              <div className="text-2xl font-bold text-foreground">{stats?.occupancyRate || 0}%</div>
-            )}
-            <div className="mt-2 h-1.5 w-full bg-secondary rounded-full overflow-hidden">
-              <div className="h-full bg-primary rounded-full" style={{ width: `${stats?.occupancyRate || 0}%` }} />
+            <div className="flex gap-1 h-3 w-full rounded-full overflow-hidden">
+              {occupiedCount > 0 && (
+                <div className="bg-red-500 transition-all" style={{ width: `${(occupiedCount / Math.max(totalCount, 1)) * 100}%` }} title={`${occupiedCount} Occupied`} />
+              )}
+              {maintenanceCount > 0 && (
+                <div className="bg-amber-500 transition-all" style={{ width: `${(maintenanceCount / Math.max(totalCount, 1)) * 100}%` }} title={`${maintenanceCount} Maintenance`} />
+              )}
+              {cleaningCount > 0 && (
+                <div className="bg-blue-500 transition-all" style={{ width: `${(cleaningCount / Math.max(totalCount, 1)) * 100}%` }} title={`${cleaningCount} Cleaning`} />
+              )}
+              {availableCount > 0 && (
+                <div className="bg-emerald-500 transition-all" style={{ width: `${(availableCount / Math.max(totalCount, 1)) * 100}%` }} title={`${availableCount} Available`} />
+              )}
+            </div>
+            <div className="flex items-center gap-4 mt-2 flex-wrap">
+              {[
+                { label: t("status.occupied"), color: "bg-red-500", count: occupiedCount },
+                { label: t("dashboard.maintenance"), color: "bg-amber-500", count: maintenanceCount },
+                { label: t("dashboard.cleaning"), color: "bg-blue-500", count: cleaningCount },
+                { label: t("status.available"), color: "bg-emerald-500", count: availableCount },
+              ].map(({ label, color, count }) => (
+                <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className={`h-2 w-2 rounded-full ${color}`} />
+                  {count} {label}
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.activeBookings")}</CardTitle>
-            <div className="p-2 bg-emerald-500/10 rounded-md"><Users className="h-4 w-4 text-emerald-500" /></div>
-          </CardHeader>
-          <CardContent>
-            {statsLoading ? <Skeleton className="h-8 w-16" /> : (
-              <div className="text-2xl font-bold text-foreground">{stats?.activeBookings || 0}</div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1 flex gap-2">
-              <span className="flex items-center"><Clock className="me-1 h-3 w-3" /> {stats?.pendingCheckIns || 0} {t("dashboard.checkIn")}</span>
-              <span className="flex items-center"><Clock className="me-1 h-3 w-3" /> {stats?.pendingCheckOuts || 0} {t("dashboard.checkOut")}</span>
-            </p>
-          </CardContent>
-        </Card>
+        <OccupancyHeatmap propertyType={typeParam} />
+
+        <div className="grid gap-6 md:grid-cols-7">
+          {/* Unit Status Grid */}
+          <Card className="md:col-span-5 shadow-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="font-serif">{t("dashboard.unitStatusOverview")}</CardTitle>
+              <CardDescription>{t("dashboard.unitStatusDesc")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {roomsLoading ? (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                  {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
+                </div>
+              ) : filteredRooms.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <DoorOpen className="h-10 w-10 text-muted-foreground/30 mb-3" />
+                  <p className="text-sm font-medium text-foreground">{t("common.noData")}</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                  {filteredRooms.map((room) => {
+                    const status = (room.status ?? "available").toLowerCase();
+                    const colorClass = STATUS_COLORS[status] ?? STATUS_COLORS["available"];
+                    const dotClass = UNIT_DOT[status] ?? UNIT_DOT["available"];
+                    return (
+                      <Link key={room.id} href="/rooms">
+                        <div className={`group relative rounded-lg border p-2.5 cursor-pointer hover:shadow-md transition-all ${colorClass}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className={`h-2 w-2 rounded-full shrink-0 ${dotClass}`} />
+                          </div>
+                          <p className="text-xs font-semibold leading-tight truncate">{room.name}</p>
+                          <p className="text-[10px] opacity-70 capitalize mt-0.5">{t(`status.${status}`, status)}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Operational Quick Actions */}
+          <Card className="md:col-span-2 shadow-sm border-border/50">
+            <CardHeader>
+              <CardTitle className="font-serif">{t("dashboard.quickActions")}</CardTitle>
+              <CardDescription>{t("dashboard.quickActionsDesc")}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <Link href="/rooms" className="w-full">
+                <Button variant="outline" className="w-full justify-start h-11">
+                  <DoorOpen className="me-2 h-4 w-4 text-emerald-500" />
+                  {t("dashboard.manageUnits")}
+                </Button>
+              </Link>
+              <Link href="/unit-map" className="w-full">
+                <Button variant="outline" className="w-full justify-start h-11">
+                  <MapPin className="me-2 h-4 w-4 text-indigo-500" />
+                  {t("dashboard.viewUnitMap")}
+                </Button>
+              </Link>
+              <Link href="/maintenance" className="w-full">
+                <Button variant="outline" className="w-full justify-start h-11">
+                  <Wrench className="me-2 h-4 w-4 text-amber-500" />
+                  {t("dashboard.maintenance")}
+                </Button>
+              </Link>
+              <Link href="/finance" className="w-full">
+                <Button variant="outline" className="w-full justify-start h-11">
+                  <LineChart className="me-2 h-4 w-4 text-primary" />
+                  {t("dashboard.viewReports")}
+                </Button>
+              </Link>
+              <Link href="/guest-requests" className="w-full">
+                <Button variant="outline" className="w-full justify-start h-11">
+                  <CheckCircle2 className="me-2 h-4 w-4 text-blue-500" />
+                  {t("dashboard.guestRequests")}
+                </Button>
+              </Link>
+              <Link href="/user-management" className="w-full">
+                <Button variant="outline" className="w-full justify-start h-11">
+                  <Settings className="me-2 h-4 w-4 text-slate-500" />
+                  {t("dashboard.userManagement")}
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      <OccupancyHeatmap propertyType={typeParam} />
-
-      <div className="grid gap-6 md:grid-cols-7 lg:grid-cols-7">
-        <Card className="md:col-span-4 lg:col-span-5 shadow-sm border-border/50">
-          <CardHeader>
-            <CardTitle className="font-serif">{t("dashboard.recentActivity")}</CardTitle>
-            <CardDescription>
-              {selectedType === "all"
-                ? t("dashboard.recentActivityDesc")
-                : t("dashboard.recentActivityDescFiltered", { type: selectedLabel })}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {bookingsLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="space-y-2 flex-1"><Skeleton className="h-4 w-[200px]" /><Skeleton className="h-3 w-[150px]" /></div>
-                  </div>
-                ))}
-              </div>
-            ) : recentBookings && recentBookings.length > 0 ? (
-              <div className="space-y-6">
-                {recentBookings.slice(0, 6).map((booking) => (
-                  <div key={booking.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-10 w-10 border">
-                        <AvatarFallback className="bg-primary/5 text-primary font-medium">
-                          {booking.guestName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium leading-none text-foreground">{booking.guestName}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {booking.roomName} • {new Date(booking.checkIn + "T00:00:00").toLocaleDateString(locale)} – {new Date(booking.checkOut + "T00:00:00").toLocaleDateString(locale)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-sm font-semibold">{formatCurrency(booking.totalAmount)}</span>
-                      <Badge variant="outline" className={`text-[10px] px-2 py-0 h-5 border-0 ${getStatusColor(booking.status)}`}>
-                        {t(`status.${booking.status}`, booking.status)}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <CalendarDays className="h-10 w-10 text-muted-foreground/30 mb-3" />
-                <p className="text-sm font-medium text-foreground">{t("dashboard.noRecentBookings")}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {selectedType === "all"
-                    ? t("dashboard.noRecentBookingsDesc")
-                    : t("dashboard.noRecentBookingsDescFiltered", { type: selectedLabel })}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-3 lg:col-span-2 shadow-sm border-border/50">
-          <CardHeader>
-            <CardTitle className="font-serif">{t("dashboard.quickActions")}</CardTitle>
-            <CardDescription>{t("dashboard.quickActionsDesc")}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <Link href="/bookings/new" className="w-full">
-              <Button variant="outline" className="w-full justify-start h-12">
-                <CalendarDays className="me-2 h-4 w-4 text-primary" />
-                {t("dashboard.createBooking")}
-              </Button>
-            </Link>
-            <Link href="/rooms" className="w-full">
-              <Button variant="outline" className="w-full justify-start h-12">
-                <DoorOpen className="me-2 h-4 w-4 text-blue-500" />
-                {t("dashboard.manageRooms")}
-              </Button>
-            </Link>
-            <Link href="/finance" className="w-full">
-              <Button variant="outline" className="w-full justify-start h-12">
-                <LineChart className="me-2 h-4 w-4 text-emerald-500" />
-                {t("dashboard.viewReports")}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
+    );
+  }
+  

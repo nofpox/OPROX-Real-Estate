@@ -76,6 +76,7 @@
   },
   "dependencies": {
     "i18next": "^26.3.0",
-    "react-i18next": "^17.0.8"
+    "react-i18next": "^17.0.8",
+    "react-qr-code": "^2.0.21"
   }
 }

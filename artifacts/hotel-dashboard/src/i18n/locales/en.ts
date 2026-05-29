@@ -43,6 +43,8 @@ const en = {
     email: "Email",
     phone: "Phone",
     noData: "No data found.",
+      refresh: "Refresh",
+      all: "All",
     createdOn: "Created on",
     notProvided: "Not provided",
     perNight: "/night",
@@ -244,6 +246,9 @@ const en = {
       Presidential: "Presidential",
     },
     perNight: "/nt",
+      viewQR: "View QR Code",
+      qrCodeFor: "QR Code —",
+      qrScanHint: "Residents scan this code to access the unit portal.",
     guests: "Guests",
   },
   guests: {

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/guest-portal/"
+title = "Guest Portal"
+version = "1.0.0"
+id = "artifacts/guest-portal"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/guest-portal/" ]
+localPort = 20240
+
+[services.development]
+run = "pnpm --filter @workspace/guest-portal run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/guest-portal", "run", "build" ]
+publicDir = "artifacts/guest-portal/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20240"
+BASE_PATH = "/guest-portal/"
