@@ -22,9 +22,6 @@ import React, { useState } from "react";
   import { useTranslation } from "react-i18next";
   import QRCodeSVG from "react-qr-code";
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
-
   const RoomStatusBadge = ({ status }: { status: string }) => {
     const { t } = useTranslation();
     switch (status.toLowerCase()) {
@@ -42,7 +39,6 @@ import React, { useState } from "react";
   const roomSchema = z.object({
     name: z.string().min(1),
     type: z.string().min(1),
-    pricePerNight: z.coerce.number().min(0),
     status: z.string().min(1),
     capacity: z.coerce.number().min(1),
   });
@@ -63,12 +59,12 @@ import React, { useState } from "react";
 
     const form = useForm<z.infer<typeof roomSchema>>({
       resolver: zodResolver(roomSchema),
-      defaultValues: { name: "", type: "Standard", pricePerNight: 100, status: "available", capacity: 2 },
+      defaultValues: { name: "", type: "Standard", status: "available", capacity: 2 },
     });
 
     const handleEdit = (room: Room) => {
       setEditingRoom(room);
-      form.reset({ name: room.name, type: room.type, pricePerNight: room.pricePerNight, status: room.status, capacity: room.capacity || 2 });
+      form.reset({ name: room.name, type: room.type, status: room.status, capacity: room.capacity || 2 });
       setIsDialogOpen(true);
     };
 
@@ -82,13 +78,14 @@ import React, { useState } from "react";
     };
 
     const onSubmit = (data: z.infer<typeof roomSchema>) => {
+      const payload = { ...data, pricePerNight: editingRoom?.pricePerNight ?? 0 };
       if (editingRoom) {
-        updateRoom.mutate({ id: editingRoom.id, data }, {
+        updateRoom.mutate({ id: editingRoom.id, data: payload }, {
           onSuccess: () => { toast({ title: t("rooms.updateSuccess") }); queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() }); setIsDialogOpen(false); },
           onError: () => { toast({ title: t("rooms.updateFailed"), variant: "destructive" }); },
         });
       } else {
-        createRoom.mutate({ data }, {
+        createRoom.mutate({ data: payload }, {
           onSuccess: () => { toast({ title: t("rooms.createSuccess") }); queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() }); setIsDialogOpen(false); },
           onError: () => { toast({ title: t("rooms.createFailed"), variant: "destructive" }); },
         });
@@ -97,7 +94,7 @@ import React, { useState } from "react";
 
     const onOpenChange = (open: boolean) => {
       setIsDialogOpen(open);
-      if (!open) { setEditingRoom(null); form.reset({ name: "", type: "Standard", pricePerNight: 100, status: "available", capacity: 2 }); }
+      if (!open) { setEditingRoom(null); form.reset({ name: "", type: "Standard", status: "available", capacity: 2 }); }
     };
 
     const filteredRooms = rooms?.filter(
@@ -161,29 +158,20 @@ import React, { useState } from "react";
                       </FormItem>
                     )} />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField control={form.control} name="pricePerNight" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("rooms.fields.price")}</FormLabel>
-                        <FormControl><Input type="number" min="0" step="0.01" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="status" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("rooms.fields.status")}</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl><SelectTrigger><SelectValue placeholder={t("rooms.fields.selectStatus")} /></SelectTrigger></FormControl>
-                          <SelectContent>
-                            <SelectItem value="available">{t("status.available")}</SelectItem>
-                            <SelectItem value="occupied">{t("status.occupied")}</SelectItem>
-                            <SelectItem value="maintenance">{t("status.maintenance")}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  </div>
+                  <FormField control={form.control} name="status" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("rooms.fields.status")}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder={t("rooms.fields.selectStatus")} /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          <SelectItem value="available">{t("status.available")}</SelectItem>
+                          <SelectItem value="occupied">{t("status.occupied")}</SelectItem>
+                          <SelectItem value="maintenance">{t("status.maintenance")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
                   <DialogFooter className="pt-4">
                     <Button type="submit" disabled={createRoom.isPending || updateRoom.isPending}>
                       {t("rooms.saveRoom")}
@@ -215,7 +203,6 @@ import React, { useState } from "react";
                   <TableHead>{t("rooms.columns.room")}</TableHead>
                   <TableHead>{t("rooms.columns.type")}</TableHead>
                   <TableHead>{t("rooms.columns.capacity")}</TableHead>
-                  <TableHead>{t("rooms.columns.rate")}</TableHead>
                   <TableHead>{t("rooms.columns.status")}</TableHead>
                   <TableHead className="w-[50px]" />
                 </TableRow>
@@ -224,7 +211,7 @@ import React, { useState } from "react";
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
-                      {[100, 80, 40, 80, 80].map((w, j) => (
+                      {[100, 80, 40, 80].map((w, j) => (
                         <TableCell key={j}><Skeleton className={`h-4 w-[${w}px]`} /></TableCell>
                       ))}
                       <TableCell><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
@@ -232,7 +219,7 @@ import React, { useState } from "react";
                   ))
                 ) : filteredRooms?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
                       {t("rooms.noRooms")}
                     </TableCell>
                   </TableRow>
@@ -242,9 +229,6 @@ import React, { useState } from "react";
                       <TableCell className="font-medium">{room.name}</TableCell>
                       <TableCell>{room.type}</TableCell>
                       <TableCell>{room.capacity} {t("rooms.guests")}</TableCell>
-                      <TableCell className="font-medium">
-                        {formatCurrency(room.pricePerNight)}<span className="text-muted-foreground text-xs font-normal">{t("rooms.perNight")}</span>
-                      </TableCell>
                       <TableCell><RoomStatusBadge status={room.status} /></TableCell>
                       <TableCell>
                         <DropdownMenu>

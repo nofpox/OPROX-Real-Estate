@@ -7,8 +7,7 @@ import React from "react";
   import { Badge } from "@/components/ui/badge";
   import { Skeleton } from "@/components/ui/skeleton";
   import {
-    DoorOpen, DollarSign, Percent, Wrench, ArrowUpRight,
-    LineChart, MapPin, CheckCircle2, Settings,
+    DoorOpen, Percent, Wrench, MapPin, CheckCircle2, Settings,
   } from "lucide-react";
   import { useTranslation } from "react-i18next";
   import branding from "@/config/branding";
@@ -32,9 +31,6 @@ import React from "react";
     maintenance: "bg-amber-500",
     cleaning: "bg-blue-500",
   };
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
   export default function Dashboard() {
     const { t } = useTranslation();
@@ -73,24 +69,7 @@ import React from "react";
         </div>
 
         {/* KPI Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {/* Revenue */}
-          <Card className="shadow-sm border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.totalRevenue")}</CardTitle>
-              <div className="p-2 bg-primary/10 rounded-md"><DollarSign className="h-4 w-4 text-primary" /></div>
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? <Skeleton className="h-8 w-24" /> : (
-                <div className="text-2xl font-bold text-foreground">{formatCurrency(stats?.monthlyRevenue || 0)}</div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                <ArrowUpRight className="h-3 w-3 text-green-500" />
-                <span className="text-green-500 font-medium">12.5%</span> {t("dashboard.fromLastMonth")}
-              </p>
-            </CardContent>
-          </Card>
-
+        <div className="grid gap-4 md:grid-cols-3">
           {/* Available Units */}
           <Card className="shadow-sm border-border/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -244,12 +223,6 @@ import React from "react";
                 <Button variant="outline" className="w-full justify-start h-11">
                   <Wrench className="me-2 h-4 w-4 text-amber-500" />
                   {t("dashboard.maintenance")}
-                </Button>
-              </Link>
-              <Link href="/finance" className="w-full">
-                <Button variant="outline" className="w-full justify-start h-11">
-                  <LineChart className="me-2 h-4 w-4 text-primary" />
-                  {t("dashboard.viewReports")}
                 </Button>
               </Link>
               <Link href="/guest-requests" className="w-full">
