@@ -8,13 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Loader2, CalendarDays, User, Phone, Mail, DoorOpen, CreditCard, Ban, CheckCircle2, LogOut } from "lucide-react";
+import { ArrowLeft, Loader2, CalendarDays, User, Phone, Mail, DoorOpen, Ban, CheckCircle2, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BookingStatusBadge } from "./bookings";
 import { useTranslation } from "react-i18next";
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 
 export default function BookingDetail() {
   const { t } = useTranslation();
@@ -115,15 +112,6 @@ export default function BookingDetail() {
                     <div>
                       <p className="text-sm font-medium">{t("bookings.columns.dates")}</p>
                       <p className="text-base">{new Date(booking.checkIn + "T00:00:00").toLocaleDateString()} — {new Date(booking.checkOut + "T00:00:00").toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <CreditCard className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium">{t("bookings.columns.amount")}</p>
-                      <p className="text-base font-semibold">{formatCurrency(booking.totalAmount)}</p>
                     </div>
                   </div>
                 </div>

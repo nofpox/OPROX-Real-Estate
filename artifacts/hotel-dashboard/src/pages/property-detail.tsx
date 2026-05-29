@@ -10,11 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, MapPin, Building2, Wrench, Calendar as CalendarIcon, DollarSign, AlertCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Building2, Wrench, Calendar as CalendarIcon, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 
 export default function PropertyDetail() {
   const { t } = useTranslation();
@@ -83,11 +80,10 @@ export default function PropertyDetail() {
         {property.description && <p className="text-muted-foreground mt-2 max-w-3xl">{property.description}</p>}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         {[
           { icon: Building2, label: t("properties.detail.totalRooms"), value: stats?.unitCount || 0, color: "" },
           { icon: CalendarIcon, label: t("properties.detail.activeBookings"), value: stats?.activeBookings || 0, color: "" },
-          { icon: DollarSign, label: t("properties.netIncome"), value: formatCurrency(stats?.netIncome || 0), color: (stats?.netIncome || 0) >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400" },
           { icon: AlertCircle, label: t("properties.detail.openWorkOrders", "Open Work Orders"), value: stats?.openWorkOrders || 0, color: "text-amber-600 dark:text-amber-500" },
         ].map(({ icon: Icon, label, value, color }) => (
           <Card key={label} className="shadow-sm">
@@ -117,7 +113,6 @@ export default function PropertyDetail() {
                   <TableRow className="hover:bg-transparent bg-muted/20">
                     <TableHead>{t("rooms.columns.room")}</TableHead>
                     <TableHead>{t("rooms.columns.type")}</TableHead>
-                    <TableHead>{t("rooms.columns.rate")}</TableHead>
                     <TableHead>{t("rooms.columns.status")}</TableHead>
                     <TableHead>{t("rooms.columns.capacity")}</TableHead>
                   </TableRow>
@@ -140,7 +135,6 @@ export default function PropertyDetail() {
                           <Link href={`/bookings?room=${room.id}`}>{room.name}</Link>
                         </TableCell>
                         <TableCell>{t(`rooms.types.${room.type}`, room.type)}</TableCell>
-                        <TableCell>{formatCurrency(room.pricePerNight)}<span className="text-xs text-muted-foreground">{t("rooms.perNight")}</span></TableCell>
                         <TableCell>
                           <Badge variant="outline" className={
                             room.status === "available" ? "bg-green-50 text-green-700 border-green-200" :

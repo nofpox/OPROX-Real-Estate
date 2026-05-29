@@ -12,9 +12,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { BookingStatusBadge } from "@/pages/bookings";
 import { useTranslation } from "react-i18next";
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
-
 function getInitials(name: string) {
   const parts = name.trim().split(" ");
   if (parts.length === 0) return "?";
@@ -50,7 +47,6 @@ export default function Guests() {
 
   const totalGuests = guests?.length || 0;
   const returningGuests = guests?.filter((g) => g.totalBookings > 1).length || 0;
-  const totalRevenue = guests?.reduce((acc, g) => acc + g.totalSpent, 0) || 0;
 
   return (
     <div className="space-y-6">
@@ -59,11 +55,10 @@ export default function Guests() {
         <p className="text-muted-foreground mt-1">{t("guests.subtitle")}</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {[
           { label: t("guests.kpi.totalGuests"), value: isLoading ? null : totalGuests },
           { label: t("guests.kpi.returningGuests"), value: isLoading ? null : returningGuests },
-          { label: t("guests.kpi.totalRevenue"), value: isLoading ? null : formatCurrency(totalRevenue) },
         ].map(({ label, value }) => (
           <Card key={label} className="shadow-sm border-border/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -98,7 +93,6 @@ export default function Guests() {
                 <TableHead>{t("guests.columns.guest")}</TableHead>
                 <TableHead>{t("guests.columns.phone")}</TableHead>
                 <TableHead>{t("guests.columns.stays")}</TableHead>
-                <TableHead>{t("guests.columns.totalSpent")}</TableHead>
                 <TableHead>{t("guests.columns.lastStay")}</TableHead>
                 <TableHead>{t("guests.columns.lastStatus")}</TableHead>
                 <TableHead className="w-[50px]" />
@@ -117,7 +111,7 @@ export default function Guests() {
                 ))
               ) : guests?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                     {t("guests.noGuests")}
                   </TableCell>
                 </TableRow>
@@ -139,7 +133,6 @@ export default function Guests() {
                     </TableCell>
                     <TableCell>{guest.guestPhone || <span className="text-muted-foreground">-</span>}</TableCell>
                     <TableCell>{guest.totalBookings}</TableCell>
-                    <TableCell className="font-medium">{formatCurrency(guest.totalSpent)}</TableCell>
                     <TableCell>
                       {guest.lastStay
                         ? new Date(guest.lastStay + "T00:00:00").toLocaleDateString()

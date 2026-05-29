@@ -6,12 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Eye, Mail, Phone, Calendar, CreditCard } from "lucide-react";
+import { ArrowLeft, Eye, Mail, Phone, Calendar } from "lucide-react";
 import { BookingStatusBadge } from "@/pages/bookings";
 import { useTranslation } from "react-i18next";
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 
 function getInitials(name: string) {
   const parts = name.trim().split(" ");
@@ -94,10 +91,9 @@ export default function GuestProfile() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-border/50 pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-border/50 pt-6">
             {[
               { icon: Calendar, color: "bg-primary/10 text-primary", label: t("guests.profile.totalStays"), value: guest?.totalBookings },
-              { icon: CreditCard, color: "bg-amber-500/10 text-amber-600", label: t("guests.profile.totalSpent"), value: guest && formatCurrency(guest.totalSpent) },
               { icon: Calendar, color: "bg-blue-500/10 text-blue-600", label: t("guests.profile.firstStay"), value: guest?.firstStay ? new Date(guest.firstStay + "T00:00:00").toLocaleDateString() : "-" },
             ].map(({ icon: Icon, color, label, value }) => (
               <div key={label} className="flex items-center gap-3">
@@ -124,7 +120,6 @@ export default function GuestProfile() {
                 <TableHead>{t("bookings.checkIn")}</TableHead>
                 <TableHead>{t("bookings.checkOut")}</TableHead>
                 <TableHead>Nights</TableHead>
-                <TableHead>{t("common.amount")}</TableHead>
                 <TableHead>{t("common.status")}</TableHead>
                 <TableHead className="w-[80px]" />
               </TableRow>
@@ -141,7 +136,7 @@ export default function GuestProfile() {
                 ))
               ) : guest?.bookings?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                     {t("guests.profile.noBookings")}
                   </TableCell>
                 </TableRow>
@@ -161,7 +156,6 @@ export default function GuestProfile() {
                       <TableCell>{checkIn.toLocaleDateString()}</TableCell>
                       <TableCell>{checkOut.toLocaleDateString()}</TableCell>
                       <TableCell>{nights}</TableCell>
-                      <TableCell className="font-medium">{formatCurrency(booking.totalAmount)}</TableCell>
                       <TableCell><BookingStatusBadge status={booking.status} /></TableCell>
                       <TableCell>
                         <Link href={`/bookings/${booking.id}`}>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "wouter";
 import {
   useListProperties, getListPropertiesQueryKey, useCreateProperty, useUpdateProperty,
-  useDeleteProperty, useGetFinanceSummary
+  useDeleteProperty,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -21,9 +21,6 @@ import { Plus, MapPin, Building2, Pencil, Trash2, ArrowRight } from "lucide-reac
 import { useToast } from "@/hooks/use-toast";
 import { type Property } from "@workspace/api-client-react";
 import { useTranslation } from "react-i18next";
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 
 const PropertyTypeBadge = ({ type }: { type: string }) => {
   const { t } = useTranslation();
@@ -60,8 +57,6 @@ export default function Properties() {
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 
   const { data: properties, isLoading: isLoadingProperties } = useListProperties();
-  const { data: financeSummaries } = useGetFinanceSummary();
-
   const createProperty = useCreateProperty();
   const updateProperty = useUpdateProperty();
   const deleteProperty = useDeleteProperty();
@@ -109,7 +104,6 @@ export default function Properties() {
 
   const totalProperties = properties?.length || 0;
   const activeUnits = properties?.reduce((sum, p) => sum + (p.unitCount || 0), 0) || 0;
-  const totalRevenue = financeSummaries?.reduce((sum, f) => sum + f.totalRevenue, 0) || 0;
 
   return (
     <div className="space-y-6">
@@ -209,11 +203,10 @@ export default function Properties() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {[
           { icon: Building2, label: t("properties.kpi.totalProperties"), value: totalProperties },
           { icon: null, label: t("properties.kpi.activeUnits"), value: activeUnits },
-          { icon: null, label: t("properties.kpi.portfolioRevenue"), value: formatCurrency(totalRevenue) },
         ].map(({ label, value }) => (
           <Card key={label} className="shadow-sm">
             <CardContent className="p-6">
@@ -247,7 +240,6 @@ export default function Properties() {
           </div>
         ) : (
           properties?.map((property) => {
-            const finance = financeSummaries?.find((f) => f.propertyId === property.id);
             return (
               <Card key={property.id} className="shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all">
                 <CardHeader className="p-6 pb-4">
@@ -265,20 +257,6 @@ export default function Properties() {
                   <div className="mb-4">
                     <Badge variant="secondary" className="font-normal">{property.unitCount} {t("properties.units")}</Badge>
                   </div>
-                  {finance && (
-                    <div className="mt-auto pt-4 border-t grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <p className="text-muted-foreground text-xs">{t("properties.revenue")}</p>
-                        <p className="font-medium text-foreground">{formatCurrency(finance.totalRevenue)}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-xs">{t("properties.netIncome")}</p>
-                        <p className={`font-medium ${finance.netIncome >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-                          {formatCurrency(finance.netIncome)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
                 <CardFooter className="p-4 bg-muted/20 border-t flex justify-between gap-2">
                   <div className="flex gap-2">

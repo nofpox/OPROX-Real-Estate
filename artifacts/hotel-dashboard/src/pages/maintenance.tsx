@@ -17,7 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Trash2, Plus, Clock, CheckCircle2, Wrench, AlertCircle, DollarSign } from "lucide-react";
+import { Trash2, Plus, Clock, CheckCircle2, Wrench, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
@@ -29,7 +29,6 @@ const workOrderSchema = z.object({
   priority: z.enum(["low", "medium", "high", "urgent"]),
   status: z.enum(["pending", "in-progress", "on-hold", "completed"]).default("pending"),
   assignedTo: z.string().optional(),
-  cost: z.coerce.number().min(0).optional().or(z.literal("")),
   dueDate: z.string().optional().or(z.literal("")),
 });
 
@@ -92,7 +91,7 @@ export default function Maintenance() {
     resolver: zodResolver(workOrderSchema),
     defaultValues: {
       propertyId: selectedProperty !== "all" ? parseInt(selectedProperty) : undefined,
-      unitId: "", title: "", description: "", priority: "medium", status: "pending", assignedTo: "", cost: "", dueDate: "",
+      unitId: "", title: "", description: "", priority: "medium", status: "pending", assignedTo: "", dueDate: "",
     },
   });
 
@@ -121,7 +120,7 @@ export default function Maintenance() {
   };
 
   const onSubmit = (data: z.infer<typeof workOrderSchema>) => {
-    const payload = { ...data, unitId: data.unitId ? Number(data.unitId) : undefined, cost: data.cost !== "" && data.cost !== undefined ? Number(data.cost) : undefined, dueDate: data.dueDate || undefined };
+    const payload = { ...data, unitId: data.unitId ? Number(data.unitId) : undefined, dueDate: data.dueDate || undefined };
     createWorkOrder.mutate({ data: payload as any }, {
       onSuccess: () => { toast({ title: t("maintenance.createSuccess") }); invalidateAll(); setIsDialogOpen(false); form.reset(); },
       onError: () => { toast({ title: t("maintenance.createFailed"), variant: "destructive" }); },
@@ -138,7 +137,6 @@ export default function Maintenance() {
     inProgress: allWorkOrders?.filter((w) => w.status === "in-progress").length || 0,
     onHold: allWorkOrders?.filter((w) => w.status === "on-hold").length || 0,
     completed: allWorkOrders?.filter((w) => w.status === "completed").length || 0,
-    totalCost: allWorkOrders?.reduce((sum, w) => sum + (w.cost ? Number(w.cost) : 0), 0) || 0,
   };
 
   return (
@@ -241,18 +239,6 @@ export default function Maintenance() {
                     </FormItem>
                   )} />
                 </div>
-                <FormField control={form.control} name="cost" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("maintenance.fields.cost")}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <DollarSign className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input type="number" min="0" step="0.01" placeholder="0.00" className="ps-8" {...field} />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
                 <FormField control={form.control} name="description" render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("maintenance.fields.description")}</FormLabel>
@@ -269,13 +255,12 @@ export default function Maintenance() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-4">
         {[
           { icon: AlertCircle, label: t("maintenance.kpi.pending"), value: statsData.pending, color: "" },
           { icon: Clock, label: t("maintenance.kpi.inProgress"), value: statsData.inProgress, color: "text-amber-600 dark:text-amber-500" },
           { icon: Wrench, label: t("maintenance.kpi.onHold"), value: statsData.onHold, color: "" },
           { icon: CheckCircle2, label: t("maintenance.kpi.completed"), value: statsData.completed, color: "text-green-600 dark:text-green-500" },
-          { icon: DollarSign, label: t("maintenance.kpi.totalCost"), value: `$${statsData.totalCost.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, color: "" },
         ].map(({ icon: Icon, label, value, color }) => (
           <Card key={label} className="shadow-sm">
             <CardContent className="p-6">
@@ -335,7 +320,6 @@ export default function Maintenance() {
                 <TableHead className="w-[28%]">{t("maintenance.columns.issue")}</TableHead>
                 <TableHead>{t("maintenance.columns.assignedTo")}</TableHead>
                 <TableHead>{t("maintenance.columns.dueDate")}</TableHead>
-                <TableHead>{t("maintenance.columns.cost")}</TableHead>
                 <TableHead>{t("maintenance.columns.status")}</TableHead>
                 <TableHead className="text-end">{t("maintenance.columns.actions")}</TableHead>
               </TableRow>
@@ -352,7 +336,7 @@ export default function Maintenance() {
                 ))
               ) : workOrders?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">{t("maintenance.noWorkOrders")}</TableCell>
+                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">{t("maintenance.noWorkOrders")}</TableCell>
                 </TableRow>
               ) : (
                 workOrders?.map((wo) => {
@@ -388,10 +372,6 @@ export default function Maintenance() {
                             {new Date(wo.dueDate + "T00:00:00").toLocaleDateString()}
                           </span>
                         ) : <span className="text-muted-foreground">-</span>}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {wo.cost ? <span className="font-medium">${Number(wo.cost).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
-                          : <span className="text-muted-foreground">-</span>}
                       </TableCell>
                       <TableCell><StatusBadge status={wo.status} /></TableCell>
                       <TableCell className="text-end">

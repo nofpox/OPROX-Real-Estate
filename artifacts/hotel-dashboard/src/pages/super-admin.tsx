@@ -41,7 +41,7 @@ const MODE_CARDS: {
     bg: "bg-blue-50 dark:bg-blue-900/20",
     border: "border-blue-200 dark:border-blue-800",
     description: "Full-service hotel operations",
-    highlights: ["Bookings & check-in", "Finance & revenue", "Maintenance", "Service requests"],
+    highlights: ["Bookings & check-in", "Maintenance", "Housekeeping", "Service requests"],
   },
   {
     id: "compound",
