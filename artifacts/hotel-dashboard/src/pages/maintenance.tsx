@@ -33,6 +33,15 @@ const workOrderSchema = z.object({
   dueDate: z.string().optional().or(z.literal("")),
 });
 
+const PHOTO_MARKER = "\n\n[PHOTO]:";
+
+function parseDescription(desc: string | null | undefined): { text: string; photo: string | null } {
+  if (!desc) return { text: "", photo: null };
+  const idx = desc.indexOf(PHOTO_MARKER);
+  if (idx === -1) return { text: desc, photo: null };
+  return { text: desc.slice(0, idx).trim(), photo: desc.slice(idx + PHOTO_MARKER.length).trim() };
+}
+
 const PriorityBadge = ({ priority }: { priority: string }) => {
   const { t } = useTranslation();
   switch (priority) {
@@ -61,6 +70,7 @@ export default function Maintenance() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [photoDialog, setPhotoDialog] = useState<string | null>(null);
 
   const searchParams: Record<string, any> = {};
   if (selectedProperty !== "all") searchParams.propertyId = parseInt(selectedProperty);
@@ -347,15 +357,26 @@ export default function Maintenance() {
               ) : (
                 workOrders?.map((wo) => {
                   const isOverdue = wo.dueDate && wo.dueDate < new Date().toISOString().split("T")[0] && wo.status !== "completed";
+                  const parsed = parseDescription(wo.description);
                   return (
                     <TableRow key={wo.id}>
                       <TableCell><PriorityBadge priority={wo.priority} /></TableCell>
                       <TableCell>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col gap-1">
                           <span className="font-medium">{wo.title}</span>
                           <span className="text-xs text-muted-foreground">
                             {wo.propertyName}{wo.unitName ? ` • ${wo.unitName}` : ` • ${t("maintenance.fields.propertyWide")}`}
                           </span>
+                          {parsed.text && <span className="text-xs text-muted-foreground italic line-clamp-2">{parsed.text}</span>}
+                          {parsed.photo && (
+                            <button type="button" onClick={() => setPhotoDialog(parsed.photo)} className="mt-1 self-start">
+                              <img
+                                src={parsed.photo}
+                                alt="Attached photo"
+                                className="h-14 w-20 object-cover rounded-md border border-border hover:opacity-80 transition-opacity cursor-pointer"
+                              />
+                            </button>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-sm">
@@ -399,6 +420,18 @@ export default function Maintenance() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Photo lightbox */}
+      <Dialog open={!!photoDialog} onOpenChange={(open) => !open && setPhotoDialog(null)}>
+        <DialogContent className="sm:max-w-lg p-2">
+          <DialogHeader className="p-2">
+            <DialogTitle className="text-sm">{t("maintenance.attachedPhoto")}</DialogTitle>
+          </DialogHeader>
+          {photoDialog && (
+            <img src={photoDialog} alt="Attached photo" className="w-full rounded-lg object-contain max-h-[70vh]" />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

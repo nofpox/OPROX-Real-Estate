@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
   import { useParams, useLocation } from "wouter";
   import { useQuery, useMutation } from "@tanstack/react-query";
   import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { useState } from "react";
   import {
     Building2, ArrowLeft, Zap, Droplets, Wind, Brush, Volume2, Users,
     DoorOpen, CheckCircle2, Star, Loader2, AlertCircle, Calendar, DollarSign,
+    Camera, X,
   } from "lucide-react";
 
   const API = "/api";
@@ -48,10 +49,25 @@ import { useState } from "react";
     const [activeTab, setActiveTab] = useState<Tab>("request");
     const [reqType, setReqType] = useState("");
     const [reqDesc, setReqDesc] = useState("");
+    const [photoBase64, setPhotoBase64] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState("");
     const [submitted, setSubmitted] = useState<"request" | "feedback" | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => setPhotoBase64(reader.result as string);
+      reader.readAsDataURL(file);
+    };
+
+    const clearPhoto = () => {
+      setPhotoBase64(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
 
     const { data: room, isLoading: roomLoading, isError: roomError } = useQuery<Room>({
       queryKey: ["room", roomId],
@@ -65,15 +81,21 @@ import { useState } from "react";
       enabled: !!roomId && !isNaN(roomId),
     });
 
+    const buildDescription = () => {
+      const text = reqDesc.trim();
+      if (photoBase64) return text ? `${text}\n\n[PHOTO]:${photoBase64}` : `[PHOTO]:${photoBase64}`;
+      return text;
+    };
+
     const requestMutation = useMutation({
       mutationFn: () => fetch(`${API}/guest/requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId, type: reqType, description: reqDesc }),
+        body: JSON.stringify({ roomId, type: reqType, description: buildDescription() }),
       }).then(r => { if (!r.ok) throw new Error("Submission failed"); return r.json(); }),
       onSuccess: () => {
         toast({ title: "Request submitted! We'll be in touch shortly." });
-        setSubmitted("request"); setReqType(""); setReqDesc("");
+        setSubmitted("request"); setReqType(""); setReqDesc(""); clearPhoto();
       },
       onError: () => toast({ title: "Failed to submit request. Please try again.", variant: "destructive" }),
     });
@@ -196,15 +218,43 @@ import { useState } from "react";
                         <p className="text-sm font-medium mb-2 text-foreground">Description</p>
                         <Textarea
                           placeholder="Describe the issue in detail…"
-                          rows={4}
+                          rows={3}
                           value={reqDesc}
                           onChange={(e) => setReqDesc(e.target.value)}
                           className="resize-none"
                         />
                       </div>
+                      <div>
+                        <p className="text-sm font-medium mb-2 text-foreground">Attach Photo <span className="text-muted-foreground font-normal">(optional)</span></p>
+                        {photoBase64 ? (
+                          <div className="relative w-full rounded-xl overflow-hidden border border-border">
+                            <img src={photoBase64} alt="Attached" className="w-full max-h-48 object-cover" />
+                            <button
+                              type="button"
+                              onClick={clearPhoto}
+                              className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex items-center justify-center gap-2 w-full h-20 rounded-xl border-2 border-dashed border-border hover:border-amber-400 bg-muted/30 hover:bg-amber-50/50 cursor-pointer transition-colors">
+                            <Camera size={20} className="text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Take photo or choose from gallery</span>
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              capture="environment"
+                              className="hidden"
+                              onChange={handleFileChange}
+                            />
+                          </label>
+                        )}
+                      </div>
                       <Button
                         onClick={() => requestMutation.mutate()}
-                        disabled={!reqType || reqDesc.trim().length < 5 || requestMutation.isPending}
+                        disabled={!reqType || (reqDesc.trim().length < 5 && !photoBase64) || requestMutation.isPending}
                         className="w-full h-11 font-semibold bg-amber-500 hover:bg-amber-600 text-black"
                       >
                         {requestMutation.isPending ? <><Loader2 className="animate-spin mr-2" size={16} />Submitting…</> : "Submit Request"}
