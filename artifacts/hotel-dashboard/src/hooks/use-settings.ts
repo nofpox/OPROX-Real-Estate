@@ -1,25 +1,9 @@
 import { useGetSettings } from "@workspace/api-client-react";
 import branding from "@/config/branding";
+import { type BusinessMode, MODE_MODULE_DEFAULTS } from "@/config/modules";
 
-export type BusinessMode = "hotel" | "compound" | "serviced-apartments";
-
-export const MODE_DEFAULTS: Record<BusinessMode, string[]> = {
-  hotel: [
-    "properties", "rooms", "guests", "bookings",
-    "finance", "maintenance", "staff", "tasks",
-    "guestRequests", "activityLog", "userManagement",
-  ],
-  compound: [
-    "properties", "rooms", "unitMap",
-    "maintenance", "staff", "tasks",
-    "activityLog", "userManagement",
-  ],
-  "serviced-apartments": [
-    "properties", "rooms", "guests", "bookings",
-    "tasks", "guestRequests", "staff",
-    "activityLog", "userManagement",
-  ],
-};
+export type { BusinessMode };
+export { MODE_MODULE_DEFAULTS };
 
 export type AppSettings = {
   propertyName: string;
@@ -27,7 +11,7 @@ export type AppSettings = {
   logoText: string;
   logoSub: string;
   businessMode: BusinessMode;
-  enabledFeatures: string[];
+  enabledModules: string[];
 };
 
 const FALLBACK: AppSettings = {
@@ -36,7 +20,7 @@ const FALLBACK: AppSettings = {
   logoText: branding.logoText,
   logoSub: branding.logoSub,
   businessMode: "hotel",
-  enabledFeatures: MODE_DEFAULTS.hotel,
+  enabledModules: MODE_MODULE_DEFAULTS.hotel,
 };
 
 export function useSettings(): AppSettings {
@@ -49,8 +33,8 @@ export function useSettings(): AppSettings {
     logoText: data.logoText || FALLBACK.logoText,
     logoSub: data.logoSub || FALLBACK.logoSub,
     businessMode: mode,
-    enabledFeatures: data.enabledFeatures?.length
-      ? data.enabledFeatures
-      : (MODE_DEFAULTS[mode] ?? MODE_DEFAULTS.hotel),
+    enabledModules: data.enabledModules?.length
+      ? data.enabledModules
+      : (MODE_MODULE_DEFAULTS[mode] ?? MODE_MODULE_DEFAULTS.hotel),
   };
 }

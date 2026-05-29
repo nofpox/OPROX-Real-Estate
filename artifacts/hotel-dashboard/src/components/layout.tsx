@@ -3,7 +3,7 @@ import React, { useState } from "react";
   import {
     LayoutDashboard, Calendar, DoorOpen, Menu, Users, Building2,
     BarChart3, Wrench, UserCog, ClipboardList, ChevronDown, Shield,
-    MapPin, InboxIcon, History, Settings,
+    MapPin, InboxIcon, History, Settings, Dumbbell,
   } from "lucide-react";
   import { Button } from "@/components/ui/button";
   import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -18,21 +18,23 @@ import React, { useState } from "react";
   import { useTranslation } from "react-i18next";
   import type { AuthUser } from "@/App";
   import { useSettings } from "@/hooks/use-settings";
+  import { getEnabledNavKeys } from "@/config/modules";
 
   const NAV_ITEMS = [
-    { href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard, section: "main", featureKey: null },
-    { href: "/properties", labelKey: "nav.properties", icon: Building2, section: "main", featureKey: "properties" },
-    { href: "/rooms", labelKey: "nav.rooms", icon: DoorOpen, section: "main", featureKey: "rooms" },
-    { href: "/guests", labelKey: "nav.guests", icon: Users, section: "main", featureKey: "guests" },
-    { href: "/bookings", labelKey: "nav.bookings", icon: Calendar, section: "main", featureKey: "bookings" },
-    { href: "/unit-map", labelKey: "nav.unitMap", icon: MapPin, section: "main", featureKey: "unitMap" },
-    { href: "/finance", labelKey: "nav.finance", icon: BarChart3, section: "operations", featureKey: "finance" },
-    { href: "/maintenance", labelKey: "nav.maintenance", icon: Wrench, section: "operations", featureKey: "maintenance" },
-    { href: "/staff", labelKey: "nav.staff", icon: UserCog, section: "operations", featureKey: "staff" },
-    { href: "/tasks", labelKey: "nav.tasks", icon: ClipboardList, section: "operations", featureKey: "tasks" },
-    { href: "/guest-requests", labelKey: "nav.guestRequests", icon: InboxIcon, section: "operations", featureKey: "guestRequests" },
-    { href: "/activity-log", labelKey: "nav.activityLog", icon: History, section: "operations", featureKey: "activityLog" },
-    { href: "/user-management", labelKey: "nav.userManagement", icon: Settings, section: "operations", featureKey: "userManagement" },
+    { href: "/",              labelKey: "nav.dashboard",      icon: LayoutDashboard, section: "main",       featureKey: null },
+    { href: "/properties",    labelKey: "nav.properties",     icon: Building2,       section: "main",       featureKey: "properties" },
+    { href: "/rooms",         labelKey: "nav.rooms",          icon: DoorOpen,        section: "main",       featureKey: "rooms" },
+    { href: "/guests",        labelKey: "nav.guests",         icon: Users,           section: "main",       featureKey: "guests" },
+    { href: "/bookings",      labelKey: "nav.bookings",       icon: Calendar,        section: "main",       featureKey: "bookings" },
+    { href: "/unit-map",      labelKey: "nav.unitMap",        icon: MapPin,          section: "main",       featureKey: "unitMap" },
+    { href: "/finance",       labelKey: "nav.finance",        icon: BarChart3,       section: "operations", featureKey: "finance" },
+    { href: "/maintenance",   labelKey: "nav.maintenance",    icon: Wrench,          section: "operations", featureKey: "maintenance" },
+    { href: "/facilities",    labelKey: "nav.facilities",     icon: Dumbbell,        section: "operations", featureKey: "facilities" },
+    { href: "/staff",         labelKey: "nav.staff",          icon: UserCog,         section: "operations", featureKey: "staff" },
+    { href: "/tasks",         labelKey: "nav.tasks",          icon: ClipboardList,   section: "operations", featureKey: "tasks" },
+    { href: "/guest-requests",labelKey: "nav.guestRequests",  icon: InboxIcon,       section: "operations", featureKey: "guestRequests" },
+    { href: "/activity-log",  labelKey: "nav.activityLog",    icon: History,         section: "operations", featureKey: "activityLog" },
+    { href: "/user-management",labelKey: "nav.userManagement",icon: Settings,        section: "operations", featureKey: "userManagement" },
   ];
 
   const ROLE_ICON_COLORS: Record<string, string> = {
@@ -57,12 +59,11 @@ import React, { useState } from "react";
     const { t } = useTranslation();
     const settings = useSettings();
 
+    const enabledNavKeys = getEnabledNavKeys(settings.enabledModules);
     const visibleNavItems = NAV_ITEMS.filter((item) => {
       if (!can(item.href)) return false;
-      if (item.featureKey && settings.enabledFeatures.length > 0) {
-        return settings.enabledFeatures.includes(item.featureKey);
-      }
-      return true;
+      if (item.featureKey === null) return true;
+      return enabledNavKeys.has(item.featureKey);
     });
     const mainNav = visibleNavItems.filter((i) => i.section === "main");
     const opsNav = visibleNavItems.filter((i) => i.section === "operations");

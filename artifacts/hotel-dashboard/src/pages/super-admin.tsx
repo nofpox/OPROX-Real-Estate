@@ -7,30 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import {
-  Hotel, Building2, Sparkles, CheckCircle2, ArrowLeft,
-  ShieldAlert, LayoutDashboard, Calendar, DoorOpen, Users,
-  BarChart3, Wrench, UserCog, ClipboardList, MapPin,
-  InboxIcon, History, Settings,
+  Hotel, Building2, Building, Sparkles, CheckCircle2, ArrowLeft,
+  ShieldAlert, LayoutDashboard, Settings, Info,
 } from "lucide-react";
-import { type BusinessMode, MODE_DEFAULTS } from "@/hooks/use-settings";
+import {
+  MODULE_REGISTRY,
+  MODE_MODULE_DEFAULTS,
+  type BusinessMode,
+  type ModuleDef,
+} from "@/config/modules";
 
-const FEATURE_DEFS: { key: string; label: string; desc: string; icon: React.ElementType }[] = [
-  { key: "properties",     label: "Properties",          desc: "Multi-property management",          icon: Building2 },
-  { key: "rooms",          label: "Rooms & Units",        desc: "Room inventory and status",           icon: DoorOpen },
-  { key: "guests",         label: "Guests",               desc: "Guest directory and profiles",        icon: Users },
-  { key: "bookings",       label: "Bookings",             desc: "Reservation lifecycle management",    icon: Calendar },
-  { key: "unitMap",        label: "Unit Map",             desc: "Visual unit layout overview",         icon: MapPin },
-  { key: "finance",        label: "Finance & Reporting",  desc: "Revenue, expenses, and P&L",          icon: BarChart3 },
-  { key: "maintenance",    label: "Maintenance",          desc: "Work orders and maintenance",         icon: Wrench },
-  { key: "staff",          label: "Staff Management",     desc: "Staff directory and scheduling",      icon: UserCog },
-  { key: "tasks",          label: "Tasks & Housekeeping", desc: "Task board and cleaning assignments", icon: ClipboardList },
-  { key: "guestRequests",  label: "Guest Requests",       desc: "In-stay service requests",            icon: InboxIcon },
-  { key: "activityLog",    label: "Activity Log",         desc: "System audit trail",                  icon: History },
-  { key: "userManagement", label: "User Management",      desc: "Staff accounts and permissions",      icon: Settings },
-];
+// ─── Business mode preset cards ──────────────────────────────────────────────
 
 const MODE_CARDS: {
   id: BusinessMode;
@@ -44,23 +35,33 @@ const MODE_CARDS: {
 }[] = [
   {
     id: "hotel",
-    label: "Hotel Mode",
+    label: "Hotel",
     icon: Hotel,
     color: "text-blue-700 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-900/20",
     border: "border-blue-200 dark:border-blue-800",
     description: "Full-service hotel operations",
-    highlights: ["Bookings & check-in", "Finance & revenue", "Guest management"],
+    highlights: ["Bookings & check-in", "Finance & revenue", "Maintenance", "Service requests"],
   },
   {
     id: "compound",
-    label: "Compound Mode",
+    label: "Compound",
     icon: Building2,
     color: "text-emerald-700 dark:text-emerald-400",
     bg: "bg-emerald-50 dark:bg-emerald-900/20",
     border: "border-emerald-200 dark:border-emerald-800",
-    description: "Unit & compound management",
-    highlights: ["Unit map & inventory", "Maintenance focus", "No bookings/finance"],
+    description: "Villa & compound management",
+    highlights: ["Unit map & inventory", "Maintenance focus", "Housekeeping", "Service requests"],
+  },
+  {
+    id: "tower",
+    label: "Residential Tower",
+    icon: Building,
+    color: "text-teal-700 dark:text-teal-400",
+    bg: "bg-teal-50 dark:bg-teal-900/20",
+    border: "border-teal-200 dark:border-teal-800",
+    description: "Mixed-use tower with shared amenities",
+    highlights: ["Facility booking", "Maintenance", "Housekeeping", "Service requests"],
   },
   {
     id: "serviced-apartments",
@@ -70,9 +71,11 @@ const MODE_CARDS: {
     bg: "bg-violet-50 dark:bg-violet-900/20",
     border: "border-violet-200 dark:border-violet-800",
     description: "Housekeeping & cleaning focus",
-    highlights: ["Tasks & housekeeping", "Guest requests", "Laundry & cleaning"],
+    highlights: ["Bookings & tenants", "Housekeeping", "Service requests"],
   },
 ];
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function SuperAdmin() {
   const { data, isLoading } = useGetSettings();
@@ -83,7 +86,7 @@ export default function SuperAdmin() {
   const [logoText, setLogoText] = useState("");
   const [logoSub, setLogoSub] = useState("");
   const [businessMode, setBusinessMode] = useState<BusinessMode>("hotel");
-  const [enabledFeatures, setEnabledFeatures] = useState<string[]>(MODE_DEFAULTS.hotel);
+  const [enabledModules, setEnabledModules] = useState<string[]>(MODE_MODULE_DEFAULTS.hotel);
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
@@ -93,19 +96,21 @@ export default function SuperAdmin() {
     setLogoSub(data.logoSub || "");
     const mode = (data.businessMode as BusinessMode) || "hotel";
     setBusinessMode(mode);
-    setEnabledFeatures(data.enabledFeatures?.length ? data.enabledFeatures : MODE_DEFAULTS[mode]);
+    setEnabledModules(
+      data.enabledModules?.length ? data.enabledModules : MODE_MODULE_DEFAULTS[mode]
+    );
     setDirty(false);
   }, [data]);
 
   function applyModePreset(mode: BusinessMode) {
     setBusinessMode(mode);
-    setEnabledFeatures([...MODE_DEFAULTS[mode]]);
+    setEnabledModules([...MODE_MODULE_DEFAULTS[mode]]);
     setDirty(true);
   }
 
-  function toggleFeature(key: string) {
-    setEnabledFeatures((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+  function toggleModule(id: string) {
+    setEnabledModules((prev) =>
+      prev.includes(id) ? prev.filter((k) => k !== id) : [...prev, id]
     );
     setDirty(true);
   }
@@ -118,7 +123,7 @@ export default function SuperAdmin() {
           logoText: logoText.trim(),
           logoSub: logoSub.trim(),
           businessMode,
-          enabledFeatures,
+          enabledModules,
         },
       });
       setDirty(false);
@@ -135,6 +140,10 @@ export default function SuperAdmin() {
       </div>
     );
   }
+
+  const operationalModules = MODULE_REGISTRY.filter((m) => m.group === "operational");
+  const functionalModules = MODULE_REGISTRY.filter((m) => m.group === "functional");
+  const totalActive = enabledModules.length;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -218,11 +227,12 @@ export default function SuperAdmin() {
               Business Mode
             </CardTitle>
             <CardDescription>
-              Select a mode to apply the recommended feature set. You can fine-tune individual features below.
+              Pick a preset to auto-select the recommended modules for your property type.
+              You can then fine-tune individual modules below.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {MODE_CARDS.map((mode) => {
                 const Icon = mode.icon;
                 const isActive = businessMode === mode.id;
@@ -237,11 +247,11 @@ export default function SuperAdmin() {
                     }`}
                   >
                     <div className={`flex items-center gap-2 mb-2 ${isActive ? mode.color : "text-foreground"}`}>
-                      <Icon className="h-5 w-5" />
-                      <span className="font-semibold text-sm">{mode.label}</span>
-                      {isActive && <CheckCircle2 className="h-4 w-4 ml-auto" />}
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <span className="font-semibold text-sm leading-tight">{mode.label}</span>
+                      {isActive && <CheckCircle2 className="h-4 w-4 ml-auto shrink-0" />}
                     </div>
-                    <p className="text-xs text-muted-foreground mb-3">{mode.description}</p>
+                    <p className="text-xs text-muted-foreground mb-3 leading-snug">{mode.description}</p>
                     <div className="space-y-1">
                       {mode.highlights.map((h) => (
                         <div key={h} className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -257,51 +267,82 @@ export default function SuperAdmin() {
           </CardContent>
         </Card>
 
-        {/* Feature Flags */}
+        {/* Functional Modules */}
         <Card>
           <CardHeader className="pb-4">
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between gap-3">
               <div>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Settings className="h-4 w-4 text-muted-foreground" />
-                  Feature Flags
+                  Independent Functional Modules
                 </CardTitle>
                 <CardDescription className="mt-1">
-                  Fine-tune which modules are visible for this client
+                  Each module runs the same workflow regardless of property type — toggle them
+                  independently of the business mode preset.
                 </CardDescription>
               </div>
-              <Badge variant="secondary" className="mt-1">
-                {enabledFeatures.length} / {FEATURE_DEFS.length} enabled
+              <Badge variant="secondary" className="mt-1 shrink-0">
+                {totalActive} / {MODULE_REGISTRY.length} active
               </Badge>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {FEATURE_DEFS.map((feat) => {
-                const Icon = feat.icon;
-                const enabled = enabledFeatures.includes(feat.key);
-                return (
-                  <div
-                    key={feat.key}
-                    className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 transition-colors ${
-                      enabled ? "bg-card border-border" : "bg-muted/30 border-border/50 opacity-60"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium leading-tight">{feat.label}</p>
-                        <p className="text-xs text-muted-foreground truncate">{feat.desc}</p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={enabled}
-                      onCheckedChange={() => toggleFeature(feat.key)}
-                      aria-label={`Toggle ${feat.label}`}
-                    />
-                  </div>
-                );
-              })}
+          <CardContent className="space-y-6">
+
+            {/* Architecture note */}
+            <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 px-4 py-3">
+              <Info className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                Modules are the primary unit of configuration. Business mode presets above just apply
+                a recommended combination — you can always override them here. The same{" "}
+                <span className="font-semibold">Housekeeping</span> workflow works whether it's a
+                hotel room, a villa, or an apartment unit.
+              </p>
+            </div>
+
+            {/* Operational modules */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  Operational Modules
+                </h3>
+                <Separator className="flex-1" />
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Data-centric pages — bookings calendar, financial reporting, and visual unit maps.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {operationalModules.map((mod) => (
+                  <ModuleToggleRow
+                    key={mod.id}
+                    mod={mod}
+                    enabled={enabledModules.includes(mod.id)}
+                    onToggle={() => toggleModule(mod.id)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Functional modules */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  Functional Modules
+                </h3>
+                <Separator className="flex-1" />
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Property-type-agnostic workflows — the same logic applies across hotels, compounds, and towers.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {functionalModules.map((mod) => (
+                  <ModuleToggleRow
+                    key={mod.id}
+                    mod={mod}
+                    enabled={enabledModules.includes(mod.id)}
+                    onToggle={() => toggleModule(mod.id)}
+                  />
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -322,6 +363,40 @@ export default function SuperAdmin() {
       </main>
 
       <Toaster />
+    </div>
+  );
+}
+
+// ─── Module toggle row ────────────────────────────────────────────────────────
+
+function ModuleToggleRow({
+  mod,
+  enabled,
+  onToggle,
+}: {
+  mod: ModuleDef;
+  enabled: boolean;
+  onToggle: () => void;
+}) {
+  const Icon = mod.icon;
+  return (
+    <div
+      className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 transition-colors ${
+        enabled ? "bg-card border-border" : "bg-muted/30 border-border/50 opacity-60"
+      }`}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+        <div className="min-w-0">
+          <p className="text-sm font-medium leading-tight">{mod.label}</p>
+          <p className="text-xs text-muted-foreground leading-snug line-clamp-1">{mod.description}</p>
+        </div>
+      </div>
+      <Switch
+        checked={enabled}
+        onCheckedChange={onToggle}
+        aria-label={`Toggle ${mod.label}`}
+      />
     </div>
   );
 }

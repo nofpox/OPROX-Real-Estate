@@ -16,6 +16,7 @@ const ar: Translations = {
       guestRequests: "صندوق الطلبات",
       activityLog: "سجل النشاط",
       userManagement: "إدارة المستخدمين",
+      facilities: "حجز المرافق",
   },
   common: {
     save: "حفظ",

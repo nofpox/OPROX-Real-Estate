@@ -16,8 +16,8 @@ export const GetSettingsResponse = zod.object({
   "propertyType": zod.string().describe('Hotel | Compound | Furnished Apartments | all'),
   "logoText": zod.string().describe('Large serif word in the sidebar logo'),
   "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
-  "businessMode": zod.string().describe('hotel | compound | serviced-apartments'),
-  "enabledFeatures": zod.array(zod.string()).describe('List of enabled feature keys for this client')
+  "businessMode": zod.string().describe('hotel | compound | tower | serviced-apartments'),
+  "enabledModules": zod.array(zod.string()).optional().describe('List of enabled functional module IDs for this client')
 })
 
 
@@ -30,7 +30,7 @@ export const UpdateSettingsBody = zod.object({
   "logoText": zod.string().optional(),
   "logoSub": zod.string().optional(),
   "businessMode": zod.string().optional(),
-  "enabledFeatures": zod.array(zod.string()).optional()
+  "enabledModules": zod.array(zod.string()).optional()
 })
 
 export const UpdateSettingsResponse = zod.object({
@@ -38,8 +38,8 @@ export const UpdateSettingsResponse = zod.object({
   "propertyType": zod.string().describe('Hotel | Compound | Furnished Apartments | all'),
   "logoText": zod.string().describe('Large serif word in the sidebar logo'),
   "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
-  "businessMode": zod.string().describe('hotel | compound | serviced-apartments'),
-  "enabledFeatures": zod.array(zod.string()).describe('List of enabled feature keys for this client')
+  "businessMode": zod.string().describe('hotel | compound | tower | serviced-apartments'),
+  "enabledModules": zod.array(zod.string()).optional().describe('List of enabled functional module IDs for this client')
 })
 
 

@@ -14,6 +14,7 @@ const en = {
     guestRequests: "Guest Requests",
     activityLog: "Activity Log",
     userManagement: "User Management",
+    facilities: "Facility Booking",
   },
   common: {
     save: "Save",

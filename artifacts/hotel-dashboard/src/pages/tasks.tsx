@@ -22,6 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useRole } from "@/contexts/role-context";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/contexts/language-context";
+import { useSettings } from "@/hooks/use-settings";
+import { getEnabledTaskCategories } from "@/config/modules";
 
 const CATEGORIES = ["housekeeping", "reception", "maintenance", "security", "general"];
 
@@ -91,6 +93,8 @@ export default function Tasks() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { role, allowedTaskCategories } = useRole();
+  const settings = useSettings();
+  const moduleTaskCategories = getEnabledTaskCategories(settings.enabledModules);
 
   const form = useForm<z.infer<typeof taskSchema>>({
     resolver: zodResolver(taskSchema),
@@ -106,9 +110,15 @@ export default function Tasks() {
 
   const filteredTasks = tasks?.filter((task) => {
     if (allowedTaskCategories !== null && !allowedTaskCategories.includes(task.category)) return false;
+    if (!moduleTaskCategories.includes(task.category)) return false;
     if (categoryFilter !== "all" && task.category !== categoryFilter) return false;
     return true;
   }) || [];
+
+  const visibleCategories = CATEGORIES.filter((c) => {
+    if (allowedTaskCategories !== null && !allowedTaskCategories.includes(c)) return false;
+    return moduleTaskCategories.includes(c);
+  });
 
   const pending = filteredTasks.filter((task) => task.status === "pending");
   const inProgress = filteredTasks.filter((task) => task.status === "in-progress");
@@ -244,7 +254,7 @@ export default function Tasks() {
           <SelectTrigger className="w-full sm:w-[180px] bg-background"><SelectValue placeholder={t("tasks.allCategories")} /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("tasks.allCategories")}</SelectItem>
-            {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{t(`tasks.category.${c}`)}</SelectItem>)}
+            {visibleCategories.map((c) => <SelectItem key={c} value={c}>{t(`tasks.category.${c}`)}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -284,7 +294,7 @@ export default function Tasks() {
                   <FormItem><FormLabel>{t("tasks.fields.category")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{t(`tasks.category.${c}`)}</SelectItem>)}</SelectContent>
+                      <SelectContent>{visibleCategories.map((c) => <SelectItem key={c} value={c}>{t(`tasks.category.${c}`)}</SelectItem>)}</SelectContent>
                     </Select><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="priority" render={({ field }) => (

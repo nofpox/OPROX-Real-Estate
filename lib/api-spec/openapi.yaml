@@ -1411,12 +1411,12 @@ components:
           description: Smaller sans-serif word in the sidebar logo
         businessMode:
           type: string
-          description: "hotel | compound | serviced-apartments"
-        enabledFeatures:
+          description: "hotel | compound | tower | serviced-apartments"
+        enabledModules:
           type: array
           items:
             type: string
-          description: List of enabled feature keys for this client
+          description: List of enabled functional module IDs for this client
 
     SettingsInput:
       type: object
@@ -1431,7 +1431,7 @@ components:
           type: string
         businessMode:
           type: string
-        enabledFeatures:
+        enabledModules:
           type: array
           items:
             type: string

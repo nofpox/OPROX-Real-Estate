@@ -14,10 +14,10 @@ export interface Settings {
   logoText: string;
   /** Smaller sans-serif word in the sidebar logo */
   logoSub: string;
-  /** hotel | compound | serviced-apartments */
+  /** hotel | compound | tower | serviced-apartments */
   businessMode: string;
-  /** List of enabled feature keys for this client */
-  enabledFeatures: string[];
+  /** List of enabled functional module IDs for this client */
+  enabledModules?: string[];
 }
 
 export interface SettingsInput {
@@ -26,7 +26,7 @@ export interface SettingsInput {
   logoText?: string;
   logoSub?: string;
   businessMode?: string;
-  enabledFeatures?: string[];
+  enabledModules?: string[];
 }
 
 export interface HealthStatus {

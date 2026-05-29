@@ -4,22 +4,11 @@ import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
 
-export const MODE_DEFAULTS: Record<string, string[]> = {
-  hotel: [
-    "properties", "rooms", "guests", "bookings",
-    "finance", "maintenance", "staff", "tasks",
-    "guestRequests", "activityLog", "userManagement",
-  ],
-  compound: [
-    "properties", "rooms", "unitMap",
-    "maintenance", "staff", "tasks",
-    "activityLog", "userManagement",
-  ],
-  "serviced-apartments": [
-    "properties", "rooms", "guests", "bookings",
-    "tasks", "guestRequests", "staff",
-    "activityLog", "userManagement",
-  ],
+const MODE_MODULE_DEFAULTS: Record<string, string[]> = {
+  hotel: ["bookings", "finance", "maintenance", "housekeeping", "serviceRequests"],
+  compound: ["maintenance", "housekeeping", "unitMap", "serviceRequests"],
+  tower: ["bookings", "maintenance", "housekeeping", "facility", "serviceRequests"],
+  "serviced-apartments": ["bookings", "housekeeping", "serviceRequests"],
 };
 
 const DEFAULTS: Record<string, string> = {
@@ -28,7 +17,7 @@ const DEFAULTS: Record<string, string> = {
   logoText: "My",
   logoSub: "Property",
   businessMode: "hotel",
-  enabledFeatures: JSON.stringify(MODE_DEFAULTS.hotel),
+  enabledModules: JSON.stringify(MODE_MODULE_DEFAULTS.hotel),
 };
 
 async function ensureDefaults() {
@@ -59,11 +48,11 @@ async function getAllSettings(): Promise<Record<string, string>> {
 }
 
 function buildResponse(s: Record<string, string>) {
-  let enabledFeatures: string[];
+  let enabledModules: string[];
   try {
-    enabledFeatures = JSON.parse(s.enabledFeatures);
+    enabledModules = JSON.parse(s.enabledModules);
   } catch {
-    enabledFeatures = MODE_DEFAULTS[s.businessMode] ?? MODE_DEFAULTS.hotel;
+    enabledModules = MODE_MODULE_DEFAULTS[s.businessMode] ?? MODE_MODULE_DEFAULTS.hotel;
   }
   return {
     propertyName: s.propertyName,
@@ -71,7 +60,7 @@ function buildResponse(s: Record<string, string>) {
     logoText: s.logoText,
     logoSub: s.logoSub,
     businessMode: s.businessMode,
-    enabledFeatures,
+    enabledModules,
   };
 }
 
@@ -94,11 +83,11 @@ router.patch("/settings", async (req, res) => {
     }
   }
 
-  if (Array.isArray(body.enabledFeatures)) {
-    const val = JSON.stringify(body.enabledFeatures as string[]);
+  if (Array.isArray(body.enabledModules)) {
+    const val = JSON.stringify(body.enabledModules as string[]);
     await db
       .insert(settingsTable)
-      .values({ key: "enabledFeatures", value: val })
+      .values({ key: "enabledModules", value: val })
       .onConflictDoUpdate({ target: settingsTable.key, set: { value: val, updatedAt: new Date() } });
   }
 
