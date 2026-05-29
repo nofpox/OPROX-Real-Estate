@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
   import { Link } from "wouter";
   import { useGetStatsOverview, useListRooms, useListWorkOrders } from "@workspace/api-client-react";
   import { OccupancyHeatmap } from "@/components/occupancy-heatmap";
@@ -6,13 +6,12 @@ import React, { useState } from "react";
   import { Button } from "@/components/ui/button";
   import { Badge } from "@/components/ui/badge";
   import { Skeleton } from "@/components/ui/skeleton";
-  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
   import {
     DoorOpen, DollarSign, Percent, Wrench, ArrowUpRight,
-    LineChart, LayoutGrid, MapPin, CheckCircle2, Settings,
+    LineChart, MapPin, CheckCircle2, Settings,
   } from "lucide-react";
   import { useTranslation } from "react-i18next";
-  import { useLanguage } from "@/contexts/language-context";
+  import branding from "@/config/branding";
 
   const TYPE_BADGE: Record<string, string> = {
     Hotel: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
@@ -39,28 +38,15 @@ import React, { useState } from "react";
 
   export default function Dashboard() {
     const { t } = useTranslation();
-    const { lang } = useLanguage();
-    const [selectedType, setSelectedType] = useState("all");
 
-    const PROPERTY_TYPES = [
-      { value: "all", label: t("propertyType.all") },
-      { value: "Hotel", label: t("propertyType.Hotel") },
-      { value: "Compound", label: t("propertyType.Compound") },
-      { value: "Furnished Apartments", label: t("propertyType.Furnished Apartments") },
-    ];
-
-    const typeParam = selectedType === "all" ? undefined : selectedType;
+    const typeParam = branding.propertyType === "all" ? undefined : branding.propertyType;
     const { data: stats, isLoading: statsLoading } = useGetStatsOverview(typeParam ? { propertyType: typeParam } : undefined);
     const { data: rooms, isLoading: roomsLoading } = useListRooms();
     const { data: workOrders } = useListWorkOrders({ status: "open" });
 
-    const selectedLabel = PROPERTY_TYPES.find((ty) => ty.value === selectedType)?.label ?? t("propertyType.all");
-
     // Compute operational counts from rooms
     const allRooms = rooms ?? [];
-    const filteredRooms = typeParam
-      ? allRooms // already filtered by API if propertyId passed; for type filter we do client-side
-      : allRooms;
+    const filteredRooms = allRooms;
     const occupiedCount = filteredRooms.filter((r) => r.status === "occupied").length;
     const availableCount = filteredRooms.filter((r) => r.status === "available").length;
     const maintenanceCount = filteredRooms.filter((r) => r.status === "maintenance").length;
@@ -74,46 +60,16 @@ import React, { useState } from "react";
     return (
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{t("dashboard.title")}</h1>
-            <p className="text-muted-foreground mt-1">
-              {selectedType === "all" ? t("dashboard.subtitle") : t("dashboard.subtitleFiltered", { type: selectedLabel })}
-            </p>
+            <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{branding.propertyName}</h1>
+            <p className="text-muted-foreground mt-1">{t("dashboard.subtitle")}</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-lg px-3 py-1.5">
-              <LayoutGrid className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">{t("dashboard.propertyType")}:</span>
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger className="h-7 border-0 bg-transparent shadow-none focus:ring-0 px-1 text-sm font-semibold min-w-[160px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROPERTY_TYPES.map((ty) => (
-                    <SelectItem key={ty.value} value={ty.value}>
-                      <div className="flex items-center gap-2">
-                        {ty.value !== "all" && (
-                          <span className={`inline-block h-2 w-2 rounded-full ${
-                            ty.value === "Hotel" ? "bg-blue-500"
-                            : ty.value === "Compound" ? "bg-green-500"
-                            : ty.value === "Furnished Apartments" ? "bg-indigo-500"
-                            : "bg-amber-500"
-                          }`} />
-                        )}
-                        {ty.label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {selectedType !== "all" && (
-              <Badge className={`${TYPE_BADGE[selectedType] ?? ""} border-0 text-xs font-medium`}>
-                {selectedLabel}
-              </Badge>
-            )}
-          </div>
+          {typeParam && (
+            <Badge className={`${TYPE_BADGE[typeParam] ?? ""} border-0 text-xs font-medium self-start sm:self-auto`}>
+              {t(`propertyType.${typeParam}`)}
+            </Badge>
+          )}
         </div>
 
         {/* KPI Cards */}
