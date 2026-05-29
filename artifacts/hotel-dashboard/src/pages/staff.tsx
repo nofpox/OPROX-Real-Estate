@@ -1,11 +1,6 @@
 import React, { useState } from "react";
 import {
-  useListStaff,
-  getListStaffQueryKey,
-  useCreateStaff,
-  useUpdateStaff,
-  useDeleteStaff,
-  useListProperties,
+  useListStaff, getListStaffQueryKey, useCreateStaff, useUpdateStaff, useDeleteStaff, useListProperties,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,40 +9,17 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Plus, Users, MoreVertical, Phone, Mail, Building2, UserCheck, UserX, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import StaffShifts from "./staff-shifts";
+import { useTranslation } from "react-i18next";
 
 const ROLES = [
   "Front Desk Manager", "Concierge", "Housekeeping Supervisor", "Housekeeping Staff",
@@ -56,9 +28,9 @@ const ROLES = [
 ];
 
 const staffSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  role: z.string().min(1, "Role is required"),
-  email: z.string().email("Valid email required"),
+  name: z.string().min(1),
+  role: z.string().min(1),
+  email: z.string().email(),
   phone: z.string().optional().or(z.literal("")),
   propertyId: z.coerce.number().optional().or(z.literal("")),
   status: z.enum(["active", "inactive"]).default("active"),
@@ -85,11 +57,20 @@ function getAvatarColor(name: string) {
 type Tab = "directory" | "schedule";
 
 export default function Staff() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>("directory");
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<any>(null);
+
+  const ROLE_CATEGORIES = [
+    { value: "management", label: t("staff.roleCategories.management") },
+    { value: "housekeeping", label: t("staff.roleCategories.housekeeping") },
+    { value: "maintenance", label: t("staff.roleCategories.maintenance") },
+    { value: "security", label: t("staff.roleCategories.security") },
+    { value: "reception", label: t("staff.roleCategories.reception") },
+  ];
 
   const params: any = {};
   if (selectedProperty !== "all") params.propertyId = parseInt(selectedProperty);
@@ -106,8 +87,6 @@ export default function Staff() {
     resolver: zodResolver(staffSchema),
     defaultValues: { name: "", role: "", email: "", phone: "", propertyId: "", status: "active" },
   });
-
-  const ROLE_CATEGORIES = ["Management", "Housekeeping", "Maintenance", "Security", "Reception"];
 
   const filteredStaff = staff?.filter((s) => {
     if (roleFilter === "all") return true;
@@ -133,61 +112,60 @@ export default function Staff() {
     const payload = { ...data, phone: data.phone || undefined, propertyId: data.propertyId ? Number(data.propertyId) : undefined };
     if (editingStaff) {
       updateStaff.mutate({ id: editingStaff.id, data: payload }, {
-        onSuccess: () => { toast({ title: "Staff member updated" }); queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) }); setIsDialogOpen(false); },
-        onError: () => toast({ title: "Failed to update", variant: "destructive" }),
+        onSuccess: () => { toast({ title: t("staff.toast.updated") }); queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) }); setIsDialogOpen(false); },
+        onError: () => toast({ title: t("staff.toast.updateFailed"), variant: "destructive" }),
       });
     } else {
       createStaff.mutate({ data: payload as any }, {
-        onSuccess: () => { toast({ title: "Staff member added" }); queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) }); setIsDialogOpen(false); },
-        onError: () => toast({ title: "Failed to add", variant: "destructive" }),
+        onSuccess: () => { toast({ title: t("staff.toast.added") }); queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) }); setIsDialogOpen(false); },
+        onError: () => toast({ title: t("staff.toast.addFailed"), variant: "destructive" }),
       });
     }
   };
 
   const handleToggleStatus = (s: any) => {
     updateStaff.mutate({ id: s.id, data: { status: s.status === "active" ? "inactive" : "active" } }, {
-      onSuccess: () => { toast({ title: "Status updated" }); queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) }); },
-      onError: () => toast({ title: "Failed to update", variant: "destructive" }),
+      onSuccess: () => { toast({ title: t("staff.toast.statusUpdated") }); queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) }); },
+      onError: () => toast({ title: t("staff.toast.updateFailed"), variant: "destructive" }),
     });
   };
 
   const handleDelete = (s: any) => {
-    if (confirm(`Remove ${s.name}?`)) {
+    if (confirm(t("staff.removeConfirm", { name: s.name }))) {
       deleteStaff.mutate({ id: s.id }, {
-        onSuccess: () => { toast({ title: "Staff removed" }); queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) }); },
-        onError: () => toast({ title: "Failed to remove", variant: "destructive" }),
+        onSuccess: () => { toast({ title: t("staff.toast.removed") }); queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) }); },
+        onError: () => toast({ title: t("staff.toast.removeFailed"), variant: "destructive" }),
       });
     }
   };
+
+  const TABS = [
+    { id: "directory" as Tab, label: t("staff.tabs.directory"), icon: Users },
+    { id: "schedule" as Tab, label: t("staff.tabs.schedule"), icon: CalendarDays },
+  ];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">Staff</h1>
-          <p className="text-muted-foreground mt-1">Manage your team and shift schedules.</p>
+          <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{t("staff.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("staff.subtitle")}</p>
         </div>
         {activeTab === "directory" && (
           <Button onClick={openCreate} className="font-semibold shadow-sm">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Staff Member
+            <Plus className="me-2 h-4 w-4" />
+            {t("staff.addMember")}
           </Button>
         )}
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit">
-        {([
-          { id: "directory" as Tab, label: "Directory", icon: Users },
-          { id: "schedule" as Tab, label: "Shift Schedule", icon: CalendarDays },
-        ]).map(({ id, label, icon: Icon }) => (
+        {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              activeTab === id
-                ? "bg-background shadow-sm text-foreground"
-                : "text-muted-foreground hover:text-foreground"
+              activeTab === id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Icon className="h-4 w-4" />
@@ -200,32 +178,29 @@ export default function Staff() {
         <StaffShifts />
       ) : (
         <>
-          {/* Stats */}
           <div className="grid gap-4 md:grid-cols-3">
-            <Card className="shadow-sm"><CardContent className="p-6"><div className="flex items-center gap-2 text-muted-foreground mb-2"><Users className="h-4 w-4" /><p className="text-sm font-medium">Total</p></div><h2 className="text-3xl font-bold">{staff?.length || 0}</h2></CardContent></Card>
-            <Card className="shadow-sm"><CardContent className="p-6"><div className="flex items-center gap-2 text-muted-foreground mb-2"><UserCheck className="h-4 w-4" /><p className="text-sm font-medium">Active</p></div><h2 className="text-3xl font-bold text-green-600 dark:text-green-500">{activeCount}</h2></CardContent></Card>
-            <Card className="shadow-sm"><CardContent className="p-6"><div className="flex items-center gap-2 text-muted-foreground mb-2"><UserX className="h-4 w-4" /><p className="text-sm font-medium">Inactive</p></div><h2 className="text-3xl font-bold text-muted-foreground">{inactiveCount}</h2></CardContent></Card>
+            <Card className="shadow-sm"><CardContent className="p-6"><div className="flex items-center gap-2 text-muted-foreground mb-2"><Users className="h-4 w-4" /><p className="text-sm font-medium">{t("staff.kpi.total")}</p></div><h2 className="text-3xl font-bold">{staff?.length || 0}</h2></CardContent></Card>
+            <Card className="shadow-sm"><CardContent className="p-6"><div className="flex items-center gap-2 text-muted-foreground mb-2"><UserCheck className="h-4 w-4" /><p className="text-sm font-medium">{t("staff.kpi.active")}</p></div><h2 className="text-3xl font-bold text-green-600 dark:text-green-500">{activeCount}</h2></CardContent></Card>
+            <Card className="shadow-sm"><CardContent className="p-6"><div className="flex items-center gap-2 text-muted-foreground mb-2"><UserX className="h-4 w-4" /><p className="text-sm font-medium">{t("staff.kpi.inactive")}</p></div><h2 className="text-3xl font-bold text-muted-foreground">{inactiveCount}</h2></CardContent></Card>
           </div>
 
-          {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
             <Select value={selectedProperty} onValueChange={setSelectedProperty}>
-              <SelectTrigger className="w-full sm:w-[220px] bg-background"><SelectValue placeholder="All Properties" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[220px] bg-background"><SelectValue placeholder={t("common.allProperties")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Properties</SelectItem>
+                <SelectItem value="all">{t("common.allProperties")}</SelectItem>
                 {properties?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-full sm:w-[200px] bg-background"><SelectValue placeholder="All Roles" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[200px] bg-background"><SelectValue placeholder={t("staff.allRoles")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                {ROLE_CATEGORIES.map((c) => <SelectItem key={c} value={c.toLowerCase()}>{c}</SelectItem>)}
+                <SelectItem value="all">{t("staff.allRoles")}</SelectItem>
+                {ROLE_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Grid */}
           {isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -233,14 +208,14 @@ export default function Staff() {
               ))}
             </div>
           ) : filteredStaff.length === 0 ? (
-            <Card className="shadow-sm"><CardContent className="flex flex-col items-center justify-center py-16 text-center"><Users className="h-12 w-12 text-muted-foreground/40 mb-4" /><p className="text-muted-foreground">No staff members found.</p><Button variant="outline" className="mt-4" onClick={openCreate}><Plus className="mr-2 h-4 w-4" />Add First Staff Member</Button></CardContent></Card>
+            <Card className="shadow-sm"><CardContent className="flex flex-col items-center justify-center py-16 text-center"><Users className="h-12 w-12 text-muted-foreground/40 mb-4" /><p className="text-muted-foreground">{t("staff.noStaff")}</p><Button variant="outline" className="mt-4" onClick={openCreate}><Plus className="me-2 h-4 w-4" />{t("staff.addFirst")}</Button></CardContent></Card>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredStaff.map((s) => (
                 <Card key={s.id} className="shadow-sm hover:shadow-md transition-shadow border-border/50">
                   <CardContent className="p-5">
                     <div className="flex items-start gap-4">
-                      <Avatar className={`h-12 w-12 border-2 border-background shadow-sm`}>
+                      <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
                         <AvatarFallback className={`text-white font-semibold text-sm ${getAvatarColor(s.name)}`}>{getInitials(s.name)}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
@@ -251,9 +226,9 @@ export default function Staff() {
                               <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0"><MoreVertical className="h-4 w-4" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openEdit(s)}>Edit</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleToggleStatus(s)}>{s.status === "active" ? "Mark Inactive" : "Mark Active"}</DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(s)}>Remove</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openEdit(s)}>{t("common.edit")}</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleToggleStatus(s)}>{s.status === "active" ? t("staff.markInactive") : t("staff.markActive")}</DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(s)}>{t("staff.remove")}</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -267,7 +242,7 @@ export default function Staff() {
                     </div>
                     <div className="mt-4">
                       <Badge className={`text-xs font-medium border-0 ${s.status === "active" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"}`}>
-                        {s.status === "active" ? "Active" : "Inactive"}
+                        {s.status === "active" ? t("status.active") : t("status.inactive")}
                       </Badge>
                     </div>
                   </CardContent>
@@ -278,49 +253,50 @@ export default function Staff() {
         </>
       )}
 
-      {/* Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader><DialogTitle>{editingStaff ? "Edit Staff Member" : "Add Staff Member"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingStaff ? t("staff.dialog.editTitle") : t("staff.dialog.addTitle")}</DialogTitle></DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem className="col-span-2"><FormLabel>Full Name *</FormLabel><FormControl><Input placeholder="e.g. Sarah Collins" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem className="col-span-2"><FormLabel>{t("staff.fields.name")}</FormLabel><FormControl><Input placeholder={t("staff.fields.namePlaceholder")} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="role" render={({ field }) => (
-                  <FormItem><FormLabel>Role *</FormLabel>
+                  <FormItem><FormLabel>{t("staff.fields.role")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder={t("staff.fields.selectRole")} /></SelectTrigger></FormControl>
                       <SelectContent>{ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                     </Select><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="status" render={({ field }) => (
-                  <FormItem><FormLabel>Status</FormLabel>
+                  <FormItem><FormLabel>{t("staff.fields.status")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent>
+                      <SelectContent><SelectItem value="active">{t("status.active")}</SelectItem><SelectItem value="inactive">{t("status.inactive")}</SelectItem></SelectContent>
                     </Select><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="email" render={({ field }) => (
-                  <FormItem><FormLabel>Email *</FormLabel><FormControl><Input type="email" placeholder="email@property.com" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>{t("staff.fields.email")}</FormLabel><FormControl><Input type="email" placeholder="email@property.com" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="phone" render={({ field }) => (
-                  <FormItem><FormLabel>Phone</FormLabel><FormControl><Input placeholder="+1 555-0000" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>{t("staff.fields.phone")}</FormLabel><FormControl><Input placeholder="+1 555-0000" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="propertyId" render={({ field }) => (
-                  <FormItem className="col-span-2"><FormLabel>Assigned Property</FormLabel>
+                  <FormItem className="col-span-2"><FormLabel>{t("staff.fields.property")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value?.toString() || ""}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="No specific property" /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder={t("staff.fields.noProperty")} /></SelectTrigger></FormControl>
                       <SelectContent>
-                        <SelectItem value="none">No specific property</SelectItem>
+                        <SelectItem value="none">{t("staff.fields.noProperty")}</SelectItem>
                         {properties?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
                       </SelectContent>
                     </Select><FormMessage /></FormItem>
                 )} />
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={createStaff.isPending || updateStaff.isPending}>{editingStaff ? "Save Changes" : "Add Staff Member"}</Button>
+                <Button type="submit" disabled={createStaff.isPending || updateStaff.isPending}>
+                  {editingStaff ? t("staff.dialog.saveChanges") : t("staff.addMember")}
+                </Button>
               </DialogFooter>
             </form>
           </Form>

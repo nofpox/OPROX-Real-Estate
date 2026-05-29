@@ -6,33 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Users,
-  DoorOpen,
-  DollarSign,
-  Percent,
-  ArrowUpRight,
-  CalendarDays,
-  Clock,
-  LineChart,
-  LayoutGrid,
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, DoorOpen, DollarSign, Percent, ArrowUpRight, CalendarDays, Clock, LineChart, LayoutGrid } from "lucide-react";
 import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
-
-const PROPERTY_TYPES = [
-  { value: "all", label: "All Properties" },
-  { value: "Hotel", label: "Hotel" },
-  { value: "Compound", label: "Compound" },
-  { value: "Furnished Apartments", label: "Furnished Apartments" },
-  { value: "Apartment", label: "Apartment" },
-];
+import { useTranslation } from "react-i18next";
 
 const TYPE_BADGE: Record<string, string> = {
   Hotel: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
@@ -55,53 +32,56 @@ const getStatusColor = (status: string) => {
 };
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const [selectedType, setSelectedType] = useState("all");
+
+  const PROPERTY_TYPES = [
+    { value: "all", label: t("propertyType.all") },
+    { value: "Hotel", label: t("propertyType.Hotel") },
+    { value: "Compound", label: t("propertyType.Compound") },
+    { value: "Furnished Apartments", label: t("propertyType.Furnished Apartments") },
+    { value: "Apartment", label: t("propertyType.Apartment") },
+  ];
 
   const typeParam = selectedType === "all" ? undefined : selectedType;
 
-  const { data: stats, isLoading: statsLoading } = useGetStatsOverview(
-    typeParam ? { propertyType: typeParam } : undefined
-  );
-  const { data: recentBookings, isLoading: bookingsLoading } = useGetRecentBookings(
-    typeParam ? { propertyType: typeParam } : undefined
-  );
+  const { data: stats, isLoading: statsLoading } = useGetStatsOverview(typeParam ? { propertyType: typeParam } : undefined);
+  const { data: recentBookings, isLoading: bookingsLoading } = useGetRecentBookings(typeParam ? { propertyType: typeParam } : undefined);
 
-  const selectedLabel = PROPERTY_TYPES.find((t) => t.value === selectedType)?.label ?? "All Properties";
+  const selectedLabel = PROPERTY_TYPES.find((ty) => ty.value === selectedType)?.label ?? t("propertyType.all");
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">Dashboard</h1>
+          <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{t("dashboard.title")}</h1>
           <p className="text-muted-foreground mt-1">
             {selectedType === "all"
-              ? "Overview of your full portfolio's performance today."
-              : `Showing data for ${selectedLabel} properties only.`}
+              ? t("dashboard.subtitle")
+              : t("dashboard.subtitleFiltered", { type: selectedLabel })}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Property Type Switcher */}
           <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-lg px-3 py-1.5">
             <LayoutGrid className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">Property Type:</span>
+            <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">{t("dashboard.propertyType")}:</span>
             <Select value={selectedType} onValueChange={setSelectedType}>
               <SelectTrigger className="h-7 border-0 bg-transparent shadow-none focus:ring-0 px-1 text-sm font-semibold min-w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {PROPERTY_TYPES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
+                {PROPERTY_TYPES.map((ty) => (
+                  <SelectItem key={ty.value} value={ty.value}>
                     <div className="flex items-center gap-2">
-                      {t.value !== "all" && (
+                      {ty.value !== "all" && (
                         <span className={`inline-block h-2 w-2 rounded-full ${
-                          t.value === "Hotel" ? "bg-blue-500"
-                          : t.value === "Compound" ? "bg-green-500"
-                          : t.value === "Furnished Apartments" ? "bg-indigo-500"
+                          ty.value === "Hotel" ? "bg-blue-500"
+                          : ty.value === "Compound" ? "bg-green-500"
+                          : ty.value === "Furnished Apartments" ? "bg-indigo-500"
                           : "bg-amber-500"
                         }`} />
                       )}
-                      {t.label}
+                      {ty.label}
                     </div>
                   </SelectItem>
                 ))}
@@ -117,8 +97,8 @@ export default function Dashboard() {
 
           <Link href="/bookings/new">
             <Button className="font-semibold shadow-sm">
-              <CalendarDays className="mr-2 h-4 w-4" />
-              New Booking
+              <CalendarDays className="me-2 h-4 w-4" />
+              {t("dashboard.newBooking")}
             </Button>
           </Link>
         </div>
@@ -128,101 +108,78 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="shadow-sm border-border/50">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue (Monthly)</CardTitle>
-            <div className="p-2 bg-primary/10 rounded-md">
-              <DollarSign className="h-4 w-4 text-primary" />
-            </div>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.totalRevenue")}</CardTitle>
+            <div className="p-2 bg-primary/10 rounded-md"><DollarSign className="h-4 w-4 text-primary" /></div>
           </CardHeader>
           <CardContent>
-            {statsLoading ? (
-              <Skeleton className="h-8 w-24" />
-            ) : (
-              <div className="text-2xl font-bold text-foreground">
-                {formatCurrency(stats?.monthlyRevenue || 0)}
-              </div>
+            {statsLoading ? <Skeleton className="h-8 w-24" /> : (
+              <div className="text-2xl font-bold text-foreground">{formatCurrency(stats?.monthlyRevenue || 0)}</div>
             )}
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
               <ArrowUpRight className="h-3 w-3 text-green-500" />
-              <span className="text-green-500 font-medium">12.5%</span> from last month
+              <span className="text-green-500 font-medium">12.5%</span> {t("dashboard.fromLastMonth")}
             </p>
           </CardContent>
         </Card>
 
         <Card className="shadow-sm border-border/50">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Available Rooms</CardTitle>
-            <div className="p-2 bg-blue-500/10 rounded-md">
-              <DoorOpen className="h-4 w-4 text-blue-500" />
-            </div>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.availableRooms")}</CardTitle>
+            <div className="p-2 bg-blue-500/10 rounded-md"><DoorOpen className="h-4 w-4 text-blue-500" /></div>
           </CardHeader>
           <CardContent>
-            {statsLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
+            {statsLoading ? <Skeleton className="h-8 w-16" /> : (
               <div className="text-2xl font-bold text-foreground">
                 {stats?.availableRooms || 0}{" "}
                 <span className="text-sm font-normal text-muted-foreground">/ {stats?.totalRooms || 0}</span>
               </div>
             )}
-            <p className="text-xs text-muted-foreground mt-1">Ready for check-in today</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("dashboard.readyForCheckIn")}</p>
           </CardContent>
         </Card>
 
         <Card className="shadow-sm border-border/50">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Occupancy Rate</CardTitle>
-            <div className="p-2 bg-indigo-500/10 rounded-md">
-              <Percent className="h-4 w-4 text-indigo-500" />
-            </div>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.occupancyRate")}</CardTitle>
+            <div className="p-2 bg-indigo-500/10 rounded-md"><Percent className="h-4 w-4 text-indigo-500" /></div>
           </CardHeader>
           <CardContent>
-            {statsLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
+            {statsLoading ? <Skeleton className="h-8 w-16" /> : (
               <div className="text-2xl font-bold text-foreground">{stats?.occupancyRate || 0}%</div>
             )}
             <div className="mt-2 h-1.5 w-full bg-secondary rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full"
-                style={{ width: `${stats?.occupancyRate || 0}%` }}
-              />
+              <div className="h-full bg-primary rounded-full" style={{ width: `${stats?.occupancyRate || 0}%` }} />
             </div>
           </CardContent>
         </Card>
 
         <Card className="shadow-sm border-border/50">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Bookings</CardTitle>
-            <div className="p-2 bg-emerald-500/10 rounded-md">
-              <Users className="h-4 w-4 text-emerald-500" />
-            </div>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.activeBookings")}</CardTitle>
+            <div className="p-2 bg-emerald-500/10 rounded-md"><Users className="h-4 w-4 text-emerald-500" /></div>
           </CardHeader>
           <CardContent>
-            {statsLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
+            {statsLoading ? <Skeleton className="h-8 w-16" /> : (
               <div className="text-2xl font-bold text-foreground">{stats?.activeBookings || 0}</div>
             )}
             <p className="text-xs text-muted-foreground mt-1 flex gap-2">
-              <span className="flex items-center"><Clock className="mr-1 h-3 w-3" /> {stats?.pendingCheckIns || 0} IN</span>
-              <span className="flex items-center"><Clock className="mr-1 h-3 w-3" /> {stats?.pendingCheckOuts || 0} OUT</span>
+              <span className="flex items-center"><Clock className="me-1 h-3 w-3" /> {stats?.pendingCheckIns || 0} {t("dashboard.checkIn")}</span>
+              <span className="flex items-center"><Clock className="me-1 h-3 w-3" /> {stats?.pendingCheckOuts || 0} {t("dashboard.checkOut")}</span>
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Occupancy heatmap — filters by type client-side */}
       <OccupancyHeatmap propertyType={typeParam} />
 
-      {/* Recent activity + quick actions */}
       <div className="grid gap-6 md:grid-cols-7 lg:grid-cols-7">
         <Card className="md:col-span-4 lg:col-span-5 shadow-sm border-border/50">
           <CardHeader>
-            <CardTitle className="font-serif">Recent Activity</CardTitle>
+            <CardTitle className="font-serif">{t("dashboard.recentActivity")}</CardTitle>
             <CardDescription>
               {selectedType === "all"
-                ? "Latest bookings and updates across the portfolio."
-                : `Latest bookings for ${selectedLabel} properties.`}
+                ? t("dashboard.recentActivityDesc")
+                : t("dashboard.recentActivityDescFiltered", { type: selectedLabel })}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -231,10 +188,7 @@ export default function Dashboard() {
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="flex items-center gap-4">
                     <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-[200px]" />
-                      <Skeleton className="h-3 w-[150px]" />
-                    </div>
+                    <div className="space-y-2 flex-1"><Skeleton className="h-4 w-[200px]" /><Skeleton className="h-3 w-[150px]" /></div>
                   </div>
                 ))}
               </div>
@@ -245,29 +199,19 @@ export default function Dashboard() {
                     <div className="flex items-center gap-4">
                       <Avatar className="h-10 w-10 border">
                         <AvatarFallback className="bg-primary/5 text-primary font-medium">
-                          {booking.guestName
-                            .split(" ")
-                            .map((n: string) => n[0])
-                            .join("")
-                            .substring(0, 2)
-                            .toUpperCase()}
+                          {booking.guestName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="text-sm font-medium leading-none text-foreground">{booking.guestName}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {booking.roomName} •{" "}
-                          {new Date(booking.checkIn).toLocaleDateString()} to{" "}
-                          {new Date(booking.checkOut).toLocaleDateString()}
+                          {booking.roomName} • {new Date(booking.checkIn + "T00:00:00").toLocaleDateString()} → {new Date(booking.checkOut + "T00:00:00").toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <span className="text-sm font-semibold">{formatCurrency(booking.totalAmount)}</span>
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] px-2 py-0 h-5 border-0 ${getStatusColor(booking.status)}`}
-                      >
+                      <Badge variant="outline" className={`text-[10px] px-2 py-0 h-5 border-0 ${getStatusColor(booking.status)}`}>
                         {booking.status}
                       </Badge>
                     </div>
@@ -277,11 +221,11 @@ export default function Dashboard() {
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <CalendarDays className="h-10 w-10 text-muted-foreground/30 mb-3" />
-                <p className="text-sm font-medium text-foreground">No recent bookings</p>
+                <p className="text-sm font-medium text-foreground">{t("dashboard.noRecentBookings")}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {selectedType === "all"
-                    ? "New bookings will appear here."
-                    : `No bookings found for ${selectedLabel} properties.`}
+                    ? t("dashboard.noRecentBookingsDesc")
+                    : t("dashboard.noRecentBookingsDescFiltered", { type: selectedLabel })}
                 </p>
               </div>
             )}
@@ -290,26 +234,26 @@ export default function Dashboard() {
 
         <Card className="md:col-span-3 lg:col-span-2 shadow-sm border-border/50">
           <CardHeader>
-            <CardTitle className="font-serif">Quick Actions</CardTitle>
-            <CardDescription>Frequently used tools</CardDescription>
+            <CardTitle className="font-serif">{t("dashboard.quickActions")}</CardTitle>
+            <CardDescription>{t("dashboard.quickActionsDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
             <Link href="/bookings/new" className="w-full">
               <Button variant="outline" className="w-full justify-start h-12">
-                <CalendarDays className="mr-2 h-4 w-4 text-primary" />
-                Create Booking
+                <CalendarDays className="me-2 h-4 w-4 text-primary" />
+                {t("dashboard.createBooking")}
               </Button>
             </Link>
             <Link href="/rooms" className="w-full">
               <Button variant="outline" className="w-full justify-start h-12">
-                <DoorOpen className="mr-2 h-4 w-4 text-blue-500" />
-                Manage Rooms
+                <DoorOpen className="me-2 h-4 w-4 text-blue-500" />
+                {t("dashboard.manageRooms")}
               </Button>
             </Link>
             <Link href="/finance" className="w-full">
               <Button variant="outline" className="w-full justify-start h-12">
-                <LineChart className="mr-2 h-4 w-4 text-emerald-500" />
-                View Reports
+                <LineChart className="me-2 h-4 w-4 text-emerald-500" />
+                {t("dashboard.viewReports")}
               </Button>
             </Link>
           </CardContent>
