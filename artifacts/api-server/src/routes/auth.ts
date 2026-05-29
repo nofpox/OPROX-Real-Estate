@@ -20,7 +20,7 @@ import { Router } from "express";
       if (existing.length === 0) {
         await db.insert(usersTable).values({
           username: "admin", displayName: "Administrator",
-          passwordHash: hashPwd("Admin@1234"), role: "owner",
+          passwordHash: hashPwd("admin123"), role: "owner",
           permissions: JSON.stringify(["all"]), isActive: true,
         });
       }
