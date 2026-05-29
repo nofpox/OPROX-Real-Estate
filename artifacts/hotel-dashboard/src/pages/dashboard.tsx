@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useListRooms, useListWorkOrders, useListTasks, useListGuestRequests } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,85 +13,14 @@ import {
 import { useSettings } from "@/hooks/use-settings";
 import type { BusinessMode } from "@/config/modules";
 
-// ─── Mode identity ────────────────────────────────────────────────────────────
+// ─── Mode badge colours (non-translated) ────────────────────────────────────
 
-const MODE_CONFIG: Record<BusinessMode, {
-  modeLabel: string;
-  badgeColor: string;
-  subtitle: string;
-  unitLabel: string;
-}> = {
-  hotel: {
-    modeLabel: "Hotel",
-    badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-    subtitle: "Real-time operational status — what needs attention right now",
-    unitLabel: "Rooms",
-  },
-  compound: {
-    modeLabel: "Compound",
-    badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
-    subtitle: "Real-time operational status — what needs attention right now",
-    unitLabel: "Units",
-  },
-  tower: {
-    modeLabel: "Residential Tower",
-    badgeColor: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400",
-    subtitle: "Real-time operational status — what needs attention right now",
-    unitLabel: "Residential Units",
-  },
-  "serviced-apartments": {
-    modeLabel: "Serviced Apartments",
-    badgeColor: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400",
-    subtitle: "Real-time operational status — what needs attention right now",
-    unitLabel: "Apartments",
-  },
+const MODE_BADGE: Record<BusinessMode, string> = {
+  hotel:                "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  compound:             "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+  tower:                "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400",
+  "serviced-apartments":"bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400",
 };
-
-// ─── Quick actions (mode-specific) ────────────────────────────────────────────
-
-interface ActionDef {
-  label: string;
-  href: string;
-  icon: React.ElementType;
-  color: string;
-}
-
-function getQuickActions(mode: BusinessMode, enabledModules: string[]): ActionDef[] {
-  const has = (id: string) => enabledModules.includes(id);
-  switch (mode) {
-    case "hotel":
-      return [
-        { label: "Manage Rooms",       href: "/rooms",           icon: DoorOpen,       color: "text-emerald-500" },
-        ...(has("bookings")        ? [{ label: "New Booking",    href: "/bookings/new", icon: Calendar,       color: "text-blue-500"   }] : []),
-        ...(has("maintenance")     ? [{ label: "Maintenance",    href: "/maintenance",  icon: Wrench,         color: "text-amber-500"  }] : []),
-        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks", href: "/tasks",        icon: Sparkles,       color: "text-sky-500"    }] : []),
-        ...(has("serviceRequests") ? [{ label: "Requests",       href: "/guest-requests", icon: InboxIcon,  color: "text-violet-500" }] : []),
-      ];
-    case "tower":
-      return [
-        { label: "Residential Units",  href: "/rooms",           icon: Building,       color: "text-teal-500"   },
-        ...(has("facility")        ? [{ label: "Facility Booking", href: "/facilities", icon: Dumbbell,       color: "text-orange-500" }] : []),
-        ...(has("maintenance")     ? [{ label: "Maintenance",    href: "/maintenance",  icon: Wrench,         color: "text-amber-500"  }] : []),
-        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks", href: "/tasks",        icon: Sparkles,       color: "text-sky-500"    }] : []),
-        ...(has("serviceRequests") ? [{ label: "Requests",       href: "/guest-requests", icon: InboxIcon,  color: "text-violet-500" }] : []),
-      ];
-    case "compound":
-      return [
-        ...(has("unitMap")         ? [{ label: "Unit Map",       href: "/unit-map",     icon: MapPin,         color: "text-indigo-500" }] : []),
-        { label: "All Units",          href: "/rooms",           icon: Building2,      color: "text-emerald-500" },
-        ...(has("maintenance")     ? [{ label: "Maintenance",    href: "/maintenance",  icon: Wrench,         color: "text-amber-500"  }] : []),
-        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks", href: "/tasks",        icon: Sparkles,       color: "text-sky-500"    }] : []),
-        ...(has("serviceRequests") ? [{ label: "Requests",       href: "/guest-requests", icon: InboxIcon,  color: "text-violet-500" }] : []),
-      ];
-    default:
-      return [
-        { label: "Manage Apartments",  href: "/rooms",           icon: DoorOpen,       color: "text-emerald-500" },
-        ...(has("housekeeping")    ? [{ label: "Cleaning Tasks", href: "/tasks",        icon: Sparkles,       color: "text-sky-500"    }] : []),
-        ...(has("maintenance")     ? [{ label: "Maintenance",    href: "/maintenance",  icon: Wrench,         color: "text-amber-500"  }] : []),
-        ...(has("serviceRequests") ? [{ label: "Requests",       href: "/guest-requests", icon: InboxIcon,  color: "text-violet-500" }] : []),
-      ];
-  }
-}
 
 // ─── Status colours ───────────────────────────────────────────────────────────
 
@@ -116,104 +46,154 @@ function daysUntil(dateStr: string): number {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const settings = useSettings();
   const mode = settings.businessMode;
-  const cfg = MODE_CONFIG[mode] ?? MODE_CONFIG.hotel;
 
-  const { data: rooms,        isLoading: roomsLoading } = useListRooms();
-  const { data: openOrders                            } = useListWorkOrders({ status: "open" });
-  const { data: allTasks                              } = useListTasks();
-  const { data: guestRequests                         } = useListGuestRequests();
+  const { data: rooms,     isLoading: roomsLoading } = useListRooms();
+  const { data: openOrders                          } = useListWorkOrders({ status: "open" });
+  const { data: allTasks                            } = useListTasks();
+  const { data: guestRequests                       } = useListGuestRequests();
 
-  // ── Derived counts ───────────────────────────────────────────────────────
-  const allRooms        = rooms ?? [];
-  const totalCount      = allRooms.length;
-  const availableCount  = allRooms.filter((r) => r.status === "available").length;
+  // ── Derived counts ──────────────────────────────────────────────────────
+  const allRooms         = rooms ?? [];
+  const totalCount       = allRooms.length;
+  const availableCount   = allRooms.filter((r) => r.status === "available").length;
   const maintenanceRooms = allRooms.filter((r) => r.status === "maintenance").length;
-  const cleaningRooms   = allRooms.filter((r) => r.status === "cleaning").length;
-  const occupiedCount   = allRooms.filter((r) => r.status === "occupied").length;
+  const cleaningRooms    = allRooms.filter((r) => r.status === "cleaning").length;
+  const occupiedCount    = allRooms.filter((r) => r.status === "occupied").length;
   const operationalCount = totalCount - maintenanceRooms;
 
-  const openMaintenance  = openOrders?.length ?? 0;
-  const overdueOrders    = openOrders?.filter((w) => w.dueDate && daysUntil(w.dueDate) < 0) ?? [];
-  const cleaningTasks    = (allTasks as any[] | undefined)?.filter((t: any) => t.category === "housekeeping" && t.status !== "completed") ?? [];
-  const activeTasks      = (allTasks as any[] | undefined)?.filter((t: any) => t.status === "pending" || t.status === "in-progress") ?? [];
-  const serviceRequests  = guestRequests?.filter((r) => r.status !== "completed" && r.status !== "resolved").length ?? 0;
+  const openMaintenance = openOrders?.length ?? 0;
+  const overdueOrders   = openOrders?.filter((w) => w.dueDate && daysUntil(w.dueDate) < 0) ?? [];
+  const cleaningTasks   = (allTasks as any[] | undefined)?.filter((t: any) => t.category === "housekeeping" && t.status !== "completed") ?? [];
+  const activeTasks     = (allTasks as any[] | undefined)?.filter((t: any) => t.status === "pending" || t.status === "in-progress") ?? [];
+  const serviceRequests = guestRequests?.filter((r) => r.status !== "completed" && r.status !== "resolved").length ?? 0;
 
-  // ── Next upcoming maintenance ────────────────────────────────────────────
+  // ── Next upcoming maintenance ─────────────────────────────────────────────
   const upcoming = openOrders
     ?.filter((w) => w.dueDate)
     .sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : 1))
     .find((w) => daysUntil(w.dueDate!) >= -7) ?? null;
 
   const upcomingDays = upcoming?.dueDate ? daysUntil(upcoming.dueDate) : null;
-  const upcomingLabel =
-    upcomingDays === null     ? "No upcoming scheduled maintenance"
-    : upcomingDays < 0        ? `${upcoming!.title} — ${Math.abs(upcomingDays)}d overdue`
-    : upcomingDays === 0      ? `${upcoming!.title} — due today`
-    : upcomingDays === 1      ? `${upcoming!.title} — due tomorrow`
-    :                           `${upcoming!.title} — in ${upcomingDays} days`;
+
+  function upcomingLabel(): string {
+    if (!upcoming || upcomingDays === null) return t("dashboard.assetHealth.noUpcoming");
+    const title = upcoming.title;
+    const d = upcomingDays;
+    if (d < 0)  return t("dashboard.assetHealth.daysOverdue",  { title, count: Math.abs(d) });
+    if (d === 0) return t("dashboard.assetHealth.dueToday",    { title });
+    if (d === 1) return t("dashboard.assetHealth.dueTomorrow", { title });
+    return t("dashboard.assetHealth.inDays", { title, count: d });
+  }
   const upcomingUrgent = upcomingDays !== null && upcomingDays <= 2;
 
-  const quickActions = getQuickActions(mode, settings.enabledModules);
+  // ── Unit label from translations ─────────────────────────────────────────
+  const unitLabel = t(`dashboard.unitLabels.${mode}`, { defaultValue: t("dashboard.unitLabels.hotel") });
 
   // ── Operational KPIs ─────────────────────────────────────────────────────
   const kpis = [
     {
-      label: "Open Maintenance",
-      value: openMaintenance,
-      sub: overdueOrders.length > 0 ? `${overdueOrders.length} overdue` : "work orders",
-      icon: Wrench,
+      label:     t("dashboard.kpi.openMaintenance"),
+      value:     openMaintenance,
+      sub:       overdueOrders.length > 0
+                   ? t("dashboard.kpi.overdueCount", { count: overdueOrders.length })
+                   : t("dashboard.kpi.workOrders"),
+      icon:      Wrench,
       iconColor: openMaintenance > 0 ? "text-amber-500" : "text-muted-foreground",
       iconBg:    openMaintenance > 0 ? "bg-amber-500/10" : "bg-muted/50",
       urgent:    overdueOrders.length > 0,
     },
     {
-      label: "Cleaning Tasks",
-      value: cleaningTasks.length,
-      sub: cleaningRooms > 0 ? `${cleaningRooms} units in cleaning` : "pending tasks",
-      icon: Sparkles,
+      label:     t("dashboard.kpi.cleaningTasks"),
+      value:     cleaningTasks.length,
+      sub:       cleaningRooms > 0
+                   ? t("dashboard.kpi.unitsInCleaning", { count: cleaningRooms })
+                   : t("dashboard.kpi.pendingTasks"),
+      icon:      Sparkles,
       iconColor: cleaningTasks.length > 0 ? "text-sky-500" : "text-muted-foreground",
       iconBg:    cleaningTasks.length > 0 ? "bg-sky-500/10" : "bg-muted/50",
       urgent:    false,
     },
     {
-      label: "Service Requests",
-      value: serviceRequests,
-      sub: "pending resolution",
-      icon: InboxIcon,
+      label:     t("dashboard.kpi.serviceRequests"),
+      value:     serviceRequests,
+      sub:       t("dashboard.kpi.pendingResolution"),
+      icon:      InboxIcon,
       iconColor: serviceRequests > 0 ? "text-violet-500" : "text-muted-foreground",
       iconBg:    serviceRequests > 0 ? "bg-violet-500/10" : "bg-muted/50",
       urgent:    false,
     },
     {
-      label: "Active Tasks",
-      value: activeTasks.length,
-      sub: `${activeTasks.filter((t: any) => t.status === "in-progress").length} in progress`,
-      icon: ClipboardList,
+      label:     t("dashboard.kpi.activeTasks"),
+      value:     activeTasks.length,
+      sub:       t("dashboard.kpi.inProgress", { count: activeTasks.filter((t: any) => t.status === "in-progress").length }),
+      icon:      ClipboardList,
       iconColor: activeTasks.length > 0 ? "text-indigo-500" : "text-muted-foreground",
       iconBg:    activeTasks.length > 0 ? "bg-indigo-500/10" : "bg-muted/50",
       urgent:    false,
     },
   ];
 
+  // ── Quick actions (mode-specific, labels from t()) ───────────────────────
+  const has = (id: string) => settings.enabledModules.includes(id);
+
+  interface ActionDef { label: string; href: string; icon: React.ElementType; color: string; }
+  function getQuickActions(): ActionDef[] {
+    switch (mode) {
+      case "hotel":
+        return [
+          { label: t("dashboard.quickActions.manageRooms"),    href: "/rooms",            icon: DoorOpen,  color: "text-emerald-500" },
+          ...(has("bookings")        ? [{ label: t("dashboard.quickActions.newBooking"),      href: "/bookings/new", icon: Calendar,  color: "text-blue-500"   }] : []),
+          ...(has("maintenance")     ? [{ label: t("dashboard.quickActions.maintenance"),     href: "/maintenance",  icon: Wrench,    color: "text-amber-500"  }] : []),
+          ...(has("housekeeping")    ? [{ label: t("dashboard.quickActions.cleaningTasks"),   href: "/tasks",        icon: Sparkles,  color: "text-sky-500"    }] : []),
+          ...(has("serviceRequests") ? [{ label: t("dashboard.quickActions.requests"),        href: "/guest-requests", icon: InboxIcon, color: "text-violet-500" }] : []),
+        ];
+      case "tower":
+        return [
+          { label: t("dashboard.quickActions.residentialUnits"), href: "/rooms",          icon: Building,  color: "text-teal-500"   },
+          ...(has("facility")        ? [{ label: t("dashboard.quickActions.facilityBooking"), href: "/facilities", icon: Dumbbell,  color: "text-orange-500" }] : []),
+          ...(has("maintenance")     ? [{ label: t("dashboard.quickActions.maintenance"),     href: "/maintenance",  icon: Wrench,    color: "text-amber-500"  }] : []),
+          ...(has("housekeeping")    ? [{ label: t("dashboard.quickActions.cleaningTasks"),   href: "/tasks",        icon: Sparkles,  color: "text-sky-500"    }] : []),
+          ...(has("serviceRequests") ? [{ label: t("dashboard.quickActions.requests"),        href: "/guest-requests", icon: InboxIcon, color: "text-violet-500" }] : []),
+        ];
+      case "compound":
+        return [
+          ...(has("unitMap")         ? [{ label: t("dashboard.quickActions.facilityBooking"), href: "/unit-map",    icon: MapPin,    color: "text-indigo-500" }] : []),
+          { label: t("dashboard.quickActions.manageUnits"),      href: "/rooms",            icon: Building2, color: "text-emerald-500" },
+          ...(has("maintenance")     ? [{ label: t("dashboard.quickActions.maintenance"),     href: "/maintenance",  icon: Wrench,    color: "text-amber-500"  }] : []),
+          ...(has("housekeeping")    ? [{ label: t("dashboard.quickActions.cleaningTasks"),   href: "/tasks",        icon: Sparkles,  color: "text-sky-500"    }] : []),
+          ...(has("serviceRequests") ? [{ label: t("dashboard.quickActions.requests"),        href: "/guest-requests", icon: InboxIcon, color: "text-violet-500" }] : []),
+        ];
+      default:
+        return [
+          { label: t("dashboard.quickActions.manageApartments"), href: "/rooms",           icon: DoorOpen,  color: "text-emerald-500" },
+          ...(has("housekeeping")    ? [{ label: t("dashboard.quickActions.cleaningTasks"),   href: "/tasks",        icon: Sparkles,  color: "text-sky-500"    }] : []),
+          ...(has("maintenance")     ? [{ label: t("dashboard.quickActions.maintenance"),     href: "/maintenance",  icon: Wrench,    color: "text-amber-500"  }] : []),
+          ...(has("serviceRequests") ? [{ label: t("dashboard.quickActions.requests"),        href: "/guest-requests", icon: InboxIcon, color: "text-violet-500" }] : []),
+        ];
+    }
+  }
+  const quickActions = getQuickActions();
+
   return (
     <div className="space-y-6">
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">
             {settings.propertyName}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">{cfg.subtitle}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("dashboard.subtitle")}</p>
         </div>
-        <Badge className={`${cfg.badgeColor} border-0 text-xs font-semibold self-start sm:self-auto px-3 py-1`}>
-          {cfg.modeLabel}
+        <Badge className={`${MODE_BADGE[mode] ?? MODE_BADGE.hotel} border-0 text-xs font-semibold self-start sm:self-auto px-3 py-1`}>
+          {t(`dashboard.modes.${mode}`, { defaultValue: mode })}
         </Badge>
       </div>
 
-      {/* ── Operational KPI Cards ───────────────────────────────────────────── */}
+      {/* ── Operational KPI Cards ────────────────────────────────────────────── */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
@@ -241,37 +221,41 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* ── Asset Health ────────────────────────────────────────────────────── */}
+      {/* ── Asset Health ─────────────────────────────────────────────────────── */}
       <Card className="shadow-sm border-border/50">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="font-serif text-base">Asset Health</CardTitle>
+            <CardTitle className="font-serif text-base">{t("dashboard.assetHealth.title")}</CardTitle>
             <Link href="/maintenance">
-              <Button variant="ghost" size="sm" className="text-xs h-7 text-muted-foreground">View all →</Button>
+              <Button variant="ghost" size="sm" className="text-xs h-7 text-muted-foreground">
+                {t("dashboard.assetHealth.viewAll")}
+              </Button>
             </Link>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+
           {/* Systems online */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-md ${maintenanceRooms === 0 ? "bg-emerald-500/10" : "bg-amber-500/10"}`}>
                 {maintenanceRooms === 0
                   ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  : <ShieldAlert className="h-4 w-4 text-amber-500" />
+                  : <ShieldAlert  className="h-4 w-4 text-amber-500" />
                 }
               </div>
               <div>
                 <p className="text-sm font-medium">
                   {roomsLoading
                     ? <Skeleton className="h-4 w-32 inline-block" />
-                    : `${operationalCount} / ${totalCount} units fully operational`
+                    : t("dashboard.assetHealth.systemsOnline", { operational: operationalCount, total: totalCount })
                   }
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {maintenanceRooms === 0
-                    ? "All units clear — no active maintenance blocks"
-                    : `${maintenanceRooms} unit${maintenanceRooms > 1 ? "s" : ""} currently under maintenance`}
+                    ? t("dashboard.assetHealth.allClear")
+                    : t(`dashboard.assetHealth.unitsUnderMaintenance_${maintenanceRooms === 1 ? "one" : "other"}`, { count: maintenanceRooms })
+                  }
                 </p>
               </div>
             </div>
@@ -288,9 +272,9 @@ export default function Dashboard() {
               <Wrench className={`h-4 w-4 ${upcomingUrgent ? "text-red-500" : "text-muted-foreground"}`} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Next Scheduled Maintenance</p>
+              <p className="text-sm font-medium">{t("dashboard.assetHealth.nextMaintenance")}</p>
               <p className={`text-xs mt-0.5 truncate ${upcomingUrgent ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"}`}>
-                {upcomingLabel}
+                {upcomingLabel()}
               </p>
             </div>
             {upcoming && (
@@ -299,26 +283,34 @@ export default function Dashboard() {
                 upcomingUrgent ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400" :
                 "bg-muted text-muted-foreground"
               }`}>
-                {upcomingDays !== null && upcomingDays < 0 ? "OVERDUE" : upcomingDays === 0 ? "TODAY" : `${upcomingDays}d`}
+                {upcomingDays !== null && upcomingDays < 0
+                  ? t("dashboard.assetHealth.badgeOverdue")
+                  : upcomingDays === 0
+                  ? t("dashboard.assetHealth.badgeToday")
+                  : t("dashboard.assetHealth.badgeDays", { count: upcomingDays })}
               </Badge>
             )}
           </div>
 
-          {/* Overdue list (collapsed if none) */}
+          {/* Overdue list */}
           {overdueOrders.length > 0 && (
             <div className="rounded-md bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 px-3 py-2">
               <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-1.5">
-                {overdueOrders.length} overdue work order{overdueOrders.length > 1 ? "s" : ""}
+                {t(`dashboard.assetHealth.overdueOrders_${overdueOrders.length === 1 ? "one" : "other"}`, { count: overdueOrders.length })}
               </p>
               <ul className="space-y-1">
                 {overdueOrders.slice(0, 3).map((w) => (
                   <li key={w.id} className="text-xs text-red-600 dark:text-red-400 flex justify-between">
                     <span className="truncate me-2">{w.title}</span>
-                    <span className="shrink-0 font-medium">{Math.abs(daysUntil(w.dueDate!))}d overdue</span>
+                    <span className="shrink-0 font-medium">
+                      {t("dashboard.assetHealth.entryDaysOverdue", { count: Math.abs(daysUntil(w.dueDate!)) })}
+                    </span>
                   </li>
                 ))}
                 {overdueOrders.length > 3 && (
-                  <li className="text-xs text-red-500 dark:text-red-500">+{overdueOrders.length - 3} more…</li>
+                  <li className="text-xs text-red-500">
+                    {t("dashboard.assetHealth.moreOverdue", { count: overdueOrders.length - 3 })}
+                  </li>
                 )}
               </ul>
             </div>
@@ -330,9 +322,11 @@ export default function Dashboard() {
       <Card className="shadow-sm border-border/50">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium font-serif">Operational Status</CardTitle>
+            <CardTitle className="text-sm font-medium font-serif">
+              {t("dashboard.operationalStatus.title")}
+            </CardTitle>
             <span className="text-xs text-muted-foreground">
-              {availableCount} of {totalCount} {cfg.unitLabel.toLowerCase()} ready
+              {t("dashboard.operationalStatus.readySummary", { available: availableCount, total: totalCount, label: unitLabel.toLowerCase() })}
             </span>
           </div>
         </CardHeader>
@@ -341,25 +335,25 @@ export default function Dashboard() {
             {maintenanceRooms > 0 && <div className="bg-amber-500 transition-all" style={{ width: `${(maintenanceRooms / Math.max(totalCount, 1)) * 100}%` }} />}
             {cleaningRooms    > 0 && <div className="bg-sky-500   transition-all" style={{ width: `${(cleaningRooms    / Math.max(totalCount, 1)) * 100}%` }} />}
             {occupiedCount    > 0 && <div className="bg-slate-400 transition-all" style={{ width: `${(occupiedCount    / Math.max(totalCount, 1)) * 100}%` }} />}
-            {availableCount   > 0 && <div className="bg-emerald-500 transition-all" style={{ width: `${(availableCount / Math.max(totalCount, 1)) * 100}%` }} />}
+            {availableCount   > 0 && <div className="bg-emerald-500 transition-all" style={{ width: `${(availableCount  / Math.max(totalCount, 1)) * 100}%` }} />}
           </div>
           <div className="flex items-center gap-4 mt-2 flex-wrap">
             {[
-              { label: "Under Maintenance", color: "bg-amber-500",   count: maintenanceRooms },
-              { label: "Cleaning",           color: "bg-sky-500",     count: cleaningRooms    },
-              { label: "Occupied",           color: "bg-slate-400",   count: occupiedCount    },
-              { label: "Available",          color: "bg-emerald-500", count: availableCount   },
-            ].map(({ label, color, count }) => (
-              <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              { key: "underMaintenance", color: "bg-amber-500",   count: maintenanceRooms },
+              { key: "cleaning",         color: "bg-sky-500",     count: cleaningRooms    },
+              { key: "occupied",         color: "bg-slate-400",   count: occupiedCount    },
+              { key: "available",        color: "bg-emerald-500", count: availableCount   },
+            ].map(({ key, color, count }) => (
+              <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span className={`h-2 w-2 rounded-full ${color}`} />
-                {count} {label}
+                {count} {t(`dashboard.operationalStatus.${key}`)}
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* ── Unit grid + Quick actions ──────────────────────────────────────── */}
+      {/* ── Unit grid + Quick actions ────────────────────────────────────────── */}
       <div className="grid gap-6 md:grid-cols-7">
 
         {/* Unit status grid */}
@@ -367,13 +361,17 @@ export default function Dashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="font-serif">{cfg.unitLabel} — Operational Status</CardTitle>
+                <CardTitle className="font-serif">
+                  {t("dashboard.unitGrid.title", { label: unitLabel })}
+                </CardTitle>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  Live status of every unit — maintenance and cleaning issues highlighted
+                  {t("dashboard.unitGrid.desc")}
                 </p>
               </div>
               <Link href="/rooms">
-                <Button variant="outline" size="sm" className="text-xs h-7">Manage →</Button>
+                <Button variant="outline" size="sm" className="text-xs h-7">
+                  {t("dashboard.unitGrid.manage")}
+                </Button>
               </Link>
             </div>
           </CardHeader>
@@ -387,11 +385,10 @@ export default function Dashboard() {
             ) : allRooms.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <DoorOpen className="h-10 w-10 text-muted-foreground/30 mb-3" />
-                <p className="text-sm text-muted-foreground">No units found</p>
+                <p className="text-sm text-muted-foreground">{t("dashboard.unitGrid.noUnits")}</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                {/* Sort: maintenance first, then cleaning, then occupied, then available */}
                 {[...allRooms]
                   .sort((a, b) => {
                     const order: Record<string, number> = { maintenance: 0, cleaning: 1, occupied: 2, available: 3 };
@@ -407,7 +404,9 @@ export default function Dashboard() {
                         <div className={`group relative rounded-lg border p-2.5 cursor-pointer transition-all hover:shadow-md ${colorClass} ${isAlert ? "ring-1 ring-current/30" : ""}`}>
                           <span className={`h-2 w-2 rounded-full block mb-1 ${dotClass}`} />
                           <p className="text-xs font-semibold leading-tight truncate">{room.name}</p>
-                          <p className="text-[10px] opacity-70 capitalize mt-0.5">{status}</p>
+                          <p className="text-[10px] opacity-70 capitalize mt-0.5">
+                            {t(`unitStatus.status.${status}`, { defaultValue: status })}
+                          </p>
                         </div>
                       </Link>
                     );
@@ -420,8 +419,8 @@ export default function Dashboard() {
         {/* Quick Actions */}
         <Card className="md:col-span-2 shadow-sm border-border/50">
           <CardHeader>
-            <CardTitle className="font-serif">Quick Actions</CardTitle>
-            <p className="text-sm text-muted-foreground">Jump to operational tasks</p>
+            <CardTitle className="font-serif">{t("dashboard.quickActions.title")}</CardTitle>
+            <p className="text-sm text-muted-foreground">{t("dashboard.quickActions.desc")}</p>
           </CardHeader>
           <CardContent className="grid gap-2">
             {quickActions.map((action) => {

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useListRooms, getListRoomsQueryKey, useCreateRoom, useUpdateRoom, useDeleteRoom,
   useListWorkOrders,
@@ -21,36 +22,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@/hooks/use-toast";
 import { type Room } from "@workspace/api-client-react";
 
-// ─── Status badge ─────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: string }) {
-  switch (status.toLowerCase()) {
-    case "available":
-      return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-0 dark:bg-emerald-900/30 dark:text-emerald-400">Available</Badge>;
-    case "occupied":
-      return <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-0 dark:bg-slate-800 dark:text-slate-400">Occupied</Badge>;
-    case "maintenance":
-      return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-0 dark:bg-amber-900/30 dark:text-amber-400">Under Maintenance</Badge>;
-    case "cleaning":
-      return <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100 border-0 dark:bg-sky-900/30 dark:text-sky-400">Cleaning in Progress</Badge>;
-    default:
-      return <Badge variant="outline" className="capitalize">{status}</Badge>;
-  }
-}
-
 // ─── Status sort order ────────────────────────────────────────────────────────
 
 const STATUS_ORDER: Record<string, number> = {
-  maintenance: 0,
-  cleaning: 1,
-  occupied: 2,
-  available: 3,
+  maintenance: 0, cleaning: 1, occupied: 2, available: 3,
 };
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return "—";
+  if (!dateStr) return "";
   const d = new Date(dateStr);
   return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
 }
@@ -64,27 +45,47 @@ function daysSince(dateStr: string): number {
 // ─── Form schema ──────────────────────────────────────────────────────────────
 
 const unitSchema = z.object({
-  name: z.string().min(1, "Unit number / name is required"),
-  type: z.string().min(1, "Unit type is required"),
-  status: z.string().min(1, "Status is required"),
-  capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
+  name:     z.string().min(1),
+  type:     z.string().min(1),
+  status:   z.string().min(1),
+  capacity: z.coerce.number().min(1),
 });
+
+// ─── Status badge ─────────────────────────────────────────────────────────────
+
+function StatusBadge({ status, t }: { status: string; t: (k: string, opts?: Record<string, unknown>) => string }) {
+  const key = `unitStatus.status.${status.toLowerCase()}`;
+  const label = t(key, { defaultValue: status });
+  switch (status.toLowerCase()) {
+    case "available":
+      return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-0 dark:bg-emerald-900/30 dark:text-emerald-400">{label}</Badge>;
+    case "occupied":
+      return <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-0 dark:bg-slate-800 dark:text-slate-400">{label}</Badge>;
+    case "maintenance":
+      return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-0 dark:bg-amber-900/30 dark:text-amber-400">{label}</Badge>;
+    case "cleaning":
+      return <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100 border-0 dark:bg-sky-900/30 dark:text-sky-400">{label}</Badge>;
+    default:
+      return <Badge variant="outline" className="capitalize">{label}</Badge>;
+  }
+}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function UnitStatus() {
-  const [searchQuery, setSearchQuery]   = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingRoom, setEditingRoom]   = useState<Room | null>(null);
+  const { t } = useTranslation();
+  const [searchQuery,   setSearchQuery]   = useState("");
+  const [statusFilter,  setStatusFilter]  = useState("all");
+  const [isDialogOpen,  setIsDialogOpen]  = useState(false);
+  const [editingRoom,   setEditingRoom]   = useState<Room | null>(null);
 
-  const { data: rooms,  isLoading: roomsLoading } = useListRooms();
-  const { data: completedOrders }                 = useListWorkOrders({ status: "completed" } as any);
-  const createRoom = useCreateRoom();
-  const updateRoom = useUpdateRoom();
-  const deleteRoom = useDeleteRoom();
+  const { data: rooms,           isLoading: roomsLoading } = useListRooms();
+  const { data: completedOrders }                          = useListWorkOrders({ status: "completed" } as any);
+  const createRoom  = useCreateRoom();
+  const updateRoom  = useUpdateRoom();
+  const deleteRoom  = useDeleteRoom();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const { toast }   = useToast();
 
   // Map unitId → latest completedAt across completed work orders
   const lastServiceMap = React.useMemo<Record<number, string>>(() => {
@@ -109,10 +110,10 @@ export default function UnitStatus() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Remove this unit from the system? This cannot be undone.")) {
+    if (confirm(t("unitStatus.removeConfirm"))) {
       deleteRoom.mutate({ id }, {
-        onSuccess: () => { toast({ title: "Unit removed." }); queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() }); },
-        onError:   () => { toast({ title: "Failed to remove unit.", variant: "destructive" }); },
+        onSuccess: () => { toast({ title: t("unitStatus.removed") }); queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() }); },
+        onError:   () => { toast({ title: t("unitStatus.removeFailed"), variant: "destructive" }); },
       });
     }
   };
@@ -121,13 +122,13 @@ export default function UnitStatus() {
     const payload = { ...data, pricePerNight: editingRoom?.pricePerNight ?? 0 };
     if (editingRoom) {
       updateRoom.mutate({ id: editingRoom.id, data: payload }, {
-        onSuccess: () => { toast({ title: "Unit updated." }); queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() }); setIsDialogOpen(false); },
-        onError:   () => { toast({ title: "Update failed.", variant: "destructive" }); },
+        onSuccess: () => { toast({ title: t("unitStatus.updated") }); queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() }); setIsDialogOpen(false); },
+        onError:   () => { toast({ title: t("unitStatus.updateFailed"), variant: "destructive" }); },
       });
     } else {
       createRoom.mutate({ data: payload }, {
-        onSuccess: () => { toast({ title: "Unit added." }); queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() }); setIsDialogOpen(false); },
-        onError:   () => { toast({ title: "Failed to add unit.", variant: "destructive" }); },
+        onSuccess: () => { toast({ title: t("unitStatus.added") }); queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() }); setIsDialogOpen(false); },
+        onError:   () => { toast({ title: t("unitStatus.addFailed"), variant: "destructive" }); },
       });
     }
   };
@@ -140,9 +141,9 @@ export default function UnitStatus() {
   // ── Filter + sort ──────────────────────────────────────────────────────────
   const filtered = [...(rooms ?? [])]
     .filter((r) => {
-      const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase())
-        || r.type.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === "all" || r.status.toLowerCase() === statusFilter;
+      const q = searchQuery.toLowerCase();
+      const matchesSearch  = r.name.toLowerCase().includes(q) || r.type.toLowerCase().includes(q);
+      const matchesStatus  = statusFilter === "all" || r.status.toLowerCase() === statusFilter;
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3));
@@ -157,11 +158,13 @@ export default function UnitStatus() {
   };
 
   const kpis = [
-    { label: "Under Maintenance", count: counts.maintenance, icon: Wrench,    color: "text-amber-500",   bg: "bg-amber-500/10"   },
-    { label: "Cleaning In Progress", count: counts.cleaning, icon: Sparkles,  color: "text-sky-500",     bg: "bg-sky-500/10"     },
-    { label: "Occupied",           count: counts.occupied,   icon: DoorOpen,  color: "text-slate-500",   bg: "bg-slate-500/10"   },
-    { label: "Available",          count: counts.available,  icon: CalendarCheck, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { key: "maintenance", count: counts.maintenance, icon: Wrench,       color: "text-amber-500",   bg: "bg-amber-500/10"   },
+    { key: "cleaning",    count: counts.cleaning,    icon: Sparkles,     color: "text-sky-500",     bg: "bg-sky-500/10"     },
+    { key: "occupied",    count: counts.occupied,    icon: DoorOpen,     color: "text-slate-500",   bg: "bg-slate-500/10"   },
+    { key: "available",   count: counts.available,   icon: CalendarCheck,color: "text-emerald-500", bg: "bg-emerald-500/10" },
   ];
+
+  const UNIT_TYPES = ["Studio", "1BR", "2BR", "3BR", "Penthouse", "Standard", "Deluxe", "Suite"] as const;
 
   return (
     <div className="space-y-6">
@@ -169,41 +172,51 @@ export default function UnitStatus() {
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">Unit Status</h1>
-          <p className="text-muted-foreground mt-1">
-            Live operational status of every unit — no resident data stored
-          </p>
+          <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">
+            {t("unitStatus.title")}
+          </h1>
+          <p className="text-muted-foreground mt-1">{t("unitStatus.subtitle")}</p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={onOpenChange}>
           <DialogTrigger asChild>
             <Button className="font-semibold shadow-sm">
               <Plus className="me-2 h-4 w-4" />
-              Add Unit
+              {t("unitStatus.addUnit")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="font-serif">{editingRoom ? "Edit Unit" : "Add New Unit"}</DialogTitle>
+              <DialogTitle className="font-serif">
+                {editingRoom ? t("unitStatus.editUnit") : t("unitStatus.addNewUnit")}
+              </DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unit Number / Name</FormLabel>
-                    <FormControl><Input placeholder="e.g. Unit 4A, Room 101" {...field} /></FormControl>
+                    <FormLabel>{t("unitStatus.unitNameLabel")}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t("unitStatus.unitNamePlaceholder")} {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
+
                 <div className="grid grid-cols-2 gap-4">
                   <FormField control={form.control} name="type" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Unit Type</FormLabel>
+                      <FormLabel>{t("unitStatus.columns.type")}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                        <FormControl>
+                          <SelectTrigger><SelectValue placeholder={t("unitStatus.selectType")} /></SelectTrigger>
+                        </FormControl>
                         <SelectContent>
-                          {["Studio", "1BR", "2BR", "3BR", "Penthouse", "Standard", "Deluxe", "Suite"].map((t) => (
-                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                          {UNIT_TYPES.map((tp) => (
+                            <SelectItem key={tp} value={tp}>
+                              {t(`unitStatus.types.${tp}`, { defaultValue: tp })}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -212,30 +225,35 @@ export default function UnitStatus() {
                   )} />
                   <FormField control={form.control} name="capacity" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Capacity</FormLabel>
+                      <FormLabel>{t("unitStatus.columns.capacity")}</FormLabel>
                       <FormControl><Input type="number" min="1" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                 </div>
+
                 <FormField control={form.control} name="status" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Status</FormLabel>
+                    <FormLabel>{t("unitStatus.columns.status")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder={t("unitStatus.selectStatus")} /></SelectTrigger>
+                      </FormControl>
                       <SelectContent>
-                        <SelectItem value="available">Available</SelectItem>
-                        <SelectItem value="occupied">Occupied</SelectItem>
-                        <SelectItem value="maintenance">Under Maintenance</SelectItem>
-                        <SelectItem value="cleaning">Cleaning in Progress</SelectItem>
+                        {(["available", "occupied", "maintenance", "cleaning"] as const).map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {t(`unitStatus.status.${s}`)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )} />
+
                 <DialogFooter className="pt-4">
                   <Button type="submit" disabled={createRoom.isPending || updateRoom.isPending}>
-                    {editingRoom ? "Save Changes" : "Add Unit"}
+                    {editingRoom ? t("unitStatus.saveChanges") : t("unitStatus.addUnit")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -250,15 +268,11 @@ export default function UnitStatus() {
           const Icon = kpi.icon;
           return (
             <Card
-              key={kpi.label}
+              key={kpi.key}
               className={`shadow-sm border-border/50 cursor-pointer transition-all hover:shadow-md ${
-                statusFilter === kpi.label.toLowerCase().split(" ")[0] ? "ring-2 ring-primary/40" : ""
+                statusFilter === kpi.key ? "ring-2 ring-primary/40" : ""
               }`}
-              onClick={() => setStatusFilter(
-                statusFilter === kpi.label.toLowerCase().split(" ")[0]
-                  ? "all"
-                  : kpi.label.toLowerCase().split(" ")[0]
-              )}
+              onClick={() => setStatusFilter(statusFilter === kpi.key ? "all" : kpi.key)}
             >
               <CardContent className="flex items-center gap-3 pt-5 pb-4">
                 <div className={`p-2.5 rounded-lg shrink-0 ${kpi.bg}`}>
@@ -269,7 +283,9 @@ export default function UnitStatus() {
                     ? <Skeleton className="h-6 w-8 mb-1" />
                     : <p className="text-2xl font-bold">{kpi.count}</p>
                   }
-                  <p className="text-xs text-muted-foreground leading-tight">{kpi.label}</p>
+                  <p className="text-xs text-muted-foreground leading-tight">
+                    {t(`unitStatus.kpi.${kpi.key}`)}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -281,13 +297,13 @@ export default function UnitStatus() {
       <Card className="shadow-sm border-border/50">
         <CardHeader className="pb-0">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="font-serif text-base sr-only">Units</CardTitle>
+            <CardTitle className="sr-only">{t("unitStatus.title")}</CardTitle>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center w-full">
               <div className="relative flex-1 sm:max-w-sm">
                 <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search by unit number or type…"
+                  placeholder={t("unitStatus.searchPlaceholder")}
                   className="ps-8 bg-background"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -295,14 +311,13 @@ export default function UnitStatus() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-44 bg-background">
-                  <SelectValue placeholder="All statuses" />
+                  <SelectValue placeholder={t("unitStatus.allStatuses")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="maintenance">Under Maintenance</SelectItem>
-                  <SelectItem value="cleaning">Cleaning in Progress</SelectItem>
-                  <SelectItem value="occupied">Occupied</SelectItem>
-                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="all">{t("unitStatus.allStatuses")}</SelectItem>
+                  {(["maintenance", "cleaning", "occupied", "available"] as const).map((s) => (
+                    <SelectItem key={s} value={s}>{t(`unitStatus.status.${s}`)}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -312,11 +327,11 @@ export default function UnitStatus() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="ps-6">Unit / Room</TableHead>
-                <TableHead>Unit Type</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead>Current Status</TableHead>
-                <TableHead>Last Service Date</TableHead>
+                <TableHead className="ps-6">{t("unitStatus.columns.unit")}</TableHead>
+                <TableHead>{t("unitStatus.columns.type")}</TableHead>
+                <TableHead>{t("unitStatus.columns.capacity")}</TableHead>
+                <TableHead>{t("unitStatus.columns.status")}</TableHead>
+                <TableHead>{t("unitStatus.columns.lastService")}</TableHead>
                 <TableHead className="w-[50px]" />
               </TableRow>
             </TableHeader>
@@ -334,8 +349,8 @@ export default function UnitStatus() {
                 <TableRow>
                   <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                     {searchQuery || statusFilter !== "all"
-                      ? "No units match your search or filter."
-                      : "No units configured. Add the first unit to get started."}
+                      ? t("unitStatus.noMatch")
+                      : t("unitStatus.noUnits")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -344,48 +359,53 @@ export default function UnitStatus() {
                   const ageLabel = lastService
                     ? (() => {
                         const d = daysSince(lastService);
-                        if (d === 0) return "Today";
-                        if (d === 1) return "Yesterday";
-                        return `${d}d ago`;
+                        if (d === 0) return t("common.date") === "Date" ? "Today" : "اليوم";
+                        if (d === 1) return t("common.date") === "Date" ? "Yesterday" : "أمس";
+                        return `${d}d`;
                       })()
                     : null;
                   const isStale = lastService ? daysSince(lastService) > 30 : false;
 
                   return (
-                    <TableRow key={room.id} className={room.status === "maintenance" ? "bg-amber-50/40 dark:bg-amber-950/10" : ""}>
+                    <TableRow
+                      key={room.id}
+                      className={room.status === "maintenance" ? "bg-amber-50/40 dark:bg-amber-950/10" : ""}
+                    >
                       <TableCell className="ps-6 font-semibold">{room.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{room.type}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {t(`unitStatus.types.${room.type}`, { defaultValue: room.type })}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{room.capacity ?? 1}</TableCell>
-                      <TableCell><StatusBadge status={room.status} /></TableCell>
+                      <TableCell><StatusBadge status={room.status} t={t} /></TableCell>
                       <TableCell>
                         {lastService ? (
                           <div className="flex flex-col">
                             <span className="text-sm">{formatDate(lastService)}</span>
                             <span className={`text-xs ${isStale ? "text-amber-600 dark:text-amber-400 font-medium" : "text-muted-foreground"}`}>
-                              {ageLabel}{isStale ? " — overdue" : ""}
+                              {ageLabel}{isStale ? ` — ${t("unitStatus.overdueLabel")}` : ""}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-sm">No record</span>
+                          <span className="text-muted-foreground text-sm">{t("unitStatus.noRecord")}</span>
                         )}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Actions</span>
+                              <span className="sr-only">{t("common.actions")}</span>
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem className="cursor-pointer" onClick={() => handleEdit(room)}>
-                              <Pencil className="me-2 h-4 w-4" /> Edit Unit
+                              <Pencil className="me-2 h-4 w-4" /> {t("unitStatus.editUnit")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive cursor-pointer"
                               onClick={() => handleDelete(room.id)}
                             >
-                              <Trash2 className="me-2 h-4 w-4" /> Remove Unit
+                              <Trash2 className="me-2 h-4 w-4" /> {t("unitStatus.removeUnit")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
