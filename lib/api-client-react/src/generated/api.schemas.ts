@@ -128,7 +128,7 @@ export interface OccupancyStat {
 export interface Property {
   id: number;
   name: string;
-  /** Hotel, Apartment, Compound */
+  /** Hotel, Apartment, Compound, Furnished Apartments */
   type: string;
   address: string;
   city: string;
@@ -467,6 +467,13 @@ status?: string;
 roomId?: number;
 };
 
+export type GetStatsOverviewParams = {
+/**
+ * Filter by property type (Hotel, Apartment, Compound, Furnished Apartments). Omit for all.
+ */
+propertyType?: string;
+};
+
 export type GetOccupancyHeatmapParams = {
 /**
  * Number of days in range (default 42)
@@ -527,5 +534,12 @@ export type ListGuestsParams = {
  * Search by name, email, or phone
  */
 search?: string;
+};
+
+export type GetRecentBookingsParams = {
+/**
+ * Filter by property type. Omit for all.
+ */
+propertyType?: string;
 };
 

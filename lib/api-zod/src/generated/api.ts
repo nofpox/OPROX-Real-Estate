@@ -246,6 +246,10 @@ export const CancelBookingResponse = zod.object({
 /**
  * @summary Get dashboard overview statistics
  */
+export const GetStatsOverviewQueryParams = zod.object({
+  "propertyType": zod.coerce.string().optional().describe('Filter by property type (Hotel, Apartment, Compound, Furnished Apartments). Omit for all.')
+})
+
 export const GetStatsOverviewResponse = zod.object({
   "totalBookings": zod.number(),
   "activeBookings": zod.number(),
@@ -306,7 +310,7 @@ export const GetOccupancyStatsResponse = zod.array(GetOccupancyStatsResponseItem
 export const ListPropertiesResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.string().describe('Hotel, Apartment, Compound'),
+  "type": zod.string().describe('Hotel, Apartment, Compound, Furnished Apartments'),
   "address": zod.string(),
   "city": zod.string(),
   "country": zod.string(),
@@ -342,7 +346,7 @@ export const GetPropertyParams = zod.object({
 export const GetPropertyResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.string().describe('Hotel, Apartment, Compound'),
+  "type": zod.string().describe('Hotel, Apartment, Compound, Furnished Apartments'),
   "address": zod.string(),
   "city": zod.string(),
   "country": zod.string(),
@@ -373,7 +377,7 @@ export const UpdatePropertyBody = zod.object({
 export const UpdatePropertyResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.string().describe('Hotel, Apartment, Compound'),
+  "type": zod.string().describe('Hotel, Apartment, Compound, Furnished Apartments'),
   "address": zod.string(),
   "city": zod.string(),
   "country": zod.string(),
@@ -990,6 +994,10 @@ export const GetGuestResponse = zod.object({
 /**
  * @summary Get recent bookings for activity feed
  */
+export const GetRecentBookingsQueryParams = zod.object({
+  "propertyType": zod.coerce.string().optional().describe('Filter by property type. Omit for all.')
+})
+
 export const GetRecentBookingsResponseItem = zod.object({
   "id": zod.number(),
   "guestName": zod.string(),

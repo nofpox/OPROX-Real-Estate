@@ -17,6 +17,8 @@ export * from './financeSummary';
 export * from './generateNotificationsResult';
 export * from './getFinanceMonthlyParams';
 export * from './getOccupancyHeatmapParams';
+export * from './getRecentBookingsParams';
+export * from './getStatsOverviewParams';
 export * from './guest';
 export * from './guestProfile';
 export * from './healthStatus';

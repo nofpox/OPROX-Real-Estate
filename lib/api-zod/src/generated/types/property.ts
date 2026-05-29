@@ -9,7 +9,7 @@
 export interface Property {
   id: number;
   name: string;
-  /** Hotel, Apartment, Compound */
+  /** Hotel, Apartment, Compound, Furnished Apartments */
   type: string;
   address: string;
   city: string;

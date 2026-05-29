@@ -3,16 +3,9 @@ import { useGetOccupancyHeatmap, type OccupancyHeatmapEntry } from "@workspace/a
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const DAY_SHORT = ["Su","Mo","Tu","We","Th","Fr","Sa"];
-
-function getOccupancyColor(pct: number, isToday: boolean): string {
-  if (isToday) return "ring-2 ring-primary ring-offset-1";
-  return "";
-}
 
 function getOccupancyBg(pct: number): string {
   if (pct === 0) return "bg-muted/40";
@@ -41,7 +34,11 @@ type TooltipData = {
   occupancyPct: number;
 };
 
-export function OccupancyHeatmap() {
+interface OccupancyHeatmapProps {
+  propertyType?: string;
+}
+
+export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
   const { data: rawData, isLoading } = useGetOccupancyHeatmap({ days: 42 });
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
@@ -51,20 +48,23 @@ export function OccupancyHeatmap() {
     return d.toISOString().split("T")[0];
   }, []);
 
-  // Build structured data: { propertyId, propertyName, days: Map<dateStr, entry> }
+  // Build structured data, filtered by propertyType if provided
   const properties = useMemo(() => {
     if (!rawData) return [];
-    const map = new Map<number, { id: number; name: string; cells: Map<string, typeof rawData[0]> }>();
-    for (const entry of rawData) {
+    const filtered = propertyType
+      ? rawData.filter((e) => (e as OccupancyHeatmapEntry & { propertyType?: string }).propertyType === propertyType)
+      : rawData;
+    const map = new Map<number, { id: number; name: string; cells: Map<string, OccupancyHeatmapEntry> }>();
+    for (const entry of filtered) {
       if (!map.has(entry.propertyId)) {
         map.set(entry.propertyId, { id: entry.propertyId, name: entry.propertyName, cells: new Map() });
       }
       map.get(entry.propertyId)!.cells.set(entry.date, entry);
     }
     return Array.from(map.values()).sort((a, b) => a.id - b.id);
-  }, [rawData]);
+  }, [rawData, propertyType]);
 
-  // Build the sorted list of all dates
+  // Build the sorted list of all dates from the full dataset (keeps columns stable)
   const dates = useMemo(() => {
     if (!rawData || rawData.length === 0) return [];
     const seen = new Set<string>();
@@ -75,7 +75,7 @@ export function OccupancyHeatmap() {
     return result.sort();
   }, [rawData]);
 
-  // Group dates by week for column headers
+  // Group dates by month for column headers
   const weeks = useMemo(() => {
     const groups: { label: string; dates: string[] }[] = [];
     let currentGroup: string[] = [];
@@ -94,13 +94,19 @@ export function OccupancyHeatmap() {
     return groups;
   }, [dates]);
 
-  // Average occupancy for legend context
+  // Average occupancy across filtered properties for today
   const avgOccupancy = useMemo(() => {
     if (!rawData || rawData.length === 0) return 0;
-    const todayEntries = rawData.filter((e) => e.date === today);
+    const todayEntries = rawData.filter((e) => {
+      if (e.date !== today) return false;
+      if (propertyType) {
+        return (e as OccupancyHeatmapEntry & { propertyType?: string }).propertyType === propertyType;
+      }
+      return true;
+    });
     if (todayEntries.length === 0) return 0;
     return Math.round(todayEntries.reduce((s, e) => s + e.occupancyPct, 0) / todayEntries.length);
-  }, [rawData, today]);
+  }, [rawData, today, propertyType]);
 
   const handleMouseEnter = (e: React.MouseEvent, entry: OccupancyHeatmapEntry, propertyName: string) => {
     const rect = (e.target as HTMLElement).getBoundingClientRect();
@@ -121,13 +127,14 @@ export function OccupancyHeatmap() {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="font-serif text-base">Occupancy Heatmap</CardTitle>
-            <CardDescription className="text-xs mt-0.5">Rolling 42-day view — past 7 days to next 35 days</CardDescription>
+            <CardDescription className="text-xs mt-0.5">
+              Rolling 42-day view — past 7 days to next 35 days
+              {propertyType && <span className="ml-1 font-medium text-foreground/70">· {propertyType}</span>}
+            </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs font-normal">
-              Today: <span className="font-semibold ml-1">{avgOccupancy}% avg</span>
-            </Badge>
-          </div>
+          <Badge variant="outline" className="text-xs font-normal">
+            Today: <span className="font-semibold ml-1">{avgOccupancy}% avg</span>
+          </Badge>
         </div>
 
         {/* Legend */}
@@ -161,7 +168,7 @@ export function OccupancyHeatmap() {
           </div>
         ) : properties.length === 0 ? (
           <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
-            No booking data available.
+            No properties found{propertyType ? ` for type "${propertyType}"` : ""}.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -201,14 +208,11 @@ export function OccupancyHeatmap() {
               {/* Property rows */}
               {properties.map((property) => (
                 <div key={property.id} className="flex items-center gap-[2px] mb-1.5">
-                  {/* Property name */}
                   <div className="w-[130px] shrink-0 pr-2 text-right">
                     <span className="text-[11px] font-medium text-foreground/80 leading-none truncate block">
                       {property.name}
                     </span>
                   </div>
-
-                  {/* Cells */}
                   {dates.map((d) => {
                     const entry = property.cells.get(d);
                     const pct = entry?.occupancyPct ?? 0;

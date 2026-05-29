@@ -1,10 +1,13 @@
 import { Router } from "express";
 import { db, bookingsTable, roomsTable, propertiesTable } from "@workspace/db";
-import { eq, sql, and, gte, lte } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 const router = Router();
 
 router.get("/stats/overview", async (req, res) => {
+  const propertyType = req.query.propertyType as string | undefined;
+  const typeFilter = propertyType ? eq(propertiesTable.type, propertyType) : sql`1=1`;
+
   const [bookingStats] = await db
     .select({
       totalBookings: sql<number>`count(*)::int`,
@@ -17,7 +20,10 @@ router.get("/stats/overview", async (req, res) => {
       pendingCheckIns: sql<number>`count(*) filter (where ${bookingsTable.status} = 'confirmed' and ${bookingsTable.checkIn} = current_date)::int`,
       pendingCheckOuts: sql<number>`count(*) filter (where ${bookingsTable.status} = 'checked-in' and ${bookingsTable.checkOut} = current_date)::int`,
     })
-    .from(bookingsTable);
+    .from(bookingsTable)
+    .leftJoin(roomsTable, eq(bookingsTable.roomId, roomsTable.id))
+    .leftJoin(propertiesTable, eq(roomsTable.propertyId, propertiesTable.id))
+    .where(typeFilter);
 
   const [roomStats] = await db
     .select({
@@ -25,7 +31,9 @@ router.get("/stats/overview", async (req, res) => {
       availableRooms: sql<number>`count(*) filter (where ${roomsTable.status} = 'available')::int`,
       occupiedRooms: sql<number>`count(*) filter (where ${roomsTable.status} = 'occupied')::int`,
     })
-    .from(roomsTable);
+    .from(roomsTable)
+    .leftJoin(propertiesTable, eq(roomsTable.propertyId, propertiesTable.id))
+    .where(typeFilter);
 
   const occupancyRate =
     roomStats.totalRooms > 0
@@ -69,7 +77,6 @@ router.get("/stats/occupancy-heatmap", async (req, res) => {
   const daysParam = parseInt((req.query.days as string) || "42");
   const days = Math.max(7, Math.min(daysParam, 90));
 
-  // Build date range: past 7 days → next (days - 7) days
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const startDate = new Date(today);
@@ -80,18 +87,17 @@ router.get("/stats/occupancy-heatmap", async (req, res) => {
   const startStr = startDate.toISOString().split("T")[0];
   const endStr = endDate.toISOString().split("T")[0];
 
-  // Count total rooms per property
   const roomCounts = await db
     .select({
       propertyId: roomsTable.propertyId,
       propertyName: propertiesTable.name,
+      propertyType: propertiesTable.type,
       totalRooms: sql<number>`count(*)::int`,
     })
     .from(roomsTable)
     .leftJoin(propertiesTable, eq(roomsTable.propertyId, propertiesTable.id))
-    .groupBy(roomsTable.propertyId, propertiesTable.name);
+    .groupBy(roomsTable.propertyId, propertiesTable.name, propertiesTable.type);
 
-  // Get bookings that overlap with this date range (active + confirmed + checked-in)
   const bookings = await db
     .select({
       checkIn: bookingsTable.checkIn,
@@ -101,17 +107,14 @@ router.get("/stats/occupancy-heatmap", async (req, res) => {
     .from(bookingsTable)
     .leftJoin(roomsTable, eq(bookingsTable.roomId, roomsTable.id))
     .where(
-      and(
-        sql`${bookingsTable.status} in ('confirmed', 'checked-in', 'checked-out')`,
-        sql`${bookingsTable.checkOut} >= ${startStr}`,
-        sql`${bookingsTable.checkIn} <= ${endStr}`
-      )
+      sql`${bookingsTable.status} in ('confirmed', 'checked-in', 'checked-out')
+        and ${bookingsTable.checkOut} >= ${startStr}
+        and ${bookingsTable.checkIn} <= ${endStr}`
     );
 
-  // Build heatmap: for each property × day, count overlapping bookings
-  const result: { propertyId: number; propertyName: string; date: string; occupiedRooms: number; totalRooms: number; occupancyPct: number }[] = [];
+  const result: { propertyId: number; propertyName: string; propertyType: string; date: string; occupiedRooms: number; totalRooms: number; occupancyPct: number }[] = [];
 
-  for (const { propertyId, propertyName, totalRooms } of roomCounts) {
+  for (const { propertyId, propertyName, propertyType, totalRooms } of roomCounts) {
     const d = new Date(startDate);
     while (d <= endDate) {
       const dateStr = d.toISOString().split("T")[0];
@@ -122,6 +125,7 @@ router.get("/stats/occupancy-heatmap", async (req, res) => {
       result.push({
         propertyId: propertyId!,
         propertyName: propertyName ?? "Unknown",
+        propertyType: propertyType ?? "Hotel",
         date: dateStr,
         occupiedRooms: occupied,
         totalRooms,
@@ -155,10 +159,15 @@ router.get("/stats/occupancy", async (req, res) => {
 });
 
 router.get("/stats/recent-bookings", async (req, res) => {
+  const propertyType = req.query.propertyType as string | undefined;
+  const typeFilter = propertyType ? eq(propertiesTable.type, propertyType) : sql`1=1`;
+
   const rows = await db
     .select({ booking: bookingsTable, room: roomsTable })
     .from(bookingsTable)
     .leftJoin(roomsTable, eq(bookingsTable.roomId, roomsTable.id))
+    .leftJoin(propertiesTable, eq(roomsTable.propertyId, propertiesTable.id))
+    .where(typeFilter)
     .orderBy(sql`${bookingsTable.createdAt} desc`)
     .limit(10);
 

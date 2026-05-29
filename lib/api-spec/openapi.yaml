@@ -260,6 +260,13 @@ paths:
       operationId: getStatsOverview
       tags: [stats]
       summary: Get dashboard overview statistics
+      parameters:
+        - name: propertyType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "Filter by property type (Hotel, Apartment, Compound, Furnished Apartments). Omit for all."
       responses:
         "200":
           description: Overview stats
@@ -1031,6 +1038,13 @@ paths:
       operationId: getRecentBookings
       tags: [stats]
       summary: Get recent bookings for activity feed
+      parameters:
+        - name: propertyType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "Filter by property type. Omit for all."
       responses:
         "200":
           description: Recent bookings
