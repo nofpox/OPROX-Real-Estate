@@ -4,12 +4,8 @@ import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
 
-const MODE_MODULE_DEFAULTS: Record<string, string[]> = {
-  hotel: ["bookings", "finance", "maintenance", "housekeeping", "serviceRequests"],
-  compound: ["maintenance", "housekeeping", "unitMap", "serviceRequests"],
-  tower: ["bookings", "maintenance", "housekeeping", "facility", "serviceRequests"],
-  "serviced-apartments": ["bookings", "housekeeping", "serviceRequests"],
-};
+/** Default enabled modules when no configuration has been saved yet. */
+const DEFAULT_MODULES = ["bookings", "maintenance", "housekeeping", "serviceRequests"];
 
 const DEFAULTS: Record<string, string> = {
   propertyName: "My Property",
@@ -17,7 +13,7 @@ const DEFAULTS: Record<string, string> = {
   logoText: "My",
   logoSub: "Property",
   businessMode: "hotel",
-  enabledModules: JSON.stringify(MODE_MODULE_DEFAULTS.hotel),
+  enabledModules: JSON.stringify(DEFAULT_MODULES),
 };
 
 async function ensureDefaults() {
@@ -50,9 +46,10 @@ async function getAllSettings(): Promise<Record<string, string>> {
 function buildResponse(s: Record<string, string>) {
   let enabledModules: string[];
   try {
-    enabledModules = JSON.parse(s.enabledModules);
+    const parsed = JSON.parse(s.enabledModules);
+    enabledModules = Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_MODULES;
   } catch {
-    enabledModules = MODE_MODULE_DEFAULTS[s.businessMode] ?? MODE_MODULE_DEFAULTS.hotel;
+    enabledModules = DEFAULT_MODULES;
   }
   return {
     propertyName: s.propertyName,
