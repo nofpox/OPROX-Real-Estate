@@ -789,6 +789,7 @@ export const DeleteStaffParams = zod.object({
 export const ListTasksQueryParams = zod.object({
   "propertyId": zod.coerce.number().optional(),
   "assignedToId": zod.coerce.number().optional(),
+  "supervisorId": zod.coerce.number().optional(),
   "status": zod.coerce.string().optional(),
   "date": zod.coerce.string().optional().describe('Filter by due date (YYYY-MM-DD)')
 })
@@ -802,15 +803,21 @@ export const ListTasksResponseItem = zod.object({
   "propertyName": zod.string().nullish(),
   "unitId": zod.number().nullish(),
   "unitName": zod.string().nullish(),
+  "supervisorId": zod.number().nullish(),
   "assignedToId": zod.number().nullish(),
   "assigneeName": zod.string().nullish(),
   "assignedByUserId": zod.number().nullish(),
   "completedByUserId": zod.number().nullish(),
+  "verifiedByUserId": zod.number().nullish(),
   "proofPhotoUrl": zod.string().nullish(),
+  "beforePhotoUrl": zod.string().nullish(),
+  "afterPhotoUrl": zod.string().nullish(),
   "priority": zod.string().describe('low, medium, high, urgent'),
-  "status": zod.string().describe('pending, in-progress, completed'),
+  "status": zod.string().describe('pending, in-progress, completed, verified'),
   "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListTasksResponse = zod.array(ListTasksResponseItem)
@@ -825,6 +832,7 @@ export const CreateTaskBody = zod.object({
   "category": zod.string(),
   "propertyId": zod.number().optional(),
   "unitId": zod.number().optional(),
+  "supervisorId": zod.number().optional(),
   "assignedToId": zod.number().optional(),
   "priority": zod.string(),
   "status": zod.string().optional(),
@@ -845,14 +853,20 @@ export const UpdateTaskBody = zod.object({
   "category": zod.string().optional(),
   "propertyId": zod.number().optional(),
   "unitId": zod.number().optional(),
+  "supervisorId": zod.number().optional(),
   "assignedToId": zod.number().optional(),
   "assignedByUserId": zod.number().optional(),
   "completedByUserId": zod.number().optional(),
+  "verifiedByUserId": zod.number().optional(),
   "proofPhotoUrl": zod.string().optional(),
+  "beforePhotoUrl": zod.string().optional(),
+  "afterPhotoUrl": zod.string().optional(),
   "priority": zod.string().optional(),
   "status": zod.string().optional(),
   "dueDate": zod.string().optional(),
-  "completedAt": zod.string().optional()
+  "startedAt": zod.string().optional(),
+  "completedAt": zod.string().optional(),
+  "verifiedAt": zod.string().optional()
 })
 
 export const UpdateTaskResponse = zod.object({
@@ -864,15 +878,21 @@ export const UpdateTaskResponse = zod.object({
   "propertyName": zod.string().nullish(),
   "unitId": zod.number().nullish(),
   "unitName": zod.string().nullish(),
+  "supervisorId": zod.number().nullish(),
   "assignedToId": zod.number().nullish(),
   "assigneeName": zod.string().nullish(),
   "assignedByUserId": zod.number().nullish(),
   "completedByUserId": zod.number().nullish(),
+  "verifiedByUserId": zod.number().nullish(),
   "proofPhotoUrl": zod.string().nullish(),
+  "beforePhotoUrl": zod.string().nullish(),
+  "afterPhotoUrl": zod.string().nullish(),
   "priority": zod.string().describe('low, medium, high, urgent'),
-  "status": zod.string().describe('pending, in-progress, completed'),
+  "status": zod.string().describe('pending, in-progress, completed, verified'),
   "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })
 

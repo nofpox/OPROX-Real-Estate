@@ -10,29 +10,46 @@ function tid(req: import("express").Request): number | null {
   return ((req as any).sessionUser as any)?.tenantId ?? null;
 }
 
+/** Roles that can verify a completed task */
+function canVerify(role: string | undefined): boolean {
+  return role === "owner" || role === "manager" || role === "super_admin";
+}
+
+/** Roles that bypass photo requirements */
+function isAdmin(role: string | undefined): boolean {
+  return getRoleTier(role ?? "staff") === "admin";
+}
+
 function formatTask(
   t: typeof tasksTable.$inferSelect,
-  extras: { assigneeName?: string | null; propertyName?: string | null; unitName?: string | null }
+  extras: {
+    assigneeName?: string | null;
+    propertyName?: string | null;
+    unitName?: string | null;
+  }
 ) {
   return {
     ...t,
-    createdAt: t.createdAt.toISOString(),
+    createdAt:   t.createdAt.toISOString(),
+    startedAt:   t.startedAt   ? t.startedAt.toISOString()   : null,
     completedAt: t.completedAt ? t.completedAt.toISOString() : null,
-    assigneeName: extras.assigneeName ?? null,
-    propertyName: extras.propertyName ?? null,
-    unitName: extras.unitName ?? null,
+    verifiedAt:  t.verifiedAt  ? t.verifiedAt.toISOString()  : null,
+    assigneeName:  extras.assigneeName  ?? null,
+    propertyName:  extras.propertyName  ?? null,
+    unitName:      extras.unitName      ?? null,
   };
 }
 
 router.get("/tasks", async (req, res) => {
-  const { propertyId, assignedToId, status, date } = req.query as {
-    propertyId?: string; assignedToId?: string; status?: string; date?: string;
+  const { propertyId, assignedToId, supervisorId, status, date } = req.query as {
+    propertyId?: string; assignedToId?: string; supervisorId?: string; status?: string; date?: string;
   };
   const tenantId = tid(req);
   const conditions = [];
   if (tenantId !== null) conditions.push(eq(tasksTable.tenantId, tenantId));
-  if (propertyId)   conditions.push(eq(tasksTable.propertyId, parseInt(propertyId)));
+  if (propertyId)   conditions.push(eq(tasksTable.propertyId,   parseInt(propertyId)));
   if (assignedToId) conditions.push(eq(tasksTable.assignedToId, parseInt(assignedToId)));
+  if (supervisorId) conditions.push(eq(tasksTable.supervisorId, parseInt(supervisorId)));
   if (status)       conditions.push(eq(tasksTable.status, status));
   if (date)         conditions.push(eq(tasksTable.dueDate, date));
 
@@ -86,25 +103,85 @@ router.patch("/tasks/:id", async (req, res) => {
   const conds = [eq(tasksTable.id, id)];
   if (tenantId !== null) conds.push(eq(tasksTable.tenantId, tenantId));
   const [before] = await db.select().from(tasksTable).where(and(...conds));
+  if (!before) { res.status(404).json({ error: "Task not found" }); return; }
 
-  const actor = actorFromRequest(req);
-  const tier  = getRoleTier(actor.actorRole ?? "staff");
+  const actor   = actorFromRequest(req);
+  const newStatus = parsed.data.status;
 
-  const isMarkingComplete =
-    parsed.data.status === "completed" && (!before || before.status !== "completed");
+  // ── Status transition enforcement ─────────────────────────────────────────
 
-  if (isMarkingComplete && tier !== "admin") {
-    const proof = parsed.data.proofPhotoUrl ?? before?.proofPhotoUrl;
-    if (!proof) {
-      res.status(422).json({ error: "proof_required", message: "A proof photo is required to mark this task as completed." });
+  if (newStatus && newStatus !== before.status) {
+    // pending → in-progress: require before photo
+    if (newStatus === "in-progress" && before.status === "pending") {
+      const photo = parsed.data.beforePhotoUrl ?? before.beforePhotoUrl;
+      if (!photo && !isAdmin(actor.actorRole)) {
+        res.status(422).json({
+          error: "before_photo_required",
+          message: "A Before photo is required to start this task.",
+        });
+        return;
+      }
+    }
+
+    // in-progress → completed: require after photo
+    if (newStatus === "completed" && before.status === "in-progress") {
+      const photo = parsed.data.afterPhotoUrl ?? parsed.data.proofPhotoUrl ?? before.afterPhotoUrl ?? before.proofPhotoUrl;
+      if (!photo && !isAdmin(actor.actorRole)) {
+        res.status(422).json({
+          error: "after_photo_required",
+          message: "An After photo is required to mark this task as completed.",
+        });
+        return;
+      }
+    }
+
+    // completed → verified: manager/owner/super_admin only
+    if (newStatus === "verified" && before.status === "completed") {
+      if (!canVerify(actor.actorRole)) {
+        res.status(403).json({
+          error: "forbidden",
+          message: "Only managers and owners can verify completed tasks.",
+        });
+        return;
+      }
+    }
+
+    // Prevent illegal transitions (skip → completed without going through in-progress, etc.)
+    const VALID_TRANSITIONS: Record<string, string[]> = {
+      "pending":     ["in-progress"],
+      "in-progress": ["completed", "pending"],
+      "completed":   ["verified", "in-progress"],
+      "verified":    [],
+    };
+    const allowed = VALID_TRANSITIONS[before.status] ?? [];
+    if (!allowed.includes(newStatus) && !isAdmin(actor.actorRole)) {
+      res.status(422).json({
+        error: "invalid_transition",
+        message: `Cannot move task from "${before.status}" to "${newStatus}".`,
+      });
       return;
     }
   }
 
+  // ── Build update payload ──────────────────────────────────────────────────
+
   const data: Record<string, unknown> = { ...parsed.data };
-  if (parsed.data.status === "completed" && !parsed.data.completedAt) data.completedAt = new Date();
-  if (isMarkingComplete && actor.actorId) data.completedByUserId = actor.actorId;
-  if (parsed.data.assignedToId !== undefined && parsed.data.assignedToId !== before?.assignedToId && actor.actorId) {
+
+  if (newStatus === "in-progress" && before.status === "pending") {
+    if (!before.startedAt) data.startedAt = new Date();
+  }
+
+  if (newStatus === "completed" && before.status !== "completed") {
+    data.completedAt = new Date();
+    if (actor.actorId) data.completedByUserId = actor.actorId;
+  }
+
+  if (newStatus === "verified" && before.status === "completed") {
+    data.verifiedAt = new Date();
+    if (actor.actorId) data.verifiedByUserId = actor.actorId;
+  }
+
+  if (parsed.data.assignedToId !== undefined && parsed.data.assignedToId !== before.assignedToId && actor.actorId) {
     data.assignedByUserId = actor.actorId;
   }
 
@@ -120,23 +197,23 @@ router.patch("/tasks/:id", async (req, res) => {
   const [assignedByUser] = task.assignedByUserId
     ? await db.select({ displayName: usersTable.displayName }).from(usersTable).where(eq(usersTable.id, task.assignedByUserId))
     : [null];
-  const [completedByUser] = task.completedByUserId
-    ? await db.select({ displayName: usersTable.displayName }).from(usersTable).where(eq(usersTable.id, task.completedByUserId))
-    : [null];
 
-  if (before && parsed.data.status && parsed.data.status !== before.status) {
+  if (newStatus && newStatus !== before.status) {
+    const isVerifying   = newStatus === "verified";
+    const isCompleting  = newStatus === "completed";
     logActivity({
       ...actor, tenantId: tenantId ?? 1,
       action: "task.status_changed", entityType: "task", entityId: task.id, entityLabel: task.title,
       propertyId: property?.id ?? undefined, propertyName: property?.name ?? undefined,
-      details: `${before.status} → ${parsed.data.status}`,
-      completedByName: isMarkingComplete ? (actor.actorName ?? completedByUser?.displayName) : undefined,
-      assignedByName: assignedByUser?.displayName ?? undefined,
-      proofPhotoUrl: isMarkingComplete ? (task.proofPhotoUrl ?? undefined) : undefined,
+      details: `${before.status} → ${newStatus}`,
+      completedByName: isCompleting  ? actor.actorName : undefined,
+      assignedByName:  assignedByUser?.displayName ?? undefined,
+      proofPhotoUrl:   isCompleting  ? (task.afterPhotoUrl ?? task.proofPhotoUrl ?? undefined) : undefined,
+      ...(isVerifying ? { details: `Verified by ${actor.actorName ?? "manager"}` } : {}),
     });
   }
 
-  if (before && parsed.data.assignedToId !== undefined && parsed.data.assignedToId !== before.assignedToId) {
+  if (parsed.data.assignedToId !== undefined && parsed.data.assignedToId !== before.assignedToId) {
     logActivity({
       ...actor, tenantId: tenantId ?? 1,
       action: "task.assigned", entityType: "task", entityId: task.id, entityLabel: task.title,

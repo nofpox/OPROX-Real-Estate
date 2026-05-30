@@ -23,9 +23,10 @@ import * as z from "zod";
 import {
   Plus, Trash2, CheckCheck, Clock, AlertCircle, CheckCircle2,
   Building2, Image as ImageIcon, Send, X, Zap, Droplets, Wind, Sparkles, ClipboardList,
-  Camera, Upload, ExternalLink, ShieldCheck,
+  Camera, Upload, ExternalLink, ShieldCheck, BadgeCheck,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useRole } from "@/contexts/role-context";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -45,9 +46,10 @@ const PRIORITY_VALUES = [
 ] as const;
 
 const STATUS_KEYS = [
-  { key: "pending",     colKey: "pending",    dot: "bg-slate-400"  },
-  { key: "in-progress", colKey: "inProgress", dot: "bg-amber-500"  },
+  { key: "pending",     colKey: "pending",    dot: "bg-slate-400"   },
+  { key: "in-progress", colKey: "inProgress", dot: "bg-amber-500"   },
   { key: "completed",   colKey: "completed",  dot: "bg-emerald-500" },
+  { key: "verified",    colKey: "verified",   dot: "bg-violet-500"  },
 ] as const;
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
@@ -58,10 +60,11 @@ const taskSchema = z.object({
   priority:     z.enum(["low", "medium", "high", "urgent"]),
   propertyId:   z.coerce.number().optional().or(z.literal("")),
   unitId:       z.coerce.number().optional().or(z.literal("")),
+  supervisorId: z.coerce.number().optional().or(z.literal("")),
   assignedToId: z.coerce.number().optional().or(z.literal("")),
   dueDate:      z.string().optional().or(z.literal("")),
   description:  z.string().optional().or(z.literal("")),
-  status:       z.enum(["pending", "in-progress", "completed"]).default("pending"),
+  status:       z.enum(["pending", "in-progress", "completed", "verified"]).default("pending"),
 });
 
 const commentSchema = z.object({
@@ -85,16 +88,16 @@ function formatDate(str: string | null | undefined) {
   return new Date(str + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 function isOverdue(dueDate: string | null | undefined, status: string) {
-  if (!dueDate || status === "completed") return false;
+  if (!dueDate || status === "completed" || status === "verified") return false;
   return dueDate < new Date().toISOString().split("T")[0];
 }
-function proofPhotoSrc(objectPath: string): string {
+function photoSrc(objectPath: string): string {
   return `/api/storage${objectPath}`;
 }
 
 // ── Upload helper ─────────────────────────────────────────────────────────────
 
-async function uploadProofPhoto(file: File): Promise<string> {
+async function uploadPhoto(file: File): Promise<string> {
   const metaRes = await fetch("/api/storage/uploads/request-url", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -102,7 +105,6 @@ async function uploadProofPhoto(file: File): Promise<string> {
   });
   if (!metaRes.ok) throw new Error("Failed to get upload URL");
   const { uploadURL, objectPath } = await metaRes.json();
-
   const putRes = await fetch(uploadURL, {
     method: "PUT",
     headers: { "Content-Type": file.type },
@@ -136,30 +138,37 @@ function PriorityBadge({ priority }: { priority: string }) {
   );
 }
 
-// ── Proof Photo Dialog ────────────────────────────────────────────────────────
+// ── Photo Upload Dialog ────────────────────────────────────────────────────────
+// Shared between Before-photo (start) and After-photo (complete) flows.
 
-interface ProofPhotoDialogProps {
+interface PhotoUploadDialogProps {
   task: any | null;
+  mode: "before" | "after";
   open: boolean;
   onClose: () => void;
-  onComplete: (taskId: number, proofPhotoUrl: string) => void;
+  onUpload: (taskId: number, photoUrl: string) => void;
   onSkip: (taskId: number) => void;
   isSubmitting: boolean;
 }
 
-function ProofPhotoDialog({ task, open, onClose, onComplete, onSkip, isSubmitting }: ProofPhotoDialogProps) {
+function PhotoUploadDialog({ task, mode, open, onClose, onUpload, onSkip, isSubmitting }: PhotoUploadDialogProps) {
   const { t } = useTranslation();
   const fileRef  = useRef<HTMLInputElement>(null);
-  const [file,    setFile]    = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [file,      setFile]      = useState<File | null>(null);
+  const [preview,   setPreview]   = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [error,     setError]     = useState<string | null>(null);
   const { toast } = useToast();
 
+  const isBefore = mode === "before";
+  const title     = isBefore ? "Before Photo — Start Task"    : "After Photo — Complete Task";
+  const subtitle  = isBefore
+    ? "Upload a photo capturing the current state before starting work."
+    : "Upload a photo proving the work has been completed.";
+  const actionLabel = isBefore ? "Upload & Start" : "Upload & Complete";
+
   function reset() {
-    setFile(null);
-    setPreview(null);
-    setError(null);
+    setFile(null); setPreview(null); setError(null);
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -167,9 +176,8 @@ function ProofPhotoDialog({ task, open, onClose, onComplete, onSkip, isSubmittin
     const f = e.target.files?.[0];
     if (!f) return;
     if (!f.type.startsWith("image/")) { setError("Please select an image file"); return; }
-    if (f.size > 10 * 1024 * 1024)    { setError("Image must be smaller than 10 MB"); return; }
-    setFile(f);
-    setError(null);
+    if (f.size > 10 * 1024 * 1024)   { setError("Image must be smaller than 10 MB"); return; }
+    setFile(f); setError(null);
     const reader = new FileReader();
     reader.onload = (ev) => setPreview(ev.target?.result as string);
     reader.readAsDataURL(f);
@@ -177,11 +185,10 @@ function ProofPhotoDialog({ task, open, onClose, onComplete, onSkip, isSubmittin
 
   async function handleSubmit() {
     if (!file || !task) return;
-    setUploading(true);
-    setError(null);
+    setUploading(true); setError(null);
     try {
-      const objectPath = await uploadProofPhoto(file);
-      onComplete(task.id, objectPath);
+      const objectPath = await uploadPhoto(file);
+      onUpload(task.id, objectPath);
       reset();
     } catch {
       setError("Upload failed. Please try again.");
@@ -191,10 +198,7 @@ function ProofPhotoDialog({ task, open, onClose, onComplete, onSkip, isSubmittin
     }
   }
 
-  function handleClose() {
-    reset();
-    onClose();
-  }
+  function handleClose() { reset(); onClose(); }
 
   if (!task) return null;
 
@@ -203,28 +207,28 @@ function ProofPhotoDialog({ task, open, onClose, onComplete, onSkip, isSubmittin
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-emerald-500" />
-            Proof of Work Required
+            <Camera className={`h-5 w-5 ${isBefore ? "text-amber-500" : "text-emerald-500"}`} />
+            {title}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <p className="text-sm text-muted-foreground">
-            Upload a photo proving the task is complete before marking it done.
-          </p>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
           <p className="text-sm font-medium truncate">{task.title}</p>
 
-          {/* Drop zone / preview */}
           <div
             className={`relative border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer
-              ${preview ? "border-emerald-500/40 bg-emerald-500/5" : "border-border hover:border-primary/40 hover:bg-muted/30"}
+              ${preview
+                ? isBefore ? "border-amber-500/40 bg-amber-500/5" : "border-emerald-500/40 bg-emerald-500/5"
+                : "border-border hover:border-primary/40 hover:bg-muted/30"
+              }
               ${preview ? "min-h-48" : "min-h-36"}
             `}
             onClick={() => fileRef.current?.click()}
           >
             {preview ? (
               <>
-                <img src={preview} alt="Proof preview" className="max-h-52 rounded-lg object-contain" />
+                <img src={preview} alt="Photo preview" className="max-h-52 rounded-lg object-contain" />
                 <button
                   type="button"
                   className="absolute top-2 right-2 h-6 w-6 rounded-full bg-background border border-border flex items-center justify-center hover:bg-muted"
@@ -247,17 +251,10 @@ function ProofPhotoDialog({ task, open, onClose, onComplete, onSkip, isSubmittin
           </div>
 
           <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={handleFileChange}
+            ref={fileRef} type="file" accept="image/*" capture="environment"
+            className="hidden" onChange={handleFileChange}
           />
-
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -269,21 +266,42 @@ function ProofPhotoDialog({ task, open, onClose, onComplete, onSkip, isSubmittin
           </Button>
           <div className="flex gap-2 flex-1 justify-end">
             <Button type="button" variant="outline" onClick={handleClose} disabled={uploading || isSubmitting}>
-              Cancel
+              {t("tasks.cancel")}
             </Button>
-            <Button
-              type="button"
-              onClick={handleSubmit}
+            <Button type="button" onClick={handleSubmit}
               disabled={!file || uploading || isSubmitting}
               className="gap-2"
             >
               <Upload className="h-3.5 w-3.5" />
-              {uploading ? "Uploading…" : "Upload & Complete"}
+              {uploading ? "Uploading…" : actionLabel}
             </Button>
           </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ── Photo thumbnail (reusable) ─────────────────────────────────────────────────
+
+function PhotoThumb({ label, url, icon: Icon, iconClass }: { label: string; url: string; icon: any; iconClass: string }) {
+  return (
+    <div>
+      <p className={`text-xs text-muted-foreground mb-2 flex items-center gap-1`}>
+        <Icon className={`h-3 w-3 ${iconClass}`} />
+        {label}
+      </p>
+      <a href={photoSrc(url)} target="_blank" rel="noopener noreferrer" className="block group">
+        <img
+          src={photoSrc(url)}
+          alt={label}
+          className="rounded-lg border max-h-44 object-cover group-hover:opacity-90 transition-opacity"
+        />
+        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+          <ExternalLink className="h-3 w-3" /> View full size
+        </p>
+      </a>
+    </div>
   );
 }
 
@@ -294,14 +312,20 @@ interface TaskCardProps {
   onSelect: (task: any) => void;
   onDelete: (id: number, title: string) => void;
   onStatus: (id: number, status: string) => void;
+  onVerify: (id: number) => void;
+  canVerify: boolean;
 }
 
-function TaskCard({ task, onSelect, onDelete, onStatus }: TaskCardProps) {
+function TaskCard({ task, onSelect, onDelete, onStatus, onVerify, canVerify }: TaskCardProps) {
   const { t } = useTranslation();
-  const overdue = isOverdue(task.dueDate, task.status);
+  const overdue  = isOverdue(task.dueDate, task.status);
+  const verified = task.status === "verified";
+
   return (
     <div
-      className="bg-card border border-border rounded-lg p-4 shadow-none cursor-pointer space-y-3"
+      className={`bg-card border rounded-lg p-4 shadow-none cursor-pointer space-y-3
+        ${verified ? "border-violet-200 dark:border-violet-900/40" : "border-border"}
+      `}
       onClick={() => onSelect(task)}
     >
       <div className="flex items-start justify-between gap-2">
@@ -324,19 +348,27 @@ function TaskCard({ task, onSelect, onDelete, onStatus }: TaskCardProps) {
         <PriorityBadge priority={task.priority} />
       </div>
 
-      {/* Proof photo thumbnail */}
-      {task.status === "completed" && task.proofPhotoUrl && (
-        <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-          <ShieldCheck className="h-3 w-3 shrink-0" />
-          <a
-            href={proofPhotoSrc(task.proofPhotoUrl)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline underline-offset-2 hover:no-underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            View proof photo
-          </a>
+      {/* Photo indicators */}
+      {(task.beforePhotoUrl || task.afterPhotoUrl) && (
+        <div className="flex gap-2 flex-wrap">
+          {task.beforePhotoUrl && (
+            <span className="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+              <Camera className="h-3 w-3" /> Before ✓
+            </span>
+          )}
+          {task.afterPhotoUrl && (
+            <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+              <ShieldCheck className="h-3 w-3" /> After ✓
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Verified badge */}
+      {verified && (
+        <div className="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 font-medium">
+          <BadgeCheck className="h-3.5 w-3.5 shrink-0" />
+          {t("tasks.actions.verified", { defaultValue: "Verified" })}
         </div>
       )}
 
@@ -369,21 +401,31 @@ function TaskCard({ task, onSelect, onDelete, onStatus }: TaskCardProps) {
         </p>
       )}
 
-      <div className="flex gap-1.5 pt-0.5" onClick={(e) => e.stopPropagation()}>
-        {task.status !== "in-progress" && (
-          <Button size="sm" variant="outline" className="h-7 text-xs flex-1"
-            onClick={() => onStatus(task.id, "in-progress")}>
-            <Clock className="me-1 h-3 w-3" />{t("tasks.actions.start")}
-          </Button>
-        )}
-        {task.status !== "completed" && (
-          <Button size="sm" variant="outline"
-            className="h-7 text-xs flex-1 text-emerald-700 hover:text-emerald-700 dark:text-emerald-400"
-            onClick={() => onStatus(task.id, "completed")}>
-            <CheckCheck className="me-1 h-3 w-3" />{t("tasks.actions.done")}
-          </Button>
-        )}
-      </div>
+      {!verified && (
+        <div className="flex gap-1.5 pt-0.5" onClick={(e) => e.stopPropagation()}>
+          {task.status === "pending" && (
+            <Button size="sm" variant="outline" className="h-7 text-xs flex-1"
+              onClick={() => onStatus(task.id, "in-progress")}>
+              <Clock className="me-1 h-3 w-3" />{t("tasks.actions.start")}
+            </Button>
+          )}
+          {task.status === "in-progress" && (
+            <Button size="sm" variant="outline"
+              className="h-7 text-xs flex-1 text-emerald-700 hover:text-emerald-700 dark:text-emerald-400"
+              onClick={() => onStatus(task.id, "completed")}>
+              <CheckCheck className="me-1 h-3 w-3" />{t("tasks.actions.done")}
+            </Button>
+          )}
+          {task.status === "completed" && canVerify && (
+            <Button size="sm" variant="outline"
+              className="h-7 text-xs flex-1 text-violet-700 hover:text-violet-700 border-violet-200 hover:border-violet-300 dark:text-violet-400 dark:border-violet-800"
+              onClick={() => onVerify(task.id)}>
+              <BadgeCheck className="me-1 h-3 w-3" />
+              {t("tasks.actions.verify", { defaultValue: "Verify" })}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -394,24 +436,24 @@ interface TaskDetailSheetProps {
   task: any | null;
   open: boolean;
   onClose: () => void;
+  canVerify: boolean;
+  onMarkStart?: () => void;
   onMarkComplete?: () => void;
 }
 
-function TaskDetailSheet({ task, open, onClose, onMarkComplete }: TaskDetailSheetProps) {
+function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkComplete }: TaskDetailSheetProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const updateTask = useUpdateTask();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const { toast }   = useToast();
+  const updateTask  = useUpdateTask();
+  const fileRef     = useRef<HTMLInputElement>(null);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
 
   const { data: comments, isLoading: commentsLoading } = useListTaskComments(
     task?.id ?? 0,
     { query: { enabled: !!task?.id } } as any
   );
-
   const createComment = useCreateTaskComment();
-
   const commentForm = useForm<z.infer<typeof commentSchema>>({
     resolver: zodResolver(commentSchema),
     defaultValues: { authorName: "", body: "" },
@@ -419,14 +461,20 @@ function TaskDetailSheet({ task, open, onClose, onMarkComplete }: TaskDetailShee
 
   function handleStatusChange(newStatus: string) {
     if (!task) return;
-    if (newStatus === "completed" && onMarkComplete) {
-      onMarkComplete();
-      return;
+    if (newStatus === "in-progress" && task.status === "pending" && onMarkStart) {
+      onMarkStart(); return;
+    }
+    if (newStatus === "completed" && task.status === "in-progress" && onMarkComplete) {
+      onMarkComplete(); return;
     }
     updateTask.mutate({ id: task.id, data: { status: newStatus as any } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey({}) });
         toast({ title: t("tasks.toast.statusUpdated") });
+      },
+      onError: (err: any) => {
+        const msg = err?.body?.message ?? t("tasks.toast.updateFailed");
+        toast({ title: msg, variant: "destructive" });
       },
     });
   }
@@ -457,8 +505,19 @@ function TaskDetailSheet({ task, open, onClose, onMarkComplete }: TaskDetailShee
   }
 
   if (!task) return null;
+  const overdue  = isOverdue(task.dueDate, task.status);
+  const verified = task.status === "verified";
 
-  const overdue = isOverdue(task.dueDate, task.status);
+  // Build accessible status buttons
+  const statusButtons = STATUS_KEYS.map((col) => {
+    const isCurrent = task.status === col.key;
+    let disabled = isCurrent || updateTask.isPending;
+    // "verified" button only for managers/owners and only when task is completed
+    if (col.key === "verified") {
+      disabled = disabled || !canVerify || task.status !== "completed";
+    }
+    return { ...col, isCurrent, disabled };
+  });
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
@@ -474,26 +533,34 @@ function TaskDetailSheet({ task, open, onClose, onMarkComplete }: TaskDetailShee
               <SheetTitle className="text-base font-semibold leading-snug">{task.title}</SheetTitle>
             </div>
           </div>
-          {/* Status row */}
-          <div className="flex gap-2 mt-3">
-            {STATUS_KEYS.map((col) => (
+          {/* Status buttons row */}
+          <div className="flex gap-1.5 mt-3 flex-wrap">
+            {statusButtons.map((col) => (
               <Button
                 key={col.key}
                 size="sm"
-                variant={task.status === col.key ? "default" : "outline"}
-                className="h-7 text-xs flex-1"
+                variant={col.isCurrent ? "default" : "outline"}
+                className={`h-7 text-xs flex-1 min-w-0 ${
+                  col.key === "verified" && !col.isCurrent
+                    ? "border-violet-200 text-violet-700 hover:border-violet-300 hover:text-violet-700 dark:border-violet-800 dark:text-violet-400"
+                    : ""
+                } ${col.key === "verified" && col.isCurrent ? "bg-violet-600 hover:bg-violet-700 border-violet-600" : ""}`}
                 onClick={() => handleStatusChange(col.key)}
-                disabled={task.status === col.key || updateTask.isPending}
+                disabled={col.disabled}
               >
-                {task.status === col.key && <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${col.dot} bg-current`} />}
-                {t(`tasks.columns.${col.colKey}`)}
+                {col.isCurrent && <span className={`h-1.5 w-1.5 rounded-full mr-1.5 bg-current`} />}
+                {col.key === "verified"
+                  ? <BadgeCheck className="h-3 w-3 mr-1" />
+                  : null
+                }
+                {t(`tasks.columns.${col.colKey}`, { defaultValue: col.colKey })}
               </Button>
             ))}
           </div>
         </SheetHeader>
 
         {/* Details */}
-        <div className="px-6 py-4 space-y-3 border-b">
+        <div className="px-6 py-4 space-y-4 border-b">
           <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
             <div>
               <p className="text-xs text-muted-foreground mb-1">{t("tasks.detail.category")}</p>
@@ -530,7 +597,25 @@ function TaskDetailSheet({ task, open, onClose, onMarkComplete }: TaskDetailShee
                 </p>
               </div>
             )}
+            {task.startedAt && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Started</p>
+                <p className="text-sm">{new Date(task.startedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+              </div>
+            )}
+            {task.verifiedAt && (
+              <div className="col-span-2">
+                <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                  <BadgeCheck className="h-3 w-3 text-violet-500" />
+                  {t("tasks.actions.verified", { defaultValue: "Verified" })}
+                </p>
+                <p className="text-sm font-medium text-violet-700 dark:text-violet-400">
+                  {new Date(task.verifiedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+            )}
           </div>
+
           {task.description && (
             <div>
               <p className="text-xs text-muted-foreground mb-1">{t("tasks.detail.description")}</p>
@@ -538,30 +623,34 @@ function TaskDetailSheet({ task, open, onClose, onMarkComplete }: TaskDetailShee
             </div>
           )}
 
-          {/* Proof photo (if completed with proof) */}
-          {task.status === "completed" && task.proofPhotoUrl && (
-            <div>
-              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3 text-emerald-500" />
-                Proof of Work
-              </p>
-              <a
-                href={proofPhotoSrc(task.proofPhotoUrl)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block group"
-              >
-                <img
-                  src={proofPhotoSrc(task.proofPhotoUrl)}
-                  alt="Proof of work"
-                  className="rounded-lg border max-h-48 object-cover group-hover:opacity-90 transition-opacity"
-                />
-                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                  <ExternalLink className="h-3 w-3" />
-                  View full size
-                </p>
-              </a>
-            </div>
+          {/* Before photo */}
+          {task.beforePhotoUrl && (
+            <PhotoThumb
+              label={t("tasks.detail.beforePhoto", { defaultValue: "Before Photo" })}
+              url={task.beforePhotoUrl}
+              icon={Camera}
+              iconClass="text-amber-500"
+            />
+          )}
+
+          {/* After photo */}
+          {task.afterPhotoUrl && (
+            <PhotoThumb
+              label={t("tasks.detail.afterPhoto", { defaultValue: "After Photo" })}
+              url={task.afterPhotoUrl}
+              icon={ShieldCheck}
+              iconClass="text-emerald-500"
+            />
+          )}
+
+          {/* Legacy proof photo (backwards compat) */}
+          {!task.afterPhotoUrl && task.proofPhotoUrl && (
+            <PhotoThumb
+              label="Proof of Work"
+              url={task.proofPhotoUrl}
+              icon={ShieldCheck}
+              iconClass="text-emerald-500"
+            />
           )}
         </div>
 
@@ -570,7 +659,6 @@ function TaskDetailSheet({ task, open, onClose, onMarkComplete }: TaskDetailShee
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
             {t("tasks.detail.comments")} {comments?.length ? `(${comments.length})` : ""}
           </p>
-
           {commentsLoading ? (
             <div className="space-y-3">
               {[1, 2].map((i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
@@ -597,11 +685,7 @@ function TaskDetailSheet({ task, open, onClose, onMarkComplete }: TaskDetailShee
                     </div>
                     <p className="text-sm text-foreground/80 leading-relaxed">{c.body}</p>
                     {c.imageUrl && (
-                      <img
-                        src={c.imageUrl}
-                        alt="Attachment"
-                        className="mt-2 rounded-md border max-h-48 object-cover"
-                      />
+                      <img src={c.imageUrl} alt="Attachment" className="mt-2 rounded-md border max-h-48 object-cover" />
                     )}
                   </div>
                 </div>
@@ -666,7 +750,8 @@ function TaskDetailSheet({ task, open, onClose, onMarkComplete }: TaskDetailShee
 function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const { toast }   = useToast();
+  const { role }    = useRole();
   const { data: properties } = useListProperties();
   const { data: staff }      = useListStaff({});
   const { data: rooms }      = useListRooms();
@@ -676,19 +761,23 @@ function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => voi
     resolver: zodResolver(taskSchema),
     defaultValues: {
       title: "", category: "general", priority: "medium", status: "pending",
-      propertyId: "", unitId: "", assignedToId: "", dueDate: "", description: "",
+      propertyId: "", unitId: "", supervisorId: "", assignedToId: "", dueDate: "", description: "",
     },
   });
 
   const selectedPropertyId = form.watch("propertyId");
   const filteredRooms = rooms?.filter((r) => !selectedPropertyId || r.propertyId === Number(selectedPropertyId)) ?? [];
-  const filteredStaff = staff?.filter((s) => s.status === "active") ?? [];
+  const activeStaff   = staff?.filter((s) => s.status === "active") ?? [];
+
+  // Managers/owners can assign a supervisor
+  const isManager = role.id === "owner" || role.id === "manager" || role.id === "super_admin";
 
   function onSubmit(data: z.infer<typeof taskSchema>) {
     const payload = {
       ...data,
       propertyId:   data.propertyId   ? Number(data.propertyId)   : undefined,
       unitId:       data.unitId       ? Number(data.unitId)       : undefined,
+      supervisorId: data.supervisorId ? Number(data.supervisorId) : undefined,
       assignedToId: data.assignedToId ? Number(data.assignedToId) : undefined,
       description:  data.description  || undefined,
       dueDate:      data.dueDate      || undefined,
@@ -806,7 +895,7 @@ function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => voi
                     <FormControl><SelectTrigger><SelectValue placeholder={t("tasks.unassigned")} /></SelectTrigger></FormControl>
                     <SelectContent>
                       <SelectItem value="none">{t("tasks.unassigned")}</SelectItem>
-                      {filteredStaff.map((s) => (
+                      {activeStaff.map((s) => (
                         <SelectItem key={s.id} value={s.id.toString()}>{s.name} — {s.role}</SelectItem>
                       ))}
                     </SelectContent>
@@ -815,6 +904,24 @@ function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => voi
                 </FormItem>
               )} />
             </div>
+
+            {isManager && (
+              <FormField control={form.control} name="supervisorId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("tasks.fields.supervisor", { defaultValue: "Supervisor" })}</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value?.toString() ?? ""}>
+                    <FormControl><SelectTrigger><SelectValue placeholder={t("tasks.unassigned")} /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">{t("tasks.unassigned")}</SelectItem>
+                      {activeStaff.map((s) => (
+                        <SelectItem key={s.id} value={s.id.toString()}>{s.name} — {s.role}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            )}
 
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem>
@@ -843,22 +950,26 @@ function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => voi
 
 export default function Tasks() {
   const { t } = useTranslation();
-  const [statusFilter,   setStatusFilter]   = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [propertyFilter, setPropertyFilter] = useState<string>("all");
-  const [createOpen,     setCreateOpen]     = useState(false);
-  const [selectedTask,   setSelectedTask]   = useState<any | null>(null);
-  const [proofDialog,    setProofDialog]    = useState<{ task: any } | null>(null);
+  const { role } = useRole();
+  const [statusFilter,    setStatusFilter]    = useState<string>("all");
+  const [categoryFilter,  setCategoryFilter]  = useState<string>("all");
+  const [propertyFilter,  setPropertyFilter]  = useState<string>("all");
+  const [createOpen,      setCreateOpen]      = useState(false);
+  const [selectedTask,    setSelectedTask]    = useState<any | null>(null);
+  const [beforePhotoTask, setBeforePhotoTask] = useState<any | null>(null);
+  const [afterPhotoTask,  setAfterPhotoTask]  = useState<any | null>(null);
 
   const queryClient = useQueryClient();
   const { toast }   = useToast();
+
+  const canVerify = role.id === "owner" || role.id === "manager" || role.id === "super_admin";
 
   const params: any = {};
   if (statusFilter   !== "all") params.status     = statusFilter;
   if (propertyFilter !== "all") params.propertyId = parseInt(propertyFilter);
 
-  const { data: tasks,      isLoading }  = useListTasks(params);
-  const { data: properties }             = useListProperties();
+  const { data: tasks, isLoading } = useListTasks(params);
+  const { data: properties }       = useListProperties();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
 
@@ -869,50 +980,34 @@ export default function Tasks() {
 
   const byStatus = (key: string) => filtered.filter((t) => t.status === key);
 
-  function handleStatus(id: number, status: string) {
-    if (status === "completed") {
-      const task = (tasks ?? []).find((t) => t.id === id);
-      if (task) {
-        setProofDialog({ task });
-        return;
-      }
+  // ── Status change entry-point ───────────────────────────────────────────────
+
+  function handleStatus(id: number, newStatus: string) {
+    const task = (tasks ?? []).find((t) => t.id === id);
+    if (!task) return;
+
+    if (newStatus === "in-progress" && task.status === "pending") {
+      setBeforePhotoTask(task);
+      return;
     }
-    updateTask.mutate({ id, data: { status: status as any } }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
-        if (selectedTask?.id === id) setSelectedTask((prev: any) => prev ? { ...prev, status } : null);
-        toast({ title: t("tasks.toast.statusUpdated") });
-      },
-      onError: () => toast({ title: t("tasks.toast.updateFailed"), variant: "destructive" }),
-    });
+    if (newStatus === "completed" && task.status === "in-progress") {
+      setAfterPhotoTask(task);
+      return;
+    }
+    // Direct update for other transitions (e.g. re-open, verify from card)
+    doUpdate(id, { status: newStatus as any });
   }
 
-  function handleCompleteWithProof(taskId: number, objectPath: string) {
-    updateTask.mutate({ id: taskId, data: { status: "completed" as any, proofPhotoUrl: objectPath } }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
-        if (selectedTask?.id === taskId) {
-          setSelectedTask((prev: any) => prev ? { ...prev, status: "completed", proofPhotoUrl: objectPath } : null);
-        }
-        setProofDialog(null);
-        toast({ title: "Task completed with proof photo" });
-      },
-      onError: (err: any) => {
-        const msg = err?.body?.message ?? "Failed to complete task";
-        toast({ title: msg, variant: "destructive" });
-      },
-    });
+  function handleVerify(id: number) {
+    doUpdate(id, { status: "verified" as any });
   }
 
-  function handleSkipProof(taskId: number) {
-    updateTask.mutate({ id: taskId, data: { status: "completed" as any } }, {
+  function doUpdate(id: number, data: Record<string, any>, successMsg?: string) {
+    updateTask.mutate({ id, data: data as any }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
-        if (selectedTask?.id === taskId) {
-          setSelectedTask((prev: any) => prev ? { ...prev, status: "completed" } : null);
-        }
-        setProofDialog(null);
-        toast({ title: t("tasks.toast.statusUpdated") });
+        setSelectedTask((prev: any) => prev?.id === id ? { ...prev, ...data } : prev);
+        toast({ title: successMsg ?? t("tasks.toast.statusUpdated") });
       },
       onError: (err: any) => {
         const msg = err?.body?.message ?? t("tasks.toast.updateFailed");
@@ -920,6 +1015,84 @@ export default function Tasks() {
       },
     });
   }
+
+  // ── Before photo callbacks ─────────────────────────────────────────────────
+
+  function handleStartWithPhoto(taskId: number, objectPath: string) {
+    updateTask.mutate(
+      { id: taskId, data: { status: "in-progress" as any, beforePhotoUrl: objectPath } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+          setSelectedTask((prev: any) => prev?.id === taskId ? { ...prev, status: "in-progress", beforePhotoUrl: objectPath } : prev);
+          setBeforePhotoTask(null);
+          toast({ title: t("tasks.toast.started", { defaultValue: "Task started" }) });
+        },
+        onError: (err: any) => {
+          const msg = err?.body?.message ?? t("tasks.toast.updateFailed");
+          toast({ title: msg, variant: "destructive" });
+        },
+      }
+    );
+  }
+
+  function handleSkipBeforePhoto(taskId: number) {
+    updateTask.mutate(
+      { id: taskId, data: { status: "in-progress" as any } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+          setSelectedTask((prev: any) => prev?.id === taskId ? { ...prev, status: "in-progress" } : prev);
+          setBeforePhotoTask(null);
+          toast({ title: t("tasks.toast.statusUpdated") });
+        },
+        onError: (err: any) => {
+          const msg = err?.body?.message ?? t("tasks.toast.updateFailed");
+          toast({ title: msg, variant: "destructive" });
+        },
+      }
+    );
+  }
+
+  // ── After photo callbacks ──────────────────────────────────────────────────
+
+  function handleCompleteWithPhoto(taskId: number, objectPath: string) {
+    updateTask.mutate(
+      { id: taskId, data: { status: "completed" as any, afterPhotoUrl: objectPath } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+          setSelectedTask((prev: any) => prev?.id === taskId ? { ...prev, status: "completed", afterPhotoUrl: objectPath } : prev);
+          setAfterPhotoTask(null);
+          toast({ title: t("tasks.toast.completed", { defaultValue: "Task completed" }) });
+        },
+        onError: (err: any) => {
+          const msg = err?.body?.message ?? t("tasks.toast.updateFailed");
+          toast({ title: msg, variant: "destructive" });
+        },
+      }
+    );
+  }
+
+  function handleSkipAfterPhoto(taskId: number) {
+    updateTask.mutate(
+      { id: taskId, data: { status: "completed" as any } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+          setSelectedTask((prev: any) => prev?.id === taskId ? { ...prev, status: "completed" } : prev);
+          setAfterPhotoTask(null);
+          toast({ title: t("tasks.toast.statusUpdated") });
+        },
+        onError: (err: any) => {
+          const msg = err?.body?.message ?? t("tasks.toast.updateFailed");
+          toast({ title: msg, variant: "destructive" });
+        },
+      }
+    );
+  }
+
+  // ── Delete ─────────────────────────────────────────────────────────────────
 
   function handleDelete(id: number, title: string) {
     if (!confirm(t("tasks.deleteConfirm", { title }))) return;
@@ -941,7 +1114,7 @@ export default function Tasks() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">{t("tasks.title")}</h1>
+          <h1 className="text-2xl font-semibold font-serif text-foreground">{t("tasks.title")}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{t("tasks.manageSubtitle")}</p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>
@@ -949,20 +1122,21 @@ export default function Tasks() {
         </Button>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid gap-4 grid-cols-3">
+      {/* Summary KPI cards — 4 columns */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
         {[
-          { icon: AlertCircle,  colKey: "pending",    statusKey: "pending",     color: "" },
-          { icon: Clock,        colKey: "inProgress",  statusKey: "in-progress", color: "text-amber-600 dark:text-amber-400" },
-          { icon: CheckCircle2, colKey: "completed",   statusKey: "completed",   color: "text-emerald-600 dark:text-emerald-400" },
-        ].map(({ icon: Icon, colKey, statusKey, color }) => (
+          { icon: AlertCircle,  colKey: "pending",    statusKey: "pending",     iconCls: "text-slate-400"   },
+          { icon: Clock,        colKey: "inProgress", statusKey: "in-progress", iconCls: "text-amber-500"   },
+          { icon: CheckCircle2, colKey: "completed",  statusKey: "completed",   iconCls: "text-emerald-500" },
+          { icon: BadgeCheck,   colKey: "verified",   statusKey: "verified",    iconCls: "text-violet-500"  },
+        ].map(({ icon: Icon, colKey, statusKey, iconCls }) => (
           <Card key={colKey} className="shadow-none border-border">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                <Icon className="h-4 w-4" />
-                <p className="text-xs font-medium">{t(`tasks.columns.${colKey}`)}</p>
+                <Icon className={`h-4 w-4 ${iconCls}`} />
+                <p className="text-xs font-medium">{t(`tasks.columns.${colKey}`, { defaultValue: colKey })}</p>
               </div>
-              <p className={`text-2xl font-bold ${color}`}>
+              <p className={`text-2xl font-bold ${iconCls}`}>
                 {(tasks ?? []).filter((t) => t.status === statusKey).length}
               </p>
             </CardContent>
@@ -1004,20 +1178,20 @@ export default function Tasks() {
             <SelectItem value="all">{t("tasks.allStatuses")}</SelectItem>
             {STATUS_KEYS.map((s) => (
               <SelectItem key={s.key} value={s.key}>
-                {t(`tasks.columns.${s.colKey}`)}
+                {t(`tasks.columns.${s.colKey}`, { defaultValue: s.colKey })}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Kanban columns */}
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* Kanban — 4 columns */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
         {columns.map(({ key, colKey, dot, tasks: colTasks }) => (
           <div key={key} className="space-y-3">
             <div className="flex items-center gap-2">
               <span className={`h-2 w-2 rounded-full ${dot}`} />
-              <h3 className="text-sm font-semibold">{t(`tasks.columns.${colKey}`)}</h3>
+              <h3 className="text-sm font-semibold">{t(`tasks.columns.${colKey}`, { defaultValue: colKey })}</h3>
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground font-medium">
                 {colTasks.length}
               </span>
@@ -1036,6 +1210,8 @@ export default function Tasks() {
                       onSelect={setSelectedTask}
                       onDelete={handleDelete}
                       onStatus={handleStatus}
+                      onVerify={handleVerify}
+                      canVerify={canVerify}
                     />
                   ))
               }
@@ -1049,20 +1225,37 @@ export default function Tasks() {
         ))}
       </div>
 
-      {/* Dialogs */}
+      {/* Dialogs & Sheets */}
       <CreateTaskDialog open={createOpen} onClose={() => setCreateOpen(false)} />
+
       <TaskDetailSheet
         task={selectedTask}
         open={!!selectedTask}
         onClose={() => setSelectedTask(null)}
-        onMarkComplete={selectedTask ? () => setProofDialog({ task: selectedTask }) : undefined}
+        canVerify={canVerify}
+        onMarkStart={selectedTask ? () => { setBeforePhotoTask(selectedTask); } : undefined}
+        onMarkComplete={selectedTask ? () => { setAfterPhotoTask(selectedTask); } : undefined}
       />
-      <ProofPhotoDialog
-        task={proofDialog?.task ?? null}
-        open={!!proofDialog}
-        onClose={() => setProofDialog(null)}
-        onComplete={handleCompleteWithProof}
-        onSkip={handleSkipProof}
+
+      {/* Before-photo dialog */}
+      <PhotoUploadDialog
+        task={beforePhotoTask}
+        mode="before"
+        open={!!beforePhotoTask}
+        onClose={() => setBeforePhotoTask(null)}
+        onUpload={handleStartWithPhoto}
+        onSkip={handleSkipBeforePhoto}
+        isSubmitting={updateTask.isPending}
+      />
+
+      {/* After-photo dialog */}
+      <PhotoUploadDialog
+        task={afterPhotoTask}
+        mode="after"
+        open={!!afterPhotoTask}
+        onClose={() => setAfterPhotoTask(null)}
+        onUpload={handleCompleteWithPhoto}
+        onSkip={handleSkipAfterPhoto}
         isSubmitting={updateTask.isPending}
       />
     </div>

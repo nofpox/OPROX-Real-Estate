@@ -418,6 +418,8 @@ export interface Task {
   /** @nullable */
   unitName?: string | null;
   /** @nullable */
+  supervisorId?: number | null;
+  /** @nullable */
   assignedToId?: number | null;
   /** @nullable */
   assigneeName?: string | null;
@@ -426,15 +428,25 @@ export interface Task {
   /** @nullable */
   completedByUserId?: number | null;
   /** @nullable */
+  verifiedByUserId?: number | null;
+  /** @nullable */
   proofPhotoUrl?: string | null;
+  /** @nullable */
+  beforePhotoUrl?: string | null;
+  /** @nullable */
+  afterPhotoUrl?: string | null;
   /** low, medium, high, urgent */
   priority: string;
-  /** pending, in-progress, completed */
+  /** pending, in-progress, completed, verified */
   status: string;
   /** @nullable */
   dueDate?: string | null;
   /** @nullable */
+  startedAt?: string | null;
+  /** @nullable */
   completedAt?: string | null;
+  /** @nullable */
+  verifiedAt?: string | null;
   createdAt: string;
 }
 
@@ -444,6 +456,7 @@ export interface TaskInput {
   category: string;
   propertyId?: number;
   unitId?: number;
+  supervisorId?: number;
   assignedToId?: number;
   priority: string;
   status?: string;
@@ -456,14 +469,20 @@ export interface TaskUpdate {
   category?: string;
   propertyId?: number;
   unitId?: number;
+  supervisorId?: number;
   assignedToId?: number;
   assignedByUserId?: number;
   completedByUserId?: number;
+  verifiedByUserId?: number;
   proofPhotoUrl?: string;
+  beforePhotoUrl?: string;
+  afterPhotoUrl?: string;
   priority?: string;
   status?: string;
   dueDate?: string;
+  startedAt?: string;
   completedAt?: string;
+  verifiedAt?: string;
 }
 
 export interface TaskComment {
@@ -853,6 +872,7 @@ role?: string;
 export type ListTasksParams = {
 propertyId?: number;
 assignedToId?: number;
+supervisorId?: number;
 status?: string;
 /**
  * Filter by due date (YYYY-MM-DD)

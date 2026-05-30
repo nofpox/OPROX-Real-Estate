@@ -788,6 +788,11 @@ paths:
           required: false
           schema:
             type: integer
+        - name: supervisorId
+          in: query
+          required: false
+          schema:
+            type: integer
         - name: status
           in: query
           required: false
@@ -2475,6 +2480,8 @@ components:
           type: ["integer", "null"]
         unitName:
           type: ["string", "null"]
+        supervisorId:
+          type: ["integer", "null"]
         assignedToId:
           type: ["integer", "null"]
         assigneeName:
@@ -2483,17 +2490,27 @@ components:
           type: ["integer", "null"]
         completedByUserId:
           type: ["integer", "null"]
+        verifiedByUserId:
+          type: ["integer", "null"]
         proofPhotoUrl:
+          type: ["string", "null"]
+        beforePhotoUrl:
+          type: ["string", "null"]
+        afterPhotoUrl:
           type: ["string", "null"]
         priority:
           type: string
           description: "low, medium, high, urgent"
         status:
           type: string
-          description: "pending, in-progress, completed"
+          description: "pending, in-progress, completed, verified"
         dueDate:
           type: ["string", "null"]
+        startedAt:
+          type: ["string", "null"]
         completedAt:
+          type: ["string", "null"]
+        verifiedAt:
           type: ["string", "null"]
         createdAt:
           type: string
@@ -2511,6 +2528,8 @@ components:
         propertyId:
           type: integer
         unitId:
+          type: integer
+        supervisorId:
           type: integer
         assignedToId:
           type: integer
@@ -2534,13 +2553,21 @@ components:
           type: integer
         unitId:
           type: integer
+        supervisorId:
+          type: integer
         assignedToId:
           type: integer
         assignedByUserId:
           type: integer
         completedByUserId:
           type: integer
+        verifiedByUserId:
+          type: integer
         proofPhotoUrl:
+          type: string
+        beforePhotoUrl:
+          type: string
+        afterPhotoUrl:
           type: string
         priority:
           type: string
@@ -2548,7 +2575,11 @@ components:
           type: string
         dueDate:
           type: string
+        startedAt:
+          type: string
         completedAt:
+          type: string
+        verifiedAt:
           type: string
 
     TaskComment:
