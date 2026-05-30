@@ -12,6 +12,7 @@ import {
   ClipboardList, Search, RefreshCw, Building, User,
   CheckCircle2, Wrench, BookOpen, Users,
   Plus, Trash2, UserMinus, UserCheck, ArrowRightLeft,
+  ShieldCheck, Camera, ArrowRight,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -100,6 +101,10 @@ function LogRow({ log }: { log: ActivityLog }) {
   const roleLabel       = log.actorRole ? t(`activityLog.role.${log.actorRole}`, { defaultValue: log.actorRole }) : null;
   const entityTypeLabel = t(`activityLog.entityType.${log.entityType}`, { defaultValue: log.entityType });
 
+  const isCompletion  = log.action === "task.status_changed" && log.details?.includes("→ completed");
+  const isAssignment  = log.action === "task.assigned" || log.action === "task.created";
+  const proofPhotoSrc = log.proofPhotoUrl ? `/api/storage${log.proofPhotoUrl}` : null;
+
   return (
     <div
       className="grid items-start gap-x-3 py-3 border-b border-border/40 last:border-0 hover:bg-muted/20 rounded px-3 -mx-3 transition-colors"
@@ -107,8 +112,11 @@ function LogRow({ log }: { log: ActivityLog }) {
     >
       {/* Col 1 — icon */}
       <div className="flex items-start justify-center pt-0.5">
-        <div className="h-7 w-7 rounded-full bg-muted/50 flex items-center justify-center shrink-0">
-          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        <div className={`h-7 w-7 rounded-full flex items-center justify-center shrink-0 ${isCompletion ? "bg-emerald-100 dark:bg-emerald-900/30" : "bg-muted/50"}`}>
+          {isCompletion
+            ? <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            : <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+          }
         </div>
       </div>
 
@@ -143,6 +151,48 @@ function LogRow({ log }: { log: ActivityLog }) {
             <span className="text-xs text-muted-foreground/80 truncate max-w-[16rem]">{log.details}</span>
           )}
         </div>
+
+        {/* Accountability chain */}
+        {(isAssignment && log.assignedByName) && (
+          <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
+            <User className="h-3 w-3 shrink-0 text-sky-500" />
+            <span className="font-medium text-sky-600 dark:text-sky-400">{log.assignedByName}</span>
+            <ArrowRight className="h-3 w-3 shrink-0" />
+            <span>assigned task</span>
+          </div>
+        )}
+        {(isCompletion && log.completedByName) && (
+          <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
+            <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
+            <span className="font-medium text-emerald-600 dark:text-emerald-400">{log.completedByName}</span>
+            <span>completed this task</span>
+          </div>
+        )}
+
+        {/* Proof photo thumbnail */}
+        {proofPhotoSrc && (
+          <div className="mt-2">
+            <a
+              href={proofPhotoSrc}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 group"
+            >
+              <img
+                src={proofPhotoSrc}
+                alt="Proof of work"
+                className="h-14 w-20 object-cover rounded-md border border-emerald-200 dark:border-emerald-800 group-hover:opacity-80 transition-opacity"
+              />
+              <div className="flex flex-col gap-0.5">
+                <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                  <Camera className="h-3 w-3" />
+                  Proof photo
+                </span>
+                <span className="text-[10px] text-muted-foreground">Click to view</span>
+              </div>
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Col 3 — timestamp (always LTR regardless of page direction) */}

@@ -23,6 +23,7 @@ import * as z from "zod";
 import {
   Plus, Trash2, CheckCheck, Clock, AlertCircle, CheckCircle2,
   Building2, Image as ImageIcon, Send, X, Zap, Droplets, Wind, Sparkles, ClipboardList,
+  Camera, Upload, ExternalLink, ShieldCheck,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -87,6 +88,29 @@ function isOverdue(dueDate: string | null | undefined, status: string) {
   if (!dueDate || status === "completed") return false;
   return dueDate < new Date().toISOString().split("T")[0];
 }
+function proofPhotoSrc(objectPath: string): string {
+  return `/api/storage${objectPath}`;
+}
+
+// ── Upload helper ─────────────────────────────────────────────────────────────
+
+async function uploadProofPhoto(file: File): Promise<string> {
+  const metaRes = await fetch("/api/storage/uploads/request-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+  });
+  if (!metaRes.ok) throw new Error("Failed to get upload URL");
+  const { uploadURL, objectPath } = await metaRes.json();
+
+  const putRes = await fetch(uploadURL, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+  if (!putRes.ok) throw new Error("Upload failed");
+  return objectPath as string;
+}
 
 // ── Badges ────────────────────────────────────────────────────────────────────
 
@@ -109,6 +133,157 @@ function PriorityBadge({ priority }: { priority: string }) {
     <Badge className={`border-0 text-xs ${meta.color}`}>
       {t(`priority.${priority}`, { defaultValue: priority })}
     </Badge>
+  );
+}
+
+// ── Proof Photo Dialog ────────────────────────────────────────────────────────
+
+interface ProofPhotoDialogProps {
+  task: any | null;
+  open: boolean;
+  onClose: () => void;
+  onComplete: (taskId: number, proofPhotoUrl: string) => void;
+  onSkip: (taskId: number) => void;
+  isSubmitting: boolean;
+}
+
+function ProofPhotoDialog({ task, open, onClose, onComplete, onSkip, isSubmitting }: ProofPhotoDialogProps) {
+  const { t } = useTranslation();
+  const fileRef  = useRef<HTMLInputElement>(null);
+  const [file,    setFile]    = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error,   setError]   = useState<string | null>(null);
+  const { toast } = useToast();
+
+  function reset() {
+    setFile(null);
+    setPreview(null);
+    setError(null);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!f.type.startsWith("image/")) { setError("Please select an image file"); return; }
+    if (f.size > 10 * 1024 * 1024)    { setError("Image must be smaller than 10 MB"); return; }
+    setFile(f);
+    setError(null);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPreview(ev.target?.result as string);
+    reader.readAsDataURL(f);
+  }
+
+  async function handleSubmit() {
+    if (!file || !task) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const objectPath = await uploadProofPhoto(file);
+      onComplete(task.id, objectPath);
+      reset();
+    } catch {
+      setError("Upload failed. Please try again.");
+      toast({ title: "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function handleClose() {
+    reset();
+    onClose();
+  }
+
+  if (!task) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+      <DialogContent className="sm:max-w-[440px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-emerald-500" />
+            Proof of Work Required
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <p className="text-sm text-muted-foreground">
+            Upload a photo proving the task is complete before marking it done.
+          </p>
+          <p className="text-sm font-medium truncate">{task.title}</p>
+
+          {/* Drop zone / preview */}
+          <div
+            className={`relative border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 transition-colors cursor-pointer
+              ${preview ? "border-emerald-500/40 bg-emerald-500/5" : "border-border hover:border-primary/40 hover:bg-muted/30"}
+              ${preview ? "min-h-48" : "min-h-36"}
+            `}
+            onClick={() => fileRef.current?.click()}
+          >
+            {preview ? (
+              <>
+                <img src={preview} alt="Proof preview" className="max-h-52 rounded-lg object-contain" />
+                <button
+                  type="button"
+                  className="absolute top-2 right-2 h-6 w-6 rounded-full bg-background border border-border flex items-center justify-center hover:bg-muted"
+                  onClick={(e) => { e.stopPropagation(); reset(); }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="h-12 w-12 rounded-full bg-muted/60 flex items-center justify-center">
+                  <Camera className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium">Click to select a photo</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG, HEIC up to 10 MB</p>
+                </div>
+              </>
+            )}
+          </div>
+
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
+        </div>
+
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button type="button" variant="ghost" size="sm" className="text-muted-foreground"
+            onClick={() => { reset(); onSkip(task.id); }}
+            disabled={uploading || isSubmitting}
+          >
+            Skip (Admin only)
+          </Button>
+          <div className="flex gap-2 flex-1 justify-end">
+            <Button type="button" variant="outline" onClick={handleClose} disabled={uploading || isSubmitting}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!file || uploading || isSubmitting}
+              className="gap-2"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              {uploading ? "Uploading…" : "Upload & Complete"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -148,6 +323,22 @@ function TaskCard({ task, onSelect, onDelete, onStatus }: TaskCardProps) {
         <CategoryBadge category={task.category} />
         <PriorityBadge priority={task.priority} />
       </div>
+
+      {/* Proof photo thumbnail */}
+      {task.status === "completed" && task.proofPhotoUrl && (
+        <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+          <ShieldCheck className="h-3 w-3 shrink-0" />
+          <a
+            href={proofPhotoSrc(task.proofPhotoUrl)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:no-underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            View proof photo
+          </a>
+        </div>
+      )}
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
@@ -199,7 +390,14 @@ function TaskCard({ task, onSelect, onDelete, onStatus }: TaskCardProps) {
 
 // ── Task Detail Sheet ─────────────────────────────────────────────────────────
 
-function TaskDetailSheet({ task, open, onClose }: { task: any | null; open: boolean; onClose: () => void }) {
+interface TaskDetailSheetProps {
+  task: any | null;
+  open: boolean;
+  onClose: () => void;
+  onMarkComplete?: () => void;
+}
+
+function TaskDetailSheet({ task, open, onClose, onMarkComplete }: TaskDetailSheetProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -221,6 +419,10 @@ function TaskDetailSheet({ task, open, onClose }: { task: any | null; open: bool
 
   function handleStatusChange(newStatus: string) {
     if (!task) return;
+    if (newStatus === "completed" && onMarkComplete) {
+      onMarkComplete();
+      return;
+    }
     updateTask.mutate({ id: task.id, data: { status: newStatus as any } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey({}) });
@@ -333,6 +535,32 @@ function TaskDetailSheet({ task, open, onClose }: { task: any | null; open: bool
             <div>
               <p className="text-xs text-muted-foreground mb-1">{t("tasks.detail.description")}</p>
               <p className="text-sm text-foreground/80 leading-relaxed">{task.description}</p>
+            </div>
+          )}
+
+          {/* Proof photo (if completed with proof) */}
+          {task.status === "completed" && task.proofPhotoUrl && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                Proof of Work
+              </p>
+              <a
+                href={proofPhotoSrc(task.proofPhotoUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group"
+              >
+                <img
+                  src={proofPhotoSrc(task.proofPhotoUrl)}
+                  alt="Proof of work"
+                  className="rounded-lg border max-h-48 object-cover group-hover:opacity-90 transition-opacity"
+                />
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <ExternalLink className="h-3 w-3" />
+                  View full size
+                </p>
+              </a>
             </div>
           )}
         </div>
@@ -620,6 +848,7 @@ export default function Tasks() {
   const [propertyFilter, setPropertyFilter] = useState<string>("all");
   const [createOpen,     setCreateOpen]     = useState(false);
   const [selectedTask,   setSelectedTask]   = useState<any | null>(null);
+  const [proofDialog,    setProofDialog]    = useState<{ task: any } | null>(null);
 
   const queryClient = useQueryClient();
   const { toast }   = useToast();
@@ -641,6 +870,13 @@ export default function Tasks() {
   const byStatus = (key: string) => filtered.filter((t) => t.status === key);
 
   function handleStatus(id: number, status: string) {
+    if (status === "completed") {
+      const task = (tasks ?? []).find((t) => t.id === id);
+      if (task) {
+        setProofDialog({ task });
+        return;
+      }
+    }
     updateTask.mutate({ id, data: { status: status as any } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
@@ -648,6 +884,40 @@ export default function Tasks() {
         toast({ title: t("tasks.toast.statusUpdated") });
       },
       onError: () => toast({ title: t("tasks.toast.updateFailed"), variant: "destructive" }),
+    });
+  }
+
+  function handleCompleteWithProof(taskId: number, objectPath: string) {
+    updateTask.mutate({ id: taskId, data: { status: "completed" as any, proofPhotoUrl: objectPath } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+        if (selectedTask?.id === taskId) {
+          setSelectedTask((prev: any) => prev ? { ...prev, status: "completed", proofPhotoUrl: objectPath } : null);
+        }
+        setProofDialog(null);
+        toast({ title: "Task completed with proof photo" });
+      },
+      onError: (err: any) => {
+        const msg = err?.body?.message ?? "Failed to complete task";
+        toast({ title: msg, variant: "destructive" });
+      },
+    });
+  }
+
+  function handleSkipProof(taskId: number) {
+    updateTask.mutate({ id: taskId, data: { status: "completed" as any } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+        if (selectedTask?.id === taskId) {
+          setSelectedTask((prev: any) => prev ? { ...prev, status: "completed" } : null);
+        }
+        setProofDialog(null);
+        toast({ title: t("tasks.toast.statusUpdated") });
+      },
+      onError: (err: any) => {
+        const msg = err?.body?.message ?? t("tasks.toast.updateFailed");
+        toast({ title: msg, variant: "destructive" });
+      },
     });
   }
 
@@ -785,6 +1055,15 @@ export default function Tasks() {
         task={selectedTask}
         open={!!selectedTask}
         onClose={() => setSelectedTask(null)}
+        onMarkComplete={selectedTask ? () => setProofDialog({ task: selectedTask }) : undefined}
+      />
+      <ProofPhotoDialog
+        task={proofDialog?.task ?? null}
+        open={!!proofDialog}
+        onClose={() => setProofDialog(null)}
+        onComplete={handleCompleteWithProof}
+        onSkip={handleSkipProof}
+        isSubmitting={updateTask.isPending}
       />
     </div>
   );

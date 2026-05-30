@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { db, tasksTable, staffTable, propertiesTable, roomsTable, taskCommentsTable } from "@workspace/db";
+import { db, tasksTable, staffTable, propertiesTable, roomsTable, taskCommentsTable, usersTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { insertTaskSchema, updateTaskSchema, insertTaskCommentSchema } from "@workspace/db";
-import { logActivity, actorFromRequest } from "./activityLogs";
+import { logActivity, actorFromRequest, getRoleTier } from "./activityLogs";
 
 const router = Router();
 
@@ -54,13 +54,21 @@ router.post("/tasks", async (req, res) => {
   const parsed = insertTaskSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const [task] = await db.insert(tasksTable).values(parsed.data).returning();
+  const actor = actorFromRequest(req);
+
+  // Record who assigned this task
+  const data = { ...parsed.data, assignedByUserId: actor.actorId ?? null };
+
+  const [task] = await db.insert(tasksTable).values(data).returning();
 
   const [property] = task.propertyId
     ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, task.propertyId))
     : [null];
 
-  const actor = actorFromRequest(req);
+  const [assignedStaff] = task.assignedToId
+    ? await db.select().from(staffTable).where(eq(staffTable.id, task.assignedToId))
+    : [null];
+
   logActivity({
     ...actor,
     action: "task.created",
@@ -70,9 +78,10 @@ router.post("/tasks", async (req, res) => {
     propertyId:   property?.id   ?? undefined,
     propertyName: property?.name ?? undefined,
     details: `Category: ${task.category ?? "—"}, Priority: ${task.priority ?? "—"}`,
+    assignedByName: actor.actorName,
   });
 
-  res.status(201).json(formatTask(task, { propertyName: property?.name }));
+  res.status(201).json(formatTask(task, { assigneeName: assignedStaff?.name, propertyName: property?.name }));
 });
 
 router.patch("/tasks/:id", async (req, res) => {
@@ -84,9 +93,42 @@ router.patch("/tasks/:id", async (req, res) => {
   // Fetch old record to detect what changed
   const [before] = await db.select().from(tasksTable).where(eq(tasksTable.id, id));
 
+  const actor = actorFromRequest(req);
+  const tier  = getRoleTier(actor.actorRole ?? "staff");
+
+  const isMarkingComplete =
+    parsed.data.status === "completed" &&
+    (!before || before.status !== "completed");
+
+  // Proof-of-work enforcement: non-admins must supply a proof photo
+  if (isMarkingComplete && tier !== "admin") {
+    const proof = parsed.data.proofPhotoUrl ?? before?.proofPhotoUrl;
+    if (!proof) {
+      res.status(422).json({
+        error: "proof_required",
+        message: "A proof photo is required to mark this task as completed.",
+      });
+      return;
+    }
+  }
+
   const data: Record<string, unknown> = { ...parsed.data };
   if (parsed.data.status === "completed" && !parsed.data.completedAt) {
     data.completedAt = new Date();
+  }
+
+  // Stamp who completed
+  if (isMarkingComplete && actor.actorId) {
+    data.completedByUserId = actor.actorId;
+  }
+
+  // Stamp who is assigning (when assignedToId is being changed)
+  if (
+    parsed.data.assignedToId !== undefined &&
+    parsed.data.assignedToId !== before?.assignedToId &&
+    actor.actorId
+  ) {
+    data.assignedByUserId = actor.actorId;
   }
 
   const [task] = await db.update(tasksTable).set(data).where(eq(tasksTable.id, id)).returning();
@@ -99,7 +141,13 @@ router.patch("/tasks/:id", async (req, res) => {
     ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, task.propertyId))
     : [null];
 
-  const actor = actorFromRequest(req);
+  // Resolve names for the assigning user and completing user
+  const [assignedByUser] = task.assignedByUserId
+    ? await db.select({ displayName: usersTable.displayName }).from(usersTable).where(eq(usersTable.id, task.assignedByUserId))
+    : [null];
+  const [completedByUser] = task.completedByUserId
+    ? await db.select({ displayName: usersTable.displayName }).from(usersTable).where(eq(usersTable.id, task.completedByUserId))
+    : [null];
 
   if (before && parsed.data.status && parsed.data.status !== before.status) {
     logActivity({
@@ -111,6 +159,9 @@ router.patch("/tasks/:id", async (req, res) => {
       propertyId:   property?.id   ?? undefined,
       propertyName: property?.name ?? undefined,
       details: `${before.status} → ${parsed.data.status}`,
+      completedByName: isMarkingComplete ? (actor.actorName ?? completedByUser?.displayName) : undefined,
+      assignedByName: assignedByUser?.displayName ?? undefined,
+      proofPhotoUrl: isMarkingComplete ? (task.proofPhotoUrl ?? undefined) : undefined,
     });
   }
 
@@ -124,6 +175,7 @@ router.patch("/tasks/:id", async (req, res) => {
       propertyId:   property?.id   ?? undefined,
       propertyName: property?.name ?? undefined,
       details: staff ? `Assigned to ${staff.name}` : "Unassigned",
+      assignedByName: actor.actorName,
     });
   }
 

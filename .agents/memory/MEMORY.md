@@ -1,1 +1,3 @@
 - [i18n language architecture](i18n-language-architecture.md) — central config in languages.ts; generation script at scripts/src/generate-locale.ts; 10 languages total (en, ar, ur + 8 new); ar+ur are RTL
+- [Proof-of-work accountability](proof-of-work.md) — tasks require photo upload on completion; session-first actor extraction; admin role bypasses proof requirement
+- [Object storage setup](object-storage-setup.md) — GCS bucket live; storage routes at /api/storage; objectPath from upload must be prepended with /api/storage to serve

@@ -756,6 +756,9 @@ export const ListTasksResponseItem = zod.object({
   "unitName": zod.string().nullish(),
   "assignedToId": zod.number().nullish(),
   "assigneeName": zod.string().nullish(),
+  "assignedByUserId": zod.number().nullish(),
+  "completedByUserId": zod.number().nullish(),
+  "proofPhotoUrl": zod.string().nullish(),
   "priority": zod.string().describe('low, medium, high, urgent'),
   "status": zod.string().describe('pending, in-progress, completed'),
   "dueDate": zod.string().nullish(),
@@ -795,6 +798,9 @@ export const UpdateTaskBody = zod.object({
   "propertyId": zod.number().optional(),
   "unitId": zod.number().optional(),
   "assignedToId": zod.number().optional(),
+  "assignedByUserId": zod.number().optional(),
+  "completedByUserId": zod.number().optional(),
+  "proofPhotoUrl": zod.string().optional(),
   "priority": zod.string().optional(),
   "status": zod.string().optional(),
   "dueDate": zod.string().optional(),
@@ -812,6 +818,9 @@ export const UpdateTaskResponse = zod.object({
   "unitName": zod.string().nullish(),
   "assignedToId": zod.number().nullish(),
   "assigneeName": zod.string().nullish(),
+  "assignedByUserId": zod.number().nullish(),
+  "completedByUserId": zod.number().nullish(),
+  "proofPhotoUrl": zod.string().nullish(),
   "priority": zod.string().describe('low, medium, high, urgent'),
   "status": zod.string().describe('pending, in-progress, completed'),
   "dueDate": zod.string().nullish(),
@@ -1336,6 +1345,7 @@ export const ListActivityLogsQueryParams = zod.object({
 
 export const ListActivityLogsResponseItem = zod.object({
   "id": zod.number(),
+  "actorId": zod.number().nullish(),
   "actorName": zod.string().nullish(),
   "actorRole": zod.string().nullish(),
   "action": zod.string(),
@@ -1345,6 +1355,9 @@ export const ListActivityLogsResponseItem = zod.object({
   "propertyId": zod.number().nullish(),
   "propertyName": zod.string().nullish(),
   "details": zod.string().nullish(),
+  "assignedByName": zod.string().nullish(),
+  "completedByName": zod.string().nullish(),
+  "proofPhotoUrl": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListActivityLogsResponse = zod.array(ListActivityLogsResponseItem)
@@ -1513,6 +1526,21 @@ export const UpdateCustomFieldResponse = zod.object({
  */
 export const DeleteCustomFieldParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Request a presigned upload URL for direct-to-GCS upload
+ */
+export const RequestUploadUrlBody = zod.object({
+  "name": zod.string(),
+  "size": zod.number(),
+  "contentType": zod.string()
+})
+
+export const RequestUploadUrlResponse = zod.object({
+  "uploadURL": zod.string(),
+  "objectPath": zod.string()
 })
 
 

@@ -2,6 +2,7 @@ import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
 
 export const activityLogsTable = pgTable("activity_logs", {
   id: serial("id").primaryKey(),
+  actorId: integer("actor_id"),
   actorName: text("actor_name"),
   actorRole: text("actor_role"),
   action: text("action").notNull(),
@@ -11,6 +12,9 @@ export const activityLogsTable = pgTable("activity_logs", {
   propertyId: integer("property_id"),
   propertyName: text("property_name"),
   details: text("details"),
+  assignedByName: text("assigned_by_name"),
+  completedByName: text("completed_by_name"),
+  proofPhotoUrl: text("proof_photo_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

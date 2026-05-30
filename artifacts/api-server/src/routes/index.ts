@@ -20,6 +20,7 @@ import { Router, type IRouter } from "express";
 import settingsRouter from "./settings";
 import fieldUsersRouter from "./fieldUsers";
 import customFieldsRouter from "./customFields";
+import storageRouter from "./storage";
 
   const router: IRouter = Router();
 
@@ -44,6 +45,7 @@ import customFieldsRouter from "./customFields";
   router.use(settingsRouter);
   router.use(fieldUsersRouter);
   router.use(customFieldsRouter);
+  router.use(storageRouter);
 
   export default router;
   

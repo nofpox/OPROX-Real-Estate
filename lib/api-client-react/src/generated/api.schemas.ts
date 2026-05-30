@@ -387,6 +387,12 @@ export interface Task {
   assignedToId?: number | null;
   /** @nullable */
   assigneeName?: string | null;
+  /** @nullable */
+  assignedByUserId?: number | null;
+  /** @nullable */
+  completedByUserId?: number | null;
+  /** @nullable */
+  proofPhotoUrl?: string | null;
   /** low, medium, high, urgent */
   priority: string;
   /** pending, in-progress, completed */
@@ -417,6 +423,9 @@ export interface TaskUpdate {
   propertyId?: number;
   unitId?: number;
   assignedToId?: number;
+  assignedByUserId?: number;
+  completedByUserId?: number;
+  proofPhotoUrl?: string;
   priority?: string;
   status?: string;
   dueDate?: string;
@@ -657,6 +666,7 @@ export interface UnitFinancialUpdate {
 
 export interface ActivityLog {
   id: number;
+  actorId?: number | null;
   actorName?: string | null;
   actorRole?: string | null;
   action: string;
@@ -666,6 +676,9 @@ export interface ActivityLog {
   propertyId?: number | null;
   propertyName?: string | null;
   details?: string | null;
+  assignedByName?: string | null;
+  completedByName?: string | null;
+  proofPhotoUrl?: string | null;
   createdAt: string;
 }
 
@@ -701,6 +714,17 @@ export interface FieldUserInput {
   propertyId?: number;
   status?: string;
   notes?: string;
+}
+
+export interface RequestUploadUrlBody {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export interface RequestUploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
 }
 
 export type ListBookingsParams = {

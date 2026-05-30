@@ -1597,6 +1597,25 @@ paths:
         "204":
           description: Deleted
 
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a presigned upload URL for direct-to-GCS upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestUploadUrlBody"
+      responses:
+        "200":
+          description: Presigned upload URL and object path
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestUploadUrlResponse"
+
 components:
   schemas:
     Settings:
@@ -2265,6 +2284,12 @@ components:
           type: ["integer", "null"]
         assigneeName:
           type: ["string", "null"]
+        assignedByUserId:
+          type: ["integer", "null"]
+        completedByUserId:
+          type: ["integer", "null"]
+        proofPhotoUrl:
+          type: ["string", "null"]
         priority:
           type: string
           description: "low, medium, high, urgent"
@@ -2316,6 +2341,12 @@ components:
           type: integer
         assignedToId:
           type: integer
+        assignedByUserId:
+          type: integer
+        completedByUserId:
+          type: integer
+        proofPhotoUrl:
+          type: string
         priority:
           type: string
         status:
@@ -2758,6 +2789,9 @@ components:
       properties:
         id:
           type: integer
+        actorId:
+          type: integer
+          nullable: true
         actorName:
           type: string
           nullable: true
@@ -2781,6 +2815,15 @@ components:
           type: string
           nullable: true
         details:
+          type: string
+          nullable: true
+        assignedByName:
+          type: string
+          nullable: true
+        completedByName:
+          type: string
+          nullable: true
+        proofPhotoUrl:
           type: string
           nullable: true
         createdAt:
@@ -2852,4 +2895,24 @@ components:
         status:
           type: string
         notes:
+          type: string
+
+    RequestUploadUrlBody:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+        contentType:
+          type: string
+
+    RequestUploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
           type: string
