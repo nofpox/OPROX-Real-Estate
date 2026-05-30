@@ -34,8 +34,8 @@ const id: Translations = {
   priority: { urgent: "Mendesak", high: "Tinggi", medium: "Sedang", low: "Rendah" },
   roles: {
     owner: "Pemilik",
-    manager: "Manajer", "front-desk": "Resepsionis", housekeeping: "Tata Graha",
-    maintenance: "Pemeliharaan", security: "Keamanan", viewingAs: "Dilihat sebagai",
+    manager: "Manajer Properti", "front-desk": "Supervisor", housekeeping: "Staf Kebersihan",
+    maintenance: "Teknisi Pemeliharaan", security: "Satpam", viewingAs: "Dilihat sebagai",
     switchRole: "Ganti Peran", active: "aktif",
     desc: {
       owner: "Akses sistem penuh termasuk keuangan dan pengaturan",

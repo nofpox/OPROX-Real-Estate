@@ -34,8 +34,8 @@ const tl: Translations = {
   priority: { urgent: "Apurahan", high: "Mataas", medium: "Katamtaman", low: "Mababa" },
   roles: {
     owner: "May-ari",
-    manager: "Tagapamahala", "front-desk": "Front Desk", housekeeping: "Housekeeping",
-    maintenance: "Pagpapanatili", security: "Seguridad", viewingAs: "Tinitingnan bilang",
+    manager: "Property Manager", "front-desk": "Superbisor", housekeeping: "Kawani ng Paglilinis",
+    maintenance: "Technician sa Pagpapanatili", security: "Bantay-Seguridad", viewingAs: "Tinitingnan bilang",
     switchRole: "Palitan ang Papel", active: "aktibo",
     desc: {
       owner: "Buong access sa sistema kasama ang pananalapi at mga setting",

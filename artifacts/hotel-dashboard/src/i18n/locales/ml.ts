@@ -35,8 +35,8 @@ const ml: Translations = {
   priority: { urgent: "അടിയന്തിരം", high: "ഉയർന്ന", medium: "ഇടത്തരം", low: "കുറഞ്ഞ" },
   roles: {
     owner: "ഉടമ",
-    manager: "മാനേജർ", "front-desk": "ഫ്രണ്ട് ഡെസ്ക്", housekeeping: "ഹൗസ്കീപ്പിംഗ്",
-    maintenance: "അറ്റകുറ്റപ്പണി", security: "സുരക്ഷ", viewingAs: "ആയി കാണുന്നത്",
+    manager: "പ്രോപ്പർട്ടി മാനേജർ", "front-desk": "സൂപ്പർവൈസർ", housekeeping: "ക്ലീനിംഗ് സ്റ്റാഫ്",
+    maintenance: "അറ്റകുറ്റ ടെക്നീഷ്യൻ", security: "സുരക്ഷാ ഗാർഡ്", viewingAs: "ആയി കാണുന്നത്",
     switchRole: "റോൾ മാറ്റുക", active: "സജീവം",
     desc: {
       owner: "ഫിനാൻസും സെറ്റിങ്ങുകളും ഉൾപ്പെടെ പൂർണ്ണ സിസ്റ്റം ആക്സസ്",

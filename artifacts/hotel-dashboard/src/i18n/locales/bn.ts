@@ -35,8 +35,8 @@ const bn: Translations = {
   priority: { urgent: "জরুরি", high: "উচ্চ", medium: "মধ্যম", low: "নিম্ন" },
   roles: {
     owner: "মালিক",
-    manager: "ব্যবস্থাপক", "front-desk": "ফ্রন্ট ডেস্ক", housekeeping: "হাউসকিপিং",
-    maintenance: "রক্ষণাবেক্ষণ", security: "নিরাপত্তা", viewingAs: "হিসেবে দেখছেন",
+    manager: "সম্পত্তি ব্যবস্থাপক", "front-desk": "সুপারভাইজার", housekeeping: "পরিষ্কার কর্মী",
+    maintenance: "রক্ষণাবেক্ষণ টেকনিশিয়ান", security: "নিরাপত্তা প্রহরী", viewingAs: "হিসেবে দেখছেন",
     switchRole: "ভূমিকা পরিবর্তন করুন", active: "সক্রিয়",
     desc: {
       owner: "অর্থ ও সেটিংস সহ সম্পূর্ণ সিস্টেম অ্যাক্সেস",

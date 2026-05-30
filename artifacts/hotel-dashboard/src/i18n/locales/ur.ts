@@ -35,8 +35,8 @@ const ur: Translations = {
   priority: { urgent: "فوری", high: "زیادہ", medium: "درمیانہ", low: "کم" },
   roles: {
     owner: "مالک",
-    manager: "مینیجر", "front-desk": "فرنٹ ڈیسک", housekeeping: "ہاؤس کیپنگ",
-    maintenance: "دیکھ بھال", security: "سیکیورٹی", viewingAs: "بطور دیکھ رہے ہیں",
+    manager: "پراپرٹی مینیجر", "front-desk": "سپروائزر", housekeeping: "صفائی عملہ",
+    maintenance: "مینٹیننس ٹیکنیشن", security: "سیکیورٹی گارڈ", viewingAs: "بطور دیکھ رہے ہیں",
     switchRole: "کردار تبدیل کریں", active: "فعال",
     desc: {
       owner: "فنانس اور سیٹنگز سمیت مکمل سسٹم رسائی",

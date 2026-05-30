@@ -34,8 +34,8 @@ const th: Translations = {
   priority: { urgent: "เร่งด่วน", high: "สูง", medium: "ปานกลาง", low: "ต่ำ" },
   roles: {
     owner: "เจ้าของ",
-    manager: "ผู้จัดการ", "front-desk": "แผนกต้อนรับ", housekeeping: "แม่บ้าน",
-    maintenance: "ช่างซ่อมบำรุง", security: "รักษาความปลอดภัย", viewingAs: "กำลังดูในฐานะ",
+    manager: "ผู้จัดการทรัพย์สิน", "front-desk": "หัวหน้างาน", housekeeping: "พนักงานทำความสะอาด",
+    maintenance: "ช่างเทคนิคบำรุงรักษา", security: "เจ้าหน้าที่รักษาความปลอดภัย", viewingAs: "กำลังดูในฐานะ",
     switchRole: "เปลี่ยนบทบาท", active: "ใช้งานอยู่",
     desc: {
       owner: "เข้าถึงระบบทั้งหมดรวมถึงการเงินและการตั้งค่า",
