@@ -260,7 +260,7 @@ export default function SuperAdmin() {
                     className={`group text-left rounded-xl border-2 p-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       isOn
                         ? "bg-card border-border shadow-sm"
-                        : "bg-muted/20 border-border/40 opacity-60 hover:opacity-80"
+                        : "bg-muted/20 border-border/40 hover:border-border/70 hover:bg-muted/30"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
