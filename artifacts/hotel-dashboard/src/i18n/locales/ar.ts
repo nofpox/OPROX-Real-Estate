@@ -115,6 +115,15 @@ const ar: Translations = {
   dashboard: {
     title: "لوحة التحكم",
     subtitle: "الحالة التشغيلية الفورية — ما يحتاج انتباهك الآن",
+    overviewSubtitle: "نظرة عامة على جميع الأصول والمهام النشطة.",
+    assetSummary: "ملخص الأصول",
+    totalAssets: "إجمالي الأصول",
+    active: "نشط",
+    underMaintenance: "قيد الصيانة",
+    taskSummary: "ملخص المهام",
+    pending: "معلقة",
+    inProgress: "قيد التنفيذ",
+    completed: "مكتملة",
     modes: {
       hotel: "فندق",
       compound: "مجمع سكني",

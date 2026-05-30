@@ -113,6 +113,15 @@ const en = {
   dashboard: {
     title: "Dashboard",
     subtitle: "Real-time operational status — what needs attention right now",
+    overviewSubtitle: "Overview of all assets and active tasks.",
+    assetSummary: "Asset Summary",
+    totalAssets: "Total Assets",
+    active: "Active",
+    underMaintenance: "Under Maintenance",
+    taskSummary: "Task Summary",
+    pending: "Pending",
+    inProgress: "In Progress",
+    completed: "Completed",
     modes: {
       hotel: "Standard",
       compound: "Mixed",

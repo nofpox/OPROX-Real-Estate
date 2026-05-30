@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useListProperties, useListRooms, useListTasks } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,6 +51,8 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
+  const { t } = useTranslation();
+
   const { data: properties, isLoading: propsLoading } = useListProperties();
   const { data: rooms,      isLoading: roomsLoading  } = useListRooms();
   const { data: tasks,      isLoading: tasksLoading  } = useListTasks();
@@ -75,16 +78,16 @@ export default function Dashboard() {
 
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Overview of all assets and active tasks.</p>
+        <h1 className="text-2xl font-semibold text-foreground">{t("dashboard.title")}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t("dashboard.overviewSubtitle")}</p>
       </div>
 
       {/* Asset Summary */}
       <section className="space-y-3">
-        <SectionHeading>Asset Summary</SectionHeading>
+        <SectionHeading>{t("dashboard.assetSummary")}</SectionHeading>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           <StatCard
-            label="Total Assets"
+            label={t("dashboard.totalAssets")}
             value={totalAssets}
             icon={Building2}
             accent="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
@@ -92,7 +95,7 @@ export default function Dashboard() {
             loading={assetsLoading}
           />
           <StatCard
-            label="Active"
+            label={t("dashboard.active")}
             value={activeAssets}
             icon={CheckCircle2}
             accent="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
@@ -100,7 +103,7 @@ export default function Dashboard() {
             loading={assetsLoading}
           />
           <StatCard
-            label="Under Maintenance"
+            label={t("dashboard.underMaintenance")}
             value={underMaint}
             icon={Wrench}
             accent="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
@@ -112,10 +115,10 @@ export default function Dashboard() {
 
       {/* Task Summary */}
       <section className="space-y-3">
-        <SectionHeading>Task Summary</SectionHeading>
+        <SectionHeading>{t("dashboard.taskSummary")}</SectionHeading>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           <StatCard
-            label="Pending"
+            label={t("dashboard.pending")}
             value={pending}
             icon={Clock}
             accent="bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
@@ -123,7 +126,7 @@ export default function Dashboard() {
             loading={tasksLoading}
           />
           <StatCard
-            label="In Progress"
+            label={t("dashboard.inProgress")}
             value={inProgress}
             icon={Loader2}
             accent="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
@@ -131,7 +134,7 @@ export default function Dashboard() {
             loading={tasksLoading}
           />
           <StatCard
-            label="Completed"
+            label={t("dashboard.completed")}
             value={completed}
             icon={CheckCircle2}
             accent="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
