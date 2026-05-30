@@ -23,8 +23,9 @@ import * as z from "zod";
 import {
   Plus, Trash2, CheckCheck, Clock, AlertCircle, CheckCircle2,
   Building2, Image as ImageIcon, Send, X, Zap, Droplets, Wind, Sparkles, ClipboardList,
-  Camera, Upload, ExternalLink, ShieldCheck, BadgeCheck,
+  Camera, Upload, ExternalLink, ShieldCheck, BadgeCheck, FileText, Download, Loader2,
 } from "lucide-react";
+import { generateTaskReport } from "@/lib/pdf-report";
 import { useToast } from "@/hooks/use-toast";
 import { useRole } from "@/contexts/role-context";
 
@@ -745,6 +746,169 @@ function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkCo
   );
 }
 
+// ── Report Dialog ─────────────────────────────────────────────────────────────
+
+function ReportDialog({
+  open, onClose, tasks, properties,
+}: {
+  open:       boolean;
+  onClose:    () => void;
+  tasks:      any[];
+  properties: any[];
+}) {
+  const { t }    = useTranslation();
+  const { role } = useRole();
+  const { toast } = useToast();
+
+  // Default: last 30 days
+  const today  = new Date().toISOString().split("T")[0];
+  const thirty = new Date(Date.now() - 30 * 86_400_000).toISOString().split("T")[0];
+
+  const [dateFrom,      setDateFrom]      = useState(thirty);
+  const [dateTo,        setDateTo]        = useState(today);
+  const [propFilter,    setPropFilter]    = useState("all");
+  const [includePhotos, setIncludePhotos] = useState(false);
+  const [generating,    setGenerating]    = useState(false);
+
+  // Compute preview count
+  const scoped = (propFilter !== "all"
+    ? tasks.filter((t) => String(t.propertyId) === propFilter)
+    : tasks
+  ).filter((t) => {
+    if (t.status !== "completed" && t.status !== "verified") return false;
+    const d = (t.completedAt ?? t.createdAt).split("T")[0];
+    return d >= dateFrom && d <= dateTo;
+  });
+
+  const propertyLabel = propFilter === "all"
+    ? "All Properties"
+    : (properties.find((p) => String(p.id) === propFilter)?.name ?? "All Properties");
+
+  async function handleGenerate() {
+    if (!dateFrom || !dateTo) return;
+    setGenerating(true);
+    try {
+      const scopedTasks = propFilter !== "all"
+        ? tasks.filter((t) => String(t.propertyId) === propFilter)
+        : tasks;
+      await generateTaskReport({
+        tasks:         scopedTasks,
+        dateFrom,
+        dateTo,
+        companyName:   "Grand PMS",
+        propertyLabel,
+        generatedBy:   role.label ?? role.id,
+        includePhotos,
+      });
+      toast({ title: "Report downloaded", description: `${scoped.length} tasks included.` });
+      onClose();
+    } catch (err) {
+      toast({ title: "Failed to generate report", variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            {t("tasks.report.title", { defaultValue: "Generate Task Report" })}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          {/* Date range */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">
+                {t("tasks.report.from", { defaultValue: "From" })}
+              </label>
+              <Input
+                type="date"
+                value={dateFrom}
+                max={dateTo}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">
+                {t("tasks.report.to", { defaultValue: "To" })}
+              </label>
+              <Input
+                type="date"
+                value={dateTo}
+                min={dateFrom}
+                max={today}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Property */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">
+              {t("tasks.report.property", { defaultValue: "Property" })}
+            </label>
+            <Select value={propFilter} onValueChange={setPropFilter}>
+              <SelectTrigger className="h-9 text-sm bg-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Properties</SelectItem>
+                {properties.map((p) => (
+                  <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Include photos */}
+          <label className="flex items-center gap-3 cursor-pointer select-none rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors">
+            <input
+              type="checkbox"
+              checked={includePhotos}
+              onChange={(e) => setIncludePhotos(e.target.checked)}
+              className="h-4 w-4 rounded accent-primary"
+            />
+            <div>
+              <p className="text-sm font-medium">
+                {t("tasks.report.includePhotos", { defaultValue: "Include photo evidence" })}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("tasks.report.includePhotosHint", { defaultValue: "Appends before/after photos as a separate page" })}
+              </p>
+            </div>
+          </label>
+
+          {/* Preview */}
+          <div className="rounded-lg bg-muted/50 px-3 py-2.5 text-sm">
+            <span className="text-muted-foreground">{t("tasks.report.preview", { defaultValue: "Tasks matching filters:" })} </span>
+            <span className="font-semibold text-foreground">{scoped.length}</span>
+            <span className="text-muted-foreground"> (completed &amp; verified)</span>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={generating}>
+            {t("tasks.cancel", { defaultValue: "Cancel" })}
+          </Button>
+          <Button onClick={handleGenerate} disabled={generating || !dateFrom || !dateTo}>
+            {generating
+              ? <><Loader2 className="me-2 h-4 w-4 animate-spin" />Generating…</>
+              : <><Download className="me-2 h-4 w-4" />{t("tasks.report.download", { defaultValue: "Download PDF" })}</>
+            }
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Create Task Dialog ────────────────────────────────────────────────────────
 
 function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -955,6 +1119,7 @@ export default function Tasks() {
   const [categoryFilter,  setCategoryFilter]  = useState<string>("all");
   const [propertyFilter,  setPropertyFilter]  = useState<string>("all");
   const [createOpen,      setCreateOpen]      = useState(false);
+  const [reportOpen,      setReportOpen]      = useState(false);
   const [selectedTask,    setSelectedTask]    = useState<any | null>(null);
   const [beforePhotoTask, setBeforePhotoTask] = useState<any | null>(null);
   const [afterPhotoTask,  setAfterPhotoTask]  = useState<any | null>(null);
@@ -1117,9 +1282,15 @@ export default function Tasks() {
           <h1 className="text-2xl font-semibold font-serif text-foreground">{t("tasks.title")}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{t("tasks.manageSubtitle")}</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="me-2 h-4 w-4" />{t("tasks.newTask")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setReportOpen(true)}>
+            <FileText className="me-2 h-4 w-4" />
+            {t("tasks.report.generate", { defaultValue: "Generate Report" })}
+          </Button>
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="me-2 h-4 w-4" />{t("tasks.newTask")}
+          </Button>
+        </div>
       </div>
 
       {/* Summary KPI cards — 4 columns */}
@@ -1257,6 +1428,14 @@ export default function Tasks() {
         onUpload={handleCompleteWithPhoto}
         onSkip={handleSkipAfterPhoto}
         isSubmitting={updateTask.isPending}
+      />
+
+      {/* Report dialog */}
+      <ReportDialog
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        tasks={tasks ?? []}
+        properties={properties ?? []}
       />
     </div>
   );

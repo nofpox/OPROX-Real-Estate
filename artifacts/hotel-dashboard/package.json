@@ -80,6 +80,8 @@
     "@uppy/dashboard": "^5.1.1",
     "@uppy/react": "^5.2.0",
     "i18next": "^26.3.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "react-i18next": "^17.0.8",
     "react-qr-code": "^2.0.21"
   }
