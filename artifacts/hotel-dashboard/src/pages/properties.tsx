@@ -53,7 +53,7 @@ export default function Properties() {
 
   const form = useForm<z.infer<typeof propertySchema>>({
     resolver: zodResolver(propertySchema),
-    defaultValues: { name: "", type: "Hotel", address: "", city: "", country: "USA", description: "", status: "active" },
+    defaultValues: { name: "", type: "Property", address: "", city: "", country: "USA", description: "", status: "active" },
   });
 
   const handleEdit = (property: Property) => {
@@ -87,7 +87,7 @@ export default function Properties() {
 
   const onOpenChange = (open: boolean) => {
     setIsDialogOpen(open);
-    if (!open) { setEditingProperty(null); form.reset({ name: "", type: "Hotel", address: "", city: "", country: "USA", description: "", status: "active" }); }
+    if (!open) { setEditingProperty(null); form.reset({ name: "", type: "Property", address: "", city: "", country: "USA", description: "", status: "active" }); }
   };
 
   const totalProperties = properties?.length || 0;
@@ -121,35 +121,19 @@ export default function Properties() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="type" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("properties.fields.type")}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder={t("properties.fields.selectType")} /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          {(["Hotel", "Apartment", "Compound", "Furnished Apartments"] as const).map((type) => (
-                            <SelectItem key={type} value={type}>{t(`propertyType.${type}`, type)}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="status" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("properties.fields.status")}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder={t("properties.fields.selectStatus")} /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">{t("status.active")}</SelectItem>
-                          <SelectItem value="inactive">{t("status.inactive")}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </div>
+                <FormField control={form.control} name="status" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("properties.fields.status")}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder={t("properties.fields.selectStatus")} /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">{t("status.active")}</SelectItem>
+                        <SelectItem value="inactive">{t("status.inactive")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
                 <FormField control={form.control} name="address" render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("properties.fields.address")}</FormLabel>

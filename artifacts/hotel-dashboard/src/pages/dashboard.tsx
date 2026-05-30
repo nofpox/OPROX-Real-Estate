@@ -188,9 +188,6 @@ export default function Dashboard() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">{t("dashboard.subtitle")}</p>
         </div>
-        <Badge className={`${MODE_BADGE[mode] ?? MODE_BADGE.hotel} border-0 text-xs font-semibold self-start sm:self-auto px-3 py-1`}>
-          {t(`dashboard.modes.${mode}`, { defaultValue: mode })}
-        </Badge>
       </div>
 
       {/* ── Operational KPI Cards ────────────────────────────────────────────── */}
