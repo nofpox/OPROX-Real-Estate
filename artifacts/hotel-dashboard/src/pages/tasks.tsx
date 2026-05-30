@@ -4,6 +4,7 @@ import {
   useListTasks, getListTasksQueryKey, useCreateTask, useUpdateTask, useDeleteTask,
   useListStaff, useListProperties, useListRooms,
   useListTaskComments, useCreateTaskComment,
+  useSubmitTaskReport, useRejectTaskReport, useEscalateTaskReport, useApproveTaskReport,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +25,7 @@ import {
   Plus, Trash2, CheckCheck, Clock, AlertCircle, CheckCircle2,
   Building2, Image as ImageIcon, Send, X, Zap, Droplets, Wind, Sparkles, ClipboardList,
   Camera, Upload, ExternalLink, ShieldCheck, BadgeCheck, FileText, Download, Loader2,
+  FileCheck, ArrowUpCircle, XCircle, ThumbsUp, RotateCcw,
 } from "lucide-react";
 import { generateTaskReport } from "@/lib/pdf-report";
 import { useToast } from "@/hooks/use-toast";
@@ -136,6 +138,28 @@ function PriorityBadge({ priority }: { priority: string }) {
     <Badge className={`border-0 text-xs ${meta.color}`}>
       {t(`priority.${priority}`, { defaultValue: priority })}
     </Badge>
+  );
+}
+
+// ── Report Status ─────────────────────────────────────────────────────────────
+
+const REPORT_STATUS_META: Record<string, { label: string; cls: string; dotCls: string }> = {
+  none:      { label: "—",                    cls: "",                                                                         dotCls: ""                  },
+  submitted: { label: "Submitted",            cls: "text-blue-600 dark:text-blue-400",                                         dotCls: "bg-blue-500"       },
+  rejected:  { label: "Rejected",             cls: "text-red-600 dark:text-red-400",                                           dotCls: "bg-red-500"        },
+  escalated: { label: "Escalated to Manager", cls: "text-amber-600 dark:text-amber-400",                                       dotCls: "bg-amber-500"      },
+  approved:  { label: "Approved ✓",           cls: "text-emerald-600 dark:text-emerald-400 font-semibold",                     dotCls: "bg-emerald-500"    },
+};
+
+function ReportStatusBadge({ status }: { status: string | null | undefined }) {
+  const s = status ?? "none";
+  if (s === "none") return null;
+  const meta = REPORT_STATUS_META[s] ?? REPORT_STATUS_META.none;
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${meta.cls}`}>
+      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${meta.dotCls}`} />
+      {meta.label}
+    </span>
   );
 }
 
@@ -310,17 +334,28 @@ function PhotoThumb({ label, url, icon: Icon, iconClass }: { label: string; url:
 
 interface TaskCardProps {
   task: any;
-  onSelect: (task: any) => void;
-  onDelete: (id: number, title: string) => void;
-  onStatus: (id: number, status: string) => void;
-  onVerify: (id: number) => void;
-  canVerify: boolean;
+  onSelect:        (task: any) => void;
+  onDelete:        (id: number, title: string) => void;
+  onStatus:        (id: number, status: string) => void;
+  onVerify:        (id: number) => void;
+  canVerify:       boolean;
+  onSubmitReport:  (id: number) => void;
+  onRejectReport:  (id: number) => void;
+  onEscalateReport:(id: number) => void;
+  onApproveReport: (id: number) => void;
+  canReviewReport: boolean;
+  canApproveReport:boolean;
 }
 
-function TaskCard({ task, onSelect, onDelete, onStatus, onVerify, canVerify }: TaskCardProps) {
+function TaskCard({
+  task, onSelect, onDelete, onStatus, onVerify, canVerify,
+  onSubmitReport, onRejectReport, onEscalateReport, onApproveReport,
+  canReviewReport, canApproveReport,
+}: TaskCardProps) {
   const { t } = useTranslation();
   const overdue  = isOverdue(task.dueDate, task.status);
   const verified = task.status === "verified";
+  const rs       = task.reportStatus ?? "none";
 
   return (
     <div
@@ -373,6 +408,9 @@ function TaskCard({ task, onSelect, onDelete, onStatus, onVerify, canVerify }: T
         </div>
       )}
 
+      {/* Report escalation status */}
+      <ReportStatusBadge status={rs} />
+
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
           {task.assigneeName ? (
@@ -423,6 +461,43 @@ function TaskCard({ task, onSelect, onDelete, onStatus, onVerify, canVerify }: T
               onClick={() => onVerify(task.id)}>
               <BadgeCheck className="me-1 h-3 w-3" />
               {t("tasks.actions.verify", { defaultValue: "Verify" })}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Report escalation actions */}
+      {(task.status === "completed" || task.status === "verified") && (
+        <div className="flex gap-1.5 pt-0.5" onClick={(e) => e.stopPropagation()}>
+          {(rs === "none" || rs === "rejected") && (
+            <Button size="sm" variant="outline"
+              className={`h-7 text-xs flex-1 ${rs === "rejected" ? "text-amber-700 hover:text-amber-700 border-amber-200 hover:border-amber-300" : ""}`}
+              onClick={() => onSubmitReport(task.id)}>
+              {rs === "rejected"
+                ? <><RotateCcw className="me-1 h-3 w-3" />Resubmit</>
+                : <><FileCheck className="me-1 h-3 w-3" />Submit Report</>
+              }
+            </Button>
+          )}
+          {rs === "submitted" && canReviewReport && (
+            <>
+              <Button size="sm" variant="outline"
+                className="h-7 text-xs flex-1 text-emerald-700 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300 dark:text-emerald-400 dark:border-emerald-800"
+                onClick={() => onEscalateReport(task.id)}>
+                <ArrowUpCircle className="me-1 h-3 w-3" />Escalate
+              </Button>
+              <Button size="sm" variant="outline"
+                className="h-7 text-xs flex-1 text-red-700 hover:text-red-700 border-red-200 hover:border-red-300 dark:text-red-400 dark:border-red-800"
+                onClick={() => onRejectReport(task.id)}>
+                <XCircle className="me-1 h-3 w-3" />Reject
+              </Button>
+            </>
+          )}
+          {rs === "escalated" && canApproveReport && (
+            <Button size="sm" variant="outline"
+              className="h-7 text-xs flex-1 text-emerald-700 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300 dark:text-emerald-400 dark:border-emerald-800"
+              onClick={() => onApproveReport(task.id)}>
+              <ThumbsUp className="me-1 h-3 w-3" />Approve Report
             </Button>
           )}
         </div>
@@ -655,6 +730,63 @@ function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkCo
           )}
         </div>
 
+        {/* Report Escalation Trail */}
+        {task.reportStatus && task.reportStatus !== "none" && (
+          <div className="px-6 py-4 space-y-3 border-b">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Report Escalation
+            </p>
+            <ol className="relative border-s border-muted ms-2 space-y-4">
+              {/* Step 1: Submitted */}
+              <li className="ms-4">
+                <span className={`absolute -start-1.5 mt-0.5 h-3 w-3 rounded-full border-2 border-background ${task.submittedAt ? "bg-blue-500" : "bg-muted"}`} />
+                <p className={`text-xs font-semibold ${task.submittedAt ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`}>
+                  Submitted
+                </p>
+                {task.submittedAt && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(task.submittedAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                )}
+              </li>
+              {/* Step 2: Supervisor review */}
+              <li className="ms-4">
+                <span className={`absolute -start-1.5 mt-0.5 h-3 w-3 rounded-full border-2 border-background ${task.reportStatus === "rejected" ? "bg-red-500" : task.escalatedAt ? "bg-amber-500" : "bg-muted"}`} />
+                <p className={`text-xs font-semibold ${task.reportStatus === "rejected" ? "text-red-600 dark:text-red-400" : task.escalatedAt ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
+                  {task.reportStatus === "rejected" ? "Rejected by Supervisor" : "Reviewed by Supervisor"}
+                </p>
+                {(task.rejectedAt || task.escalatedAt) && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(task.rejectedAt ?? task.escalatedAt!).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                )}
+                {task.rejectionNotes && (
+                  <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 rounded px-2 py-1 mt-1">
+                    {task.rejectionNotes}
+                  </p>
+                )}
+              </li>
+              {/* Step 3: Manager approval */}
+              {task.reportStatus !== "rejected" && (
+                <li className="ms-4">
+                  <span className={`absolute -start-1.5 mt-0.5 h-3 w-3 rounded-full border-2 border-background ${task.approvedAt ? "bg-emerald-500" : "bg-muted"}`} />
+                  <p className={`text-xs font-semibold ${task.approvedAt ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+                    Approved by Manager
+                  </p>
+                  {task.approvedAt && (
+                    <p className="text-[10px] text-muted-foreground">
+                      {new Date(task.approvedAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  )}
+                  {!task.approvedAt && task.escalatedAt && (
+                    <p className="text-[10px] text-muted-foreground italic">Awaiting manager approval</p>
+                  )}
+                </li>
+              )}
+            </ol>
+          </div>
+        )}
+
         {/* Comments */}
         <div className="flex-1 px-6 pt-4 pb-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
@@ -746,15 +878,70 @@ function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkCo
   );
 }
 
+// ── Reject Report Dialog ──────────────────────────────────────────────────────
+
+function RejectReportDialog({
+  taskId, open, onClose, onConfirm, isPending,
+}: {
+  taskId:    number | null;
+  open:      boolean;
+  onClose:   () => void;
+  onConfirm: (id: number, notes: string) => void;
+  isPending: boolean;
+}) {
+  const [notes, setNotes] = useState("");
+
+  function handleClose() { setNotes(""); onClose(); }
+  function handleSubmit() {
+    if (!taskId || !notes.trim()) return;
+    onConfirm(taskId, notes.trim());
+    setNotes("");
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-600">
+            <XCircle className="h-5 w-5" /> Reject Report
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Explain why this task report is being sent back for corrections.
+          The worker will see this message.
+        </p>
+        <Textarea
+          placeholder="Rejection reason (required)…"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="resize-none h-24 text-sm"
+          autoFocus
+        />
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose} disabled={isPending}>Cancel</Button>
+          <Button
+            variant="destructive"
+            onClick={handleSubmit}
+            disabled={!notes.trim() || isPending}
+          >
+            {isPending ? <><Loader2 className="me-2 h-4 w-4 animate-spin" />Rejecting…</> : "Reject Report"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Report Dialog ─────────────────────────────────────────────────────────────
 
 function ReportDialog({
-  open, onClose, tasks, properties,
+  open, onClose, tasks, properties, defaultApprovedOnly = false,
 }: {
-  open:       boolean;
-  onClose:    () => void;
-  tasks:      any[];
-  properties: any[];
+  open:               boolean;
+  onClose:            () => void;
+  tasks:              any[];
+  properties:         any[];
+  defaultApprovedOnly?: boolean;
 }) {
   const { t }    = useTranslation();
   const { role } = useRole();
@@ -764,11 +951,12 @@ function ReportDialog({
   const today  = new Date().toISOString().split("T")[0];
   const thirty = new Date(Date.now() - 30 * 86_400_000).toISOString().split("T")[0];
 
-  const [dateFrom,      setDateFrom]      = useState(thirty);
-  const [dateTo,        setDateTo]        = useState(today);
-  const [propFilter,    setPropFilter]    = useState("all");
-  const [includePhotos, setIncludePhotos] = useState(false);
-  const [generating,    setGenerating]    = useState(false);
+  const [dateFrom,       setDateFrom]       = useState(thirty);
+  const [dateTo,         setDateTo]         = useState(today);
+  const [propFilter,     setPropFilter]     = useState("all");
+  const [includePhotos,  setIncludePhotos]  = useState(false);
+  const [approvedOnly,   setApprovedOnly]   = useState(defaultApprovedOnly);
+  const [generating,     setGenerating]     = useState(false);
 
   // Compute preview count
   const scoped = (propFilter !== "all"
@@ -776,6 +964,7 @@ function ReportDialog({
     : tasks
   ).filter((t) => {
     if (t.status !== "completed" && t.status !== "verified") return false;
+    if (approvedOnly && t.reportStatus !== "approved") return false;
     const d = (t.completedAt ?? t.createdAt).split("T")[0];
     return d >= dateFrom && d <= dateTo;
   });
@@ -788,9 +977,10 @@ function ReportDialog({
     if (!dateFrom || !dateTo) return;
     setGenerating(true);
     try {
-      const scopedTasks = propFilter !== "all"
+      const scopedTasks = (propFilter !== "all"
         ? tasks.filter((t) => String(t.propertyId) === propFilter)
-        : tasks;
+        : tasks
+      ).filter((t) => !approvedOnly || t.reportStatus === "approved");
       await generateTaskReport({
         tasks:         scopedTasks,
         dateFrom,
@@ -799,6 +989,7 @@ function ReportDialog({
         propertyLabel,
         generatedBy:   role.label ?? role.id,
         includePhotos,
+        approvedOnly,
       });
       toast({ title: "Report downloaded", description: `${scoped.length} tasks included.` });
       onClose();
@@ -867,6 +1058,22 @@ function ReportDialog({
             </Select>
           </div>
 
+          {/* Approved only */}
+          <label className="flex items-center gap-3 cursor-pointer select-none rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors">
+            <input
+              type="checkbox"
+              checked={approvedOnly}
+              onChange={(e) => setApprovedOnly(e.target.checked)}
+              className="h-4 w-4 rounded accent-primary"
+            />
+            <div>
+              <p className="text-sm font-medium">Approved reports only</p>
+              <p className="text-xs text-muted-foreground">
+                Only include tasks whose report has been approved by a manager
+              </p>
+            </div>
+          </label>
+
           {/* Include photos */}
           <label className="flex items-center gap-3 cursor-pointer select-none rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors">
             <input
@@ -889,7 +1096,9 @@ function ReportDialog({
           <div className="rounded-lg bg-muted/50 px-3 py-2.5 text-sm">
             <span className="text-muted-foreground">{t("tasks.report.preview", { defaultValue: "Tasks matching filters:" })} </span>
             <span className="font-semibold text-foreground">{scoped.length}</span>
-            <span className="text-muted-foreground"> (completed &amp; verified)</span>
+            <span className="text-muted-foreground">
+              {" "}({approvedOnly ? "approved reports" : "completed & verified"})
+            </span>
           </div>
         </div>
 
@@ -1120,6 +1329,7 @@ export default function Tasks() {
   const [propertyFilter,  setPropertyFilter]  = useState<string>("all");
   const [createOpen,      setCreateOpen]      = useState(false);
   const [reportOpen,      setReportOpen]      = useState(false);
+  const [rejectTaskId,    setRejectTaskId]    = useState<number | null>(null);
   const [selectedTask,    setSelectedTask]    = useState<any | null>(null);
   const [beforePhotoTask, setBeforePhotoTask] = useState<any | null>(null);
   const [afterPhotoTask,  setAfterPhotoTask]  = useState<any | null>(null);
@@ -1127,7 +1337,10 @@ export default function Tasks() {
   const queryClient = useQueryClient();
   const { toast }   = useToast();
 
-  const canVerify = role.id === "owner" || role.id === "manager" || role.id === "super_admin";
+  const canVerify      = role.id === "owner" || role.id === "manager" || role.id === "super_admin";
+  const canReport      = role.id === "owner" || role.id === "manager" || role.id === "super_admin" || role.id === "supervisor";
+  const canReviewRpt   = role.id === "supervisor" || role.id === "manager" || role.id === "owner" || role.id === "super_admin";
+  const canApproveRpt  = role.id === "manager" || role.id === "owner" || role.id === "super_admin";
 
   const params: any = {};
   if (statusFilter   !== "all") params.status     = statusFilter;
@@ -1135,8 +1348,12 @@ export default function Tasks() {
 
   const { data: tasks, isLoading } = useListTasks(params);
   const { data: properties }       = useListProperties();
-  const updateTask = useUpdateTask();
-  const deleteTask = useDeleteTask();
+  const updateTask    = useUpdateTask();
+  const deleteTask    = useDeleteTask();
+  const submitReport  = useSubmitTaskReport();
+  const rejectReport  = useRejectTaskReport();
+  const escalateRpt   = useEscalateTaskReport();
+  const approveRpt    = useApproveTaskReport();
 
   const filtered = (tasks ?? []).filter((t) => {
     if (categoryFilter !== "all" && t.category !== categoryFilter) return false;
@@ -1165,6 +1382,57 @@ export default function Tasks() {
 
   function handleVerify(id: number) {
     doUpdate(id, { status: "verified" as any });
+  }
+
+  // ── Report escalation handlers ──────────────────────────────────────────────
+
+  function handleSubmitReport(id: number) {
+    submitReport.mutate({ id }, {
+      onSuccess: (updated: any) => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+        setSelectedTask((prev: any) => prev?.id === id ? { ...prev, ...updated } : prev);
+        toast({ title: "Report submitted for review." });
+      },
+      onError: (err: any) => toast({ title: err?.body?.error ?? "Failed to submit report.", variant: "destructive" }),
+    });
+  }
+
+  function handleRejectReport(id: number) {
+    setRejectTaskId(id);
+  }
+
+  function confirmRejectReport(id: number, notes: string) {
+    rejectReport.mutate({ id, data: { notes } }, {
+      onSuccess: (updated: any) => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+        setSelectedTask((prev: any) => prev?.id === id ? { ...prev, ...updated } : prev);
+        setRejectTaskId(null);
+        toast({ title: "Report rejected — task moved back to in-progress." });
+      },
+      onError: (err: any) => toast({ title: err?.body?.error ?? "Failed to reject report.", variant: "destructive" }),
+    });
+  }
+
+  function handleEscalateReport(id: number) {
+    escalateRpt.mutate({ id }, {
+      onSuccess: (updated: any) => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+        setSelectedTask((prev: any) => prev?.id === id ? { ...prev, ...updated } : prev);
+        toast({ title: "Report escalated to manager." });
+      },
+      onError: (err: any) => toast({ title: err?.body?.error ?? "Failed to escalate report.", variant: "destructive" }),
+    });
+  }
+
+  function handleApproveReport(id: number) {
+    approveRpt.mutate({ id }, {
+      onSuccess: (updated: any) => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+        setSelectedTask((prev: any) => prev?.id === id ? { ...prev, ...updated } : prev);
+        toast({ title: "Report approved." });
+      },
+      onError: (err: any) => toast({ title: err?.body?.error ?? "Failed to approve report.", variant: "destructive" }),
+    });
   }
 
   function doUpdate(id: number, data: Record<string, any>, successMsg?: string) {
@@ -1283,10 +1551,12 @@ export default function Tasks() {
           <p className="text-sm text-muted-foreground mt-0.5">{t("tasks.manageSubtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setReportOpen(true)}>
-            <FileText className="me-2 h-4 w-4" />
-            {t("tasks.report.generate", { defaultValue: "Generate Report" })}
-          </Button>
+          {canReport && (
+            <Button variant="outline" onClick={() => setReportOpen(true)}>
+              <FileText className="me-2 h-4 w-4" />
+              {t("tasks.report.generate", { defaultValue: "Generate Report" })}
+            </Button>
+          )}
           <Button onClick={() => setCreateOpen(true)}>
             <Plus className="me-2 h-4 w-4" />{t("tasks.newTask")}
           </Button>
@@ -1383,6 +1653,12 @@ export default function Tasks() {
                       onStatus={handleStatus}
                       onVerify={handleVerify}
                       canVerify={canVerify}
+                      onSubmitReport={handleSubmitReport}
+                      onRejectReport={handleRejectReport}
+                      onEscalateReport={handleEscalateReport}
+                      onApproveReport={handleApproveReport}
+                      canReviewReport={canReviewRpt}
+                      canApproveReport={canApproveRpt}
                     />
                   ))
               }
@@ -1436,6 +1712,16 @@ export default function Tasks() {
         onClose={() => setReportOpen(false)}
         tasks={tasks ?? []}
         properties={properties ?? []}
+        defaultApprovedOnly={canApproveRpt}
+      />
+
+      {/* Reject report dialog */}
+      <RejectReportDialog
+        taskId={rejectTaskId}
+        open={rejectTaskId !== null}
+        onClose={() => setRejectTaskId(null)}
+        onConfirm={confirmRejectReport}
+        isPending={rejectReport.isPending}
       />
     </div>
   );

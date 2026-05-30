@@ -20,6 +20,16 @@ function isAdmin(role: string | undefined): boolean {
   return getRoleTier(role ?? "staff") === "admin";
 }
 
+/** Supervisor or higher can reject/escalate submitted reports */
+function canReviewReport(role: string | undefined): boolean {
+  return role === "supervisor" || role === "manager" || role === "owner" || role === "super_admin";
+}
+
+/** Manager or higher can approve escalated reports */
+function canApproveReport(role: string | undefined): boolean {
+  return role === "manager" || role === "owner" || role === "super_admin";
+}
+
 function formatTask(
   t: typeof tasksTable.$inferSelect,
   extras: {
@@ -31,9 +41,13 @@ function formatTask(
   return {
     ...t,
     createdAt:   t.createdAt.toISOString(),
-    startedAt:   t.startedAt   ? t.startedAt.toISOString()   : null,
-    completedAt: t.completedAt ? t.completedAt.toISOString() : null,
-    verifiedAt:  t.verifiedAt  ? t.verifiedAt.toISOString()  : null,
+    startedAt:   t.startedAt    ? t.startedAt.toISOString()    : null,
+    completedAt: t.completedAt  ? t.completedAt.toISOString()  : null,
+    verifiedAt:  t.verifiedAt   ? t.verifiedAt.toISOString()   : null,
+    submittedAt: t.submittedAt  ? t.submittedAt.toISOString()  : null,
+    rejectedAt:  t.rejectedAt   ? t.rejectedAt.toISOString()   : null,
+    escalatedAt: t.escalatedAt  ? t.escalatedAt.toISOString()  : null,
+    approvedAt:  t.approvedAt   ? t.approvedAt.toISOString()   : null,
     assigneeName:  extras.assigneeName  ?? null,
     propertyName:  extras.propertyName  ?? null,
     unitName:      extras.unitName      ?? null,
@@ -242,6 +256,189 @@ router.delete("/tasks/:id", async (req, res) => {
     });
   }
   res.status(204).end();
+});
+
+// ── Report Escalation Actions ─────────────────────────────────────────────────
+
+/** POST /tasks/:id/submit — worker submits completed task for review */
+router.post("/tasks/:id/submit", async (req, res) => {
+  const id       = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const tenantId = tid(req);
+  const actor    = actorFromRequest(req);
+  const conds    = [eq(tasksTable.id, id)];
+  if (tenantId !== null) conds.push(eq(tasksTable.tenantId, tenantId));
+
+  const [task] = await db.select().from(tasksTable).where(and(...conds));
+  if (!task) { res.status(404).json({ error: "Task not found" }); return; }
+
+  if (task.status !== "completed" && task.status !== "verified") {
+    res.status(422).json({ error: "Task must be completed or verified before submitting a report." });
+    return;
+  }
+  if (task.reportStatus !== "none" && task.reportStatus !== "rejected") {
+    res.status(422).json({ error: `Cannot submit from reportStatus="${task.reportStatus}".` });
+    return;
+  }
+
+  const [updated] = await db.update(tasksTable)
+    .set({ reportStatus: "submitted", submittedAt: new Date(), submittedByUserId: actor.actorId ?? null })
+    .where(and(...conds)).returning();
+
+  const [staff] = updated.assignedToId
+    ? await db.select().from(staffTable).where(eq(staffTable.id, updated.assignedToId)) : [null];
+  const [property] = updated.propertyId
+    ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, updated.propertyId)) : [null];
+
+  logActivity({
+    ...actor, tenantId: tenantId ?? 1,
+    action: "task.report_submitted", entityType: "task", entityId: task.id, entityLabel: task.title,
+    propertyId: property?.id, propertyName: property?.name,
+    details: `Report submitted by ${actor.actorName ?? "worker"}`,
+  });
+
+  res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
+});
+
+/** POST /tasks/:id/reject — supervisor rejects a submitted report */
+router.post("/tasks/:id/reject", async (req, res) => {
+  const id       = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const tenantId = tid(req);
+  const actor    = actorFromRequest(req);
+
+  if (!canReviewReport(actor.actorRole)) {
+    res.status(403).json({ error: "Only supervisors and managers can reject reports." });
+    return;
+  }
+
+  const notes = (req.body?.notes ?? "").trim();
+  if (!notes) { res.status(400).json({ error: "Rejection notes are required." }); return; }
+
+  const conds = [eq(tasksTable.id, id)];
+  if (tenantId !== null) conds.push(eq(tasksTable.tenantId, tenantId));
+  const [task] = await db.select().from(tasksTable).where(and(...conds));
+  if (!task) { res.status(404).json({ error: "Task not found" }); return; }
+
+  if (task.reportStatus !== "submitted") {
+    res.status(422).json({ error: "Report must be in 'submitted' state to reject." });
+    return;
+  }
+
+  const [updated] = await db.update(tasksTable)
+    .set({
+      reportStatus:     "rejected",
+      rejectedAt:       new Date(),
+      rejectedByUserId: actor.actorId ?? null,
+      rejectionNotes:   notes,
+      // Push task back to in-progress so worker can correct it
+      status:           "in-progress",
+    })
+    .where(and(...conds)).returning();
+
+  const [staff] = updated.assignedToId
+    ? await db.select().from(staffTable).where(eq(staffTable.id, updated.assignedToId)) : [null];
+  const [property] = updated.propertyId
+    ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, updated.propertyId)) : [null];
+
+  logActivity({
+    ...actor, tenantId: tenantId ?? 1,
+    action: "task.report_rejected", entityType: "task", entityId: task.id, entityLabel: task.title,
+    propertyId: property?.id, propertyName: property?.name,
+    details: `Rejected by ${actor.actorName ?? "supervisor"}: ${notes}`,
+  });
+
+  res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
+});
+
+/** POST /tasks/:id/escalate — supervisor escalates to manager */
+router.post("/tasks/:id/escalate", async (req, res) => {
+  const id       = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const tenantId = tid(req);
+  const actor    = actorFromRequest(req);
+
+  if (!canReviewReport(actor.actorRole)) {
+    res.status(403).json({ error: "Only supervisors and managers can escalate reports." });
+    return;
+  }
+
+  const conds = [eq(tasksTable.id, id)];
+  if (tenantId !== null) conds.push(eq(tasksTable.tenantId, tenantId));
+  const [task] = await db.select().from(tasksTable).where(and(...conds));
+  if (!task) { res.status(404).json({ error: "Task not found" }); return; }
+
+  if (task.reportStatus !== "submitted") {
+    res.status(422).json({ error: "Report must be in 'submitted' state to escalate." });
+    return;
+  }
+
+  const [updated] = await db.update(tasksTable)
+    .set({
+      reportStatus:      "escalated",
+      escalatedAt:       new Date(),
+      escalatedByUserId: actor.actorId ?? null,
+    })
+    .where(and(...conds)).returning();
+
+  const [staff] = updated.assignedToId
+    ? await db.select().from(staffTable).where(eq(staffTable.id, updated.assignedToId)) : [null];
+  const [property] = updated.propertyId
+    ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, updated.propertyId)) : [null];
+
+  logActivity({
+    ...actor, tenantId: tenantId ?? 1,
+    action: "task.report_escalated", entityType: "task", entityId: task.id, entityLabel: task.title,
+    propertyId: property?.id, propertyName: property?.name,
+    details: `Escalated to manager by ${actor.actorName ?? "supervisor"}`,
+  });
+
+  res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
+});
+
+/** POST /tasks/:id/approve — manager approves an escalated report */
+router.post("/tasks/:id/approve", async (req, res) => {
+  const id       = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const tenantId = tid(req);
+  const actor    = actorFromRequest(req);
+
+  if (!canApproveReport(actor.actorRole)) {
+    res.status(403).json({ error: "Only managers and owners can approve reports." });
+    return;
+  }
+
+  const conds = [eq(tasksTable.id, id)];
+  if (tenantId !== null) conds.push(eq(tasksTable.tenantId, tenantId));
+  const [task] = await db.select().from(tasksTable).where(and(...conds));
+  if (!task) { res.status(404).json({ error: "Task not found" }); return; }
+
+  if (task.reportStatus !== "escalated") {
+    res.status(422).json({ error: "Report must be 'escalated' before it can be approved." });
+    return;
+  }
+
+  const [updated] = await db.update(tasksTable)
+    .set({
+      reportStatus:      "approved",
+      approvedAt:        new Date(),
+      approvedByUserId:  actor.actorId ?? null,
+    })
+    .where(and(...conds)).returning();
+
+  const [staff] = updated.assignedToId
+    ? await db.select().from(staffTable).where(eq(staffTable.id, updated.assignedToId)) : [null];
+  const [property] = updated.propertyId
+    ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, updated.propertyId)) : [null];
+
+  logActivity({
+    ...actor, tenantId: tenantId ?? 1,
+    action: "task.report_approved", entityType: "task", entityId: task.id, entityLabel: task.title,
+    propertyId: property?.id, propertyName: property?.name,
+    details: `Approved by ${actor.actorName ?? "manager"}`,
+  });
+
+  res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
 });
 
 router.get("/tasks/:id/comments", async (req, res) => {

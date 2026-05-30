@@ -27,6 +27,17 @@ export const tasksTable = pgTable("tasks", {
   startedAt:          timestamp("started_at"),
   completedAt:        timestamp("completed_at"),
   verifiedAt:         timestamp("verified_at"),
+  // Report escalation flow: none → submitted → rejected | escalated → approved
+  reportStatus:       text("report_status").notNull().default("none"),
+  submittedAt:        timestamp("submitted_at"),
+  submittedByUserId:  integer("submitted_by_user_id"),
+  rejectedAt:         timestamp("rejected_at"),
+  rejectedByUserId:   integer("rejected_by_user_id"),
+  rejectionNotes:     text("rejection_notes"),
+  escalatedAt:        timestamp("escalated_at"),
+  escalatedByUserId:  integer("escalated_by_user_id"),
+  approvedAt:         timestamp("approved_at"),
+  approvedByUserId:   integer("approved_by_user_id"),
   createdAt:          timestamp("created_at").defaultNow().notNull(),
 });
 

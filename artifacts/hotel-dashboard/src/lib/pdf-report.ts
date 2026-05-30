@@ -22,6 +22,8 @@ const P: Record<string, RGB> = {
   blue:    [ 59, 130, 246],
   violet:  [124,  58, 237],
   orange:  [234,  88,  12],
+  amber:   [217, 119,   6],
+  emerald: [ 16, 185, 129],
 };
 
 // ── Formatters ────────────────────────────────────────────────────────────────
@@ -58,6 +60,26 @@ function cap(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1).replace(/-/g, " ");
 }
 
+function reportStatusLabel(rs: string | null | undefined): string {
+  switch (rs) {
+    case "submitted": return "Submitted";
+    case "rejected":  return "Rejected";
+    case "escalated": return "Escalated";
+    case "approved":  return "Approved";
+    default:          return "—";
+  }
+}
+
+function reportStatusColor(rs: string | null | undefined): RGB {
+  switch (rs) {
+    case "submitted": return P.blue;
+    case "rejected":  return P.red;
+    case "escalated": return P.amber;
+    case "approved":  return P.emerald;
+    default:          return P.muted;
+  }
+}
+
 /** Fetch an image URL and return a base64 data-URI, or null on failure. */
 async function toDataUrl(url: string): Promise<string | null> {
   try {
@@ -83,16 +105,18 @@ export interface ReportOptions {
   propertyLabel: string;     // "All Properties" or a specific name
   generatedBy:   string;
   includePhotos: boolean;
+  approvedOnly?: boolean;
 }
 
 // ── Main generator ────────────────────────────────────────────────────────────
 
 export async function generateTaskReport(opts: ReportOptions): Promise<void> {
-  const { tasks, dateFrom, dateTo, companyName, propertyLabel, generatedBy, includePhotos } = opts;
+  const { tasks, dateFrom, dateTo, companyName, propertyLabel, generatedBy, includePhotos, approvedOnly } = opts;
 
   // Filter: completed or verified, completedAt within range
   const report = tasks.filter((t) => {
     if (t.status !== "completed" && t.status !== "verified") return false;
+    if (approvedOnly && t.reportStatus !== "approved") return false;
     const d = (t.completedAt ?? t.createdAt).split("T")[0];
     return d >= dateFrom && d <= dateTo;
   });
@@ -116,7 +140,7 @@ export async function generateTaskReport(opts: ReportOptions): Promise<void> {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...P.primary);
-  doc.text("TASK COMPLETION REPORT", ML, 26);
+  doc.text(approvedOnly ? "APPROVED TASK REPORT" : "TASK COMPLETION REPORT", ML, 26);
 
   doc.setDrawColor(...P.primary);
   doc.setLineWidth(0.8);
@@ -138,6 +162,7 @@ export async function generateTaskReport(opts: ReportOptions): Promise<void> {
   // ── KPI cards ─────────────────────────────────────────────────────────────
   const total    = report.length;
   const verified = report.filter((t) => t.status === "verified").length;
+  const approved = report.filter((t) => t.reportStatus === "approved").length;
   const late     = report.filter((t) =>
     t.dueDate && t.completedAt && t.completedAt.split("T")[0] > t.dueDate
   ).length;
@@ -150,9 +175,9 @@ export async function generateTaskReport(opts: ReportOptions): Promise<void> {
     : "—";
 
   const KPI_CARDS: { label: string; value: string; color: RGB }[] = [
-    { label: "Completed",      value: String(total),    color: P.green  },
-    { label: "Verified",       value: String(verified), color: P.violet },
-    { label: "Completed Late", value: String(late),     color: P.red    },
+    { label: "Completed",      value: String(total),    color: P.green   },
+    { label: "Verified",       value: String(verified), color: P.violet  },
+    { label: "Approved",       value: String(approved), color: P.emerald },
     { label: "Avg. Duration",  value: avgH,             color: P.primary },
   ];
 
@@ -238,14 +263,15 @@ export async function generateTaskReport(opts: ReportOptions): Promise<void> {
       startY: curY,
       margin: { left: ML, right: MR },
       head: [[
-        { content: "#",         styles: { cellWidth: 8  } },
-        { content: "Title",     styles: { cellWidth: 46 } },
-        { content: "Category",  styles: { cellWidth: 22 } },
-        { content: "Priority",  styles: { cellWidth: 18 } },
-        { content: "Assignee",  styles: { cellWidth: 24 } },
-        { content: "Completed", styles: { cellWidth: 24 } },
-        { content: "Duration",  styles: { cellWidth: 16 } },
-        { content: "Status",    styles: { cellWidth: 20 } },
+        { content: "#",          styles: { cellWidth: 7  } },
+        { content: "Title",      styles: { cellWidth: 42 } },
+        { content: "Category",   styles: { cellWidth: 20 } },
+        { content: "Priority",   styles: { cellWidth: 16 } },
+        { content: "Assignee",   styles: { cellWidth: 22 } },
+        { content: "Completed",  styles: { cellWidth: 22 } },
+        { content: "Duration",   styles: { cellWidth: 14 } },
+        { content: "Status",     styles: { cellWidth: 18 } },
+        { content: "Report",     styles: { cellWidth: 18 } },
       ]],
       body: report.map((t, i) => [
         String(i + 1),
@@ -256,16 +282,17 @@ export async function generateTaskReport(opts: ReportOptions): Promise<void> {
         fmt(t.completedAt),
         duration(t.startedAt, t.completedAt),
         t.status === "verified" ? "Verified ✓" : "Completed",
+        reportStatusLabel(t.reportStatus),
       ]),
       headStyles: {
         fillColor: P.mid,
         textColor: P.white,
         fontStyle: "bold",
-        fontSize: 8,
+        fontSize: 7.5,
         cellPadding: 3,
       },
       bodyStyles: {
-        fontSize: 7.5,
+        fontSize: 7,
         cellPadding: { top: 2.5, right: 2.5, bottom: 2.5, left: 2.5 },
         textColor: P.dark,
         minCellHeight: 9,
@@ -275,16 +302,102 @@ export async function generateTaskReport(opts: ReportOptions): Promise<void> {
         0: { halign: "center", textColor: P.muted },
         6: { halign: "center" },
         7: { halign: "center", fontStyle: "bold" },
+        8: { halign: "center", fontStyle: "bold" },
       },
       didParseCell(data) {
         if (data.section !== "body") return;
         if (data.column.index === 7 && String(data.cell.raw).includes("Verified")) {
           data.cell.styles.textColor = P.violet;
         }
+        if (data.column.index === 8) {
+          const rs = String(data.cell.raw);
+          data.cell.styles.textColor = reportStatusColor(rs.toLowerCase() === "—" ? "none" : rs.toLowerCase());
+        }
         if (data.column.index === 3) {
           const p = String(data.cell.raw).toLowerCase();
-          if (p === "urgent")   data.cell.styles.textColor = P.red;
+          if (p === "urgent")    data.cell.styles.textColor = P.red;
           else if (p === "high") data.cell.styles.textColor = P.orange;
+        }
+      },
+    });
+  }
+
+  // ── Approval Audit Trail ────────────────────────────────────────────────────
+  const withTrail = report.filter((t) =>
+    t.reportStatus && t.reportStatus !== "none" && t.submittedAt
+  );
+
+  if (withTrail.length > 0) {
+    const tblY = (doc as any).lastAutoTable?.finalY ?? curY;
+    let ay = tblY + 14;
+
+    if (ay + 20 > H - 16) { doc.addPage(); ay = 20; }
+
+    doc.setFillColor(...P.dark);
+    doc.rect(ML, ay, CW, 7, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...P.white);
+    doc.text("REPORT APPROVAL AUDIT TRAIL", ML + 3, ay + 4.8);
+    doc.text(`${withTrail.length} record${withTrail.length !== 1 ? "s" : ""}`, W - MR, ay + 4.8, { align: "right" });
+    ay += 10;
+
+    autoTable(doc, {
+      startY: ay,
+      margin: { left: ML, right: MR },
+      head: [[
+        { content: "#",           styles: { cellWidth: 7  } },
+        { content: "Task",        styles: { cellWidth: 40 } },
+        { content: "Submitted",   styles: { cellWidth: 28 } },
+        { content: "Reviewed",    styles: { cellWidth: 28 } },
+        { content: "Approved",    styles: { cellWidth: 28 } },
+        { content: "Report Status", styles: { cellWidth: 22 } },
+        { content: "Notes",       styles: { cellWidth: 30 } },
+      ]],
+      body: withTrail.map((t, i) => {
+        const reviewedAt = t.rejectedAt ?? t.escalatedAt;
+        return [
+          String(i + 1),
+          t.title + (t.propertyName ? `\n${t.propertyName}` : ""),
+          fmtDT(t.submittedAt),
+          reviewedAt ? fmtDT(reviewedAt) : "Pending",
+          t.approvedAt ? fmtDT(t.approvedAt) : "Pending",
+          reportStatusLabel(t.reportStatus),
+          t.rejectionNotes ?? "",
+        ];
+      }),
+      headStyles: {
+        fillColor: P.mid,
+        textColor: P.white,
+        fontStyle: "bold",
+        fontSize: 7.5,
+        cellPadding: 3,
+      },
+      bodyStyles: {
+        fontSize: 6.5,
+        cellPadding: { top: 2.5, right: 2.5, bottom: 2.5, left: 2.5 },
+        textColor: P.dark,
+        minCellHeight: 9,
+      },
+      alternateRowStyles: { fillColor: [248, 250, 252] as RGB },
+      columnStyles: {
+        0: { halign: "center", textColor: P.muted },
+        5: { halign: "center", fontStyle: "bold" },
+        6: { textColor: P.red, fontStyle: "italic" },
+      },
+      didParseCell(data) {
+        if (data.section !== "body") return;
+        if (data.column.index === 5) {
+          const rs = String(data.cell.raw).toLowerCase();
+          data.cell.styles.textColor = reportStatusColor(rs === "—" ? "none" : rs);
+        }
+        if (data.column.index === 3 && String(data.cell.raw) === "Pending") {
+          data.cell.styles.textColor = P.muted;
+          data.cell.styles.fontStyle = "italic";
+        }
+        if (data.column.index === 4 && String(data.cell.raw) === "Pending") {
+          data.cell.styles.textColor = P.muted;
+          data.cell.styles.fontStyle = "italic";
         }
       },
     });
@@ -342,7 +455,7 @@ export async function generateTaskReport(opts: ReportOptions): Promise<void> {
           // Label banner
           doc.setFillColor(...color);
           doc.roundedRect(px, py, photoW, 6, 2, 2, "F");
-          doc.rect(px, py + 3, photoW, 3, "F");   // flatten bottom corners
+          doc.rect(px, py + 3, photoW, 3, "F");
           doc.setFont("helvetica", "bold");
           doc.setFontSize(7);
           doc.setTextColor(...P.white);
@@ -394,7 +507,8 @@ export async function generateTaskReport(opts: ReportOptions): Promise<void> {
   }
 
   // ── Download ───────────────────────────────────────────────────────────────
-  const from = dateFrom.replace(/-/g, "");
-  const to   = dateTo.replace(/-/g, "");
-  doc.save(`task-report-${from}-${to}.pdf`);
+  const from   = dateFrom.replace(/-/g, "");
+  const to     = dateTo.replace(/-/g, "");
+  const suffix = approvedOnly ? "-approved" : "";
+  doc.save(`task-report-${from}-${to}${suffix}.pdf`);
 }

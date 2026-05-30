@@ -447,6 +447,26 @@ export interface Task {
   completedAt?: string | null;
   /** @nullable */
   verifiedAt?: string | null;
+  /** none, submitted, rejected, escalated, approved */
+  reportStatus?: string;
+  /** @nullable */
+  submittedAt?: string | null;
+  /** @nullable */
+  submittedByUserId?: number | null;
+  /** @nullable */
+  rejectedAt?: string | null;
+  /** @nullable */
+  rejectedByUserId?: number | null;
+  /** @nullable */
+  rejectionNotes?: string | null;
+  /** @nullable */
+  escalatedAt?: string | null;
+  /** @nullable */
+  escalatedByUserId?: number | null;
+  /** @nullable */
+  approvedAt?: string | null;
+  /** @nullable */
+  approvedByUserId?: number | null;
   createdAt: string;
 }
 
@@ -493,6 +513,11 @@ export interface TaskComment {
   /** @nullable */
   imageUrl?: string | null;
   createdAt: string;
+}
+
+export interface TaskReportAction {
+  /** Optional notes (required for rejection) */
+  notes?: string;
 }
 
 export interface TaskCommentInput {

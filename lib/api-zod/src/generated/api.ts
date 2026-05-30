@@ -818,6 +818,16 @@ export const ListTasksResponseItem = zod.object({
   "startedAt": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
   "verifiedAt": zod.string().nullish(),
+  "reportStatus": zod.string().optional().describe('none, submitted, rejected, escalated, approved'),
+  "submittedAt": zod.string().nullish(),
+  "submittedByUserId": zod.number().nullish(),
+  "rejectedAt": zod.string().nullish(),
+  "rejectedByUserId": zod.number().nullish(),
+  "rejectionNotes": zod.string().nullish(),
+  "escalatedAt": zod.string().nullish(),
+  "escalatedByUserId": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "approvedByUserId": zod.number().nullish(),
   "createdAt": zod.string()
 })
 export const ListTasksResponse = zod.array(ListTasksResponseItem)
@@ -893,6 +903,16 @@ export const UpdateTaskResponse = zod.object({
   "startedAt": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
   "verifiedAt": zod.string().nullish(),
+  "reportStatus": zod.string().optional().describe('none, submitted, rejected, escalated, approved'),
+  "submittedAt": zod.string().nullish(),
+  "submittedByUserId": zod.number().nullish(),
+  "rejectedAt": zod.string().nullish(),
+  "rejectedByUserId": zod.number().nullish(),
+  "rejectionNotes": zod.string().nullish(),
+  "escalatedAt": zod.string().nullish(),
+  "escalatedByUserId": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "approvedByUserId": zod.number().nullish(),
   "createdAt": zod.string()
 })
 
@@ -902,6 +922,198 @@ export const UpdateTaskResponse = zod.object({
  */
 export const DeleteTaskParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Worker submits a completed task for supervisor review
+ */
+export const SubmitTaskReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const SubmitTaskReportResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string().describe('housekeeping, reception, maintenance, security, general'),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "supervisorId": zod.number().nullish(),
+  "assignedToId": zod.number().nullish(),
+  "assigneeName": zod.string().nullish(),
+  "assignedByUserId": zod.number().nullish(),
+  "completedByUserId": zod.number().nullish(),
+  "verifiedByUserId": zod.number().nullish(),
+  "proofPhotoUrl": zod.string().nullish(),
+  "beforePhotoUrl": zod.string().nullish(),
+  "afterPhotoUrl": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('pending, in-progress, completed, verified'),
+  "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish(),
+  "reportStatus": zod.string().optional().describe('none, submitted, rejected, escalated, approved'),
+  "submittedAt": zod.string().nullish(),
+  "submittedByUserId": zod.number().nullish(),
+  "rejectedAt": zod.string().nullish(),
+  "rejectedByUserId": zod.number().nullish(),
+  "rejectionNotes": zod.string().nullish(),
+  "escalatedAt": zod.string().nullish(),
+  "escalatedByUserId": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "approvedByUserId": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Supervisor rejects a submitted task report, sending it back to the worker
+ */
+export const RejectTaskReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const RejectTaskReportBody = zod.object({
+  "notes": zod.string().optional().describe('Optional notes (required for rejection)')
+})
+
+export const RejectTaskReportResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string().describe('housekeeping, reception, maintenance, security, general'),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "supervisorId": zod.number().nullish(),
+  "assignedToId": zod.number().nullish(),
+  "assigneeName": zod.string().nullish(),
+  "assignedByUserId": zod.number().nullish(),
+  "completedByUserId": zod.number().nullish(),
+  "verifiedByUserId": zod.number().nullish(),
+  "proofPhotoUrl": zod.string().nullish(),
+  "beforePhotoUrl": zod.string().nullish(),
+  "afterPhotoUrl": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('pending, in-progress, completed, verified'),
+  "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish(),
+  "reportStatus": zod.string().optional().describe('none, submitted, rejected, escalated, approved'),
+  "submittedAt": zod.string().nullish(),
+  "submittedByUserId": zod.number().nullish(),
+  "rejectedAt": zod.string().nullish(),
+  "rejectedByUserId": zod.number().nullish(),
+  "rejectionNotes": zod.string().nullish(),
+  "escalatedAt": zod.string().nullish(),
+  "escalatedByUserId": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "approvedByUserId": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Supervisor escalates a submitted task report to the manager
+ */
+export const EscalateTaskReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const EscalateTaskReportBody = zod.object({
+  "notes": zod.string().optional().describe('Optional notes (required for rejection)')
+})
+
+export const EscalateTaskReportResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string().describe('housekeeping, reception, maintenance, security, general'),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "supervisorId": zod.number().nullish(),
+  "assignedToId": zod.number().nullish(),
+  "assigneeName": zod.string().nullish(),
+  "assignedByUserId": zod.number().nullish(),
+  "completedByUserId": zod.number().nullish(),
+  "verifiedByUserId": zod.number().nullish(),
+  "proofPhotoUrl": zod.string().nullish(),
+  "beforePhotoUrl": zod.string().nullish(),
+  "afterPhotoUrl": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('pending, in-progress, completed, verified'),
+  "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish(),
+  "reportStatus": zod.string().optional().describe('none, submitted, rejected, escalated, approved'),
+  "submittedAt": zod.string().nullish(),
+  "submittedByUserId": zod.number().nullish(),
+  "rejectedAt": zod.string().nullish(),
+  "rejectedByUserId": zod.number().nullish(),
+  "rejectionNotes": zod.string().nullish(),
+  "escalatedAt": zod.string().nullish(),
+  "escalatedByUserId": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "approvedByUserId": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Manager approves an escalated task report (makes PDF available to owner)
+ */
+export const ApproveTaskReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ApproveTaskReportBody = zod.object({
+  "notes": zod.string().optional().describe('Optional notes (required for rejection)')
+})
+
+export const ApproveTaskReportResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string().describe('housekeeping, reception, maintenance, security, general'),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "supervisorId": zod.number().nullish(),
+  "assignedToId": zod.number().nullish(),
+  "assigneeName": zod.string().nullish(),
+  "assignedByUserId": zod.number().nullish(),
+  "completedByUserId": zod.number().nullish(),
+  "verifiedByUserId": zod.number().nullish(),
+  "proofPhotoUrl": zod.string().nullish(),
+  "beforePhotoUrl": zod.string().nullish(),
+  "afterPhotoUrl": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('pending, in-progress, completed, verified'),
+  "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish(),
+  "reportStatus": zod.string().optional().describe('none, submitted, rejected, escalated, approved'),
+  "submittedAt": zod.string().nullish(),
+  "submittedByUserId": zod.number().nullish(),
+  "rejectedAt": zod.string().nullish(),
+  "rejectedByUserId": zod.number().nullish(),
+  "rejectionNotes": zod.string().nullish(),
+  "escalatedAt": zod.string().nullish(),
+  "escalatedByUserId": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "approvedByUserId": zod.number().nullish(),
+  "createdAt": zod.string()
 })
 
 

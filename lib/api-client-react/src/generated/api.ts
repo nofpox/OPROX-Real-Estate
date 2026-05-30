@@ -92,6 +92,7 @@ import type {
   TaskComment,
   TaskCommentInput,
   TaskInput,
+  TaskReportAction,
   TaskUpdate,
   Tenant,
   UnitFinancial,
@@ -3337,6 +3338,292 @@ export const useDeleteTask = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteTaskMutationOptions(options));
+    }
+
+export const getSubmitTaskReportUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/submit`
+}
+
+/**
+ * @summary Worker submits a completed task for supervisor review
+ */
+export const submitTaskReport = async (id: number, options?: RequestInit): Promise<Task> => {
+
+  return customFetch<Task>(getSubmitTaskReportUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getSubmitTaskReportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitTaskReport>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitTaskReport>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['submitTaskReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitTaskReport>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  submitTaskReport(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitTaskReportMutationResult = NonNullable<Awaited<ReturnType<typeof submitTaskReport>>>
+
+    export type SubmitTaskReportMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Worker submits a completed task for supervisor review
+ */
+export const useSubmitTaskReport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitTaskReport>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitTaskReport>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getSubmitTaskReportMutationOptions(options));
+    }
+
+export const getRejectTaskReportUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/reject`
+}
+
+/**
+ * @summary Supervisor rejects a submitted task report, sending it back to the worker
+ */
+export const rejectTaskReport = async (id: number,
+    taskReportAction: TaskReportAction, options?: RequestInit): Promise<Task> => {
+
+  return customFetch<Task>(getRejectTaskReportUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      taskReportAction,)
+  }
+);}
+
+
+
+
+export const getRejectTaskReportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectTaskReport>>, TError,{id: number;data: BodyType<TaskReportAction>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectTaskReport>>, TError,{id: number;data: BodyType<TaskReportAction>}, TContext> => {
+
+const mutationKey = ['rejectTaskReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectTaskReport>>, {id: number;data: BodyType<TaskReportAction>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  rejectTaskReport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectTaskReportMutationResult = NonNullable<Awaited<ReturnType<typeof rejectTaskReport>>>
+    export type RejectTaskReportMutationBody = BodyType<TaskReportAction>
+    export type RejectTaskReportMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Supervisor rejects a submitted task report, sending it back to the worker
+ */
+export const useRejectTaskReport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectTaskReport>>, TError,{id: number;data: BodyType<TaskReportAction>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rejectTaskReport>>,
+        TError,
+        {id: number;data: BodyType<TaskReportAction>},
+        TContext
+      > => {
+      return useMutation(getRejectTaskReportMutationOptions(options));
+    }
+
+export const getEscalateTaskReportUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/escalate`
+}
+
+/**
+ * @summary Supervisor escalates a submitted task report to the manager
+ */
+export const escalateTaskReport = async (id: number,
+    taskReportAction?: TaskReportAction, options?: RequestInit): Promise<Task> => {
+
+  return customFetch<Task>(getEscalateTaskReportUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      taskReportAction,)
+  }
+);}
+
+
+
+
+export const getEscalateTaskReportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof escalateTaskReport>>, TError,{id: number;data?: BodyType<TaskReportAction>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof escalateTaskReport>>, TError,{id: number;data?: BodyType<TaskReportAction>}, TContext> => {
+
+const mutationKey = ['escalateTaskReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof escalateTaskReport>>, {id: number;data?: BodyType<TaskReportAction>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  escalateTaskReport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EscalateTaskReportMutationResult = NonNullable<Awaited<ReturnType<typeof escalateTaskReport>>>
+    export type EscalateTaskReportMutationBody = BodyType<TaskReportAction> | undefined
+    export type EscalateTaskReportMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Supervisor escalates a submitted task report to the manager
+ */
+export const useEscalateTaskReport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof escalateTaskReport>>, TError,{id: number;data?: BodyType<TaskReportAction>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof escalateTaskReport>>,
+        TError,
+        {id: number;data?: BodyType<TaskReportAction>},
+        TContext
+      > => {
+      return useMutation(getEscalateTaskReportMutationOptions(options));
+    }
+
+export const getApproveTaskReportUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/approve`
+}
+
+/**
+ * @summary Manager approves an escalated task report (makes PDF available to owner)
+ */
+export const approveTaskReport = async (id: number,
+    taskReportAction?: TaskReportAction, options?: RequestInit): Promise<Task> => {
+
+  return customFetch<Task>(getApproveTaskReportUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      taskReportAction,)
+  }
+);}
+
+
+
+
+export const getApproveTaskReportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveTaskReport>>, TError,{id: number;data?: BodyType<TaskReportAction>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveTaskReport>>, TError,{id: number;data?: BodyType<TaskReportAction>}, TContext> => {
+
+const mutationKey = ['approveTaskReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveTaskReport>>, {id: number;data?: BodyType<TaskReportAction>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  approveTaskReport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveTaskReportMutationResult = NonNullable<Awaited<ReturnType<typeof approveTaskReport>>>
+    export type ApproveTaskReportMutationBody = BodyType<TaskReportAction> | undefined
+    export type ApproveTaskReportMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Manager approves an escalated task report (makes PDF available to owner)
+ */
+export const useApproveTaskReport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveTaskReport>>, TError,{id: number;data?: BodyType<TaskReportAction>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveTaskReport>>,
+        TError,
+        {id: number;data?: BodyType<TaskReportAction>},
+        TContext
+      > => {
+      return useMutation(getApproveTaskReportMutationOptions(options));
     }
 
 export const getListTaskCommentsUrl = (id: number,) => {

@@ -869,6 +869,100 @@ paths:
         "204":
           description: Deleted
 
+  /tasks/{id}/submit:
+    post:
+      operationId: submitTaskReport
+      tags: [tasks]
+      summary: Worker submits a completed task for supervisor review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}/reject:
+    post:
+      operationId: rejectTaskReport
+      tags: [tasks]
+      summary: Supervisor rejects a submitted task report, sending it back to the worker
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskReportAction"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}/escalate:
+    post:
+      operationId: escalateTaskReport
+      tags: [tasks]
+      summary: Supervisor escalates a submitted task report to the manager
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskReportAction"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}/approve:
+    post:
+      operationId: approveTaskReport
+      tags: [tasks]
+      summary: Manager approves an escalated task report (makes PDF available to owner)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskReportAction"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
   /tasks/{id}/comments:
     get:
       operationId: listTaskComments
@@ -2577,6 +2671,27 @@ components:
           type: ["string", "null"]
         verifiedAt:
           type: ["string", "null"]
+        reportStatus:
+          type: string
+          description: "none, submitted, rejected, escalated, approved"
+        submittedAt:
+          type: ["string", "null"]
+        submittedByUserId:
+          type: ["integer", "null"]
+        rejectedAt:
+          type: ["string", "null"]
+        rejectedByUserId:
+          type: ["integer", "null"]
+        rejectionNotes:
+          type: ["string", "null"]
+        escalatedAt:
+          type: ["string", "null"]
+        escalatedByUserId:
+          type: ["integer", "null"]
+        approvedAt:
+          type: ["string", "null"]
+        approvedByUserId:
+          type: ["integer", "null"]
         createdAt:
           type: string
 
@@ -2663,6 +2778,13 @@ components:
           type: ["string", "null"]
         createdAt:
           type: string
+
+    TaskReportAction:
+      type: object
+      properties:
+        notes:
+          type: string
+          description: Optional notes (required for rejection)
 
     TaskCommentInput:
       type: object
