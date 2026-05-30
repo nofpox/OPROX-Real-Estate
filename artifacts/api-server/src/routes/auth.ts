@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import crypto from "node:crypto";
 import {
   checkLoginAllowed,
@@ -12,6 +12,7 @@ import {
 export type SessionUser = {
   id: number; username: string; displayName: string; email: string | null;
   role: string; permissions: string[]; isActive: boolean; createdAt: string;
+  mustChangePassword: boolean;
 };
 
 export const sessions = new Map<string, SessionUser>();
@@ -93,6 +94,7 @@ router.post("/auth/login", async (req, res) => {
     role: user.role,
     permissions: (() => { try { return JSON.parse(user.permissions); } catch { return []; } })(),
     isActive: user.isActive, createdAt: user.createdAt.toISOString(),
+    mustChangePassword: (user as any).mustChangePassword ?? false,
   };
   sessions.set(sessionId, sessionUser);
   res.setHeader("Set-Cookie", `pms_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`);
@@ -115,6 +117,37 @@ router.get("/auth/me", (req, res) => {
   const session = sessionId ? sessions.get(sessionId) : undefined;
   if (!session) { res.status(401).json({ error: "Not authenticated" }); return; }
   res.json(session);
+});
+
+// ── Change password ───────────────────────────────────────────────────────────
+
+router.post("/auth/change-password", async (req, res) => {
+  const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
+  const session   = sessionId ? sessions.get(sessionId) : undefined;
+  if (!session) { res.status(401).json({ error: "Not authenticated" }); return; }
+
+  const { currentPassword, newPassword } = req.body ?? {};
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ error: "currentPassword and newPassword are required" }); return;
+  }
+  if (String(newPassword).length < 8) {
+    res.status(400).json({ error: "New password must be at least 8 characters" }); return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, session.id));
+  if (!user || user.passwordHash !== hashPwd(String(currentPassword))) {
+    res.status(401).json({ error: "Current password is incorrect" }); return;
+  }
+
+  await db.execute(
+    sql`UPDATE users SET password_hash = ${hashPwd(String(newPassword))}, must_change_password = false WHERE id = ${session.id}`
+  );
+
+  // Patch the live session so the frontend sees the flag cleared immediately
+  session.mustChangePassword = false;
+  sessions.set(sessionId!, session);
+
+  res.json({ ok: true });
 });
 
 // ── Security log (admin only) ─────────────────────────────────────────────────

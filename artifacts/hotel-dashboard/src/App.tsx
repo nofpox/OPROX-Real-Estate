@@ -25,6 +25,7 @@ import UserManagement from "@/pages/user-management";
 import ActivityLog from "@/pages/activity-log";
 import UnitMap from "@/pages/unit-map";
 import Login from "@/pages/login";
+import ForcePasswordChange from "@/pages/force-password-change";
 import SuperAdmin from "@/pages/super-admin";
 
 const queryClient = new QueryClient({
@@ -33,6 +34,7 @@ const queryClient = new QueryClient({
 
 export type AuthUser = {
   id: number; username: string; displayName: string; role: string; permissions: string[];
+  mustChangePassword?: boolean;
 } | null;
 
 function Router() {
@@ -101,6 +103,20 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <Toaster />
           <Login onLogin={(user) => setAuthUser(user as AuthUser)} />
+        </QueryClientProvider>
+      </LanguageProvider>
+    );
+  }
+
+  if (authUser.mustChangePassword) {
+    return (
+      <LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          <Toaster />
+          <ForcePasswordChange
+            username={authUser.displayName}
+            onSuccess={() => setAuthUser({ ...authUser, mustChangePassword: false })}
+          />
         </QueryClientProvider>
       </LanguageProvider>
     );
