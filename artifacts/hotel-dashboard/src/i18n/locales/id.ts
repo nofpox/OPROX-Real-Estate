@@ -245,12 +245,7 @@ const id: Translations = {
     category: { electrical: "Listrik", plumbing: "Perpipaan", hvac: "HVAC", cleaning: "Kebersihan", housekeeping: "Tata Graha", reception: "Resepsi", maintenance: "Pemeliharaan", security: "Keamanan", general: "Umum" },
     detail: { taskLabel: "Tugas #{{id}}", category: "Kategori", priority: "Prioritas", asset: "Aset", assignedTo: "Ditugaskan kepada", supervisor: "Supervisor", dueDate: "Batas waktu", overdue: "Terlambat", description: "Deskripsi", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "Komentar", noComments: "Belum ada komentar. Jadilah yang pertama.", yourName: "Nama Anda", addComment: "Tambahkan komentar…", posting: "Memposting…", postComment: "Posting Komentar" },
     fields: { taskName: "Nama Tugas", taskNameRequired: "Nama tugas wajib diisi", taskNamePlaceholder: "mis. Ganti pemutus arus yang rusak", asset: "Aset", selectAsset: "Pilih aset…", noAsset: "Tidak ada aset tertentu", unitOptional: "Unit (opsional)", anyUnit: "Unit mana saja", title: "Judul Tugas *", titlePlaceholder: "mis. Bersihkan kamar 201", description: "Deskripsi", descriptionPlaceholder: "Jelaskan tugas secara detail…", category: "Kategori *", priority: "Prioritas *", property: "Properti", anyProperty: "Properti mana saja", unit: "Unit / Kamar", noUnit: "Tidak ada unit tertentu", assignTo: "Tugaskan Kepada", supervisor: "Supervisor", dueDate: "Batas Waktu" },
-    hints: {
-      submitReport: 'Make sure photos are clear and show the full work scope.',
-      escalate: 'Confirm work meets quality standards before sending to Manager.',
-      reject: 'You must provide a clear reason for rejection so the worker can fix it.',
-      approve: 'Approving this report will officially close the task and make it available for export.',
-    },
+    hints: { submitReport: "Pastikan semua foto jernih dan mencakup semua area sebelum mengirimkan.", escalate: "Konfirmasi pekerjaan memenuhi standar kualitas sebelum dikirim ke Manajer.", reject: "Berikan alasan penolakan yang jelas agar pekerja dapat memperbaikinya." },
   },
   help: {
     openButton: 'Panduan Bantuan',

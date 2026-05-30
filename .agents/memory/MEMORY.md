@@ -11,3 +11,4 @@
 - [Settings composite constraint](settings-constraint.md) — unique constraint is (tenant_id, key); onConflictDoUpdate target must be array [settingsTable.tenantId, settingsTable.key]
 - [Auth forgot-password flow](forgot-password-flow.md) — in-memory resetTokens map; 6-char hex token; 15-min expiry; verifies email+phone+tenantSlug; returns token in response body for demo mode
 - [DB push non-TTY workaround](db-push-non-tty.md) — drizzle-kit push blocks on interactive prompts in non-TTY shells; bypass by running raw SQL via executeSql() code_execution tool instead
+- [Seed data scope](seed-data-scope.md) — properties/bookings/expenses/work_orders can go missing; seed them with explicit IDs (INSERT … ON CONFLICT DO NOTHING + setval sequence reset); rooms/staff/tasks/shifts survive restarts

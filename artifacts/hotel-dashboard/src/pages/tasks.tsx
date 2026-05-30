@@ -28,7 +28,7 @@ import {
   Building2, Image as ImageIcon, Send, X, Zap, Droplets, Wind, Sparkles, ClipboardList,
   Camera, Upload, ExternalLink, ShieldCheck, BadgeCheck, FileText, Download, Loader2,
   FileCheck, ArrowUpCircle, XCircle, ThumbsUp, RotateCcw,
-  QrCode, Copy, Printer,
+  QrCode, Copy, Printer, HelpCircle,
 } from "lucide-react";
 import { generateTaskReport } from "@/lib/pdf-report";
 import { useToast } from "@/hooks/use-toast";
@@ -484,63 +484,71 @@ function TaskCard({
       {(task.status === "completed" || task.status === "verified") && (
         <div className="flex gap-1.5 pt-0.5" onClick={(e) => e.stopPropagation()}>
           {(rs === "none" || rs === "rejected") && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="sm" variant="outline"
-                  className={`h-7 text-xs flex-1 ${rs === "rejected" ? "text-amber-700 hover:text-amber-700 border-amber-200 hover:border-amber-300" : ""}`}
-                  onClick={() => onSubmitReport(task.id)}>
-                  {rs === "rejected"
-                    ? <><RotateCcw className="me-1 h-3 w-3" />{t("tasks.actions.resubmit", { defaultValue: "Resubmit" })}</>
-                    : <><FileCheck className="me-1 h-3 w-3" />{t("tasks.actions.submitReport", { defaultValue: "Submit Report" })}</>
-                  }
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-[220px] text-center text-xs leading-snug">
-                {t("tasks.hints.submitReport")}
-              </TooltipContent>
-            </Tooltip>
+            <div className="flex items-center flex-1 gap-1">
+              <Button size="sm" variant="outline"
+                className={`h-7 text-xs flex-1 ${rs === "rejected" ? "text-amber-700 hover:text-amber-700 border-amber-200 hover:border-amber-300" : ""}`}
+                onClick={() => onSubmitReport(task.id)}>
+                {rs === "rejected"
+                  ? <><RotateCcw className="me-1 h-3 w-3" />{t("tasks.actions.resubmit", { defaultValue: "Resubmit" })}</>
+                  : <><FileCheck className="me-1 h-3 w-3" />{t("tasks.actions.submitReport", { defaultValue: "Submit Report" })}</>
+                }
+              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors p-0.5">
+                    <HelpCircle className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[220px] text-center text-xs leading-snug">
+                  {t("tasks.hints.submitReport")}
+                </TooltipContent>
+              </Tooltip>
+            </div>
           )}
           {rs === "submitted" && canReviewReport && (
             <>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline"
-                    className="h-7 text-xs flex-1 text-emerald-700 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300 dark:text-emerald-400 dark:border-emerald-800"
-                    onClick={() => onEscalateReport(task.id)}>
-                    <ArrowUpCircle className="me-1 h-3 w-3" />{t("tasks.actions.escalate", { defaultValue: "Review & Escalate" })}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[220px] text-center text-xs leading-snug">
-                  {t("tasks.hints.escalate")}
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline"
-                    className="h-7 text-xs flex-1 text-red-700 hover:text-red-700 border-red-200 hover:border-red-300 dark:text-red-400 dark:border-red-800"
-                    onClick={() => onRejectReport(task.id)}>
-                    <XCircle className="me-1 h-3 w-3" />{t("tasks.actions.reject", { defaultValue: "Reject" })}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[220px] text-center text-xs leading-snug">
-                  {t("tasks.hints.reject")}
-                </TooltipContent>
-              </Tooltip>
+              <div className="flex items-center flex-1 gap-1">
+                <Button size="sm" variant="outline"
+                  className="h-7 text-xs flex-1 text-emerald-700 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300 dark:text-emerald-400 dark:border-emerald-800"
+                  onClick={() => onEscalateReport(task.id)}>
+                  <ArrowUpCircle className="me-1 h-3 w-3" />{t("tasks.actions.escalate", { defaultValue: "Review & Escalate" })}
+                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors p-0.5">
+                      <HelpCircle className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[220px] text-center text-xs leading-snug">
+                    {t("tasks.hints.escalate")}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <div className="flex items-center flex-1 gap-1">
+                <Button size="sm" variant="outline"
+                  className="h-7 text-xs flex-1 text-red-700 hover:text-red-700 border-red-200 hover:border-red-300 dark:text-red-400 dark:border-red-800"
+                  onClick={() => onRejectReport(task.id)}>
+                  <XCircle className="me-1 h-3 w-3" />{t("tasks.actions.reject", { defaultValue: "Reject" })}
+                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors p-0.5">
+                      <HelpCircle className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[220px] text-center text-xs leading-snug">
+                    {t("tasks.hints.reject")}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
             </>
           )}
           {rs === "escalated" && canApproveReport && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="sm" variant="outline"
-                  className="h-7 text-xs flex-1 text-emerald-700 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300 dark:text-emerald-400 dark:border-emerald-800"
-                  onClick={() => onApproveReport(task.id)}>
-                  <ThumbsUp className="me-1 h-3 w-3" />{t("tasks.actions.approve", { defaultValue: "Approve Report" })}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-[220px] text-center text-xs leading-snug">
-                {t("tasks.hints.approve")}
-              </TooltipContent>
-            </Tooltip>
+            <Button size="sm" variant="outline"
+              className="h-7 text-xs flex-1 text-emerald-700 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300 dark:text-emerald-400 dark:border-emerald-800"
+              onClick={() => onApproveReport(task.id)}>
+              <ThumbsUp className="me-1 h-3 w-3" />{t("tasks.actions.approve", { defaultValue: "Approve Report" })}
+            </Button>
           )}
         </div>
       )}

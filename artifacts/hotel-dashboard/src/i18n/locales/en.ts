@@ -735,10 +735,9 @@ const en = {
       dueDate: "Due Date",
     },
     hints: {
-      submitReport: "Make sure photos are clear and show the full work scope.",
-      escalate: "Confirm work meets quality standards before sending to Manager.",
+      submitReport: "Ensure all photos are clear and cover all areas before submitting.",
+      escalate: "Confirm the work meets quality standards before sending to the Manager.",
       reject: "You must provide a clear reason for rejection so the worker can fix it.",
-      approve: "Approving this report will officially close the task and make it available for export.",
     },
   },
   help: {

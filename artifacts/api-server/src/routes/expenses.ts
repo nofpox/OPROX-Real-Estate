@@ -51,7 +51,13 @@ router.patch("/expenses/:id", async (req, res) => {
   if (tenantId !== null) conds.push(eq(expensesTable.tenantId, tenantId));
   const [expense] = await db.update(expensesTable).set(parsed.data).where(and(...conds)).returning();
   if (!expense) { res.status(404).json({ error: "Expense not found" }); return; }
-  res.json(formatExpense(expense));
+  const [property] = expense.propertyId
+    ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, expense.propertyId))
+    : [null];
+  const [unit] = expense.unitId
+    ? await db.select().from(roomsTable).where(eq(roomsTable.id, expense.unitId))
+    : [null];
+  res.json(formatExpense(expense, property?.name, unit?.name));
 });
 
 router.delete("/expenses/:id", async (req, res) => {
@@ -118,7 +124,13 @@ router.get("/finance/monthly", async (req, res) => {
 
   const revConds = tenantId !== null ? [eq(bookingsTable.tenantId, tenantId)] : [];
   if (propertyId) {
-    // Filter bookings by rooms belonging to this property
+    const propertyRooms = await db.select({ id: roomsTable.id }).from(roomsTable).where(eq(roomsTable.propertyId, parseInt(propertyId)));
+    const roomIds = propertyRooms.map((r) => r.id);
+    if (roomIds.length > 0) {
+      revConds.push(sql`${bookingsTable.roomId} = ANY(ARRAY[${sql.raw(roomIds.join(","))}])`);
+    } else {
+      revConds.push(sql`1=0`);
+    }
   }
 
   const revenueRows = await db

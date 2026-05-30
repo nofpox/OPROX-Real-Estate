@@ -245,12 +245,7 @@ const bn: Translations = {
     category: { electrical: "বৈদ্যুতিক", plumbing: "পাইপলাইন", hvac: "HVAC", cleaning: "পরিষ্কার", housekeeping: "হাউসকিপিং", reception: "রিসেপশন", maintenance: "রক্ষণাবেক্ষণ", security: "নিরাপত্তা", general: "সাধারণ" },
     detail: { taskLabel: "কাজ #{{id}}", category: "বিভাগ", priority: "অগ্রাধিকার", asset: "সম্পদ", assignedTo: "নিযুক্ত", supervisor: "Supervisor", dueDate: "নির্ধারিত তারিখ", overdue: "মেয়াদোত্তীর্ণ", description: "বিবরণ", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "মন্তব্য", noComments: "এখনো কোনো মন্তব্য নেই।", yourName: "আপনার নাম", addComment: "মন্তব্য যোগ করুন…", posting: "পোস্ট হচ্ছে…", postComment: "মন্তব্য পোস্ট করুন" },
     fields: { taskName: "কাজের নাম", taskNameRequired: "কাজের নাম আবশ্যক", taskNamePlaceholder: "যেমন ত্রুটিপূর্ণ সার্কিট ব্রেকার পরিবর্তন করুন", asset: "সম্পদ", selectAsset: "সম্পদ নির্বাচন করুন…", noAsset: "কোনো নির্দিষ্ট সম্পদ নয়", unitOptional: "ইউনিট (ঐচ্ছিক)", anyUnit: "যেকোনো ইউনিট", title: "কাজের শিরোনাম *", titlePlaceholder: "যেমন ২০১ কক্ষ পরিষ্কার করুন", description: "বিবরণ", descriptionPlaceholder: "কাজের বিস্তারিত বিবরণ দিন…", category: "বিভাগ *", priority: "অগ্রাধিকার *", property: "সম্পত্তি", anyProperty: "যেকোনো সম্পত্তি", unit: "ইউনিট / কক্ষ", noUnit: "কোনো নির্দিষ্ট ইউনিট নয়", assignTo: "নিযুক্ত করুন", supervisor: "Supervisor", dueDate: "নির্ধারিত তারিখ" },
-    hints: {
-      submitReport: 'Make sure photos are clear and show the full work scope.',
-      escalate: 'Confirm work meets quality standards before sending to Manager.',
-      reject: 'You must provide a clear reason for rejection so the worker can fix it.',
-      approve: 'Approving this report will officially close the task and make it available for export.',
-    },
+    hints: { submitReport: "জমা দেওয়ার আগে নিশ্চিত করুন যে সব ছবি স্পষ্ট এবং সব এলাকা কভার করে।", escalate: "ম্যানেজারের কাছে পাঠানোর আগে নিশ্চিত করুন যে কাজ মানের মান পূরণ করে।", reject: "কর্মীটি ঠিক করতে পারে সেজন্য প্রত্যাখ্যানের একটি স্পষ্ট কারণ দিতে হবে।" },
   },
   help: {
     openButton: 'সাহায্য গাইড',

@@ -245,12 +245,7 @@ const th: Translations = {
     category: { electrical: "ไฟฟ้า", plumbing: "ประปา", hvac: "HVAC", cleaning: "ทำความสะอาด", housekeeping: "แม่บ้าน", reception: "แผนกต้อนรับ", maintenance: "บำรุงรักษา", security: "ความปลอดภัย", general: "ทั่วไป" },
     detail: { taskLabel: "งาน #{{id}}", category: "หมวดหมู่", priority: "ความสำคัญ", asset: "สินทรัพย์", assignedTo: "มอบหมายให้", supervisor: "Supervisor", dueDate: "วันครบกำหนด", overdue: "เกินกำหนด", description: "คำอธิบาย", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "ความคิดเห็น", noComments: "ยังไม่มีความคิดเห็น", yourName: "ชื่อของคุณ", addComment: "เพิ่มความคิดเห็น…", posting: "กำลังโพสต์…", postComment: "โพสต์ความคิดเห็น" },
     fields: { taskName: "ชื่องาน", taskNameRequired: "จำเป็นต้องระบุชื่องาน", taskNamePlaceholder: "เช่น เปลี่ยนเซอร์กิตเบรกเกอร์ที่ชำรุด", asset: "สินทรัพย์", selectAsset: "เลือกสินทรัพย์…", noAsset: "ไม่มีสินทรัพย์ที่เฉพาะเจาะจง", unitOptional: "ยูนิต (ไม่บังคับ)", anyUnit: "ยูนิตใดก็ได้", title: "หัวข้องาน *", titlePlaceholder: "เช่น ทำความสะอาดห้อง 201", description: "คำอธิบาย", descriptionPlaceholder: "อธิบายงานโดยละเอียด…", category: "หมวดหมู่ *", priority: "ความสำคัญ *", property: "ทรัพย์สิน", anyProperty: "ทรัพย์สินใดก็ได้", unit: "ยูนิต / ห้อง", noUnit: "ไม่มียูนิตที่เฉพาะเจาะจง", assignTo: "มอบหมายให้", supervisor: "Supervisor", dueDate: "วันครบกำหนด" },
-    hints: {
-      submitReport: 'Make sure photos are clear and show the full work scope.',
-      escalate: 'Confirm work meets quality standards before sending to Manager.',
-      reject: 'You must provide a clear reason for rejection so the worker can fix it.',
-      approve: 'Approving this report will officially close the task and make it available for export.',
-    },
+    hints: { submitReport: "ตรวจสอบให้แน่ใจว่าภาพถ่ายทั้งหมดชัดเจนและครอบคลุมทุกพื้นที่ก่อนส่ง", escalate: "ยืนยันว่างานตรงตามมาตรฐานคุณภาพก่อนส่งให้ผู้จัดการ", reject: "ระบุเหตุผลการปฏิเสธที่ชัดเจนเพื่อให้พนักงานสามารถแก้ไขได้" },
   },
   help: {
     openButton: 'คู่มือช่วยเหลือ',

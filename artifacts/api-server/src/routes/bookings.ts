@@ -111,7 +111,11 @@ router.delete("/bookings/:id", async (req, res) => {
   const tenantId = tid(req);
   const conds = [eq(bookingsTable.id, id)];
   if (tenantId !== null) conds.push(eq(bookingsTable.tenantId, tenantId));
+  const [booking] = await db.select().from(bookingsTable).where(and(...conds));
   await db.delete(bookingsTable).where(and(...conds));
+  if (booking?.status === "checked-in" && booking.roomId) {
+    await db.update(roomsTable).set({ status: "available" }).where(eq(roomsTable.id, booking.roomId));
+  }
   res.status(204).end();
 });
 

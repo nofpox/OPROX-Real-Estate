@@ -247,12 +247,7 @@ const tl: Translations = {
     category: { electrical: "Elektrikal", plumbing: "Tubero", hvac: "HVAC", cleaning: "Paglilinis", housekeeping: "Housekeeping", reception: "Resepsyon", maintenance: "Pagpapanatili", security: "Seguridad", general: "Pangkalahatan" },
     detail: { taskLabel: "Gawain #{{id}}", category: "Kategorya", priority: "Priyoridad", asset: "Asset", assignedTo: "Itinalaga kay", supervisor: "Supervisor", dueDate: "Takdang petsa", overdue: "Huli na", description: "Paglalarawan", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "Mga Komento", noComments: "Wala pang komento. Maging una.", yourName: "Ang inyong pangalan", addComment: "Magdagdag ng komento…", posting: "Nipo-post…", postComment: "Mag-post ng Komento" },
     fields: { taskName: "Pangalan ng Gawain", taskNameRequired: "Kailangan ang pangalan ng gawain", taskNamePlaceholder: "hal. Palitan ang sirang circuit breaker", asset: "Asset", selectAsset: "Pumili ng asset…", noAsset: "Walang tiyak na asset", unitOptional: "Unit (opsyonal)", anyUnit: "Anumang unit", title: "Pamagat ng Gawain *", titlePlaceholder: "hal. Linisin ang silid 201", description: "Paglalarawan", descriptionPlaceholder: "Ilarawan ang gawain nang detalyado…", category: "Kategorya *", priority: "Priyoridad *", property: "Ari-arian", anyProperty: "Anumang ari-arian", unit: "Unit / Silid", noUnit: "Walang tiyak na unit", assignTo: "Italaga Kay", supervisor: "Supervisor", dueDate: "Takdang Petsa" },
-    hints: {
-      submitReport: 'Make sure photos are clear and show the full work scope.',
-      escalate: 'Confirm work meets quality standards before sending to Manager.',
-      reject: 'You must provide a clear reason for rejection so the worker can fix it.',
-      approve: 'Approving this report will officially close the task and make it available for export.',
-    },
+    hints: { submitReport: "Tiyakin na ang lahat ng larawan ay malinaw at sumasaklaw sa lahat ng lugar bago mag-submit.", escalate: "Kumpirmahin na natutugunan ng trabaho ang mga pamantayan sa kalidad bago ipadala sa Manager.", reject: "Magbigay ng malinaw na dahilan ng pagtanggi para maayos ng manggagawa." },
   },
   help: {
     openButton: 'Gabay sa Tulong',

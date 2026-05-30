@@ -245,12 +245,7 @@ const ur: Translations = {
     category: { electrical: "بجلی", plumbing: "پلمبنگ", hvac: "HVAC", cleaning: "صفائی", housekeeping: "ہاؤس کیپنگ", reception: "استقبالیہ", maintenance: "دیکھ بھال", security: "سیکیورٹی", general: "عمومی" },
     detail: { taskLabel: "کام #{{id}}", category: "زمرہ", priority: "ترجیح", asset: "اثاثہ", assignedTo: "کو تفویض", supervisor: "Supervisor", dueDate: "مقررہ تاریخ", overdue: "مدت گزری", description: "تفصیل", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "تبصرے", noComments: "ابھی کوئی تبصرہ نہیں۔ پہلے تبصرہ کریں۔", yourName: "آپ کا نام", addComment: "تبصرہ شامل کریں…", posting: "پوسٹ ہو رہا ہے…", postComment: "تبصرہ پوسٹ کریں" },
     fields: { taskName: "کام کا نام", taskNameRequired: "کام کا نام ضروری ہے", taskNamePlaceholder: "جیسے خراب سرکٹ بریکر بدلیں", asset: "اثاثہ", selectAsset: "اثاثہ منتخب کریں…", noAsset: "کوئی خاص اثاثہ نہیں", unitOptional: "یونٹ (اختیاری)", anyUnit: "کوئی بھی یونٹ", title: "کام کا عنوان *", titlePlaceholder: "جیسے کمرہ 201 صاف کریں", description: "تفصیل", descriptionPlaceholder: "کام کی تفصیلی وضاحت کریں…", category: "زمرہ *", priority: "ترجیح *", property: "جائیداد", anyProperty: "کوئی بھی جائیداد", unit: "یونٹ / کمرہ", noUnit: "کوئی خاص یونٹ نہیں", assignTo: "کو تفویض کریں", supervisor: "Supervisor", dueDate: "مقررہ تاریخ" },
-    hints: {
-      submitReport: 'Make sure photos are clear and show the full work scope.',
-      escalate: 'Confirm work meets quality standards before sending to Manager.',
-      reject: 'You must provide a clear reason for rejection so the worker can fix it.',
-      approve: 'Approving this report will officially close the task and make it available for export.',
-    },
+    hints: { submitReport: "جمع کرنے سے پہلے یقینی بنائیں کہ تمام تصاویر واضح ہوں اور تمام علاقوں کو کور کریں۔", escalate: "مینیجر کو بھیجنے سے پہلے تصدیق کریں کہ کام معیار کو پورا کرتا ہے۔", reject: "مسترد کرنے کی واضح وجہ فراہم کریں تاکہ کارکن اسے ٹھیک کر سکے۔" },
   },
   help: {
     openButton: 'مدد گائیڈ',

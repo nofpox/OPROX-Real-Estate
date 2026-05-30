@@ -245,12 +245,7 @@ const ml: Translations = {
     category: { electrical: "വൈദ്യുതി", plumbing: "പ്ലംബിംഗ്", hvac: "HVAC", cleaning: "ശുചീകരണം", housekeeping: "ഹൗസ്കീപ്പിംഗ്", reception: "റിസപ്ഷൻ", maintenance: "അറ്റകുറ്റം", security: "സുരക്ഷ", general: "പൊതു" },
     detail: { taskLabel: "ജോലി #{{id}}", category: "വിഭാഗം", priority: "മുൻഗണന", asset: "ആസ്തി", assignedTo: "നിയോഗിച്ചത്", supervisor: "Supervisor", dueDate: "നിശ്ചിത തീയതി", overdue: "കാലഹരണം", description: "വിവരണം", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "അഭിപ്രായങ്ങൾ", noComments: "ഇതുവരെ അഭിപ്രായം ഇല്ല.", yourName: "നിങ്ങളുടെ പേര്", addComment: "അഭിപ്രായം ചേർക്കുക…", posting: "പോസ്റ്റ് ചെയ്യുന്നു…", postComment: "അഭിപ്രായം പോസ്റ്റ് ചെയ്യുക" },
     fields: { taskName: "ജോലിയുടെ പേര്", taskNameRequired: "ജോലിയുടെ പേര് ആവശ്യമാണ്", taskNamePlaceholder: "ഉദാ. തകരാറായ സർക്യൂട്ട് ബ്രേക്കർ മാറ്റുക", asset: "ആസ്തി", selectAsset: "ആസ്തി തിരഞ്ഞെടുക്കുക…", noAsset: "നിർദ്ദിഷ്ട ആസ്തി ഇല്ല", unitOptional: "യൂണിറ്റ് (ഐച്ഛിക)", anyUnit: "ഏതെങ്കിലും യൂണിറ്റ്", title: "ജോലി ശീർഷകം *", titlePlaceholder: "ഉദാ. 201 മുറി ശുചീകരിക്കുക", description: "വിവരണം", descriptionPlaceholder: "ജോലി വിശദമായി വിവരിക്കുക…", category: "വിഭാഗം *", priority: "മുൻഗണന *", property: "പ്രോപ്പർട്ടി", anyProperty: "ഏതെങ്കിലും പ്രോപ്പർട്ടി", unit: "യൂണിറ്റ് / മുറി", noUnit: "നിർദ്ദിഷ്ട യൂണിറ്റ് ഇല്ല", assignTo: "നിയോഗിക്കുക", supervisor: "Supervisor", dueDate: "നിശ്ചിത തീയതി" },
-    hints: {
-      submitReport: 'Make sure photos are clear and show the full work scope.',
-      escalate: 'Confirm work meets quality standards before sending to Manager.',
-      reject: 'You must provide a clear reason for rejection so the worker can fix it.',
-      approve: 'Approving this report will officially close the task and make it available for export.',
-    },
+    hints: { submitReport: "സമർപ്പിക്കുന്നതിന് മുൻപ് എല്ലാ ഫോട്ടോകളും വ്യക്തമാണെന്നും എല്ലാ ഭാഗങ്ങളും ഉൾക്കൊള്ളുന്നുണ്ടെന്നും ഉറപ്പാക്കുക.", escalate: "മാനേജർക്ക് അയക്കുന്നതിന് മുൻപ് ജോലി ഗുണനിലവാര മാനദണ്ഡങ്ങൾ പാലിക്കുന്നുണ്ടെന്ന് സ്ഥിരീകരിക്കുക.", reject: "ജോലിക്കാരന് ശരിയാക്കാൻ കഴിയുന്നതിന് നിരസിക്കലിന്റെ വ്യക്തമായ കാരണം നൽകണം." },
   },
   help: {
     openButton: 'സഹായ ഗൈഡ്',

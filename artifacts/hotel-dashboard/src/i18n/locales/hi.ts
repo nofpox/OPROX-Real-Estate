@@ -244,12 +244,7 @@ const hi: Translations = {
     category: { electrical: "विद्युत", plumbing: "नलसाजी", hvac: "HVAC", cleaning: "सफाई", housekeeping: "हाउसकीपिंग", reception: "स्वागत", maintenance: "रखरखाव", security: "सुरक्षा", general: "सामान्य" },
     detail: { taskLabel: "कार्य #{{id}}", category: "श्रेणी", priority: "प्राथमिकता", asset: "संपत्ति", assignedTo: "को सौंपा गया", supervisor: "Supervisor", dueDate: "नियत तारीख", overdue: "अतिदेय", description: "विवरण", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "टिप्पणियाँ", noComments: "अभी कोई टिप्पणी नहीं। पहले जोड़ें।", yourName: "आपका नाम", addComment: "टिप्पणी जोड़ें…", posting: "पोस्ट हो रहा है…", postComment: "टिप्पणी पोस्ट करें" },
     fields: { taskName: "कार्य का नाम", taskNameRequired: "कार्य का नाम आवश्यक है", taskNamePlaceholder: "जैसे खराब सर्किट ब्रेकर बदलें", asset: "संपत्ति", selectAsset: "संपत्ति चुनें…", noAsset: "कोई विशेष संपत्ति नहीं", unitOptional: "इकाई (वैकल्पिक)", anyUnit: "कोई भी इकाई", title: "कार्य शीर्षक *", titlePlaceholder: "जैसे कमरा 201 साफ करें", description: "विवरण", descriptionPlaceholder: "कार्य का विस्तृत विवरण दें…", category: "श्रेणी *", priority: "प्राथमिकता *", property: "संपत्ति", anyProperty: "कोई भी संपत्ति", unit: "इकाई / कमरा", noUnit: "कोई विशेष इकाई नहीं", assignTo: "को सौंपें", supervisor: "Supervisor", dueDate: "नियत तारीख" },
-    hints: {
-      submitReport: 'Make sure photos are clear and show the full work scope.',
-      escalate: 'Confirm work meets quality standards before sending to Manager.',
-      reject: 'You must provide a clear reason for rejection so the worker can fix it.',
-      approve: 'Approving this report will officially close the task and make it available for export.',
-    },
+    hints: { submitReport: "जमा करने से पहले सुनिश्चित करें कि सभी तस्वीरें स्पष्ट हों और सभी क्षेत्रों को कवर करें।", escalate: "मैनेजर को भेजने से पहले पुष्टि करें कि काम गुणवत्ता मानकों को पूरा करता है।", reject: "अस्वीकृति का स्पष्ट कारण बताएं ताकि कर्मचारी उसे ठीक कर सके।" },
   },
   help: {
     openButton: 'सहायता गाइड',

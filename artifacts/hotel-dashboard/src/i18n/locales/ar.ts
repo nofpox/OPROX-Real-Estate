@@ -737,10 +737,9 @@ const ar: Translations = {
       dueDate: "تاريخ الاستحقاق",
     },
     hints: {
-      submitReport: 'Make sure photos are clear and show the full work scope.',
-      escalate: 'Confirm work meets quality standards before sending to Manager.',
-      reject: 'You must provide a clear reason for rejection so the worker can fix it.',
-      approve: 'Approving this report will officially close the task and make it available for export.',
+      submitReport: 'تأكد من وضوح جميع الصور وتغطيتها لجميع المناطق قبل الإرسال.',
+      escalate: 'تأكد من أن العمل يلبي معايير الجودة قبل الإرسال إلى المدير.',
+      reject: 'يجب تقديم سبب واضح للرفض حتى يتمكن العامل من التصحيح.',
     },
   },
   help: {
