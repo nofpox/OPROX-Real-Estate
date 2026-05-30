@@ -106,18 +106,14 @@ import React, { useState } from "react";
     return (
       <div className="flex min-h-screen w-full flex-col bg-muted/30 lg:flex-row">
 
-        {/* Mobile overlay backdrop */}
+        {/* Mobile overlay — only rendered when open, no animation, no GPU layer */}
         {mobileOpen && (
-          <div
-            className="fixed inset-0 z-20 bg-black/50 lg:hidden"
-            onClick={() => setMobileOpen(false)}
-          />
-        )}
-
-        {/* Mobile slide-in drawer */}
-        <aside className={`fixed inset-y-0 z-30 w-72 flex flex-col bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-in-out lg:hidden ${sidebarSide} ${sidebarBorder} ${
-          mobileOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"
-        }`}>
+          <>
+            <div
+              className="fixed inset-0 z-20 bg-black/60 lg:hidden"
+              onClick={() => setMobileOpen(false)}
+            />
+            <aside className={`fixed inset-y-0 z-30 w-72 flex flex-col bg-sidebar text-sidebar-foreground lg:hidden ${sidebarSide} ${sidebarBorder}`}>
           <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-sidebar-border">
             <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
               <span className="text-xl">{settings.logoText}</span>
@@ -138,7 +134,9 @@ import React, { useState } from "react";
               )}
             </nav>
           </div>
-        </aside>
+            </aside>
+          </>
+        )}
 
         {/* Desktop sidebar */}
         <aside className={`hidden w-64 flex-col bg-sidebar text-sidebar-foreground lg:flex fixed inset-y-0 z-10 ${sidebarSide} ${sidebarBorder}`}>

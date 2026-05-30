@@ -22,7 +22,7 @@ import Staff from "@/pages/staff";
 import Tasks from "@/pages/tasks";
 import GuestRequests from "@/pages/guest-requests";
 import UserManagement from "@/pages/user-management";
-import ActivityLog from "@/pages/activity-log";
+import AuditLog from "@/pages/audit-log";
 import AdminSettings from "@/pages/admin-settings";
 import UnitMap from "@/pages/unit-map";
 import Login from "@/pages/login";
@@ -55,7 +55,7 @@ function Router() {
       <Route path="/tasks" component={Tasks} />
       <Route path="/guest-requests" component={GuestRequests} />
       <Route path="/user-management" component={UserManagement} />
-      <Route path="/activity-log" component={ActivityLog} />
+      <Route path="/activity-log" component={AuditLog} />
       <Route path="/admin-settings" component={AdminSettings} />
       <Route path="/unit-map" component={UnitMap} />
       <Route path="/security-dashboard" component={SecurityDashboard} />
