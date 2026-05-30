@@ -250,6 +250,7 @@ const hi: Translations = {
     rejectReport: { title: "रिपोर्ट अस्वीकार करें", description: "बताएं कि यह रिपोर्ट सुधार के लिए वापस क्यों भेजी जा रही है। कर्मचारी यह संदेश देखेगा।", placeholder: "अस्वीकृति का कारण (आवश्यक)…", submit: "अस्वीकार करें", rejecting: "अस्वीकार किया जा रहा है…" },
     approvedReportsOnly: "केवल अनुमोदित रिपोर्ट",
     approvedReportsOnlyDesc: "केवल वे कार्य शामिल करें जिनकी रिपोर्ट प्रबंधक ने अनुमोदित की हो",
+    recall: "रिपोर्ट वापस लें", recalling: "वापस ले रहा है…", recallSuccess: "रिपोर्ट वापस ली गई। ठीक करके पुनः जमा करें।", recallConfirmTitle: "रिपोर्ट वापस लें?", recallConfirmDesc: "यह आपकी रिपोर्ट वापस लेगा और कार्य को पुनः प्रगति में लाएगा।", reopen: "कार्य पुनः खोलें", reopening: "पुनः खोल रहा है…", reopenSuccess: "कार्य पुनः खोला गया।", reopenConfirmTitle: "कार्य पुनः खोलें?", reopenConfirmDesc: "यह रिपोर्ट स्थिति को रीसेट करेगा और नई सबमिशन की अनुमति देगा।",
   },
   help: {
     openButton: 'सहायता गाइड',
@@ -419,6 +420,7 @@ const hi: Translations = {
     adminNotesPlaceholder: "इस टिकट के लिए उत्तर या नोट जोड़ें…",
   },
   pdf: { approvedReport: "APPROVED TASK REPORT", completionReport: "TASK COMPLETION REPORT", completed: "Completed", verified: "Verified", approved: "Approved", avgDuration: "Avg. Duration", categoryBreakdown: "CATEGORY BREAKDOWN", completedTasksSection: "COMPLETED TASKS", auditTrailSection: "REPORT APPROVAL AUDIT TRAIL", photoAppendix: "PHOTO EVIDENCE APPENDIX", colTitle: "Title", colCategory: "Category", colPriority: "Priority", colAssignee: "Assignee", colCompleted: "Completed", colDuration: "Duration", colStatus: "Status", colReport: "Report", colTask: "Task", colSubmitted: "Submitted", colReviewedBy: "Reviewed by Supervisor", colApprovedBy: "Approved by Manager", colReportStatus: "Report Status", colNotes: "Notes", statusSubmitted: "Submitted", statusRejected: "Rejected by Supervisor", statusEscalated: "Reviewed by Supervisor", statusApproved: "Approved by Manager", unassigned: "Unassigned", pending: "Pending", noTasks: "No completed tasks found for the selected period.", confidential: "Confidential", before: "BEFORE", after: "AFTER", noPhoto: "No photo", photoUnavailable: "Photo unavailable", couldNotLoad: "Could not load photo", taskSingular: "task", taskPlural: "tasks", recordSingular: "record", recordPlural: "records", verifiedCheck: "Verified ✓", pageOf: "Page {{current}} of {{total}}" },
+  offline: { banner: "आप ऑफ़लाइन हैं", tapToSync: "दोबारा जुड़ने पर परिवर्तन स्वतः सिंक होंगे", syncing: "{{count}} लंबित परिवर्तन सिंक हो रहे हैं…", synced: "वापस ऑनलाइन — सभी परिवर्तन सहेजे गए", pendingBadge: "{{count}} लंबित" },
 };
 
 export default hi;

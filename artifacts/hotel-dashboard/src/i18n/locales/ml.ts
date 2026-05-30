@@ -251,6 +251,7 @@ const ml: Translations = {
     rejectReport: { title: "റിപ്പോർട്ട് നിരസിക്കുക", description: "ഈ റിപ്പോർട്ട് തിരുത്തലുകൾക്കായി മടക്കി അയക്കുന്നതിന്റെ കാരണം വിശദീകരിക്കുക. ജോലിക്കാരൻ ഈ സന്ദേശം കാണും.", placeholder: "നിരാകരണ കാരണം (ആവശ്യമാണ്)…", submit: "നിരസിക്കുക", rejecting: "നിരസിക്കുന്നു…" },
     approvedReportsOnly: "അംഗീകൃത റിപ്പോർട്ടുകൾ മാത്രം",
     approvedReportsOnlyDesc: "മാനേജർ അംഗീകരിച്ച റിപ്പോർട്ടുകൾ ഉള്ള ടാസ്‌ക്കുകൾ മാത്രം ഉൾപ്പെടുത്തുക",
+    recall: "റിപ്പോർട്ട് തിരിച്ചെടുക്കൂ", recalling: "തിരിച്ചെടുക്കുന്നു…", recallSuccess: "റിപ്പോർട്ട് തിരിച്ചെടുത്തു. തിരുത്തി വീണ്ടും സമർപ്പിക്കുക.", recallConfirmTitle: "റിപ്പോർട്ട് തിരിച്ചെടുക്കണോ?", recallConfirmDesc: "ഇത് നിങ്ങളുടെ റിപ്പോർട്ട് തിരിച്ചെടുക്കുകയും ടാസ്ക്ക് പുരോഗതിയിലേക്ക് മടക്കുകയും ചെയ്യും.", reopen: "ടാസ്ക്ക് വീണ്ടും തുറക്കുക", reopening: "വീണ്ടും തുറക്കുന്നു…", reopenSuccess: "ടാസ്ക്ക് വീണ്ടും തുറന്നു.", reopenConfirmTitle: "ടാസ്ക്ക് വീണ്ടും തുറക്കണോ?", reopenConfirmDesc: "ഇത് റിപ്പോർട്ടിന്റെ നില റീസെറ്റ് ചെയ്ത് പുതിയ സമർപ്പണം അനുവദിക്കും.",
   },
   help: {
     openButton: 'സഹായ ഗൈഡ്',
@@ -420,6 +421,7 @@ const ml: Translations = {
     adminNotesPlaceholder: "ഈ ടിക്കറ്റിനായി ഒരു പ്രതികരണം അല്ലെങ്കിൽ കുറിപ്പ് ചേർക്കുക…",
   },
   pdf: { approvedReport: "APPROVED TASK REPORT", completionReport: "TASK COMPLETION REPORT", completed: "Completed", verified: "Verified", approved: "Approved", avgDuration: "Avg. Duration", categoryBreakdown: "CATEGORY BREAKDOWN", completedTasksSection: "COMPLETED TASKS", auditTrailSection: "REPORT APPROVAL AUDIT TRAIL", photoAppendix: "PHOTO EVIDENCE APPENDIX", colTitle: "Title", colCategory: "Category", colPriority: "Priority", colAssignee: "Assignee", colCompleted: "Completed", colDuration: "Duration", colStatus: "Status", colReport: "Report", colTask: "Task", colSubmitted: "Submitted", colReviewedBy: "Reviewed by Supervisor", colApprovedBy: "Approved by Manager", colReportStatus: "Report Status", colNotes: "Notes", statusSubmitted: "Submitted", statusRejected: "Rejected by Supervisor", statusEscalated: "Reviewed by Supervisor", statusApproved: "Approved by Manager", unassigned: "Unassigned", pending: "Pending", noTasks: "No completed tasks found for the selected period.", confidential: "Confidential", before: "BEFORE", after: "AFTER", noPhoto: "No photo", photoUnavailable: "Photo unavailable", couldNotLoad: "Could not load photo", taskSingular: "task", taskPlural: "tasks", recordSingular: "record", recordPlural: "records", verifiedCheck: "Verified ✓", pageOf: "Page {{current}} of {{total}}" },
+  offline: { banner: "നിങ്ങൾ ഓഫ്‌ലൈനിലാണ്", tapToSync: "വീണ്ടും കണക്‌ടാകുമ്പോൾ മാറ്റങ്ങൾ സ്വതഃ സമന്വയിക്കും", syncing: "{{count}} മുൻഗണനാ മാറ്റ(ങ്ങൾ) സമന്വയിക്കുന്നു…", synced: "വീണ്ടും ഓൺലൈൻ — എല്ലാ മാറ്റങ്ങളും സംരക്ഷിച്ചു", pendingBadge: "{{count}} മുൻഗണന" },
 };
 
 export default ml;

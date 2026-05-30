@@ -251,6 +251,7 @@ const fr: Translations = {
     rejectReport: { title: "Rejeter le rapport", description: "Expliquez pourquoi ce rapport est renvoyé pour corrections. Le travailleur verra ce message.", placeholder: "Raison du rejet (obligatoire)…", submit: "Rejeter", rejecting: "Rejet en cours…" },
     approvedReportsOnly: "Rapports approuvés uniquement",
     approvedReportsOnlyDesc: "N'inclure que les tâches dont le rapport a été approuvé par un responsable",
+    recall: "Retirer la soumission", recalling: "Retrait en cours…", recallSuccess: "Soumission retirée. Corrigez et resoumettez.", recallConfirmTitle: "Retirer la soumission ?", recallConfirmDesc: "Cela retirera votre rapport et remettra la tâche en cours.", reopen: "Rouvrir la tâche", reopening: "Réouverture…", reopenSuccess: "Tâche rouverte.", reopenConfirmTitle: "Rouvrir la tâche ?", reopenConfirmDesc: "Cela réinitialisera le statut du rapport et permettra une nouvelle soumission.",
   },
   help: {
     openButton: "Guide d'aide",
@@ -428,6 +429,7 @@ const fr: Translations = {
     taskSingular: "tâche", taskPlural: "tâches", recordSingular: "enregistrement", recordPlural: "enregistrements",
     verifiedCheck: "Vérifié ✓", pageOf: "Page {{current}} sur {{total}}",
   },
+  offline: { banner: "Vous êtes hors ligne", tapToSync: "Les modifications seront synchronisées automatiquement lors de la reconnexion", syncing: "Synchronisation de {{count}} modification(s) en attente…", synced: "De retour en ligne — toutes les modifications enregistrées", pendingBadge: "{{count}} en attente" },
 };
 
 export default fr;

@@ -3630,6 +3630,146 @@ export const useApproveTaskReport = <TError = ErrorType<unknown>,
       return useMutation(getApproveTaskReportMutationOptions(options));
     }
 
+export const getRecallTaskReportUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/recall`
+}
+
+/**
+ * @summary Worker withdraws a submitted report that has not yet been reviewed (returns task to in-progress)
+ */
+export const recallTaskReport = async (id: number, options?: RequestInit): Promise<Task> => {
+
+  return customFetch<Task>(getRecallTaskReportUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRecallTaskReportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recallTaskReport>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recallTaskReport>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['recallTaskReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recallTaskReport>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  recallTaskReport(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecallTaskReportMutationResult = NonNullable<Awaited<ReturnType<typeof recallTaskReport>>>
+
+    export type RecallTaskReportMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Worker withdraws a submitted report that has not yet been reviewed (returns task to in-progress)
+ */
+export const useRecallTaskReport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recallTaskReport>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recallTaskReport>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getRecallTaskReportMutationOptions(options));
+    }
+
+export const getReopenTaskUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/reopen`
+}
+
+/**
+ * @summary Supervisor or manager resets a task's report status to allow a fresh submission
+ */
+export const reopenTask = async (id: number, options?: RequestInit): Promise<Task> => {
+
+  return customFetch<Task>(getReopenTaskUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getReopenTaskMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenTask>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reopenTask>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['reopenTask'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reopenTask>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  reopenTask(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReopenTaskMutationResult = NonNullable<Awaited<ReturnType<typeof reopenTask>>>
+
+    export type ReopenTaskMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Supervisor or manager resets a task's report status to allow a fresh submission
+ */
+export const useReopenTask = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenTask>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reopenTask>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getReopenTaskMutationOptions(options));
+    }
+
 export const getListTaskCommentsUrl = (id: number,) => {
 
 

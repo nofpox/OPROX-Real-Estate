@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, tasksTable, staffTable, propertiesTable, roomsTable, taskCommentsTable, usersTable } from "@workspace/db";
+import { db, tasksTable, staffTable, propertiesTable, roomsTable, taskCommentsTable, usersTable, notificationsTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { insertTaskSchema, updateTaskSchema, insertTaskCommentSchema } from "@workspace/db";
 import { logActivity, actorFromRequest, getRoleTier } from "./activityLogs";
@@ -28,6 +28,25 @@ function canReviewReport(role: string | undefined): boolean {
 /** Manager or higher can approve escalated reports */
 function canApproveReport(role: string | undefined): boolean {
   return role === "manager" || role === "owner" || role === "super_admin";
+}
+
+/** Fire-and-forget: insert a notification row for all users in the tenant */
+function createTaskNotification(params: {
+  tenantId: number;
+  type: string;
+  title: string;
+  message: string;
+  relatedId: number;
+}): void {
+  db.insert(notificationsTable).values({
+    tenantId: params.tenantId,
+    type: params.type,
+    title: params.title,
+    message: params.message,
+    isRead: false,
+    relatedId: params.relatedId,
+    relatedType: "task",
+  }).catch(() => { /* non-critical — never block the main response */ });
 }
 
 function formatTask(
@@ -297,6 +316,14 @@ router.post("/tasks/:id/submit", async (req, res) => {
     details: `Report submitted by ${actor.actorName ?? "worker"}`,
   });
 
+  createTaskNotification({
+    tenantId: tenantId ?? 1,
+    type: "task-report",
+    title: "New Report Submitted",
+    message: `${actor.actorName ?? "A worker"} submitted a report for "${task.title}"`,
+    relatedId: task.id,
+  });
+
   res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
 });
 
@@ -348,6 +375,14 @@ router.post("/tasks/:id/reject", async (req, res) => {
     details: `Rejected by ${actor.actorName ?? "supervisor"}: ${notes}`,
   });
 
+  createTaskNotification({
+    tenantId: tenantId ?? 1,
+    type: "task-report",
+    title: "Report Rejected",
+    message: `Your report for "${task.title}" was rejected: ${notes}`,
+    relatedId: task.id,
+  });
+
   res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
 });
 
@@ -393,6 +428,14 @@ router.post("/tasks/:id/escalate", async (req, res) => {
     details: `Escalated to manager by ${actor.actorName ?? "supervisor"}`,
   });
 
+  createTaskNotification({
+    tenantId: tenantId ?? 1,
+    type: "task-report",
+    title: "Report Escalated for Approval",
+    message: `"${task.title}" has been escalated and requires your approval`,
+    relatedId: task.id,
+  });
+
   res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
 });
 
@@ -436,6 +479,116 @@ router.post("/tasks/:id/approve", async (req, res) => {
     action: "task.report_approved", entityType: "task", entityId: task.id, entityLabel: task.title,
     propertyId: property?.id, propertyName: property?.name,
     details: `Approved by ${actor.actorName ?? "manager"}`,
+  });
+
+  createTaskNotification({
+    tenantId: tenantId ?? 1,
+    type: "task-report",
+    title: "Report Approved ✓",
+    message: `Your report for "${task.title}" has been approved`,
+    relatedId: task.id,
+  });
+
+  res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
+});
+
+/** POST /tasks/:id/recall — worker withdraws their own submitted report before supervisor review */
+router.post("/tasks/:id/recall", async (req, res) => {
+  const id       = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const tenantId = tid(req);
+  const actor    = actorFromRequest(req);
+
+  const conds = [eq(tasksTable.id, id)];
+  if (tenantId !== null) conds.push(eq(tasksTable.tenantId, tenantId));
+  const [task] = await db.select().from(tasksTable).where(and(...conds));
+  if (!task) { res.status(404).json({ error: "Task not found" }); return; }
+
+  if (task.reportStatus !== "submitted") {
+    res.status(422).json({ error: "Only a submitted (pending review) report can be recalled." });
+    return;
+  }
+
+  const [updated] = await db.update(tasksTable)
+    .set({
+      reportStatus:      "none",
+      submittedAt:       null,
+      submittedByUserId: null,
+      status:            "in-progress",
+    })
+    .where(and(...conds)).returning();
+
+  const [staff] = updated.assignedToId
+    ? await db.select().from(staffTable).where(eq(staffTable.id, updated.assignedToId)) : [null];
+  const [property] = updated.propertyId
+    ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, updated.propertyId)) : [null];
+
+  logActivity({
+    ...actor, tenantId: tenantId ?? 1,
+    action: "task.report_recalled", entityType: "task", entityId: task.id, entityLabel: task.title,
+    propertyId: property?.id, propertyName: property?.name,
+    details: `Report recalled by ${actor.actorName ?? "worker"}`,
+  });
+
+  res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
+});
+
+/** POST /tasks/:id/reopen — supervisor/manager resets all report status fields for a fresh submission */
+router.post("/tasks/:id/reopen", async (req, res) => {
+  const id       = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const tenantId = tid(req);
+  const actor    = actorFromRequest(req);
+
+  if (!canReviewReport(actor.actorRole)) {
+    res.status(403).json({ error: "Only supervisors and managers can reopen tasks." });
+    return;
+  }
+
+  const conds = [eq(tasksTable.id, id)];
+  if (tenantId !== null) conds.push(eq(tasksTable.tenantId, tenantId));
+  const [task] = await db.select().from(tasksTable).where(and(...conds));
+  if (!task) { res.status(404).json({ error: "Task not found" }); return; }
+
+  if (task.reportStatus === "none") {
+    res.status(422).json({ error: "Task report is already in the initial state." });
+    return;
+  }
+
+  const [updated] = await db.update(tasksTable)
+    .set({
+      reportStatus:      "none",
+      submittedAt:       null,
+      submittedByUserId: null,
+      rejectedAt:        null,
+      rejectedByUserId:  null,
+      rejectionNotes:    null,
+      escalatedAt:       null,
+      escalatedByUserId: null,
+      approvedAt:        null,
+      approvedByUserId:  null,
+      status:            "in-progress",
+    })
+    .where(and(...conds)).returning();
+
+  const [staff] = updated.assignedToId
+    ? await db.select().from(staffTable).where(eq(staffTable.id, updated.assignedToId)) : [null];
+  const [property] = updated.propertyId
+    ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, updated.propertyId)) : [null];
+
+  logActivity({
+    ...actor, tenantId: tenantId ?? 1,
+    action: "task.reopened", entityType: "task", entityId: task.id, entityLabel: task.title,
+    propertyId: property?.id, propertyName: property?.name,
+    details: `Task reopened by ${actor.actorName ?? "supervisor"}`,
+  });
+
+  createTaskNotification({
+    tenantId: tenantId ?? 1,
+    type: "task-report",
+    title: "Task Re-opened",
+    message: `"${task.title}" has been re-opened for a fresh submission`,
+    relatedId: task.id,
   });
 
   res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));

@@ -251,6 +251,7 @@ const ne: Translations = {
     rejectReport: { title: "रिपोर्ट अस्वीकार गर्नुहोस्", description: "यो रिपोर्ट सुधारका लागि किन फिर्ता गरिँदैछ भनेर व्याख्या गर्नुहोस्। कार्यकर्ताले यो सन्देश देख्नेछन्।", placeholder: "अस्वीकारको कारण (आवश्यक)…", submit: "अस्वीकार गर्नुहोस्", rejecting: "अस्वीकार गर्दै…" },
     approvedReportsOnly: "अनुमोदित रिपोर्टहरू मात्र",
     approvedReportsOnlyDesc: "केवल ती कार्यहरू समावेश गर्नुहोस् जसको रिपोर्ट प्रबन्धकले अनुमोदन गरेका छन्",
+    recall: "रिपोर्ट फिर्ता लिनुहोस्", recalling: "फिर्ता लिँदै छ…", recallSuccess: "रिपोर्ट फिर्ता लिइयो। सच्याएर पुनः पेश गर्नुहोस्।", recallConfirmTitle: "रिपोर्ट फिर्ता लिने?", recallConfirmDesc: "यसले तपाईँको रिपोर्ट फिर्ता लिन्छ र कार्यलाई प्रगतिमा फर्काउँछ।", reopen: "कार्य पुनः खोल्नुहोस्", reopening: "पुनः खोल्दै छ…", reopenSuccess: "कार्य पुनः खोलियो।", reopenConfirmTitle: "कार्य पुनः खोल्ने?", reopenConfirmDesc: "यसले रिपोर्टको अवस्था रिसेट गर्छ र नयाँ पेशको अनुमति दिन्छ।",
   },
   help: {
     openButton: 'सहायता गाइड',
@@ -420,6 +421,7 @@ const ne: Translations = {
     adminNotesPlaceholder: "यो टिकटका लागि प्रतिक्रिया वा नोट थप्नुहोस्…",
   },
   pdf: { approvedReport: "APPROVED TASK REPORT", completionReport: "TASK COMPLETION REPORT", completed: "Completed", verified: "Verified", approved: "Approved", avgDuration: "Avg. Duration", categoryBreakdown: "CATEGORY BREAKDOWN", completedTasksSection: "COMPLETED TASKS", auditTrailSection: "REPORT APPROVAL AUDIT TRAIL", photoAppendix: "PHOTO EVIDENCE APPENDIX", colTitle: "Title", colCategory: "Category", colPriority: "Priority", colAssignee: "Assignee", colCompleted: "Completed", colDuration: "Duration", colStatus: "Status", colReport: "Report", colTask: "Task", colSubmitted: "Submitted", colReviewedBy: "Reviewed by Supervisor", colApprovedBy: "Approved by Manager", colReportStatus: "Report Status", colNotes: "Notes", statusSubmitted: "Submitted", statusRejected: "Rejected by Supervisor", statusEscalated: "Reviewed by Supervisor", statusApproved: "Approved by Manager", unassigned: "Unassigned", pending: "Pending", noTasks: "No completed tasks found for the selected period.", confidential: "Confidential", before: "BEFORE", after: "AFTER", noPhoto: "No photo", photoUnavailable: "Photo unavailable", couldNotLoad: "Could not load photo", taskSingular: "task", taskPlural: "tasks", recordSingular: "record", recordPlural: "records", verifiedCheck: "Verified ✓", pageOf: "Page {{current}} of {{total}}" },
+  offline: { banner: "तपाईँ अफलाइन हुनुहुन्छ", tapToSync: "पुनः जडान भएपछि परिवर्तनहरू स्वतः सिंक हुनेछन्", syncing: "{{count}} लम्बित परिवर्तन सिंक गर्दै…", synced: "पुनः अनलाइन — सबै परिवर्तनहरू सुरक्षित", pendingBadge: "{{count}} लम्बित" },
 };
 
 export default ne;

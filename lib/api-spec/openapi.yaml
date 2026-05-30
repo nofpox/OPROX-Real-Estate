@@ -963,6 +963,44 @@ paths:
               schema:
                 $ref: "#/components/schemas/Task"
 
+  /tasks/{id}/recall:
+    post:
+      operationId: recallTaskReport
+      tags: [tasks]
+      summary: Worker withdraws a submitted report that has not yet been reviewed (returns task to in-progress)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}/reopen:
+    post:
+      operationId: reopenTask
+      tags: [tasks]
+      summary: Supervisor or manager resets a task's report status to allow a fresh submission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
   /tasks/{id}/comments:
     get:
       operationId: listTaskComments

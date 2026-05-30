@@ -4,6 +4,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider } from "react-i18next";
 import { Toaster } from "@/components/ui/toaster";
+import { OfflineBanner } from "@/components/offline-banner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
 import { RoleProvider, useRole } from "@/contexts/role-context";
@@ -185,6 +186,7 @@ function App() {
                       <Router />
                     </Layout>
                     <Toaster />
+                    <OfflineBanner />
                   </Route>
                 </Switch>
               </WouterRouter>

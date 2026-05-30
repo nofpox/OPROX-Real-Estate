@@ -1118,6 +1118,96 @@ export const ApproveTaskReportResponse = zod.object({
 
 
 /**
+ * @summary Worker withdraws a submitted report that has not yet been reviewed (returns task to in-progress)
+ */
+export const RecallTaskReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const RecallTaskReportResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string().describe('housekeeping, reception, maintenance, security, general'),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "supervisorId": zod.number().nullish(),
+  "assignedToId": zod.number().nullish(),
+  "assigneeName": zod.string().nullish(),
+  "assignedByUserId": zod.number().nullish(),
+  "completedByUserId": zod.number().nullish(),
+  "verifiedByUserId": zod.number().nullish(),
+  "proofPhotoUrl": zod.string().nullish(),
+  "beforePhotoUrl": zod.string().nullish(),
+  "afterPhotoUrl": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('pending, in-progress, completed, verified'),
+  "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish(),
+  "reportStatus": zod.string().optional().describe('none, submitted, rejected, escalated, approved'),
+  "submittedAt": zod.string().nullish(),
+  "submittedByUserId": zod.number().nullish(),
+  "rejectedAt": zod.string().nullish(),
+  "rejectedByUserId": zod.number().nullish(),
+  "rejectionNotes": zod.string().nullish(),
+  "escalatedAt": zod.string().nullish(),
+  "escalatedByUserId": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "approvedByUserId": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Supervisor or manager resets a task's report status to allow a fresh submission
+ */
+export const ReopenTaskParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReopenTaskResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string().describe('housekeeping, reception, maintenance, security, general'),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "supervisorId": zod.number().nullish(),
+  "assignedToId": zod.number().nullish(),
+  "assigneeName": zod.string().nullish(),
+  "assignedByUserId": zod.number().nullish(),
+  "completedByUserId": zod.number().nullish(),
+  "verifiedByUserId": zod.number().nullish(),
+  "proofPhotoUrl": zod.string().nullish(),
+  "beforePhotoUrl": zod.string().nullish(),
+  "afterPhotoUrl": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('pending, in-progress, completed, verified'),
+  "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish(),
+  "reportStatus": zod.string().optional().describe('none, submitted, rejected, escalated, approved'),
+  "submittedAt": zod.string().nullish(),
+  "submittedByUserId": zod.number().nullish(),
+  "rejectedAt": zod.string().nullish(),
+  "rejectedByUserId": zod.number().nullish(),
+  "rejectionNotes": zod.string().nullish(),
+  "escalatedAt": zod.string().nullish(),
+  "escalatedByUserId": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "approvedByUserId": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary List comments for a task
  */
 export const ListTaskCommentsParams = zod.object({

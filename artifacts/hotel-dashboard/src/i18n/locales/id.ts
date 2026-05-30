@@ -251,6 +251,7 @@ const id: Translations = {
     rejectReport: { title: "Tolak Laporan", description: "Jelaskan mengapa laporan ini dikembalikan untuk perbaikan. Pekerja akan melihat pesan ini.", placeholder: "Alasan penolakan (wajib)…", submit: "Tolak", rejecting: "Menolak…" },
     approvedReportsOnly: "Laporan yang disetujui saja",
     approvedReportsOnlyDesc: "Hanya sertakan tugas yang laporannya telah disetujui oleh manajer",
+    recall: "Tarik Laporan", recalling: "Menarik…", recallSuccess: "Laporan ditarik. Perbaiki dan kirim ulang.", recallConfirmTitle: "Tarik Laporan?", recallConfirmDesc: "Ini akan menarik laporan Anda dan mengembalikan tugas ke sedang dikerjakan.", reopen: "Buka Kembali Tugas", reopening: "Membuka kembali…", reopenSuccess: "Tugas dibuka kembali.", reopenConfirmTitle: "Buka Kembali Tugas?", reopenConfirmDesc: "Ini akan mereset status laporan dan mengizinkan pengiriman baru.",
   },
   help: {
     openButton: 'Panduan Bantuan',
@@ -420,6 +421,7 @@ const id: Translations = {
     adminNotesPlaceholder: "Tambahkan respons atau catatan internal untuk tiket ini…",
   },
   pdf: { approvedReport: "APPROVED TASK REPORT", completionReport: "TASK COMPLETION REPORT", completed: "Completed", verified: "Verified", approved: "Approved", avgDuration: "Avg. Duration", categoryBreakdown: "CATEGORY BREAKDOWN", completedTasksSection: "COMPLETED TASKS", auditTrailSection: "REPORT APPROVAL AUDIT TRAIL", photoAppendix: "PHOTO EVIDENCE APPENDIX", colTitle: "Title", colCategory: "Category", colPriority: "Priority", colAssignee: "Assignee", colCompleted: "Completed", colDuration: "Duration", colStatus: "Status", colReport: "Report", colTask: "Task", colSubmitted: "Submitted", colReviewedBy: "Reviewed by Supervisor", colApprovedBy: "Approved by Manager", colReportStatus: "Report Status", colNotes: "Notes", statusSubmitted: "Submitted", statusRejected: "Rejected by Supervisor", statusEscalated: "Reviewed by Supervisor", statusApproved: "Approved by Manager", unassigned: "Unassigned", pending: "Pending", noTasks: "No completed tasks found for the selected period.", confidential: "Confidential", before: "BEFORE", after: "AFTER", noPhoto: "No photo", photoUnavailable: "Photo unavailable", couldNotLoad: "Could not load photo", taskSingular: "task", taskPlural: "tasks", recordSingular: "record", recordPlural: "records", verifiedCheck: "Verified ✓", pageOf: "Page {{current}} of {{total}}" },
+  offline: { banner: "Anda sedang offline", tapToSync: "Perubahan akan tersinkronisasi otomatis saat terhubung kembali", syncing: "Menyinkronkan {{count}} perubahan yang tertunda…", synced: "Kembali online — semua perubahan tersimpan", pendingBadge: "{{count}} tertunda" },
 };
 
 export default id;

@@ -251,6 +251,7 @@ const th: Translations = {
     rejectReport: { title: "ปฏิเสธรายงาน", description: "อธิบายว่าทำไมรายงานนี้จึงถูกส่งกลับเพื่อแก้ไข พนักงานจะเห็นข้อความนี้", placeholder: "เหตุผลในการปฏิเสธ (จำเป็น)…", submit: "ปฏิเสธ", rejecting: "กำลังปฏิเสธ…" },
     approvedReportsOnly: "เฉพาะรายงานที่ได้รับการอนุมัติ",
     approvedReportsOnlyDesc: "รวมเฉพาะงานที่รายงานได้รับการอนุมัติจากผู้จัดการ",
+    recall: "เรียกคืนรายงาน", recalling: "กำลังเรียกคืน…", recallSuccess: "เรียกคืนรายงานแล้ว แก้ไขและส่งใหม่", recallConfirmTitle: "เรียกคืนรายงาน?", recallConfirmDesc: "การดำเนินการนี้จะเรียกคืนรายงานของคุณและส่งงานกลับสู่สถานะกำลังดำเนินการ", reopen: "เปิดงานใหม่", reopening: "กำลังเปิดใหม่…", reopenSuccess: "เปิดงานใหม่แล้ว", reopenConfirmTitle: "เปิดงานใหม่?", reopenConfirmDesc: "การดำเนินการนี้จะรีเซ็ตสถานะรายงานและอนุญาตให้ส่งใหม่ได้",
   },
   help: {
     openButton: 'คู่มือช่วยเหลือ',
@@ -420,6 +421,7 @@ const th: Translations = {
     adminNotesPlaceholder: "เพิ่มคำตอบหรือบันทึกภายในสำหรับตั๋วนี้…",
   },
   pdf: { approvedReport: "APPROVED TASK REPORT", completionReport: "TASK COMPLETION REPORT", completed: "Completed", verified: "Verified", approved: "Approved", avgDuration: "Avg. Duration", categoryBreakdown: "CATEGORY BREAKDOWN", completedTasksSection: "COMPLETED TASKS", auditTrailSection: "REPORT APPROVAL AUDIT TRAIL", photoAppendix: "PHOTO EVIDENCE APPENDIX", colTitle: "Title", colCategory: "Category", colPriority: "Priority", colAssignee: "Assignee", colCompleted: "Completed", colDuration: "Duration", colStatus: "Status", colReport: "Report", colTask: "Task", colSubmitted: "Submitted", colReviewedBy: "Reviewed by Supervisor", colApprovedBy: "Approved by Manager", colReportStatus: "Report Status", colNotes: "Notes", statusSubmitted: "Submitted", statusRejected: "Rejected by Supervisor", statusEscalated: "Reviewed by Supervisor", statusApproved: "Approved by Manager", unassigned: "Unassigned", pending: "Pending", noTasks: "No completed tasks found for the selected period.", confidential: "Confidential", before: "BEFORE", after: "AFTER", noPhoto: "No photo", photoUnavailable: "Photo unavailable", couldNotLoad: "Could not load photo", taskSingular: "task", taskPlural: "tasks", recordSingular: "record", recordPlural: "records", verifiedCheck: "Verified ✓", pageOf: "Page {{current}} of {{total}}" },
+  offline: { banner: "คุณกำลังออฟไลน์อยู่", tapToSync: "การเปลี่ยนแปลงจะซิงค์โดยอัตโนมัติเมื่อเชื่อมต่อใหม่", syncing: "กำลังซิงค์ {{count}} การเปลี่ยนแปลงที่รอดำเนินการ…", synced: "กลับออนไลน์แล้ว — บันทึกการเปลี่ยนแปลงทั้งหมดแล้ว", pendingBadge: "{{count}} รอดำเนินการ" },
 };
 
 export default th;

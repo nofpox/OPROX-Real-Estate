@@ -251,6 +251,7 @@ const zh: Translations = {
     rejectReport: { title: "拒绝报告", description: "请说明退回此任务报告的原因。工作人员将看到此消息。", placeholder: "拒绝原因（必填）…", submit: "拒绝", rejecting: "拒绝中…" },
     approvedReportsOnly: "仅限已批准的报告",
     approvedReportsOnlyDesc: "仅包括报告已由经理批准的任务",
+    recall: "撤回提交", recalling: "撤回中…", recallSuccess: "已撤回提交。修正报告后重新提交。", recallConfirmTitle: "撤回提交？", recallConfirmDesc: "这将撤回您的报告并将任务恢复为进行中状态。", reopen: "重新开放任务", reopening: "正在重新开放…", reopenSuccess: "任务已重新开放。", reopenConfirmTitle: "重新开放任务？", reopenConfirmDesc: "这将重置报告状态并允许重新提交。",
   },
   help: {
     openButton: "帮助指南",
@@ -428,6 +429,7 @@ const zh: Translations = {
     taskSingular: "task", taskPlural: "tasks", recordSingular: "record", recordPlural: "records",
     verifiedCheck: "Verified ✓", pageOf: "Page {{current}} of {{total}}",
   },
+  offline: { banner: "您当前处于离线状态", tapToSync: "重新连接后更改将自动同步", syncing: "正在同步 {{count}} 个待处理更改…", synced: "已重新联机 — 所有更改已保存", pendingBadge: "{{count}} 个待处理" },
 };
 
 export default zh;

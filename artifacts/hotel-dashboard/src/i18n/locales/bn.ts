@@ -251,6 +251,7 @@ const bn: Translations = {
     rejectReport: { title: "রিপোর্ট প্রত্যাখ্যান করুন", description: "কেন এই রিপোর্টটি সংশোধনের জন্য ফেরত পাঠানো হচ্ছে তা ব্যাখ্যা করুন। কর্মী এই বার্তা দেখবেন।", placeholder: "প্রত্যাখ্যানের কারণ (প্রয়োজনীয়)…", submit: "প্রত্যাখ্যান করুন", rejecting: "প্রত্যাখ্যান করা হচ্ছে…" },
     approvedReportsOnly: "শুধুমাত্র অনুমোদিত রিপোর্ট",
     approvedReportsOnlyDesc: "শুধুমাত্র সেই কাজগুলি অন্তর্ভুক্ত করুন যাদের রিপোর্ট ম্যানেজার অনুমোদন দিয়েছেন",
+    recall: "রিপোর্ট প্রত্যাহার", recalling: "প্রত্যাহার করা হচ্ছে…", recallSuccess: "রিপোর্ট প্রত্যাহার করা হয়েছে। সংশোধন করে পুনরায় জমা দিন।", recallConfirmTitle: "রিপোর্ট প্রত্যাহার?", recallConfirmDesc: "এটি আপনার রিপোর্ট প্রত্যাহার করবে এবং কাজটি পুনরায় চলমানে ফিরিয়ে দেবে।", reopen: "কাজ পুনরায় খুলুন", reopening: "পুনরায় খোলা হচ্ছে…", reopenSuccess: "কাজ পুনরায় খোলা হয়েছে।", reopenConfirmTitle: "কাজ পুনরায় খুলবেন?", reopenConfirmDesc: "এটি রিপোর্টের স্ট্যাটাস রিসেট করবে এবং নতুন জমা দেওয়ার অনুমতি দেবে।",
   },
   help: {
     openButton: 'সাহায্য গাইড',
@@ -420,6 +421,7 @@ const bn: Translations = {
     adminNotesPlaceholder: "এই টিকেটের জন্য একটি উত্তর বা নোট যোগ করুন…",
   },
   pdf: { approvedReport: "APPROVED TASK REPORT", completionReport: "TASK COMPLETION REPORT", completed: "Completed", verified: "Verified", approved: "Approved", avgDuration: "Avg. Duration", categoryBreakdown: "CATEGORY BREAKDOWN", completedTasksSection: "COMPLETED TASKS", auditTrailSection: "REPORT APPROVAL AUDIT TRAIL", photoAppendix: "PHOTO EVIDENCE APPENDIX", colTitle: "Title", colCategory: "Category", colPriority: "Priority", colAssignee: "Assignee", colCompleted: "Completed", colDuration: "Duration", colStatus: "Status", colReport: "Report", colTask: "Task", colSubmitted: "Submitted", colReviewedBy: "Reviewed by Supervisor", colApprovedBy: "Approved by Manager", colReportStatus: "Report Status", colNotes: "Notes", statusSubmitted: "Submitted", statusRejected: "Rejected by Supervisor", statusEscalated: "Reviewed by Supervisor", statusApproved: "Approved by Manager", unassigned: "Unassigned", pending: "Pending", noTasks: "No completed tasks found for the selected period.", confidential: "Confidential", before: "BEFORE", after: "AFTER", noPhoto: "No photo", photoUnavailable: "Photo unavailable", couldNotLoad: "Could not load photo", taskSingular: "task", taskPlural: "tasks", recordSingular: "record", recordPlural: "records", verifiedCheck: "Verified ✓", pageOf: "Page {{current}} of {{total}}" },
+  offline: { banner: "আপনি অফলাইনে আছেন", tapToSync: "পুনরায় সংযুক্ত হলে পরিবর্তনগুলি স্বয়ংক্রিয়ভাবে সিঙ্ক হবে", syncing: "{{count}}টি মুলতুবি পরিবর্তন সিঙ্ক হচ্ছে…", synced: "পুনরায় অনলাইন — সমস্ত পরিবর্তন সংরক্ষিত", pendingBadge: "{{count}} মুলতুবি" },
 };
 
 export default bn;

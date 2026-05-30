@@ -6,7 +6,10 @@ import {
   useListStaff, useListProperties, useListRooms,
   useListTaskComments, useCreateTaskComment,
   useSubmitTaskReport, useRejectTaskReport, useEscalateTaskReport, useApproveTaskReport,
+  useRecallTaskReport, useReopenTask,
 } from "@workspace/api-client-react";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { enqueue, dequeue, getQueue } from "@/lib/offline-queue";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +30,7 @@ import {
   Plus, Trash2, CheckCheck, Clock, AlertCircle, CheckCircle2,
   Building2, Image as ImageIcon, Send, X, Zap, Droplets, Wind, Sparkles, ClipboardList,
   Camera, Upload, ExternalLink, ShieldCheck, BadgeCheck, FileText, Download, Loader2,
-  FileCheck, ArrowUpCircle, XCircle, ThumbsUp, RotateCcw,
+  FileCheck, ArrowUpCircle, XCircle, ThumbsUp, RotateCcw, Undo2,
   QrCode, Copy, Printer, HelpCircle,
 } from "lucide-react";
 import { generateTaskReport } from "@/lib/pdf-report";
@@ -564,11 +567,14 @@ interface TaskDetailSheetProps {
   open: boolean;
   onClose: () => void;
   canVerify: boolean;
+  canReopen?: boolean;
   onMarkStart?: () => void;
   onMarkComplete?: () => void;
+  onRecall?: (id: number) => void;
+  onReopen?: (id: number) => void;
 }
 
-function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkComplete }: TaskDetailSheetProps) {
+function TaskDetailSheet({ task, open, onClose, canVerify, canReopen, onMarkStart, onMarkComplete, onRecall, onReopen }: TaskDetailSheetProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { toast }   = useToast();
@@ -854,6 +860,32 @@ function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkCo
                 </li>
               )}
             </ol>
+
+            {/* Recall / Reopen action buttons */}
+            <div className="flex gap-2 pt-1 flex-wrap">
+              {task.reportStatus === "submitted" && onRecall && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs border-amber-200 text-amber-700 hover:border-amber-300 hover:text-amber-700 dark:border-amber-800 dark:text-amber-400"
+                  onClick={() => onRecall(task.id)}
+                >
+                  <Undo2 className="h-3 w-3 me-1" />
+                  {t("tasks.recall.button")}
+                </Button>
+              )}
+              {canReopen && onReopen && task.reportStatus !== "none" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs border-violet-200 text-violet-700 hover:border-violet-300 hover:text-violet-700 dark:border-violet-800 dark:text-violet-400"
+                  onClick={() => onReopen(task.id)}
+                >
+                  <RotateCcw className="h-3 w-3 me-1" />
+                  {t("tasks.reopen.button")}
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
@@ -1542,6 +1574,36 @@ export default function Tasks() {
   const rejectReport  = useRejectTaskReport();
   const escalateRpt   = useEscalateTaskReport();
   const approveRpt    = useApproveTaskReport();
+  const recallRpt     = useRecallTaskReport();
+  const reopenTaskMut = useReopenTask();
+
+  const { isOnline }  = useOnlineStatus();
+
+  // Replay queued offline actions on reconnection
+  useEffect(() => {
+    if (!isOnline) return;
+    const queue = getQueue();
+    if (queue.length === 0) return;
+    queue.forEach(({ id: entryId, action }) => {
+      if (action.type === "submit") {
+        submitReport.mutate({ id: action.taskId }, {
+          onSuccess: () => { dequeue(entryId); queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) }); },
+          onError: () => { dequeue(entryId); },
+        });
+      } else if (action.type === "recall") {
+        recallRpt.mutate({ id: action.taskId }, {
+          onSuccess: () => { dequeue(entryId); queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) }); },
+          onError: () => { dequeue(entryId); },
+        });
+      } else if (action.type === "reopen") {
+        reopenTaskMut.mutate({ id: action.taskId }, {
+          onSuccess: () => { dequeue(entryId); queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) }); },
+          onError: () => { dequeue(entryId); },
+        });
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline]);
 
   // ── URL deep-link: ?taskId=X auto-opens that task ──────────────────────────
   useEffect(() => {
@@ -1647,6 +1709,38 @@ export default function Tasks() {
         toast({ title: "Report approved." });
       },
       onError: (err: any) => toast({ title: err?.body?.error ?? "Failed to approve report.", variant: "destructive" }),
+    });
+  }
+
+  function handleRecallReport(id: number) {
+    if (!isOnline) {
+      enqueue({ type: "recall", taskId: id });
+      toast({ title: t("tasks.recall.queued", { defaultValue: "Recall queued — will sync when back online." }) });
+      return;
+    }
+    recallRpt.mutate({ id }, {
+      onSuccess: (updated: any) => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+        setSelectedTask((prev: any) => prev?.id === id ? { ...prev, ...updated } : prev);
+        toast({ title: t("tasks.recall.success", { defaultValue: "Report recalled — you can edit and resubmit." }) });
+      },
+      onError: (err: any) => toast({ title: err?.body?.error ?? "Failed to recall report.", variant: "destructive" }),
+    });
+  }
+
+  function handleReopenTask(id: number) {
+    if (!isOnline) {
+      enqueue({ type: "reopen", taskId: id });
+      toast({ title: t("tasks.reopen.queued", { defaultValue: "Reopen queued — will sync when back online." }) });
+      return;
+    }
+    reopenTaskMut.mutate({ id }, {
+      onSuccess: (updated: any) => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+        setSelectedTask((prev: any) => prev?.id === id ? { ...prev, ...updated } : prev);
+        toast({ title: t("tasks.reopen.success", { defaultValue: "Task reopened and report cleared." }) });
+      },
+      onError: (err: any) => toast({ title: err?.body?.error ?? "Failed to reopen task.", variant: "destructive" }),
     });
   }
 
@@ -1896,8 +1990,11 @@ export default function Tasks() {
         open={!!selectedTask}
         onClose={() => setSelectedTask(null)}
         canVerify={canVerify}
+        canReopen={canReviewRpt}
         onMarkStart={selectedTask ? () => { setBeforePhotoTask(selectedTask); } : undefined}
         onMarkComplete={selectedTask ? () => { setAfterPhotoTask(selectedTask); } : undefined}
+        onRecall={handleRecallReport}
+        onReopen={handleReopenTask}
       />
 
       {/* Before-photo dialog */}

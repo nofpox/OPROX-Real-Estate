@@ -253,6 +253,7 @@ const tl: Translations = {
     rejectReport: { title: "Tanggihan ang Ulat", description: "Ipaliwanag kung bakit ang ulat na ito ay ibinabalik para sa mga pagwawasto. Makikita ng manggagawa ang mensaheng ito.", placeholder: "Dahilan ng pagtanggi (kinakailangan)…", submit: "Tanggihan", rejecting: "Tinatanggihan…" },
     approvedReportsOnly: "Mga aprubadong ulat lamang",
     approvedReportsOnlyDesc: "Isama lamang ang mga gawaing ang ulat ay inaaprubahan ng Manager",
+    recall: "Bawiin ang Ulat", recalling: "Binabawi…", recallSuccess: "Naibalik ang ulat. Ayusin at muling isumite.", recallConfirmTitle: "Bawiin ang Ulat?", recallConfirmDesc: "Babawiin nito ang iyong ulat at ibabalik ang gawain sa in-progress.", reopen: "Buksan Muli ang Gawain", reopening: "Binubuksan muli…", reopenSuccess: "Nabuksan muli ang gawain.", reopenConfirmTitle: "Buksan Muli ang Gawain?", reopenConfirmDesc: "Ire-reset nito ang katayuan ng ulat at papayagan ang bagong pagsusumite.",
   },
   help: {
     openButton: 'Gabay sa Tulong',
@@ -422,6 +423,7 @@ const tl: Translations = {
     adminNotesPlaceholder: "Magdagdag ng tugon o panloob na tala para sa tiket na ito…",
   },
   pdf: { approvedReport: "APPROVED TASK REPORT", completionReport: "TASK COMPLETION REPORT", completed: "Completed", verified: "Verified", approved: "Approved", avgDuration: "Avg. Duration", categoryBreakdown: "CATEGORY BREAKDOWN", completedTasksSection: "COMPLETED TASKS", auditTrailSection: "REPORT APPROVAL AUDIT TRAIL", photoAppendix: "PHOTO EVIDENCE APPENDIX", colTitle: "Title", colCategory: "Category", colPriority: "Priority", colAssignee: "Assignee", colCompleted: "Completed", colDuration: "Duration", colStatus: "Status", colReport: "Report", colTask: "Task", colSubmitted: "Submitted", colReviewedBy: "Reviewed by Supervisor", colApprovedBy: "Approved by Manager", colReportStatus: "Report Status", colNotes: "Notes", statusSubmitted: "Submitted", statusRejected: "Rejected by Supervisor", statusEscalated: "Reviewed by Supervisor", statusApproved: "Approved by Manager", unassigned: "Unassigned", pending: "Pending", noTasks: "No completed tasks found for the selected period.", confidential: "Confidential", before: "BEFORE", after: "AFTER", noPhoto: "No photo", photoUnavailable: "Photo unavailable", couldNotLoad: "Could not load photo", taskSingular: "task", taskPlural: "tasks", recordSingular: "record", recordPlural: "records", verifiedCheck: "Verified ✓", pageOf: "Page {{current}} of {{total}}" },
+  offline: { banner: "Naka-offline ka", tapToSync: "Awtomatikong mag-si-sync ang mga pagbabago kapag nakakonekta na", syncing: "Nag-si-sync ng {{count}} nakabinbing pagbabago…", synced: "Bumalik online — naligtas ang lahat ng pagbabago", pendingBadge: "{{count}} nakabinbing" },
 };
 
 export default tl;
