@@ -31,7 +31,6 @@ const PropertyStatusBadge = ({ status }: { status: string }) => {
 
 const propertySchema = z.object({
   name: z.string().min(1),
-  type: z.string().min(1),
   address: z.string().min(1),
   city: z.string().min(1),
   country: z.string().default("USA"),
@@ -53,12 +52,12 @@ export default function Properties() {
 
   const form = useForm<z.infer<typeof propertySchema>>({
     resolver: zodResolver(propertySchema),
-    defaultValues: { name: "", type: "Property", address: "", city: "", country: "USA", description: "", status: "active" },
+    defaultValues: { name: "", address: "", city: "", country: "USA", description: "", status: "active" },
   });
 
   const handleEdit = (property: Property) => {
     setEditingProperty(property);
-    form.reset({ name: property.name, type: property.type, address: property.address, city: property.city, country: property.country, description: property.description || "", status: property.status });
+    form.reset({ name: property.name, address: property.address, city: property.city, country: property.country, description: property.description || "", status: property.status });
     setIsDialogOpen(true);
   };
 
@@ -87,7 +86,7 @@ export default function Properties() {
 
   const onOpenChange = (open: boolean) => {
     setIsDialogOpen(open);
-    if (!open) { setEditingProperty(null); form.reset({ name: "", type: "Property", address: "", city: "", country: "USA", description: "", status: "active" }); }
+    if (!open) { setEditingProperty(null); form.reset({ name: "", address: "", city: "", country: "USA", description: "", status: "active" }); }
   };
 
   const totalProperties = properties?.length || 0;

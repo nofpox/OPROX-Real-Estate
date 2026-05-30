@@ -9,7 +9,6 @@ const DEFAULT_MODULES = ["bookings", "maintenance", "housekeeping", "serviceRequ
 
 const DEFAULTS: Record<string, string> = {
   propertyName: "My Property",
-  propertyType: "all",
   logoText: "My",
   logoSub: "Property",
   businessMode: "hotel",
@@ -53,7 +52,6 @@ function buildResponse(s: Record<string, string>) {
   }
   return {
     propertyName: s.propertyName,
-    propertyType: s.propertyType,
     logoText: s.logoText,
     logoSub: s.logoSub,
     businessMode: s.businessMode,
@@ -68,7 +66,7 @@ router.get("/settings", async (_req, res) => {
 
 router.patch("/settings", async (req, res) => {
   const body = req.body ?? {};
-  const stringFields = ["propertyName", "propertyType", "logoText", "logoSub", "businessMode"];
+  const stringFields = ["propertyName", "logoText", "logoSub", "businessMode"];
 
   for (const key of stringFields) {
     if (typeof body[key] === "string" && body[key].trim().length > 0) {

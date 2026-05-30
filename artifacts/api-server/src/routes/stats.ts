@@ -5,9 +5,6 @@ import { eq, sql } from "drizzle-orm";
 const router = Router();
 
 router.get("/stats/overview", async (req, res) => {
-  const propertyType = req.query.propertyType as string | undefined;
-  const typeFilter = propertyType ? eq(propertiesTable.type, propertyType) : sql`1=1`;
-
   const [bookingStats] = await db
     .select({
       totalBookings: sql<number>`count(*)::int`,
@@ -22,8 +19,7 @@ router.get("/stats/overview", async (req, res) => {
     })
     .from(bookingsTable)
     .leftJoin(roomsTable, eq(bookingsTable.roomId, roomsTable.id))
-    .leftJoin(propertiesTable, eq(roomsTable.propertyId, propertiesTable.id))
-    .where(typeFilter);
+    .leftJoin(propertiesTable, eq(roomsTable.propertyId, propertiesTable.id));
 
   const [roomStats] = await db
     .select({
@@ -32,8 +28,7 @@ router.get("/stats/overview", async (req, res) => {
       occupiedRooms: sql<number>`count(*) filter (where ${roomsTable.status} = 'occupied')::int`,
     })
     .from(roomsTable)
-    .leftJoin(propertiesTable, eq(roomsTable.propertyId, propertiesTable.id))
-    .where(typeFilter);
+    .leftJoin(propertiesTable, eq(roomsTable.propertyId, propertiesTable.id));
 
   const occupancyRate =
     roomStats.totalRooms > 0
@@ -91,12 +86,11 @@ router.get("/stats/occupancy-heatmap", async (req, res) => {
     .select({
       propertyId: roomsTable.propertyId,
       propertyName: propertiesTable.name,
-      propertyType: propertiesTable.type,
       totalRooms: sql<number>`count(*)::int`,
     })
     .from(roomsTable)
     .leftJoin(propertiesTable, eq(roomsTable.propertyId, propertiesTable.id))
-    .groupBy(roomsTable.propertyId, propertiesTable.name, propertiesTable.type);
+    .groupBy(roomsTable.propertyId, propertiesTable.name);
 
   const bookings = await db
     .select({
@@ -112,9 +106,9 @@ router.get("/stats/occupancy-heatmap", async (req, res) => {
         and ${bookingsTable.checkIn} <= ${endStr}`
     );
 
-  const result: { propertyId: number; propertyName: string; propertyType: string; date: string; occupiedRooms: number; totalRooms: number; occupancyPct: number }[] = [];
+  const result: { propertyId: number; propertyName: string; date: string; occupiedRooms: number; totalRooms: number; occupancyPct: number }[] = [];
 
-  for (const { propertyId, propertyName, propertyType, totalRooms } of roomCounts) {
+  for (const { propertyId, propertyName, totalRooms } of roomCounts) {
     const d = new Date(startDate);
     while (d <= endDate) {
       const dateStr = d.toISOString().split("T")[0];
@@ -125,7 +119,6 @@ router.get("/stats/occupancy-heatmap", async (req, res) => {
       result.push({
         propertyId: propertyId!,
         propertyName: propertyName ?? "Unknown",
-        propertyType: propertyType ?? "Hotel",
         date: dateStr,
         occupiedRooms: occupied,
         totalRooms,
@@ -159,15 +152,11 @@ router.get("/stats/occupancy", async (req, res) => {
 });
 
 router.get("/stats/recent-bookings", async (req, res) => {
-  const propertyType = req.query.propertyType as string | undefined;
-  const typeFilter = propertyType ? eq(propertiesTable.type, propertyType) : sql`1=1`;
-
   const rows = await db
     .select({ booking: bookingsTable, room: roomsTable })
     .from(bookingsTable)
     .leftJoin(roomsTable, eq(bookingsTable.roomId, roomsTable.id))
     .leftJoin(propertiesTable, eq(roomsTable.propertyId, propertiesTable.id))
-    .where(typeFilter)
     .orderBy(sql`${bookingsTable.createdAt} desc`)
     .limit(10);
 

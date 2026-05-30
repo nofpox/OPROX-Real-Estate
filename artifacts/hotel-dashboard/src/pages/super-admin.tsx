@@ -175,15 +175,15 @@ export default function SuperAdmin() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="propertyType">Property Type Label</Label>
+              <Label htmlFor="businessMode">Business Mode</Label>
               <p className="text-xs text-muted-foreground">
-                Shown as a badge on the dashboard. Has no effect on which features are enabled.
+                Controls unit labels and available features for this portfolio.
               </p>
               <Select
                 value={businessMode}
                 onValueChange={(v) => { setBusinessMode(v as BusinessMode); setDirty(true); }}
               >
-                <SelectTrigger id="propertyType" className="w-full sm:w-64">
+                <SelectTrigger id="businessMode" className="w-full sm:w-64">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

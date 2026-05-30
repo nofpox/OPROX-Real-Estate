@@ -6,7 +6,6 @@ export type { BusinessMode };
 
 export type AppSettings = {
   propertyName: string;
-  propertyType: string;
   logoText: string;
   logoSub: string;
   businessMode: BusinessMode;
@@ -18,7 +17,6 @@ const DEFAULT_MODULES = ["bookings", "maintenance", "housekeeping", "serviceRequ
 
 const FALLBACK: AppSettings = {
   propertyName: branding.propertyName,
-  propertyType: branding.propertyType,
   logoText: branding.logoText,
   logoSub: branding.logoSub,
   businessMode: "hotel",
@@ -30,7 +28,6 @@ export function useSettings(): AppSettings {
   if (!data) return FALLBACK;
   return {
     propertyName: data.propertyName || FALLBACK.propertyName,
-    propertyType: data.propertyType || FALLBACK.propertyType,
     logoText: data.logoText || FALLBACK.logoText,
     logoSub: data.logoSub || FALLBACK.logoSub,
     businessMode: ((data.businessMode as BusinessMode) || "hotel"),

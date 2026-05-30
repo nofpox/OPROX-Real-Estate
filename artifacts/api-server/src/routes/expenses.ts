@@ -105,7 +105,6 @@ router.get("/finance/summary", async (req, res) => {
       return {
         propertyId: prop.id,
         propertyName: prop.name,
-        propertyType: prop.type,
         totalRevenue,
         totalExpenses,
         netIncome: totalRevenue - totalExpenses,

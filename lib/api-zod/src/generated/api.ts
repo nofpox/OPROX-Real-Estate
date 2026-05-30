@@ -13,7 +13,6 @@ import * as zod from 'zod';
  */
 export const GetSettingsResponse = zod.object({
   "propertyName": zod.string().describe('Display name shown as the dashboard heading and sidebar logo'),
-  "propertyType": zod.string().describe('Hotel | Compound | Furnished Apartments | all'),
   "logoText": zod.string().describe('Large serif word in the sidebar logo'),
   "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
   "businessMode": zod.string().describe('hotel | compound | tower | serviced-apartments'),
@@ -26,7 +25,6 @@ export const GetSettingsResponse = zod.object({
  */
 export const UpdateSettingsBody = zod.object({
   "propertyName": zod.string().optional(),
-  "propertyType": zod.string().optional(),
   "logoText": zod.string().optional(),
   "logoSub": zod.string().optional(),
   "businessMode": zod.string().optional(),
@@ -35,7 +33,6 @@ export const UpdateSettingsBody = zod.object({
 
 export const UpdateSettingsResponse = zod.object({
   "propertyName": zod.string().describe('Display name shown as the dashboard heading and sidebar logo'),
-  "propertyType": zod.string().describe('Hotel | Compound | Furnished Apartments | all'),
   "logoText": zod.string().describe('Large serif word in the sidebar logo'),
   "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
   "businessMode": zod.string().describe('hotel | compound | tower | serviced-apartments'),
@@ -281,10 +278,6 @@ export const CancelBookingResponse = zod.object({
 /**
  * @summary Get dashboard overview statistics
  */
-export const GetStatsOverviewQueryParams = zod.object({
-  "propertyType": zod.coerce.string().optional().describe('Filter by property type (Hotel, Apartment, Compound, Furnished Apartments). Omit for all.')
-})
-
 export const GetStatsOverviewResponse = zod.object({
   "totalBookings": zod.number(),
   "activeBookings": zod.number(),
@@ -345,7 +338,6 @@ export const GetOccupancyStatsResponse = zod.array(GetOccupancyStatsResponseItem
 export const ListPropertiesResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.string().describe('Hotel, Apartment, Compound, Furnished Apartments'),
   "address": zod.string(),
   "city": zod.string(),
   "country": zod.string(),
@@ -362,7 +354,6 @@ export const ListPropertiesResponse = zod.array(ListPropertiesResponseItem)
  */
 export const CreatePropertyBody = zod.object({
   "name": zod.string(),
-  "type": zod.string(),
   "address": zod.string(),
   "city": zod.string(),
   "country": zod.string().optional(),
@@ -381,7 +372,6 @@ export const GetPropertyParams = zod.object({
 export const GetPropertyResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.string().describe('Hotel, Apartment, Compound, Furnished Apartments'),
   "address": zod.string(),
   "city": zod.string(),
   "country": zod.string(),
@@ -401,7 +391,6 @@ export const UpdatePropertyParams = zod.object({
 
 export const UpdatePropertyBody = zod.object({
   "name": zod.string().optional(),
-  "type": zod.string().optional(),
   "address": zod.string().optional(),
   "city": zod.string().optional(),
   "country": zod.string().optional(),
@@ -412,7 +401,6 @@ export const UpdatePropertyBody = zod.object({
 export const UpdatePropertyResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.string().describe('Hotel, Apartment, Compound, Furnished Apartments'),
   "address": zod.string(),
   "city": zod.string(),
   "country": zod.string(),
@@ -1029,10 +1017,6 @@ export const GetGuestResponse = zod.object({
 /**
  * @summary Get recent bookings for activity feed
  */
-export const GetRecentBookingsQueryParams = zod.object({
-  "propertyType": zod.coerce.string().optional().describe('Filter by property type. Omit for all.')
-})
-
 export const GetRecentBookingsResponseItem = zod.object({
   "id": zod.number(),
   "guestName": zod.string(),

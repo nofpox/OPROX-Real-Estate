@@ -33,11 +33,7 @@ type TooltipData = {
   occupancyPct: number;
 };
 
-interface OccupancyHeatmapProps {
-  propertyType?: string;
-}
-
-export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
+export function OccupancyHeatmap() {
   const { t } = useTranslation();
   const { lang } = useLanguage();
   const locale = lang === "ar" ? "ar-EG" : "en-US";
@@ -53,18 +49,15 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
 
   const properties = useMemo(() => {
     if (!rawData) return [];
-    const filtered = propertyType
-      ? rawData.filter((e) => (e as OccupancyHeatmapEntry & { propertyType?: string }).propertyType === propertyType)
-      : rawData;
     const map = new Map<number, { id: number; name: string; cells: Map<string, OccupancyHeatmapEntry> }>();
-    for (const entry of filtered) {
+    for (const entry of rawData) {
       if (!map.has(entry.propertyId)) {
         map.set(entry.propertyId, { id: entry.propertyId, name: entry.propertyName, cells: new Map() });
       }
       map.get(entry.propertyId)!.cells.set(entry.date, entry);
     }
     return Array.from(map.values()).sort((a, b) => a.id - b.id);
-  }, [rawData, propertyType]);
+  }, [rawData]);
 
   const dates = useMemo(() => {
     if (!rawData || rawData.length === 0) return [];
@@ -84,7 +77,6 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
     for (const d of dates) {
       const dateObj = new Date(d + "T00:00:00");
       const monthKey = `${dateObj.getFullYear()}-${dateObj.getMonth()}`;
-      const monthLabel = dateObj.toLocaleDateString(locale, { month: "short" });
       if (currentMonthKey !== monthKey && currentGroup.length > 0) {
         const prevDate = new Date(currentGroup[0] + "T00:00:00");
         groups.push({ label: prevDate.toLocaleDateString(locale, { month: "short" }), dates: currentGroup });
@@ -102,14 +94,10 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
 
   const avgOccupancy = useMemo(() => {
     if (!rawData || rawData.length === 0) return 0;
-    const todayEntries = rawData.filter((e) => {
-      if (e.date !== today) return false;
-      if (propertyType) return (e as OccupancyHeatmapEntry & { propertyType?: string }).propertyType === propertyType;
-      return true;
-    });
+    const todayEntries = rawData.filter((e) => e.date === today);
     if (todayEntries.length === 0) return 0;
     return Math.round(todayEntries.reduce((s, e) => s + e.occupancyPct, 0) / todayEntries.length);
-  }, [rawData, today, propertyType]);
+  }, [rawData, today]);
 
   const handleMouseEnter = (e: React.MouseEvent, entry: OccupancyHeatmapEntry, propertyName: string) => {
     const rect = (e.target as HTMLElement).getBoundingClientRect();
@@ -141,7 +129,6 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
             <CardTitle className="font-serif text-base">{t("dashboard.heatmap.title")}</CardTitle>
             <CardDescription className="text-xs mt-0.5">
               {t("dashboard.heatmap.subtitle")}
-              {propertyType && <span className="ms-1 font-medium text-foreground/70">· {t(`propertyType.${propertyType}`, propertyType)}</span>}
             </CardDescription>
           </div>
           <Badge variant="outline" className="text-xs font-normal whitespace-nowrap">
@@ -173,9 +160,7 @@ export function OccupancyHeatmap({ propertyType }: OccupancyHeatmapProps) {
           </div>
         ) : properties.length === 0 ? (
           <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
-            {propertyType
-              ? t("dashboard.heatmap.noDataFiltered", { type: t(`propertyType.${propertyType}`, propertyType) })
-              : t("dashboard.heatmap.noData")}
+            {t("dashboard.heatmap.noData")}
           </div>
         ) : (
           /* Always render heatmap grid LTR — date progression is always left-to-right universally */

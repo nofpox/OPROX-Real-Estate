@@ -17,7 +17,7 @@ import { Router } from "express";
     res.json({
       unit: {
         id: row.room.id, name: row.room.name, type: row.room.type,
-        propertyId: row.room.propertyId, propertyName: row.property?.name ?? null, propertyType: row.property?.type ?? null,
+        propertyId: row.room.propertyId, propertyName: row.property?.name ?? null,
       },
       financial: financial ? {
         dueDate: financial.dueDate,

@@ -7,7 +7,7 @@ import { Router } from "express";
   function fmtRow(fin: typeof unitFinancialsTable.$inferSelect, room?: typeof roomsTable.$inferSelect | null, property?: typeof propertiesTable.$inferSelect | null) {
     return {
       roomId: fin.roomId, unitName: room?.name ?? null, propertyName: property?.name ?? null,
-      propertyType: property?.type ?? null, status: fin.status, dueDate: fin.dueDate,
+      status: fin.status, dueDate: fin.dueDate,
       amountDue: fin.amountDue ? parseFloat(String(fin.amountDue)) : null,
       checkIn: fin.checkIn, checkOut: fin.checkOut,
       updatedAt: fin.updatedAt.toISOString(), createdAt: fin.createdAt.toISOString(),

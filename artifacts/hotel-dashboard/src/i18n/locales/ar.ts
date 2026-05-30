@@ -94,13 +94,6 @@ const ar: Translations = {
       security: "مهام الأمن والسلامة والوصول",
     },
   },
-  propertyType: {
-    Hotel: "فندق",
-    Apartment: "شقة سكنية",
-    Compound: "مجمع سكني",
-    "Furnished Apartments": "شقق مفروشة",
-    all: "جميع العقارات",
-  },
   header: {
     myAccount: "حسابي",
     settings: "الإعدادات",

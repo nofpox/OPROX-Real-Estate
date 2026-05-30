@@ -294,13 +294,6 @@ paths:
       operationId: getStatsOverview
       tags: [stats]
       summary: Get dashboard overview statistics
-      parameters:
-        - name: propertyType
-          in: query
-          required: false
-          schema:
-            type: string
-          description: "Filter by property type (Hotel, Apartment, Compound, Furnished Apartments). Omit for all."
       responses:
         "200":
           description: Overview stats
@@ -1072,13 +1065,6 @@ paths:
       operationId: getRecentBookings
       tags: [stats]
       summary: Get recent bookings for activity feed
-      parameters:
-        - name: propertyType
-          in: query
-          required: false
-          schema:
-            type: string
-          description: "Filter by property type. Omit for all."
       responses:
         "200":
           description: Recent bookings
@@ -1495,14 +1481,11 @@ components:
   schemas:
     Settings:
       type: object
-      required: [propertyName, propertyType, logoText, logoSub, businessMode, enabledFeatures]
+      required: [propertyName, logoText, logoSub, businessMode, enabledFeatures]
       properties:
         propertyName:
           type: string
           description: Display name shown as the dashboard heading and sidebar logo
-        propertyType:
-          type: string
-          description: "Hotel | Compound | Furnished Apartments | all"
         logoText:
           type: string
           description: Large serif word in the sidebar logo
@@ -1522,8 +1505,6 @@ components:
       type: object
       properties:
         propertyName:
-          type: string
-        propertyType:
           type: string
         logoText:
           type: string
@@ -1751,15 +1732,12 @@ components:
 
     Property:
       type: object
-      required: [id, name, type, address, city, country, status, createdAt]
+      required: [id, name, address, city, country, status, createdAt]
       properties:
         id:
           type: integer
         name:
           type: string
-        type:
-          type: string
-          description: "Hotel, Apartment, Compound, Furnished Apartments"
         address:
           type: string
         city:
@@ -1778,11 +1756,9 @@ components:
 
     PropertyInput:
       type: object
-      required: [name, type, address, city]
+      required: [name, address, city]
       properties:
         name:
-          type: string
-        type:
           type: string
         address:
           type: string
@@ -1799,8 +1775,6 @@ components:
       type: object
       properties:
         name:
-          type: string
-        type:
           type: string
         address:
           type: string

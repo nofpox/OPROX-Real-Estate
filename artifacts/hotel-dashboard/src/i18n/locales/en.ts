@@ -92,13 +92,6 @@ const en = {
       security: "Security tasks and property access",
     },
   },
-  propertyType: {
-    Hotel: "Hotel",
-    Apartment: "Apartment",
-    Compound: "Compound",
-    "Furnished Apartments": "Furnished Apartments",
-    all: "All Properties",
-  },
   header: {
     myAccount: "My Account",
     settings: "Settings",

@@ -8,8 +8,6 @@
 export interface Settings {
   /** Display name shown as the dashboard heading and sidebar logo */
   propertyName: string;
-  /** Hotel | Compound | Furnished Apartments | all */
-  propertyType: string;
   /** Large serif word in the sidebar logo */
   logoText: string;
   /** Smaller sans-serif word in the sidebar logo */
@@ -22,7 +20,6 @@ export interface Settings {
 
 export interface SettingsInput {
   propertyName?: string;
-  propertyType?: string;
   logoText?: string;
   logoSub?: string;
   businessMode?: string;
@@ -152,8 +149,6 @@ export interface OccupancyStat {
 export interface Property {
   id: number;
   name: string;
-  /** Hotel, Apartment, Compound, Furnished Apartments */
-  type: string;
   address: string;
   city: string;
   country: string;
@@ -167,7 +162,6 @@ export interface Property {
 
 export interface PropertyInput {
   name: string;
-  type: string;
   address: string;
   city: string;
   country?: string;
@@ -177,7 +171,6 @@ export interface PropertyInput {
 
 export interface PropertyUpdate {
   name?: string;
-  type?: string;
   address?: string;
   city?: string;
   country?: string;
@@ -660,13 +653,6 @@ status?: string;
 roomId?: number;
 };
 
-export type GetStatsOverviewParams = {
-/**
- * Filter by property type (Hotel, Apartment, Compound, Furnished Apartments). Omit for all.
- */
-propertyType?: string;
-};
-
 export type GetOccupancyHeatmapParams = {
 /**
  * Number of days in range (default 42)
@@ -727,13 +713,6 @@ export type ListGuestsParams = {
  * Search by name, email, or phone
  */
 search?: string;
-};
-
-export type GetRecentBookingsParams = {
-/**
- * Filter by property type. Omit for all.
- */
-propertyType?: string;
 };
 
 export type ListGuestRequestsParams = {
