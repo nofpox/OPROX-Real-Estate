@@ -212,7 +212,7 @@ export default function Properties() {
         ) : (
           properties?.map((property) => {
             return (
-              <Card key={property.id} className="shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all">
+              <Card key={property.id} className="shadow-sm overflow-hidden flex flex-col group">
                 <CardHeader className="p-6 pb-4">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <CardTitle className="font-serif text-xl line-clamp-1 flex-1">{property.name}</CardTitle>

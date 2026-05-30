@@ -64,7 +64,7 @@ function FieldRow({
   const { t } = useTranslation();
   return (
     <div
-      className="grid items-center gap-x-3 py-3 border-b border-border/40 last:border-0 px-3 -mx-3 hover:bg-muted/20 rounded transition-colors"
+      className="grid items-center gap-x-3 py-3 border-b border-border/40 last:border-0 px-3 -mx-3 hover:bg-muted/20 rounded"
       style={{ gridTemplateColumns: "1fr 7rem 5rem 4rem auto" }}
     >
       <div className="min-w-0">
@@ -344,7 +344,7 @@ function AdminSettingsInner() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border ${
               activeTab === tab
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-background text-muted-foreground border-border hover:bg-muted"

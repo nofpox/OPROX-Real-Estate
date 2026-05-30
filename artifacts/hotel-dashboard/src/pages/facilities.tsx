@@ -88,7 +88,7 @@ export default function Facilities() {
               <button
                 key={fac.id}
                 onClick={() => setSelectedFacility(fac)}
-                className={`w-full text-left rounded-lg border px-4 py-3 transition-all flex items-center gap-3 ${
+                className={`w-full text-left rounded-lg border px-4 py-3 flex items-center gap-3 ${
                   isSelected
                     ? `${fac.bg} border-current ${fac.color} ring-1 ring-current/30`
                     : "bg-card border-border hover:bg-muted/40"

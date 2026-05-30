@@ -256,7 +256,7 @@ export default function StaffShifts() {
                 )}
                 <button
                   onClick={() => handleOpenDialog(key)}
-                  className="w-full rounded-md border border-dashed border-border/60 py-1.5 text-[11px] text-muted-foreground hover:bg-muted/50 hover:border-primary/40 hover:text-primary transition-colors"
+                  className="w-full rounded-md border border-dashed border-border/60 py-1.5 text-[11px] text-muted-foreground hover:bg-muted/50"
                 >
                   {t("shifts.addDay")}
                 </button>
@@ -324,7 +324,7 @@ export default function StaffShifts() {
                         <button
                           key={st.id} type="button"
                           onClick={() => handleShiftTypeChange(st.id)}
-                          className={`flex flex-col items-center gap-1 rounded-lg border-2 p-2.5 text-xs font-medium transition-all ${
+                          className={`flex flex-col items-center gap-1 rounded-lg border-2 p-2.5 text-xs font-medium ${
                             isSelected ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:border-primary/50"
                           }`}
                         >

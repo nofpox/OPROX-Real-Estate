@@ -121,7 +121,7 @@ export default function PropertyDetail() {
                     </TableRow>
                   ) : (
                     rooms.map((room) => (
-                      <TableRow key={room.id} className="cursor-pointer hover:bg-muted/50 transition-colors">
+                      <TableRow key={room.id} className="cursor-pointer hover:bg-muted/50">
                         <TableCell className="font-medium">{room.name}</TableCell>
                         <TableCell>{t(`rooms.types.${room.type}`, room.type)}</TableCell>
                         <TableCell>
@@ -166,7 +166,7 @@ export default function PropertyDetail() {
                 </div>
               ) : (
                 workOrders.filter((w) => w.status !== "completed").slice(0, 5).map((wo) => (
-                  <div key={wo.id} className="p-4 hover:bg-muted/30 transition-colors">
+                  <div key={wo.id} className="p-4">
                     <div className="flex justify-between items-start mb-1">
                       <h4 className="font-medium text-sm line-clamp-1" title={wo.title}>{wo.title}</h4>
                       <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 border-0 ${

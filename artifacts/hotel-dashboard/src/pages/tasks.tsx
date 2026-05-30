@@ -216,7 +216,7 @@ function ProofPhotoDialog({ task, open, onClose, onComplete, onSkip, isSubmittin
 
           {/* Drop zone / preview */}
           <div
-            className={`relative border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 transition-colors cursor-pointer
+            className={`relative border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer
               ${preview ? "border-emerald-500/40 bg-emerald-500/5" : "border-border hover:border-primary/40 hover:bg-muted/30"}
               ${preview ? "min-h-48" : "min-h-36"}
             `}
@@ -301,7 +301,7 @@ function TaskCard({ task, onSelect, onDelete, onStatus }: TaskCardProps) {
   const overdue = isOverdue(task.dueDate, task.status);
   return (
     <div
-      className="bg-card border border-border rounded-lg p-4 shadow-none hover:shadow-sm hover:border-border/80 transition-all cursor-pointer space-y-3"
+      className="bg-card border border-border rounded-lg p-4 shadow-none cursor-pointer space-y-3"
       onClick={() => onSelect(task)}
     >
       <div className="flex items-start justify-between gap-2">

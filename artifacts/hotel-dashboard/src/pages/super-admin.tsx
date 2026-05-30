@@ -257,7 +257,7 @@ export default function SuperAdmin() {
                     key={mod.id}
                     type="button"
                     onClick={() => toggleModule(mod.id)}
-                    className={`group text-left rounded-xl border-2 p-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    className={`group text-left rounded-xl border-2 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       isOn
                         ? "bg-card border-border shadow-sm"
                         : "bg-muted border-border/50 hover:border-border hover:bg-muted/80"
@@ -280,12 +280,12 @@ export default function SuperAdmin() {
                       {/* Switch — click is captured by the parent button */}
                       <div className="shrink-0 mt-0.5 pointer-events-none">
                         <div
-                          className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${
+                          className={`relative inline-flex h-5 w-9 rounded-full ${
                             isOn ? "bg-primary" : "bg-muted-foreground/30"
                           }`}
                         >
                           <span
-                            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow ${
                               isOn ? "translate-x-[18px]" : "translate-x-0.5"
                             }`}
                           />

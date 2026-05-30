@@ -365,27 +365,24 @@ export default function SecurityDashboard() {
         </Button>
       </div>
 
-      {/* ── KPI cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ── KPI cards — plain divs, no Card/shadow/Skeleton/animation ── */}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         {kpiCards.map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <Card key={kpi.label} className="shadow-sm border-border/50">
-              <CardContent className="pt-5 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2.5 rounded-lg shrink-0 ${kpi.bg}`}>
-                    <Icon className={`h-4 w-4 ${kpi.color}`} />
-                  </div>
-                  <div className="min-w-0">
-                    {sessionsLoading || usersLoading
-                      ? <Skeleton className="h-6 w-8 mb-1" />
-                      : <p className="text-2xl font-bold leading-none">{kpi.value}</p>
-                    }
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{kpi.label}</p>
-                  </div>
+            <div key={kpi.label} style={{ flex: "1 1 120px", border: "1px solid #e5e7eb", borderRadius: 8, padding: "14px 16px", background: "white" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div className={`p-2 rounded-lg shrink-0 ${kpi.bg}`}>
+                  <Icon className={`h-4 w-4 ${kpi.color}`} />
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1 }}>
+                    {sessionsLoading || usersLoading ? "—" : kpi.value}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{kpi.label}</div>
+                </div>
+              </div>
+            </div>
           );
         })}
       </div>
@@ -427,7 +424,7 @@ export default function SecurityDashboard() {
                 return (
                   <div
                     key={u.id}
-                    className="flex items-center gap-3 px-6 py-3.5 hover:bg-muted/20 transition-colors"
+                    className="flex items-center gap-3 px-6 py-3.5"
                   >
                     <div className="relative shrink-0">
                       <InitialAvatar name={u.displayName} cls={avatarCls} />

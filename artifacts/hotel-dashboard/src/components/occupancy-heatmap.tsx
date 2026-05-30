@@ -216,7 +216,7 @@ export function OccupancyHeatmap() {
                     return (
                       <div
                         key={d}
-                        className={`w-5 h-7 rounded-sm cursor-default shrink-0 transition-transform hover:scale-110 hover:z-10 relative ${getOccupancyBg(pct)} ${isToday ? "ring-2 ring-primary ring-offset-0 z-10" : ""}`}
+                        className={`w-5 h-7 rounded-sm cursor-default shrink-0 relative ${getOccupancyBg(pct)} ${isToday ? "ring-2 ring-primary ring-offset-0 z-10" : ""}`}
                         onMouseEnter={(e) => entry && handleMouseEnter(e, entry, property.name)}
                         onMouseLeave={() => setTooltip(null)}
                       >

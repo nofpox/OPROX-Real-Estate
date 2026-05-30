@@ -111,7 +111,7 @@ export function NotificationBell() {
               {notifications.map((n) => (
                 <button
                   key={n.id}
-                  className={`w-full text-start px-4 py-3 transition-colors hover:bg-muted/50 ${!n.isRead ? "bg-primary/5" : ""}`}
+                  className={`w-full text-start px-4 py-3 ${!n.isRead ? "bg-primary/5" : ""}`}
                   onClick={() => !n.isRead && handleMarkRead(n.id)}
                 >
                   <div className="flex items-start gap-3">

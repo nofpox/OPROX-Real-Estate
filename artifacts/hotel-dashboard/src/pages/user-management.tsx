@@ -435,7 +435,7 @@ export default function UserManagement() {
                 return (
                   <div
                     key={role.id}
-                    className={`rounded-lg border transition-all ${isExpanded ? "border-border bg-card shadow-sm" : "border-border/50 bg-muted/20"}`}
+                    className={`rounded-lg border ${isExpanded ? "border-border bg-card shadow-sm" : "border-border/50 bg-muted/20"}`}
                   >
                     <button
                       type="button"
@@ -451,7 +451,7 @@ export default function UserManagement() {
                           <p className="text-[11px] text-muted-foreground leading-tight mt-0.5 truncate">{roleDesc}</p>
                         </div>
                       </div>
-                      <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground shrink-0 ${isExpanded ? "rotate-180" : ""}`} />
                     </button>
 
                     {isExpanded && (

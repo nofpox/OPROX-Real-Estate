@@ -97,7 +97,7 @@ export default function ForcePasswordChange({ username, onSuccess }: Props) {
                 <button
                   type="button"
                   onClick={() => setShowNext((v) => !v)}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
                 >
                   {showNext ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

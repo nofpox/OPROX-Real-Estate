@@ -105,7 +105,7 @@ export default function GuestRequests() {
           <button
             key={key}
             onClick={() => setStatusFilter(statusFilter === key ? "all" : key)}
-            className={`text-left p-4 rounded-xl border border-border/50 transition-all ${statusFilter === key ? "ring-2 ring-primary ring-offset-1 bg-primary/5" : "bg-card hover:shadow-sm"}`}
+            className={`text-left p-4 rounded-xl border border-border/50 ${statusFilter === key ? "ring-2 ring-primary ring-offset-1 bg-primary/5" : "bg-card"}`}
           >
             <div className={`inline-flex p-2 rounded-lg ${bg} mb-2`}>
               <Icon size={18} className={color} />
@@ -169,7 +169,7 @@ export default function GuestRequests() {
                 const typeLabel = t(`guestRequests.typeLabel.${req.type}`, { defaultValue: req.type });
                 const statusLabel = t(`guestRequests.statusLabel.${req.status}`, { defaultValue: req.status });
                 return (
-                  <div key={req.id} className="p-4 flex items-start gap-4 hover:bg-muted/30 transition-colors">
+                  <div key={req.id} className="p-4 flex items-start gap-4">
                     <div className={`w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0`}>
                       <Icon size={18} className={iconColor} />
                     </div>

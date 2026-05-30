@@ -269,7 +269,7 @@ export default function UnitStatus() {
           return (
             <Card
               key={kpi.key}
-              className={`shadow-sm border-border/50 cursor-pointer transition-all hover:shadow-md ${
+              className={`shadow-sm border-border/50 cursor-pointer ${
                 statusFilter === kpi.key ? "ring-2 ring-primary/40" : ""
               }`}
               onClick={() => setStatusFilter(statusFilter === kpi.key ? "all" : kpi.key)}
