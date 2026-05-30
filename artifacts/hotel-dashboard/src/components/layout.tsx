@@ -54,6 +54,13 @@ import React, { useState } from "react";
   export function Layout({ children, authUser, onLogout }: LayoutProps) {
     const [location] = useLocation();
     const [mobileOpen, setMobileOpen] = useState(false);
+
+    // Close the mobile drawer whenever the active route changes.
+    // This covers programmatic navigation (Link clicks already call setMobileOpen(false)
+    // via the nav onClick, but direct URL changes or back/forward navigation do not).
+    React.useEffect(() => {
+      setMobileOpen(false);
+    }, [location]);
     const { role, setRoleId, can } = useRole();
     const { lang, isRTL } = useLanguage();
     const { t } = useTranslation();

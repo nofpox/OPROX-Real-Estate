@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/language-context";
 import { useListActivityLogs, useListProperties } from "@workspace/api-client-react";
 import type { ActivityLog } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -279,7 +280,11 @@ function ActivityLogTable({ rows, loading }: { rows: ActivityLog[]; loading: boo
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ActivityLogPage() {
+// ActivityLogPage wraps the inner component with key={lang} so the browser
+// performs a full layout recalculation on every language switch.
+// The table and all its cells are freshly mounted, guaranteeing that the
+// browser's table layout engine starts from a clean state in the new direction.
+function ActivityLogInner() {
   const { t } = useTranslation();
   const [search,       setSearch]       = useState("");
   const [entityFilter, setEntityFilter] = useState("all");
@@ -484,4 +489,9 @@ export default function ActivityLogPage() {
 
     </div>
   );
+}
+
+export default function ActivityLogPage() {
+  const { lang } = useLanguage();
+  return <ActivityLogInner key={lang} />;
 }
