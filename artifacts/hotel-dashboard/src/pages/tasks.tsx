@@ -9,7 +9,7 @@ import {
   useRecallTaskReport, useReopenTask,
 } from "@workspace/api-client-react";
 import { useOnlineStatus } from "@/hooks/use-online-status";
-import { enqueue, dequeue, getQueue } from "@/lib/offline-queue";
+import { enqueue } from "@/lib/offline-queue";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -1579,31 +1579,8 @@ export default function Tasks() {
 
   const { isOnline }  = useOnlineStatus();
 
-  // Replay queued offline actions on reconnection
-  useEffect(() => {
-    if (!isOnline) return;
-    const queue = getQueue();
-    if (queue.length === 0) return;
-    queue.forEach(({ id: entryId, action }) => {
-      if (action.type === "submit") {
-        submitReport.mutate({ id: action.taskId }, {
-          onSuccess: () => { dequeue(entryId); queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) }); },
-          onError: () => { dequeue(entryId); },
-        });
-      } else if (action.type === "recall") {
-        recallRpt.mutate({ id: action.taskId }, {
-          onSuccess: () => { dequeue(entryId); queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) }); },
-          onError: () => { dequeue(entryId); },
-        });
-      } else if (action.type === "reopen") {
-        reopenTaskMut.mutate({ id: action.taskId }, {
-          onSuccess: () => { dequeue(entryId); queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) }); },
-          onError: () => { dequeue(entryId); },
-        });
-      }
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOnline]);
+  // Queue replay is handled globally by useOfflineSync() in App.tsx.
+  // When it completes it invalidates ["listTasks"] which re-fetches this page automatically.
 
   // ── URL deep-link: ?taskId=X auto-opens that task ──────────────────────────
   useEffect(() => {
@@ -1664,6 +1641,11 @@ export default function Tasks() {
   // ── Report escalation handlers ──────────────────────────────────────────────
 
   function handleSubmitReport(id: number) {
+    if (!isOnline) {
+      enqueue({ type: "submit", taskId: id });
+      toast({ title: t("offline.queued", "Queued — will sync when back online.") });
+      return;
+    }
     submitReport.mutate({ id }, {
       onSuccess: (updated: any) => {
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });

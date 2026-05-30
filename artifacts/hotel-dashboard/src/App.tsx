@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider } from "react-i18next";
 import { Toaster } from "@/components/ui/toaster";
 import { OfflineBanner } from "@/components/offline-banner";
+import { useOfflineSync } from "@/hooks/use-offline-sync";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
 import { RoleProvider, useRole } from "@/contexts/role-context";
@@ -69,6 +70,12 @@ function Router() {
       <Route component={NotFound} />
     </Switch>
   );
+}
+
+/** Mounts the global offline queue replay — works on every page, not just Tasks. */
+function GlobalOfflineSync() {
+  useOfflineSync();
+  return null;
 }
 
 /** Keeps x-actor-* headers in sync whenever the dashboard role changes. */
@@ -178,6 +185,7 @@ function App() {
           <TooltipProvider>
             <RoleProvider initialRole={authUser.role}>
               <ActorHeaderSync displayName={authUser.displayName} />
+              <GlobalOfflineSync />
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
                 <Switch>
                   <Route path="/super-admin" component={SuperAdmin} />

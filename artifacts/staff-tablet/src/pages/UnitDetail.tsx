@@ -1,6 +1,8 @@
 import { useState } from "react";
   import { useLocation } from "wouter";
   import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+  import { useOnlineStatus } from "@/hooks/use-online-status";
+  import { enqueue } from "@/lib/offline-queue";
   import { Button } from "@/components/ui/button";
   import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
   import { Badge } from "@/components/ui/badge";
@@ -37,6 +39,7 @@ import { useState } from "react";
     const [, navigate] = useLocation();
     const { toast } = useToast();
     const queryClient = useQueryClient();
+    const { isOnline } = useOnlineStatus();
     const [qrOpen, setQrOpen] = useState(false);
     const [financialForm, setFinancialForm] = useState<Partial<Financial>>({});
     const [editFinancial, setEditFinancial] = useState(false);
@@ -122,7 +125,14 @@ import { useState } from "react";
             <CardContent>
               {roomLoading ? <Skeleton className="h-10 w-full" /> : (
                 <div className="flex gap-2">
-                  <Select value={room?.status} onValueChange={(v) => updateStatus.mutate(v)}>
+                  <Select value={room?.status} onValueChange={(v) => {
+                    if (!isOnline) {
+                      enqueue({ type: "updateStatus", roomId: id, status: v });
+                      toast({ title: "Offline — status change queued, will sync when reconnected." });
+                      return;
+                    }
+                    updateStatus.mutate(v);
+                  }}>
                     <SelectTrigger className="flex-1">
                       <SelectValue placeholder="Set status" />
                     </SelectTrigger>
@@ -254,7 +264,14 @@ import { useState } from "react";
                         <p className="text-[10px] text-muted-foreground/70 mt-0.5">Ref: {req.refCode}</p>
                       </div>
                       {req.status !== "resolved" && (
-                        <Button size="sm" variant="ghost" onClick={() => resolveRequest.mutate(req.id)} className="h-7 text-xs text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 shrink-0">
+                        <Button size="sm" variant="ghost" onClick={() => {
+                          if (!isOnline) {
+                            enqueue({ type: "resolveRequest", requestId: req.id });
+                            toast({ title: "Offline — resolve queued, will sync when reconnected." });
+                            return;
+                          }
+                          resolveRequest.mutate(req.id);
+                        }} className="h-7 text-xs text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 shrink-0">
                           <CheckCircle2 size={13} className="mr-1" /> Resolve
                         </Button>
                       )}
