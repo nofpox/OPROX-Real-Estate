@@ -8,6 +8,7 @@ const ml: Translations = {
     operations: "പ്രവർത്തനങ്ങൾ", unitMap: "യൂണിറ്റ് മാപ്പ്",
     guestRequests: "സേവന അഭ്യർത്ഥനകൾ", activityLog: "പ്രവർത്തന ലോഗ്",
     userManagement: "ഉപയോക്തൃ മാനേജ്മെന്റ്", facilities: "സൗകര്യ ബുക്കിംഗ്",
+    adminSettings: "അഡ്മിൻ ക്രമീകരണങ്ങൾ",
   },
   common: {
     save: "സംരക്ഷിക്കുക", cancel: "റദ്ദാക്കുക", delete: "ഇല്ലാതാക്കുക",
@@ -304,6 +305,28 @@ const ml: Translations = {
     names: { gym: "ഫിറ്റ്നസ് സെന്റർ", pool: "നീന്തൽക്കുളം", "meeting-a": "മീറ്റിംഗ് റൂം A", lounge: "സ്കൈ ലൗഞ്ച്", parking: "വിസിറ്റർ പാർക്കിംഗ്", rooftop: "റൂഫ്ടോപ്പ് ഗാർഡൻ" },
   },
   unitMap: { title: "യൂണിറ്റ് മാപ്പ്", subtitle: "എല്ലാ യൂണിറ്റുകളുടെയും ദൃശ്യ ലേഔട്ടും തത്സമയ സ്ഥിതിയും." },
+  adminSettings: {
+    title: "അഡ്മിൻ ക്രമീകരണങ്ങൾ",
+    subtitle: "ആസ്തികൾക്കും ജോലികൾക്കും ഇഷ്ടമനുസരിച്ചുള്ള ഫീൽഡുകളും ലേബലുകളും നിർവ്വചിക്കൂ — കോഡ് മാറ്റം ആവശ്യമില്ല.",
+    tabs: { asset: "ആസ്തികൾ", task: "ജോലികൾ" },
+    addField: "ഫീൽഡ് ചേർക്കുക", editField: "ഫീൽഡ് തിരുത്തുക", deleteField: "ഫീൽഡ് നീക്കം ചെയ്യുക",
+    noFields: "ഇതുവരെ ഫീൽഡുകൾ ഇല്ല. 'ഫീൽഡ് ചേർക്കുക' ക്ലിക്ക് ചെയ്യൂ.",
+    fieldCount: "{{count}} ഫീൽഡ് നിർവ്വചിച്ചിട്ടുണ്ട്",
+    table: { label: "ലേബൽ / കീ", type: "തരം", required: "ആവശ്യകമാണ്", status: "നില" },
+    form: {
+      labelField: "പ്രദർശന ലേബൽ", labelPlaceholder: "ഉദാ: സീരിയൽ നമ്പർ",
+      keyField: "ഫീൽഡ് കീ", keyPlaceholder: "ഉദാ: serial_number",
+      keyHelp: "ചെറിയ അക്ഷരങ്ങൾ, അക്കങ്ങൾ, അണ്ടർസ്കോർ മാത്രം. ലേബലിൽ നിന്ന് സ്വയം.",
+      typeField: "ഫീൽഡ് തരം",
+      optionsField: "ഓപ്ഷനുകൾ (കോമ ഉപയോഗിച്ച്)", optionsPlaceholder: "ഉദാ: കുറഞ്ഞ, ഇടത്തരം, ഉയർന്ന",
+      optionsHelp: "തിരഞ്ഞെടുക്കൽ (ഡ്രോപ്ഡൗൺ) ഫീൽഡുകൾക്ക് ആവശ്യകമാണ്.",
+      requiredField: "ആവശ്യകമാണ് എന്ന് അടയാളപ്പെടുത്തുക", activeField: "സജീവം (ഫോമിൽ ദൃശ്യമാണ്)",
+    },
+    fieldTypes: { text: "ടെക്സ്റ്റ്", number: "സംഖ്യ", select: "തിരഞ്ഞെടുക്കൽ (ഡ്രോപ്ഡൗൺ)", date: "തീയതി", boolean: "അതെ / ഇല്ല" },
+    active: "സജീവം", inactive: "നിഷ്ക്രിയം", save: "ഫീൽഡ് സംരക്ഷിക്കുക",
+    confirmDelete: "ഈ ഫീൽഡ് ഇല്ലാതാക്കണോ? ഇത് പഴയപടിയാക്കാൻ കഴിയില്ല.",
+    saved: "ഫീൽഡ് വിജയകരമായി സംരക്ഷിച്ചു.", deleted: "ഫീൽഡ് ഇല്ലാതാക്കി.",
+  },
 };
 
 export default ml;

@@ -1521,6 +1521,82 @@ paths:
         "204":
           description: Deleted
 
+  /admin/custom-fields:
+    get:
+      operationId: listCustomFields
+      tags: [adminSettings]
+      summary: List custom field definitions
+      parameters:
+        - name: entityType
+          in: query
+          schema:
+            type: string
+          description: "Filter by entity type: asset | task"
+      responses:
+        "200":
+          description: List of custom fields
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomField"
+    post:
+      operationId: createCustomField
+      tags: [adminSettings]
+      summary: Create a new custom field definition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomFieldInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomField"
+
+  /admin/custom-fields/{id}:
+    patch:
+      operationId: updateCustomField
+      tags: [adminSettings]
+      summary: Update a custom field definition
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCustomFieldInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomField"
+    delete:
+      operationId: deleteCustomField
+      tags: [adminSettings]
+      summary: Delete a custom field definition
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
 components:
   schemas:
     Settings:
@@ -1560,6 +1636,83 @@ components:
           type: array
           items:
             type: string
+
+    CustomField:
+      type: object
+      required: [id, entityType, fieldKey, fieldLabel, fieldType, required, sortOrder, active, createdAt]
+      properties:
+        id:
+          type: integer
+        entityType:
+          type: string
+          description: "asset | task"
+        fieldKey:
+          type: string
+          description: Machine-readable key (e.g. serial_number)
+        fieldLabel:
+          type: string
+          description: Display label shown in the UI
+        fieldType:
+          type: string
+          description: "text | number | select | date | boolean"
+        options:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Available options for select-type fields
+        required:
+          type: boolean
+        sortOrder:
+          type: integer
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateCustomFieldInput:
+      type: object
+      required: [entityType, fieldKey, fieldLabel, fieldType]
+      properties:
+        entityType:
+          type: string
+        fieldKey:
+          type: string
+        fieldLabel:
+          type: string
+        fieldType:
+          type: string
+        options:
+          type: array
+          nullable: true
+          items:
+            type: string
+        required:
+          type: boolean
+        sortOrder:
+          type: integer
+        active:
+          type: boolean
+
+    UpdateCustomFieldInput:
+      type: object
+      properties:
+        fieldLabel:
+          type: string
+        fieldType:
+          type: string
+        options:
+          type: array
+          nullable: true
+          items:
+            type: string
+        required:
+          type: boolean
+        sortOrder:
+          type: integer
+        active:
+          type: boolean
 
     HealthStatus:
       type: object

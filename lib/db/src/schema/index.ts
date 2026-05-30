@@ -15,3 +15,4 @@ export * from "./activityLogs";
 export * from "./unitFinancials";
 export * from "./settings";
 export * from "./fieldUsers";
+export * from "./customFields";

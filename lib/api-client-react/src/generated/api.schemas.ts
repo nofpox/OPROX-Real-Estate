@@ -26,6 +26,44 @@ export interface SettingsInput {
   enabledModules?: string[];
 }
 
+export interface CustomField {
+  id: number;
+  /** asset | task */
+  entityType: string;
+  /** Machine-readable key (e.g. serial_number) */
+  fieldKey: string;
+  /** Display label shown in the UI */
+  fieldLabel: string;
+  /** text | number | select | date | boolean */
+  fieldType: string;
+  /** Available options for select-type fields */
+  options?: string[] | null;
+  required: boolean;
+  sortOrder: number;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface CreateCustomFieldInput {
+  entityType: string;
+  fieldKey: string;
+  fieldLabel: string;
+  fieldType: string;
+  options?: string[] | null;
+  required?: boolean;
+  sortOrder?: number;
+  active?: boolean;
+}
+
+export interface UpdateCustomFieldInput {
+  fieldLabel?: string;
+  fieldType?: string;
+  options?: string[] | null;
+  required?: boolean;
+  sortOrder?: number;
+  active?: boolean;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -753,5 +791,12 @@ export type ListFieldUsersParams = {
 propertyId?: number;
 role?: string;
 status?: string;
+};
+
+export type ListCustomFieldsParams = {
+/**
+ * Filter by entity type: asset | task
+ */
+entityType?: string;
 };
 

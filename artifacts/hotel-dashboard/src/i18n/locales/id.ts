@@ -8,6 +8,7 @@ const id: Translations = {
     operations: "Operasional", unitMap: "Peta Unit",
     guestRequests: "Permintaan Layanan", activityLog: "Log Aktivitas",
     userManagement: "Manajemen Pengguna", facilities: "Pemesanan Fasilitas",
+    adminSettings: "Pengaturan Admin",
   },
   common: {
     save: "Simpan", cancel: "Batal", delete: "Hapus", edit: "Edit", add: "Tambah",
@@ -304,6 +305,28 @@ const id: Translations = {
     names: { gym: "Pusat Kebugaran", pool: "Kolam Renang", "meeting-a": "Ruang Rapat A", lounge: "Sky Lounge", parking: "Parkir Pengunjung", rooftop: "Taman Rooftop" },
   },
   unitMap: { title: "Peta Unit", subtitle: "Tata letak visual semua unit dan status langsung mereka." },
+  adminSettings: {
+    title: "Pengaturan Admin",
+    subtitle: "Tentukan bidang khusus dan label untuk Aset dan Tugas — tanpa perubahan kode.",
+    tabs: { asset: "Aset", task: "Tugas" },
+    addField: "Tambah Bidang", editField: "Edit Bidang", deleteField: "Hapus Bidang",
+    noFields: "Belum ada bidang khusus. Klik 'Tambah Bidang' untuk membuat satu.",
+    fieldCount: "{{count}} bidang terdefinisi",
+    table: { label: "Label / Kunci", type: "Tipe", required: "Wajib", status: "Status" },
+    form: {
+      labelField: "Label Tampilan", labelPlaceholder: "mis. Nomor Seri",
+      keyField: "Kunci Bidang", keyPlaceholder: "mis. nomor_seri",
+      keyHelp: "Huruf kecil, angka, dan garis bawah saja. Diisi otomatis dari label.",
+      typeField: "Tipe Bidang",
+      optionsField: "Pilihan (dipisahkan koma)", optionsPlaceholder: "mis. Rendah, Sedang, Tinggi",
+      optionsHelp: "Diperlukan untuk bidang tipe Pilihan (dropdown).",
+      requiredField: "Tandai sebagai wajib", activeField: "Aktif (terlihat di formulir)",
+    },
+    fieldTypes: { text: "Teks", number: "Angka", select: "Pilihan (dropdown)", date: "Tanggal", boolean: "Ya / Tidak" },
+    active: "Aktif", inactive: "Tidak Aktif", save: "Simpan Bidang",
+    confirmDelete: "Hapus bidang ini? Tindakan ini tidak dapat dibatalkan.",
+    saved: "Bidang berhasil disimpan.", deleted: "Bidang dihapus.",
+  },
 };
 
 export default id;

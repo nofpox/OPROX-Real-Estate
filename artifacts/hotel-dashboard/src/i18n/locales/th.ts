@@ -8,6 +8,7 @@ const th: Translations = {
     operations: "การดำเนินงาน", unitMap: "แผนที่ยูนิต",
     guestRequests: "คำขอบริการ", activityLog: "บันทึกกิจกรรม",
     userManagement: "การจัดการผู้ใช้", facilities: "การจองสิ่งอำนวยความสะดวก",
+    adminSettings: "การตั้งค่าผู้ดูแล",
   },
   common: {
     save: "บันทึก", cancel: "ยกเลิก", delete: "ลบ", edit: "แก้ไข", add: "เพิ่ม",
@@ -304,6 +305,28 @@ const th: Translations = {
     names: { gym: "ฟิตเนสเซ็นเตอร์", pool: "สระว่ายน้ำ", "meeting-a": "ห้องประชุม A", lounge: "สกายเลาจน์", parking: "ที่จอดรถสำหรับผู้เยี่ยมชม", rooftop: "สวนดาดฟ้า" },
   },
   unitMap: { title: "แผนที่ยูนิต", subtitle: "เลย์เอาต์ภาพของยูนิตทั้งหมดและสถานะสดของพวกเขา" },
+  adminSettings: {
+    title: "การตั้งค่าผู้ดูแล",
+    subtitle: "กำหนดฟิลด์และป้ายชื่อสำหรับสินทรัพย์และงาน — ไม่ต้องแก้ไขโค้ด",
+    tabs: { asset: "สินทรัพย์", task: "งาน" },
+    addField: "เพิ่มฟิลด์", editField: "แก้ไขฟิลด์", deleteField: "ลบฟิลด์",
+    noFields: "ยังไม่มีฟิลด์กำหนดเอง คลิก 'เพิ่มฟิลด์' เพื่อสร้าง",
+    fieldCount: "กำหนด {{count}} ฟิลด์แล้ว",
+    table: { label: "ป้ายชื่อ / คีย์", type: "ประเภท", required: "จำเป็น", status: "สถานะ" },
+    form: {
+      labelField: "ป้ายชื่อที่แสดง", labelPlaceholder: "เช่น หมายเลขซีเรียล",
+      keyField: "คีย์ฟิลด์", keyPlaceholder: "เช่น serial_number",
+      keyHelp: "ตัวพิมพ์เล็ก ตัวเลข และขีดล่างเท่านั้น กรอกอัตโนมัติจากป้ายชื่อ",
+      typeField: "ประเภทฟิลด์",
+      optionsField: "ตัวเลือก (คั่นด้วยเครื่องหมายจุลภาค)", optionsPlaceholder: "เช่น น้อย, ปานกลาง, มาก",
+      optionsHelp: "จำเป็นสำหรับฟิลด์ประเภทเลือก (dropdown)",
+      requiredField: "ทำเครื่องหมายว่าจำเป็น", activeField: "ใช้งานอยู่ (แสดงในฟอร์ม)",
+    },
+    fieldTypes: { text: "ข้อความ", number: "ตัวเลข", select: "เลือก (dropdown)", date: "วันที่", boolean: "ใช่ / ไม่ใช่" },
+    active: "ใช้งานอยู่", inactive: "ไม่ใช้งาน", save: "บันทึกฟิลด์",
+    confirmDelete: "ลบฟิลด์นี้? ไม่สามารถย้อนกลับได้",
+    saved: "บันทึกฟิลด์สำเร็จ", deleted: "ลบฟิลด์แล้ว",
+  },
 };
 
 export default th;

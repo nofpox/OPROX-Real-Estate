@@ -8,6 +8,7 @@ const ur: Translations = {
     operations: "آپریشنز", unitMap: "یونٹ نقشہ",
     guestRequests: "سروس کی درخواستیں", activityLog: "سرگرمی لاگ",
     userManagement: "صارف انتظام", facilities: "سہولت بکنگ",
+    adminSettings: "ایڈمن سیٹنگز",
   },
   common: {
     save: "محفوظ کریں", cancel: "منسوخ کریں", delete: "حذف کریں",
@@ -304,6 +305,28 @@ const ur: Translations = {
     names: { gym: "فٹنس سینٹر", pool: "سوئمنگ پول", "meeting-a": "میٹنگ روم A", lounge: "اسکائی لاؤنج", parking: "وزیٹر پارکنگ", rooftop: "روف ٹاپ گارڈن" },
   },
   unitMap: { title: "یونٹ نقشہ", subtitle: "تمام یونٹوں کی بصری ترتیب اور ان کی لائیو حیثیت۔" },
+  adminSettings: {
+    title: "ایڈمن سیٹنگز",
+    subtitle: "اثاثوں اور کاموں کے لیے کسٹم فیلڈز اور لیبلز تعریف کریں — کوئی کوڈ تبدیلی نہیں۔",
+    tabs: { asset: "اثاثے", task: "کام" },
+    addField: "فیلڈ شامل کریں", editField: "فیلڈ ترمیم کریں", deleteField: "فیلڈ حذف کریں",
+    noFields: "ابھی تک کوئی کسٹم فیلڈ نہیں۔ 'فیلڈ شامل کریں' پر کلک کریں۔",
+    fieldCount: "{{count}} فیلڈ(s) تعریف شدہ",
+    table: { label: "لیبل / کلید", type: "قسم", required: "ضروری", status: "حیثیت" },
+    form: {
+      labelField: "ڈسپلے لیبل", labelPlaceholder: "مثال: سیریل نمبر",
+      keyField: "فیلڈ کلید", keyPlaceholder: "مثال: serial_number",
+      keyHelp: "صرف چھوٹے حروف، اعداد، اور انڈرسکور۔ لیبل سے خودکار۔",
+      typeField: "فیلڈ کی قسم",
+      optionsField: "آپشنز (کوما سے الگ)", optionsPlaceholder: "مثال: کم، درمیانی، زیادہ",
+      optionsHelp: "سلیکٹ (ڈراپ ڈاؤن) قسم کے لیے ضروری۔",
+      requiredField: "ضروری کے طور پر نشان لگائیں", activeField: "فعال (فارمز میں نظر آتا ہے)",
+    },
+    fieldTypes: { text: "متن", number: "عدد", select: "انتخاب (ڈراپ ڈاؤن)", date: "تاریخ", boolean: "ہاں / نہیں" },
+    active: "فعال", inactive: "غیر فعال", save: "فیلڈ محفوظ کریں",
+    confirmDelete: "یہ فیلڈ حذف کریں؟ اس کو واپس نہیں کیا جا سکتا۔",
+    saved: "فیلڈ کامیابی سے محفوظ ہو گیا۔", deleted: "فیلڈ حذف ہو گیا۔",
+  },
 };
 
 export default ur;

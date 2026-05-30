@@ -23,6 +23,7 @@ import Tasks from "@/pages/tasks";
 import GuestRequests from "@/pages/guest-requests";
 import UserManagement from "@/pages/user-management";
 import ActivityLog from "@/pages/activity-log";
+import AdminSettings from "@/pages/admin-settings";
 import UnitMap from "@/pages/unit-map";
 import Login from "@/pages/login";
 import ForcePasswordChange from "@/pages/force-password-change";
@@ -54,6 +55,7 @@ function Router() {
       <Route path="/guest-requests" component={GuestRequests} />
       <Route path="/user-management" component={UserManagement} />
       <Route path="/activity-log" component={ActivityLog} />
+      <Route path="/admin-settings" component={AdminSettings} />
       <Route path="/unit-map" component={UnitMap} />
       <Route component={NotFound} />
     </Switch>

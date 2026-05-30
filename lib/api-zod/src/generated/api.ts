@@ -1441,3 +1441,78 @@ export const DeleteFieldUserParams = zod.object({
 })
 
 
+/**
+ * @summary List custom field definitions
+ */
+export const ListCustomFieldsQueryParams = zod.object({
+  "entityType": zod.coerce.string().optional().describe('Filter by entity type: asset | task')
+})
+
+export const ListCustomFieldsResponseItem = zod.object({
+  "id": zod.number(),
+  "entityType": zod.string().describe('asset | task'),
+  "fieldKey": zod.string().describe('Machine-readable key (e.g. serial_number)'),
+  "fieldLabel": zod.string().describe('Display label shown in the UI'),
+  "fieldType": zod.string().describe('text | number | select | date | boolean'),
+  "options": zod.array(zod.string()).nullish().describe('Available options for select-type fields'),
+  "required": zod.boolean(),
+  "sortOrder": zod.number(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+export const ListCustomFieldsResponse = zod.array(ListCustomFieldsResponseItem)
+
+
+/**
+ * @summary Create a new custom field definition
+ */
+export const CreateCustomFieldBody = zod.object({
+  "entityType": zod.string(),
+  "fieldKey": zod.string(),
+  "fieldLabel": zod.string(),
+  "fieldType": zod.string(),
+  "options": zod.array(zod.string()).nullish(),
+  "required": zod.boolean().optional(),
+  "sortOrder": zod.number().optional(),
+  "active": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Update a custom field definition
+ */
+export const UpdateCustomFieldParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateCustomFieldBody = zod.object({
+  "fieldLabel": zod.string().optional(),
+  "fieldType": zod.string().optional(),
+  "options": zod.array(zod.string()).nullish(),
+  "required": zod.boolean().optional(),
+  "sortOrder": zod.number().optional(),
+  "active": zod.boolean().optional()
+})
+
+export const UpdateCustomFieldResponse = zod.object({
+  "id": zod.number(),
+  "entityType": zod.string().describe('asset | task'),
+  "fieldKey": zod.string().describe('Machine-readable key (e.g. serial_number)'),
+  "fieldLabel": zod.string().describe('Display label shown in the UI'),
+  "fieldType": zod.string().describe('text | number | select | date | boolean'),
+  "options": zod.array(zod.string()).nullish().describe('Available options for select-type fields'),
+  "required": zod.boolean(),
+  "sortOrder": zod.number(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a custom field definition
+ */
+export const DeleteCustomFieldParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+

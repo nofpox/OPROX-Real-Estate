@@ -19,6 +19,7 @@ import { Router, type IRouter } from "express";
   import maintenanceRequestsRouter from "./maintenanceRequests";
 import settingsRouter from "./settings";
 import fieldUsersRouter from "./fieldUsers";
+import customFieldsRouter from "./customFields";
 
   const router: IRouter = Router();
 
@@ -42,6 +43,7 @@ import fieldUsersRouter from "./fieldUsers";
   router.use(shiftsRouter);
   router.use(settingsRouter);
   router.use(fieldUsersRouter);
+  router.use(customFieldsRouter);
 
   export default router;
   

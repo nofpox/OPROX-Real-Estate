@@ -8,6 +8,7 @@ const ne: Translations = {
     operations: "सञ्चालन", unitMap: "एकाइ नक्सा",
     guestRequests: "सेवा अनुरोधहरू", activityLog: "गतिविधि लग",
     userManagement: "प्रयोगकर्ता व्यवस्थापन", facilities: "सुविधा बुकिङ",
+    adminSettings: "प्रशासक सेटिङहरू",
   },
   common: {
     save: "सुरक्षित गर्नुहोस्", cancel: "रद्द गर्नुहोस्", delete: "मेट्नुहोस्",
@@ -304,6 +305,28 @@ const ne: Translations = {
     names: { gym: "फिटनेस सेन्टर", pool: "पौडी पोखरी", "meeting-a": "बैठक कोठा A", lounge: "स्काई लाउन्ज", parking: "आगन्तुक पार्किङ", rooftop: "रुफटप बगैँचा" },
   },
   unitMap: { title: "एकाइ नक्सा", subtitle: "सबै एकाइहरूको दृश्य लेआउट र उनीहरूको लाइभ स्थिति।" },
+  adminSettings: {
+    title: "प्रशासक सेटिङहरू",
+    subtitle: "सम्पत्ति र कार्यहरूको लागि कस्टम फिल्ड र लेबलहरू परिभाषित गर्नुहोस् — कुनै कोड परिवर्तन आवश्यक छैन।",
+    tabs: { asset: "सम्पत्तिहरू", task: "कार्यहरू" },
+    addField: "फिल्ड थप्नुहोस्", editField: "फिल्ड सम्पादन गर्नुहोस्", deleteField: "फिल्ड मेटाउनुहोस्",
+    noFields: "अहिलेसम्म कुनै कस्टम फिल्ड छैन। 'फिल्ड थप्नुहोस्' क्लिक गर्नुहोस्।",
+    fieldCount: "{{count}} फिल्ड(हरू) परिभाषित",
+    table: { label: "लेबल / कुञ्जी", type: "प्रकार", required: "अनिवार्य", status: "स्थिति" },
+    form: {
+      labelField: "प्रदर्शन लेबल", labelPlaceholder: "उदाहरण: सिरियल नम्बर",
+      keyField: "फिल्ड कुञ्जी", keyPlaceholder: "उदाहरण: serial_number",
+      keyHelp: "सानो अक्षर, अंक र अन्डरस्कोर मात्र। लेबलबाट स्वचालित।",
+      typeField: "फिल्ड प्रकार",
+      optionsField: "विकल्पहरू (अल्पविराम द्वारा)", optionsPlaceholder: "उदाहरण: कम, मध्यम, उच्च",
+      optionsHelp: "चयन (ड्रपडाउन) प्रकारको लागि आवश्यक।",
+      requiredField: "अनिवार्य रूपमा चिन्हित गर्नुहोस्", activeField: "सक्रिय (फारममा देखिने)",
+    },
+    fieldTypes: { text: "पाठ", number: "संख्या", select: "चयन (ड्रपडाउन)", date: "मिति", boolean: "हो / होइन" },
+    active: "सक्रिय", inactive: "निष्क्रिय", save: "फिल्ड सुरक्षित गर्नुहोस्",
+    confirmDelete: "यो फिल्ड मेटाउने? यो पूर्ववत् हुन सक्दैन।",
+    saved: "फिल्ड सफलतापूर्वक सुरक्षित भयो।", deleted: "फिल्ड मेटाइयो।",
+  },
 };
 
 export default ne;

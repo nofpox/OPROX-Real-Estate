@@ -8,6 +8,7 @@ const tl: Translations = {
     operations: "Mga Operasyon", unitMap: "Mapa ng Unit",
     guestRequests: "Mga Kahilingan sa Serbisyo", activityLog: "Log ng Aktibidad",
     userManagement: "Pamamahala ng Gumagamit", facilities: "Booking ng Pasilidad",
+    adminSettings: "Mga Setting ng Admin",
   },
   common: {
     save: "I-save", cancel: "Kanselahin", delete: "Burahin", edit: "I-edit", add: "Idagdag",
@@ -306,6 +307,28 @@ const tl: Translations = {
     names: { gym: "Fitness Center", pool: "Swimming Pool", "meeting-a": "Meeting Room A", lounge: "Sky Lounge", parking: "Visitor Parking", rooftop: "Rooftop Garden" },
   },
   unitMap: { title: "Mapa ng Unit", subtitle: "Visual na layout ng lahat ng unit at kanilang live na katayuan." },
+  adminSettings: {
+    title: "Mga Setting ng Admin",
+    subtitle: "Tukuyin ang mga custom na field at label para sa Mga Asset at Gawain — walang pagbabago ng code.",
+    tabs: { asset: "Mga Asset", task: "Mga Gawain" },
+    addField: "Magdagdag ng Field", editField: "I-edit ang Field", deleteField: "Burahin ang Field",
+    noFields: "Wala pang custom na field. I-click ang 'Magdagdag ng Field' para lumikha ng isa.",
+    fieldCount: "{{count}} field(s) ang tinukoy",
+    table: { label: "Label / Susi", type: "Uri", required: "Kinakailangan", status: "Katayuan" },
+    form: {
+      labelField: "Display Label", labelPlaceholder: "hal. Serial Number",
+      keyField: "Field Key", keyPlaceholder: "hal. serial_number",
+      keyHelp: "Maliliit na letra, numero, at underscore lamang. Awtomatikong nalalaman mula sa label.",
+      typeField: "Uri ng Field",
+      optionsField: "Mga Opsyon (pinaghihiwalay ng kuwit)", optionsPlaceholder: "hal. Mababa, Katamtaman, Mataas",
+      optionsHelp: "Kinakailangan para sa mga Select (dropdown) na field.",
+      requiredField: "Markahan bilang kinakailangan", activeField: "Aktibo (makikita sa mga form)",
+    },
+    fieldTypes: { text: "Teksto", number: "Numero", select: "Piliin (dropdown)", date: "Petsa", boolean: "Oo / Hindi" },
+    active: "Aktibo", inactive: "Hindi Aktibo", save: "I-save ang Field",
+    confirmDelete: "Burahin ang field na ito? Hindi ito mababawi.",
+    saved: "Matagumpay na na-save ang field.", deleted: "Nabura ang field.",
+  },
 };
 
 export default tl;

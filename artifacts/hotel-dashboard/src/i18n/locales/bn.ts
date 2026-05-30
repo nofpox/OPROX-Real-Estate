@@ -8,6 +8,7 @@ const bn: Translations = {
     operations: "অপারেশন", unitMap: "ইউনিট মানচিত্র",
     guestRequests: "সেবা অনুরোধ", activityLog: "কার্যকলাপ লগ",
     userManagement: "ব্যবহারকারী ব্যবস্থাপনা", facilities: "সুবিধা বুকিং",
+    adminSettings: "অ্যাডমিন সেটিংস",
   },
   common: {
     save: "সংরক্ষণ করুন", cancel: "বাতিল করুন", delete: "মুছুন",
@@ -304,6 +305,28 @@ const bn: Translations = {
     names: { gym: "ফিটনেস সেন্টার", pool: "সুইমিং পুল", "meeting-a": "মিটিং রুম A", lounge: "স্কাই লাউঞ্জ", parking: "ভিজিটর পার্কিং", rooftop: "রুফটপ গার্ডেন" },
   },
   unitMap: { title: "ইউনিট মানচিত্র", subtitle: "সকল ইউনিটের ভিজ্যুয়াল বিন্যাস এবং তাদের লাইভ অবস্থা।" },
+  adminSettings: {
+    title: "অ্যাডমিন সেটিংস",
+    subtitle: "সম্পদ এবং কাজের জন্য কাস্টম ফিল্ড এবং লেবেল সংজ্ঞায়িত করুন — কোনো কোড পরিবর্তন ছাড়াই।",
+    tabs: { asset: "সম্পদ", task: "কাজ" },
+    addField: "ফিল্ড যোগ করুন", editField: "ফিল্ড সম্পাদনা করুন", deleteField: "ফিল্ড মুছুন",
+    noFields: "এখনো কোনো কাস্টম ফিল্ড নেই। 'ফিল্ড যোগ করুন' ক্লিক করুন।",
+    fieldCount: "{{count}}টি ফিল্ড সংজ্ঞায়িত",
+    table: { label: "লেবেল / কী", type: "ধরন", required: "প্রয়োজনীয়", status: "অবস্থা" },
+    form: {
+      labelField: "প্রদর্শন লেবেল", labelPlaceholder: "যেমন: সিরিয়াল নম্বর",
+      keyField: "ফিল্ড কী", keyPlaceholder: "যেমন: serial_number",
+      keyHelp: "শুধুমাত্র ছোট হাতের অক্ষর, সংখ্যা এবং আন্ডারস্কোর। লেবেল থেকে স্বয়ংক্রিয়।",
+      typeField: "ফিল্ডের ধরন",
+      optionsField: "বিকল্পগুলি (কমা দিয়ে আলাদা)", optionsPlaceholder: "যেমন: কম, মাঝারি, বেশি",
+      optionsHelp: "নির্বাচন (ড্রপডাউন) ধরনের জন্য প্রয়োজনীয়।",
+      requiredField: "প্রয়োজনীয় হিসেবে চিহ্নিত করুন", activeField: "সক্রিয় (ফর্মে দৃশ্যমান)",
+    },
+    fieldTypes: { text: "টেক্সট", number: "সংখ্যা", select: "নির্বাচন (ড্রপডাউন)", date: "তারিখ", boolean: "হ্যাঁ / না" },
+    active: "সক্রিয়", inactive: "নিষ্ক্রিয়", save: "ফিল্ড সংরক্ষণ করুন",
+    confirmDelete: "এই ফিল্ড মুছবেন? এটি পূর্বাবস্থায় ফেরানো যাবে না।",
+    saved: "ফিল্ড সফলভাবে সংরক্ষিত হয়েছে।", deleted: "ফিল্ড মুছে ফেলা হয়েছে।",
+  },
 };
 
 export default bn;

@@ -8,6 +8,7 @@ const hi: Translations = {
     operations: "संचालन", unitMap: "इकाई नक्शा",
     guestRequests: "सेवा अनुरोध", activityLog: "गतिविधि लॉग",
     userManagement: "उपयोगकर्ता प्रबंधन", facilities: "सुविधा बुकिंग",
+    adminSettings: "व्यवस्थापक सेटिंग्स",
   },
   common: {
     save: "सहेजें", cancel: "रद्द करें", delete: "हटाएं", edit: "संपादित करें", add: "जोड़ें",
@@ -303,6 +304,28 @@ const hi: Translations = {
     names: { gym: "फिटनेस सेंटर", pool: "स्विमिंग पूल", "meeting-a": "मीटिंग रूम A", lounge: "स्काई लाउंज", parking: "विज़िटर पार्किंग", rooftop: "रूफटॉप गार्डन" },
   },
   unitMap: { title: "इकाई नक्शा", subtitle: "सभी इकाइयों का दृश्य लेआउट और उनकी लाइव स्थिति।" },
+  adminSettings: {
+    title: "व्यवस्थापक सेटिंग्स",
+    subtitle: "संपत्तियों और कार्यों के लिए कस्टम फ़ील्ड और लेबल परिभाषित करें — बिना कोड परिवर्तन के।",
+    tabs: { asset: "संपत्तियाँ", task: "कार्य" },
+    addField: "फ़ील्ड जोड़ें", editField: "फ़ील्ड संपादित करें", deleteField: "फ़ील्ड हटाएं",
+    noFields: "कोई कस्टम फ़ील्ड नहीं। 'फ़ील्ड जोड़ें' पर क्लिक करें।",
+    fieldCount: "{{count}} फ़ील्ड परिभाषित",
+    table: { label: "लेबल / कुंजी", type: "प्रकार", required: "आवश्यक", status: "स्थिति" },
+    form: {
+      labelField: "प्रदर्शन लेबल", labelPlaceholder: "जैसे: सीरियल नंबर",
+      keyField: "फ़ील्ड कुंजी", keyPlaceholder: "जैसे: serial_number",
+      keyHelp: "केवल छोटे अक्षर, अंक और अंडरस्कोर। लेबल से स्वचालित।",
+      typeField: "फ़ील्ड प्रकार",
+      optionsField: "विकल्प (अल्पविराम से अलग)", optionsPlaceholder: "जैसे: कम, मध्यम, उच्च",
+      optionsHelp: "चयन (ड्रॉपडाउन) प्रकार के लिए आवश्यक।",
+      requiredField: "आवश्यक के रूप में चिह्नित करें", activeField: "सक्रिय (फ़ॉर्म में दृश्य)",
+    },
+    fieldTypes: { text: "पाठ", number: "संख्या", select: "चयन (ड्रॉपडाउन)", date: "तारीख", boolean: "हाँ / नहीं" },
+    active: "सक्रिय", inactive: "निष्क्रिय", save: "फ़ील्ड सहेजें",
+    confirmDelete: "इस फ़ील्ड को हटाएं? यह पूर्ववत नहीं किया जा सकता।",
+    saved: "फ़ील्ड सफलतापूर्वक सहेजा गया।", deleted: "फ़ील्ड हटा दिया गया।",
+  },
 };
 
 export default hi;
