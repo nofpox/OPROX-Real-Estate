@@ -657,6 +657,11 @@ const ar: Translations = {
       done: "تم",
       verify: "Verify",
       verified: "Verified",
+      resubmit: "إعادة الإرسال",
+      submitReport: "إرسال التقرير",
+      escalate: "مراجعة ورفع",
+      reject: "رفض",
+      approve: "الموافقة على التقرير",
     },
     empty: {
       pending: "لا توجد مهام معلقة",
@@ -731,6 +736,20 @@ const ar: Translations = {
       supervisor: "Supervisor",
       dueDate: "تاريخ الاستحقاق",
     },
+    hints: {
+      submitReport: 'Make sure photos are clear and show the full work scope.',
+      escalate: 'Confirm work meets quality standards before sending to Manager.',
+      reject: 'You must provide a clear reason for rejection so the worker can fix it.',
+      approve: 'Approving this report will officially close the task and make it available for export.',
+    },
+  },
+  help: {
+    openButton: 'دليل المساعدة',
+    title: 'دليل البدء السريع',
+    subtitle: 'سير عمل خطوة بخطوة لكل دور',
+    worker: { title: 'العامل', step1: 'امسح رمز QR لفتح المهمة.', step2: 'قم بالعمل والتقط صور قبل وبعد.', step3: 'أدخل الملاحظات المطلوبة وانقر إرسال التقرير.', step4: 'إذا رُفض، اقرأ ملاحظات المشرف، أصلح المشكلة، وأعد الإرسال.' },
+    supervisor: { title: 'المشرف', step1: 'راجع صور العامل وجودة العمل.', step2: 'استخدم رفض مع التعليقات إذا كان غير مكتمل، أو صعّد إذا تمت الموافقة.' },
+    manager: { title: 'المدير / المالك', step1: 'راجع المهام المُصعَّدة.', step2: 'استخدم الموافقة لإنهاء التقرير.', step3: 'بعد الموافقة، يتم إغلاق التقارير وإتاحتها للتصدير.', note: 'التقارير المعتمدة مقفلة ولا يمكن تعديلها.' },
   },
   guestRequests: {
     title: "طلبات الخدمة",

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, CheckCircle2, Clock, Loader2, Wrench } from "lucide-react";
 import { Link } from "wouter";
+import { HelpGuideButton } from "@/components/help-guide-modal";
 
 // ── Stat card ────────────────────────────────────────────────────────────────
 
@@ -77,9 +78,14 @@ export default function Dashboard() {
     <div className="space-y-8 max-w-5xl">
 
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">{t("dashboard.title")}</h1>
-        <p className="text-sm text-muted-foreground mt-1">{t("dashboard.overviewSubtitle")}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">{t("dashboard.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("dashboard.overviewSubtitle")}</p>
+        </div>
+        <div className="shrink-0 pt-0.5">
+          <HelpGuideButton />
+        </div>
       </div>
 
       {/* Asset Summary */}

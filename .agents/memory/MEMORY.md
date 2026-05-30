@@ -1,5 +1,6 @@
 - [i18n language architecture](i18n-language-architecture.md) — central config in languages.ts; generation script at scripts/src/generate-locale.ts; 10 languages total (en, ar, ur + 8 new); ar+ur are RTL
 - [Locale compact format pitfall](locale-compact-format.md) — compact locale files use single-line objects; {{id}} contains } which breaks [^}]+ regex; use line-by-line replacement anchored on a unique key
+- [Locale actions key sync](locale-actions-sync.md) — en.ts tasks.actions is the TypeScript structural source of truth; adding keys there requires adding the same keys to all 9 compact locales or TS2739 errors; ar.ts is expanded format (multiline), rest are compact (single-line regex)
 - [Proof-of-work accountability](proof-of-work.md) — tasks require photo upload on completion; session-first actor extraction; admin role bypasses proof requirement
 - [Object storage setup](object-storage-setup.md) — GCS bucket live; storage routes at /api/storage; objectPath from upload must be prepended with /api/storage to serve
 - [Express tier gate pattern](express-tier-gate.md) — router.use(mw, subRouter) runs mw for ALL paths; use a single path-prefix gate middleware instead.

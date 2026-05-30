@@ -655,6 +655,11 @@ const en = {
       done: "Done",
       verify: "Verify",
       verified: "Verified",
+      resubmit: "Resubmit",
+      submitReport: "Submit Report",
+      escalate: "Review & Escalate",
+      reject: "Reject",
+      approve: "Approve Report",
     },
     empty: {
       pending: "No pending tasks",
@@ -728,6 +733,36 @@ const en = {
       assignTo: "Assign To",
       supervisor: "Supervisor",
       dueDate: "Due Date",
+    },
+    hints: {
+      submitReport: "Make sure photos are clear and show the full work scope.",
+      escalate: "Confirm work meets quality standards before sending to Manager.",
+      reject: "You must provide a clear reason for rejection so the worker can fix it.",
+      approve: "Approving this report will officially close the task and make it available for export.",
+    },
+  },
+  help: {
+    openButton: "Help Guide",
+    title: "Quick Start Guide",
+    subtitle: "Step-by-step workflow for each role",
+    worker: {
+      title: "Worker",
+      step1: "Scan QR Code to open the task.",
+      step2: "Perform work and capture 'Before & After' photos.",
+      step3: "Fill in required notes and click 'Submit Report'.",
+      step4: "If status is 'Rejected', read supervisor notes, fix the issue, and 'Resubmit'.",
+    },
+    supervisor: {
+      title: "Supervisor",
+      step1: "Review worker photos and work quality.",
+      step2: "Use 'Reject' with comments if incomplete, or 'Escalate' if approved.",
+    },
+    manager: {
+      title: "Manager / Owner",
+      step1: "Review escalated tasks.",
+      step2: "Use 'Approve' to finalize the report.",
+      step3: "Once approved, reports are officially closed and visible for export.",
+      note: "Approved reports are locked and cannot be modified.",
     },
   },
   guestRequests: {
