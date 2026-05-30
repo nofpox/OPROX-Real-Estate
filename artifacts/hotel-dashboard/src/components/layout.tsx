@@ -195,7 +195,7 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
   React.useEffect(() => { setMobileOpen(false); }, [location]);
 
   const { role } = useRole();
-  const { isRTL } = useLanguage();
+  const { isRTL, lang } = useLanguage();
   const { t } = useTranslation();
   const settings = useSettings();
 
@@ -272,7 +272,7 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
+        <main key={lang} className="flex-1 p-4 md:p-6 lg:p-8">
           {children}
         </main>
       </div>
