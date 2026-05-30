@@ -36,7 +36,12 @@ type TooltipData = {
 export function OccupancyHeatmap() {
   const { t } = useTranslation();
   const { lang } = useLanguage();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
+  const LOCALE_MAP: Record<string, string> = {
+    ar: "ar-EG", fr: "fr-FR", pt: "pt-BR", zh: "zh-CN",
+    id: "id-ID", hi: "hi-IN", bn: "bn-BD", ur: "ur-PK",
+    tl: "fil-PH", ml: "ml-IN", ne: "ne-NP", th: "th-TH",
+  };
+  const locale = LOCALE_MAP[lang] ?? "en-US";
 
   const { data: rawData, isLoading } = useGetOccupancyHeatmap({ days: 42 });
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);

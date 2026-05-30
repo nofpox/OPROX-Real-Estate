@@ -18,6 +18,9 @@ import bn from "./locales/bn";
 import ml from "./locales/ml";
 import ne from "./locales/ne";
 import th from "./locales/th";
+import zh from "./locales/zh";
+import fr from "./locales/fr";
+import pt from "./locales/pt";
 
 const RESOURCES: Record<string, { translation: typeof en }> = {
   en: { translation: en },
@@ -30,6 +33,9 @@ const RESOURCES: Record<string, { translation: typeof en }> = {
   ml: { translation: ml },
   ne: { translation: ne },
   th: { translation: th },
+  zh: { translation: zh },
+  fr: { translation: fr },
+  pt: { translation: pt },
 };
 
 // Validate all registered languages have resources (catches missing imports)
