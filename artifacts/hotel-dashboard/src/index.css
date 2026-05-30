@@ -178,6 +178,8 @@
 @layer base {
   * {
     @apply border-border;
+    filter: none;
+    backdrop-filter: none;
   }
 
   body {
