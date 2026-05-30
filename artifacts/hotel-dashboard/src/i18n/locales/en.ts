@@ -396,7 +396,7 @@ const en = {
     },
     fields: {
       name: "Property Name",
-      namePlaceholder: "Grand Hotel Downtown",
+      namePlaceholder: "Grand PMS",
       type: "Property Type",
       selectType: "Select type",
       status: "Status",

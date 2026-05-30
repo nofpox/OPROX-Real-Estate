@@ -5,7 +5,7 @@
 
 const branding = {
   // The full name displayed as the dashboard hero heading and in the sidebar.
-  propertyName: "Grand Hotel Downtown",
+  propertyName: "Grand PMS",
 
   // Sidebar logo — two-part text: large serif word + smaller sans word.
   logoText: "Grand",

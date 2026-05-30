@@ -141,7 +141,7 @@ export default function SuperAdmin() {
                 id="propertyName"
                 value={propertyName}
                 onChange={(e) => { setPropertyName(e.target.value); setDirty(true); }}
-                placeholder="Grand Hotel Downtown"
+                placeholder="Grand PMS"
               />
             </div>
 
