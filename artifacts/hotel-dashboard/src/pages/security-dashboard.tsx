@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useListActiveSessions,
@@ -28,12 +29,12 @@ import {
 // ─── Role tier helpers ─────────────────────────────────────────────────────────
 
 function roleTier(role: string): "admin" | "supervisor" | "worker" {
-  if (role === "owner" || role === "admin") return "admin";
-  if (role === "manager" || role === "property-manager" || role === "site-supervisor") return "supervisor";
+  if (role === "owner" || role === "admin" || role === "manager") return "admin";
+  if (role === "front-desk" || role === "security-officer") return "supervisor";
   return "worker";
 }
 
-const TIER_BADGE: Record<string, { label: string; cls: string }> = {
+const TIER_STYLES = {
   admin:      { label: "Admin",      cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"       },
   supervisor: { label: "Supervisor", cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
   worker:     { label: "Worker",     cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"   },
@@ -41,12 +42,11 @@ const TIER_BADGE: Record<string, { label: string; cls: string }> = {
 
 function TierBadge({ role }: { role: string }) {
   const tier = roleTier(role);
-  const { label, cls } = TIER_BADGE[tier];
+  const { label, cls } = TIER_STYLES[tier];
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${cls}`}>
-      {tier === "admin" && <Shield className="h-2.5 w-2.5" />}
+    <Badge variant="secondary" className={`text-[10px] shrink-0 ${cls}`}>
       {label}
-    </span>
+    </Badge>
   );
 }
 
@@ -87,32 +87,35 @@ interface KillConfirmProps {
 }
 
 function KillConfirmDialog({ target, onConfirm, onCancel, isPending }: KillConfirmProps) {
+  const { t } = useTranslation();
   return (
     <AlertDialog open={!!target}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-destructive">
             <Zap className="h-5 w-5" />
-            Activate Kill Switch
+            {t("securityDashboard.killSwitchTitle")}
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-2">
             <span className="block">
-              You are about to <strong>immediately deactivate</strong>{" "}
-              <strong>{target?.displayName}</strong> and invalidate all their active sessions.
+              {t("securityDashboard.killDesc1a")} <strong>{t("securityDashboard.killDesc1b")}</strong>{" "}
+              <strong>{target?.displayName}</strong> {t("securityDashboard.killDesc1c")}
             </span>
             <span className="block text-destructive/80 text-sm">
-              They will be logged out of every device instantly and cannot log back in until reactivated.
+              {t("securityDashboard.killDesc2")}
             </span>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onCancel} disabled={isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel onClick={onCancel} disabled={isPending}>
+            {t("common.cancel")}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isPending}
             className="bg-destructive hover:bg-destructive/90"
           >
-            {isPending ? "Deactivating…" : "Deactivate Now"}
+            {isPending ? t("securityDashboard.deactivating") : t("securityDashboard.deactivateNow")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -133,13 +136,16 @@ function SessionsPanel({
   currentUserId: number;
   onKill: (s: { id: number; displayName: string; role: string }) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Card className="shadow-sm border-border/50">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Wifi className="h-4 w-4 text-emerald-500" />
-          Active Sessions
-          <Badge variant="secondary" className="ms-auto text-xs">{sessions.length} online</Badge>
+          {t("securityDashboard.activeSessions")}
+          <Badge variant="secondary" className="ms-auto text-xs">
+            {sessions.length} {t("securityDashboard.onlineSuffix")}
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
@@ -150,7 +156,7 @@ function SessionsPanel({
         ) : sessions.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
             <WifiOff className="h-8 w-8 opacity-25" />
-            <p className="text-sm">No active sessions</p>
+            <p className="text-sm">{t("securityDashboard.noActiveSessions")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -173,7 +179,7 @@ function SessionsPanel({
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
                       {s.displayName}
-                      {isMe && <span className="ms-1 text-[10px] text-muted-foreground">(you)</span>}
+                      {isMe && <span className="ms-1 text-[10px] text-muted-foreground">({t("securityDashboard.you")})</span>}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">@{s.username} · {s.role}</p>
                   </div>
@@ -201,6 +207,7 @@ function SessionsPanel({
 // ─── Security log panel ───────────────────────────────────────────────────────
 
 function SecurityLogPanel() {
+  const { t } = useTranslation();
   const { entries, loading, refetch } = useSecurityLog();
 
   return (
@@ -208,7 +215,7 @@ function SecurityLogPanel() {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Activity className="h-4 w-4 text-muted-foreground" />
-          Security Events
+          {t("securityDashboard.securityEvents")}
           <Button variant="ghost" size="icon" className="h-6 w-6 ms-auto" onClick={refetch}>
             <RefreshCw className="h-3.5 w-3.5" />
           </Button>
@@ -222,7 +229,7 @@ function SecurityLogPanel() {
         ) : entries.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
             <Lock className="h-8 w-8 opacity-25" />
-            <p className="text-sm">No security events recorded</p>
+            <p className="text-sm">{t("securityDashboard.noSecurityEvents")}</p>
           </div>
         ) : (
           <div className="space-y-1 max-h-80 overflow-y-auto">
@@ -258,6 +265,7 @@ function SecurityLogPanel() {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SecurityDashboard() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
 
@@ -270,14 +278,17 @@ export default function SecurityDashboard() {
   const killSwitch = useKillSwitchUser({
     mutation: {
       onSuccess: (user) => {
-        toast({ title: "Kill switch activated", description: `${user.displayName} has been deactivated and logged out.` });
+        toast({
+          title: t("securityDashboard.killActivated"),
+          description: t("securityDashboard.killActivatedDesc", { name: user.displayName }),
+        });
         qc.invalidateQueries({ queryKey: getListActiveSessionsQueryKey() });
         qc.invalidateQueries({ queryKey: getListUsersQueryKey() });
         setKillTarget(null);
       },
       onError: (err: unknown) => {
-        const msg = (err as { message?: string })?.message ?? "Failed to deactivate user.";
-        toast({ variant: "destructive", title: "Kill switch failed", description: msg });
+        const msg = (err as { message?: string })?.message ?? t("securityDashboard.deactivateFailed");
+        toast({ variant: "destructive", title: t("securityDashboard.killFailed"), description: msg });
         setKillTarget(null);
       },
     },
@@ -305,44 +316,23 @@ export default function SecurityDashboard() {
         body: JSON.stringify({ isActive: true }),
       });
       if (!resp.ok) throw new Error("Request failed");
-      toast({ title: "User reactivated", description: `${user.displayName} can now log in again.` });
+      toast({
+        title: t("securityDashboard.userReactivated"),
+        description: t("securityDashboard.userReactivatedDesc", { name: user.displayName }),
+      });
       qc.invalidateQueries({ queryKey: getListUsersQueryKey() });
     } catch {
-      toast({ variant: "destructive", title: "Failed to reactivate user" });
+      toast({ variant: "destructive", title: t("securityDashboard.reactivateFailed") });
     } finally {
       setReactivating(null);
     }
   };
 
   const kpiCards = [
-    {
-      label: "Total Users",
-      value: users.length,
-      icon: Users,
-      color: "text-primary",
-      bg: "bg-primary/10",
-    },
-    {
-      label: "Online Now",
-      value: activeSessions.length,
-      icon: Wifi,
-      color: "text-emerald-500",
-      bg: "bg-emerald-500/10",
-    },
-    {
-      label: "Active Accounts",
-      value: activeUsers.length,
-      icon: UserCheck,
-      color: "text-blue-500",
-      bg: "bg-blue-500/10",
-    },
-    {
-      label: "Deactivated",
-      value: inactiveUsers.length,
-      icon: UserX,
-      color: "text-destructive",
-      bg: "bg-destructive/10",
-    },
+    { label: t("securityDashboard.totalUsers"),     value: users.length,          icon: Users,     color: "text-primary",    bg: "bg-primary/10"     },
+    { label: t("securityDashboard.onlineNow"),      value: activeSessions.length,  icon: Wifi,      color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { label: t("securityDashboard.activeAccounts"), value: activeUsers.length,     icon: UserCheck, color: "text-blue-500",   bg: "bg-blue-500/10"    },
+    { label: t("securityDashboard.deactivated"),    value: inactiveUsers.length,   icon: UserX,     color: "text-destructive", bg: "bg-destructive/10" },
   ];
 
   return (
@@ -353,15 +343,15 @@ export default function SecurityDashboard() {
         <div>
           <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground flex items-center gap-3">
             <Shield className="h-8 w-8 text-primary" />
-            Security Dashboard
+            {t("securityDashboard.title")}
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Monitor active sessions and manage user access in real time.
+            {t("securityDashboard.subtitle")}
           </p>
         </div>
         <Button variant="outline" size="sm" className="gap-2" onClick={() => refetchSessions()}>
           <RefreshCw className="h-3.5 w-3.5" />
-          Refresh
+          {t("common.refresh")}
         </Button>
       </div>
 
@@ -403,7 +393,7 @@ export default function SecurityDashboard() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="h-4 w-4 text-muted-foreground" />
-            All Users
+            {t("securityDashboard.allUsers")}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0 p-0">
@@ -422,10 +412,7 @@ export default function SecurityDashboard() {
                   tier === "supervisor" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
                   "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
                 return (
-                  <div
-                    key={u.id}
-                    className="flex items-center gap-3 px-6 py-3.5"
-                  >
+                  <div key={u.id} className="flex items-center gap-3 px-6 py-3.5">
                     <div className="relative shrink-0">
                       <InitialAvatar name={u.displayName} cls={avatarCls} />
                       {isOnline && (
@@ -436,7 +423,7 @@ export default function SecurityDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-medium">{u.displayName}</p>
-                        {isMe && <span className="text-[10px] text-muted-foreground">(you)</span>}
+                        {isMe && <span className="text-[10px] text-muted-foreground">({t("securityDashboard.you")})</span>}
                       </div>
                       <p className="text-xs text-muted-foreground">@{u.username} · {u.role}</p>
                     </div>
@@ -446,12 +433,12 @@ export default function SecurityDashboard() {
 
                       {isOnline
                         ? <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 gap-1">
-                            <Eye className="h-2.5 w-2.5" />Online
+                            <Eye className="h-2.5 w-2.5" />{t("securityDashboard.online")}
                           </Badge>
                         : u.isActive
-                        ? <Badge variant="secondary" className="text-[10px]">Offline</Badge>
+                        ? <Badge variant="secondary" className="text-[10px]">{t("securityDashboard.offline")}</Badge>
                         : <Badge variant="secondary" className="text-[10px] bg-destructive/10 text-destructive gap-1">
-                            <ShieldOff className="h-2.5 w-2.5" />Blocked
+                            <ShieldOff className="h-2.5 w-2.5" />{t("securityDashboard.blocked")}
                           </Badge>
                       }
 
@@ -463,7 +450,7 @@ export default function SecurityDashboard() {
                           onClick={() => setKillTarget({ id: u.id, displayName: u.displayName, role: u.role })}
                         >
                           <Zap className="h-3 w-3 me-1" />
-                          Kill
+                          {t("securityDashboard.kill")}
                         </Button>
                       )}
 
@@ -476,7 +463,7 @@ export default function SecurityDashboard() {
                           disabled={reactivating === u.id}
                         >
                           <UserCheck className="h-3 w-3 me-1" />
-                          Reactivate
+                          {t("securityDashboard.reactivate")}
                         </Button>
                       )}
                     </div>
