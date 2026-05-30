@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, date, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, date, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -39,7 +39,21 @@ export const tasksTable = pgTable("tasks", {
   approvedAt:         timestamp("approved_at"),
   approvedByUserId:   integer("approved_by_user_id"),
   createdAt:          timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  // ── Performance indexes for multi-tenant queries at scale ──────────────────
+  // Primary filter: every query scopes to tenant + status
+  index("tasks_tenant_status_idx").on(t.tenantId, t.status),
+  // Worker inbox: worker fetches their own tasks
+  index("tasks_tenant_assignee_idx").on(t.tenantId, t.assignedToId),
+  // Supervisor view: supervisor fetches their team's tasks
+  index("tasks_tenant_supervisor_idx").on(t.tenantId, t.supervisorId),
+  // Property filter: dashboard filters tasks by property
+  index("tasks_tenant_property_idx").on(t.tenantId, t.propertyId),
+  // Report review queue: supervisors/managers fetch submitted reports
+  index("tasks_tenant_report_status_idx").on(t.tenantId, t.reportStatus),
+  // Due-date ordering: the ORDER BY clause uses this
+  index("tasks_due_date_idx").on(t.dueDate),
+]);
 
 export const insertTaskSchema = createInsertSchema(tasksTable).omit({ id: true, createdAt: true });
 export const updateTaskSchema = insertTaskSchema.partial();

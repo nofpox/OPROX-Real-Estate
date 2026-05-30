@@ -77,6 +77,13 @@ router.get("/tasks", async (req, res) => {
   const { propertyId, assignedToId, supervisorId, status, date } = req.query as {
     propertyId?: string; assignedToId?: string; supervisorId?: string; status?: string; date?: string;
   };
+  // Pagination — prevents unbounded full-table reads at 1M+ rows.
+  // Clients should pass ?limit=100&offset=0 and paginate through results.
+  const limitRaw  = parseInt((req.query as any).limit  ?? "200");
+  const offsetRaw = parseInt((req.query as any).offset ?? "0");
+  const limit  = Math.min(Math.max(1, isNaN(limitRaw)  ? 200 : limitRaw),  500); // cap at 500
+  const offset = Math.max(0, isNaN(offsetRaw) ? 0 : offsetRaw);
+
   const tenantId = tid(req);
   const conditions = [];
   if (tenantId !== null) conditions.push(eq(tasksTable.tenantId, tenantId));
@@ -86,15 +93,31 @@ router.get("/tasks", async (req, res) => {
   if (status)       conditions.push(eq(tasksTable.status, status));
   if (date)         conditions.push(eq(tasksTable.dueDate, date));
 
-  const rows = await db
-    .select({ task: tasksTable, staff: staffTable, property: propertiesTable, room: roomsTable })
-    .from(tasksTable)
-    .leftJoin(staffTable,      eq(tasksTable.assignedToId, staffTable.id))
-    .leftJoin(propertiesTable, eq(tasksTable.propertyId,   propertiesTable.id))
-    .leftJoin(roomsTable,      eq(tasksTable.unitId,        roomsTable.id))
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(sql`${tasksTable.dueDate} asc nulls last, ${tasksTable.createdAt} desc`);
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
+  const [rows, [{ total }]] = await Promise.all([
+    db
+      .select({ task: tasksTable, staff: staffTable, property: propertiesTable, room: roomsTable })
+      .from(tasksTable)
+      .leftJoin(staffTable,      eq(tasksTable.assignedToId, staffTable.id))
+      .leftJoin(propertiesTable, eq(tasksTable.propertyId,   propertiesTable.id))
+      .leftJoin(roomsTable,      eq(tasksTable.unitId,        roomsTable.id))
+      .where(whereClause)
+      .orderBy(sql`${tasksTable.dueDate} asc nulls last, ${tasksTable.createdAt} desc`)
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(tasksTable)
+      .where(whereClause),
+  ]);
+
+  // Return pagination metadata as response headers — keeps the array shape backward-compatible
+  // with the frontend while exposing total/hasMore for future cursor-based pagination.
+  res.setHeader("X-Total-Count",  String(total));
+  res.setHeader("X-Limit",        String(limit));
+  res.setHeader("X-Offset",       String(offset));
+  res.setHeader("X-Has-More",     String(offset + rows.length < total));
   res.json(rows.map(({ task, staff, property, room }) =>
     formatTask(task, { assigneeName: staff?.name, propertyName: property?.name, unitName: room?.name })
   ));

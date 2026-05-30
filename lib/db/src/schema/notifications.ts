@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, integer, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -12,7 +12,12 @@ export const notificationsTable = pgTable("notifications", {
   relatedId:   integer("related_id"),
   relatedType: text("related_type"),
   createdAt:   timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  // Unread bell-icon query: WHERE tenant_id = ? AND is_read = false ORDER BY created_at DESC
+  index("notifications_tenant_unread_idx").on(t.tenantId, t.isRead, t.createdAt),
+  // Bulk mark-as-read: WHERE tenant_id = ?
+  index("notifications_tenant_idx").on(t.tenantId),
+]);
 
 export const insertNotificationSchema = createInsertSchema(notificationsTable).omit({ id: true, createdAt: true });
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
