@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "@/components/notification-bell";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { useRole, ROLES, type AppRole } from "@/contexts/role-context";
+import { useRole, ROLES, type AppRole, isOwnerTier } from "@/contexts/role-context";
 import { useLanguage } from "@/contexts/language-context";
 import { useTranslation } from "react-i18next";
 import type { AuthUser } from "@/App";
@@ -38,6 +38,7 @@ const NAV_ITEMS = [
 
 /* Role pill colours — solid only, no opacity modifiers */
 const ROLE_ICON_COLORS: Record<string, string> = {
+  owner:        "bg-yellow-100 text-yellow-700",
   manager:      "bg-purple-100 text-purple-700",
   "front-desk": "bg-amber-100 text-amber-700",
   housekeeping: "bg-green-100 text-green-700",
@@ -118,42 +119,51 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
       </div>
 
       <div className="border-t border-sidebar-border">
-        {/* Role switcher */}
+        {/* Role display — switcher for owners, static badge for everyone else */}
         <div className="px-4 pt-3 pb-2">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground px-1 mb-1.5" style={{ opacity: 0.4 }}>
             {t("roles.viewingAs")}
           </p>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 bg-sidebar-accent text-sm font-medium">
-                <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${ROLE_ICON_COLORS[role.id]}`}>
-                  <Shield className="h-3 w-3" />
-                </span>
-                <span className="flex-1 text-start text-sidebar-foreground">{t(`roles.${role.id}`)}</span>
-                <ChevronDown className="h-3.5 w-3.5 text-sidebar-foreground shrink-0" style={{ opacity: 0.5 }} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-56 mb-1">
-              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{t("roles.switchRole")}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {ROLES.map((r) => (
-                <DropdownMenuItem
-                  key={r.id}
-                  onClick={() => setRoleId(r.id as AppRole)}
-                  className={`flex flex-col items-start gap-0.5 ${role.id === r.id ? "bg-accent" : ""}`}
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${ROLE_ICON_COLORS[r.id]}`}>
-                      <Shield className="h-3 w-3" />
-                    </span>
-                    <span className="font-medium">{t(`roles.${r.id}`)}</span>
-                    {role.id === r.id && <span className="ml-auto text-[10px] text-muted-foreground">{t("roles.active")}</span>}
-                  </div>
-                  <p className="text-[11px] text-muted-foreground ps-7">{t(`roles.desc.${r.id}`)}</p>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {isOwnerTier(authUser?.role ?? "") ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 bg-sidebar-accent text-sm font-medium">
+                  <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${ROLE_ICON_COLORS[role.id] ?? ""}`}>
+                    <Shield className="h-3 w-3" />
+                  </span>
+                  <span className="flex-1 text-start text-sidebar-foreground">{t(`roles.${role.id}`)}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-sidebar-foreground shrink-0" style={{ opacity: 0.5 }} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-56 mb-1">
+                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{t("roles.switchRole")}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {ROLES.map((r) => (
+                  <DropdownMenuItem
+                    key={r.id}
+                    onClick={() => setRoleId(r.id as AppRole)}
+                    className={`flex flex-col items-start gap-0.5 ${role.id === r.id ? "bg-accent" : ""}`}
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${ROLE_ICON_COLORS[r.id] ?? ""}`}>
+                        <Shield className="h-3 w-3" />
+                      </span>
+                      <span className="font-medium">{t(`roles.${r.id}`)}</span>
+                      {role.id === r.id && <span className="ml-auto text-[10px] text-muted-foreground">{t("roles.active")}</span>}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground ps-7">{t(`roles.desc.${r.id}`)}</p>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 bg-sidebar-accent text-sm font-medium">
+              <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${ROLE_ICON_COLORS[role.id] ?? ""}`}>
+                <Shield className="h-3 w-3" />
+              </span>
+              <span className="flex-1 text-start text-sidebar-foreground">{t(`roles.${role.id}`)}</span>
+            </div>
+          )}
         </div>
 
         {/* User menu */}
@@ -188,13 +198,21 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
 }
 
 export function Layout({ children, authUser, onLogout }: LayoutProps) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   /* Close the drawer on every route change */
   React.useEffect(() => { setMobileOpen(false); }, [location]);
 
-  const { role } = useRole();
+  /* Route guard — redirect to first allowed page if current path is inaccessible */
+  const { can, role } = useRole();
+  React.useEffect(() => {
+    if (!can(location)) {
+      const firstAllowed = role.allowedNav.find((p) => p !== "*") ?? "/tasks";
+      navigate(firstAllowed);
+    }
+  }, [location, role.id]);
+
   const { isRTL, lang } = useLanguage();
   const { t } = useTranslation();
   const settings = useSettings();

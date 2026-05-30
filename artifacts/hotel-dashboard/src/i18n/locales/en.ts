@@ -80,6 +80,7 @@ const en = {
     low: "Low",
   },
   roles: {
+    owner: "Owner",
     manager: "Manager",
     "front-desk": "Front Desk",
     housekeeping: "Housekeeping",
@@ -89,11 +90,12 @@ const en = {
     switchRole: "Switch Role",
     active: "active",
     desc: {
-      manager: "Full access to all features",
-      "front-desk": "Room management, service requests, and operations",
-      housekeeping: "Housekeeping tasks and room status",
-      maintenance: "Work orders and maintenance tasks",
-      security: "Security tasks and property access",
+      owner: "Full system access including finance and settings",
+      manager: "Tasks, activity logs, and user management",
+      "front-desk": "Assigned tasks and own profile",
+      housekeeping: "Assigned tasks and own profile",
+      maintenance: "Assigned tasks and own profile",
+      security: "Assigned tasks and own profile",
     },
   },
   header: {

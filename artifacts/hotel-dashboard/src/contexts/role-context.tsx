@@ -1,87 +1,119 @@
 import React, { createContext, useContext, useState } from "react";
 
-  export type AppRole = "manager" | "front-desk" | "housekeeping" | "maintenance" | "security";
+export type AppRole = "owner" | "manager" | "front-desk" | "housekeeping" | "maintenance" | "security";
 
-  export interface RoleDefinition {
-    id: AppRole;
-    label: string;
-    description: string;
-    allowedNav: string[];
-    taskCategories: string[] | null;
-  }
+export interface RoleDefinition {
+  id: AppRole;
+  label: string;
+  description: string;
+  allowedNav: string[];
+  taskCategories: string[] | null;
+}
 
-  export const ROLES: RoleDefinition[] = [
-    {
-      id: "manager",
-      label: "Manager",
-      description: "Full access to all features",
-      allowedNav: [
-        "/", "/properties", "/rooms",
-        "/maintenance", "/staff", "/tasks", "/guest-requests", "/user-management",
-        "/activity-log", "/unit-map", "/facilities",
-      ],
-      taskCategories: null,
-    },
-    {
-      id: "front-desk",
-      label: "Front Desk",
-      description: "Room management, service requests, and operations",
-      allowedNav: ["/", "/rooms", "/guest-requests", "/tasks"],
-      taskCategories: ["reception", "general"],
-    },
-    {
-      id: "housekeeping",
-      label: "Housekeeping",
-      description: "Housekeeping tasks and room status",
-      allowedNav: ["/rooms", "/tasks"],
-      taskCategories: ["housekeeping"],
-    },
-    {
-      id: "maintenance",
-      label: "Maintenance",
-      description: "Work orders and maintenance tasks",
-      allowedNav: ["/maintenance", "/tasks", "/guest-requests"],
-      taskCategories: ["maintenance"],
-    },
-    {
-      id: "security",
-      label: "Security",
-      description: "Security tasks and property access",
-      allowedNav: ["/tasks"],
-      taskCategories: ["security"],
-    },
-  ];
+export function mapDbRoleToAppRole(dbRole: string): AppRole {
+  if (dbRole === "owner" || dbRole === "admin") return "owner";
+  if (dbRole === "manager" || dbRole === "property-manager" || dbRole === "site-supervisor") return "manager";
+  if (dbRole === "front-desk") return "front-desk";
+  if (dbRole === "housekeeping" || dbRole === "cleaning-staff") return "housekeeping";
+  if (dbRole === "maintenance" || dbRole === "maintenance-tech") return "maintenance";
+  if (dbRole === "security" || dbRole === "security-officer") return "security";
+  return "front-desk";
+}
 
-  interface RoleContextValue {
-    role: RoleDefinition;
-    setRoleId: (id: AppRole) => void;
-    can: (path: string) => boolean;
-    allowedTaskCategories: string[] | null;
-  }
+export function isOwnerTier(dbRole: string): boolean {
+  return dbRole === "owner" || dbRole === "admin";
+}
 
-  const RoleContext = createContext<RoleContextValue | null>(null);
+export const ROLES: RoleDefinition[] = [
+  {
+    id: "owner",
+    label: "Owner",
+    description: "Full system access including finance and settings",
+    allowedNav: ["*"],
+    taskCategories: null,
+  },
+  {
+    id: "manager",
+    label: "Manager",
+    description: "Tasks, activity logs, and user management",
+    allowedNav: ["/tasks", "/activity-log", "/user-management"],
+    taskCategories: null,
+  },
+  {
+    id: "front-desk",
+    label: "Front Desk",
+    description: "Assigned tasks and own profile",
+    allowedNav: ["/tasks"],
+    taskCategories: ["reception", "general"],
+  },
+  {
+    id: "housekeeping",
+    label: "Housekeeping",
+    description: "Assigned tasks and own profile",
+    allowedNav: ["/tasks"],
+    taskCategories: ["housekeeping"],
+  },
+  {
+    id: "maintenance",
+    label: "Maintenance",
+    description: "Assigned tasks and own profile",
+    allowedNav: ["/tasks"],
+    taskCategories: ["maintenance"],
+  },
+  {
+    id: "security",
+    label: "Security",
+    description: "Assigned tasks and own profile",
+    allowedNav: ["/tasks"],
+    taskCategories: ["security"],
+  },
+];
 
-  export function RoleProvider({ children }: { children: React.ReactNode }) {
-    const [roleId, setRoleId] = useState<AppRole>("manager");
-    const role = ROLES.find((r) => r.id === roleId)!;
+interface RoleContextValue {
+  role: RoleDefinition;
+  setRoleId: (id: AppRole) => void;
+  can: (path: string) => boolean;
+  allowedTaskCategories: string[] | null;
+  actualDbRole: string;
+}
 
-    const can = (path: string) => {
-      if (role.id === "manager") return true;
-      return role.allowedNav.some((allowed) =>
-        path === "/" ? allowed === "/" : allowed === path || path.startsWith(allowed + "/")
-      );
-    };
+const RoleContext = createContext<RoleContextValue | null>(null);
 
-    return (
-      <RoleContext.Provider value={{ role, setRoleId, can, allowedTaskCategories: role.taskCategories }}>
-        {children}
-      </RoleContext.Provider>
+export function RoleProvider({
+  children,
+  initialRole = "owner",
+}: {
+  children: React.ReactNode;
+  initialRole?: string;
+}) {
+  const [roleId, setRoleId] = useState<AppRole>(() => mapDbRoleToAppRole(initialRole));
+
+  const role = ROLES.find((r) => r.id === roleId) ?? ROLES[0];
+
+  const can = (path: string): boolean => {
+    if (role.allowedNav.includes("*")) return true;
+    return role.allowedNav.some((allowed) =>
+      path === "/" ? allowed === "/" : allowed === path || path.startsWith(allowed + "/")
     );
-  }
+  };
 
-  export function useRole() {
-    const ctx = useContext(RoleContext);
-    if (!ctx) throw new Error("useRole must be used inside RoleProvider");
-    return ctx;
-  }
-  
+  return (
+    <RoleContext.Provider
+      value={{
+        role,
+        setRoleId,
+        can,
+        allowedTaskCategories: role.taskCategories,
+        actualDbRole: initialRole,
+      }}
+    >
+      {children}
+    </RoleContext.Provider>
+  );
+}
+
+export function useRole() {
+  const ctx = useContext(RoleContext);
+  if (!ctx) throw new Error("useRole must be used inside RoleProvider");
+  return ctx;
+}

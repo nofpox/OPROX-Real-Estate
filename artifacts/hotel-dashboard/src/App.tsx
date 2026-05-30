@@ -136,7 +136,7 @@ function App() {
       <LanguageProvider>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
-            <RoleProvider>
+            <RoleProvider initialRole={authUser.role}>
               <ActorHeaderSync displayName={authUser.displayName} />
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
                 <Switch>
