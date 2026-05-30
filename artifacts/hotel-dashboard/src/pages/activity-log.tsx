@@ -4,7 +4,6 @@ import { useListActivityLogs, useListProperties } from "@workspace/api-client-re
 import type { ActivityLog } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -15,27 +14,29 @@ import {
   ShieldCheck, Camera, ArrowRight,
 } from "lucide-react";
 
-// ─── Static maps (no translation strings — these are just style/icon data) ────
+// ─── Static action metadata — labels are plain English strings, never i18n keys ─
+// This means the action-type pill text is always stable regardless of language or
+// translation file state. The pill is an internal system code, not UI copy.
 
 const ACTION_META: Record<string, { icon: React.ElementType; cls: string; label: string }> = {
-  "task.created":              { icon: Plus,           label: "Task Created",         cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  "task.status_changed":       { icon: ArrowRightLeft, label: "Status Changed",       cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
-  "task.assigned":             { icon: User,           label: "Task Assigned",        cls: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400"                 },
-  "task.deleted":              { icon: Trash2,         label: "Task Deleted",         cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
-  "work_order.created":        { icon: Plus,           label: "Work Order Created",   cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"         },
-  "work_order.status_changed": { icon: Wrench,         label: "Work Order Updated",   cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"         },
-  "work_order.deleted":        { icon: Trash2,         label: "Work Order Deleted",   cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
-  "booking.created":           { icon: Plus,           label: "Booking Created",      cls: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400"     },
-  "booking.checked_in":        { icon: CheckCircle2,   label: "Checked In",           cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  "booking.checked_out":       { icon: CheckCircle2,   label: "Checked Out",          cls: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400"            },
-  "booking.cancelled":         { icon: Trash2,         label: "Booking Cancelled",    cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
-  "booking.confirmed":         { icon: CheckCircle2,   label: "Booking Confirmed",    cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
-  "booking.status_changed":    { icon: ArrowRightLeft, label: "Booking Updated",      cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
-  "field_user.created":        { icon: User,           label: "Team Member Added",    cls: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400"     },
-  "field_user.updated":        { icon: User,           label: "Team Member Updated",  cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
-  "field_user.deactivated":    { icon: UserMinus,      label: "Member Deactivated",   cls: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"     },
-  "field_user.reactivated":    { icon: UserCheck,      label: "Member Reactivated",   cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  "field_user.deleted":        { icon: Trash2,         label: "Team Member Removed",  cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
+  "task.created":              { icon: Plus,           label: "Task Created",        cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  "task.status_changed":       { icon: ArrowRightLeft, label: "Status Changed",      cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"            },
+  "task.assigned":             { icon: User,           label: "Task Assigned",       cls: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400"                },
+  "task.deleted":              { icon: Trash2,         label: "Task Deleted",        cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                },
+  "work_order.created":        { icon: Plus,           label: "Work Order Created",  cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"        },
+  "work_order.status_changed": { icon: Wrench,         label: "Work Order Updated",  cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"        },
+  "work_order.deleted":        { icon: Trash2,         label: "Work Order Deleted",  cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                },
+  "booking.created":           { icon: Plus,           label: "Booking Created",     cls: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400"    },
+  "booking.checked_in":        { icon: CheckCircle2,   label: "Checked In",          cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"},
+  "booking.checked_out":       { icon: CheckCircle2,   label: "Checked Out",         cls: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400"           },
+  "booking.cancelled":         { icon: Trash2,         label: "Booking Cancelled",   cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                },
+  "booking.confirmed":         { icon: CheckCircle2,   label: "Booking Confirmed",   cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"            },
+  "booking.status_changed":    { icon: ArrowRightLeft, label: "Booking Updated",     cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"            },
+  "field_user.created":        { icon: User,           label: "Team Member Added",   cls: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400"    },
+  "field_user.updated":        { icon: User,           label: "Team Member Updated", cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"            },
+  "field_user.deactivated":    { icon: UserMinus,      label: "Member Deactivated",  cls: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"    },
+  "field_user.reactivated":    { icon: UserCheck,      label: "Member Reactivated",  cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"},
+  "field_user.deleted":        { icon: Trash2,         label: "Team Member Removed", cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                },
 };
 
 const ROLE_CLS: Record<string, string> = {
@@ -53,7 +54,7 @@ const ROLE_KEYS   = [
   "cleaning-staff", "security-officer", "manager", "front-desk",
 ] as const;
 
-// ─── Time helpers ─────────────────────────────────────────────────────────────
+// ─── Time helpers ──────────────────────────────────────────────────────────────
 
 function relativeTime(iso: string, t: ReturnType<typeof useTranslation>["t"]): string {
   const diff  = Date.now() - new Date(iso).getTime();
@@ -74,34 +75,41 @@ function fullTime(iso: string): string {
   });
 }
 
-// ─── Pill badge ───────────────────────────────────────────────────────────────
+// ─── Pill badge ────────────────────────────────────────────────────────────────
 
 function Pill({ label, cls }: { label: string; cls: string }) {
   return (
-    <span
-      className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium leading-tight whitespace-nowrap ${cls}`}
-    >
+    <span className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium leading-tight whitespace-nowrap ${cls}`}>
       {label}
     </span>
   );
 }
 
-// ─── Log entry row — grid is pinned LTR so columns never flip in RTL mode ────
-//   col 1: icon bubble  (fixed 32 px)
-//   col 2: content      (fills remaining space, overflow hidden)
-//   col 3: timestamp    (shrinks to content)
+// ─── Table row ────────────────────────────────────────────────────────────────
 //
-//   dir="ltr" on the row means the browser lays out columns left-to-right
-//   regardless of document direction.  Text inside each cell still inherits
-//   the document's dir for correct Arabic/Urdu/etc. glyph shaping.
+// Rendered as a native <tr> inside a <table dir="ltr">.
+// The browser's table layout engine owns column ordering — it is physically
+// fixed at the HTML level and cannot be affected by document direction,
+// CSS transforms, Tailwind utilities, or JavaScript re-renders.
+//
+// Column widths are declared once in <colgroup> in ActivityLogTable:
+//   col 1 — 2.5 rem  — icon bubble
+//   col 2 — auto     — content (fills remaining width)
+//   col 3 — 5 rem    — timestamp (shrinks to content)
 
 function LogRow({ log }: { log: ActivityLog }) {
   const { t } = useTranslation();
-  const meta  = ACTION_META[log.action] ?? { icon: ClipboardList, cls: "bg-muted text-muted-foreground", label: log.action.replace(/[_.]/g, " ") };
+  const meta  = ACTION_META[log.action] ?? {
+    icon: ClipboardList,
+    cls:  "bg-muted text-muted-foreground",
+    label: log.action.replace(/[_.]/g, " "),
+  };
   const Icon  = meta.icon;
 
   const actionLabel     = meta.label;
-  const roleLabel       = log.actorRole ? t(`activityLog.role.${log.actorRole}`, { defaultValue: log.actorRole }) : null;
+  const roleLabel       = log.actorRole
+    ? t(`activityLog.role.${log.actorRole}`, { defaultValue: log.actorRole })
+    : null;
   const entityTypeLabel = t(`activityLog.entityType.${log.entityType}`, { defaultValue: log.entityType });
 
   const isCompletion  = log.action === "task.status_changed" && log.details?.includes("→ completed");
@@ -109,24 +117,24 @@ function LogRow({ log }: { log: ActivityLog }) {
   const proofPhotoSrc = log.proofPhotoUrl ? `/api/storage${log.proofPhotoUrl}` : null;
 
   return (
-    <div
-      dir="ltr"
-      className="grid items-start gap-x-3 py-3 border-b border-border/40 last:border-0 hover:bg-muted/20 rounded px-3 -mx-3 transition-colors"
-      style={{ gridTemplateColumns: "2rem 1fr auto" }}
-    >
-      {/* Col 1 — icon */}
-      <div className="flex items-start justify-center pt-0.5">
-        <div className={`h-7 w-7 rounded-full flex items-center justify-center shrink-0 ${isCompletion ? "bg-emerald-100 dark:bg-emerald-900/30" : "bg-muted/50"}`}>
-          {isCompletion
-            ? <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-            : <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-          }
-        </div>
-      </div>
+    <tr className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors">
 
-      {/* Col 2 — content (overflow-hidden prevents layout blowout) */}
-      <div className="min-w-0 overflow-hidden">
-        {/* action + role badges on one line, wrapping is fine */}
+      {/* Cell 1 — icon bubble, fixed width, top-aligned */}
+      <td style={{ width: "2.5rem", verticalAlign: "top", paddingTop: "0.75rem", paddingBottom: "0.75rem" }}>
+        <div className="flex justify-center">
+          <div className={`h-7 w-7 rounded-full flex items-center justify-center shrink-0 ${isCompletion ? "bg-emerald-100 dark:bg-emerald-900/30" : "bg-muted/50"}`}>
+            {isCompletion
+              ? <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              : <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+            }
+          </div>
+        </div>
+      </td>
+
+      {/* Cell 2 — main content, overflows hidden so long text cannot break the layout */}
+      <td style={{ verticalAlign: "top", paddingTop: "0.75rem", paddingBottom: "0.75rem", paddingLeft: "0.75rem", paddingRight: "0.75rem", overflow: "hidden", maxWidth: 0 }}>
+
+        {/* Action type + role pills */}
         <div className="flex flex-wrap gap-1 mb-1">
           <Pill label={actionLabel} cls={meta.cls} />
           {roleLabel && (
@@ -134,12 +142,12 @@ function LogRow({ log }: { log: ActivityLog }) {
           )}
         </div>
 
-        {/* entity label */}
+        {/* Entity label */}
         <p className="text-sm font-medium text-foreground leading-tight truncate">
           {log.entityLabel ?? `${entityTypeLabel} #${log.entityId}`}
         </p>
 
-        {/* meta row */}
+        {/* Actor / property / details */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
             <User className="h-3 w-3 shrink-0" />
@@ -156,7 +164,7 @@ function LogRow({ log }: { log: ActivityLog }) {
           )}
         </div>
 
-        {/* Accountability chain */}
+        {/* Accountability chain — who assigned / who completed */}
         {(isAssignment && log.assignedByName) && (
           <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
             <User className="h-3 w-3 shrink-0 text-sky-500" />
@@ -173,7 +181,7 @@ function LogRow({ log }: { log: ActivityLog }) {
           </div>
         )}
 
-        {/* Proof photo thumbnail */}
+        {/* Proof-of-work photo thumbnail */}
         {proofPhotoSrc && (
           <div className="mt-2">
             <a
@@ -197,47 +205,81 @@ function LogRow({ log }: { log: ActivityLog }) {
             </a>
           </div>
         )}
-      </div>
+      </td>
 
-      {/* Col 3 — timestamp (always LTR regardless of page direction) */}
-      <div className="shrink-0 pt-0.5" dir="ltr">
+      {/* Cell 3 — timestamp, fixed width, right-aligned, always numeric LTR */}
+      <td style={{ width: "5rem", verticalAlign: "top", paddingTop: "0.75rem", paddingBottom: "0.75rem", textAlign: "right", whiteSpace: "nowrap" }}>
         <span
-          className="text-xs text-muted-foreground whitespace-nowrap cursor-default"
+          className="text-xs text-muted-foreground cursor-default"
           title={fullTime(log.createdAt)}
         >
           {relativeTime(log.createdAt, t)}
         </span>
-      </div>
-    </div>
+      </td>
+    </tr>
   );
 }
 
-// ─── Skeleton row matching the grid above ────────────────────────────────────
+// ─── Skeleton row — same 3-cell structure as LogRow ───────────────────────────
 
 function SkeletonRow() {
   return (
-    <div
-      className="grid items-start gap-x-3 py-3 border-b border-border/40 last:border-0 px-3 -mx-3"
-      style={{ gridTemplateColumns: "2rem 1fr auto" }}
-    >
-      <div className="flex justify-center pt-0.5">
-        <Skeleton className="h-7 w-7 rounded-full" />
-      </div>
-      <div className="space-y-2 min-w-0">
-        <Skeleton className="h-4 w-28 rounded-full" />
-        <Skeleton className="h-4 w-48" />
-        <Skeleton className="h-3 w-40" />
-      </div>
-      <div className="pt-1 shrink-0">
-        <Skeleton className="h-3 w-10" />
-      </div>
-    </div>
+    <tr className="border-b border-border/40">
+      <td style={{ width: "2.5rem", verticalAlign: "top", paddingTop: "0.75rem", paddingBottom: "0.75rem" }}>
+        <div className="flex justify-center">
+          <Skeleton className="h-7 w-7 rounded-full" />
+        </div>
+      </td>
+      <td style={{ verticalAlign: "top", paddingTop: "0.75rem", paddingBottom: "0.75rem", paddingLeft: "0.75rem", paddingRight: "0.75rem" }}>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-28 rounded-full" />
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-3 w-40" />
+        </div>
+      </td>
+      <td style={{ width: "5rem", verticalAlign: "top", paddingTop: "0.75rem", paddingBottom: "0.75rem", textAlign: "right" }}>
+        <Skeleton className="h-3 w-10 ml-auto" />
+      </td>
+    </tr>
   );
 }
 
-// ─── Inner page (re-mounts on every language switch via key={lang}) ───────────
+// ─── Native table wrapper ─────────────────────────────────────────────────────
+//
+// dir="ltr" is set on the <table> element. This is not a CSS trick — it is a
+// standard HTML attribute that instructs the browser's table layout engine to
+// place columns left-to-right. The browser guarantees this regardless of:
+//   • document.documentElement.dir (global RTL mode)
+//   • any CSS property on any ancestor element
+//   • JavaScript re-renders or React reconciliation
+//
+// Text content inside each <td> still inherits the document's dir, so Arabic,
+// Urdu, Hebrew, etc. glyphs render correctly inside their cells.
 
-function ActivityLogInner() {
+function ActivityLogTable({ rows, loading }: { rows: ActivityLog[]; loading: boolean }) {
+  return (
+    <table
+      dir="ltr"
+      style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}
+    >
+      <colgroup>
+        <col style={{ width: "2.5rem" }} />
+        <col />
+        <col style={{ width: "5rem" }} />
+      </colgroup>
+      <tbody>
+        {loading
+          ? Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
+          : rows.map((log) => <LogRow key={log.id} log={log} />)
+        }
+      </tbody>
+    </table>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function ActivityLogPage() {
   const { t } = useTranslation();
   const [search,       setSearch]       = useState("");
   const [entityFilter, setEntityFilter] = useState("all");
@@ -265,7 +307,6 @@ function ActivityLogInner() {
     );
   }, [allLogs, search]);
 
-  // KPI card definitions
   const kpiDefs = [
     { key: "total",       labelKey: "kpi.total",       icon: ClipboardList, color: "text-primary",     bg: "bg-primary/10",     entityType: undefined    },
     { key: "tasks",       labelKey: "kpi.tasks",       icon: CheckCircle2,  color: "text-emerald-500", bg: "bg-emerald-500/10", entityType: "task"       },
@@ -289,7 +330,7 @@ function ActivityLogInner() {
   return (
     <div className="space-y-6">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">
@@ -308,7 +349,7 @@ function ActivityLogInner() {
         </Button>
       </div>
 
-      {/* ── KPI cards ── */}
+      {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiDefs.map((kpi, i) => {
           const Icon = kpi.icon;
@@ -335,7 +376,7 @@ function ActivityLogInner() {
         })}
       </div>
 
-      {/* ── Filters + Log ── */}
+      {/* Filters + log table */}
       <Card className="shadow-sm border-border/50">
         <CardHeader className="pb-3">
 
@@ -351,7 +392,7 @@ function ActivityLogInner() {
             />
           </div>
 
-          {/* Filter row — flex-wrap so narrow screens wrap gracefully */}
+          {/* Filter row */}
           <div className="flex flex-wrap gap-2 items-center pt-1">
             <Select value={entityFilter} onValueChange={setEntityFilter}>
               <SelectTrigger className="h-8 w-auto min-w-[8rem] text-xs bg-background">
@@ -407,13 +448,8 @@ function ActivityLogInner() {
           </div>
         </CardHeader>
 
-        {/* Log list */}
         <CardContent className="pt-0 px-6">
-          {isLoading ? (
-            <div className="py-2">
-              {Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
-            </div>
-          ) : filtered.length === 0 ? (
+          {!isLoading && filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-16 text-muted-foreground">
               <ClipboardList className="h-10 w-10 opacity-25" />
               <p className="text-sm">
@@ -421,14 +457,12 @@ function ActivityLogInner() {
               </p>
             </div>
           ) : (
-            <div>
-              {filtered.map((log) => <LogRow key={log.id} log={log} />)}
-            </div>
+            <ActivityLogTable rows={filtered} loading={isLoading} />
           )}
         </CardContent>
       </Card>
 
-      {/* ── Legend ── */}
+      {/* Legend */}
       <Card className="shadow-sm border-border/50 bg-muted/20">
         <CardContent className="pt-4 pb-4">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
@@ -450,8 +484,4 @@ function ActivityLogInner() {
 
     </div>
   );
-}
-
-export default function ActivityLogPage() {
-  return <ActivityLogInner />;
 }
