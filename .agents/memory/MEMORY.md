@@ -1,0 +1,1 @@
+- [i18n language architecture](i18n-language-architecture.md) — central config in languages.ts; generation script at scripts/src/generate-locale.ts; 10 languages total (en, ar, ur + 8 new); ar+ur are RTL

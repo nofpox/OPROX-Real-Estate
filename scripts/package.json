@@ -6,6 +6,7 @@
   "scripts": {
     "hello": "tsx ./src/hello.ts",
     "backup": "tsx ./src/backup-db.ts",
+    "generate-locale": "tsx ./src/generate-locale.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
