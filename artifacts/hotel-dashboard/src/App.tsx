@@ -31,6 +31,7 @@ import ForcePasswordChange from "@/pages/force-password-change";
 import SuperAdmin from "@/pages/super-admin";
 import SecurityDashboard from "@/pages/security-dashboard";
 import Analytics from "@/pages/analytics";
+import SupportTickets from "@/pages/support-tickets";
 import SuspendedPage from "@/pages/suspended";
 
 const queryClient = new QueryClient({
@@ -63,6 +64,7 @@ function Router() {
       <Route path="/unit-map" component={UnitMap} />
       <Route path="/security-dashboard" component={SecurityDashboard} />
       <Route path="/analytics" component={Analytics} />
+      <Route path="/support-tickets" component={SupportTickets} />
       <Route component={NotFound} />
     </Switch>
   );

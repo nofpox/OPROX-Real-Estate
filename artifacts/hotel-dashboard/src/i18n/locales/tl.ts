@@ -11,6 +11,7 @@ const tl: Translations = {
     adminSettings: "Mga Setting ng Admin",
     securityDashboard: "Security",
     analytics: "Analytics",
+    supportTickets: "Support Tickets",
   },
   common: {
     save: "I-save", cancel: "Kanselahin", delete: "Burahin", edit: "I-edit", add: "Idagdag",
@@ -24,6 +25,7 @@ const tl: Translations = {
     noData: "Walang datos na nahanap.", refresh: "I-refresh", all: "Lahat",
     createdOn: "Nilikha noong", notProvided: "Hindi ibinigay", perNight: "/gabi",
     today: "Ngayon", yesterday: "Kahapon",
+    saving: "Nag-iimpok…", clearFilter: "I-clear", view: "Tingnan",
   },
   status: {
     confirmed: "Nakumpirma", "checked-in": "Naka-check in", "checked-out": "Naka-check out",
@@ -391,6 +393,19 @@ const tl: Translations = {
     userReactivated: "Nai-reactivate ang gumagamit",
     userReactivatedDesc: "Maaari nang mag-log in si {{name}}.",
     reactivateFailed: "Nabigo ang pag-reactivate ng gumagamit",
+  },
+  support: {
+    buttonLabel: "Suporta & Feedback", dialogTitle: "Suporta & Feedback",
+    dialogSubtitle: "Mag-ulat ng isyu, magmungkahi ng feature, o ipaalam ang tungkol sa bug.",
+    category: "Kategorya", categoryIssue: "Isyu", categoryBug: "Bug", categorySuggestion: "Mungkahi",
+    titleLabel: "Pamagat", titlePlaceholder: "Maikling buod ng iyong kahilingan",
+    descriptionLabel: "Paglalarawan", descriptionPlaceholder: "Ilarawan ang isyu o mungkahi nang detalyado…",
+    submit: "Isumite ang Tiket", successTitle: "Salamat!", successBody: "Naisumite na ang iyong tiket.",
+    pageTitle: "Mga Tiket ng Suporta", pageSubtitle: "Suriin at pamahalaan ang mga kahilingan ng suporta.",
+    filterStatus: "I-filter ayon sa status", noTickets: "Walang tiket ng suporta.",
+    submittedBy: "Isinumite ni", status: "Status", createdAt: "Nilikha",
+    updateStatus: "I-update ang Status", adminNotes: "Mga Tala ng Admin",
+    adminNotesPlaceholder: "Magdagdag ng tugon o panloob na tala para sa tiket na ito…",
   },
 };
 

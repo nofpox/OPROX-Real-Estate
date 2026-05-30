@@ -4,7 +4,9 @@ import {
   LayoutDashboard, DoorOpen, Menu, Building2,
   Wrench, UserCog, ClipboardList, ChevronDown, Shield,
   MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert, BarChart2,
+  Ticket, MessageCircleQuestion,
 } from "lucide-react";
+import { SupportDialog } from "@/components/support-dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -35,6 +37,7 @@ const NAV_ITEMS = [
   { href: "/admin-settings",      labelKey: "nav.adminSettings",     icon: SlidersHorizontal, section: "operations", featureKey: null },
   { href: "/security-dashboard",  labelKey: "nav.securityDashboard", icon: ShieldAlert,       section: "operations", featureKey: null },
   { href: "/analytics",           labelKey: "nav.analytics",         icon: BarChart2,          section: "operations", featureKey: null },
+  { href: "/support-tickets",    labelKey: "nav.supportTickets",    icon: Ticket,             section: "operations", featureKey: null },
 ];
 
 /* Role pill colours — solid only, no opacity modifiers */
@@ -69,6 +72,7 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
   const [location] = useLocation();
   const { t } = useTranslation();
   const { role, setRoleId, can } = useRole();
+  const [supportOpen, setSupportOpen] = useState(false);
   const settings = useSettings();
 
   const enabledNavKeys = getEnabledNavKeys(settings.enabledModules);
@@ -118,6 +122,18 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
             </>
           )}
         </nav>
+      </div>
+
+      {/* Support button — visible to all users */}
+      <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} authUser={authUser} />
+      <div className="px-4 py-2">
+        <button
+          onClick={() => setSupportOpen(true)}
+          className="w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+        >
+          <MessageCircleQuestion className="h-5 w-5 shrink-0" />
+          {t("support.buttonLabel")}
+        </button>
       </div>
 
       <div className="border-t border-sidebar-border">

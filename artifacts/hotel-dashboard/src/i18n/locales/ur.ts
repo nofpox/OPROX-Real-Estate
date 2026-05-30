@@ -11,6 +11,7 @@ const ur: Translations = {
     adminSettings: "ایڈمن سیٹنگز",
     securityDashboard: "Security",
     analytics: "Analytics",
+    supportTickets: "Support Tickets",
   },
   common: {
     save: "محفوظ کریں", cancel: "منسوخ کریں", delete: "حذف کریں",
@@ -25,6 +26,7 @@ const ur: Translations = {
     noData: "کوئی ڈیٹا نہیں ملا۔", refresh: "تازہ کریں", all: "تمام",
     createdOn: "بنایا گیا", notProvided: "فراہم نہیں", perNight: "/رات",
     today: "آج", yesterday: "کل",
+    saving: "محفوظ ہو رہا ہے…", clearFilter: "صاف کریں", view: "دیکھیں",
   },
   status: {
     confirmed: "تصدیق شدہ", "checked-in": "چیک ان", "checked-out": "چیک آؤٹ",
@@ -389,6 +391,19 @@ const ur: Translations = {
     userReactivated: "صارف دوبارہ فعال",
     userReactivatedDesc: "{{name}} اب دوبارہ لاگ ان کر سکتے ہیں۔",
     reactivateFailed: "صارف دوبارہ فعال کرنے میں ناکامی",
+  },
+  support: {
+    buttonLabel: "سپورٹ اور فیڈبیک", dialogTitle: "سپورٹ اور فیڈبیک",
+    dialogSubtitle: "کسی مسئلے کی اطلاع دیں، کوئی فیچر تجویز کریں، یا بگ بتائیں۔",
+    category: "زمرہ", categoryIssue: "مسئلہ", categoryBug: "بگ", categorySuggestion: "تجویز",
+    titleLabel: "عنوان", titlePlaceholder: "اپنی درخواست کا مختصر خلاصہ",
+    descriptionLabel: "تفصیل", descriptionPlaceholder: "مسئلہ یا تجویز کو تفصیل سے بیان کریں…",
+    submit: "ٹکٹ جمع کریں", successTitle: "شکریہ!", successBody: "آپ کا ٹکٹ جمع ہو گیا۔",
+    pageTitle: "سپورٹ ٹکٹس", pageSubtitle: "اپنی ٹیم کی سپورٹ درخواستوں کا جائزہ لیں۔",
+    filterStatus: "اسٹیٹس کے مطابق فلٹر کریں", noTickets: "کوئی سپورٹ ٹکٹ نہیں ملا۔",
+    submittedBy: "جمع کروانے والا", status: "اسٹیٹس", createdAt: "بنایا گیا",
+    updateStatus: "اسٹیٹس اپ ڈیٹ کریں", adminNotes: "ایڈمن نوٹس",
+    adminNotesPlaceholder: "اس ٹکٹ کے لیے جواب یا نوٹ شامل کریں…",
   },
 };
 

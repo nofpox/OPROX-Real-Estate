@@ -11,6 +11,7 @@ const hi: Translations = {
     adminSettings: "व्यवस्थापक सेटिंग्स",
     securityDashboard: "Security",
     analytics: "Analytics",
+    supportTickets: "Support Tickets",
   },
   common: {
     save: "सहेजें", cancel: "रद्द करें", delete: "हटाएं", edit: "संपादित करें", add: "जोड़ें",
@@ -24,6 +25,7 @@ const hi: Translations = {
     noData: "कोई डेटा नहीं मिला।", refresh: "ताज़ा करें", all: "सभी",
     createdOn: "बनाया गया", notProvided: "उपलब्ध नहीं", perNight: "/रात",
     today: "आज", yesterday: "कल",
+    saving: "सहेजा जा रहा है…", clearFilter: "साफ़ करें", view: "देखें",
   },
   status: {
     confirmed: "पुष्टि हुई", "checked-in": "चेक-इन", "checked-out": "चेक-आउट",
@@ -388,6 +390,19 @@ const hi: Translations = {
     userReactivated: "उपयोगकर्ता पुनः सक्रिय",
     userReactivatedDesc: "{{name}} अब फिर से लॉग इन कर सकते हैं।",
     reactivateFailed: "उपयोगकर्ता पुनः सक्रिय करने में विफल",
+  },
+  support: {
+    buttonLabel: "Support & Feedback", dialogTitle: "Support & Feedback",
+    dialogSubtitle: "किसी समस्या की रिपोर्ट करें, कोई सुविधा सुझाएं, या बग की जानकारी दें।",
+    category: "श्रेणी", categoryIssue: "समस्या", categoryBug: "बग", categorySuggestion: "सुझाव",
+    titleLabel: "शीर्षक", titlePlaceholder: "आपके अनुरोध का संक्षिप्त विवरण",
+    descriptionLabel: "विवरण", descriptionPlaceholder: "समस्या या सुझाव का विस्तृत वर्णन करें…",
+    submit: "टिकट जमा करें", successTitle: "धन्यवाद!", successBody: "आपका टिकट जमा हो गया है।",
+    pageTitle: "सपोर्ट टिकट", pageSubtitle: "अपनी टीम के सपोर्ट अनुरोधों की समीक्षा करें।",
+    filterStatus: "स्थिति के अनुसार फ़िल्टर करें", noTickets: "कोई सपोर्ट टिकट नहीं मिला।",
+    submittedBy: "द्वारा जमा", status: "स्थिति", createdAt: "बनाया गया",
+    updateStatus: "स्थिति अपडेट करें", adminNotes: "एडमिन नोट्स",
+    adminNotesPlaceholder: "इस टिकट के लिए उत्तर या नोट जोड़ें…",
   },
 };
 

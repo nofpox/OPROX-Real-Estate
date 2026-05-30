@@ -11,6 +11,7 @@ const th: Translations = {
     adminSettings: "การตั้งค่าผู้ดูแล",
     securityDashboard: "Security",
     analytics: "Analytics",
+    supportTickets: "Support Tickets",
   },
   common: {
     save: "บันทึก", cancel: "ยกเลิก", delete: "ลบ", edit: "แก้ไข", add: "เพิ่ม",
@@ -24,6 +25,7 @@ const th: Translations = {
     noData: "ไม่พบข้อมูล", refresh: "รีเฟรช", all: "ทั้งหมด",
     createdOn: "สร้างเมื่อ", notProvided: "ไม่ได้ระบุ", perNight: "/คืน",
     today: "วันนี้", yesterday: "เมื่อวาน",
+    saving: "กำลังบันทึก…", clearFilter: "ล้าง", view: "ดู",
   },
   status: {
     confirmed: "ยืนยันแล้ว", "checked-in": "เช็คอิน", "checked-out": "เช็คเอาต์",
@@ -389,6 +391,19 @@ const th: Translations = {
     userReactivated: "เปิดใช้งานผู้ใช้อีกครั้ง",
     userReactivatedDesc: "{{name}} สามารถเข้าสู่ระบบได้อีกครั้ง",
     reactivateFailed: "เปิดใช้งานผู้ใช้อีกครั้งไม่สำเร็จ",
+  },
+  support: {
+    buttonLabel: "สนับสนุน & ข้อเสนอแนะ", dialogTitle: "สนับสนุน & ข้อเสนอแนะ",
+    dialogSubtitle: "รายงานปัญหา แนะนำฟีเจอร์ หรือแจ้งบัก",
+    category: "หมวดหมู่", categoryIssue: "ปัญหา", categoryBug: "บัก", categorySuggestion: "ข้อเสนอแนะ",
+    titleLabel: "ชื่อเรื่อง", titlePlaceholder: "สรุปคำขอของคุณสั้นๆ",
+    descriptionLabel: "รายละเอียด", descriptionPlaceholder: "อธิบายปัญหาหรือข้อเสนอแนะอย่างละเอียด…",
+    submit: "ส่งตั๋ว", successTitle: "ขอบคุณ!", successBody: "ตั๋วของคุณถูกส่งแล้ว",
+    pageTitle: "ตั๋วสนับสนุน", pageSubtitle: "ตรวจสอบและจัดการคำขอสนับสนุนจากทีมของคุณ",
+    filterStatus: "กรองตามสถานะ", noTickets: "ไม่พบตั๋วสนับสนุน",
+    submittedBy: "ส่งโดย", status: "สถานะ", createdAt: "สร้างเมื่อ",
+    updateStatus: "อัปเดตสถานะ", adminNotes: "บันทึกผู้ดูแล",
+    adminNotesPlaceholder: "เพิ่มคำตอบหรือบันทึกภายในสำหรับตั๋วนี้…",
   },
 };
 

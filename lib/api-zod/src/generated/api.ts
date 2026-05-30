@@ -2006,3 +2006,69 @@ export const DeleteTenantParams = zod.object({
 })
 
 
+/**
+ * @summary List support tickets (admin/owner only)
+ */
+export const ListSupportTicketsQueryParams = zod.object({
+  "status": zod.coerce.string().optional()
+})
+
+export const ListSupportTicketsResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "category": zod.string().describe('issue, suggestion, bug'),
+  "title": zod.string(),
+  "description": zod.string(),
+  "status": zod.string().describe('open, in-progress, resolved, closed'),
+  "submittedByUserId": zod.number().nullish(),
+  "submittedByName": zod.string().nullish(),
+  "submittedByRole": zod.string().nullish(),
+  "adminNotes": zod.string().nullish(),
+  "resolvedByUserId": zod.number().nullish(),
+  "resolvedAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListSupportTicketsResponse = zod.array(ListSupportTicketsResponseItem)
+
+
+/**
+ * @summary Submit a support ticket (any authenticated user)
+ */
+export const CreateSupportTicketBody = zod.object({
+  "category": zod.string(),
+  "title": zod.string(),
+  "description": zod.string()
+})
+
+
+/**
+ * @summary Update a support ticket status/notes (admin/owner only)
+ */
+export const UpdateSupportTicketParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateSupportTicketBody = zod.object({
+  "status": zod.string().optional(),
+  "adminNotes": zod.string().optional()
+})
+
+export const UpdateSupportTicketResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "category": zod.string().describe('issue, suggestion, bug'),
+  "title": zod.string(),
+  "description": zod.string(),
+  "status": zod.string().describe('open, in-progress, resolved, closed'),
+  "submittedByUserId": zod.number().nullish(),
+  "submittedByName": zod.string().nullish(),
+  "submittedByRole": zod.string().nullish(),
+  "adminNotes": zod.string().nullish(),
+  "resolvedByUserId": zod.number().nullish(),
+  "resolvedAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+

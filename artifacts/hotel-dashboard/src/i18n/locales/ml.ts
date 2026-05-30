@@ -11,6 +11,7 @@ const ml: Translations = {
     adminSettings: "അഡ്മിൻ ക്രമീകരണങ്ങൾ",
     securityDashboard: "Security",
     analytics: "Analytics",
+    supportTickets: "Support Tickets",
   },
   common: {
     save: "സംരക്ഷിക്കുക", cancel: "റദ്ദാക്കുക", delete: "ഇല്ലാതാക്കുക",
@@ -25,6 +26,7 @@ const ml: Translations = {
     noData: "ഡേറ്റ കണ്ടെത്തിയില്ല.", refresh: "പുതുക്കുക", all: "എല്ലാം",
     createdOn: "നിർമ്മിച്ചത്", notProvided: "നൽകിയിട്ടില്ല", perNight: "/രാത്രി",
     today: "ഇന്ന്", yesterday: "ഇന്നലെ",
+    saving: "സംരക്ഷിക്കുന്നു…", clearFilter: "മായ്ക്കുക", view: "കാണുക",
   },
   status: {
     confirmed: "സ്ഥിരീകരിച്ചു", "checked-in": "ചെക്ക്-ഇൻ", "checked-out": "ചെക്ക്-ഔട്ട്",
@@ -389,6 +391,19 @@ const ml: Translations = {
     userReactivated: "ഉപയോക്താവ് വീണ്ടും സജീവം",
     userReactivatedDesc: "{{name}} ഇപ്പോൾ വീണ്ടും ലോഗ് ഇൻ ചെയ്യാം.",
     reactivateFailed: "ഉപയോക്താവ് വീണ്ടും സജീവമാക്കൽ പരാജയം",
+  },
+  support: {
+    buttonLabel: "Support & Feedback", dialogTitle: "Support & Feedback",
+    dialogSubtitle: "ഒരു പ്രശ്നം റിപ്പോർട്ട് ചെയ്യുക, ഒരു ഫീച്ചർ നിർദ്ദേശിക്കുക, അല്ലെങ്കിൽ ഒരു ബഗ് അറിയിക്കുക.",
+    category: "വിഭാഗം", categoryIssue: "പ്രശ്നം", categoryBug: "ബഗ്", categorySuggestion: "നിർദ്ദേശം",
+    titleLabel: "തലക്കെട്ട്", titlePlaceholder: "നിങ്ങളുടെ അഭ്യർത്ഥനയുടെ ചുരുക്കം",
+    descriptionLabel: "വിവരണം", descriptionPlaceholder: "പ്രശ്നം അല്ലെങ്കിൽ നിർദ്ദേശം വിശദമായി വിവരിക്കുക…",
+    submit: "ടിക്കറ്റ് സമർപ്പിക്കുക", successTitle: "നന്ദി!", successBody: "നിങ്ങളുടെ ടിക്കറ്റ് സമർപ്പിച്ചു.",
+    pageTitle: "സപ്പോർട്ട് ടിക്കറ്റുകൾ", pageSubtitle: "നിങ്ങളുടെ ടീമിന്റെ സപ്പോർട്ട് അഭ്യർത്ഥനകൾ അവലോകനം ചെയ്യുക.",
+    filterStatus: "സ്റ്റാറ്റസ് അനുസരിച്ച് ഫിൽട്ടർ ചെയ്യുക", noTickets: "സപ്പോർട്ട് ടിക്കറ്റുകൾ ഇല്ല.",
+    submittedBy: "സമർപ്പിച്ചത്", status: "സ്റ്റാറ്റസ്", createdAt: "സൃഷ്ടിച്ചത്",
+    updateStatus: "സ്റ്റാറ്റസ് അപ്‌ഡേറ്റ് ചെയ്യുക", adminNotes: "അഡ്‌മിൻ കുറിപ്പുകൾ",
+    adminNotesPlaceholder: "ഈ ടിക്കറ്റിനായി ഒരു പ്രതികരണം അല്ലെങ്കിൽ കുറിപ്പ് ചേർക്കുക…",
   },
 };
 

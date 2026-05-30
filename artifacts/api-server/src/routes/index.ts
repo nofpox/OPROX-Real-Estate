@@ -24,6 +24,7 @@ import fieldUsersRouter from "./fieldUsers";
 import customFieldsRouter from "./customFields";
 import storageRouter from "./storage";
 import superAdminRouter from "./super-admin";
+import supportTicketsRouter from "./support-tickets";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
   worker: 0, supervisor: 1, admin: 2,
@@ -131,6 +132,7 @@ router.use(tasksRouter);
 router.use(notificationsRouter);
 router.use(storageRouter);
 router.use(guestRouter);
+router.use(supportTicketsRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

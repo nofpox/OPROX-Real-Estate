@@ -11,6 +11,7 @@ const bn: Translations = {
     adminSettings: "অ্যাডমিন সেটিংস",
     securityDashboard: "Security",
     analytics: "Analytics",
+    supportTickets: "Support Tickets",
   },
   common: {
     save: "সংরক্ষণ করুন", cancel: "বাতিল করুন", delete: "মুছুন",
@@ -25,6 +26,7 @@ const bn: Translations = {
     noData: "কোনো ডেটা পাওয়া যায়নি।", refresh: "রিফ্রেশ করুন", all: "সকল",
     createdOn: "তৈরি হয়েছে", notProvided: "প্রদান করা হয়নি", perNight: "/রাত",
     today: "আজ", yesterday: "গতকাল",
+    saving: "সংরক্ষণ হচ্ছে…", clearFilter: "পরিষ্কার", view: "দেখুন",
   },
   status: {
     confirmed: "নিশ্চিত", "checked-in": "চেক-ইন", "checked-out": "চেক-আউট",
@@ -389,6 +391,19 @@ const bn: Translations = {
     userReactivated: "ব্যবহারকারী পুনরায় সক্রিয়",
     userReactivatedDesc: "{{name}} এখন আবার লগ ইন করতে পারবেন।",
     reactivateFailed: "ব্যবহারকারী পুনরায় সক্রিয় করতে ব্যর্থ",
+  },
+  support: {
+    buttonLabel: "Support & Feedback", dialogTitle: "Support & Feedback",
+    dialogSubtitle: "একটি সমস্যা রিপোর্ট করুন, একটি ফিচার পরামর্শ দিন, বা একটি বাগ জানান।",
+    category: "বিভাগ", categoryIssue: "সমস্যা", categoryBug: "বাগ", categorySuggestion: "পরামর্শ",
+    titleLabel: "শিরোনাম", titlePlaceholder: "আপনার অনুরোধের সংক্ষিপ্ত সারাংশ",
+    descriptionLabel: "বিবরণ", descriptionPlaceholder: "সমস্যা বা পরামর্শ বিস্তারিত বর্ণনা করুন…",
+    submit: "টিকেট জমা দিন", successTitle: "ধন্যবাদ!", successBody: "আপনার টিকেট জমা দেওয়া হয়েছে।",
+    pageTitle: "সাপোর্ট টিকেট", pageSubtitle: "আপনার দলের সাপোর্ট অনুরোধ পর্যালোচনা ও পরিচালনা করুন।",
+    filterStatus: "স্ট্যাটাস দ্বারা ফিল্টার", noTickets: "কোনো সাপোর্ট টিকেট পাওয়া যায়নি।",
+    submittedBy: "জমাদানকারী", status: "স্ট্যাটাস", createdAt: "তৈরির তারিখ",
+    updateStatus: "স্ট্যাটাস আপডেট করুন", adminNotes: "অ্যাডমিন নোট",
+    adminNotesPlaceholder: "এই টিকেটের জন্য একটি উত্তর বা নোট যোগ করুন…",
   },
 };
 

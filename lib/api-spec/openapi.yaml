@@ -1913,6 +1913,69 @@ paths:
         "204":
           description: Deleted
 
+  /support-tickets:
+    get:
+      operationId: listSupportTickets
+      tags: [supportTickets]
+      summary: List support tickets (admin/owner only)
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of support tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupportTicket"
+    post:
+      operationId: createSupportTicket
+      tags: [supportTickets]
+      summary: Submit a support ticket (any authenticated user)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportTicketInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicket"
+
+  /support-tickets/{id}:
+    patch:
+      operationId: updateSupportTicket
+      tags: [supportTickets]
+      summary: Update a support ticket status/notes (admin/owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportTicketUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicket"
+
 components:
   schemas:
     Settings:
@@ -3452,3 +3515,57 @@ components:
           type: string
         isActive:
           type: boolean
+
+    SupportTicket:
+      type: object
+      required: [id, tenantId, category, title, description, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        category:
+          type: string
+          description: "issue, suggestion, bug"
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          description: "open, in-progress, resolved, closed"
+        submittedByUserId:
+          type: ["integer", "null"]
+        submittedByName:
+          type: ["string", "null"]
+        submittedByRole:
+          type: ["string", "null"]
+        adminNotes:
+          type: ["string", "null"]
+        resolvedByUserId:
+          type: ["integer", "null"]
+        resolvedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    SupportTicketInput:
+      type: object
+      required: [category, title, description]
+      properties:
+        category:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+
+    SupportTicketUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        adminNotes:
+          type: string

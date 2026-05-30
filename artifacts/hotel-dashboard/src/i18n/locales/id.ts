@@ -11,6 +11,7 @@ const id: Translations = {
     adminSettings: "Pengaturan Admin",
     securityDashboard: "Security",
     analytics: "Analytics",
+    supportTickets: "Support Tickets",
   },
   common: {
     save: "Simpan", cancel: "Batal", delete: "Hapus", edit: "Edit", add: "Tambah",
@@ -24,6 +25,7 @@ const id: Translations = {
     noData: "Tidak ada data.", refresh: "Segarkan", all: "Semua",
     createdOn: "Dibuat pada", notProvided: "Tidak tersedia", perNight: "/malam",
     today: "Hari Ini", yesterday: "Kemarin",
+    saving: "Menyimpan…", clearFilter: "Hapus", view: "Lihat",
   },
   status: {
     confirmed: "Dikonfirmasi", "checked-in": "Check-in", "checked-out": "Check-out",
@@ -389,6 +391,19 @@ const id: Translations = {
     userReactivated: "Pengguna diaktifkan kembali",
     userReactivatedDesc: "{{name}} sekarang bisa masuk lagi.",
     reactivateFailed: "Gagal mengaktifkan kembali pengguna",
+  },
+  support: {
+    buttonLabel: "Dukungan & Masukan", dialogTitle: "Dukungan & Masukan",
+    dialogSubtitle: "Laporkan masalah, sarankan fitur, atau beritahu kami tentang bug.",
+    category: "Kategori", categoryIssue: "Masalah", categoryBug: "Bug", categorySuggestion: "Saran",
+    titleLabel: "Judul", titlePlaceholder: "Ringkasan singkat permintaan Anda",
+    descriptionLabel: "Deskripsi", descriptionPlaceholder: "Jelaskan masalah atau saran secara detail…",
+    submit: "Kirim Tiket", successTitle: "Terima kasih!", successBody: "Tiket Anda telah dikirim.",
+    pageTitle: "Tiket Dukungan", pageSubtitle: "Tinjau dan kelola permintaan dukungan dari tim Anda.",
+    filterStatus: "Filter berdasarkan status", noTickets: "Tidak ada tiket dukungan.",
+    submittedBy: "Dikirim oleh", status: "Status", createdAt: "Dibuat",
+    updateStatus: "Perbarui Status", adminNotes: "Catatan Admin",
+    adminNotesPlaceholder: "Tambahkan respons atau catatan internal untuk tiket ini…",
   },
 };
 

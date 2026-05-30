@@ -865,6 +865,42 @@ export interface UpdateTenantInput {
   isActive?: boolean;
 }
 
+export interface SupportTicket {
+  id: number;
+  tenantId: number;
+  /** issue, suggestion, bug */
+  category: string;
+  title: string;
+  description: string;
+  /** open, in-progress, resolved, closed */
+  status: string;
+  /** @nullable */
+  submittedByUserId?: number | null;
+  /** @nullable */
+  submittedByName?: string | null;
+  /** @nullable */
+  submittedByRole?: string | null;
+  /** @nullable */
+  adminNotes?: string | null;
+  /** @nullable */
+  resolvedByUserId?: number | null;
+  /** @nullable */
+  resolvedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SupportTicketInput {
+  category: string;
+  title: string;
+  description: string;
+}
+
+export interface SupportTicketUpdate {
+  status?: string;
+  adminNotes?: string;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
@@ -982,5 +1018,9 @@ export type ListCustomFieldsParams = {
  * Filter by entity type: asset | task
  */
 entityType?: string;
+};
+
+export type ListSupportTicketsParams = {
+status?: string;
 };
 
