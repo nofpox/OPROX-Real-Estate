@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { QRCodeCanvas } from "qrcode.react";
 import { useTranslation } from "react-i18next";
 import {
   useListTasks, getListTasksQueryKey, useCreateTask, useUpdateTask, useDeleteTask,
@@ -26,6 +27,7 @@ import {
   Building2, Image as ImageIcon, Send, X, Zap, Droplets, Wind, Sparkles, ClipboardList,
   Camera, Upload, ExternalLink, ShieldCheck, BadgeCheck, FileText, Download, Loader2,
   FileCheck, ArrowUpCircle, XCircle, ThumbsUp, RotateCcw,
+  QrCode, Copy, Printer,
 } from "lucide-react";
 import { generateTaskReport } from "@/lib/pdf-report";
 import { useToast } from "@/hooks/use-toast";
@@ -345,12 +347,13 @@ interface TaskCardProps {
   onApproveReport: (id: number) => void;
   canReviewReport: boolean;
   canApproveReport:boolean;
+  onShowQr:        (task: any) => void;
 }
 
 function TaskCard({
   task, onSelect, onDelete, onStatus, onVerify, canVerify,
   onSubmitReport, onRejectReport, onEscalateReport, onApproveReport,
-  canReviewReport, canApproveReport,
+  canReviewReport, canApproveReport, onShowQr,
 }: TaskCardProps) {
   const { t } = useTranslation();
   const overdue  = isOverdue(task.dueDate, task.status);
@@ -366,13 +369,23 @@ function TaskCard({
     >
       <div className="flex items-start justify-between gap-2">
         <p className="font-medium text-sm leading-snug flex-1">{task.title}</p>
-        <Button
-          variant="ghost" size="icon"
-          className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
-          onClick={(e) => { e.stopPropagation(); onDelete(task.id, task.title); }}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        <div className="flex items-center shrink-0" onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="ghost" size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-primary"
+            title="QR Code"
+            onClick={() => onShowQr(task)}
+          >
+            <QrCode className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost" size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            onClick={() => onDelete(task.id, task.title)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
 
       {task.description && (
@@ -609,6 +622,25 @@ function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkCo
               <SheetTitle className="text-base font-semibold leading-snug">{task.title}</SheetTitle>
             </div>
           </div>
+          {/* QR Code row */}
+          <div className="flex items-center gap-2 mt-2">
+            <div className="rounded-lg border bg-white p-1.5 shadow-sm shrink-0">
+              <QRCodeCanvas value={taskQrUrl(task.id)} size={48} level="M" marginSize={0} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Scan to open task</p>
+              <p className="text-[10px] text-muted-foreground truncate">{taskQrUrl(task.id)}</p>
+            </div>
+            <Button
+              variant="ghost" size="icon"
+              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-primary"
+              title="Full QR Code"
+              onClick={() => (document.dispatchEvent(new CustomEvent("show-task-qr", { detail: task })))}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
           {/* Status buttons row */}
           <div className="flex gap-1.5 mt-3 flex-wrap">
             {statusButtons.map((col) => (
@@ -875,6 +907,123 @@ function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkCo
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+// ── QR Code helpers ───────────────────────────────────────────────────────────
+
+function taskQrUrl(taskId: number): string {
+  return `${window.location.origin}${window.location.pathname.replace(/\/$/, "")}?taskId=${taskId}`;
+}
+
+// ── QR Code Modal ─────────────────────────────────────────────────────────────
+
+function QrCodeModal({ task, open, onClose }: { task: any | null; open: boolean; onClose: () => void }) {
+  const { toast } = useToast();
+  const canvasRef  = useRef<HTMLCanvasElement | null>(null);
+  const url        = task ? taskQrUrl(task.id) : "";
+
+  function handleCopy() {
+    navigator.clipboard.writeText(url).then(
+      () => toast({ title: "Link copied to clipboard." }),
+      () => toast({ title: "Could not copy link.", variant: "destructive" }),
+    );
+  }
+
+  function handleDownload() {
+    // qrcode.react renders to the canvas with id qr-canvas-modal
+    const canvas = document.getElementById("qr-canvas-modal") as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `task-${task?.id ?? "qr"}.png`;
+    a.click();
+  }
+
+  function handlePrint() {
+    const canvas = document.getElementById("qr-canvas-modal") as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const img   = canvas.toDataURL("image/png");
+    const win   = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(`
+      <html><head><title>Task QR — ${task?.id}</title>
+      <style>
+        body { margin:0; font-family:sans-serif; display:flex; flex-direction:column; align-items:center; padding:32px; gap:16px; }
+        img  { width:240px; height:240px; }
+        h2   { margin:0; font-size:18px; text-align:center; }
+        p    { margin:0; font-size:12px; color:#6b7280; word-break:break-all; text-align:center; max-width:260px; }
+        small{ font-size:11px; color:#9ca3af; }
+        @media print { button { display:none; } }
+      </style></head><body>
+      <img src="${img}" />
+      <h2>${task?.title ?? ""}</h2>
+      <p>${url}</p>
+      <small>Task #${task?.id} · ${task?.propertyName ?? ""}</small>
+      <button onclick="window.print()" style="margin-top:16px;padding:8px 20px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;font-size:13px">Print</button>
+      </body></html>
+    `);
+    win.document.close();
+  }
+
+  if (!task) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="sm:max-w-xs">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <QrCode className="h-5 w-5 text-primary" />
+            Task QR Code
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* QR Code */}
+        <div className="flex flex-col items-center gap-4 py-2">
+          <div className="rounded-xl border-2 border-border bg-white p-4 shadow-sm">
+            <QRCodeCanvas
+              id="qr-canvas-modal"
+              value={url}
+              size={192}
+              level="M"
+              marginSize={1}
+              imageSettings={{
+                src: "",
+                excavate: false,
+                height: 0,
+                width: 0,
+              }}
+            />
+          </div>
+
+          {/* Task info */}
+          <div className="text-center space-y-0.5">
+            <p className="text-sm font-semibold text-foreground leading-tight">{task.title}</p>
+            {task.propertyName && (
+              <p className="text-xs text-muted-foreground">{task.propertyName}</p>
+            )}
+            <p className="text-xs text-muted-foreground">Task #{task.id}</p>
+          </div>
+
+          {/* URL preview */}
+          <p className="text-[10px] text-muted-foreground text-center break-all px-2 leading-tight">
+            {url}
+          </p>
+        </div>
+
+        <DialogFooter className="flex-row gap-2 sm:flex-row">
+          <Button variant="outline" size="sm" className="flex-1" onClick={handleCopy}>
+            <Copy className="me-1.5 h-3.5 w-3.5" />Copy Link
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1" onClick={handleDownload}>
+            <Download className="me-1.5 h-3.5 w-3.5" />Save PNG
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1" onClick={handlePrint}>
+            <Printer className="me-1.5 h-3.5 w-3.5" />Print
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1333,6 +1482,7 @@ export default function Tasks() {
   const [selectedTask,    setSelectedTask]    = useState<any | null>(null);
   const [beforePhotoTask, setBeforePhotoTask] = useState<any | null>(null);
   const [afterPhotoTask,  setAfterPhotoTask]  = useState<any | null>(null);
+  const [qrTask,          setQrTask]          = useState<any | null>(null);
 
   const queryClient = useQueryClient();
   const { toast }   = useToast();
@@ -1354,6 +1504,33 @@ export default function Tasks() {
   const rejectReport  = useRejectTaskReport();
   const escalateRpt   = useEscalateTaskReport();
   const approveRpt    = useApproveTaskReport();
+
+  // ── URL deep-link: ?taskId=X auto-opens that task ──────────────────────────
+  useEffect(() => {
+    if (!tasks) return;
+    const sp = new URLSearchParams(window.location.search);
+    const idStr = sp.get("taskId");
+    if (!idStr) return;
+    const id = parseInt(idStr);
+    const found = tasks.find((t) => t.id === id);
+    if (found) {
+      setSelectedTask(found);
+      // Clean URL without reloading
+      sp.delete("taskId");
+      const newSearch = sp.toString();
+      window.history.replaceState(null, "", newSearch ? `?${newSearch}` : window.location.pathname);
+    }
+  }, [tasks]);
+
+  // ── Custom event: detail sheet "expand QR" button ──────────────────────────
+  useEffect(() => {
+    const handler = (e: Event) => setQrTask((e as CustomEvent).detail ?? null);
+    document.addEventListener("show-task-qr", handler);
+    return () => document.removeEventListener("show-task-qr", handler);
+  }, []);
+
+  // ── QR handler ─────────────────────────────────────────────────────────────
+  const handleShowQr = useCallback((task: any) => setQrTask(task), []);
 
   const filtered = (tasks ?? []).filter((t) => {
     if (categoryFilter !== "all" && t.category !== categoryFilter) return false;
@@ -1659,6 +1836,7 @@ export default function Tasks() {
                       onApproveReport={handleApproveReport}
                       canReviewReport={canReviewRpt}
                       canApproveReport={canApproveRpt}
+                      onShowQr={handleShowQr}
                     />
                   ))
               }
@@ -1713,6 +1891,13 @@ export default function Tasks() {
         tasks={tasks ?? []}
         properties={properties ?? []}
         defaultApprovedOnly={canApproveRpt}
+      />
+
+      {/* QR Code modal */}
+      <QrCodeModal
+        task={qrTask}
+        open={qrTask !== null}
+        onClose={() => setQrTask(null)}
       />
 
       {/* Reject report dialog */}
