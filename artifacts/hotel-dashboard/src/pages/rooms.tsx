@@ -359,8 +359,8 @@ export default function UnitStatus() {
                   const ageLabel = lastService
                     ? (() => {
                         const d = daysSince(lastService);
-                        if (d === 0) return t("common.date") === "Date" ? "Today" : "اليوم";
-                        if (d === 1) return t("common.date") === "Date" ? "Yesterday" : "أمس";
+                        if (d === 0) return t("common.today");
+                        if (d === 1) return t("common.yesterday");
                         return `${d}d`;
                       })()
                     : null;
