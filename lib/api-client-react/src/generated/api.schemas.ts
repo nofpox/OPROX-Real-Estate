@@ -385,6 +385,23 @@ export interface TaskUpdate {
   completedAt?: string;
 }
 
+export interface TaskComment {
+  id: number;
+  taskId: number;
+  authorName: string;
+  body: string;
+  /** @nullable */
+  imageUrl?: string | null;
+  createdAt: string;
+}
+
+export interface TaskCommentInput {
+  taskId: number;
+  authorName: string;
+  body: string;
+  imageUrl?: string;
+}
+
 export interface AppNotification {
   id: number;
   /** check-in, check-out, maintenance-alert */

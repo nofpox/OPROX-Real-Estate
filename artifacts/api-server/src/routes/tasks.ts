@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { db, tasksTable, staffTable, propertiesTable, roomsTable } from "@workspace/db";
+import { db, tasksTable, staffTable, propertiesTable, roomsTable, taskCommentsTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
-import { insertTaskSchema, updateTaskSchema } from "@workspace/db";
+import { insertTaskSchema, updateTaskSchema, insertTaskCommentSchema } from "@workspace/db";
 import { logActivity, actorFromRequest } from "./activityLogs";
 
 const router = Router();
@@ -149,6 +149,32 @@ router.delete("/tasks/:id", async (req, res) => {
   }
 
   res.status(204).end();
+});
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+
+router.get("/tasks/:id/comments", async (req, res) => {
+  const taskId = parseInt(req.params.id);
+  if (isNaN(taskId)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const rows = await db
+    .select()
+    .from(taskCommentsTable)
+    .where(eq(taskCommentsTable.taskId, taskId))
+    .orderBy(taskCommentsTable.createdAt);
+
+  res.json(rows.map((c) => ({ ...c, createdAt: c.createdAt.toISOString() })));
+});
+
+router.post("/tasks/:id/comments", async (req, res) => {
+  const taskId = parseInt(req.params.id);
+  if (isNaN(taskId)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const parsed = insertTaskCommentSchema.safeParse({ ...req.body, taskId });
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  const [comment] = await db.insert(taskCommentsTable).values(parsed.data).returning();
+  res.status(201).json({ ...comment, createdAt: comment.createdAt.toISOString() });
 });
 
 export default router;

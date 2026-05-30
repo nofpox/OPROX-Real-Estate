@@ -829,6 +829,39 @@ export const DeleteTaskParams = zod.object({
 
 
 /**
+ * @summary List comments for a task
+ */
+export const ListTaskCommentsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListTaskCommentsResponseItem = zod.object({
+  "id": zod.number(),
+  "taskId": zod.number(),
+  "authorName": zod.string(),
+  "body": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListTaskCommentsResponse = zod.array(ListTaskCommentsResponseItem)
+
+
+/**
+ * @summary Add a comment to a task
+ */
+export const CreateTaskCommentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const CreateTaskCommentBody = zod.object({
+  "taskId": zod.number(),
+  "authorName": zod.string(),
+  "body": zod.string(),
+  "imageUrl": zod.string().optional()
+})
+
+
+/**
  * @summary List notifications (optionally unread only)
  */
 export const ListNotificationsQueryParams = zod.object({

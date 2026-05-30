@@ -862,6 +862,50 @@ paths:
         "204":
           description: Deleted
 
+  /tasks/{id}/comments:
+    get:
+      operationId: listTaskComments
+      tags: [tasks]
+      summary: List comments for a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaskComment"
+    post:
+      operationId: createTaskComment
+      tags: [tasks]
+      summary: Add a comment to a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCommentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskComment"
+
   /notifications:
     get:
       operationId: listNotifications
@@ -2126,6 +2170,36 @@ components:
         dueDate:
           type: string
         completedAt:
+          type: string
+
+    TaskComment:
+      type: object
+      required: [id, taskId, authorName, body, createdAt]
+      properties:
+        id:
+          type: integer
+        taskId:
+          type: integer
+        authorName:
+          type: string
+        body:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    TaskCommentInput:
+      type: object
+      required: [taskId, authorName, body]
+      properties:
+        taskId:
+          type: integer
+        authorName:
+          type: string
+        body:
+          type: string
+        imageUrl:
           type: string
 
     AppNotification:

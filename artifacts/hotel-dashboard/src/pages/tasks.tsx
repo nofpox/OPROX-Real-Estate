@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   useListTasks, getListTasksQueryKey, useCreateTask, useUpdateTask, useDeleteTask,
   useListStaff, useListProperties, useListRooms,
+  useListTaskComments, useCreateTaskComment,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,267 +14,748 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, ClipboardList, CheckCircle2, Clock, AlertCircle, Trash2, CheckCheck, Shield } from "lucide-react";
+import {
+  Plus, Trash2, CheckCheck, Clock, AlertCircle, CheckCircle2,
+  Building2, Image as ImageIcon, Send, X, Zap, Droplets, Wind, Sparkles, ClipboardList,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useRole } from "@/contexts/role-context";
-import { useTranslation } from "react-i18next";
-import { useLanguage } from "@/contexts/language-context";
-import { useSettings } from "@/hooks/use-settings";
-import { getEnabledTaskCategories } from "@/config/modules";
 
-const CATEGORIES = ["housekeeping", "reception", "maintenance", "security", "general"];
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const CATEGORIES = [
+  { value: "electrical", label: "Electrical",  icon: Zap,         color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" },
+  { value: "plumbing",   label: "Plumbing",    icon: Droplets,    color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
+  { value: "hvac",       label: "HVAC",        icon: Wind,        color: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400" },
+  { value: "cleaning",   label: "Cleaning",    icon: Sparkles,    color: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400" },
+  { value: "general",    label: "General",     icon: ClipboardList, color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400" },
+];
+
+const PRIORITIES = [
+  { value: "low",    label: "Low",    color: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" },
+  { value: "medium", label: "Medium", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  { value: "high",   label: "High",   color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400" },
+  { value: "urgent", label: "Urgent", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
+];
+
+const STATUS_COLUMNS = [
+  { key: "pending",     label: "Open",        dot: "bg-slate-400",  count: 0 },
+  { key: "in-progress", label: "In Progress", dot: "bg-amber-500",  count: 0 },
+  { key: "completed",   label: "Completed",   dot: "bg-emerald-500",count: 0 },
+];
+
+// ── Schemas ───────────────────────────────────────────────────────────────────
 
 const taskSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().optional().or(z.literal("")),
-  category: z.enum(["housekeeping", "reception", "maintenance", "security", "general"]),
-  priority: z.enum(["low", "medium", "high", "urgent"]),
-  status: z.enum(["pending", "in-progress", "completed"]).default("pending"),
-  propertyId: z.coerce.number().optional().or(z.literal("")),
-  unitId: z.coerce.number().optional().or(z.literal("")),
+  title:        z.string().min(1, "Task name is required"),
+  category:     z.enum(["electrical", "plumbing", "hvac", "cleaning", "general"]),
+  priority:     z.enum(["low", "medium", "high", "urgent"]),
+  propertyId:   z.coerce.number().optional().or(z.literal("")),
+  unitId:       z.coerce.number().optional().or(z.literal("")),
   assignedToId: z.coerce.number().optional().or(z.literal("")),
-  dueDate: z.string().optional().or(z.literal("")),
+  dueDate:      z.string().optional().or(z.literal("")),
+  description:  z.string().optional().or(z.literal("")),
+  status:       z.enum(["pending", "in-progress", "completed"]).default("pending"),
 });
 
-const PriorityBadge = ({ priority }: { priority: string }) => {
-  const { t } = useTranslation();
-  switch (priority) {
-    case "urgent": return <Badge className="bg-red-100 text-red-800 border-0 dark:bg-red-900/30 dark:text-red-400 text-xs">{t("priority.urgent")}</Badge>;
-    case "high": return <Badge className="bg-orange-100 text-orange-800 border-0 dark:bg-orange-900/30 dark:text-orange-400 text-xs">{t("priority.high")}</Badge>;
-    case "medium": return <Badge className="bg-amber-100 text-amber-800 border-0 dark:bg-amber-900/30 dark:text-amber-400 text-xs">{t("priority.medium")}</Badge>;
-    default: return <Badge className="bg-slate-100 text-slate-700 border-0 dark:bg-slate-800 dark:text-slate-400 text-xs">{t("priority.low")}</Badge>;
-  }
-};
+const commentSchema = z.object({
+  authorName: z.string().min(1, "Name is required"),
+  body:       z.string().min(1, "Comment cannot be empty"),
+});
 
-const CategoryBadge = ({ category }: { category: string }) => {
-  const { t } = useTranslation();
-  const styles: Record<string, string> = {
-    housekeeping: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400",
-    reception: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-    maintenance: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
-    security: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-    general: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400",
-  };
-  return (
-    <Badge className={`border-0 text-xs ${styles[category] || styles.general}`}>
-      {t(`tasks.category.${category}`)}
-    </Badge>
-  );
-};
+// ── Helper fns ────────────────────────────────────────────────────────────────
 
+function getCategoryMeta(value: string) {
+  return CATEGORIES.find((c) => c.value === value) ?? CATEGORIES[4];
+}
+function getPriorityMeta(value: string) {
+  return PRIORITIES.find((p) => p.value === value) ?? PRIORITIES[1];
+}
 function getInitials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
+function formatDate(str: string | null | undefined) {
+  if (!str) return null;
+  return new Date(str + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+function isOverdue(dueDate: string | null | undefined, status: string) {
+  if (!dueDate || status === "completed") return false;
+  return dueDate < new Date().toISOString().split("T")[0];
+}
 
-export default function Tasks() {
-  const { t } = useTranslation();
-  const { lang } = useLanguage();
-  const locale = lang === "ar" ? "ar-EG" : "en-US";
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [selectedProperty, setSelectedProperty] = useState<string>("all");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+// ── Badges ────────────────────────────────────────────────────────────────────
 
-  const params: any = {};
-  if (statusFilter !== "all") params.status = statusFilter;
-  if (selectedProperty !== "all") params.propertyId = parseInt(selectedProperty);
-
-  const { data: tasks, isLoading } = useListTasks(params);
-  const { data: staff } = useListStaff({});
-  const { data: properties } = useListProperties();
-  const { data: rooms } = useListRooms();
-
-  const createTask = useCreateTask();
-  const updateTask = useUpdateTask();
-  const deleteTask = useDeleteTask();
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const { role, allowedTaskCategories } = useRole();
-  const settings = useSettings();
-  const moduleTaskCategories = getEnabledTaskCategories(settings.enabledModules);
-
-  const form = useForm<z.infer<typeof taskSchema>>({
-    resolver: zodResolver(taskSchema),
-    defaultValues: { title: "", description: "", category: "general", priority: "medium", status: "pending", propertyId: "", unitId: "", assignedToId: "", dueDate: "" },
-  });
-
-  const selectedFormPropertyId = form.watch("propertyId");
-  const availableRooms = rooms?.filter((r) => !selectedFormPropertyId || r.propertyId === Number(selectedFormPropertyId)) || [];
-  const availableStaff = staff?.filter((s) => {
-    if (!selectedFormPropertyId) return s.status === "active";
-    return s.status === "active" && (!s.propertyId || s.propertyId === Number(selectedFormPropertyId));
-  }) || [];
-
-  const filteredTasks = tasks?.filter((task) => {
-    if (allowedTaskCategories !== null && !allowedTaskCategories.includes(task.category)) return false;
-    if (!moduleTaskCategories.includes(task.category)) return false;
-    if (categoryFilter !== "all" && task.category !== categoryFilter) return false;
-    return true;
-  }) || [];
-
-  const visibleCategories = CATEGORIES.filter((c) => {
-    if (allowedTaskCategories !== null && !allowedTaskCategories.includes(c)) return false;
-    return moduleTaskCategories.includes(c);
-  });
-
-  const pending = filteredTasks.filter((task) => task.status === "pending");
-  const inProgress = filteredTasks.filter((task) => task.status === "in-progress");
-  const completed = filteredTasks.filter((task) => task.status === "completed");
-
-  const handleStatusChange = (id: number, newStatus: string) => {
-    updateTask.mutate({ id, data: { status: newStatus as any } }, {
-      onSuccess: () => { queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) }); toast({ title: t("tasks.toast.statusUpdated") }); },
-      onError: () => toast({ title: t("tasks.toast.updateFailed"), variant: "destructive" }),
-    });
-  };
-
-  const handleDelete = (id: number, title: string) => {
-    if (confirm(t("tasks.deleteConfirm", { title }))) {
-      deleteTask.mutate({ id }, {
-        onSuccess: () => { queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) }); toast({ title: t("tasks.toast.deleted") }); },
-        onError: () => toast({ title: t("tasks.toast.deleteFailed"), variant: "destructive" }),
-      });
-    }
-  };
-
-  const onSubmit = (data: z.infer<typeof taskSchema>) => {
-    const payload = { ...data, description: data.description || undefined, propertyId: data.propertyId ? Number(data.propertyId) : undefined, unitId: data.unitId ? Number(data.unitId) : undefined, assignedToId: data.assignedToId ? Number(data.assignedToId) : undefined, dueDate: data.dueDate || undefined };
-    createTask.mutate({ data: payload as any }, {
-      onSuccess: () => { toast({ title: t("tasks.toast.created") }); queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) }); setIsDialogOpen(false); form.reset(); },
-      onError: () => toast({ title: t("tasks.toast.createFailed"), variant: "destructive" }),
-    });
-  };
-
-  const TaskCard = ({ task }: { task: (typeof filteredTasks)[0] }) => {
-    const isOverdue = task.dueDate && task.dueDate < new Date().toISOString().split("T")[0] && task.status !== "completed";
-    return (
-      <div className="bg-card border border-border/50 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <p className="font-medium text-sm leading-snug flex-1">{task.title}</p>
-          <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(task.id, task.title)}>
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-        {task.description && <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>}
-        <div className="flex flex-wrap gap-1.5">
-          <PriorityBadge priority={task.priority} />
-          <CategoryBadge category={task.category} />
-        </div>
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            {task.assigneeName ? (
-              <>
-                <Avatar className="h-5 w-5 bg-primary">
-                  <AvatarFallback className="text-[9px] bg-primary text-primary-foreground font-semibold">{getInitials(task.assigneeName)}</AvatarFallback>
-                </Avatar>
-                <span>{task.assigneeName.split(" ")[0]}</span>
-              </>
-            ) : (
-              <span className="italic">{t("tasks.unassigned")}</span>
-            )}
-          </div>
-          {task.dueDate && (
-            <span className={isOverdue ? "text-red-500 font-medium" : ""}>
-              {new Date(task.dueDate + "T00:00:00").toLocaleDateString(locale, { month: "short", day: "numeric" })}
-            </span>
-          )}
-        </div>
-        {task.propertyName && (
-          <p className="text-xs text-muted-foreground/70 truncate">{task.propertyName}{task.unitName ? ` · ${task.unitName}` : ""}</p>
-        )}
-        <div className="flex gap-1.5 pt-1">
-          {task.status !== "in-progress" && (
-            <Button size="sm" variant="outline" className="h-7 text-xs flex-1 border-dashed" onClick={() => handleStatusChange(task.id, "in-progress")}>
-              <Clock className="me-1 h-3 w-3" />{t("tasks.actions.start")}
-            </Button>
-          )}
-          {task.status !== "completed" && (
-            <Button size="sm" variant="outline" className="h-7 text-xs flex-1 border-dashed text-green-700 hover:text-green-700 dark:text-green-400" onClick={() => handleStatusChange(task.id, "completed")}>
-              <CheckCheck className="me-1 h-3 w-3" />{t("tasks.actions.done")}
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const SkeletonCard = () => (
-    <div className="bg-card border border-border/50 rounded-lg p-4 space-y-3">
-      <Skeleton className="h-4 w-3/4" />
-      <Skeleton className="h-3 w-1/2" />
-      <div className="flex gap-2"><Skeleton className="h-5 w-16 rounded-full" /><Skeleton className="h-5 w-20 rounded-full" /></div>
-    </div>
-  );
-
-  const columns = [
-    { key: "pending", label: t("status.pending"), color: "bg-slate-400", tasks: pending, skeletonCount: 3 },
-    { key: "in-progress", label: t("status.in-progress"), color: "bg-amber-500", tasks: inProgress, skeletonCount: 2 },
-    { key: "completed", label: t("status.completed"), color: "bg-green-500", tasks: completed, skeletonCount: 1 },
-  ];
-
+function CategoryBadge({ category }: { category: string }) {
+  const meta = getCategoryMeta(category);
+  const Icon = meta.icon;
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{t("tasks.title")}</h1>
-          <p className="text-muted-foreground mt-1">{t("tasks.subtitle")}</p>
-        </div>
-        <Button onClick={() => setIsDialogOpen(true)} className="font-semibold shadow-sm">
-          <Plus className="me-2 h-4 w-4" />{t("tasks.newTask")}
+    <Badge className={`gap-1 border-0 text-xs font-medium ${meta.color}`}>
+      <Icon className="h-3 w-3" />
+      {meta.label}
+    </Badge>
+  );
+}
+
+function PriorityBadge({ priority }: { priority: string }) {
+  const meta = getPriorityMeta(priority);
+  return <Badge className={`border-0 text-xs ${meta.color}`}>{meta.label}</Badge>;
+}
+
+// ── Task Card ─────────────────────────────────────────────────────────────────
+
+interface TaskCardProps {
+  task: any;
+  onSelect: (task: any) => void;
+  onDelete: (id: number, title: string) => void;
+  onStatus: (id: number, status: string) => void;
+}
+
+function TaskCard({ task, onSelect, onDelete, onStatus }: TaskCardProps) {
+  const overdue = isOverdue(task.dueDate, task.status);
+  return (
+    <div
+      className="bg-card border border-border rounded-lg p-4 shadow-none hover:shadow-sm hover:border-border/80 transition-all cursor-pointer space-y-3"
+      onClick={() => onSelect(task)}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-medium text-sm leading-snug flex-1">{task.title}</p>
+        <Button
+          variant="ghost" size="icon"
+          className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+          onClick={(e) => { e.stopPropagation(); onDelete(task.id, task.title); }}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      {task.description && (
+        <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
+      )}
+
+      <div className="flex flex-wrap gap-1.5">
+        <CategoryBadge category={task.category} />
+        <PriorityBadge priority={task.priority} />
+      </div>
+
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          {task.assigneeName ? (
+            <>
+              <Avatar className="h-5 w-5">
+                <AvatarFallback className="text-[9px] bg-primary text-primary-foreground font-semibold">
+                  {getInitials(task.assigneeName)}
+                </AvatarFallback>
+              </Avatar>
+              <span>{task.assigneeName.split(" ")[0]}</span>
+            </>
+          ) : (
+            <span className="italic opacity-60">Unassigned</span>
+          )}
+        </div>
+        {task.dueDate && (
+          <span className={overdue ? "text-red-500 font-medium" : ""}>
+            {formatDate(task.dueDate)}
+          </span>
+        )}
+      </div>
+
+      {task.propertyName && (
+        <p className="text-xs text-muted-foreground/60 truncate flex items-center gap-1">
+          <Building2 className="h-3 w-3 shrink-0" />
+          {task.propertyName}{task.unitName ? ` · ${task.unitName}` : ""}
+        </p>
+      )}
+
+      <div className="flex gap-1.5 pt-0.5" onClick={(e) => e.stopPropagation()}>
+        {task.status !== "in-progress" && (
+          <Button size="sm" variant="outline" className="h-7 text-xs flex-1"
+            onClick={() => onStatus(task.id, "in-progress")}>
+            <Clock className="me-1 h-3 w-3" />Start
+          </Button>
+        )}
+        {task.status !== "completed" && (
+          <Button size="sm" variant="outline"
+            className="h-7 text-xs flex-1 text-emerald-700 hover:text-emerald-700 dark:text-emerald-400"
+            onClick={() => onStatus(task.id, "completed")}>
+            <CheckCheck className="me-1 h-3 w-3" />Done
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Task Detail Sheet ─────────────────────────────────────────────────────────
+
+function TaskDetailSheet({ task, open, onClose }: { task: any | null; open: boolean; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const updateTask = useUpdateTask();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
+
+  const { data: comments, isLoading: commentsLoading } = useListTaskComments(
+    task?.id ?? 0,
+    { query: { enabled: !!task?.id } } as any
+  );
+
+  const createComment = useCreateTaskComment();
+
+  const commentForm = useForm<z.infer<typeof commentSchema>>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: { authorName: "", body: "" },
+  });
+
+  function handleStatusChange(newStatus: string) {
+    if (!task) return;
+    updateTask.mutate({ id: task.id, data: { status: newStatus as any } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey({}) });
+        toast({ title: "Status updated" });
+      },
+    });
+  }
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setPendingImage(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function submitComment(data: z.infer<typeof commentSchema>) {
+    if (!task) return;
+    createComment.mutate(
+      { id: task.id, data: { taskId: task.id, authorName: data.authorName, body: data.body, ...(pendingImage ? { imageUrl: pendingImage } : {}) } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: [`/tasks/${task.id}/comments`] });
+          commentForm.reset();
+          setPendingImage(null);
+          if (fileRef.current) fileRef.current.value = "";
+          toast({ title: "Comment added" });
+        },
+        onError: () => toast({ title: "Failed to add comment", variant: "destructive" }),
+      }
+    );
+  }
+
+  if (!task) return null;
+
+  const overdue = isOverdue(task.dueDate, task.status);
+  const catMeta = getCategoryMeta(task.category);
+  const priMeta = getPriorityMeta(task.priority);
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent className="w-full sm:max-w-[520px] overflow-y-auto flex flex-col gap-0 p-0">
+
+        {/* Header */}
+        <SheetHeader className="px-6 pt-6 pb-4 border-b">
+          <div className="flex items-start gap-3 pr-6">
+            <div className="flex-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Task #{task.id}</p>
+              <SheetTitle className="text-base font-semibold leading-snug">{task.title}</SheetTitle>
+            </div>
+          </div>
+          {/* Status row */}
+          <div className="flex gap-2 mt-3">
+            {STATUS_COLUMNS.map((col) => (
+              <Button
+                key={col.key}
+                size="sm"
+                variant={task.status === col.key ? "default" : "outline"}
+                className="h-7 text-xs flex-1"
+                onClick={() => handleStatusChange(col.key)}
+                disabled={task.status === col.key || updateTask.isPending}
+              >
+                {task.status === col.key && <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${col.dot} bg-current`} />}
+                {col.label}
+              </Button>
+            ))}
+          </div>
+        </SheetHeader>
+
+        {/* Details */}
+        <div className="px-6 py-4 space-y-3 border-b">
+          <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Category</p>
+              <CategoryBadge category={task.category} />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Priority</p>
+              <PriorityBadge priority={task.priority} />
+            </div>
+            {task.propertyName && (
+              <div className="col-span-2">
+                <p className="text-xs text-muted-foreground mb-1">Asset</p>
+                <p className="text-sm font-medium">{task.propertyName}{task.unitName ? ` — ${task.unitName}` : ""}</p>
+              </div>
+            )}
+            {task.assigneeName && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Assigned to</p>
+                <div className="flex items-center gap-1.5">
+                  <Avatar className="h-5 w-5">
+                    <AvatarFallback className="text-[9px] bg-primary text-primary-foreground font-semibold">
+                      {getInitials(task.assigneeName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="text-sm">{task.assigneeName}</p>
+                </div>
+              </div>
+            )}
+            {task.dueDate && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Due date</p>
+                <p className={`text-sm font-medium ${overdue ? "text-red-500" : ""}`}>
+                  {formatDate(task.dueDate)}{overdue ? " · Overdue" : ""}
+                </p>
+              </div>
+            )}
+          </div>
+          {task.description && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Description</p>
+              <p className="text-sm text-foreground/80 leading-relaxed">{task.description}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Comments */}
+        <div className="flex-1 px-6 pt-4 pb-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+            Comments {comments?.length ? `(${comments.length})` : ""}
+          </p>
+
+          {commentsLoading ? (
+            <div className="space-y-3">
+              {[1, 2].map((i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
+            </div>
+          ) : comments?.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic py-4 text-center">No comments yet. Be the first to add one.</p>
+          ) : (
+            <div className="space-y-3 mb-4">
+              {(comments ?? []).map((c: any) => (
+                <div key={c.id} className="flex gap-3">
+                  <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+                    <AvatarFallback className="text-[9px] bg-muted text-muted-foreground font-semibold">
+                      {getInitials(c.authorName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 mb-0.5">
+                      <p className="text-xs font-semibold">{c.authorName}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(c.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                    <p className="text-sm text-foreground/80 leading-relaxed">{c.body}</p>
+                    {c.imageUrl && (
+                      <img
+                        src={c.imageUrl}
+                        alt="Attachment"
+                        className="mt-2 rounded-md border max-h-48 object-cover"
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Add comment form */}
+        <div className="px-6 pb-6 pt-3 border-t bg-background">
+          <Form {...commentForm}>
+            <form onSubmit={commentForm.handleSubmit(submitComment)} className="space-y-2">
+              <FormField control={commentForm.control} name="authorName" render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="Your name" className="h-8 text-sm" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={commentForm.control} name="body" render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea placeholder="Add a comment…" className="resize-none h-16 text-sm" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              {/* Image preview */}
+              {pendingImage && (
+                <div className="relative inline-block">
+                  <img src={pendingImage} alt="Preview" className="h-20 rounded-md border object-cover" />
+                  <button type="button"
+                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-background border flex items-center justify-center"
+                    onClick={() => { setPendingImage(null); if (fileRef.current) fileRef.current.value = ""; }}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" className="h-8 px-2"
+                  onClick={() => fileRef.current?.click()} title="Attach image">
+                  <ImageIcon className="h-3.5 w-3.5" />
+                </Button>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+                <Button type="submit" size="sm" className="h-8 flex-1" disabled={createComment.isPending}>
+                  <Send className="me-1 h-3.5 w-3.5" />
+                  {createComment.isPending ? "Posting…" : "Post Comment"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+// ── Create Task Dialog ────────────────────────────────────────────────────────
+
+function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { data: properties } = useListProperties();
+  const { data: staff }      = useListStaff({});
+  const { data: rooms }      = useListRooms();
+  const createTask = useCreateTask();
+
+  const form = useForm<z.infer<typeof taskSchema>>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: "", category: "general", priority: "medium", status: "pending",
+      propertyId: "", unitId: "", assignedToId: "", dueDate: "", description: "",
+    },
+  });
+
+  const selectedPropertyId = form.watch("propertyId");
+  const filteredRooms = rooms?.filter((r) => !selectedPropertyId || r.propertyId === Number(selectedPropertyId)) ?? [];
+  const filteredStaff = staff?.filter((s) => s.status === "active") ?? [];
+
+  function onSubmit(data: z.infer<typeof taskSchema>) {
+    const payload = {
+      ...data,
+      propertyId:   data.propertyId   ? Number(data.propertyId)   : undefined,
+      unitId:       data.unitId       ? Number(data.unitId)       : undefined,
+      assignedToId: data.assignedToId ? Number(data.assignedToId) : undefined,
+      description:  data.description  || undefined,
+      dueDate:      data.dueDate      || undefined,
+    };
+    createTask.mutate({ data: payload as any }, {
+      onSuccess: () => {
+        toast({ title: "Task created" });
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey({}) });
+        onClose();
+        form.reset();
+      },
+      onError: () => toast({ title: "Failed to create task", variant: "destructive" }),
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>New Task</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
+            {/* Task Name */}
+            <FormField control={form.control} name="title" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Task Name <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Replace faulty circuit breaker" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* Asset */}
+            <FormField control={form.control} name="propertyId" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Asset</FormLabel>
+                <Select onValueChange={(v) => { field.onChange(v); form.setValue("unitId", ""); }} value={field.value?.toString() ?? ""}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select asset…" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">No specific asset</SelectItem>
+                    {properties?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            {/* Unit — only when asset selected */}
+            {selectedPropertyId && filteredRooms.length > 0 && (
+              <FormField control={form.control} name="unitId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Unit (optional)</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value?.toString() ?? ""}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Any unit" /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">Any unit</SelectItem>
+                      {filteredRooms.map((r) => <SelectItem key={r.id} value={r.id.toString()}>{r.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Category */}
+              <FormField control={form.control} name="category" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category <span className="text-destructive">*</span></FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {CATEGORIES.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          <div className="flex items-center gap-2">
+                            <c.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                            {c.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              {/* Priority */}
+              <FormField control={form.control} name="priority" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Priority <span className="text-destructive">*</span></FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              {/* Due Date */}
+              <FormField control={form.control} name="dueDate" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Due Date</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              {/* Assign To */}
+              <FormField control={form.control} name="assignedToId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Assign To</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value?.toString() ?? ""}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">Unassigned</SelectItem>
+                      {filteredStaff.map((s) => (
+                        <SelectItem key={s.id} value={s.id.toString()}>{s.name} — {s.role}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+
+            {/* Description */}
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Describe the task in detail…" className="resize-none h-24" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+              <Button type="submit" disabled={createTask.isPending}>
+                {createTask.isPending ? "Creating…" : "Create Task"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+
+export default function Tasks() {
+  const [statusFilter,   setStatusFilter]   = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [propertyFilter, setPropertyFilter] = useState<string>("all");
+  const [createOpen,     setCreateOpen]     = useState(false);
+  const [selectedTask,   setSelectedTask]   = useState<any | null>(null);
+
+  const queryClient = useQueryClient();
+  const { toast }   = useToast();
+
+  const params: any = {};
+  if (statusFilter   !== "all") params.status     = statusFilter;
+  if (propertyFilter !== "all") params.propertyId = parseInt(propertyFilter);
+
+  const { data: tasks,      isLoading }  = useListTasks(params);
+  const { data: properties }             = useListProperties();
+  const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
+
+  const filtered = (tasks ?? []).filter((t) => {
+    if (categoryFilter !== "all" && t.category !== categoryFilter) return false;
+    return true;
+  });
+
+  const byStatus = (key: string) => filtered.filter((t) => t.status === key);
+
+  function handleStatus(id: number, status: string) {
+    updateTask.mutate({ id, data: { status: status as any } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+        // also refresh the selected task if it's the same
+        if (selectedTask?.id === id) setSelectedTask((prev: any) => prev ? { ...prev, status } : null);
+        toast({ title: "Status updated" });
+      },
+      onError: () => toast({ title: "Update failed", variant: "destructive" }),
+    });
+  }
+
+  function handleDelete(id: number, title: string) {
+    if (!confirm(`Delete "${title}"?`)) return;
+    deleteTask.mutate({ id }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
+        if (selectedTask?.id === id) setSelectedTask(null);
+        toast({ title: "Task deleted" });
+      },
+      onError: () => toast({ title: "Delete failed", variant: "destructive" }),
+    });
+  }
+
+  const columns = STATUS_COLUMNS.map((col) => ({ ...col, tasks: byStatus(col.key) }));
+
+  return (
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Tasks</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Manage and track work across all assets.</p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)}>
+          <Plus className="me-2 h-4 w-4" />New Task
+        </Button>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid gap-4 grid-cols-3">
         {[
-          { icon: AlertCircle, label: t("status.pending"), value: tasks?.filter((task) => task.status === "pending").length || 0, color: "" },
-          { icon: Clock, label: t("status.in-progress"), value: tasks?.filter((task) => task.status === "in-progress").length || 0, color: "text-amber-600 dark:text-amber-500" },
-          { icon: CheckCircle2, label: t("tasks.completedToday"), value: tasks?.filter((task) => task.status === "completed").length || 0, color: "text-green-600 dark:text-green-500" },
+          { icon: AlertCircle,  label: "Open",        value: (tasks ?? []).filter((t) => t.status === "pending").length,     color: "" },
+          { icon: Clock,        label: "In Progress",  value: (tasks ?? []).filter((t) => t.status === "in-progress").length, color: "text-amber-600 dark:text-amber-400" },
+          { icon: CheckCircle2, label: "Completed",    value: (tasks ?? []).filter((t) => t.status === "completed").length,   color: "text-emerald-600 dark:text-emerald-400" },
         ].map(({ icon: Icon, label, value, color }) => (
-          <Card key={label} className="shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 text-muted-foreground mb-2"><Icon className="h-4 w-4" /><p className="text-sm font-medium">{label}</p></div>
-              <h2 className={`text-3xl font-bold ${color}`}>{value}</h2>
+          <Card key={label} className="shadow-none border-border">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                <Icon className="h-4 w-4" />
+                <p className="text-xs font-medium">{label}</p>
+              </div>
+              <p className={`text-2xl font-bold ${color}`}>{value}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Select value={selectedProperty} onValueChange={setSelectedProperty}>
-          <SelectTrigger className="w-full sm:w-[220px] bg-background"><SelectValue placeholder={t("common.allProperties")} /></SelectTrigger>
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        <Select value={propertyFilter} onValueChange={setPropertyFilter}>
+          <SelectTrigger className="w-[180px] bg-background h-8 text-sm">
+            <SelectValue placeholder="All Assets" />
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t("common.allProperties")}</SelectItem>
+            <SelectItem value="all">All Assets</SelectItem>
             {properties?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
           </SelectContent>
         </Select>
+
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full sm:w-[180px] bg-background"><SelectValue placeholder={t("tasks.allCategories")} /></SelectTrigger>
+          <SelectTrigger className="w-[160px] bg-background h-8 text-sm">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t("tasks.allCategories")}</SelectItem>
-            {visibleCategories.map((c) => <SelectItem key={c} value={c}>{t(`tasks.category.${c}`)}</SelectItem>)}
+            <SelectItem value="all">All Categories</SelectItem>
+            {CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[140px] bg-background h-8 text-sm">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            {STATUS_COLUMNS.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
+      {/* Kanban columns */}
       <div className="grid gap-6 md:grid-cols-3">
-        {columns.map(({ key, label, color, tasks: colTasks, skeletonCount }) => (
+        {columns.map(({ key, label, dot, tasks: colTasks }) => (
           <div key={key} className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className={`h-2.5 w-2.5 rounded-full ${color}`} />
-              <h3 className="font-semibold text-sm text-foreground">{label}</h3>
-              <span className="ms-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{colTasks.length}</span>
+              <span className={`h-2 w-2 rounded-full ${dot}`} />
+              <h3 className="text-sm font-semibold">{label}</h3>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground font-medium">
+                {colTasks.length}
+              </span>
             </div>
             <div className="space-y-3">
               {isLoading
-                ? Array.from({ length: skeletonCount }).map((_, i) => <SkeletonCard key={i} />)
-                : colTasks.map((task) => <TaskCard key={task.id} task={task} />)}
+                ? Array.from({ length: 2 }).map((_, i) => (
+                    <div key={i} className="bg-card border rounded-lg p-4 space-y-3">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <div className="flex gap-2"><Skeleton className="h-5 w-16 rounded-full" /><Skeleton className="h-5 w-16 rounded-full" /></div>
+                    </div>
+                  ))
+                : colTasks.map((task) => (
+                    <TaskCard key={task.id} task={task}
+                      onSelect={setSelectedTask}
+                      onDelete={handleDelete}
+                      onStatus={handleStatus}
+                    />
+                  ))
+              }
               {!isLoading && colTasks.length === 0 && (
-                <div className="rounded-lg border border-dashed border-border/60 p-6 text-center">
-                  <p className="text-xs text-muted-foreground">{t(`tasks.empty.${key}`)}</p>
+                <div className="rounded-lg border border-dashed p-6 text-center">
+                  <p className="text-xs text-muted-foreground">No tasks here</p>
                 </div>
               )}
             </div>
@@ -281,78 +763,13 @@ export default function Tasks() {
         ))}
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[540px]">
-          <DialogHeader><DialogTitle>{t("tasks.createTask")}</DialogTitle></DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField control={form.control} name="title" render={({ field }) => (
-                <FormItem><FormLabel>{t("tasks.fields.title")}</FormLabel><FormControl><Input placeholder={t("tasks.fields.titlePlaceholder")} {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="category" render={({ field }) => (
-                  <FormItem><FormLabel>{t("tasks.fields.category")}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>{visibleCategories.map((c) => <SelectItem key={c} value={c}>{t(`tasks.category.${c}`)}</SelectItem>)}</SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="priority" render={({ field }) => (
-                  <FormItem><FormLabel>{t("tasks.fields.priority")}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="low">{t("priority.low")}</SelectItem>
-                        <SelectItem value="medium">{t("priority.medium")}</SelectItem>
-                        <SelectItem value="high">{t("priority.high")}</SelectItem>
-                        <SelectItem value="urgent">{t("priority.urgent")}</SelectItem>
-                      </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="propertyId" render={({ field }) => (
-                  <FormItem><FormLabel>{t("tasks.fields.property")}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value?.toString() || ""}>
-                      <FormControl><SelectTrigger><SelectValue placeholder={t("tasks.fields.anyProperty")} /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">{t("tasks.fields.anyProperty")}</SelectItem>
-                        {properties?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="unitId" render={({ field }) => (
-                  <FormItem><FormLabel>{t("tasks.fields.unit")}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value?.toString() || ""} disabled={availableRooms.length === 0}>
-                      <FormControl><SelectTrigger><SelectValue placeholder={t("tasks.fields.noUnit")} /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">{t("tasks.fields.noUnit")}</SelectItem>
-                        {availableRooms.map((r) => <SelectItem key={r.id} value={r.id.toString()}>{r.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="assignedToId" render={({ field }) => (
-                  <FormItem><FormLabel>{t("tasks.fields.assignTo")}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value?.toString() || ""}>
-                      <FormControl><SelectTrigger><SelectValue placeholder={t("tasks.unassigned")} /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">{t("tasks.unassigned")}</SelectItem>
-                        {availableStaff.map((s) => <SelectItem key={s.id} value={s.id.toString()}>{s.name} — {s.role}</SelectItem>)}
-                      </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="dueDate" render={({ field }) => (
-                  <FormItem><FormLabel>{t("tasks.fields.dueDate")}</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-              </div>
-              <FormField control={form.control} name="description" render={({ field }) => (
-                <FormItem><FormLabel>{t("tasks.fields.description")}</FormLabel><FormControl><Textarea placeholder={t("tasks.fields.descriptionPlaceholder")} className="resize-none h-20" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <DialogFooter className="pt-2">
-                <Button type="submit" disabled={createTask.isPending}>{t("tasks.createTask")}</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      {/* Dialogs */}
+      <CreateTaskDialog open={createOpen} onClose={() => setCreateOpen(false)} />
+      <TaskDetailSheet
+        task={selectedTask}
+        open={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+      />
     </div>
   );
 }

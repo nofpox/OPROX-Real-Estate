@@ -5,6 +5,7 @@ export * from "./expenses";
 export * from "./workOrders";
 export * from "./staff";
 export * from "./tasks";
+export * from "./taskComments";
 export * from "./notifications";
 export * from "./shifts";
 export * from "./users";
