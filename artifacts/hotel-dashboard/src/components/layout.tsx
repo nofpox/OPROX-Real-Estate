@@ -240,10 +240,7 @@ import React, { useState } from "react";
             </div>
           </header>
 
-          {/* key={lang} forces a clean remount of all page content on language change.
-              React Query cache means no loading flash — data is served instantly from cache.
-              animate-in/fade-in gives a smooth 150ms cross-fade instead of an abrupt swap. */}
-          <main key={lang} className="flex-1 p-4 md:p-6 lg:p-8 animate-in fade-in duration-150">
+          <main className="flex-1 p-4 md:p-6 lg:p-8">
             {children}
           </main>
         </div>

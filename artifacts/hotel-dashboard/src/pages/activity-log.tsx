@@ -14,7 +14,6 @@ import {
   Plus, Trash2, UserMinus, UserCheck, ArrowRightLeft,
   ShieldCheck, Camera, ArrowRight,
 } from "lucide-react";
-import { useLanguage } from "@/contexts/language-context";
 
 // ─── Static maps (no translation strings — these are just style/icon data) ────
 
@@ -87,10 +86,14 @@ function Pill({ label, cls }: { label: string; cls: string }) {
   );
 }
 
-// ─── Log entry row — CSS Grid locks the 3-column structure unconditionally ────
-//   col 1: icon bubble  (fixed 28 px)
+// ─── Log entry row — grid is pinned LTR so columns never flip in RTL mode ────
+//   col 1: icon bubble  (fixed 32 px)
 //   col 2: content      (fills remaining space, overflow hidden)
-//   col 3: timestamp    (shrinks to content, always LTR)
+//   col 3: timestamp    (shrinks to content)
+//
+//   dir="ltr" on the row means the browser lays out columns left-to-right
+//   regardless of document direction.  Text inside each cell still inherits
+//   the document's dir for correct Arabic/Urdu/etc. glyph shaping.
 
 function LogRow({ log }: { log: ActivityLog }) {
   const { t } = useTranslation();
@@ -107,6 +110,7 @@ function LogRow({ log }: { log: ActivityLog }) {
 
   return (
     <div
+      dir="ltr"
       className="grid items-start gap-x-3 py-3 border-b border-border/40 last:border-0 hover:bg-muted/20 rounded px-3 -mx-3 transition-colors"
       style={{ gridTemplateColumns: "2rem 1fr auto" }}
     >
@@ -448,13 +452,6 @@ function ActivityLogInner() {
   );
 }
 
-// ─── Public export — keyed on current language ────────────────────────────────
-//   Every language switch unmounts and fully remounts ActivityLogInner,
-//   giving it a clean slate with zero residual layout or DOM state from the
-//   previous direction.  This is the only reliable way to prevent RTL/LTR
-//   corruption across font/glyph size differences and logical-CSS transitions.
-
 export default function ActivityLogPage() {
-  const { lang } = useLanguage();
-  return <ActivityLogInner key={lang} />;
+  return <ActivityLogInner />;
 }
