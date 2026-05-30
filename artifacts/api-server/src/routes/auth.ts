@@ -167,6 +167,21 @@ router.post("/auth/login", async (req, res) => {
   recordSuccessfulLogin(ip, String(username));
 
   const sessionId = crypto.randomUUID();
+  // Block login if tenant is suspended
+  if (resolvedTenantId !== null) {
+    const [tenantRow] = await db
+      .select({ status: tenantsTable.status, isActive: tenantsTable.isActive })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, resolvedTenantId));
+    if (tenantRow?.status === "suspended" || tenantRow?.isActive === false) {
+      res.status(403).json({
+        error: "TENANT_SUSPENDED",
+        message: "This company account has been suspended. Please contact support.",
+      });
+      return;
+    }
+  }
+
   const sessionUser: SessionUser = {
     id: user.id,
     username: user.username,

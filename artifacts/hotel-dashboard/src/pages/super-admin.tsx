@@ -12,14 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import {
   ArrowLeft, ShieldAlert, LayoutDashboard, CheckCircle2,
-  Lock, Layers, Building, Building2, Globe, Plus, Pencil,
-  Trash2, Users, DoorClosed, RefreshCw, X, ChevronDown,
+  Lock, Unlock, ShieldOff, Layers, Building, Building2, Globe, Plus, Pencil,
+  Trash2, Users, RefreshCw, X,
 } from "lucide-react";
 import {
   MODULE_REGISTRY,
@@ -199,58 +198,97 @@ function TenantFormDialog({
 // ─── Tenant Row ───────────────────────────────────────────────────────────────
 
 function TenantRow({
-  tenant, onEdit, onDelete, onToggle,
+  tenant, onEdit, onDelete, onFreeze, onActivate,
 }: {
   tenant: Tenant;
-  onEdit: (t: Tenant) => void;
-  onDelete: (t: Tenant) => void;
-  onToggle: (t: Tenant, active: boolean) => void;
+  onEdit:     (t: Tenant) => void;
+  onDelete:   (t: Tenant) => void;
+  onFreeze:   (t: Tenant) => void;
+  onActivate: (t: Tenant) => void;
 }) {
-  const planColor = PLAN_COLORS[tenant.plan] ?? "bg-gray-100 text-gray-700";
+  const planColor  = PLAN_COLORS[tenant.plan] ?? "bg-gray-100 text-gray-700";
+  const suspended  = (tenant as any).status === "suspended" || !tenant.isActive;
+
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${tenant.isActive ? "bg-card" : "bg-muted/40 opacity-60"}`}>
-      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-        <span className="font-serif font-bold text-sm text-primary">
-          {(tenant.logoText ?? tenant.name).slice(0, 2).toUpperCase()}
-        </span>
+    <div className={[
+      "flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors",
+      suspended
+        ? "bg-red-50/60 dark:bg-red-950/20 border-red-200 dark:border-red-900/40 opacity-80"
+        : "bg-card",
+    ].join(" ")}>
+
+      {/* Avatar */}
+      <div className={[
+        "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
+        suspended ? "bg-red-100 dark:bg-red-900/30" : "bg-primary/10",
+      ].join(" ")}>
+        {suspended
+          ? <ShieldOff className="h-4 w-4 text-red-600 dark:text-red-400" />
+          : <span className="font-serif font-bold text-sm text-primary">
+              {(tenant.logoText ?? tenant.name).slice(0, 2).toUpperCase()}
+            </span>
+        }
       </div>
+
+      {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-sm truncate">{tenant.name}</span>
           <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${planColor}`}>
             {tenant.plan}
           </span>
-          {!tenant.isActive && (
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">
-              inactive
+          {suspended && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 flex items-center gap-1">
+              <Lock className="h-2.5 w-2.5" />SUSPENDED
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-0.5">
+        <div className="flex items-center gap-3 mt-0.5 flex-wrap">
           <span className="text-xs text-muted-foreground font-mono">{tenant.slug}</span>
           <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <Building className="h-3 w-3" />{tenant.propertyCount ?? 0}
+            <Building className="h-3 w-3" />{(tenant as any).propertyCount ?? 0}
           </span>
           <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <Users className="h-3 w-3" />{tenant.userCount ?? 0}
+            <Users className="h-3 w-3" />{(tenant as any).userCount ?? 0}
           </span>
           {tenant.contactEmail && (
             <span className="text-xs text-muted-foreground truncate max-w-36">{tenant.contactEmail}</span>
           )}
         </div>
       </div>
+
+      {/* Actions */}
       <div className="flex items-center gap-1 shrink-0">
-        <Switch
-          checked={tenant.isActive}
-          onCheckedChange={(v) => onToggle(tenant, v)}
-          className="scale-75"
-        />
+        {suspended ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs gap-1.5 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-950/30"
+            onClick={() => onActivate(tenant)}
+          >
+            <Unlock className="h-3 w-3" />Activate
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs gap-1.5 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+            onClick={() => onFreeze(tenant)}
+            disabled={tenant.id === 1}
+            title={tenant.id === 1 ? "Cannot suspend the default tenant" : "Suspend this tenant"}
+          >
+            <Lock className="h-3 w-3" />Freeze
+          </Button>
+        )}
         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onEdit(tenant)}>
           <Pencil className="h-3.5 w-3.5" />
         </Button>
         {tenant.id !== 1 && (
-          <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
-            onClick={() => onDelete(tenant)}>
+          <Button
+            size="icon" variant="ghost"
+            className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+            onClick={() => onDelete(tenant)}
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         )}
@@ -310,14 +348,30 @@ export default function SuperAdminPage() {
   const [formOpen,   setFormOpen]   = useState(false);
   const [editTarget, setEditTarget] = useState<Tenant | null>(null);
   const [deleteConf, setDeleteConf] = useState<Tenant | null>(null);
+  const [freezeConf, setFreezeConf] = useState<Tenant | null>(null);
+  const [freezing,   setFreezing]   = useState(false);
 
-  async function handleToggle(tenant: Tenant, active: boolean) {
+  async function handleFreeze(tenant: Tenant) {
+    setFreezing(true);
     try {
-      await updateTenant({ id: tenant.id, data: { isActive: active } });
+      await updateTenant({ id: tenant.id, data: { isActive: false, status: "suspended" } as any });
       qc.invalidateQueries({ queryKey: getListTenantsQueryKey() });
-      toast({ title: active ? "Tenant activated" : "Tenant suspended" });
+      setFreezeConf(null);
+      toast({ title: `${tenant.name} has been suspended`, description: "All users are now blocked from accessing the system." });
     } catch {
-      toast({ title: "Update failed", variant: "destructive" });
+      toast({ title: "Freeze failed", variant: "destructive" });
+    } finally {
+      setFreezing(false);
+    }
+  }
+
+  async function handleActivate(tenant: Tenant) {
+    try {
+      await updateTenant({ id: tenant.id, data: { isActive: true, status: "active" } as any });
+      qc.invalidateQueries({ queryKey: getListTenantsQueryKey() });
+      toast({ title: `${tenant.name} has been reactivated`, description: "Users can now sign in again." });
+    } catch {
+      toast({ title: "Activation failed", variant: "destructive" });
     }
   }
 
@@ -433,7 +487,8 @@ export default function SuperAdminPage() {
                     key={t.id} tenant={t}
                     onEdit={(tenant) => { setEditTarget(tenant); setFormOpen(true); }}
                     onDelete={(tenant) => setDeleteConf(tenant)}
-                    onToggle={handleToggle}
+                    onFreeze={(tenant) => setFreezeConf(tenant)}
+                    onActivate={handleActivate}
                   />
                 ))}
               </div>
@@ -598,6 +653,47 @@ export default function SuperAdminPage() {
         open={formOpen} onClose={() => setFormOpen(false)}
         editing={editTarget} onDone={() => qc.invalidateQueries({ queryKey: getListTenantsQueryKey() })}
       />
+
+      {/* ── Freeze confirmation ────────────────────────────────────────────── */}
+      {freezeConf && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <Card className="w-full max-w-sm shadow-xl border-red-200 dark:border-red-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base text-red-600 flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Freeze Tenant?
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 p-3 text-sm text-red-800 dark:text-red-300">
+                <p className="font-medium">Immediate effect:</p>
+                <ul className="mt-1.5 space-y-1 text-xs list-disc list-inside text-red-700 dark:text-red-400">
+                  <li>All users under <strong>{freezeConf.name}</strong> will be blocked instantly</li>
+                  <li>Active sessions will receive a 403 on their next API call</li>
+                  <li>Login attempts will be rejected</li>
+                </ul>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                You can reactivate this tenant at any time to restore access.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setFreezeConf(null)} disabled={freezing}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleFreeze(freezeConf)}
+                  disabled={freezing}
+                  className="gap-2"
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                  {freezing ? "Freezing…" : "Freeze Tenant"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* ── Delete confirmation ────────────────────────────────────────────── */}
       {deleteConf && (

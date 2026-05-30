@@ -1,5 +1,5 @@
 import i18n from "@/i18n";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider } from "react-i18next";
@@ -30,6 +30,7 @@ import Login from "@/pages/login";
 import ForcePasswordChange from "@/pages/force-password-change";
 import SuperAdmin from "@/pages/super-admin";
 import SecurityDashboard from "@/pages/security-dashboard";
+import SuspendedPage from "@/pages/suspended";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
@@ -78,8 +79,31 @@ function ActorHeaderSync({ displayName }: { displayName: string }) {
 }
 
 function App() {
-  const [authUser, setAuthUser] = useState<AuthUser>(null);
+  const [authUser,    setAuthUser]    = useState<AuthUser>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [isSuspended, setIsSuspended] = useState(false);
+  // Ref so the fetch interceptor always reads the latest setter without re-running the effect
+  const setSuspendedRef = useRef(setIsSuspended);
+
+  // ── Global fetch interceptor: catch TENANT_SUSPENDED on any API response ───
+  useEffect(() => {
+    const origFetch = window.fetch.bind(window);
+    window.fetch = async (...args: Parameters<typeof fetch>) => {
+      const res = await origFetch(...args);
+      if (res.status === 403) {
+        res.clone().json().then((data: unknown) => {
+          if (
+            data && typeof data === "object" &&
+            (data as Record<string, unknown>).error === "TENANT_SUSPENDED"
+          ) {
+            setSuspendedRef.current(true);
+          }
+        }).catch(() => {});
+      }
+      return res;
+    };
+    return () => { window.fetch = origFetch; };
+  }, []);
 
   useEffect(() => {
     fetch("/api/auth/me", { credentials: "include" })
@@ -99,7 +123,18 @@ function App() {
   function handleLogout() {
     fetch("/api/auth/logout", { method: "POST", credentials: "include" }).finally(() => {
       setAuthUser(null);
+      setIsSuspended(false);
     });
+  }
+
+  // ── Suspended wall: shown to any logged-in user of a suspended tenant ──────
+  if (isSuspended) {
+    return (
+      <I18nextProvider i18n={i18n}>
+        <Toaster />
+        <SuspendedPage onSignOut={handleLogout} />
+      </I18nextProvider>
+    );
   }
 
   if (!authUser) {

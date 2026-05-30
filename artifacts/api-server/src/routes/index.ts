@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { sessions, getRoleTier } from "./auth.js";
+import { suspendedTenants, loadSuspendedTenants } from "../tenant-status.js";
 import healthRouter from "./health";
 import roomsRouter from "./rooms";
 import bookingsRouter from "./bookings";
@@ -56,6 +57,19 @@ function tierGate(req: Request, res: Response, next: NextFunction): void {
   // Attach session + tenant context for downstream handlers
   (req as any).sessionUser = session;
   (req as any).tenantId    = session.tenantId;
+
+  // ── Kill-switch check ─────────────────────────────────────────────────────
+  // If the tenant is suspended all its users are immediately blocked.
+  // Super-admins bypass this (they need access to reactivate tenants).
+  if (!session.isSuperAdmin && session.tenantId !== null) {
+    if (suspendedTenants.has(session.tenantId)) {
+      res.status(403).json({
+        error: "TENANT_SUSPENDED",
+        message: "This company account has been suspended. Please contact support.",
+      });
+      return;
+    }
+  }
 
   // Super-admin: may only access super-admin routes and auth routes
   if (session.isSuperAdmin) {
@@ -117,5 +131,12 @@ router.use(tasksRouter);
 router.use(notificationsRouter);
 router.use(storageRouter);
 router.use(guestRouter);
+
+// Populate the kill-switch cache from DB on startup.
+// Runs asynchronously; any request that arrives before it finishes will do
+// an extra DB check in the worst case (safe, just slightly slower).
+loadSuspendedTenants().catch((err) => {
+  console.error("[tenant-status] Failed to load suspended tenants:", err);
+});
 
 export default router;

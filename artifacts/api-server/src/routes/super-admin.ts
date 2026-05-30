@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, tenantsTable, usersTable, propertiesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { hashPwd } from "./auth.js";
+import { suspendedTenants } from "../tenant-status.js";
 
 const router = Router();
 
@@ -173,6 +174,14 @@ router.patch("/super-admin/tenants/:id", async (req, res) => {
 
   const [tenant] = await db.update(tenantsTable).set(update).where(eq(tenantsTable.id, id)).returning();
   if (!tenant) { res.status(404).json({ error: "Tenant not found" }); return; }
+
+  // Keep the in-memory kill-switch cache in sync immediately
+  if (tenant.status === "suspended" || tenant.isActive === false) {
+    suspendedTenants.add(tenant.id);
+  } else {
+    suspendedTenants.delete(tenant.id);
+  }
+
   res.json(fmt(tenant));
 });
 
