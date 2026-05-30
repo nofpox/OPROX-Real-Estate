@@ -10,6 +10,7 @@ const ne: Translations = {
     userManagement: "प्रयोगकर्ता व्यवस्थापन", facilities: "सुविधा बुकिङ",
     adminSettings: "प्रशासक सेटिङहरू",
     securityDashboard: "Security",
+    analytics: "Analytics",
   },
   common: {
     save: "सुरक्षित गर्नुहोस्", cancel: "रद्द गर्नुहोस्", delete: "मेट्नुहोस्",

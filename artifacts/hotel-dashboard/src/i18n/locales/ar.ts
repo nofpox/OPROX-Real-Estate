@@ -19,6 +19,7 @@ const ar: Translations = {
     facilities: "حجز المرافق",
     adminSettings: "إعدادات المسؤول",
     securityDashboard: "Security",
+    analytics: "Analytics",
   },
   common: {
     save: "حفظ",

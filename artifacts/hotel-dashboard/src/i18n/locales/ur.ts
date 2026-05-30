@@ -10,6 +10,7 @@ const ur: Translations = {
     userManagement: "صارف انتظام", facilities: "سہولت بکنگ",
     adminSettings: "ایڈمن سیٹنگز",
     securityDashboard: "Security",
+    analytics: "Analytics",
   },
   common: {
     save: "محفوظ کریں", cancel: "منسوخ کریں", delete: "حذف کریں",

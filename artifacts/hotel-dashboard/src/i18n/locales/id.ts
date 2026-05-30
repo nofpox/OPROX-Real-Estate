@@ -10,6 +10,7 @@ const id: Translations = {
     userManagement: "Manajemen Pengguna", facilities: "Pemesanan Fasilitas",
     adminSettings: "Pengaturan Admin",
     securityDashboard: "Security",
+    analytics: "Analytics",
   },
   common: {
     save: "Simpan", cancel: "Batal", delete: "Hapus", edit: "Edit", add: "Tambah",

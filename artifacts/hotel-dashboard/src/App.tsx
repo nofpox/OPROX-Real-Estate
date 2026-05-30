@@ -30,6 +30,7 @@ import Login from "@/pages/login";
 import ForcePasswordChange from "@/pages/force-password-change";
 import SuperAdmin from "@/pages/super-admin";
 import SecurityDashboard from "@/pages/security-dashboard";
+import Analytics from "@/pages/analytics";
 import SuspendedPage from "@/pages/suspended";
 
 const queryClient = new QueryClient({
@@ -61,6 +62,7 @@ function Router() {
       <Route path="/admin-settings" component={AdminSettings} />
       <Route path="/unit-map" component={UnitMap} />
       <Route path="/security-dashboard" component={SecurityDashboard} />
+      <Route path="/analytics" component={Analytics} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -10,6 +10,7 @@ const tl: Translations = {
     userManagement: "Pamamahala ng Gumagamit", facilities: "Booking ng Pasilidad",
     adminSettings: "Mga Setting ng Admin",
     securityDashboard: "Security",
+    analytics: "Analytics",
   },
   common: {
     save: "I-save", cancel: "Kanselahin", delete: "Burahin", edit: "I-edit", add: "Idagdag",

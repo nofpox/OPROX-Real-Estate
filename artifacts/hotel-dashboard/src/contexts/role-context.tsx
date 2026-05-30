@@ -48,7 +48,7 @@ export const ROLES: RoleDefinition[] = [
     id: "manager",
     label: "Manager",
     description: "Tasks, activity logs, and user management",
-    allowedNav: ["/tasks", "/activity-log", "/user-management"],
+    allowedNav: ["/tasks", "/activity-log", "/user-management", "/analytics"],
     taskCategories: null,
   },
   {

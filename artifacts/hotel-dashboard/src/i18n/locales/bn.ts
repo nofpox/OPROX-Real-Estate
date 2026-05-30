@@ -10,6 +10,7 @@ const bn: Translations = {
     userManagement: "ব্যবহারকারী ব্যবস্থাপনা", facilities: "সুবিধা বুকিং",
     adminSettings: "অ্যাডমিন সেটিংস",
     securityDashboard: "Security",
+    analytics: "Analytics",
   },
   common: {
     save: "সংরক্ষণ করুন", cancel: "বাতিল করুন", delete: "মুছুন",

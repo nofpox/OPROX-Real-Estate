@@ -17,6 +17,7 @@ const en = {
     facilities: "Facility Booking",
     adminSettings: "Admin Settings",
     securityDashboard: "Security",
+    analytics: "Analytics",
   },
   common: {
     save: "Save",

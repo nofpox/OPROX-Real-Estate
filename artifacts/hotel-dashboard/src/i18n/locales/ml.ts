@@ -10,6 +10,7 @@ const ml: Translations = {
     userManagement: "ഉപയോക്തൃ മാനേജ്മെന്റ്", facilities: "സൗകര്യ ബുക്കിംഗ്",
     adminSettings: "അഡ്മിൻ ക്രമീകരണങ്ങൾ",
     securityDashboard: "Security",
+    analytics: "Analytics",
   },
   common: {
     save: "സംരക്ഷിക്കുക", cancel: "റദ്ദാക്കുക", delete: "ഇല്ലാതാക്കുക",

@@ -10,6 +10,7 @@ const hi: Translations = {
     userManagement: "उपयोगकर्ता प्रबंधन", facilities: "सुविधा बुकिंग",
     adminSettings: "व्यवस्थापक सेटिंग्स",
     securityDashboard: "Security",
+    analytics: "Analytics",
   },
   common: {
     save: "सहेजें", cancel: "रद्द करें", delete: "हटाएं", edit: "संपादित करें", add: "जोड़ें",

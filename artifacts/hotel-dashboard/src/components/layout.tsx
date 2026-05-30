@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard, DoorOpen, Menu, Building2,
   Wrench, UserCog, ClipboardList, ChevronDown, Shield,
-  MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert,
+  MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert, BarChart2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -34,6 +34,7 @@ const NAV_ITEMS = [
   { href: "/user-management",     labelKey: "nav.userManagement",    icon: Settings,          section: "operations", featureKey: "userManagement" },
   { href: "/admin-settings",      labelKey: "nav.adminSettings",     icon: SlidersHorizontal, section: "operations", featureKey: null },
   { href: "/security-dashboard",  labelKey: "nav.securityDashboard", icon: ShieldAlert,       section: "operations", featureKey: null },
+  { href: "/analytics",           labelKey: "nav.analytics",         icon: BarChart2,          section: "operations", featureKey: null },
 ];
 
 /* Role pill colours — solid only, no opacity modifiers */
