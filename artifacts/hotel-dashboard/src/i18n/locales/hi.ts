@@ -245,6 +245,11 @@ const hi: Translations = {
     detail: { taskLabel: "कार्य #{{id}}", category: "श्रेणी", priority: "प्राथमिकता", asset: "संपत्ति", assignedTo: "को सौंपा गया", supervisor: "Supervisor", dueDate: "नियत तारीख", overdue: "अतिदेय", description: "विवरण", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "टिप्पणियाँ", noComments: "अभी कोई टिप्पणी नहीं। पहले जोड़ें।", yourName: "आपका नाम", addComment: "टिप्पणी जोड़ें…", posting: "पोस्ट हो रहा है…", postComment: "टिप्पणी पोस्ट करें" },
     fields: { taskName: "कार्य का नाम", taskNameRequired: "कार्य का नाम आवश्यक है", taskNamePlaceholder: "जैसे खराब सर्किट ब्रेकर बदलें", asset: "संपत्ति", selectAsset: "संपत्ति चुनें…", noAsset: "कोई विशेष संपत्ति नहीं", unitOptional: "इकाई (वैकल्पिक)", anyUnit: "कोई भी इकाई", title: "कार्य शीर्षक *", titlePlaceholder: "जैसे कमरा 201 साफ करें", description: "विवरण", descriptionPlaceholder: "कार्य का विस्तृत विवरण दें…", category: "श्रेणी *", priority: "प्राथमिकता *", property: "संपत्ति", anyProperty: "कोई भी संपत्ति", unit: "इकाई / कमरा", noUnit: "कोई विशेष इकाई नहीं", assignTo: "को सौंपें", supervisor: "Supervisor", dueDate: "नियत तारीख" },
     hints: { submitReport: "जमा करने से पहले सुनिश्चित करें कि सभी तस्वीरें स्पष्ट हों और सभी क्षेत्रों को कवर करें।", escalate: "मैनेजर को भेजने से पहले पुष्टि करें कि काम गुणवत्ता मानकों को पूरा करता है।", reject: "अस्वीकृति का स्पष्ट कारण बताएं ताकि कर्मचारी उसे ठीक कर सके।" },
+    reportStatus: { submitted: "जमा किया गया", rejected: "पर्यवेक्षक द्वारा अस्वीकृत", escalated: "पर्यवेक्षक द्वारा समीक्षित", approved: "प्रबंधक द्वारा अनुमोदित ✓", awaitingApproval: "प्रबंधक अनुमोदन की प्रतीक्षा", sectionTitle: "रिपोर्ट एस्केलेशन" },
+    skipAdmin: "छोड़ें (केवल एडमिन)",
+    rejectReport: { title: "रिपोर्ट अस्वीकार करें", description: "बताएं कि यह रिपोर्ट सुधार के लिए वापस क्यों भेजी जा रही है। कर्मचारी यह संदेश देखेगा।", placeholder: "अस्वीकृति का कारण (आवश्यक)…", submit: "अस्वीकार करें", rejecting: "अस्वीकार किया जा रहा है…" },
+    approvedReportsOnly: "केवल अनुमोदित रिपोर्ट",
+    approvedReportsOnlyDesc: "केवल वे कार्य शामिल करें जिनकी रिपोर्ट प्रबंधक ने अनुमोदित की हो",
   },
   help: {
     openButton: 'सहायता गाइड',

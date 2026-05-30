@@ -146,22 +146,23 @@ function PriorityBadge({ priority }: { priority: string }) {
 
 // ── Report Status ─────────────────────────────────────────────────────────────
 
-const REPORT_STATUS_META: Record<string, { label: string; cls: string; dotCls: string }> = {
-  none:      { label: "—",                    cls: "",                                                                         dotCls: ""                  },
-  submitted: { label: "Submitted",            cls: "text-blue-600 dark:text-blue-400",                                         dotCls: "bg-blue-500"       },
-  rejected:  { label: "Rejected",             cls: "text-red-600 dark:text-red-400",                                           dotCls: "bg-red-500"        },
-  escalated: { label: "Reviewed by Supervisor", cls: "text-amber-600 dark:text-amber-400",                                     dotCls: "bg-amber-500"      },
-  approved:  { label: "Approved by Manager ✓", cls: "text-emerald-600 dark:text-emerald-400 font-semibold",                   dotCls: "bg-emerald-500"    },
+const REPORT_STATUS_META: Record<string, { labelKey: string; cls: string; dotCls: string }> = {
+  none:      { labelKey: "",                                   cls: "",                                                                       dotCls: ""               },
+  submitted: { labelKey: "tasks.reportStatus.submitted",       cls: "text-blue-600 dark:text-blue-400",                                       dotCls: "bg-blue-500"    },
+  rejected:  { labelKey: "tasks.reportStatus.rejected",        cls: "text-red-600 dark:text-red-400",                                         dotCls: "bg-red-500"     },
+  escalated: { labelKey: "tasks.reportStatus.escalated",       cls: "text-amber-600 dark:text-amber-400",                                     dotCls: "bg-amber-500"   },
+  approved:  { labelKey: "tasks.reportStatus.approved",        cls: "text-emerald-600 dark:text-emerald-400 font-semibold",                   dotCls: "bg-emerald-500" },
 };
 
 function ReportStatusBadge({ status }: { status: string | null | undefined }) {
+  const { t } = useTranslation();
   const s = status ?? "none";
   if (s === "none") return null;
   const meta = REPORT_STATUS_META[s] ?? REPORT_STATUS_META.none;
   return (
     <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${meta.cls}`}>
       <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${meta.dotCls}`} />
-      {meta.label}
+      {meta.labelKey ? t(meta.labelKey as any) : "—"}
     </span>
   );
 }
@@ -290,7 +291,7 @@ function PhotoUploadDialog({ task, mode, open, onClose, onUpload, onSkip, isSubm
             onClick={() => { reset(); onSkip(task.id); }}
             disabled={uploading || isSubmitting}
           >
-            Skip (Admin only)
+            {t("tasks.skipAdmin")}
           </Button>
           <div className="flex gap-2 flex-1 justify-end">
             <Button type="button" variant="outline" onClick={handleClose} disabled={uploading || isSubmitting}>
@@ -803,14 +804,14 @@ function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkCo
         {task.reportStatus && task.reportStatus !== "none" && (
           <div className="px-6 py-4 space-y-3 border-b">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Report Escalation
+              {t("tasks.reportStatus.sectionTitle")}
             </p>
             <ol className="relative border-s border-muted ms-2 space-y-4">
               {/* Step 1: Submitted */}
               <li className="ms-4">
                 <span className={`absolute -start-1.5 mt-0.5 h-3 w-3 rounded-full border-2 border-background ${task.submittedAt ? "bg-blue-500" : "bg-muted"}`} />
                 <p className={`text-xs font-semibold ${task.submittedAt ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`}>
-                  Submitted
+                  {t("tasks.reportStatus.submitted")}
                 </p>
                 {task.submittedAt && (
                   <p className="text-[10px] text-muted-foreground">
@@ -822,7 +823,7 @@ function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkCo
               <li className="ms-4">
                 <span className={`absolute -start-1.5 mt-0.5 h-3 w-3 rounded-full border-2 border-background ${task.reportStatus === "rejected" ? "bg-red-500" : task.escalatedAt ? "bg-amber-500" : "bg-muted"}`} />
                 <p className={`text-xs font-semibold ${task.reportStatus === "rejected" ? "text-red-600 dark:text-red-400" : task.escalatedAt ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
-                  {task.reportStatus === "rejected" ? "Rejected by Supervisor" : "Reviewed by Supervisor"}
+                  {task.reportStatus === "rejected" ? t("tasks.reportStatus.rejected") : t("tasks.reportStatus.escalated")}
                 </p>
                 {(task.rejectedAt || task.escalatedAt) && (
                   <p className="text-[10px] text-muted-foreground">
@@ -840,7 +841,7 @@ function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkCo
                 <li className="ms-4">
                   <span className={`absolute -start-1.5 mt-0.5 h-3 w-3 rounded-full border-2 border-background ${task.approvedAt ? "bg-emerald-500" : "bg-muted"}`} />
                   <p className={`text-xs font-semibold ${task.approvedAt ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
-                    Approved by Manager
+                    {t("tasks.reportStatus.approved")}
                   </p>
                   {task.approvedAt && (
                     <p className="text-[10px] text-muted-foreground">
@@ -848,7 +849,7 @@ function TaskDetailSheet({ task, open, onClose, canVerify, onMarkStart, onMarkCo
                     </p>
                   )}
                   {!task.approvedAt && task.escalatedAt && (
-                    <p className="text-[10px] text-muted-foreground italic">Awaiting manager approval</p>
+                    <p className="text-[10px] text-muted-foreground italic">{t("tasks.reportStatus.awaitingApproval")}</p>
                   )}
                 </li>
               )}
@@ -1075,6 +1076,7 @@ function RejectReportDialog({
   onConfirm: (id: number, notes: string) => void;
   isPending: boolean;
 }) {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState("");
 
   function handleClose() { setNotes(""); onClose(); }
@@ -1089,28 +1091,27 @@ function RejectReportDialog({
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
-            <XCircle className="h-5 w-5" /> Reject Report
+            <XCircle className="h-5 w-5" /> {t("tasks.rejectReport.title")}
           </DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
-          Explain why this task report is being sent back for corrections.
-          The worker will see this message.
+          {t("tasks.rejectReport.description")}
         </p>
         <Textarea
-          placeholder="Rejection reason (required)…"
+          placeholder={t("tasks.rejectReport.placeholder")}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           className="resize-none h-24 text-sm"
           autoFocus
         />
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isPending}>Cancel</Button>
+          <Button variant="outline" onClick={handleClose} disabled={isPending}>{t("tasks.cancel")}</Button>
           <Button
             variant="destructive"
             onClick={handleSubmit}
             disabled={!notes.trim() || isPending}
           >
-            {isPending ? <><Loader2 className="me-2 h-4 w-4 animate-spin" />Rejecting…</> : "Reject Report"}
+            {isPending ? <><Loader2 className="me-2 h-4 w-4 animate-spin" />{t("tasks.rejectReport.rejecting")}</> : t("tasks.rejectReport.title")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1253,9 +1254,9 @@ function ReportDialog({
               className="h-4 w-4 rounded accent-primary"
             />
             <div>
-              <p className="text-sm font-medium">Approved reports only</p>
+              <p className="text-sm font-medium">{t("tasks.approvedReportsOnly")}</p>
               <p className="text-xs text-muted-foreground">
-                Only include tasks whose report has been approved by a manager
+                {t("tasks.approvedReportsOnlyDesc")}
               </p>
             </div>
           </label>

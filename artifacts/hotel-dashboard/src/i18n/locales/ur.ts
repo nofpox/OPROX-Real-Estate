@@ -246,6 +246,11 @@ const ur: Translations = {
     detail: { taskLabel: "کام #{{id}}", category: "زمرہ", priority: "ترجیح", asset: "اثاثہ", assignedTo: "کو تفویض", supervisor: "Supervisor", dueDate: "مقررہ تاریخ", overdue: "مدت گزری", description: "تفصیل", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "تبصرے", noComments: "ابھی کوئی تبصرہ نہیں۔ پہلے تبصرہ کریں۔", yourName: "آپ کا نام", addComment: "تبصرہ شامل کریں…", posting: "پوسٹ ہو رہا ہے…", postComment: "تبصرہ پوسٹ کریں" },
     fields: { taskName: "کام کا نام", taskNameRequired: "کام کا نام ضروری ہے", taskNamePlaceholder: "جیسے خراب سرکٹ بریکر بدلیں", asset: "اثاثہ", selectAsset: "اثاثہ منتخب کریں…", noAsset: "کوئی خاص اثاثہ نہیں", unitOptional: "یونٹ (اختیاری)", anyUnit: "کوئی بھی یونٹ", title: "کام کا عنوان *", titlePlaceholder: "جیسے کمرہ 201 صاف کریں", description: "تفصیل", descriptionPlaceholder: "کام کی تفصیلی وضاحت کریں…", category: "زمرہ *", priority: "ترجیح *", property: "جائیداد", anyProperty: "کوئی بھی جائیداد", unit: "یونٹ / کمرہ", noUnit: "کوئی خاص یونٹ نہیں", assignTo: "کو تفویض کریں", supervisor: "Supervisor", dueDate: "مقررہ تاریخ" },
     hints: { submitReport: "جمع کرنے سے پہلے یقینی بنائیں کہ تمام تصاویر واضح ہوں اور تمام علاقوں کو کور کریں۔", escalate: "مینیجر کو بھیجنے سے پہلے تصدیق کریں کہ کام معیار کو پورا کرتا ہے۔", reject: "مسترد کرنے کی واضح وجہ فراہم کریں تاکہ کارکن اسے ٹھیک کر سکے۔" },
+    reportStatus: { submitted: "جمع کر دیا گیا", rejected: "سپروائزر نے مسترد کیا", escalated: "سپروائزر نے جائزہ لیا", approved: "مینیجر نے منظور کیا ✓", awaitingApproval: "مینیجر کی منظوری کا انتظار", sectionTitle: "رپورٹ ایسکالیشن" },
+    skipAdmin: "چھوڑیں (صرف ایڈمن)",
+    rejectReport: { title: "رپورٹ مسترد کریں", description: "وضاحت کریں کہ یہ رپورٹ درستگی کے لیے واپس کیوں بھیجی جا رہی ہے۔ کارکن یہ پیغام دیکھے گا۔", placeholder: "مسترد کرنے کی وجہ (لازمی)…", submit: "مسترد کریں", rejecting: "مسترد کیا جا رہا ہے…" },
+    approvedReportsOnly: "صرف منظور شدہ رپورٹس",
+    approvedReportsOnlyDesc: "صرف وہ کام شامل کریں جن کی رپورٹ مینیجر نے منظور کی ہو",
   },
   help: {
     openButton: 'مدد گائیڈ',

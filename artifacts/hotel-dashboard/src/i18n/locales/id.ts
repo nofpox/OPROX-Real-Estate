@@ -246,6 +246,11 @@ const id: Translations = {
     detail: { taskLabel: "Tugas #{{id}}", category: "Kategori", priority: "Prioritas", asset: "Aset", assignedTo: "Ditugaskan kepada", supervisor: "Supervisor", dueDate: "Batas waktu", overdue: "Terlambat", description: "Deskripsi", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "Komentar", noComments: "Belum ada komentar. Jadilah yang pertama.", yourName: "Nama Anda", addComment: "Tambahkan komentar…", posting: "Memposting…", postComment: "Posting Komentar" },
     fields: { taskName: "Nama Tugas", taskNameRequired: "Nama tugas wajib diisi", taskNamePlaceholder: "mis. Ganti pemutus arus yang rusak", asset: "Aset", selectAsset: "Pilih aset…", noAsset: "Tidak ada aset tertentu", unitOptional: "Unit (opsional)", anyUnit: "Unit mana saja", title: "Judul Tugas *", titlePlaceholder: "mis. Bersihkan kamar 201", description: "Deskripsi", descriptionPlaceholder: "Jelaskan tugas secara detail…", category: "Kategori *", priority: "Prioritas *", property: "Properti", anyProperty: "Properti mana saja", unit: "Unit / Kamar", noUnit: "Tidak ada unit tertentu", assignTo: "Tugaskan Kepada", supervisor: "Supervisor", dueDate: "Batas Waktu" },
     hints: { submitReport: "Pastikan semua foto jernih dan mencakup semua area sebelum mengirimkan.", escalate: "Konfirmasi pekerjaan memenuhi standar kualitas sebelum dikirim ke Manajer.", reject: "Berikan alasan penolakan yang jelas agar pekerja dapat memperbaikinya." },
+    reportStatus: { submitted: "Dikirimkan", rejected: "Ditolak oleh Supervisor", escalated: "Ditinjau oleh Supervisor", approved: "Disetujui oleh Manajer ✓", awaitingApproval: "Menunggu persetujuan manajer", sectionTitle: "Eskalasi Laporan" },
+    skipAdmin: "Lewati (Admin saja)",
+    rejectReport: { title: "Tolak Laporan", description: "Jelaskan mengapa laporan ini dikembalikan untuk perbaikan. Pekerja akan melihat pesan ini.", placeholder: "Alasan penolakan (wajib)…", submit: "Tolak", rejecting: "Menolak…" },
+    approvedReportsOnly: "Laporan yang disetujui saja",
+    approvedReportsOnlyDesc: "Hanya sertakan tugas yang laporannya telah disetujui oleh manajer",
   },
   help: {
     openButton: 'Panduan Bantuan',

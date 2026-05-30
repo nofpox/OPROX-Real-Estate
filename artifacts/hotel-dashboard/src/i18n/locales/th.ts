@@ -246,6 +246,11 @@ const th: Translations = {
     detail: { taskLabel: "งาน #{{id}}", category: "หมวดหมู่", priority: "ความสำคัญ", asset: "สินทรัพย์", assignedTo: "มอบหมายให้", supervisor: "Supervisor", dueDate: "วันครบกำหนด", overdue: "เกินกำหนด", description: "คำอธิบาย", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "ความคิดเห็น", noComments: "ยังไม่มีความคิดเห็น", yourName: "ชื่อของคุณ", addComment: "เพิ่มความคิดเห็น…", posting: "กำลังโพสต์…", postComment: "โพสต์ความคิดเห็น" },
     fields: { taskName: "ชื่องาน", taskNameRequired: "จำเป็นต้องระบุชื่องาน", taskNamePlaceholder: "เช่น เปลี่ยนเซอร์กิตเบรกเกอร์ที่ชำรุด", asset: "สินทรัพย์", selectAsset: "เลือกสินทรัพย์…", noAsset: "ไม่มีสินทรัพย์ที่เฉพาะเจาะจง", unitOptional: "ยูนิต (ไม่บังคับ)", anyUnit: "ยูนิตใดก็ได้", title: "หัวข้องาน *", titlePlaceholder: "เช่น ทำความสะอาดห้อง 201", description: "คำอธิบาย", descriptionPlaceholder: "อธิบายงานโดยละเอียด…", category: "หมวดหมู่ *", priority: "ความสำคัญ *", property: "ทรัพย์สิน", anyProperty: "ทรัพย์สินใดก็ได้", unit: "ยูนิต / ห้อง", noUnit: "ไม่มียูนิตที่เฉพาะเจาะจง", assignTo: "มอบหมายให้", supervisor: "Supervisor", dueDate: "วันครบกำหนด" },
     hints: { submitReport: "ตรวจสอบให้แน่ใจว่าภาพถ่ายทั้งหมดชัดเจนและครอบคลุมทุกพื้นที่ก่อนส่ง", escalate: "ยืนยันว่างานตรงตามมาตรฐานคุณภาพก่อนส่งให้ผู้จัดการ", reject: "ระบุเหตุผลการปฏิเสธที่ชัดเจนเพื่อให้พนักงานสามารถแก้ไขได้" },
+    reportStatus: { submitted: "ส่งแล้ว", rejected: "ปฏิเสธโดยผู้ดูแล", escalated: "ผู้ดูแลตรวจสอบแล้ว", approved: "ผู้จัดการอนุมัติแล้ว ✓", awaitingApproval: "รอการอนุมัติจากผู้จัดการ", sectionTitle: "การยกระดับรายงาน" },
+    skipAdmin: "ข้าม (เฉพาะผู้ดูแลระบบ)",
+    rejectReport: { title: "ปฏิเสธรายงาน", description: "อธิบายว่าทำไมรายงานนี้จึงถูกส่งกลับเพื่อแก้ไข พนักงานจะเห็นข้อความนี้", placeholder: "เหตุผลในการปฏิเสธ (จำเป็น)…", submit: "ปฏิเสธ", rejecting: "กำลังปฏิเสธ…" },
+    approvedReportsOnly: "เฉพาะรายงานที่ได้รับการอนุมัติ",
+    approvedReportsOnlyDesc: "รวมเฉพาะงานที่รายงานได้รับการอนุมัติจากผู้จัดการ",
   },
   help: {
     openButton: 'คู่มือช่วยเหลือ',

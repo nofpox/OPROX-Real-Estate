@@ -246,6 +246,11 @@ const ne: Translations = {
     detail: { taskLabel: "कार्य #{{id}}", category: "श्रेणी", priority: "प्राथमिकता", asset: "सम्पत्ति", assignedTo: "जिम्मेवारी", supervisor: "Supervisor", dueDate: "नियत मिति", overdue: "म्याद नाघेको", description: "विवरण", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "टिप्पणीहरू", noComments: "अहिले कुनै टिप्पणी छैन।", yourName: "तपाईंको नाम", addComment: "टिप्पणी थप्नुहोस्…", posting: "पोस्ट हुँदैछ…", postComment: "टिप्पणी पोस्ट गर्नुहोस्" },
     fields: { taskName: "कार्यको नाम", taskNameRequired: "कार्यको नाम आवश्यक छ", taskNamePlaceholder: "जस्तै खराब सर्किट ब्रेकर बदल्नुहोस्", asset: "सम्पत्ति", selectAsset: "सम्पत्ति छान्नुहोस्…", noAsset: "कुनै विशेष सम्पत्ति छैन", unitOptional: "एकाइ (वैकल्पिक)", anyUnit: "जुनसुकै एकाइ", title: "कार्य शीर्षक *", titlePlaceholder: "जस्तै कोठा २०१ सफा गर्नुहोस्", description: "विवरण", descriptionPlaceholder: "कार्यको विस्तृत विवरण दिनुहोस्…", category: "श्रेणी *", priority: "प्राथमिकता *", property: "सम्पत्ति", anyProperty: "जुनसुकै सम्पत्ति", unit: "एकाइ / कोठा", noUnit: "कुनै विशेष एकाइ छैन", assignTo: "जिम्मेवारी तोक्नुहोस्", supervisor: "Supervisor", dueDate: "नियत मिति" },
     hints: { submitReport: "पेश गर्नु अघि सुनिश्चित गर्नुहोस् कि सबै फोटोहरू स्पष्ट छन् र सबै क्षेत्रहरू समेटेका छन्।", escalate: "म्यानेजरलाई पठाउनु अघि पुष्टि गर्नुहोस् कि काम गुणस्तर मापदण्ड पूरा गर्छ।", reject: "कार्यकर्ताले सुधार गर्न सकोस् भनी अस्वीकृतिको स्पष्ट कारण दिनुहोस्।" },
+    reportStatus: { submitted: "पेश गरियो", rejected: "सुपरभाइजरले अस्वीकार गरे", escalated: "सुपरभाइजरले समीक्षा गरे", approved: "प्रबन्धकले अनुमोदन गरे ✓", awaitingApproval: "प्रबन्धकको अनुमोदनको प्रतीक्षा", sectionTitle: "रिपोर्ट एस्केलेशन" },
+    skipAdmin: "छोड्नुहोस् (एडमिन मात्र)",
+    rejectReport: { title: "रिपोर्ट अस्वीकार गर्नुहोस्", description: "यो रिपोर्ट सुधारका लागि किन फिर्ता गरिँदैछ भनेर व्याख्या गर्नुहोस्। कार्यकर्ताले यो सन्देश देख्नेछन्।", placeholder: "अस्वीकारको कारण (आवश्यक)…", submit: "अस्वीकार गर्नुहोस्", rejecting: "अस्वीकार गर्दै…" },
+    approvedReportsOnly: "अनुमोदित रिपोर्टहरू मात्र",
+    approvedReportsOnlyDesc: "केवल ती कार्यहरू समावेश गर्नुहोस् जसको रिपोर्ट प्रबन्धकले अनुमोदन गरेका छन्",
   },
   help: {
     openButton: 'सहायता गाइड',

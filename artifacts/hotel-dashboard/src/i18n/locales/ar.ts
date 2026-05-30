@@ -741,6 +741,11 @@ const ar: Translations = {
       escalate: 'تأكد من أن العمل يلبي معايير الجودة قبل الإرسال إلى المدير.',
       reject: 'يجب تقديم سبب واضح للرفض حتى يتمكن العامل من التصحيح.',
     },
+    reportStatus: { submitted: "مُقدَّم", rejected: "مرفوض من المشرف", escalated: "راجعه المشرف", approved: "معتمد من المدير ✓", awaitingApproval: "بانتظار موافقة المدير", sectionTitle: "مسار التقرير" },
+    skipAdmin: "تخطي (للمسؤول فقط)",
+    rejectReport: { title: "رفض التقرير", description: "وضّح سبب إعادة هذا التقرير للتصحيح. سيرى العامل هذه الرسالة.", placeholder: "سبب الرفض (مطلوب)…", submit: "رفض", rejecting: "جارٍ الرفض…" },
+    approvedReportsOnly: "التقارير المعتمدة فقط",
+    approvedReportsOnlyDesc: "تضمين المهام التي تمت الموافقة على تقاريرها من المدير فقط",
   },
   help: {
     openButton: 'دليل المساعدة',

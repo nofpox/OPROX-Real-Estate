@@ -17,33 +17,11 @@ import { useListActivityLogs, useListProperties } from "@workspace/api-client-re
 import type { ActivityLog } from "@workspace/api-client-react";
 import { RefreshCw } from "lucide-react";
 
-// ── Action labels — static English strings, never translated ──────────────────
-const ACTION_LABEL: Record<string, string> = {
-  "task.created":              "Task Created",
-  "task.status_changed":       "Status Changed",
-  "task.assigned":             "Task Assigned",
-  "task.deleted":              "Task Deleted",
-  "work_order.created":        "Work Order Created",
-  "work_order.status_changed": "Work Order Updated",
-  "work_order.deleted":        "Work Order Deleted",
-  "booking.created":           "Booking Created",
-  "booking.checked_in":        "Checked In",
-  "booking.checked_out":       "Checked Out",
-  "booking.cancelled":         "Booking Cancelled",
-  "booking.confirmed":         "Booking Confirmed",
-  "booking.status_changed":    "Booking Updated",
-  "field_user.created":        "Team Member Added",
-  "field_user.updated":        "Team Member Updated",
-  "field_user.deactivated":    "Member Deactivated",
-  "field_user.reactivated":    "Member Reactivated",
-  "field_user.deleted":        "Team Member Removed",
-};
-
 // ── Relative time — plain string, no formatting library ───────────────────────
-function relTime(iso: string): string {
+function relTime(iso: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (s < 60)   return "just now";
-  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 60)    return t("notifications.justNow");
+  if (s < 3600)  return `${Math.floor(s / 60)}m`;
   if (s < 86400) return `${Math.floor(s / 3600)}h`;
   return `${Math.floor(s / 86400)}d`;
 }
@@ -54,7 +32,11 @@ function fullTime(iso: string): string {
 
 // ── Table row — pure <tr> / <td>, inline styles only ─────────────────────────
 function Row({ log }: { log: ActivityLog }) {
-  const label = ACTION_LABEL[log.action] ?? log.action.replace(/[_.]/g, " ");
+  const { t } = useTranslation();
+  const rawKey = `activityLog.action.${log.action}`;
+  const label = t(rawKey) !== rawKey
+    ? t(rawKey)
+    : log.action.replace(/[_.]/g, " ");
   const proofSrc = log.proofPhotoUrl ? `/api/storage${log.proofPhotoUrl}` : null;
 
   return (
@@ -82,7 +64,7 @@ function Row({ log }: { log: ActivityLog }) {
           {log.entityLabel ?? `${log.entityType} #${log.entityId}`}
         </div>
         <div style={{ fontSize: "12px", color: "#6b7280" }}>
-          {log.actorName ?? "System"}
+          {log.actorName ?? t("activityLog.systemActor")}
           {log.actorRole ? <span style={{ marginLeft: 4 }}>· {log.actorRole}</span> : null}
           {log.propertyName ? <span style={{ marginLeft: 4 }}>· {log.propertyName}</span> : null}
         </div>
@@ -93,14 +75,14 @@ function Row({ log }: { log: ActivityLog }) {
         ) : null}
         {proofSrc ? (
           <a href={proofSrc} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: "6px" }}>
-            <img src={proofSrc} alt="Proof" style={{ height: 48, width: 72, objectFit: "cover", borderRadius: 6, border: "1px solid #d1fae5" }} />
+            <img src={proofSrc} alt="proof" style={{ height: 48, width: 72, objectFit: "cover", borderRadius: 6, border: "1px solid #d1fae5" }} />
           </a>
         ) : null}
       </td>
 
       {/* Col 3 — timestamp, right-aligned */}
       <td style={{ verticalAlign: "top", padding: "10px 0 10px 8px", whiteSpace: "nowrap", textAlign: "right", fontSize: "12px", color: "#9ca3af" }}>
-        <span title={fullTime(log.createdAt)}>{relTime(log.createdAt)}</span>
+        <span title={fullTime(log.createdAt)}>{relTime(log.createdAt, t)}</span>
       </td>
     </tr>
   );
@@ -132,6 +114,10 @@ function AuditLogInner() {
     );
   }, [logs, search]);
 
+  const eventsLabel = isLoading
+    ? t("activityLog.loading")
+    : t("activityLog.eventsCount_other", { count: rows.length });
+
   // ── Outer page: plain white background, no opacity classes ─────────────────
   return (
     <div style={{ padding: 0 }}>
@@ -159,14 +145,14 @@ function AuditLogInner() {
       {/* KPI row — plain bordered boxes, no opacity/blur */}
       <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
         {[
-          { label: "Total Events",  value: (logs ?? []).length },
-          { label: "Tasks",         value: (logs ?? []).filter(l => l.entityType === "task").length },
-          { label: "Work Orders",   value: (logs ?? []).filter(l => l.entityType === "work_order").length },
-          { label: "Team Changes",  value: (logs ?? []).filter(l => l.entityType === "field_user").length },
+          { key: "total",       value: (logs ?? []).length },
+          { key: "tasks",       value: (logs ?? []).filter(l => l.entityType === "task").length },
+          { key: "workOrders",  value: (logs ?? []).filter(l => l.entityType === "work_order").length },
+          { key: "teamChanges", value: (logs ?? []).filter(l => l.entityType === "field_user").length },
         ].map((k) => (
-          <div key={k.label} style={{ flex: "1 1 100px", border: "1px solid #e5e7eb", borderRadius: 8, padding: "14px 16px", background: "white" }}>
+          <div key={k.key} style={{ flex: "1 1 100px", border: "1px solid #e5e7eb", borderRadius: 8, padding: "14px 16px", background: "white" }}>
             <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1 }}>{isLoading ? "—" : k.value}</div>
-            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{k.label}</div>
+            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{t(`activityLog.kpi.${k.key}`)}</div>
           </div>
         ))}
       </div>
@@ -185,33 +171,33 @@ function AuditLogInner() {
           onChange={(e) => setEntity(e.target.value)}
           style={{ padding: "6px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, background: "white" }}
         >
-          <option value="all">All Types</option>
-          <option value="task">Tasks</option>
-          <option value="work_order">Work Orders</option>
-          <option value="booking">Bookings</option>
-          <option value="field_user">Team</option>
+          <option value="all">{t("activityLog.allTypes")}</option>
+          <option value="task">{t("activityLog.filterType.task")}</option>
+          <option value="work_order">{t("activityLog.filterType.work_order")}</option>
+          <option value="booking">{t("activityLog.filterType.booking")}</option>
+          <option value="field_user">{t("activityLog.filterType.field_user")}</option>
         </select>
         <select
           value={propId}
           onChange={(e) => setPropId(e.target.value)}
           style={{ padding: "6px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, background: "white" }}
         >
-          <option value="all">All Properties</option>
+          <option value="all">{t("common.allProperties")}</option>
           {(properties ?? []).map((p) => (
             <option key={p.id} value={String(p.id)}>{p.name}</option>
           ))}
         </select>
         <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: "auto" }}>
-          {isLoading ? "Loading…" : `${rows.length} events`}
+          {eventsLabel}
         </span>
       </div>
 
       {/* Table — dir="ltr" so column order is fixed by the browser table engine */}
       <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, background: "white", overflow: "hidden" }}>
         {isLoading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#9ca3af", fontSize: 14 }}>Loading…</div>
+          <div style={{ padding: 40, textAlign: "center", color: "#9ca3af", fontSize: 14 }}>{t("activityLog.loading")}</div>
         ) : rows.length === 0 ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#9ca3af", fontSize: 14 }}>No activity found.</div>
+          <div style={{ padding: 40, textAlign: "center", color: "#9ca3af", fontSize: 14 }}>{t("activityLog.noActivity")}</div>
         ) : (
           <table
             dir="ltr"

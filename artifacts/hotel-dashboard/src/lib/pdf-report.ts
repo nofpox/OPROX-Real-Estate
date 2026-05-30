@@ -37,10 +37,15 @@ function p(key: string): string {
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
+// Resolved at call-time so language switches take effect before PDF generation
+function pdfDateLocale(): string {
+  return i18n.language === "fr" ? "fr-FR" : i18n.language === "pt" ? "pt-BR" : "en-GB";
+}
+
 function fmt(iso: string | null | undefined): string {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleDateString("en-GB", {
+    return new Date(iso).toLocaleDateString(pdfDateLocale(), {
       day: "2-digit", month: "short", year: "numeric",
     });
   } catch { return "—"; }
@@ -49,7 +54,7 @@ function fmt(iso: string | null | undefined): string {
 function fmtDT(iso: string | null | undefined): string {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleString("en-GB", {
+    return new Date(iso).toLocaleString(pdfDateLocale(), {
       day: "2-digit", month: "short", year: "numeric",
       hour: "2-digit", minute: "2-digit",
     });

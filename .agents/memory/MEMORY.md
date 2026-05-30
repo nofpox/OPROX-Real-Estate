@@ -13,3 +13,5 @@
 - [Auth forgot-password flow](forgot-password-flow.md) — in-memory resetTokens map; 6-char hex token; 15-min expiry; verifies email+phone+tenantSlug; returns token in response body for demo mode
 - [DB push non-TTY workaround](db-push-non-tty.md) — drizzle-kit push blocks on interactive prompts in non-TTY shells; bypass by running raw SQL via executeSql() code_execution tool instead
 - [Seed data scope](seed-data-scope.md) — properties/bookings/expenses/work_orders can go missing; seed them with explicit IDs (INSERT … ON CONFLICT DO NOTHING + setval sequence reset); rooms/staff/tasks/shifts survive restarts
+- [PDF date locale must be call-time](pdf-date-locale.md) — pdfDateLocale() must be a function called inside fmt/fmtDT, not a module-level const; i18n.language is runtime; only fr→fr-FR and pt→pt-BR get native dates; all others fall back to en-GB (Helvetica limitation)
+- [i18n locale structural sync](locale-structural-sync.md) — Translations type = typeof en; every key added to en.ts must be mirrored in all 13 locale files or TS2739 fires; ar.ts is expanded multi-line format, all others are compact single-line objects per section

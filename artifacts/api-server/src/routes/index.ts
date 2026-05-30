@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import { logger } from "../lib/logger.js";
 import { sessions, getRoleTier } from "./auth.js";
 import { suspendedTenants, loadSuspendedTenants } from "../tenant-status.js";
 import healthRouter from "./health";
@@ -138,7 +139,7 @@ router.use(supportTicketsRouter);
 // Runs asynchronously; any request that arrives before it finishes will do
 // an extra DB check in the worst case (safe, just slightly slower).
 loadSuspendedTenants().catch((err) => {
-  console.error("[tenant-status] Failed to load suspended tenants:", err);
+  logger.error({ err }, "[tenant-status] Failed to load suspended tenants");
 });
 
 export default router;

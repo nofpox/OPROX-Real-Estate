@@ -246,6 +246,11 @@ const pt: Translations = {
     detail: { taskLabel: "Tarefa #{{id}}", category: "Categoria", priority: "Prioridade", asset: "Ativo", assignedTo: "Atribuído a", supervisor: "Supervisor", dueDate: "Vencimento", overdue: "Em atraso", description: "Descrição", beforePhoto: "Foto Antes", afterPhoto: "Foto Depois", comments: "Comentários", noComments: "Nenhum comentário ainda. Seja o primeiro a adicionar.", yourName: "Seu nome", addComment: "Adicionar um comentário…", posting: "Publicando…", postComment: "Publicar Comentário" },
     fields: { taskName: "Nome da Tarefa", taskNameRequired: "O nome da tarefa é obrigatório", taskNamePlaceholder: "ex. Substituir disjuntor com defeito", asset: "Ativo", selectAsset: "Selecionar ativo…", noAsset: "Nenhum ativo específico", unitOptional: "Unidade (opcional)", anyUnit: "Qualquer unidade", title: "Título da Tarefa *", titlePlaceholder: "ex. Limpar quarto 201", description: "Descrição", descriptionPlaceholder: "Descreva a tarefa em detalhes…", category: "Categoria *", priority: "Prioridade *", property: "Propriedade", anyProperty: "Qualquer propriedade", unit: "Unidade / Quarto", noUnit: "Nenhuma unidade específica", assignTo: "Atribuir a", supervisor: "Supervisor", dueDate: "Vencimento" },
     hints: { submitReport: "Certifique-se de que todas as fotos estão nítidas e cobrem todas as áreas antes de enviar.", escalate: "Confirme que o trabalho atende aos padrões de qualidade antes de enviar ao gerente.", reject: "Você deve fornecer um motivo claro para rejeição para que o trabalhador possa corrigir o problema." },
+    reportStatus: { submitted: "Enviado", rejected: "Rejeitado pelo supervisor", escalated: "Revisado pelo supervisor", approved: "Aprovado pelo gestor ✓", awaitingApproval: "Aguardando aprovação do gestor", sectionTitle: "Escalada do relatório" },
+    skipAdmin: "Ignorar (apenas Admin)",
+    rejectReport: { title: "Rejeitar relatório", description: "Explique por que este relatório está sendo devolvido para correções. O trabalhador verá esta mensagem.", placeholder: "Motivo da rejeição (obrigatório)…", submit: "Rejeitar", rejecting: "Rejeitando…" },
+    approvedReportsOnly: "Apenas relatórios aprovados",
+    approvedReportsOnlyDesc: "Incluir apenas tarefas cujo relatório foi aprovado por um gestor",
   },
   help: {
     openButton: "Guia de Ajuda",

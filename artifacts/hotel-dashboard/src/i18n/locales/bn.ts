@@ -246,6 +246,11 @@ const bn: Translations = {
     detail: { taskLabel: "কাজ #{{id}}", category: "বিভাগ", priority: "অগ্রাধিকার", asset: "সম্পদ", assignedTo: "নিযুক্ত", supervisor: "Supervisor", dueDate: "নির্ধারিত তারিখ", overdue: "মেয়াদোত্তীর্ণ", description: "বিবরণ", beforePhoto: "Before Photo", afterPhoto: "After Photo", comments: "মন্তব্য", noComments: "এখনো কোনো মন্তব্য নেই।", yourName: "আপনার নাম", addComment: "মন্তব্য যোগ করুন…", posting: "পোস্ট হচ্ছে…", postComment: "মন্তব্য পোস্ট করুন" },
     fields: { taskName: "কাজের নাম", taskNameRequired: "কাজের নাম আবশ্যক", taskNamePlaceholder: "যেমন ত্রুটিপূর্ণ সার্কিট ব্রেকার পরিবর্তন করুন", asset: "সম্পদ", selectAsset: "সম্পদ নির্বাচন করুন…", noAsset: "কোনো নির্দিষ্ট সম্পদ নয়", unitOptional: "ইউনিট (ঐচ্ছিক)", anyUnit: "যেকোনো ইউনিট", title: "কাজের শিরোনাম *", titlePlaceholder: "যেমন ২০১ কক্ষ পরিষ্কার করুন", description: "বিবরণ", descriptionPlaceholder: "কাজের বিস্তারিত বিবরণ দিন…", category: "বিভাগ *", priority: "অগ্রাধিকার *", property: "সম্পত্তি", anyProperty: "যেকোনো সম্পত্তি", unit: "ইউনিট / কক্ষ", noUnit: "কোনো নির্দিষ্ট ইউনিট নয়", assignTo: "নিযুক্ত করুন", supervisor: "Supervisor", dueDate: "নির্ধারিত তারিখ" },
     hints: { submitReport: "জমা দেওয়ার আগে নিশ্চিত করুন যে সব ছবি স্পষ্ট এবং সব এলাকা কভার করে।", escalate: "ম্যানেজারের কাছে পাঠানোর আগে নিশ্চিত করুন যে কাজ মানের মান পূরণ করে।", reject: "কর্মীটি ঠিক করতে পারে সেজন্য প্রত্যাখ্যানের একটি স্পষ্ট কারণ দিতে হবে।" },
+    reportStatus: { submitted: "জমা দেওয়া হয়েছে", rejected: "সুপারভাইজার প্রত্যাখ্যান করেছেন", escalated: "সুপারভাইজার পর্যালোচনা করেছেন", approved: "ম্যানেজার অনুমোদন দিয়েছেন ✓", awaitingApproval: "ম্যানেজারের অনুমোদনের অপেক্ষায়", sectionTitle: "রিপোর্ট এস্কালেশন" },
+    skipAdmin: "এড়িয়ে যান (শুধুমাত্র অ্যাডমিন)",
+    rejectReport: { title: "রিপোর্ট প্রত্যাখ্যান করুন", description: "কেন এই রিপোর্টটি সংশোধনের জন্য ফেরত পাঠানো হচ্ছে তা ব্যাখ্যা করুন। কর্মী এই বার্তা দেখবেন।", placeholder: "প্রত্যাখ্যানের কারণ (প্রয়োজনীয়)…", submit: "প্রত্যাখ্যান করুন", rejecting: "প্রত্যাখ্যান করা হচ্ছে…" },
+    approvedReportsOnly: "শুধুমাত্র অনুমোদিত রিপোর্ট",
+    approvedReportsOnlyDesc: "শুধুমাত্র সেই কাজগুলি অন্তর্ভুক্ত করুন যাদের রিপোর্ট ম্যানেজার অনুমোদন দিয়েছেন",
   },
   help: {
     openButton: 'সাহায্য গাইড',

@@ -246,6 +246,11 @@ const zh: Translations = {
     detail: { taskLabel: "任务 #{{id}}", category: "类别", priority: "优先级", asset: "资产", assignedTo: "分配给", supervisor: "主管", dueDate: "截止日期", overdue: "已逾期", description: "描述", beforePhoto: "前置照片", afterPhoto: "后置照片", comments: "评论", noComments: "暂无评论。成为第一个添加评论的人。", yourName: "您的姓名", addComment: "添加评论…", posting: "发布中…", postComment: "发布评论" },
     fields: { taskName: "任务名称", taskNameRequired: "任务名称为必填项", taskNamePlaceholder: "例如 更换故障断路器", asset: "资产", selectAsset: "选择资产…", noAsset: "无特定资产", unitOptional: "单元（可选）", anyUnit: "任意单元", title: "任务标题 *", titlePlaceholder: "例如 清洁201号房间", description: "描述", descriptionPlaceholder: "详细描述任务…", category: "类别 *", priority: "优先级 *", property: "物业", anyProperty: "任意物业", unit: "单元 / 房间", noUnit: "无特定单元", assignTo: "分配给", supervisor: "主管", dueDate: "截止日期" },
     hints: { submitReport: "提交前请确保所有照片清晰并覆盖所有区域。", escalate: "在发送给经理之前，请确认工作符合质量标准。", reject: "您必须提供明确的拒绝原因，以便工作人员进行修正。" },
+    reportStatus: { submitted: "已提交", rejected: "被主管拒绝", escalated: "已由主管审核", approved: "已由经理批准 ✓", awaitingApproval: "等待经理审批", sectionTitle: "报告升级流程" },
+    skipAdmin: "跳过（仅限管理员）",
+    rejectReport: { title: "拒绝报告", description: "请说明退回此任务报告的原因。工作人员将看到此消息。", placeholder: "拒绝原因（必填）…", submit: "拒绝", rejecting: "拒绝中…" },
+    approvedReportsOnly: "仅限已批准的报告",
+    approvedReportsOnlyDesc: "仅包括报告已由经理批准的任务",
   },
   help: {
     openButton: "帮助指南",
