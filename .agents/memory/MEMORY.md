@@ -4,3 +4,6 @@
 - [Express tier gate pattern](express-tier-gate.md) — router.use(mw, subRouter) runs mw for ALL paths; use a single path-prefix gate middleware instead.
 - [RBAC structure](rbac-structure.md) — Three-tier RBAC: Owner (admin), Manager (supervisor), Worker. Frontend role-context wired to authUser.role from /api/auth/me.
 - [Settings JSON fields pattern](settings-json-fields.md) — taskTypes (array) and taskRequirements (object) stored as JSON strings in key-value settingsTable; defaults seeded on boot via ensureDefaults(); parsed with parseJsonSafe helper.
+- [Multi-tenancy architecture](multi-tenancy.md) — shared-schema, tenant_id on every table; null tenantId = superadmin (sees all); login requires tenantSlug for tenant users
+- [Superadmin password seeding](superadmin-seed.md) — encode(digest(...)) needs pgcrypto extension; must use Node.js hashPwd() at server boot (ensureAdmin) not raw SQL migration
+- [Settings composite constraint](settings-constraint.md) — unique constraint is (tenant_id, key); onConflictDoUpdate target must be array [settingsTable.tenantId, settingsTable.key]

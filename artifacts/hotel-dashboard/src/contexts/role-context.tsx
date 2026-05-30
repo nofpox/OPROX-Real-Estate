@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 
-export type AppRole = "owner" | "manager" | "front-desk" | "housekeeping" | "maintenance" | "security";
+export type AppRole = "super_admin" | "owner" | "manager" | "front-desk" | "housekeeping" | "maintenance" | "security";
 
 export interface RoleDefinition {
   id: AppRole;
@@ -11,6 +11,7 @@ export interface RoleDefinition {
 }
 
 export function mapDbRoleToAppRole(dbRole: string): AppRole {
+  if (dbRole === "super_admin") return "super_admin";
   if (dbRole === "owner" || dbRole === "admin") return "owner";
   if (dbRole === "manager" || dbRole === "property-manager" || dbRole === "site-supervisor") return "manager";
   if (dbRole === "front-desk") return "front-desk";
@@ -21,10 +22,21 @@ export function mapDbRoleToAppRole(dbRole: string): AppRole {
 }
 
 export function isOwnerTier(dbRole: string): boolean {
-  return dbRole === "owner" || dbRole === "admin";
+  return dbRole === "owner" || dbRole === "admin" || dbRole === "super_admin";
+}
+
+export function isSuperAdmin(dbRole: string): boolean {
+  return dbRole === "super_admin";
 }
 
 export const ROLES: RoleDefinition[] = [
+  {
+    id: "super_admin",
+    label: "Super Admin",
+    description: "Platform-level access: tenant management and all settings",
+    allowedNav: ["*"],
+    taskCategories: null,
+  },
   {
     id: "owner",
     label: "Owner",

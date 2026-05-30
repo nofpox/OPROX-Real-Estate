@@ -1625,3 +1625,116 @@ export const RequestUploadUrlResponse = zod.object({
 })
 
 
+/**
+ * @summary List all tenants (super-admin only)
+ */
+export const ListTenantsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "plan": zod.string(),
+  "status": zod.string(),
+  "contactName": zod.string().nullish(),
+  "contactEmail": zod.string().nullish(),
+  "contactPhone": zod.string().nullish(),
+  "logoText": zod.string().nullish(),
+  "logoSub": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "propertyCount": zod.number().optional(),
+  "userCount": zod.number().optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListTenantsResponse = zod.array(ListTenantsResponseItem)
+
+
+/**
+ * @summary Create a new tenant
+ */
+export const CreateTenantBody = zod.object({
+  "name": zod.string(),
+  "slug": zod.string(),
+  "plan": zod.string().optional(),
+  "contactName": zod.string().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().optional(),
+  "logoText": zod.string().optional(),
+  "logoSub": zod.string().optional(),
+  "adminUsername": zod.string().optional(),
+  "adminPassword": zod.string().optional(),
+  "adminDisplayName": zod.string().optional()
+})
+
+
+/**
+ * @summary Get a single tenant
+ */
+export const GetTenantParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetTenantResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "plan": zod.string(),
+  "status": zod.string(),
+  "contactName": zod.string().nullish(),
+  "contactEmail": zod.string().nullish(),
+  "contactPhone": zod.string().nullish(),
+  "logoText": zod.string().nullish(),
+  "logoSub": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "propertyCount": zod.number().optional(),
+  "userCount": zod.number().optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update a tenant
+ */
+export const UpdateTenantParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateTenantBody = zod.object({
+  "name": zod.string().optional(),
+  "plan": zod.string().optional(),
+  "status": zod.string().optional(),
+  "contactName": zod.string().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().optional(),
+  "logoText": zod.string().optional(),
+  "logoSub": zod.string().optional(),
+  "isActive": zod.boolean().optional()
+})
+
+export const UpdateTenantResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "plan": zod.string(),
+  "status": zod.string(),
+  "contactName": zod.string().nullish(),
+  "contactEmail": zod.string().nullish(),
+  "contactPhone": zod.string().nullish(),
+  "logoText": zod.string().nullish(),
+  "logoSub": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "propertyCount": zod.number().optional(),
+  "userCount": zod.number().optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a tenant
+ */
+export const DeleteTenantParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+

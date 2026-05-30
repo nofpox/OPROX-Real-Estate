@@ -5,25 +5,19 @@ import { sessions } from "./auth";
 
 const router = Router();
 
-router.get("/activity-logs", async (req, res) => {
-  const {
-    limit: limitStr,
-    offset: offsetStr,
-    entityType,
-    actorRole,
-    propertyId,
-  } = req.query as {
-    limit?: string;
-    offset?: string;
-    entityType?: string;
-    actorRole?: string;
-    propertyId?: string;
-  };
+function tid(req: import("express").Request): number | null {
+  return ((req as any).sessionUser as any)?.tenantId ?? null;
+}
 
+router.get("/activity-logs", async (req, res) => {
+  const { limit: limitStr, offset: offsetStr, entityType, actorRole, propertyId } = req.query as {
+    limit?: string; offset?: string; entityType?: string; actorRole?: string; propertyId?: string;
+  };
   const limit  = Math.min(parseInt(limitStr  ?? "100"), 500);
   const offset = parseInt(offsetStr ?? "0") || 0;
-
+  const tenantId = tid(req);
   const conditions = [];
+  if (tenantId !== null) conditions.push(eq(activityLogsTable.tenantId, tenantId));
   if (entityType) conditions.push(eq(activityLogsTable.entityType, entityType));
   if (actorRole)  conditions.push(eq(activityLogsTable.actorRole,  actorRole));
   if (propertyId) conditions.push(eq(activityLogsTable.propertyId, parseInt(propertyId)));
@@ -36,10 +30,7 @@ router.get("/activity-logs", async (req, res) => {
     .limit(limit)
     .offset(offset);
 
-  res.json(rows.map((r) => ({
-    ...r,
-    createdAt: r.createdAt.toISOString(),
-  })));
+  res.json(rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })));
 });
 
 export default router;
@@ -49,6 +40,7 @@ export async function logActivity(params: {
   actorId?: number;
   actorName?: string;
   actorRole?: string;
+  tenantId?: number;
   action: string;
   entityType: string;
   entityId?: number;
@@ -62,6 +54,7 @@ export async function logActivity(params: {
 }) {
   try {
     await db.insert(activityLogsTable).values({
+      tenantId:        params.tenantId       ?? 1,
       actorId:         params.actorId        ?? null,
       actorName:       params.actorName      ?? null,
       actorRole:       params.actorRole      ?? null,
@@ -76,10 +69,10 @@ export async function logActivity(params: {
       completedByName: params.completedByName ?? null,
       proofPhotoUrl:   params.proofPhotoUrl  ?? null,
     });
-  } catch { /* non-critical — never block the main response */ }
+  } catch { /* non-critical */ }
 }
 
-/** Extract actor identity. Prefers real session; falls back to x-actor-* headers (demo mode). */
+/** Extract actor identity. Prefers real session; falls back to x-actor-* headers. */
 export function actorFromRequest(req: import("express").Request) {
   const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
   const session   = sessionId ? sessions.get(sessionId) : undefined;
@@ -101,7 +94,7 @@ export function actorFromRequest(req: import("express").Request) {
 
 /** Role tier: "admin" > "supervisor" > "worker" */
 export function getRoleTier(role: string): "admin" | "supervisor" | "worker" {
-  if (role === "owner" || role === "admin") return "admin";
+  if (role === "owner" || role === "admin" || role === "super_admin") return "admin";
   if (role === "manager") return "supervisor";
   return "worker";
 }

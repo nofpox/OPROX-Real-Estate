@@ -1,3 +1,4 @@
+export * from "./tenants";
 export * from "./rooms";
 export * from "./bookings";
 export * from "./properties";

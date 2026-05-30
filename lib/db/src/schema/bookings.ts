@@ -3,17 +3,18 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const bookingsTable = pgTable("bookings", {
-  id: serial("id").primaryKey(),
-  guestName: text("guest_name").notNull(),
-  guestEmail: text("guest_email").notNull(),
-  guestPhone: text("guest_phone"),
-  roomId: integer("room_id").notNull(),
-  checkIn: date("check_in").notNull(),
-  checkOut: date("check_out").notNull(),
-  status: text("status").notNull().default("confirmed"),
+  id:          serial("id").primaryKey(),
+  tenantId:    integer("tenant_id").notNull().default(1),
+  guestName:   text("guest_name").notNull(),
+  guestEmail:  text("guest_email").notNull(),
+  guestPhone:  text("guest_phone"),
+  roomId:      integer("room_id").notNull(),
+  checkIn:     date("check_in").notNull(),
+  checkOut:    date("check_out").notNull(),
+  status:      text("status").notNull().default("confirmed"),
   totalAmount: numeric("total_amount", { precision: 10, scale: 2 }).notNull(),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  notes:       text("notes"),
+  createdAt:   timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertBookingSchema = createInsertSchema(bookingsTable).omit({ id: true, createdAt: true });

@@ -773,6 +773,50 @@ export interface RequestUploadUrlResponse {
   objectPath: string;
 }
 
+export interface Tenant {
+  id: number;
+  name: string;
+  slug: string;
+  plan: string;
+  status: string;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  logoText?: string | null;
+  logoSub?: string | null;
+  isActive: boolean;
+  propertyCount?: number;
+  userCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTenantInput {
+  name: string;
+  slug: string;
+  plan?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  logoText?: string;
+  logoSub?: string;
+  adminUsername?: string;
+  adminPassword?: string;
+  adminDisplayName?: string;
+}
+
+export interface UpdateTenantInput {
+  name?: string;
+  plan?: string;
+  status?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  logoText?: string;
+  logoSub?: string;
+  isActive?: boolean;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;

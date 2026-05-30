@@ -36,6 +36,8 @@ tags:
     description: Client/property configuration settings
   - name: fieldUsers
     description: Field operations team — roles and property assignments
+  - name: superAdmin
+    description: Super-admin tenant management (super_admin role only)
 paths:
   /settings:
     get:
@@ -1660,6 +1662,93 @@ paths:
               schema:
                 $ref: "#/components/schemas/RequestUploadUrlResponse"
 
+  /super-admin/tenants:
+    get:
+      operationId: listTenants
+      tags: [superAdmin]
+      summary: List all tenants (super-admin only)
+      responses:
+        "200":
+          description: Tenant list with stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tenant"
+    post:
+      operationId: createTenant
+      tags: [superAdmin]
+      summary: Create a new tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTenantInput"
+      responses:
+        "201":
+          description: Created tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+
+  /super-admin/tenants/{id}:
+    get:
+      operationId: getTenant
+      tags: [superAdmin]
+      summary: Get a single tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tenant detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+    patch:
+      operationId: updateTenant
+      tags: [superAdmin]
+      summary: Update a tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTenantInput"
+      responses:
+        "200":
+          description: Updated tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+    delete:
+      operationId: deleteTenant
+      tags: [superAdmin]
+      summary: Delete a tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
 components:
   schemas:
     Settings:
@@ -3046,3 +3135,92 @@ components:
           type: string
         objectPath:
           type: string
+
+    Tenant:
+      type: object
+      required: [id, name, slug, plan, status, isActive, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        plan:
+          type: string
+        status:
+          type: string
+        contactName:
+          type: string
+          nullable: true
+        contactEmail:
+          type: string
+          nullable: true
+        contactPhone:
+          type: string
+          nullable: true
+        logoText:
+          type: string
+          nullable: true
+        logoSub:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        propertyCount:
+          type: integer
+        userCount:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    CreateTenantInput:
+      type: object
+      required: [name, slug]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        plan:
+          type: string
+        contactName:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        logoText:
+          type: string
+        logoSub:
+          type: string
+        adminUsername:
+          type: string
+        adminPassword:
+          type: string
+        adminDisplayName:
+          type: string
+
+    UpdateTenantInput:
+      type: object
+      properties:
+        name:
+          type: string
+        plan:
+          type: string
+        status:
+          type: string
+        contactName:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        logoText:
+          type: string
+        logoSub:
+          type: string
+        isActive:
+          type: boolean

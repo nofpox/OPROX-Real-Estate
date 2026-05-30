@@ -5,6 +5,7 @@ import { tasksTable } from "./tasks";
 
 export const taskCommentsTable = pgTable("task_comments", {
   id:         serial("id").primaryKey(),
+  tenantId:   integer("tenant_id").notNull().default(1),
   taskId:     integer("task_id").notNull().references(() => tasksTable.id, { onDelete: "cascade" }),
   authorName: text("author_name").notNull(),
   body:       text("body").notNull(),

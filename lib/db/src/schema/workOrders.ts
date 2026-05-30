@@ -3,18 +3,19 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const workOrdersTable = pgTable("work_orders", {
-  id: serial("id").primaryKey(),
-  propertyId: integer("property_id").notNull(),
-  unitId: integer("unit_id"),
-  title: text("title").notNull(),
+  id:          serial("id").primaryKey(),
+  tenantId:    integer("tenant_id").notNull().default(1),
+  propertyId:  integer("property_id").notNull(),
+  unitId:      integer("unit_id"),
+  title:       text("title").notNull(),
   description: text("description"),
-  priority: text("priority").notNull().default("medium"),
-  status: text("status").notNull().default("pending"),
-  assignedTo: text("assigned_to"),
-  cost: numeric("cost", { precision: 10, scale: 2 }),
-  dueDate: date("due_date"),
+  priority:    text("priority").notNull().default("medium"),
+  status:      text("status").notNull().default("pending"),
+  assignedTo:  text("assigned_to"),
+  cost:        numeric("cost", { precision: 10, scale: 2 }),
+  dueDate:     date("due_date"),
   completedAt: timestamp("completed_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt:   timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertWorkOrderSchema = createInsertSchema(workOrdersTable).omit({ id: true, createdAt: true });

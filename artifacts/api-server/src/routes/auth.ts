@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, tenantsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import crypto from "node:crypto";
 import {
@@ -10,15 +10,23 @@ import {
 } from "../lib/security.js";
 
 export type SessionUser = {
-  id: number; username: string; displayName: string; email: string | null;
-  role: string; permissions: string[]; isActive: boolean; createdAt: string;
+  id: number;
+  username: string;
+  displayName: string;
+  email: string | null;
+  role: string;
+  permissions: string[];
+  isActive: boolean;
+  createdAt: string;
   mustChangePassword: boolean;
+  tenantId: number | null;
+  isSuperAdmin: boolean;
 };
 
 export const sessions = new Map<string, SessionUser>();
 
 export function getRoleTier(role: string): "admin" | "supervisor" | "worker" {
-  if (role === "owner" || role === "admin") return "admin";
+  if (role === "owner" || role === "admin" || role === "super_admin") return "admin";
   if (role === "manager" || role === "property-manager" || role === "site-supervisor") return "supervisor";
   return "worker";
 }
@@ -29,12 +37,50 @@ export function hashPwd(password: string): string {
 
 export async function ensureAdmin() {
   try {
-    const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.username, "admin"));
+    // Ensure default tenant exists
+    await db.execute(sql`
+      INSERT INTO tenants (id, name, slug, plan, status, logo_text, logo_sub)
+      VALUES (1, 'Grand PMS Demo', 'grand-pms', 'enterprise', 'active', 'Grand', 'PMS')
+      ON CONFLICT (slug) DO NOTHING
+    `);
+
+    // Ensure admin user exists (scoped to tenant 1)
+    const existing = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.username, "admin"));
     if (existing.length === 0) {
       await db.insert(usersTable).values({
-        username: "admin", displayName: "Administrator",
-        passwordHash: hashPwd("admin123"), role: "owner",
-        permissions: JSON.stringify(["all"]), isActive: true,
+        username: "admin",
+        displayName: "Administrator",
+        passwordHash: hashPwd("admin123"),
+        role: "owner",
+        permissions: JSON.stringify(["all"]),
+        isActive: true,
+        tenantId: 1,
+      });
+    } else {
+      // Backfill tenantId for existing admin if null
+      await db.execute(sql`
+        UPDATE users SET tenant_id = 1 WHERE role != 'super_admin' AND tenant_id IS NULL
+      `);
+    }
+
+    // Ensure superadmin exists (tenantId = null)
+    const sa = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.username, "superadmin"));
+    if (sa.length === 0) {
+      await db.insert(usersTable).values({
+        username: "superadmin",
+        displayName: "Super Administrator",
+        email: "super@grandpms.io",
+        passwordHash: hashPwd("superadmin123"),
+        role: "super_admin",
+        permissions: JSON.stringify(["all"]),
+        isActive: true,
+        tenantId: null,
       });
     }
   } catch {
@@ -47,7 +93,7 @@ const router = Router();
 // ── Login ─────────────────────────────────────────────────────────────────────
 
 router.post("/auth/login", async (req, res) => {
-  const { username, password } = req.body ?? {};
+  const { username, password, tenantSlug } = req.body ?? {};
   if (!username || !password) {
     res.status(400).json({ error: "Missing credentials" });
     return;
@@ -59,7 +105,6 @@ router.post("/auth/login", async (req, res) => {
     "unknown"
   );
 
-  // Rate-limit check
   const check = checkLoginAllowed(ip, String(username));
   if (!check.allowed) {
     const minutesLeft = check.lockedUntilMs
@@ -72,7 +117,6 @@ router.post("/auth/login", async (req, res) => {
     return;
   }
 
-  // Credential check
   const [user] = await db.select().from(usersTable).where(eq(usersTable.username, String(username)));
 
   if (!user || !user.isActive || user.passwordHash !== hashPwd(String(password))) {
@@ -83,24 +127,51 @@ router.post("/auth/login", async (req, res) => {
         lockedUntilMs: result.lockedUntilMs,
       });
     } else {
-      res.status(401).json({
-        error: "Invalid credentials",
-        attemptsLeft: result.attemptsLeft,
-      });
+      res.status(401).json({ error: "Invalid credentials", attemptsLeft: result.attemptsLeft });
     }
     return;
   }
 
-  // Success
+  const isSuperAdmin = user.role === "super_admin";
+
+  // Resolve tenant
+  let resolvedTenantId: number | null = null;
+  if (!isSuperAdmin) {
+    if (tenantSlug) {
+      const [tenant] = await db
+        .select({ id: tenantsTable.id })
+        .from(tenantsTable)
+        .where(eq(tenantsTable.slug, String(tenantSlug)));
+      if (!tenant) {
+        res.status(401).json({ error: "Unknown tenant" });
+        return;
+      }
+      if (user.tenantId !== null && user.tenantId !== tenant.id) {
+        res.status(403).json({ error: "User does not belong to this tenant" });
+        return;
+      }
+      resolvedTenantId = tenant.id;
+    } else {
+      // Fall back to user's stored tenantId (for backward compat / single-tenant deploys)
+      resolvedTenantId = user.tenantId ?? 1;
+    }
+  }
+
   recordSuccessfulLogin(ip, String(username));
 
   const sessionId = crypto.randomUUID();
   const sessionUser: SessionUser = {
-    id: user.id, username: user.username, displayName: user.displayName, email: user.email,
+    id: user.id,
+    username: user.username,
+    displayName: user.displayName,
+    email: user.email,
     role: user.role,
     permissions: (() => { try { return JSON.parse(user.permissions); } catch { return []; } })(),
-    isActive: user.isActive, createdAt: user.createdAt.toISOString(),
-    mustChangePassword: (user as any).mustChangePassword ?? false,
+    isActive: user.isActive,
+    createdAt: user.createdAt.toISOString(),
+    mustChangePassword: user.mustChangePassword ?? false,
+    tenantId: resolvedTenantId,
+    isSuperAdmin,
   };
   sessions.set(sessionId, sessionUser);
   res.setHeader("Set-Cookie", `pms_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`);
@@ -149,10 +220,8 @@ router.post("/auth/change-password", async (req, res) => {
     sql`UPDATE users SET password_hash = ${hashPwd(String(newPassword))}, must_change_password = false WHERE id = ${session.id}`
   );
 
-  // Patch the live session so the frontend sees the flag cleared immediately
   session.mustChangePassword = false;
   sessions.set(sessionId!, session);
-
   res.json({ ok: true });
 });
 
@@ -179,7 +248,7 @@ router.get("/auth/sessions", (req, res) => {
 router.get("/auth/security-log", (req, res) => {
   const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
   const session = sessionId ? sessions.get(sessionId) : undefined;
-  if (!session || session.role !== "owner") {
+  if (!session || (session.role !== "owner" && !session.isSuperAdmin)) {
     res.status(403).json({ error: "Forbidden" });
     return;
   }

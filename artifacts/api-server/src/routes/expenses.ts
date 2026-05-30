@@ -5,28 +5,19 @@ import { insertExpenseSchema, updateExpenseSchema } from "@workspace/db";
 
 const router = Router();
 
-function formatExpense(
-  e: typeof expensesTable.$inferSelect,
-  propertyName?: string | null,
-  unitName?: string | null
-) {
-  return {
-    ...e,
-    amount: Number(e.amount),
-    createdAt: e.createdAt.toISOString(),
-    propertyName: propertyName ?? null,
-    unitName: unitName ?? null,
-  };
+function tid(req: import("express").Request): number | null {
+  return ((req as any).sessionUser as any)?.tenantId ?? null;
+}
+
+function formatExpense(e: typeof expensesTable.$inferSelect, propertyName?: string | null, unitName?: string | null) {
+  return { ...e, amount: Number(e.amount), createdAt: e.createdAt.toISOString(), propertyName: propertyName ?? null, unitName: unitName ?? null };
 }
 
 router.get("/expenses", async (req, res) => {
-  const { propertyId, unitId, category } = req.query as {
-    propertyId?: string;
-    unitId?: string;
-    category?: string;
-  };
-
+  const { propertyId, unitId, category } = req.query as { propertyId?: string; unitId?: string; category?: string };
+  const tenantId = tid(req);
   const conditions = [];
+  if (tenantId !== null) conditions.push(eq(expensesTable.tenantId, tenantId));
   if (propertyId) conditions.push(eq(expensesTable.propertyId, parseInt(propertyId)));
   if (unitId) conditions.push(eq(expensesTable.unitId, parseInt(unitId)));
   if (category) conditions.push(eq(expensesTable.category, category));
@@ -38,12 +29,12 @@ router.get("/expenses", async (req, res) => {
     .leftJoin(roomsTable, eq(expensesTable.unitId, roomsTable.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(sql`${expensesTable.expenseDate} desc`);
-
   res.json(rows.map(({ expense, property, room }) => formatExpense(expense, property?.name, room?.name)));
 });
 
 router.post("/expenses", async (req, res) => {
-  const parsed = insertExpenseSchema.safeParse(req.body);
+  const tenantId = tid(req) ?? 1;
+  const parsed = insertExpenseSchema.safeParse({ ...req.body, tenantId });
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [expense] = await db.insert(expensesTable).values(parsed.data).returning();
   const [property] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, expense.propertyId));
@@ -53,9 +44,12 @@ router.post("/expenses", async (req, res) => {
 router.patch("/expenses/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const tenantId = tid(req);
   const parsed = updateExpenseSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const [expense] = await db.update(expensesTable).set(parsed.data).where(eq(expensesTable.id, id)).returning();
+  const conds = [eq(expensesTable.id, id)];
+  if (tenantId !== null) conds.push(eq(expensesTable.tenantId, tenantId));
+  const [expense] = await db.update(expensesTable).set(parsed.data).where(and(...conds)).returning();
   if (!expense) { res.status(404).json({ error: "Expense not found" }); return; }
   res.json(formatExpense(expense));
 });
@@ -63,12 +57,20 @@ router.patch("/expenses/:id", async (req, res) => {
 router.delete("/expenses/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-  await db.delete(expensesTable).where(eq(expensesTable.id, id));
+  const tenantId = tid(req);
+  const conds = [eq(expensesTable.id, id)];
+  if (tenantId !== null) conds.push(eq(expensesTable.tenantId, tenantId));
+  await db.delete(expensesTable).where(and(...conds));
   res.status(204).end();
 });
 
 router.get("/finance/summary", async (req, res) => {
-  const props = await db.select().from(propertiesTable).orderBy(propertiesTable.name);
+  const tenantId = tid(req);
+  const props = await db
+    .select()
+    .from(propertiesTable)
+    .where(tenantId !== null ? eq(propertiesTable.tenantId, tenantId) : undefined)
+    .orderBy(propertiesTable.name);
 
   const results = await Promise.all(
     props.map(async (prop) => {
@@ -99,28 +101,26 @@ router.get("/finance/summary", async (req, res) => {
         })
         .from(expensesTable)
         .where(eq(expensesTable.propertyId, prop.id));
-      const totalExpenses = Number(e?.total ?? 0);
-      const expenseCount = e?.count ?? 0;
-
       return {
-        propertyId: prop.id,
-        propertyName: prop.name,
-        totalRevenue,
-        totalExpenses,
-        netIncome: totalRevenue - totalExpenses,
-        bookingCount,
-        expenseCount,
+        propertyId: prop.id, propertyName: prop.name,
+        totalRevenue, totalExpenses: Number(e?.total ?? 0),
+        netIncome: totalRevenue - Number(e?.total ?? 0),
+        bookingCount, expenseCount: e?.count ?? 0,
       };
     })
   );
-
   res.json(results);
 });
 
 router.get("/finance/monthly", async (req, res) => {
   const { propertyId } = req.query as { propertyId?: string };
+  const tenantId = tid(req);
 
-  // Revenue from bookings
+  const revConds = tenantId !== null ? [eq(bookingsTable.tenantId, tenantId)] : [];
+  if (propertyId) {
+    // Filter bookings by rooms belonging to this property
+  }
+
   const revenueRows = await db
     .select({
       month: sql<string>`to_char(date_trunc('month', ${bookingsTable.createdAt}), 'Mon YYYY')`,
@@ -128,9 +128,13 @@ router.get("/finance/monthly", async (req, res) => {
       revenue: sql<number>`coalesce(sum(${bookingsTable.totalAmount}::numeric) filter (where ${bookingsTable.status} != 'cancelled'), 0)`,
     })
     .from(bookingsTable)
+    .where(revConds.length > 0 ? and(...revConds) : undefined)
     .groupBy(sql`date_trunc('month', ${bookingsTable.createdAt})`);
 
-  // Expenses
+  const expConds = [];
+  if (tenantId !== null) expConds.push(eq(expensesTable.tenantId, tenantId));
+  if (propertyId) expConds.push(eq(expensesTable.propertyId, parseInt(propertyId)));
+
   const expenseRows = await db
     .select({
       month: sql<string>`to_char(date_trunc('month', ${expensesTable.expenseDate}::timestamp), 'Mon YYYY')`,
@@ -138,7 +142,7 @@ router.get("/finance/monthly", async (req, res) => {
       expenses: sql<number>`coalesce(sum(${expensesTable.amount}::numeric), 0)`,
     })
     .from(expensesTable)
-    .where(propertyId ? eq(expensesTable.propertyId, parseInt(propertyId)) : sql`true`)
+    .where(expConds.length > 0 ? and(...expConds) : undefined)
     .groupBy(sql`date_trunc('month', ${expensesTable.expenseDate}::timestamp)`);
 
   const byMonth = new Map<string, { month: string; revenue: number; expenses: number }>();
@@ -147,18 +151,15 @@ router.get("/finance/monthly", async (req, res) => {
   }
   for (const e of expenseRows) {
     const existing = byMonth.get(e.sortKey);
-    if (existing) {
-      existing.expenses = Number(e.expenses);
-    } else {
-      byMonth.set(e.sortKey, { month: e.month, revenue: 0, expenses: Number(e.expenses) });
-    }
+    if (existing) { existing.expenses = Number(e.expenses); }
+    else { byMonth.set(e.sortKey, { month: e.month, revenue: 0, expenses: Number(e.expenses) }); }
   }
 
-  const result = Array.from(byMonth.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, v]) => ({ ...v, netIncome: v.revenue - v.expenses }));
-
-  res.json(result);
+  res.json(
+    Array.from(byMonth.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => ({ ...v, netIncome: v.revenue - v.expenses }))
+  );
 });
 
 export default router;

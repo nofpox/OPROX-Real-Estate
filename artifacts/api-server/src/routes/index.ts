@@ -22,18 +22,18 @@ import settingsRouter from "./settings";
 import fieldUsersRouter from "./fieldUsers";
 import customFieldsRouter from "./customFields";
 import storageRouter from "./storage";
+import superAdminRouter from "./super-admin";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
   worker: 0, supervisor: 1, admin: 2,
 };
 
-// Paths that are public (no session required)
-const PUBLIC_PREFIXES = ["/auth/", "/health"];
+const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/"];
 
-// Paths that require admin tier (owner only)
+const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
+
 const ADMIN_PREFIXES = ["/expenses", "/unit-financials", "/settings"];
 
-// Paths that require supervisor tier (manager+)
 const SUPERVISOR_PREFIXES = [
   "/users", "/activity-logs", "/staff", "/properties", "/rooms",
   "/bookings", "/stats", "/guests", "/work-orders", "/shifts",
@@ -43,48 +43,60 @@ const SUPERVISOR_PREFIXES = [
 function tierGate(req: Request, res: Response, next: NextFunction): void {
   const path = req.path;
 
-  // Public routes bypass auth entirely
   if (PUBLIC_PREFIXES.some((p) => path.startsWith(p) || path === p.replace(/\/$/, ""))) {
     next(); return;
   }
 
-  // All other routes require a valid session
   const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
   const session = sessionId ? sessions.get(sessionId) : undefined;
   if (!session) {
     res.status(401).json({ error: "Not authenticated" }); return;
   }
 
+  // Attach session + tenant context for downstream handlers
+  (req as any).sessionUser = session;
+  (req as any).tenantId    = session.tenantId;
+
+  // Super-admin: may only access super-admin routes and auth routes
+  if (session.isSuperAdmin) {
+    if (SUPER_ADMIN_PREFIXES.some((p) => path.startsWith(p))) {
+      next(); return;
+    }
+    // Allow super-admin to access any tenant route (they bypass tenant scoping)
+    // so they can inspect/manage tenant data
+    next(); return;
+  }
+
+  // Block regular users from super-admin routes
+  if (SUPER_ADMIN_PREFIXES.some((p) => path.startsWith(p))) {
+    res.status(403).json({ error: "Forbidden" }); return;
+  }
+
   const tier = getRoleTier(session.role);
   const level = TIER_LEVEL[tier];
 
-  // Check admin-only paths
   if (ADMIN_PREFIXES.some((p) => path.startsWith(p))) {
     if (level < TIER_LEVEL.admin) {
       res.status(403).json({ error: "Forbidden" }); return;
     }
   }
 
-  // Check supervisor+ paths
   if (SUPERVISOR_PREFIXES.some((p) => path.startsWith(p))) {
     if (level < TIER_LEVEL.supervisor) {
       res.status(403).json({ error: "Forbidden" }); return;
     }
   }
 
-  // Attach session for downstream handlers
-  (req as any).sessionUser = session;
   next();
 }
 
 const router: IRouter = Router();
 
-// Single path-aware gate — must be first
 router.use(tierGate);
 
-// All routers — no per-router middleware needed; tierGate handles access control
 router.use(authRouter);
 router.use(healthRouter);
+router.use(superAdminRouter);
 router.use(expensesRouter);
 router.use(unitFinancialsRouter);
 router.use(settingsRouter);

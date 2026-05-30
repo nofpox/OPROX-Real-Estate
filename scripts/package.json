@@ -7,7 +7,12 @@
     "hello": "tsx ./src/hello.ts",
     "backup": "tsx ./src/backup-db.ts",
     "generate-locale": "tsx ./src/generate-locale.ts",
+    "migrate-tenants": "tsx ./src/migrate-tenants.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@workspace/db": "workspace:*",
+    "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
