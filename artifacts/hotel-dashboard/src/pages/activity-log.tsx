@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useListActivityLogs, useListProperties } from "@workspace/api-client-react";
 import type { ActivityLog } from "@workspace/api-client-react";
@@ -154,36 +154,44 @@ export default function ActivityLogPage() {
     propertyId: propertyFilter   !== "all" ? parseInt(propertyFilter) : undefined,
   });
 
-  const filtered = (logs ?? []).filter((log) => {
-    if (!search) return true;
+  const allLogs = useMemo(() => logs ?? [], [logs]);
+
+  const filtered = useMemo(() => {
+    if (!search) return allLogs;
     const q = search.toLowerCase();
-    return (
+    return allLogs.filter((log) =>
       (log.actorName   ?? "").toLowerCase().includes(q) ||
       (log.entityLabel ?? "").toLowerCase().includes(q) ||
       (log.details     ?? "").toLowerCase().includes(q) ||
       (log.propertyName ?? "").toLowerCase().includes(q)
     );
-  });
+  }, [allLogs, search]);
 
-  const allLogs = logs ?? [];
-  const kpiDefs = [
-    { key: "total",       labelKey: "kpi.total",       icon: ClipboardList, color: "text-primary",        bg: "bg-primary/10",      entityType: undefined },
-    { key: "tasks",       labelKey: "kpi.tasks",       icon: CheckCircle2,  color: "text-emerald-500",    bg: "bg-emerald-500/10",  entityType: "task"       },
-    { key: "workOrders",  labelKey: "kpi.workOrders",  icon: Wrench,        color: "text-amber-500",      bg: "bg-amber-500/10",    entityType: "work_order" },
-    { key: "teamChanges", labelKey: "kpi.teamChanges", icon: Users,         color: "text-violet-500",     bg: "bg-violet-500/10",   entityType: "field_user" },
-  ];
-  const kpiValues = kpiDefs.map((k) =>
-    k.entityType ? allLogs.filter((l) => l.entityType === k.entityType).length : allLogs.length
+  // Static structure (no translation); values depend only on allLogs.
+  const kpiDefs = useMemo(() => [
+    { key: "total",       labelKey: "kpi.total",       icon: ClipboardList, color: "text-primary",        bg: "bg-primary/10",      entityType: undefined        },
+    { key: "tasks",       labelKey: "kpi.tasks",       icon: CheckCircle2,  color: "text-emerald-500",    bg: "bg-emerald-500/10",  entityType: "task"           },
+    { key: "workOrders",  labelKey: "kpi.workOrders",  icon: Wrench,        color: "text-amber-500",      bg: "bg-amber-500/10",    entityType: "work_order"     },
+    { key: "teamChanges", labelKey: "kpi.teamChanges", icon: Users,         color: "text-violet-500",     bg: "bg-violet-500/10",   entityType: "field_user"     },
+  ], []);
+
+  const kpiValues = useMemo(
+    () => kpiDefs.map((k) =>
+      k.entityType ? allLogs.filter((l) => l.entityType === k.entityType).length : allLogs.length
+    ),
+    [kpiDefs, allLogs]
   );
 
   const hasFilters = entityTypeFilter !== "all" || actorRoleFilter !== "all" || propertyFilter !== "all" || search;
 
-  const LEGEND_ITEMS = [
+  // Legend labels depend on `t` — memoized so they don't rebuild on every render,
+  // only when the language changes (t reference changes with i18next language switch).
+  const LEGEND_ITEMS = useMemo(() => [
     { icon: CheckCircle2, label: t("activityLog.legend.tasks.label"),      desc: t("activityLog.legend.tasks.desc")       },
     { icon: Wrench,       label: t("activityLog.legend.workOrders.label"), desc: t("activityLog.legend.workOrders.desc")  },
     { icon: BookOpen,     label: t("activityLog.legend.bookings.label"),   desc: t("activityLog.legend.bookings.desc")    },
     { icon: Users,        label: t("activityLog.legend.team.label"),       desc: t("activityLog.legend.team.desc")        },
-  ];
+  ], [t]);
 
   return (
     <div className="space-y-6">

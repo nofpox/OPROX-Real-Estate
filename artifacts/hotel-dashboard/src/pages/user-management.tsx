@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useListFieldUsers, useCreateFieldUser, useUpdateFieldUser, useDeleteFieldUser,
@@ -210,26 +210,30 @@ export default function UserManagement() {
     });
   }
 
-  const filtered = (users ?? []).filter((u) => {
+  const allUsers = useMemo(() => users ?? [], [users]);
+
+  const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    if (q && !u.name.toLowerCase().includes(q) && !(u.email ?? "").toLowerCase().includes(q)) return false;
-    if (roleFilter !== "all" && u.role !== roleFilter) return false;
-    if (propertyFilter !== "all" && String(u.propertyId ?? "none") !== propertyFilter) return false;
-    if (statusFilter !== "all" && u.status !== statusFilter) return false;
-    return true;
-  });
+    return allUsers.filter((u) => {
+      if (q && !u.name.toLowerCase().includes(q) && !(u.email ?? "").toLowerCase().includes(q)) return false;
+      if (roleFilter !== "all" && u.role !== roleFilter) return false;
+      if (propertyFilter !== "all" && String(u.propertyId ?? "none") !== propertyFilter) return false;
+      if (statusFilter !== "all" && u.status !== statusFilter) return false;
+      return true;
+    });
+  }, [allUsers, search, roleFilter, propertyFilter, statusFilter]);
 
-  const allUsers      = users ?? [];
-  const activeCount   = allUsers.filter((u) => u.status === "active").length;
-  const inactiveCount = allUsers.filter((u) => u.status === "inactive").length;
-  const propertyCover = new Set(allUsers.map((u) => u.propertyId).filter(Boolean)).size;
-
-  const kpis = [
-    { labelKey: "kpi.total",             value: allUsers.length, icon: Users,        color: "text-primary",         bg: "bg-primary/10"      },
-    { labelKey: "kpi.active",            value: activeCount,     icon: CheckCircle2, color: "text-emerald-500",     bg: "bg-emerald-500/10"  },
-    { labelKey: "kpi.inactive",          value: inactiveCount,   icon: EyeOff,       color: "text-muted-foreground",bg: "bg-muted/50"        },
-    { labelKey: "kpi.propertiesCovered", value: propertyCover,   icon: Building,     color: "text-blue-500",        bg: "bg-blue-500/10"     },
-  ];
+  const kpis = useMemo(() => {
+    const activeCount   = allUsers.filter((u) => u.status === "active").length;
+    const inactiveCount = allUsers.filter((u) => u.status === "inactive").length;
+    const propertyCover = new Set(allUsers.map((u) => u.propertyId).filter(Boolean)).size;
+    return [
+      { labelKey: "kpi.total",             value: allUsers.length, icon: Users,        color: "text-primary",         bg: "bg-primary/10"      },
+      { labelKey: "kpi.active",            value: activeCount,     icon: CheckCircle2, color: "text-emerald-500",     bg: "bg-emerald-500/10"  },
+      { labelKey: "kpi.inactive",          value: inactiveCount,   icon: EyeOff,       color: "text-muted-foreground",bg: "bg-muted/50"        },
+      { labelKey: "kpi.propertiesCovered", value: propertyCover,   icon: Building,     color: "text-blue-500",        bg: "bg-blue-500/10"     },
+    ];
+  }, [allUsers]);
 
   return (
     <div className="space-y-6">

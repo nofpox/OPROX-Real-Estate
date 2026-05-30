@@ -53,7 +53,7 @@ import React, { useState } from "react";
     const [location] = useLocation();
     const [mobileOpen, setMobileOpen] = useState(false);
     const { role, setRoleId, can } = useRole();
-    const { isRTL } = useLanguage();
+    const { lang, isRTL } = useLanguage();
     const { t } = useTranslation();
     const settings = useSettings();
 
@@ -238,7 +238,10 @@ import React, { useState } from "react";
             </div>
           </header>
 
-          <main className="flex-1 p-4 md:p-6 lg:p-8">
+          {/* key={lang} forces a clean remount of all page content on language change.
+              React Query cache means no loading flash — data is served instantly from cache.
+              animate-in/fade-in gives a smooth 150ms cross-fade instead of an abrupt swap. */}
+          <main key={lang} className="flex-1 p-4 md:p-6 lg:p-8 animate-in fade-in duration-150">
             {children}
           </main>
         </div>
