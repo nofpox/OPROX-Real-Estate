@@ -3202,6 +3202,83 @@ export const useCreateTask = <TError = ErrorType<unknown>,
       return useMutation(getCreateTaskMutationOptions(options));
     }
 
+export const getGetMyTasksUrl = () => {
+
+
+
+
+  return `/api/tasks/mine`
+}
+
+/**
+ * @summary Get tasks assigned to the currently authenticated worker
+ */
+export const getMyTasks = async ( options?: RequestInit): Promise<Task[]> => {
+
+  return customFetch<Task[]>(getGetMyTasksUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyTasksQueryKey = () => {
+    return [
+    `/api/tasks/mine`
+    ] as const;
+    }
+
+
+export const getGetMyTasksQueryOptions = <TData = Awaited<ReturnType<typeof getMyTasks>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyTasks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyTasksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyTasks>>> = ({ signal }) => getMyTasks({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyTasks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyTasksQueryResult = NonNullable<Awaited<ReturnType<typeof getMyTasks>>>
+export type GetMyTasksQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get tasks assigned to the currently authenticated worker
+ */
+
+export function useGetMyTasks<TData = Awaited<ReturnType<typeof getMyTasks>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyTasks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyTasksQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
 export const getUpdateTaskUrl = (id: number,) => {
 
 

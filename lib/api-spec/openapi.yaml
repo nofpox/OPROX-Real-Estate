@@ -831,6 +831,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/Task"
 
+  /tasks/mine:
+    get:
+      operationId: getMyTasks
+      tags: [tasks]
+      summary: Get tasks assigned to the currently authenticated worker
+      responses:
+        "200":
+          description: List of tasks assigned to the current user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+
   /tasks/{id}:
     patch:
       operationId: updateTask
@@ -2795,6 +2810,12 @@ components:
           type: ["integer", "null"]
         createdAt:
           type: string
+        completionLat:
+          type: ["number", "null"]
+        completionLng:
+          type: ["number", "null"]
+        completionAddress:
+          type: ["string", "null"]
 
     TaskInput:
       type: object
@@ -2861,6 +2882,12 @@ components:
         completedAt:
           type: string
         verifiedAt:
+          type: string
+        completionLat:
+          type: number
+        completionLng:
+          type: number
+        completionAddress:
           type: string
 
     TaskComment:

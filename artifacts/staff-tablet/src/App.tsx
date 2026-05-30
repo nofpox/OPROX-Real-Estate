@@ -9,6 +9,7 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
   import Login from "@/pages/Login";
   import Dashboard from "@/pages/Dashboard";
   import UnitDetail from "@/pages/UnitDetail";
+  import MyTasks from "@/pages/MyTasks";
   import NotFound from "@/pages/not-found";
 
   const queryClient = new QueryClient({
@@ -82,6 +83,9 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
     return (
       <Switch>
         <Route path="/login" component={Login} />
+        <Route path="/tasks">
+          <AuthGuard><MyTasks /></AuthGuard>
+        </Route>
         <Route path="/">
           <AuthGuard><Dashboard /></AuthGuard>
         </Route>
@@ -107,4 +111,3 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
       </QueryClientProvider>
     );
   }
-  

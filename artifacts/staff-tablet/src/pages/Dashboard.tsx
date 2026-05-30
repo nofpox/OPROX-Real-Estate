@@ -5,6 +5,7 @@ import { useState } from "react";
   import { Badge } from "@/components/ui/badge";
   import { Skeleton } from "@/components/ui/skeleton";
   import { Building2, LogOut, Layers, Users, Wrench, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
+  import BottomNav from "@/components/BottomNav";
 
   type Room = { id: number; name: string; type: string; status: string; capacity: number };
   type Property = { id: number; name: string; type: string };
@@ -68,7 +69,7 @@ import { useState } from "react";
     };
 
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-20">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-card border-b border-border/50 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -165,6 +166,7 @@ import { useState } from "react";
               })}
           </div>
         </div>
+        <BottomNav active="rooms" />
       </div>
     );
   }

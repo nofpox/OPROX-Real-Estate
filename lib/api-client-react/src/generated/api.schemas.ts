@@ -468,6 +468,12 @@ export interface Task {
   /** @nullable */
   approvedByUserId?: number | null;
   createdAt: string;
+  /** @nullable */
+  completionLat?: number | null;
+  /** @nullable */
+  completionLng?: number | null;
+  /** @nullable */
+  completionAddress?: string | null;
 }
 
 export interface TaskInput {
@@ -503,6 +509,9 @@ export interface TaskUpdate {
   startedAt?: string;
   completedAt?: string;
   verifiedAt?: string;
+  completionLat?: number;
+  completionLng?: number;
+  completionAddress?: string;
 }
 
 export interface TaskComment {

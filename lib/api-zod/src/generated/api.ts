@@ -828,7 +828,10 @@ export const ListTasksResponseItem = zod.object({
   "escalatedByUserId": zod.number().nullish(),
   "approvedAt": zod.string().nullish(),
   "approvedByUserId": zod.number().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "completionLat": zod.number().nullish(),
+  "completionLng": zod.number().nullish(),
+  "completionAddress": zod.string().nullish()
 })
 export const ListTasksResponse = zod.array(ListTasksResponseItem)
 
@@ -848,6 +851,51 @@ export const CreateTaskBody = zod.object({
   "status": zod.string().optional(),
   "dueDate": zod.string().optional()
 })
+
+
+/**
+ * @summary Get tasks assigned to the currently authenticated worker
+ */
+export const GetMyTasksResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "category": zod.string().describe('housekeeping, reception, maintenance, security, general'),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "supervisorId": zod.number().nullish(),
+  "assignedToId": zod.number().nullish(),
+  "assigneeName": zod.string().nullish(),
+  "assignedByUserId": zod.number().nullish(),
+  "completedByUserId": zod.number().nullish(),
+  "verifiedByUserId": zod.number().nullish(),
+  "proofPhotoUrl": zod.string().nullish(),
+  "beforePhotoUrl": zod.string().nullish(),
+  "afterPhotoUrl": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('pending, in-progress, completed, verified'),
+  "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "verifiedAt": zod.string().nullish(),
+  "reportStatus": zod.string().optional().describe('none, submitted, rejected, escalated, approved'),
+  "submittedAt": zod.string().nullish(),
+  "submittedByUserId": zod.number().nullish(),
+  "rejectedAt": zod.string().nullish(),
+  "rejectedByUserId": zod.number().nullish(),
+  "rejectionNotes": zod.string().nullish(),
+  "escalatedAt": zod.string().nullish(),
+  "escalatedByUserId": zod.number().nullish(),
+  "approvedAt": zod.string().nullish(),
+  "approvedByUserId": zod.number().nullish(),
+  "createdAt": zod.string(),
+  "completionLat": zod.number().nullish(),
+  "completionLng": zod.number().nullish(),
+  "completionAddress": zod.string().nullish()
+})
+export const GetMyTasksResponse = zod.array(GetMyTasksResponseItem)
 
 
 /**
@@ -876,7 +924,10 @@ export const UpdateTaskBody = zod.object({
   "dueDate": zod.string().optional(),
   "startedAt": zod.string().optional(),
   "completedAt": zod.string().optional(),
-  "verifiedAt": zod.string().optional()
+  "verifiedAt": zod.string().optional(),
+  "completionLat": zod.number().optional(),
+  "completionLng": zod.number().optional(),
+  "completionAddress": zod.string().optional()
 })
 
 export const UpdateTaskResponse = zod.object({
@@ -913,7 +964,10 @@ export const UpdateTaskResponse = zod.object({
   "escalatedByUserId": zod.number().nullish(),
   "approvedAt": zod.string().nullish(),
   "approvedByUserId": zod.number().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "completionLat": zod.number().nullish(),
+  "completionLng": zod.number().nullish(),
+  "completionAddress": zod.string().nullish()
 })
 
 
@@ -966,7 +1020,10 @@ export const SubmitTaskReportResponse = zod.object({
   "escalatedByUserId": zod.number().nullish(),
   "approvedAt": zod.string().nullish(),
   "approvedByUserId": zod.number().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "completionLat": zod.number().nullish(),
+  "completionLng": zod.number().nullish(),
+  "completionAddress": zod.string().nullish()
 })
 
 
@@ -1015,7 +1072,10 @@ export const RejectTaskReportResponse = zod.object({
   "escalatedByUserId": zod.number().nullish(),
   "approvedAt": zod.string().nullish(),
   "approvedByUserId": zod.number().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "completionLat": zod.number().nullish(),
+  "completionLng": zod.number().nullish(),
+  "completionAddress": zod.string().nullish()
 })
 
 
@@ -1064,7 +1124,10 @@ export const EscalateTaskReportResponse = zod.object({
   "escalatedByUserId": zod.number().nullish(),
   "approvedAt": zod.string().nullish(),
   "approvedByUserId": zod.number().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "completionLat": zod.number().nullish(),
+  "completionLng": zod.number().nullish(),
+  "completionAddress": zod.string().nullish()
 })
 
 
@@ -1113,7 +1176,10 @@ export const ApproveTaskReportResponse = zod.object({
   "escalatedByUserId": zod.number().nullish(),
   "approvedAt": zod.string().nullish(),
   "approvedByUserId": zod.number().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "completionLat": zod.number().nullish(),
+  "completionLng": zod.number().nullish(),
+  "completionAddress": zod.string().nullish()
 })
 
 
@@ -1158,7 +1224,10 @@ export const RecallTaskReportResponse = zod.object({
   "escalatedByUserId": zod.number().nullish(),
   "approvedAt": zod.string().nullish(),
   "approvedByUserId": zod.number().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "completionLat": zod.number().nullish(),
+  "completionLng": zod.number().nullish(),
+  "completionAddress": zod.string().nullish()
 })
 
 
@@ -1203,7 +1272,10 @@ export const ReopenTaskResponse = zod.object({
   "escalatedByUserId": zod.number().nullish(),
   "approvedAt": zod.string().nullish(),
   "approvedByUserId": zod.number().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "completionLat": zod.number().nullish(),
+  "completionLng": zod.number().nullish(),
+  "completionAddress": zod.string().nullish()
 })
 
 

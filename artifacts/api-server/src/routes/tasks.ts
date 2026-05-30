@@ -159,6 +159,36 @@ router.post("/tasks", async (req, res) => {
   res.status(201).json(formatTask(task, { assigneeName: assignedStaff?.name, propertyName: property?.name }));
 });
 
+/** GET /tasks/mine — returns tasks assigned to the currently logged-in worker */
+router.get("/tasks/mine", async (req, res) => {
+  const tenantId = tid(req);
+  const sessionUser = (req as any).sessionUser as any;
+  const userEmail: string | undefined = sessionUser?.email;
+
+  if (!userEmail) { res.json([]); return; }
+
+  const staffConds = [eq(staffTable.email, userEmail)];
+  if (tenantId !== null) staffConds.push(eq(staffTable.tenantId, tenantId));
+  const [myStaff] = await db.select().from(staffTable).where(and(...staffConds));
+
+  if (!myStaff) { res.json([]); return; }
+
+  const conds = [eq(tasksTable.assignedToId, myStaff.id)];
+  if (tenantId !== null) conds.push(eq(tasksTable.tenantId, tenantId));
+
+  const rows = await db
+    .select({ task: tasksTable, property: propertiesTable, room: roomsTable })
+    .from(tasksTable)
+    .leftJoin(propertiesTable, eq(tasksTable.propertyId, propertiesTable.id))
+    .leftJoin(roomsTable,      eq(tasksTable.unitId,      roomsTable.id))
+    .where(and(...conds))
+    .orderBy(sql`${tasksTable.dueDate} asc nulls last, ${tasksTable.createdAt} desc`);
+
+  res.json(rows.map(({ task, property, room }) =>
+    formatTask(task, { assigneeName: myStaff.name, propertyName: property?.name, unitName: room?.name })
+  ));
+});
+
 router.patch("/tasks/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
@@ -177,18 +207,6 @@ router.patch("/tasks/:id", async (req, res) => {
   // ── Status transition enforcement ─────────────────────────────────────────
 
   if (newStatus && newStatus !== before.status) {
-    // pending → in-progress: require before photo
-    if (newStatus === "in-progress" && before.status === "pending") {
-      const photo = parsed.data.beforePhotoUrl ?? before.beforePhotoUrl;
-      if (!photo && !isAdmin(actor.actorRole)) {
-        res.status(422).json({
-          error: "before_photo_required",
-          message: "A Before photo is required to start this task.",
-        });
-        return;
-      }
-    }
-
     // in-progress → completed: require after photo
     if (newStatus === "completed" && before.status === "in-progress") {
       const photo = parsed.data.afterPhotoUrl ?? parsed.data.proofPhotoUrl ?? before.afterPhotoUrl ?? before.proofPhotoUrl;
@@ -349,12 +367,29 @@ router.post("/tasks/:id/submit", async (req, res) => {
     details: `Report submitted by ${actor.actorName ?? "worker"}`,
   });
 
+  // Find supervisor's userId for targeted notification (staff.email → users.email)
+  let supervisorUserId: number | null = null;
+  if (updated.supervisorId) {
+    const [supStaff] = await db.select().from(staffTable).where(eq(staffTable.id, updated.supervisorId));
+    if (supStaff?.email) {
+      const supConds = [eq(usersTable.email, supStaff.email)];
+      if (tenantId !== null) supConds.push(eq(usersTable.tenantId, tenantId));
+      const [supUser] = await db.select({ id: usersTable.id }).from(usersTable).where(and(...supConds));
+      supervisorUserId = supUser?.id ?? null;
+    }
+  }
+
+  const gpsNote = updated.completionLat && updated.completionLng
+    ? ` · 📍 ${updated.completionLat.toFixed(4)}, ${updated.completionLng.toFixed(4)}`
+    : "";
+
   createTaskNotification({
     tenantId: tenantId ?? 1,
     type: "task-report",
-    title: "New Report Submitted",
-    message: `${actor.actorName ?? "A worker"} submitted a report for "${task.title}"`,
+    title: "تقرير مهمة جديد · New Report Submitted",
+    message: `${actor.actorName ?? "عامل"} أنهى "${task.title}"${gpsNote} — بانتظار اعتمادك`,
     relatedId: task.id,
+    userId: supervisorUserId,
   });
 
   res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));

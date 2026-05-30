@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, date, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, real, date, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -20,6 +20,10 @@ export const tasksTable = pgTable("tasks", {
   beforePhotoUrl:     text("before_photo_url"),
   afterPhotoUrl:      text("after_photo_url"),
   proofPhotoUrl:      text("proof_photo_url"),   // kept for backwards compat
+  // GPS location captured at task completion
+  completionLat:      real("completion_lat"),
+  completionLng:      real("completion_lng"),
+  completionAddress:  text("completion_address"),
   priority:           text("priority").notNull().default("medium"),
   // Status flow: pending → in-progress → completed → verified
   status:             text("status").notNull().default("pending"),
