@@ -149,8 +149,8 @@ const REPORT_STATUS_META: Record<string, { label: string; cls: string; dotCls: s
   none:      { label: "—",                    cls: "",                                                                         dotCls: ""                  },
   submitted: { label: "Submitted",            cls: "text-blue-600 dark:text-blue-400",                                         dotCls: "bg-blue-500"       },
   rejected:  { label: "Rejected",             cls: "text-red-600 dark:text-red-400",                                           dotCls: "bg-red-500"        },
-  escalated: { label: "Escalated to Manager", cls: "text-amber-600 dark:text-amber-400",                                       dotCls: "bg-amber-500"      },
-  approved:  { label: "Approved ✓",           cls: "text-emerald-600 dark:text-emerald-400 font-semibold",                     dotCls: "bg-emerald-500"    },
+  escalated: { label: "Reviewed by Supervisor", cls: "text-amber-600 dark:text-amber-400",                                     dotCls: "bg-amber-500"      },
+  approved:  { label: "Approved by Manager ✓", cls: "text-emerald-600 dark:text-emerald-400 font-semibold",                   dotCls: "bg-emerald-500"    },
 };
 
 function ReportStatusBadge({ status }: { status: string | null | undefined }) {
@@ -497,7 +497,7 @@ function TaskCard({
               <Button size="sm" variant="outline"
                 className="h-7 text-xs flex-1 text-emerald-700 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300 dark:text-emerald-400 dark:border-emerald-800"
                 onClick={() => onEscalateReport(task.id)}>
-                <ArrowUpCircle className="me-1 h-3 w-3" />Escalate
+                <ArrowUpCircle className="me-1 h-3 w-3" />Review & Escalate
               </Button>
               <Button size="sm" variant="outline"
                 className="h-7 text-xs flex-1 text-red-700 hover:text-red-700 border-red-200 hover:border-red-300 dark:text-red-400 dark:border-red-800"
@@ -1595,7 +1595,7 @@ export default function Tasks() {
       onSuccess: (updated: any) => {
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
         setSelectedTask((prev: any) => prev?.id === id ? { ...prev, ...updated } : prev);
-        toast({ title: "Report escalated to manager." });
+        toast({ title: "Report reviewed by supervisor and escalated to manager." });
       },
       onError: (err: any) => toast({ title: err?.body?.error ?? "Failed to escalate report.", variant: "destructive" }),
     });

@@ -63,9 +63,9 @@ function cap(str: string): string {
 function reportStatusLabel(rs: string | null | undefined): string {
   switch (rs) {
     case "submitted": return "Submitted";
-    case "rejected":  return "Rejected";
-    case "escalated": return "Escalated";
-    case "approved":  return "Approved";
+    case "rejected":  return "Rejected by Supervisor";
+    case "escalated": return "Reviewed by Supervisor";
+    case "approved":  return "Approved by Manager";
     default:          return "—";
   }
 }
@@ -348,9 +348,9 @@ export async function generateTaskReport(opts: ReportOptions): Promise<void> {
       head: [[
         { content: "#",           styles: { cellWidth: 7  } },
         { content: "Task",        styles: { cellWidth: 40 } },
-        { content: "Submitted",   styles: { cellWidth: 28 } },
-        { content: "Reviewed",    styles: { cellWidth: 28 } },
-        { content: "Approved",    styles: { cellWidth: 28 } },
+        { content: "Submitted",              styles: { cellWidth: 32 } },
+        { content: "Reviewed by Supervisor", styles: { cellWidth: 36 } },
+        { content: "Approved by Manager",    styles: { cellWidth: 30 } },
         { content: "Report Status", styles: { cellWidth: 22 } },
         { content: "Notes",       styles: { cellWidth: 30 } },
       ]],
