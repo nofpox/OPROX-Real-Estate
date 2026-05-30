@@ -609,12 +609,15 @@ export interface UnitFinancialUpdate {
 
 export interface ActivityLog {
   id: number;
-  username?: string | null;
+  actorName?: string | null;
+  actorRole?: string | null;
   action: string;
   entityType: string;
   entityId?: number | null;
+  entityLabel?: string | null;
+  propertyId?: number | null;
+  propertyName?: string | null;
   details?: string | null;
-  ipAddress?: string | null;
   createdAt: string;
 }
 
@@ -744,6 +747,10 @@ export type UpdateGuestRequestBody = {
 
 export type ListActivityLogsParams = {
 limit?: number;
+offset?: number;
+entityType?: string;
+actorRole?: string;
+propertyId?: number;
 };
 
 export type ListFieldUsersParams = {

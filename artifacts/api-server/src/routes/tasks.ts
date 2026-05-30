@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, tasksTable, staffTable, propertiesTable, roomsTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { insertTaskSchema, updateTaskSchema } from "@workspace/db";
+import { logActivity, actorFromRequest } from "./activityLogs";
 
 const router = Router();
 
@@ -28,17 +29,17 @@ router.get("/tasks", async (req, res) => {
   };
 
   const conditions = [];
-  if (propertyId) conditions.push(eq(tasksTable.propertyId, parseInt(propertyId)));
+  if (propertyId)   conditions.push(eq(tasksTable.propertyId, parseInt(propertyId)));
   if (assignedToId) conditions.push(eq(tasksTable.assignedToId, parseInt(assignedToId)));
-  if (status) conditions.push(eq(tasksTable.status, status));
-  if (date) conditions.push(eq(tasksTable.dueDate, date));
+  if (status)       conditions.push(eq(tasksTable.status, status));
+  if (date)         conditions.push(eq(tasksTable.dueDate, date));
 
   const rows = await db
     .select({ task: tasksTable, staff: staffTable, property: propertiesTable, room: roomsTable })
     .from(tasksTable)
-    .leftJoin(staffTable, eq(tasksTable.assignedToId, staffTable.id))
-    .leftJoin(propertiesTable, eq(tasksTable.propertyId, propertiesTable.id))
-    .leftJoin(roomsTable, eq(tasksTable.unitId, roomsTable.id))
+    .leftJoin(staffTable,      eq(tasksTable.assignedToId, staffTable.id))
+    .leftJoin(propertiesTable, eq(tasksTable.propertyId,   propertiesTable.id))
+    .leftJoin(roomsTable,      eq(tasksTable.unitId,        roomsTable.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(sql`${tasksTable.dueDate} asc nulls last, ${tasksTable.createdAt} desc`);
 
@@ -52,8 +53,26 @@ router.get("/tasks", async (req, res) => {
 router.post("/tasks", async (req, res) => {
   const parsed = insertTaskSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
   const [task] = await db.insert(tasksTable).values(parsed.data).returning();
-  res.status(201).json(formatTask(task, {}));
+
+  const [property] = task.propertyId
+    ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, task.propertyId))
+    : [null];
+
+  const actor = actorFromRequest(req);
+  logActivity({
+    ...actor,
+    action: "task.created",
+    entityType: "task",
+    entityId: task.id,
+    entityLabel: task.title,
+    propertyId:   property?.id   ?? undefined,
+    propertyName: property?.name ?? undefined,
+    details: `Category: ${task.category ?? "—"}, Priority: ${task.priority ?? "—"}`,
+  });
+
+  res.status(201).json(formatTask(task, { propertyName: property?.name }));
 });
 
 router.patch("/tasks/:id", async (req, res) => {
@@ -61,6 +80,9 @@ router.patch("/tasks/:id", async (req, res) => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const parsed = updateTaskSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  // Fetch old record to detect what changed
+  const [before] = await db.select().from(tasksTable).where(eq(tasksTable.id, id));
 
   const data: Record<string, unknown> = { ...parsed.data };
   if (parsed.data.status === "completed" && !parsed.data.completedAt) {
@@ -77,13 +99,55 @@ router.patch("/tasks/:id", async (req, res) => {
     ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, task.propertyId))
     : [null];
 
+  const actor = actorFromRequest(req);
+
+  if (before && parsed.data.status && parsed.data.status !== before.status) {
+    logActivity({
+      ...actor,
+      action: "task.status_changed",
+      entityType: "task",
+      entityId: task.id,
+      entityLabel: task.title,
+      propertyId:   property?.id   ?? undefined,
+      propertyName: property?.name ?? undefined,
+      details: `${before.status} → ${parsed.data.status}`,
+    });
+  }
+
+  if (before && parsed.data.assignedToId !== undefined && parsed.data.assignedToId !== before.assignedToId) {
+    logActivity({
+      ...actor,
+      action: "task.assigned",
+      entityType: "task",
+      entityId: task.id,
+      entityLabel: task.title,
+      propertyId:   property?.id   ?? undefined,
+      propertyName: property?.name ?? undefined,
+      details: staff ? `Assigned to ${staff.name}` : "Unassigned",
+    });
+  }
+
   res.json(formatTask(task, { assigneeName: staff?.name, propertyName: property?.name }));
 });
 
 router.delete("/tasks/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const [task] = await db.select().from(tasksTable).where(eq(tasksTable.id, id));
   await db.delete(tasksTable).where(eq(tasksTable.id, id));
+
+  if (task) {
+    const actor = actorFromRequest(req);
+    logActivity({
+      ...actor,
+      action: "task.deleted",
+      entityType: "task",
+      entityId: id,
+      entityLabel: task.title,
+    });
+  }
+
   res.status(204).end();
 });
 

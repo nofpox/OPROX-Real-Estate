@@ -1363,6 +1363,22 @@ paths:
           in: query
           schema:
             type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+        - name: entityType
+          in: query
+          schema:
+            type: string
+        - name: actorRole
+          in: query
+          schema:
+            type: string
+        - name: propertyId
+          in: query
+          schema:
+            type: integer
       responses:
         "200":
           description: Logs
@@ -2541,7 +2557,10 @@ components:
       properties:
         id:
           type: integer
-        username:
+        actorName:
+          type: string
+          nullable: true
+        actorRole:
           type: string
           nullable: true
         action:
@@ -2551,10 +2570,16 @@ components:
         entityId:
           type: integer
           nullable: true
-        details:
+        entityLabel:
           type: string
           nullable: true
-        ipAddress:
+        propertyId:
+          type: integer
+          nullable: true
+        propertyName:
+          type: string
+          nullable: true
+        details:
           type: string
           nullable: true
         createdAt:

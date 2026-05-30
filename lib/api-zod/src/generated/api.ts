@@ -1310,17 +1310,24 @@ export const UpdateUnitFinancialResponse = zod.object({
  * @summary List activity audit logs
  */
 export const ListActivityLogsQueryParams = zod.object({
-  "limit": zod.coerce.number().optional()
+  "limit": zod.coerce.number().optional(),
+  "offset": zod.coerce.number().optional(),
+  "entityType": zod.coerce.string().optional(),
+  "actorRole": zod.coerce.string().optional(),
+  "propertyId": zod.coerce.number().optional()
 })
 
 export const ListActivityLogsResponseItem = zod.object({
   "id": zod.number(),
-  "username": zod.string().nullish(),
+  "actorName": zod.string().nullish(),
+  "actorRole": zod.string().nullish(),
   "action": zod.string(),
   "entityType": zod.string(),
   "entityId": zod.number().nullish(),
+  "entityLabel": zod.string().nullish(),
+  "propertyId": zod.number().nullish(),
+  "propertyName": zod.string().nullish(),
   "details": zod.string().nullish(),
-  "ipAddress": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListActivityLogsResponse = zod.array(ListActivityLogsResponseItem)

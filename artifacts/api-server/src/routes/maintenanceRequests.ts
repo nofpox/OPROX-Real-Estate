@@ -38,11 +38,11 @@ import { Router } from "express";
     } as any).returning();
 
     await logActivity({
-      action: "maintenance_request",
+      action: "work_order.created",
       entityType: "work_order",
       entityId: workOrder.id,
+      entityLabel: workOrder.title,
       details: `${sourceLabel} ${cat}: ${String(description).slice(0, 100)}`,
-      ipAddress: req.ip,
     });
 
     res.status(201).json({ ...workOrder, createdAt: workOrder.createdAt.toISOString(), completedAt: null });

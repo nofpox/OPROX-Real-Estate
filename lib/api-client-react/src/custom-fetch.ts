@@ -17,6 +17,7 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _defaultHeaders: Record<string, string> = {};
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -42,6 +43,16 @@ export function setBaseUrl(url: string | null): void {
  */
 export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
+}
+
+/**
+ * Set default headers that are merged into every fetch request.
+ * Use this to inject actor context (e.g. x-actor-name, x-actor-role)
+ * from the RBAC context so the API server can record them in activity logs.
+ * Pass an empty object to clear all default headers.
+ */
+export function setDefaultHeaders(headers: Record<string, string>): void {
+  _defaultHeaders = { ...headers };
 }
 
 function isRequest(input: RequestInfo | URL): input is Request {
@@ -335,7 +346,7 @@ export async function customFetch<T = unknown>(
     throw new TypeError(`customFetch: ${method} requests cannot have a body.`);
   }
 
-  const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, headersInit);
+  const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, _defaultHeaders, headersInit);
 
   if (
     typeof init.body === "string" &&
