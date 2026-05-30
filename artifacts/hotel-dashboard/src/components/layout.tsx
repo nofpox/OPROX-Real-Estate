@@ -51,16 +51,21 @@ interface LayoutProps {
   onLogout: () => void;
 }
 
-export function Layout({ children, authUser, onLogout }: LayoutProps) {
+/* ── SidebarContent props ────────────────────────────────────────────────────
+ * Defined OUTSIDE Layout so the component identity is stable across renders.
+ * Defining it inside Layout creates a new function type on every render,
+ * causing React to unmount/remount the entire sidebar subtree each time.
+ * ─────────────────────────────────────────────────────────────────────────── */
+interface SidebarContentProps {
+  authUser: AuthUser;
+  onLogout: () => void;
+  onClose: () => void;
+}
+
+function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
   const [location] = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  /* Close the drawer on every route change */
-  React.useEffect(() => { setMobileOpen(false); }, [location]);
-
-  const { role, setRoleId, can } = useRole();
-  const { isRTL } = useLanguage();
   const { t } = useTranslation();
+  const { role, setRoleId, can } = useRole();
   const settings = useSettings();
 
   const enabledNavKeys = getEnabledNavKeys(settings.enabledModules);
@@ -76,11 +81,6 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
   const displayName = authUser?.displayName ?? "User";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase();
 
-  /* ── Nav item renderer ──────────────────────────────────────────────────
-   * NO transition-* classes anywhere.
-   * Active state: solid bg-sidebar-accent, full opacity text.
-   * Inactive state: text-sidebar-foreground, no hover animation.
-   * ----------------------------------------------------------------------- */
   const renderNavItem = (item: (typeof NAV_ITEMS)[0]) => {
     const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
     const Icon = item.icon;
@@ -101,15 +101,10 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
     );
   };
 
-  const sidebarSide   = isRTL ? "right-0" : "left-0";
-  const sidebarBorder = isRTL ? "border-l" : "border-r";
-  const mainPadding   = isRTL ? "lg:pr-64" : "lg:pl-64";
-
-  /* Shared sidebar interior — same markup for both mobile and desktop */
-  const SidebarContent = () => (
+  return (
     <>
       <div className="flex-1 overflow-auto py-4">
-        <nav className="grid items-start px-4 gap-1" onClick={() => setMobileOpen(false)}>
+        <nav className="grid items-start px-4 gap-1" onClick={onClose}>
           {mainNav.map(renderNavItem)}
           {showOpsSection && (
             <>
@@ -190,6 +185,23 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
       </div>
     </>
   );
+}
+
+export function Layout({ children, authUser, onLogout }: LayoutProps) {
+  const [location] = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  /* Close the drawer on every route change */
+  React.useEffect(() => { setMobileOpen(false); }, [location]);
+
+  const { role } = useRole();
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
+  const settings = useSettings();
+
+  const sidebarSide   = isRTL ? "right-0" : "left-0";
+  const sidebarBorder = isRTL ? "border-l" : "border-r";
+  const mainPadding   = isRTL ? "lg:pr-64" : "lg:pl-64";
 
   return (
     /*
@@ -224,7 +236,7 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
               ✕
             </button>
           </div>
-          <SidebarContent />
+          <SidebarContent authUser={authUser} onLogout={onLogout} onClose={() => setMobileOpen(false)} />
         </aside>
       )}
 
@@ -236,7 +248,7 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
             <span className="text-sidebar-foreground font-sans font-medium text-lg">{settings.logoSub}</span>
           </Link>
         </div>
-        <SidebarContent />
+        <SidebarContent authUser={authUser} onLogout={onLogout} onClose={() => {}} />
       </aside>
 
       {/* Main content */}

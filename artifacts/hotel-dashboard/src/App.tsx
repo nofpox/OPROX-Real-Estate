@@ -1,7 +1,8 @@
-import "@/i18n";
+import i18n from "@/i18n";
 import { useState, useEffect } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { I18nextProvider } from "react-i18next";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
@@ -103,50 +104,56 @@ function App() {
 
   if (!authUser) {
     return (
-      <LanguageProvider>
-        <QueryClientProvider client={queryClient}>
-          <Toaster />
-          <Login onLogin={(user) => setAuthUser(user as AuthUser)} />
-        </QueryClientProvider>
-      </LanguageProvider>
+      <I18nextProvider i18n={i18n}>
+        <LanguageProvider>
+          <QueryClientProvider client={queryClient}>
+            <Toaster />
+            <Login onLogin={(user) => setAuthUser(user as AuthUser)} />
+          </QueryClientProvider>
+        </LanguageProvider>
+      </I18nextProvider>
     );
   }
 
   if (authUser.mustChangePassword) {
     return (
-      <LanguageProvider>
-        <QueryClientProvider client={queryClient}>
-          <Toaster />
-          <ForcePasswordChange
-            username={authUser.displayName}
-            onSuccess={() => setAuthUser({ ...authUser, mustChangePassword: false })}
-          />
-        </QueryClientProvider>
-      </LanguageProvider>
+      <I18nextProvider i18n={i18n}>
+        <LanguageProvider>
+          <QueryClientProvider client={queryClient}>
+            <Toaster />
+            <ForcePasswordChange
+              username={authUser.displayName}
+              onSuccess={() => setAuthUser({ ...authUser, mustChangePassword: false })}
+            />
+          </QueryClientProvider>
+        </LanguageProvider>
+      </I18nextProvider>
     );
   }
 
   return (
-    <LanguageProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <RoleProvider>
-            <ActorHeaderSync displayName={authUser.displayName} />
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Switch>
-                <Route path="/super-admin" component={SuperAdmin} />
-                <Route>
-                  <Layout authUser={authUser} onLogout={handleLogout}>
-                    <Router />
-                  </Layout>
-                  <Toaster />
-                </Route>
-              </Switch>
-            </WouterRouter>
-          </RoleProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </LanguageProvider>
+    <I18nextProvider i18n={i18n}>
+      <LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <RoleProvider>
+              <ActorHeaderSync displayName={authUser.displayName} />
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <Switch>
+                  <Route path="/super-admin" component={SuperAdmin} />
+                  <Route>
+                    <Layout authUser={authUser} onLogout={handleLogout}>
+                      <Router />
+                    </Layout>
+                    <Toaster />
+                  </Route>
+                </Switch>
+              </WouterRouter>
+            </RoleProvider>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </LanguageProvider>
+    </I18nextProvider>
   );
 }
 

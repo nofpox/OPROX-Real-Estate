@@ -51,9 +51,6 @@ i18n.use(initReactI18next).init({
   lng: validLang,
   fallbackLng: "en",
   interpolation: { escapeValue: false },
-  // All resources are bundled synchronously — skip async init so that
-  // useTranslation() returns correct strings on the very first render.
-  initImmediate: false,
 });
 
 export default i18n;
