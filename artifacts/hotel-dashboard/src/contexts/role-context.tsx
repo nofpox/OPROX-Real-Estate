@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 
-export type AppRole = "super_admin" | "owner" | "manager" | "front-desk" | "housekeeping" | "maintenance" | "security";
+export type AppRole = "super_admin" | "owner" | "manager" | "supervisor" | "maintenance" | "cleaning" | "security";
 
 export interface RoleDefinition {
   id: AppRole;
@@ -14,11 +14,11 @@ export function mapDbRoleToAppRole(dbRole: string): AppRole {
   if (dbRole === "super_admin") return "super_admin";
   if (dbRole === "owner" || dbRole === "admin") return "owner";
   if (dbRole === "manager" || dbRole === "property-manager" || dbRole === "site-supervisor") return "manager";
-  if (dbRole === "front-desk") return "front-desk";
-  if (dbRole === "housekeeping" || dbRole === "cleaning-staff") return "housekeeping";
+  if (dbRole === "front-desk" || dbRole === "supervisor") return "supervisor";
+  if (dbRole === "housekeeping" || dbRole === "cleaning-staff" || dbRole === "cleaning") return "cleaning";
   if (dbRole === "maintenance" || dbRole === "maintenance-tech") return "maintenance";
   if (dbRole === "security" || dbRole === "security-officer") return "security";
-  return "front-desk";
+  return "supervisor";
 }
 
 export function isOwnerTier(dbRole: string): boolean {
@@ -46,35 +46,35 @@ export const ROLES: RoleDefinition[] = [
   },
   {
     id: "manager",
-    label: "Property Manager",
+    label: "Manager",
     description: "Tasks, activity logs, and user management",
     allowedNav: ["/tasks", "/activity-log", "/user-management"],
     taskCategories: null,
   },
   {
-    id: "front-desk",
+    id: "supervisor",
     label: "Supervisor",
     description: "Assigned tasks and own profile",
     allowedNav: ["/tasks"],
     taskCategories: ["reception", "general"],
   },
   {
-    id: "housekeeping",
-    label: "Cleaning Staff",
-    description: "Assigned tasks and own profile",
-    allowedNav: ["/tasks"],
-    taskCategories: ["housekeeping"],
-  },
-  {
     id: "maintenance",
-    label: "Maintenance Technician",
+    label: "Maintenance",
     description: "Assigned tasks and own profile",
     allowedNav: ["/tasks"],
     taskCategories: ["maintenance"],
   },
   {
+    id: "cleaning",
+    label: "Cleaning",
+    description: "Assigned tasks and own profile",
+    allowedNav: ["/tasks"],
+    taskCategories: ["housekeeping"],
+  },
+  {
     id: "security",
-    label: "Security Guard",
+    label: "Security",
     description: "Assigned tasks and own profile",
     allowedNav: ["/tasks"],
     taskCategories: ["security"],

@@ -38,12 +38,13 @@ const NAV_ITEMS = [
 
 /* Role pill colours — solid only, no opacity modifiers */
 const ROLE_ICON_COLORS: Record<string, string> = {
-  owner:        "bg-yellow-100 text-yellow-700",
-  manager:      "bg-purple-100 text-purple-700",
-  "front-desk": "bg-amber-100 text-amber-700",
-  housekeeping: "bg-green-100 text-green-700",
-  maintenance:  "bg-orange-100 text-orange-700",
-  security:     "bg-blue-100 text-blue-700",
+  super_admin: "bg-red-100 text-red-700",
+  owner:       "bg-yellow-100 text-yellow-700",
+  manager:     "bg-purple-100 text-purple-700",
+  supervisor:  "bg-amber-100 text-amber-700",
+  maintenance: "bg-orange-100 text-orange-700",
+  cleaning:    "bg-green-100 text-green-700",
+  security:    "bg-blue-100 text-blue-700",
 };
 
 interface LayoutProps {
