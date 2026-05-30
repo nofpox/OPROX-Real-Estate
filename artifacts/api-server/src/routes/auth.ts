@@ -17,6 +17,12 @@ export type SessionUser = {
 
 export const sessions = new Map<string, SessionUser>();
 
+export function getRoleTier(role: string): "admin" | "supervisor" | "worker" {
+  if (role === "owner" || role === "admin") return "admin";
+  if (role === "manager" || role === "property-manager" || role === "site-supervisor") return "supervisor";
+  return "worker";
+}
+
 export function hashPwd(password: string): string {
   return crypto.createHash("sha256").update(`grand-pms::${password}`).digest("hex");
 }
@@ -148,6 +154,24 @@ router.post("/auth/change-password", async (req, res) => {
   sessions.set(sessionId!, session);
 
   res.json({ ok: true });
+});
+
+// ── Active sessions (admin/supervisor) ───────────────────────────────────────
+
+router.get("/auth/sessions", (req, res) => {
+  const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
+  const caller = sessionId ? sessions.get(sessionId) : undefined;
+  if (!caller) { res.status(401).json({ error: "Not authenticated" }); return; }
+
+  const callerTier = getRoleTier(caller.role);
+  if (callerTier === "worker") { res.status(403).json({ error: "Forbidden" }); return; }
+
+  const result: { sessionKey: string; userId: number; displayName: string; username: string; role: string }[] = [];
+  for (const [key, s] of sessions.entries()) {
+    if (callerTier === "supervisor" && getRoleTier(s.role) !== "worker") continue;
+    result.push({ sessionKey: key, userId: s.id, displayName: s.displayName, username: s.username, role: s.role });
+  }
+  res.json({ sessions: result });
 });
 
 // ── Security log (admin only) ─────────────────────────────────────────────────

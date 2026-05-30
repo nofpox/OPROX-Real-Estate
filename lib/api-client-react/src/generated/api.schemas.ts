@@ -559,6 +559,18 @@ export interface AuthUser {
   createdAt?: string;
 }
 
+export interface ActiveSession {
+  sessionKey: string;
+  userId: number;
+  displayName: string;
+  username: string;
+  role: string;
+}
+
+export interface ActiveSessionList {
+  sessions: ActiveSession[];
+}
+
 export interface PmsUser {
   id: number;
   username: string;

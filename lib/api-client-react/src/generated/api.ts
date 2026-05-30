@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ActiveSessionList,
   ActivityLog,
   AppNotification,
   AuthCredentials,
@@ -4527,6 +4528,83 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Err
 
 
 
+export const getListActiveSessionsUrl = () => {
+
+
+
+
+  return `/api/auth/sessions`
+}
+
+/**
+ * @summary List active sessions (admin/supervisor only)
+ */
+export const listActiveSessions = async ( options?: RequestInit): Promise<ActiveSessionList> => {
+
+  return customFetch<ActiveSessionList>(getListActiveSessionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListActiveSessionsQueryKey = () => {
+    return [
+    `/api/auth/sessions`
+    ] as const;
+    }
+
+
+export const getListActiveSessionsQueryOptions = <TData = Awaited<ReturnType<typeof listActiveSessions>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listActiveSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListActiveSessionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listActiveSessions>>> = ({ signal }) => listActiveSessions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listActiveSessions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListActiveSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof listActiveSessions>>>
+export type ListActiveSessionsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List active sessions (admin/supervisor only)
+ */
+
+export function useListActiveSessions<TData = Awaited<ReturnType<typeof listActiveSessions>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listActiveSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListActiveSessionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
 export const getListUsersUrl = () => {
 
 
@@ -4815,6 +4893,76 @@ export const useDeleteUser = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteUserMutationOptions(options));
+    }
+
+export const getKillSwitchUserUrl = (id: number,) => {
+
+
+
+
+  return `/api/users/${id}/kill-switch`
+}
+
+/**
+ * @summary Immediately deactivate a user and invalidate all their active sessions
+ */
+export const killSwitchUser = async (id: number, options?: RequestInit): Promise<PmsUser> => {
+
+  return customFetch<PmsUser>(getKillSwitchUserUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getKillSwitchUserMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof killSwitchUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof killSwitchUser>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['killSwitchUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof killSwitchUser>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  killSwitchUser(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KillSwitchUserMutationResult = NonNullable<Awaited<ReturnType<typeof killSwitchUser>>>
+
+    export type KillSwitchUserMutationError = ErrorType<void>
+
+    /**
+ * @summary Immediately deactivate a user and invalidate all their active sessions
+ */
+export const useKillSwitchUser = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof killSwitchUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof killSwitchUser>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getKillSwitchUserMutationOptions(options));
     }
 
 export const getGetGuestUnitUrl = (unitId: number,) => {

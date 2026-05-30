@@ -9,6 +9,7 @@ const ml: Translations = {
     guestRequests: "സേവന അഭ്യർത്ഥനകൾ", activityLog: "പ്രവർത്തന ലോഗ്",
     userManagement: "ഉപയോക്തൃ മാനേജ്മെന്റ്", facilities: "സൗകര്യ ബുക്കിംഗ്",
     adminSettings: "അഡ്മിൻ ക്രമീകരണങ്ങൾ",
+    securityDashboard: "Security",
   },
   common: {
     save: "സംരക്ഷിക്കുക", cancel: "റദ്ദാക്കുക", delete: "ഇല്ലാതാക്കുക",

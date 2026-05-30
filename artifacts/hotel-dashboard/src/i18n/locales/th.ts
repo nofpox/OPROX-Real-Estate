@@ -9,6 +9,7 @@ const th: Translations = {
     guestRequests: "คำขอบริการ", activityLog: "บันทึกกิจกรรม",
     userManagement: "การจัดการผู้ใช้", facilities: "การจองสิ่งอำนวยความสะดวก",
     adminSettings: "การตั้งค่าผู้ดูแล",
+    securityDashboard: "Security",
   },
   common: {
     save: "บันทึก", cancel: "ยกเลิก", delete: "ลบ", edit: "แก้ไข", add: "เพิ่ม",

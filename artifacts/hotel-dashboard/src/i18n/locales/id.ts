@@ -9,6 +9,7 @@ const id: Translations = {
     guestRequests: "Permintaan Layanan", activityLog: "Log Aktivitas",
     userManagement: "Manajemen Pengguna", facilities: "Pemesanan Fasilitas",
     adminSettings: "Pengaturan Admin",
+    securityDashboard: "Security",
   },
   common: {
     save: "Simpan", cancel: "Batal", delete: "Hapus", edit: "Edit", add: "Tambah",

@@ -1,62 +1,114 @@
 import { Router } from "express";
-  import { db, usersTable } from "@workspace/db";
-  import { eq } from "drizzle-orm";
-  import { hashPwd } from "./auth.js";
+import { db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import { hashPwd, sessions, getRoleTier } from "./auth.js";
 
-  const router = Router();
+const router = Router();
 
-  function fmt(u: typeof usersTable.$inferSelect) {
-    return {
-      id: u.id, username: u.username, displayName: u.displayName, email: u.email,
-      role: u.role,
-      permissions: (() => { try { return JSON.parse(u.permissions); } catch { return []; } })(),
-      isActive: u.isActive, createdAt: u.createdAt.toISOString(),
-    };
+function fmt(u: typeof usersTable.$inferSelect) {
+  return {
+    id: u.id, username: u.username, displayName: u.displayName, email: u.email,
+    role: u.role,
+    permissions: (() => { try { return JSON.parse(u.permissions); } catch { return []; } })(),
+    isActive: u.isActive, createdAt: u.createdAt.toISOString(),
+  };
+}
+
+function clearUserSessions(userId: number): number {
+  let count = 0;
+  for (const [key, s] of sessions.entries()) {
+    if (s.id === userId) { sessions.delete(key); count++; }
+  }
+  return count;
+}
+
+function getCallerSession(req: import("express").Request) {
+  const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
+  return sessionId ? sessions.get(sessionId) : undefined;
+}
+
+router.get("/users", async (_req, res) => {
+  const users = await db.select().from(usersTable).orderBy(usersTable.createdAt);
+  res.json(users.map(fmt));
+});
+
+router.post("/users", async (req, res) => {
+  const { username, displayName, email, password, role, permissions, isActive } = req.body ?? {};
+  if (!username || !displayName || !password) {
+    res.status(400).json({ error: "username, displayName, and password required" }); return;
+  }
+  const [user] = await db.insert(usersTable).values({
+    username: String(username), displayName: String(displayName),
+    email: email ? String(email) : null, passwordHash: hashPwd(String(password)),
+    role: role ? String(role) : "staff",
+    permissions: JSON.stringify(Array.isArray(permissions) ? permissions : []),
+    isActive: isActive !== false,
+  }).returning();
+  res.status(201).json(fmt(user));
+});
+
+router.patch("/users/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const { username, displayName, email, password, role, permissions, isActive } = req.body ?? {};
+  const update: Record<string, unknown> = {};
+  if (username !== undefined) update.username = String(username);
+  if (displayName !== undefined) update.displayName = String(displayName);
+  if (email !== undefined) update.email = email ? String(email) : null;
+  if (password !== undefined) update.passwordHash = hashPwd(String(password));
+  if (role !== undefined) update.role = String(role);
+  if (permissions !== undefined) update.permissions = JSON.stringify(Array.isArray(permissions) ? permissions : []);
+  if (isActive !== undefined) update.isActive = Boolean(isActive);
+  const [user] = await db.update(usersTable).set(update).where(eq(usersTable.id, id)).returning();
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  if (update.isActive === false) {
+    const cleared = clearUserSessions(id);
+    req.log.info({ userId: id, sessionsCleared: cleared }, "User deactivated — sessions cleared");
+  }
+  res.json(fmt(user));
+});
+
+router.delete("/users/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  clearUserSessions(id);
+  await db.delete(usersTable).where(eq(usersTable.id, id));
+  res.status(204).end();
+});
+
+router.post("/users/:id/kill-switch", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const caller = getCallerSession(req);
+  if (!caller) { res.status(401).json({ error: "Not authenticated" }); return; }
+
+  const callerTier = getRoleTier(caller.role);
+  if (callerTier === "worker") { res.status(403).json({ error: "Forbidden" }); return; }
+
+  if (id === caller.id) { res.status(400).json({ error: "Cannot deactivate your own account" }); return; }
+
+  const [target] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+  if (!target) { res.status(404).json({ error: "User not found" }); return; }
+
+  const targetTier = getRoleTier(target.role);
+
+  if (targetTier === "admin" && callerTier !== "admin") {
+    res.status(403).json({ error: "Only admins can deactivate other admins" }); return;
+  }
+  if (callerTier === "supervisor" && targetTier !== "worker") {
+    res.status(403).json({ error: "Supervisors can only deactivate workers" }); return;
   }
 
-  router.get("/users", async (_req, res) => {
-    const users = await db.select().from(usersTable).orderBy(usersTable.createdAt);
-    res.json(users.map(fmt));
-  });
+  const [user] = await db.update(usersTable)
+    .set({ isActive: false })
+    .where(eq(usersTable.id, id))
+    .returning();
 
-  router.post("/users", async (req, res) => {
-    const { username, displayName, email, password, role, permissions, isActive } = req.body ?? {};
-    if (!username || !displayName || !password) {
-      res.status(400).json({ error: "username, displayName, and password required" }); return;
-    }
-    const [user] = await db.insert(usersTable).values({
-      username: String(username), displayName: String(displayName),
-      email: email ? String(email) : null, passwordHash: hashPwd(String(password)),
-      role: role ? String(role) : "staff",
-      permissions: JSON.stringify(Array.isArray(permissions) ? permissions : []),
-      isActive: isActive !== false,
-    }).returning();
-    res.status(201).json(fmt(user));
-  });
+  const cleared = clearUserSessions(id);
+  req.log.info({ targetUserId: id, sessionsCleared: cleared, triggeredBy: caller.id }, "Kill switch triggered");
 
-  router.patch("/users/:id", async (req, res) => {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-    const { username, displayName, email, password, role, permissions, isActive } = req.body ?? {};
-    const update: Record<string, unknown> = {};
-    if (username !== undefined) update.username = String(username);
-    if (displayName !== undefined) update.displayName = String(displayName);
-    if (email !== undefined) update.email = email ? String(email) : null;
-    if (password !== undefined) update.passwordHash = hashPwd(String(password));
-    if (role !== undefined) update.role = String(role);
-    if (permissions !== undefined) update.permissions = JSON.stringify(Array.isArray(permissions) ? permissions : []);
-    if (isActive !== undefined) update.isActive = Boolean(isActive);
-    const [user] = await db.update(usersTable).set(update).where(eq(usersTable.id, id)).returning();
-    if (!user) { res.status(404).json({ error: "User not found" }); return; }
-    res.json(fmt(user));
-  });
+  res.json(fmt(user));
+});
 
-  router.delete("/users/:id", async (req, res) => {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-    await db.delete(usersTable).where(eq(usersTable.id, id));
-    res.status(204).end();
-  });
-
-  export default router;
-  
+export default router;

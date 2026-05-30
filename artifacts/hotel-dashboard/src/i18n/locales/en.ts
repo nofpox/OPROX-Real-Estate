@@ -16,6 +16,7 @@ const en = {
     userManagement: "User Management",
     facilities: "Facility Booking",
     adminSettings: "Admin Settings",
+    securityDashboard: "Security",
   },
   common: {
     save: "Save",

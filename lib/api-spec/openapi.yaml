@@ -1164,6 +1164,23 @@ paths:
         "401":
           description: Not authenticated
 
+  /auth/sessions:
+    get:
+      operationId: listActiveSessions
+      summary: List active sessions (admin/supervisor only)
+      tags: [auth]
+      responses:
+        "200":
+          description: Active sessions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActiveSessionList"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Forbidden
+
   /users:
     get:
       operationId: listUsers
@@ -1233,6 +1250,33 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  /users/{id}/kill-switch:
+    post:
+      operationId: killSwitchUser
+      summary: Immediately deactivate a user and invalidate all their active sessions
+      tags: [users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User deactivated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PmsUser"
+        "400":
+          description: Cannot deactivate self or already inactive
+        "401":
+          description: Not authenticated
+        "403":
+          description: Forbidden — insufficient role tier
+        "404":
+          description: User not found
 
   /guest/units/{unitId}:
     get:
@@ -2566,6 +2610,30 @@ components:
           type: boolean
         createdAt:
           type: string
+
+    ActiveSession:
+      type: object
+      required: [sessionKey, userId, displayName, username, role]
+      properties:
+        sessionKey:
+          type: string
+        userId:
+          type: integer
+        displayName:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+
+    ActiveSessionList:
+      type: object
+      required: [sessions]
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActiveSession"
 
     PmsUser:
       type: object

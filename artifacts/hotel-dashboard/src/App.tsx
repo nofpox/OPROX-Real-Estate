@@ -28,6 +28,7 @@ import UnitMap from "@/pages/unit-map";
 import Login from "@/pages/login";
 import ForcePasswordChange from "@/pages/force-password-change";
 import SuperAdmin from "@/pages/super-admin";
+import SecurityDashboard from "@/pages/security-dashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
@@ -57,6 +58,7 @@ function Router() {
       <Route path="/activity-log" component={ActivityLog} />
       <Route path="/admin-settings" component={AdminSettings} />
       <Route path="/unit-map" component={UnitMap} />
+      <Route path="/security-dashboard" component={SecurityDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

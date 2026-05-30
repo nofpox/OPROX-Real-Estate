@@ -18,25 +18,25 @@ import { useLanguage } from "@/contexts/language-context";
 
 // ─── Static maps (no translation strings — these are just style/icon data) ────
 
-const ACTION_META: Record<string, { icon: React.ElementType; cls: string }> = {
-  "task.created":              { icon: Plus,           cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  "task.status_changed":       { icon: ArrowRightLeft, cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
-  "task.assigned":             { icon: User,           cls: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400"                 },
-  "task.deleted":              { icon: Trash2,         cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
-  "work_order.created":        { icon: Plus,           cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"         },
-  "work_order.status_changed": { icon: Wrench,         cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"         },
-  "work_order.deleted":        { icon: Trash2,         cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
-  "booking.created":           { icon: Plus,           cls: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400"     },
-  "booking.checked_in":        { icon: CheckCircle2,   cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  "booking.checked_out":       { icon: CheckCircle2,   cls: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400"            },
-  "booking.cancelled":         { icon: Trash2,         cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
-  "booking.confirmed":         { icon: CheckCircle2,   cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
-  "booking.status_changed":    { icon: ArrowRightLeft, cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
-  "field_user.created":        { icon: User,           cls: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400"     },
-  "field_user.updated":        { icon: User,           cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
-  "field_user.deactivated":    { icon: UserMinus,      cls: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"     },
-  "field_user.reactivated":    { icon: UserCheck,      cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  "field_user.deleted":        { icon: Trash2,         cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
+const ACTION_META: Record<string, { icon: React.ElementType; cls: string; label: string }> = {
+  "task.created":              { icon: Plus,           label: "Task Created",         cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  "task.status_changed":       { icon: ArrowRightLeft, label: "Status Changed",       cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
+  "task.assigned":             { icon: User,           label: "Task Assigned",        cls: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400"                 },
+  "task.deleted":              { icon: Trash2,         label: "Task Deleted",         cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
+  "work_order.created":        { icon: Plus,           label: "Work Order Created",   cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"         },
+  "work_order.status_changed": { icon: Wrench,         label: "Work Order Updated",   cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"         },
+  "work_order.deleted":        { icon: Trash2,         label: "Work Order Deleted",   cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
+  "booking.created":           { icon: Plus,           label: "Booking Created",      cls: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400"     },
+  "booking.checked_in":        { icon: CheckCircle2,   label: "Checked In",           cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  "booking.checked_out":       { icon: CheckCircle2,   label: "Checked Out",          cls: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400"            },
+  "booking.cancelled":         { icon: Trash2,         label: "Booking Cancelled",    cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
+  "booking.confirmed":         { icon: CheckCircle2,   label: "Booking Confirmed",    cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
+  "booking.status_changed":    { icon: ArrowRightLeft, label: "Booking Updated",      cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
+  "field_user.created":        { icon: User,           label: "Team Member Added",    cls: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400"     },
+  "field_user.updated":        { icon: User,           label: "Team Member Updated",  cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"             },
+  "field_user.deactivated":    { icon: UserMinus,      label: "Member Deactivated",   cls: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"     },
+  "field_user.reactivated":    { icon: UserCheck,      label: "Member Reactivated",   cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  "field_user.deleted":        { icon: Trash2,         label: "Team Member Removed",  cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"                 },
 };
 
 const ROLE_CLS: Record<string, string> = {
@@ -94,10 +94,10 @@ function Pill({ label, cls }: { label: string; cls: string }) {
 
 function LogRow({ log }: { log: ActivityLog }) {
   const { t } = useTranslation();
-  const meta  = ACTION_META[log.action] ?? { icon: ClipboardList, cls: "bg-muted text-muted-foreground" };
+  const meta  = ACTION_META[log.action] ?? { icon: ClipboardList, cls: "bg-muted text-muted-foreground", label: log.action.replace(/[_.]/g, " ") };
   const Icon  = meta.icon;
 
-  const actionLabel     = t(`activityLog.action.${log.action}`, { defaultValue: log.action.replace(/[_.]/g, " ") });
+  const actionLabel     = meta.label;
   const roleLabel       = log.actorRole ? t(`activityLog.role.${log.actorRole}`, { defaultValue: log.actorRole }) : null;
   const entityTypeLabel = t(`activityLog.entityType.${log.entityType}`, { defaultValue: log.entityType });
 

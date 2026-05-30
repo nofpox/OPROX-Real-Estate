@@ -9,6 +9,7 @@ const ur: Translations = {
     guestRequests: "سروس کی درخواستیں", activityLog: "سرگرمی لاگ",
     userManagement: "صارف انتظام", facilities: "سہولت بکنگ",
     adminSettings: "ایڈمن سیٹنگز",
+    securityDashboard: "Security",
   },
   common: {
     save: "محفوظ کریں", cancel: "منسوخ کریں", delete: "حذف کریں",

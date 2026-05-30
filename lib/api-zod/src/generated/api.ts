@@ -1113,6 +1113,20 @@ export const GetMeResponse = zod.object({
 
 
 /**
+ * @summary List active sessions (admin/supervisor only)
+ */
+export const ListActiveSessionsResponse = zod.object({
+  "sessions": zod.array(zod.object({
+  "sessionKey": zod.string(),
+  "userId": zod.number(),
+  "displayName": zod.string(),
+  "username": zod.string(),
+  "role": zod.string()
+}))
+})
+
+
+/**
  * @summary List all users
  */
 export const ListUsersResponseItem = zod.object({
@@ -1176,6 +1190,25 @@ export const UpdateUserResponse = zod.object({
  */
 export const DeleteUserParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Immediately deactivate a user and invalidate all their active sessions
+ */
+export const KillSwitchUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const KillSwitchUserResponse = zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "email": zod.string().nullish(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string()
 })
 
 

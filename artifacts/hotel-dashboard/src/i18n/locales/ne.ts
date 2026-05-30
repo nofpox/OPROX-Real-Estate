@@ -9,6 +9,7 @@ const ne: Translations = {
     guestRequests: "सेवा अनुरोधहरू", activityLog: "गतिविधि लग",
     userManagement: "प्रयोगकर्ता व्यवस्थापन", facilities: "सुविधा बुकिङ",
     adminSettings: "प्रशासक सेटिङहरू",
+    securityDashboard: "Security",
   },
   common: {
     save: "सुरक्षित गर्नुहोस्", cancel: "रद्द गर्नुहोस्", delete: "मेट्नुहोस्",

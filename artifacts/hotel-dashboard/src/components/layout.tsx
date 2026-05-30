@@ -3,7 +3,7 @@ import React, { useState } from "react";
   import {
     LayoutDashboard, DoorOpen, Menu, Building2,
     Wrench, UserCog, ClipboardList, ChevronDown, Shield,
-    MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal,
+    MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert,
   } from "lucide-react";
   import { Button } from "@/components/ui/button";
   import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -32,8 +32,9 @@ import React, { useState } from "react";
     { href: "/tasks",         labelKey: "nav.tasks",          icon: ClipboardList,   section: "operations", featureKey: "tasks" },
     { href: "/guest-requests",labelKey: "nav.guestRequests",  icon: InboxIcon,       section: "operations", featureKey: "guestRequests" },
     { href: "/activity-log",  labelKey: "nav.activityLog",    icon: History,         section: "operations", featureKey: "activityLog" },
-    { href: "/user-management",  labelKey: "nav.userManagement",  icon: Settings,          section: "operations", featureKey: "userManagement" },
-    { href: "/admin-settings",   labelKey: "nav.adminSettings",   icon: SlidersHorizontal, section: "operations", featureKey: null },
+    { href: "/user-management",     labelKey: "nav.userManagement",     icon: Settings,          section: "operations", featureKey: "userManagement" },
+    { href: "/admin-settings",      labelKey: "nav.adminSettings",      icon: SlidersHorizontal, section: "operations", featureKey: null },
+    { href: "/security-dashboard",  labelKey: "nav.securityDashboard",  icon: ShieldAlert,       section: "operations", featureKey: null },
   ];
 
   const ROLE_ICON_COLORS: Record<string, string> = {
