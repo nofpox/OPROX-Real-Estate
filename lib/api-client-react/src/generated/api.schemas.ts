@@ -5,6 +5,23 @@
  * Hotel Booking Management API
  * OpenAPI spec version: 0.1.0
  */
+export interface TaskType {
+  /** Stable slug identifier for the category */
+  id: string;
+  /** Human-readable display name */
+  name: string;
+  /** Tailwind color token: blue | green | orange | red | purple | yellow | pink | gray */
+  color: string;
+}
+
+export interface TaskRequirements {
+  dueDate: boolean;
+  photoProof: boolean;
+  notes: boolean;
+  priority: boolean;
+  assignedTo: boolean;
+}
+
 export interface Settings {
   /** Display name shown as the dashboard heading and sidebar logo */
   propertyName: string;
@@ -15,7 +32,18 @@ export interface Settings {
   /** hotel | compound | tower | serviced-apartments */
   businessMode: string;
   /** List of enabled functional module IDs for this client */
-  enabledModules?: string[];
+  enabledModules: string[];
+  /** Legal or trading name of the company */
+  companyName: string;
+  /** Primary contact email address */
+  contactEmail: string;
+  /** Primary contact phone number */
+  contactPhone: string;
+  /** Office / property address */
+  contactAddress: string;
+  /** Custom task category definitions */
+  taskTypes: TaskType[];
+  taskRequirements: TaskRequirements;
 }
 
 export interface SettingsInput {
@@ -24,6 +52,12 @@ export interface SettingsInput {
   logoSub?: string;
   businessMode?: string;
   enabledModules?: string[];
+  companyName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  contactAddress?: string;
+  taskTypes?: TaskType[];
+  taskRequirements?: TaskRequirements;
 }
 
 export interface CustomField {

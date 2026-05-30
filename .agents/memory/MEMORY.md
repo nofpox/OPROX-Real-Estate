@@ -3,3 +3,4 @@
 - [Object storage setup](object-storage-setup.md) — GCS bucket live; storage routes at /api/storage; objectPath from upload must be prepended with /api/storage to serve
 - [Express tier gate pattern](express-tier-gate.md) — router.use(mw, subRouter) runs mw for ALL paths; use a single path-prefix gate middleware instead.
 - [RBAC structure](rbac-structure.md) — Three-tier RBAC: Owner (admin), Manager (supervisor), Worker. Frontend role-context wired to authUser.role from /api/auth/me.
+- [Settings JSON fields pattern](settings-json-fields.md) — taskTypes (array) and taskRequirements (object) stored as JSON strings in key-value settingsTable; defaults seeded on boot via ensureDefaults(); parsed with parseJsonSafe helper.

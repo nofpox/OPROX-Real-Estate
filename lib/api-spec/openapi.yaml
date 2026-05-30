@@ -1664,7 +1664,7 @@ components:
   schemas:
     Settings:
       type: object
-      required: [propertyName, logoText, logoSub, businessMode, enabledFeatures]
+      required: [propertyName, logoText, logoSub, businessMode, enabledModules, companyName, contactEmail, contactPhone, contactAddress, taskTypes, taskRequirements]
       properties:
         propertyName:
           type: string
@@ -1683,6 +1683,25 @@ components:
           items:
             type: string
           description: List of enabled functional module IDs for this client
+        companyName:
+          type: string
+          description: Legal or trading name of the company
+        contactEmail:
+          type: string
+          description: Primary contact email address
+        contactPhone:
+          type: string
+          description: Primary contact phone number
+        contactAddress:
+          type: string
+          description: Office / property address
+        taskTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskType"
+          description: Custom task category definitions
+        taskRequirements:
+          $ref: "#/components/schemas/TaskRequirements"
 
     SettingsInput:
       type: object
@@ -1699,6 +1718,49 @@ components:
           type: array
           items:
             type: string
+        companyName:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        contactAddress:
+          type: string
+        taskTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskType"
+        taskRequirements:
+          $ref: "#/components/schemas/TaskRequirements"
+
+    TaskType:
+      type: object
+      required: [id, name, color]
+      properties:
+        id:
+          type: string
+          description: Stable slug identifier for the category
+        name:
+          type: string
+          description: Human-readable display name
+        color:
+          type: string
+          description: "Tailwind color token: blue | green | orange | red | purple | yellow | pink | gray"
+
+    TaskRequirements:
+      type: object
+      required: [dueDate, photoProof, notes, priority, assignedTo]
+      properties:
+        dueDate:
+          type: boolean
+        photoProof:
+          type: boolean
+        notes:
+          type: boolean
+        priority:
+          type: boolean
+        assignedTo:
+          type: boolean
 
     CustomField:
       type: object

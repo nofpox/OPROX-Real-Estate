@@ -16,7 +16,23 @@ export const GetSettingsResponse = zod.object({
   "logoText": zod.string().describe('Large serif word in the sidebar logo'),
   "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
   "businessMode": zod.string().describe('hotel | compound | tower | serviced-apartments'),
-  "enabledModules": zod.array(zod.string()).optional().describe('List of enabled functional module IDs for this client')
+  "enabledModules": zod.array(zod.string()).describe('List of enabled functional module IDs for this client'),
+  "companyName": zod.string().describe('Legal or trading name of the company'),
+  "contactEmail": zod.string().describe('Primary contact email address'),
+  "contactPhone": zod.string().describe('Primary contact phone number'),
+  "contactAddress": zod.string().describe('Office \/ property address'),
+  "taskTypes": zod.array(zod.object({
+  "id": zod.string().describe('Stable slug identifier for the category'),
+  "name": zod.string().describe('Human-readable display name'),
+  "color": zod.string().describe('Tailwind color token: blue | green | orange | red | purple | yellow | pink | gray')
+})).describe('Custom task category definitions'),
+  "taskRequirements": zod.object({
+  "dueDate": zod.boolean(),
+  "photoProof": zod.boolean(),
+  "notes": zod.boolean(),
+  "priority": zod.boolean(),
+  "assignedTo": zod.boolean()
+})
 })
 
 
@@ -28,7 +44,23 @@ export const UpdateSettingsBody = zod.object({
   "logoText": zod.string().optional(),
   "logoSub": zod.string().optional(),
   "businessMode": zod.string().optional(),
-  "enabledModules": zod.array(zod.string()).optional()
+  "enabledModules": zod.array(zod.string()).optional(),
+  "companyName": zod.string().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().optional(),
+  "contactAddress": zod.string().optional(),
+  "taskTypes": zod.array(zod.object({
+  "id": zod.string().describe('Stable slug identifier for the category'),
+  "name": zod.string().describe('Human-readable display name'),
+  "color": zod.string().describe('Tailwind color token: blue | green | orange | red | purple | yellow | pink | gray')
+})).optional(),
+  "taskRequirements": zod.object({
+  "dueDate": zod.boolean(),
+  "photoProof": zod.boolean(),
+  "notes": zod.boolean(),
+  "priority": zod.boolean(),
+  "assignedTo": zod.boolean()
+}).optional()
 })
 
 export const UpdateSettingsResponse = zod.object({
@@ -36,7 +68,23 @@ export const UpdateSettingsResponse = zod.object({
   "logoText": zod.string().describe('Large serif word in the sidebar logo'),
   "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
   "businessMode": zod.string().describe('hotel | compound | tower | serviced-apartments'),
-  "enabledModules": zod.array(zod.string()).optional().describe('List of enabled functional module IDs for this client')
+  "enabledModules": zod.array(zod.string()).describe('List of enabled functional module IDs for this client'),
+  "companyName": zod.string().describe('Legal or trading name of the company'),
+  "contactEmail": zod.string().describe('Primary contact email address'),
+  "contactPhone": zod.string().describe('Primary contact phone number'),
+  "contactAddress": zod.string().describe('Office \/ property address'),
+  "taskTypes": zod.array(zod.object({
+  "id": zod.string().describe('Stable slug identifier for the category'),
+  "name": zod.string().describe('Human-readable display name'),
+  "color": zod.string().describe('Tailwind color token: blue | green | orange | red | purple | yellow | pink | gray')
+})).describe('Custom task category definitions'),
+  "taskRequirements": zod.object({
+  "dueDate": zod.boolean(),
+  "photoProof": zod.boolean(),
+  "notes": zod.boolean(),
+  "priority": zod.boolean(),
+  "assignedTo": zod.boolean()
+})
 })
 
 
