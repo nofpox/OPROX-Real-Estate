@@ -1150,7 +1150,8 @@ export const GetRecentBookingsResponse = zod.array(GetRecentBookingsResponseItem
  */
 export const LoginBody = zod.object({
   "username": zod.string(),
-  "password": zod.string()
+  "password": zod.string(),
+  "tenantSlug": zod.string().optional()
 })
 
 export const LoginResponse = zod.object({
@@ -1158,6 +1159,7 @@ export const LoginResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish(),
   "role": zod.string(),
   "permissions": zod.array(zod.string()),
   "isActive": zod.boolean(),
@@ -1173,10 +1175,39 @@ export const GetMeResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish(),
   "role": zod.string(),
   "permissions": zod.array(zod.string()),
   "isActive": zod.boolean(),
   "createdAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Request a password reset token (verifies email + phone)
+ */
+export const ForgotPasswordBody = zod.object({
+  "email": zod.string(),
+  "phoneNumber": zod.string(),
+  "tenantSlug": zod.string()
+})
+
+export const ForgotPasswordResponse = zod.object({
+  "ok": zod.boolean().optional(),
+  "resetToken": zod.string().optional().describe('Demo-mode only — in production this is sent via email\/SMS')
+})
+
+
+/**
+ * @summary Reset password using a valid reset token
+ */
+export const ResetPasswordBody = zod.object({
+  "resetToken": zod.string(),
+  "newPassword": zod.string()
+})
+
+export const ResetPasswordResponse = zod.object({
+  "ok": zod.boolean().optional()
 })
 
 
@@ -1202,6 +1233,7 @@ export const ListUsersResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish(),
   "role": zod.string(),
   "permissions": zod.array(zod.string()),
   "isActive": zod.boolean(),
@@ -1217,6 +1249,7 @@ export const CreateUserBody = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string().optional(),
+  "phoneNumber": zod.string().optional(),
   "password": zod.string(),
   "role": zod.string(),
   "permissions": zod.array(zod.string()).optional(),
@@ -1235,6 +1268,7 @@ export const UpdateUserBody = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string().optional(),
+  "phoneNumber": zod.string().optional(),
   "password": zod.string(),
   "role": zod.string(),
   "permissions": zod.array(zod.string()).optional(),
@@ -1246,6 +1280,7 @@ export const UpdateUserResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish(),
   "role": zod.string(),
   "permissions": zod.array(zod.string()),
   "isActive": zod.boolean(),
@@ -1273,6 +1308,7 @@ export const KillSwitchUserResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "email": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish(),
   "role": zod.string(),
   "permissions": zod.array(zod.string()),
   "isActive": zod.boolean(),

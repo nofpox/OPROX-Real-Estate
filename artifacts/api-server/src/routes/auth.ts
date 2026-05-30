@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, usersTable, tenantsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import crypto from "node:crypto";
 import {
   checkLoginAllowed,
@@ -14,6 +14,7 @@ export type SessionUser = {
   username: string;
   displayName: string;
   email: string | null;
+  phoneNumber: string | null;
   role: string;
   permissions: string[];
   isActive: boolean;
@@ -24,6 +25,9 @@ export type SessionUser = {
 };
 
 export const sessions = new Map<string, SessionUser>();
+
+// token → { userId, tenantId, expiresAt }
+const resetTokens = new Map<string, { userId: number; tenantId: number | null; expiresAt: number }>();
 
 export function getRoleTier(role: string): "admin" | "supervisor" | "worker" {
   if (role === "owner" || role === "admin" || role === "super_admin") return "admin";
@@ -53,6 +57,8 @@ export async function ensureAdmin() {
       await db.insert(usersTable).values({
         username: "admin",
         displayName: "Administrator",
+        email: "admin@grandpms.io",
+        phoneNumber: "+1-555-000-0001",
         passwordHash: hashPwd("admin123"),
         role: "owner",
         permissions: JSON.stringify(["all"]),
@@ -76,6 +82,7 @@ export async function ensureAdmin() {
         username: "superadmin",
         displayName: "Super Administrator",
         email: "super@grandpms.io",
+        phoneNumber: "+1-555-000-0000",
         passwordHash: hashPwd("superadmin123"),
         role: "super_admin",
         permissions: JSON.stringify(["all"]),
@@ -164,7 +171,8 @@ router.post("/auth/login", async (req, res) => {
     id: user.id,
     username: user.username,
     displayName: user.displayName,
-    email: user.email,
+    email: user.email ?? null,
+    phoneNumber: user.phoneNumber ?? null,
     role: user.role,
     permissions: (() => { try { return JSON.parse(user.permissions); } catch { return []; } })(),
     isActive: user.isActive,
@@ -222,6 +230,97 @@ router.post("/auth/change-password", async (req, res) => {
 
   session.mustChangePassword = false;
   sessions.set(sessionId!, session);
+  res.json({ ok: true });
+});
+
+// ── Forgot password ───────────────────────────────────────────────────────────
+// Verifies email + phoneNumber + tenantSlug; issues a short-lived reset token.
+// In production this token would be delivered via email/SMS — here we return it
+// directly in the response body for demo/development purposes.
+
+router.post("/auth/forgot-password", async (req, res) => {
+  const { email, phoneNumber, tenantSlug } = req.body ?? {};
+  if (!email || !phoneNumber || !tenantSlug) {
+    res.status(400).json({ error: "email, phoneNumber, and tenantSlug are required" });
+    return;
+  }
+
+  // Resolve tenant
+  const [tenant] = await db
+    .select({ id: tenantsTable.id })
+    .from(tenantsTable)
+    .where(eq(tenantsTable.slug, String(tenantSlug)));
+
+  if (!tenant) {
+    // Return generic ok to avoid tenant enumeration
+    res.json({ ok: true });
+    return;
+  }
+
+  // Find user with matching email AND phone scoped to this tenant
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(
+      and(
+        eq(usersTable.tenantId, tenant.id),
+        eq(usersTable.email, String(email)),
+        eq(usersTable.phoneNumber, String(phoneNumber)),
+        eq(usersTable.isActive, true),
+      )
+    );
+
+  if (!user) {
+    // Return generic ok to avoid user enumeration
+    res.json({ ok: true });
+    return;
+  }
+
+  // Clean up any previous tokens for this user
+  for (const [tok, data] of resetTokens.entries()) {
+    if (data.userId === user.id) resetTokens.delete(tok);
+  }
+
+  // Generate a 6-character alphanumeric token (uppercase, easy to type)
+  const resetToken = crypto.randomBytes(4).toString("hex").toUpperCase().slice(0, 6);
+  resetTokens.set(resetToken, {
+    userId: user.id,
+    tenantId: tenant.id,
+    expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutes
+  });
+
+  req.log.info({ userId: user.id }, "Password reset token issued");
+
+  // In production: send via email/SMS. For demo: include in response.
+  res.json({ ok: true, resetToken });
+});
+
+// ── Reset password ────────────────────────────────────────────────────────────
+
+router.post("/auth/reset-password", async (req, res) => {
+  const { resetToken, newPassword } = req.body ?? {};
+  if (!resetToken || !newPassword) {
+    res.status(400).json({ error: "resetToken and newPassword are required" });
+    return;
+  }
+  if (String(newPassword).length < 8) {
+    res.status(400).json({ error: "Password must be at least 8 characters" });
+    return;
+  }
+
+  const data = resetTokens.get(String(resetToken).toUpperCase());
+  if (!data || data.expiresAt < Date.now()) {
+    resetTokens.delete(String(resetToken).toUpperCase());
+    res.status(400).json({ error: "Invalid or expired reset token" });
+    return;
+  }
+
+  await db.execute(
+    sql`UPDATE users SET password_hash = ${hashPwd(String(newPassword))}, must_change_password = false WHERE id = ${data.userId}`
+  );
+  resetTokens.delete(String(resetToken).toUpperCase());
+
+  req.log.info({ userId: data.userId }, "Password reset completed");
   res.json({ ok: true });
 });
 

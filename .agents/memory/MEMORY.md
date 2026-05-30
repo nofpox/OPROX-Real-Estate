@@ -8,3 +8,4 @@
 - [Multi-tenancy architecture](multi-tenancy.md) — shared-schema, tenant_id on every table; null tenantId = superadmin (sees all); login requires tenantSlug for tenant users
 - [Superadmin password seeding](superadmin-seed.md) — encode(digest(...)) needs pgcrypto extension; must use Node.js hashPwd() at server boot (ensureAdmin) not raw SQL migration
 - [Settings composite constraint](settings-constraint.md) — unique constraint is (tenant_id, key); onConflictDoUpdate target must be array [settingsTable.tenantId, settingsTable.key]
+- [Auth forgot-password flow](forgot-password-flow.md) — in-memory resetTokens map; 6-char hex token; 15-min expiry; verifies email+phone+tenantSlug; returns token in response body for demo mode

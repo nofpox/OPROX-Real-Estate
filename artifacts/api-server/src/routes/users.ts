@@ -11,7 +11,8 @@ function tid(req: import("express").Request): number | null {
 
 function fmt(u: typeof usersTable.$inferSelect) {
   return {
-    id: u.id, username: u.username, displayName: u.displayName, email: u.email,
+    id: u.id, username: u.username, displayName: u.displayName,
+    email: u.email ?? null, phoneNumber: u.phoneNumber ?? null,
     role: u.role, tenantId: u.tenantId,
     permissions: (() => { try { return JSON.parse(u.permissions); } catch { return []; } })(),
     isActive: u.isActive, createdAt: u.createdAt.toISOString(),
@@ -43,17 +44,20 @@ router.get("/users", async (req, res) => {
 
 router.post("/users", async (req, res) => {
   const tenantId = tid(req) ?? 1;
-  const { username, displayName, email, password, role, permissions, isActive } = req.body ?? {};
+  const { username, displayName, email, phoneNumber, password, role, permissions, isActive } = req.body ?? {};
   if (!username || !displayName || !password) {
     res.status(400).json({ error: "username, displayName, and password required" }); return;
   }
   const [user] = await db.insert(usersTable).values({
     tenantId,
-    username: String(username), displayName: String(displayName),
-    email: email ? String(email) : null, passwordHash: hashPwd(String(password)),
-    role: role ? String(role) : "staff",
+    username:    String(username),
+    displayName: String(displayName),
+    email:       email       ? String(email)       : null,
+    phoneNumber: phoneNumber ? String(phoneNumber) : null,
+    passwordHash: hashPwd(String(password)),
+    role:        role ? String(role) : "staff",
     permissions: JSON.stringify(Array.isArray(permissions) ? permissions : []),
-    isActive: isActive !== false,
+    isActive:    isActive !== false,
   }).returning();
   res.status(201).json(fmt(user));
 });
@@ -62,15 +66,16 @@ router.patch("/users/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const tenantId = tid(req);
-  const { username, displayName, email, password, role, permissions, isActive } = req.body ?? {};
+  const { username, displayName, email, phoneNumber, password, role, permissions, isActive } = req.body ?? {};
   const update: Record<string, unknown> = {};
-  if (username    !== undefined) update.username    = String(username);
-  if (displayName !== undefined) update.displayName = String(displayName);
-  if (email       !== undefined) update.email       = email ? String(email) : null;
-  if (password    !== undefined) update.passwordHash = hashPwd(String(password));
-  if (role        !== undefined) update.role        = String(role);
-  if (permissions !== undefined) update.permissions = JSON.stringify(Array.isArray(permissions) ? permissions : []);
-  if (isActive    !== undefined) update.isActive    = Boolean(isActive);
+  if (username     !== undefined) update.username     = String(username);
+  if (displayName  !== undefined) update.displayName  = String(displayName);
+  if (email        !== undefined) update.email        = email ? String(email) : null;
+  if (phoneNumber  !== undefined) update.phoneNumber  = phoneNumber ? String(phoneNumber) : null;
+  if (password     !== undefined) update.passwordHash = hashPwd(String(password));
+  if (role         !== undefined) update.role         = String(role);
+  if (permissions  !== undefined) update.permissions  = JSON.stringify(Array.isArray(permissions) ? permissions : []);
+  if (isActive     !== undefined) update.isActive     = Boolean(isActive);
 
   const conds = [eq(usersTable.id, id)];
   if (tenantId !== null) conds.push(eq(usersTable.tenantId, tenantId));

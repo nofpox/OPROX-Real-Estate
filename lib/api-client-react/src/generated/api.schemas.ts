@@ -599,6 +599,7 @@ export interface ShiftUpdate {
 export interface AuthCredentials {
   username: string;
   password: string;
+  tenantSlug?: string;
 }
 
 export interface AuthUser {
@@ -606,6 +607,7 @@ export interface AuthUser {
   username: string;
   displayName: string;
   email?: string | null;
+  phoneNumber?: string | null;
   role: string;
   permissions: string[];
   isActive: boolean;
@@ -629,6 +631,7 @@ export interface PmsUser {
   username: string;
   displayName: string;
   email?: string | null;
+  phoneNumber?: string | null;
   role: string;
   permissions: string[];
   isActive: boolean;
@@ -639,6 +642,7 @@ export interface UserInput {
   username: string;
   displayName: string;
   email?: string;
+  phoneNumber?: string;
   password: string;
   role: string;
   permissions?: string[];
@@ -902,6 +906,27 @@ export type ListGuestsParams = {
  * Search by name, email, or phone
  */
 search?: string;
+};
+
+export type ForgotPasswordBody = {
+  email: string;
+  phoneNumber: string;
+  tenantSlug: string;
+};
+
+export type ForgotPassword200 = {
+  ok?: boolean;
+  /** Demo-mode only — in production this is sent via email/SMS */
+  resetToken?: string;
+};
+
+export type ResetPasswordBody = {
+  resetToken: string;
+  newPassword: string;
+};
+
+export type ResetPassword200 = {
+  ok?: boolean;
 };
 
 export type ListGuestRequestsParams = {

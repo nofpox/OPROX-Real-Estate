@@ -1171,6 +1171,71 @@ paths:
         "401":
           description: Not authenticated
 
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      summary: Request a password reset token (verifies email + phone)
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, phoneNumber, tenantSlug]
+              properties:
+                email:
+                  type: string
+                phoneNumber:
+                  type: string
+                tenantSlug:
+                  type: string
+      responses:
+        "200":
+          description: Reset token issued (or no-op if user not found)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  resetToken:
+                    type: string
+                    description: Demo-mode only — in production this is sent via email/SMS
+        "400":
+          description: Missing fields
+
+  /auth/reset-password:
+    post:
+      operationId: resetPassword
+      summary: Reset password using a valid reset token
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resetToken, newPassword]
+              properties:
+                resetToken:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        "200":
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        "400":
+          description: Invalid or expired token
+
   /auth/sessions:
     get:
       operationId: listActiveSessions
@@ -2768,6 +2833,8 @@ components:
           type: string
         password:
           type: string
+        tenantSlug:
+          type: string
 
     AuthUser:
       type: object
@@ -2780,6 +2847,9 @@ components:
         displayName:
           type: string
         email:
+          type: string
+          nullable: true
+        phoneNumber:
           type: string
           nullable: true
         role:
@@ -2830,6 +2900,9 @@ components:
         email:
           type: string
           nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
         role:
           type: string
         permissions:
@@ -2850,6 +2923,8 @@ components:
         displayName:
           type: string
         email:
+          type: string
+        phoneNumber:
           type: string
         password:
           type: string
