@@ -2906,6 +2906,9 @@ components:
       properties:
         id:
           type: integer
+        userId:
+          type: ["integer", "null"]
+          description: "Target user ID. null = tenant-wide broadcast visible to all users."
         type:
           type: string
           description: "check-in, check-out, maintenance-alert"

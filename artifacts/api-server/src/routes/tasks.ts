@@ -30,21 +30,31 @@ function canApproveReport(role: string | undefined): boolean {
   return role === "manager" || role === "owner" || role === "super_admin";
 }
 
-/** Fire-and-forget: insert a notification row for all users in the tenant */
+/**
+ * Fire-and-forget: insert a notification for a task event.
+ *
+ * `userId` = target user ID (supervisor / assignee).
+ * `userId` = null (default) → tenant-wide broadcast visible to all users.
+ *
+ * Targeted notifications let supervisors see only the reports relevant to
+ * them, rather than every event across the whole tenant.
+ */
 function createTaskNotification(params: {
   tenantId: number;
   type: string;
   title: string;
   message: string;
   relatedId: number;
+  userId?: number | null;
 }): void {
   db.insert(notificationsTable).values({
-    tenantId: params.tenantId,
-    type: params.type,
-    title: params.title,
-    message: params.message,
-    isRead: false,
-    relatedId: params.relatedId,
+    tenantId:    params.tenantId,
+    userId:      params.userId ?? null,
+    type:        params.type,
+    title:       params.title,
+    message:     params.message,
+    isRead:      false,
+    relatedId:   params.relatedId,
     relatedType: "task",
   }).catch(() => { /* non-critical — never block the main response */ });
 }

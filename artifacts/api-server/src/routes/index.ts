@@ -43,7 +43,7 @@ const SUPERVISOR_PREFIXES = [
   "/maintenance-requests", "/field-users", "/admin/",
 ];
 
-function tierGate(req: Request, res: Response, next: NextFunction): void {
+async function tierGate(req: Request, res: Response, next: NextFunction): Promise<void> {
   const path = req.path;
 
   if (PUBLIC_PREFIXES.some((p) => path.startsWith(p) || path === p.replace(/\/$/, ""))) {
@@ -51,7 +51,7 @@ function tierGate(req: Request, res: Response, next: NextFunction): void {
   }
 
   const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
-  const session = sessionId ? sessions.get(sessionId) : undefined;
+  const session = sessionId ? await sessions.get(sessionId) : undefined;
   if (!session) {
     res.status(401).json({ error: "Not authenticated" }); return;
   }

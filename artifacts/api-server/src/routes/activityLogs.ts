@@ -1,8 +1,6 @@
 import { Router } from "express";
 import { db, activityLogsTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
-import { sessions } from "./auth";
-
 const router = Router();
 
 function tid(req: import("express").Request): number | null {
@@ -72,10 +70,11 @@ export async function logActivity(params: {
   } catch { /* non-critical */ }
 }
 
-/** Extract actor identity. Prefers real session; falls back to x-actor-* headers. */
+/** Extract actor identity. Uses session attached by tierGate; falls back to x-actor-* headers. */
 export function actorFromRequest(req: import("express").Request) {
-  const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
-  const session   = sessionId ? sessions.get(sessionId) : undefined;
+  // tierGate always sets req.sessionUser for authenticated routes.
+  // We read it directly here — avoids a redundant DB round-trip.
+  const session = (req as any).sessionUser as { id: number; displayName: string; role: string } | undefined;
 
   if (session) {
     return {

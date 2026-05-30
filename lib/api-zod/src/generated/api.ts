@@ -1249,6 +1249,7 @@ export const ListNotificationsQueryParams = zod.object({
 
 export const ListNotificationsResponseItem = zod.object({
   "id": zod.number(),
+  "userId": zod.number().nullish().describe('Target user ID. null = tenant-wide broadcast visible to all users.'),
   "type": zod.string().describe('check-in, check-out, maintenance-alert'),
   "title": zod.string(),
   "message": zod.string(),
@@ -1278,6 +1279,7 @@ export const MarkNotificationReadParams = zod.object({
 
 export const MarkNotificationReadResponse = zod.object({
   "id": zod.number(),
+  "userId": zod.number().nullish().describe('Target user ID. null = tenant-wide broadcast visible to all users.'),
   "type": zod.string().describe('check-in, check-out, maintenance-alert'),
   "title": zod.string(),
   "message": zod.string(),

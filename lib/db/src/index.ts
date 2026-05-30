@@ -10,16 +10,29 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
+// ── Connection pool sizing ─────────────────────────────────────────────────────
+// With Node.js cluster mode, the primary process passes POOL_MAX per worker so
+// that all workers together stay well under PostgreSQL's max_connections (112).
+//
+// Formula: floor((pg_max_connections − 10_reserved) / cluster_worker_count)
+//   Single process (CLUSTER_WORKERS=1): POOL_MAX = 20  (comfortable headroom)
+//   4 workers:                           POOL_MAX = 25  (4 × 25 = 100, under 112)
+//
+// Production note: deploy PgBouncer in transaction-pooling mode in front of this
+// pool to multiplex thousands of app connections down to ~50 real DB connections.
+// See /infra/pgbouncer.ini for the reference configuration.
+const poolMax = parseInt(process.env.POOL_MAX ?? "20", 10);
+
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // Allow enough DB connections for multiple Node.js instances behind a load balancer.
-  // Formula: (pg max_connections - 10 reserved for admin) / expected_node_instances
-  // Current DB max_connections = 112, so 20 per instance supports ~5 Node processes.
-  // Production: use PgBouncer in transaction mode to pool thousands of app connections
-  // down to a small DB-side pool (e.g., 50 total DB connections, 1000+ app connections).
-  max: 20,
-  idleTimeoutMillis: 30_000,
-  connectionTimeoutMillis: 5_000,
+  max:                         poolMax,
+  min:                         2,          // keep 2 warm connections always alive
+  idleTimeoutMillis:           30_000,
+  connectionTimeoutMillis:     5_000,
+  maxUses:                     7_500,      // recycle connections after N queries to prevent memory bloat
+  allowExitOnIdle:             true,       // let the process exit cleanly when no connections are active
+  keepAlive:                   true,       // prevent TCP-level drops during idle periods
+  keepAliveInitialDelayMillis: 10_000,
 });
 export const db = drizzle(pool, { schema });
 

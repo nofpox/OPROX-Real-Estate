@@ -8,6 +8,10 @@ function tid(req: import("express").Request): number | null {
   return ((req as any).sessionUser as any)?.tenantId ?? null;
 }
 
+function uid(req: import("express").Request): number | null {
+  return ((req as any).sessionUser as any)?.id ?? null;
+}
+
 function formatNotification(n: typeof notificationsTable.$inferSelect) {
   return { ...n, createdAt: n.createdAt.toISOString() };
 }
@@ -15,9 +19,16 @@ function formatNotification(n: typeof notificationsTable.$inferSelect) {
 router.get("/notifications", async (req, res) => {
   const { unreadOnly } = req.query as { unreadOnly?: string };
   const tenantId = tid(req);
+  const userId   = uid(req);
   const conditions = [];
   if (tenantId !== null) conditions.push(eq(notificationsTable.tenantId, tenantId));
   if (unreadOnly === "true") conditions.push(eq(notificationsTable.isRead, false));
+  // Show tenant-wide broadcasts (user_id IS NULL) AND notifications targeted at this user.
+  if (userId !== null) {
+    conditions.push(
+      sql`(${notificationsTable.userId} IS NULL OR ${notificationsTable.userId} = ${userId})`
+    );
+  }
 
   const rows = await db
     .select()
@@ -128,9 +139,18 @@ router.patch("/notifications/:id/read", async (req, res) => {
 
 router.patch("/notifications/read-all", async (req, res) => {
   const tenantId = tid(req);
+  const userId   = uid(req);
+  const conditions = [];
+  if (tenantId !== null) conditions.push(eq(notificationsTable.tenantId, tenantId));
+  // Only mark notifications visible to this user (broadcasts + their own targeted ones).
+  if (userId !== null) {
+    conditions.push(
+      sql`(${notificationsTable.userId} IS NULL OR ${notificationsTable.userId} = ${userId})`
+    );
+  }
   await db.update(notificationsTable)
     .set({ isRead: true })
-    .where(tenantId !== null ? eq(notificationsTable.tenantId, tenantId) : undefined);
+    .where(conditions.length > 0 ? and(...conditions) : undefined);
   res.json({ ok: true });
 });
 

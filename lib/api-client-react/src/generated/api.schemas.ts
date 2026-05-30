@@ -529,6 +529,11 @@ export interface TaskCommentInput {
 
 export interface AppNotification {
   id: number;
+  /**
+     * Target user ID. null = tenant-wide broadcast visible to all users.
+     * @nullable
+     */
+  userId?: number | null;
   /** check-in, check-out, maintenance-alert */
   type: string;
   title: string;

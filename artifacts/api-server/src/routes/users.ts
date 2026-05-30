@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
-import { hashPwd, sessions, getRoleTier } from "./auth.js";
+import { hashPwd, getRoleTier } from "./auth.js";
+import { sessions } from "../lib/session-store.js";
 
 const router = Router();
 
@@ -19,17 +20,13 @@ function fmt(u: typeof usersTable.$inferSelect) {
   };
 }
 
-function clearUserSessions(userId: number): number {
-  let count = 0;
-  for (const [key, s] of sessions.entries()) {
-    if (s.id === userId) { sessions.delete(key); count++; }
-  }
-  return count;
+async function clearUserSessions(userId: number): Promise<number> {
+  return sessions.deleteByUserId(userId);
 }
 
 function getCallerSession(req: import("express").Request) {
-  const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
-  return sessionId ? sessions.get(sessionId) : undefined;
+  // tierGate sets req.sessionUser before any route handler runs.
+  return (req as any).sessionUser as import("./auth.js").SessionUser | undefined;
 }
 
 router.get("/users", async (req, res) => {
@@ -83,7 +80,7 @@ router.patch("/users/:id", async (req, res) => {
   const [user] = await db.update(usersTable).set(update).where(and(...conds)).returning();
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
   if (update.isActive === false) {
-    const cleared = clearUserSessions(id);
+    const cleared = await clearUserSessions(id);
     req.log.info({ userId: id, sessionsCleared: cleared }, "User deactivated — sessions cleared");
   }
   res.json(fmt(user));
@@ -95,7 +92,7 @@ router.delete("/users/:id", async (req, res) => {
   const tenantId = tid(req);
   const conds = [eq(usersTable.id, id)];
   if (tenantId !== null) conds.push(eq(usersTable.tenantId, tenantId));
-  clearUserSessions(id);
+  await clearUserSessions(id);
   await db.delete(usersTable).where(and(...conds));
   res.status(204).end();
 });
@@ -127,7 +124,7 @@ router.post("/users/:id/kill-switch", async (req, res) => {
   }
 
   const [user] = await db.update(usersTable).set({ isActive: false }).where(and(...conds)).returning();
-  const cleared = clearUserSessions(id);
+  const cleared = await clearUserSessions(id);
   req.log.info({ targetUserId: id, sessionsCleared: cleared, triggeredBy: caller.id }, "Kill switch triggered");
   res.json(fmt(user));
 });

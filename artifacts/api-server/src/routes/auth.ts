@@ -8,23 +8,12 @@ import {
   recordSuccessfulLogin,
   readSecurityLog,
 } from "../lib/security.js";
+// Sessions are stored in PostgreSQL — shared across cluster workers, survive restarts.
+import { sessions } from "../lib/session-store.js";
+import type { SessionUser } from "../types.js";
 
-export type SessionUser = {
-  id: number;
-  username: string;
-  displayName: string;
-  email: string | null;
-  phoneNumber: string | null;
-  role: string;
-  permissions: string[];
-  isActive: boolean;
-  createdAt: string;
-  mustChangePassword: boolean;
-  tenantId: number | null;
-  isSuperAdmin: boolean;
-};
-
-export const sessions = new Map<string, SessionUser>();
+export { sessions };
+export type { SessionUser };
 
 // token → { userId, tenantId, expiresAt }
 const resetTokens = new Map<string, { userId: number; tenantId: number | null; expiresAt: number }>();
@@ -196,25 +185,25 @@ router.post("/auth/login", async (req, res) => {
     tenantId: resolvedTenantId,
     isSuperAdmin,
   };
-  sessions.set(sessionId, sessionUser);
+  await sessions.set(sessionId, sessionUser);
   res.setHeader("Set-Cookie", `pms_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`);
   res.json(sessionUser);
 });
 
 // ── Logout ────────────────────────────────────────────────────────────────────
 
-router.post("/auth/logout", (req, res) => {
+router.post("/auth/logout", async (req, res) => {
   const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
-  if (sessionId) sessions.delete(sessionId);
+  if (sessionId) await sessions.delete(sessionId);
   res.setHeader("Set-Cookie", "pms_session=; Path=/; HttpOnly; Max-Age=0");
   res.json({ ok: true });
 });
 
 // ── Session check ─────────────────────────────────────────────────────────────
 
-router.get("/auth/me", (req, res) => {
+router.get("/auth/me", async (req, res) => {
   const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
-  const session = sessionId ? sessions.get(sessionId) : undefined;
+  const session = sessionId ? await sessions.get(sessionId) : undefined;
   if (!session) { res.status(401).json({ error: "Not authenticated" }); return; }
   res.json(session);
 });
@@ -223,7 +212,7 @@ router.get("/auth/me", (req, res) => {
 
 router.post("/auth/change-password", async (req, res) => {
   const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
-  const session   = sessionId ? sessions.get(sessionId) : undefined;
+  const session   = sessionId ? await sessions.get(sessionId) : undefined;
   if (!session) { res.status(401).json({ error: "Not authenticated" }); return; }
 
   const { currentPassword, newPassword } = req.body ?? {};
@@ -244,7 +233,7 @@ router.post("/auth/change-password", async (req, res) => {
   );
 
   session.mustChangePassword = false;
-  sessions.set(sessionId!, session);
+  await sessions.set(sessionId!, session);
   res.json({ ok: true });
 });
 
@@ -379,16 +368,17 @@ router.post("/auth/reset-password", async (req, res) => {
 
 // ── Active sessions (admin/supervisor) ───────────────────────────────────────
 
-router.get("/auth/sessions", (req, res) => {
+router.get("/auth/sessions", async (req, res) => {
   const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
-  const caller = sessionId ? sessions.get(sessionId) : undefined;
+  const caller = sessionId ? await sessions.get(sessionId) : undefined;
   if (!caller) { res.status(401).json({ error: "Not authenticated" }); return; }
 
   const callerTier = getRoleTier(caller.role);
   if (callerTier === "worker") { res.status(403).json({ error: "Forbidden" }); return; }
 
+  const allSessions = await sessions.entries();
   const result: { sessionKey: string; userId: number; displayName: string; username: string; role: string }[] = [];
-  for (const [key, s] of sessions.entries()) {
+  for (const [key, s] of allSessions) {
     if (callerTier === "supervisor" && getRoleTier(s.role) !== "worker") continue;
     result.push({ sessionKey: key, userId: s.id, displayName: s.displayName, username: s.username, role: s.role });
   }
@@ -397,9 +387,9 @@ router.get("/auth/sessions", (req, res) => {
 
 // ── Security log (admin only) ─────────────────────────────────────────────────
 
-router.get("/auth/security-log", (req, res) => {
+router.get("/auth/security-log", async (req, res) => {
   const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
-  const session = sessionId ? sessions.get(sessionId) : undefined;
+  const session = sessionId ? await sessions.get(sessionId) : undefined;
   if (!session || (session.role !== "owner" && !session.isSuperAdmin)) {
     res.status(403).json({ error: "Forbidden" });
     return;

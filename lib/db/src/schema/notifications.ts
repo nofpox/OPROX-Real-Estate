@@ -5,6 +5,8 @@ import { z } from "zod/v4";
 export const notificationsTable = pgTable("notifications", {
   id:          serial("id").primaryKey(),
   tenantId:    integer("tenant_id").notNull().default(1),
+  /** Target user — null means the notification is broadcast to all users in the tenant. */
+  userId:      integer("user_id"),
   type:        text("type").notNull(),
   title:       text("title").notNull(),
   message:     text("message").notNull(),
@@ -13,9 +15,9 @@ export const notificationsTable = pgTable("notifications", {
   relatedType: text("related_type"),
   createdAt:   timestamp("created_at").defaultNow().notNull(),
 }, (t) => [
-  // Unread bell-icon query: WHERE tenant_id = ? AND is_read = false ORDER BY created_at DESC
-  index("notifications_tenant_unread_idx").on(t.tenantId, t.isRead, t.createdAt),
-  // Bulk mark-as-read: WHERE tenant_id = ?
+  // Per-user bell query: WHERE tenant_id = ? AND (user_id IS NULL OR user_id = ?) AND is_read = false
+  index("notifications_tenant_user_unread_idx").on(t.tenantId, t.userId, t.isRead, t.createdAt),
+  // Tenant-wide broadcast fetch
   index("notifications_tenant_idx").on(t.tenantId),
 ]);
 
