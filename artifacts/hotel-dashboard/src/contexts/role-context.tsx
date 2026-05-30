@@ -16,17 +16,17 @@ import React, { createContext, useContext, useState } from "react";
       label: "Manager",
       description: "Full access to all features",
       allowedNav: [
-        "/", "/bookings", "/properties", "/rooms", "/guests", "/finance",
+        "/", "/properties", "/rooms",
         "/maintenance", "/staff", "/tasks", "/guest-requests", "/user-management",
-        "/activity-log", "/unit-map",
+        "/activity-log", "/unit-map", "/facilities",
       ],
       taskCategories: null,
     },
     {
       id: "front-desk",
       label: "Front Desk",
-      description: "Bookings, guests, and room management",
-      allowedNav: ["/", "/bookings", "/rooms", "/guests", "/guest-requests"],
+      description: "Room management, service requests, and operations",
+      allowedNav: ["/", "/rooms", "/guest-requests", "/tasks"],
       taskCategories: ["reception", "general"],
     },
     {

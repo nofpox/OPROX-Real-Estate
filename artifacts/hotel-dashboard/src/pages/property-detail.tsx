@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, MapPin, Building2, Wrench, Calendar as CalendarIcon, AlertCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Building2, Wrench, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function PropertyDetail() {
@@ -80,10 +80,9 @@ export default function PropertyDetail() {
         {property.description && <p className="text-muted-foreground mt-2 max-w-3xl">{property.description}</p>}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {[
           { icon: Building2, label: t("properties.detail.totalRooms"), value: stats?.unitCount || 0, color: "" },
-          { icon: CalendarIcon, label: t("properties.detail.activeBookings"), value: stats?.activeBookings || 0, color: "" },
           { icon: AlertCircle, label: t("properties.detail.openWorkOrders", "Open Work Orders"), value: stats?.openWorkOrders || 0, color: "text-amber-600 dark:text-amber-500" },
         ].map(({ icon: Icon, label, value, color }) => (
           <Card key={label} className="shadow-sm">
@@ -131,9 +130,7 @@ export default function PropertyDetail() {
                   ) : (
                     rooms.map((room) => (
                       <TableRow key={room.id} className="cursor-pointer hover:bg-muted/50 transition-colors">
-                        <TableCell className="font-medium text-primary">
-                          <Link href={`/bookings?room=${room.id}`}>{room.name}</Link>
-                        </TableCell>
+                        <TableCell className="font-medium">{room.name}</TableCell>
                         <TableCell>{t(`rooms.types.${room.type}`, room.type)}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={
