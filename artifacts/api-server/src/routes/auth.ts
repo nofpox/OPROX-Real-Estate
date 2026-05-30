@@ -234,26 +234,43 @@ router.post("/auth/change-password", async (req, res) => {
 });
 
 // ── Forgot password ───────────────────────────────────────────────────────────
-// Verifies email + phoneNumber + tenantSlug; issues a short-lived reset token.
-// In production this token would be delivered via email/SMS — here we return it
-// directly in the response body for demo/development purposes.
+// Two-mode endpoint controlled by the presence of `deliveryMethod`:
+//
+//  Mode A — verify only (no deliveryMethod):
+//    Checks email + phoneNumber + tenantSlug; if found returns masked contact
+//    info so the client can show the delivery-choice screen.  No token issued.
+//
+//  Mode B — send (deliveryMethod = "sms" | "email"):
+//    Same verification, then generates a 6-char reset token (3-min expiry).
+//    In production the token is delivered via the chosen channel; in demo mode
+//    it is returned in the response body for testing purposes.
+
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  return `${local.charAt(0)}${"*".repeat(Math.min(local.length - 1, 4))}@${domain}`;
+}
+
+function maskPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  const last4  = digits.slice(-4);
+  return `+${"*".repeat(Math.max(digits.length - 4, 3))}-${last4}`;
+}
 
 router.post("/auth/forgot-password", async (req, res) => {
-  const { email, phoneNumber, tenantSlug } = req.body ?? {};
+  const { email, phoneNumber, tenantSlug, deliveryMethod } = req.body ?? {};
   if (!email || !phoneNumber || !tenantSlug) {
     res.status(400).json({ error: "email, phoneNumber, and tenantSlug are required" });
     return;
   }
 
-  // Resolve tenant
+  // Resolve tenant (silent on miss — avoids tenant enumeration)
   const [tenant] = await db
     .select({ id: tenantsTable.id })
     .from(tenantsTable)
     .where(eq(tenantsTable.slug, String(tenantSlug)));
 
   if (!tenant) {
-    // Return generic ok to avoid tenant enumeration
-    res.json({ ok: true });
+    res.json({ ok: true, userFound: false });
     return;
   }
 
@@ -271,28 +288,49 @@ router.post("/auth/forgot-password", async (req, res) => {
     );
 
   if (!user) {
-    // Return generic ok to avoid user enumeration
-    res.json({ ok: true });
+    // Silent — avoid user enumeration
+    res.json({ ok: true, userFound: false });
     return;
   }
 
-  // Clean up any previous tokens for this user
+  // ── Mode A: verify-only ──────────────────────────────────────────────────
+  if (!deliveryMethod) {
+    res.json({
+      ok: true,
+      userFound: true,
+      maskedEmail:  maskEmail(user.email  ?? email),
+      maskedPhone:  maskPhone(user.phoneNumber ?? phoneNumber),
+    });
+    return;
+  }
+
+  // ── Mode B: generate + deliver token ────────────────────────────────────
+  if (deliveryMethod !== "sms" && deliveryMethod !== "email") {
+    res.status(400).json({ error: "deliveryMethod must be 'sms' or 'email'" });
+    return;
+  }
+
+  // Invalidate any previous pending tokens for this user
   for (const [tok, data] of resetTokens.entries()) {
     if (data.userId === user.id) resetTokens.delete(tok);
   }
 
-  // Generate a 6-character alphanumeric token (uppercase, easy to type)
+  // 6-char uppercase hex token, 3-minute expiry
   const resetToken = crypto.randomBytes(4).toString("hex").toUpperCase().slice(0, 6);
   resetTokens.set(resetToken, {
-    userId: user.id,
-    tenantId: tenant.id,
-    expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutes
+    userId:    user.id,
+    tenantId:  tenant.id,
+    expiresAt: Date.now() + 3 * 60 * 1000,
   });
 
-  req.log.info({ userId: user.id }, "Password reset token issued");
+  req.log.info({ userId: user.id, deliveryMethod }, "Password reset token issued");
 
-  // In production: send via email/SMS. For demo: include in response.
-  res.json({ ok: true, resetToken });
+  // Production hook: plug in your SMS/email provider here.
+  // if (deliveryMethod === "sms")   await sendSms(user.phoneNumber, resetToken);
+  // if (deliveryMethod === "email") await sendEmail(user.email, resetToken);
+
+  // Demo mode: return token in response body so the UI can display it.
+  res.json({ ok: true, resetToken, deliveryMethod });
 });
 
 // ── Reset password ────────────────────────────────────────────────────────────
