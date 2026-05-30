@@ -24,7 +24,7 @@ import { useTranslation } from "react-i18next";
 const ROLES = [
   "Front Desk Manager", "Concierge", "Housekeeping Supervisor", "Housekeeping Staff",
   "Maintenance Lead", "Maintenance Technician", "Security Supervisor", "Security Officer",
-  "Property Manager", "Compound Manager", "Groundskeeper", "General Staff",
+  "Property Manager", "Estate Manager", "Groundskeeper", "General Staff",
 ];
 
 const staffSchema = z.object({

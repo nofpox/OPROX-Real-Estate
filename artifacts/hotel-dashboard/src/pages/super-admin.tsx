@@ -12,20 +12,20 @@ import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import {
   ArrowLeft, ShieldAlert, LayoutDashboard, CheckCircle2,
-  Lock, Layers, Building, Hotel, Building2, Sparkles as SparklesIcon,
+  Lock, Layers, Building, Building2,
 } from "lucide-react";
 import {
   MODULE_REGISTRY,
   type BusinessMode,
 } from "@/config/modules";
 
-// ─── Property type options ────────────────────────────────────────────────────
+// ─── Business mode options ────────────────────────────────────────────────────
 
 const PROPERTY_TYPES: { value: BusinessMode; label: string; icon: React.ElementType }[] = [
-  { value: "hotel",                label: "Hotel",                icon: Hotel       },
-  { value: "compound",             label: "Compound",             icon: Building2   },
-  { value: "tower",                label: "Residential Tower",    icon: Building    },
-  { value: "serviced-apartments",  label: "Serviced Apartments",  icon: SparklesIcon},
+  { value: "hotel",                label: "Standard (Rooms)",    icon: Building    },
+  { value: "compound",             label: "Mixed (Units)",       icon: Building2   },
+  { value: "tower",                label: "Tower (Floors)",      icon: Building    },
+  { value: "serviced-apartments",  label: "Serviced (Units)",    icon: Building2   },
 ];
 
 // ─── Core (always-on) nav items ───────────────────────────────────────────────
