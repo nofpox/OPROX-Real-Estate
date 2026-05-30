@@ -22,18 +22,6 @@ import { useToast } from "@/hooks/use-toast";
 import { type Property } from "@workspace/api-client-react";
 import { useTranslation } from "react-i18next";
 
-const PropertyTypeBadge = ({ type }: { type: string }) => {
-  const { t } = useTranslation();
-  const label = t(`propertyType.${type}`, type);
-  switch (type.toLowerCase()) {
-    case "hotel": return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-0 dark:bg-blue-900/30 dark:text-blue-400">{label}</Badge>;
-    case "apartment": return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-0 dark:bg-amber-900/30 dark:text-amber-400">{label}</Badge>;
-    case "compound": return <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-0 dark:bg-green-900/30 dark:text-green-400">{label}</Badge>;
-    case "furnished apartments": return <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-100 border-0 dark:bg-indigo-900/30 dark:text-indigo-400">{label}</Badge>;
-    default: return <Badge variant="outline">{label}</Badge>;
-  }
-};
-
 const PropertyStatusBadge = ({ status }: { status: string }) => {
   const { t } = useTranslation();
   return status.toLowerCase() === "active"
@@ -243,12 +231,11 @@ export default function Properties() {
             return (
               <Card key={property.id} className="shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-all">
                 <CardHeader className="p-6 pb-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <PropertyTypeBadge type={property.type} />
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <CardTitle className="font-serif text-xl line-clamp-1 flex-1">{property.name}</CardTitle>
                     <PropertyStatusBadge status={property.status} />
                   </div>
-                  <CardTitle className="font-serif text-xl line-clamp-1">{property.name}</CardTitle>
-                  <div className="flex items-center text-sm text-muted-foreground mt-1">
+                  <div className="flex items-center text-sm text-muted-foreground">
                     <MapPin className="me-1 h-3 w-3 shrink-0" />
                     <span className="line-clamp-1">{property.address}, {property.city}, {property.country}</span>
                   </div>

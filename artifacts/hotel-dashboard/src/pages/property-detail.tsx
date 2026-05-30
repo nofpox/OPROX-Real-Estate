@@ -49,13 +49,6 @@ export default function PropertyDetail() {
     );
   }
 
-  const typeBadgeClass =
-    property.type.toLowerCase() === "hotel" ? "bg-blue-100 text-blue-800 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400" :
-    property.type.toLowerCase() === "apartment" ? "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400" :
-    property.type.toLowerCase() === "compound" ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400" :
-    property.type.toLowerCase() === "furnished apartments" ? "bg-indigo-100 text-indigo-800 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400" :
-    "bg-slate-100 text-slate-800 hover:bg-slate-100";
-
   return (
     <div className="space-y-6">
       <Link href="/properties">
@@ -68,7 +61,6 @@ export default function PropertyDetail() {
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{property.name}</h1>
-          <Badge className={typeBadgeClass}>{t(`propertyType.${property.type}`, property.type)}</Badge>
           {property.status === "inactive" && (
             <Badge variant="outline" className="text-gray-500">{t("status.inactive")}</Badge>
           )}
