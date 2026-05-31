@@ -55,8 +55,54 @@ export function getRoleTier(role: string): "admin" | "supervisor" | "worker" {
   return "worker";
 }
 
+/**
+ * 4-level hierarchy:  owner=4 → manager=3 → supervisor=2 → worker=1
+ * Used for RBAC checks: callers can only create/manage users at strictly lower levels.
+ */
+export function getHierarchyLevel(role: string): number {
+  if (role === "owner" || role === "admin" || role === "super_admin") return 4;
+  if (role === "manager") return 3;
+  if (role === "supervisor" || role === "site-supervisor" || role === "property-manager" || role === "front-desk") return 2;
+  return 1;
+}
+
 export function hashPwd(password: string): string {
   return crypto.createHash("sha256").update(`grand-pms::${password}`).digest("hex");
+}
+
+/**
+ * Send a welcome email to a newly created employee with their login credentials.
+ */
+export async function sendWelcomeEmail(to: string, username: string, tempPassword: string): Promise<void> {
+  if (!resend) return;
+  await resend.emails.send({
+    from:    "Rakz PMS <onboarding@resend.dev>",
+    to:      [to],
+    subject: "Welcome to Rakz PMS — Your account is ready",
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
+        <h2 style="margin:0 0 8px;font-size:20px;color:#111">Welcome to Rakz PMS</h2>
+        <p style="margin:0 0 24px;color:#555;font-size:15px">
+          Your account has been created by your manager. Use the credentials below to sign in for the first time.
+          You will be asked to set a new password immediately after logging in.
+        </p>
+        <div style="background:#f4f4f5;border-radius:8px;padding:16px 20px;margin:0 0 12px">
+          <p style="margin:0 0 4px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Username</p>
+          <p style="margin:0;font-size:22px;font-weight:700;color:#111;letter-spacing:1px">${username}</p>
+        </div>
+        <div style="background:#f4f4f5;border-radius:8px;padding:16px 20px;margin:0 0 24px">
+          <p style="margin:0 0 4px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Temporary Password</p>
+          <p style="margin:0;font-size:22px;font-weight:700;color:#111;letter-spacing:4px;font-family:monospace">${tempPassword}</p>
+        </div>
+        <p style="margin:0 0 8px;color:#555;font-size:13px">
+          This is a one-time password. You will be prompted to change it on first login.
+        </p>
+        <p style="margin:0;color:#aaa;font-size:12px">
+          If you did not expect this account, please contact your administrator.
+        </p>
+      </div>
+    `,
+  });
 }
 
 export async function ensureAdmin() {
@@ -293,34 +339,37 @@ function maskPhone(phone: string): string {
 
 router.post("/auth/forgot-password", async (req, res) => {
   const { email, phoneNumber, tenantSlug, deliveryMethod } = req.body ?? {};
-  if (!email || !phoneNumber || !tenantSlug) {
-    res.status(400).json({ error: "email, phoneNumber, and tenantSlug are required" });
+  if (!email || !phoneNumber) {
+    res.status(400).json({ error: "email and phoneNumber are required" });
     return;
   }
 
-  // Resolve tenant (silent on miss — avoids tenant enumeration)
-  const [tenant] = await db
-    .select({ id: tenantsTable.id })
-    .from(tenantsTable)
-    .where(eq(tenantsTable.slug, String(tenantSlug)));
-
-  if (!tenant) {
-    res.json({ ok: true, userFound: false });
-    return;
+  // Resolve tenant — optional; when omitted, search across all tenants
+  let resolvedFpTenantId: number | null = null;
+  if (tenantSlug) {
+    const [tenant] = await db
+      .select({ id: tenantsTable.id })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.slug, String(tenantSlug)));
+    if (!tenant) {
+      res.json({ ok: true, userFound: false });
+      return;
+    }
+    resolvedFpTenantId = tenant.id;
   }
 
-  // Find user with matching email AND phone scoped to this tenant
+  // Find user with matching email AND phone (optionally scoped to tenant)
+  const fpConditions: Parameters<typeof and>[0][] = [
+    eq(usersTable.email, String(email)),
+    eq(usersTable.phoneNumber, String(phoneNumber)),
+    eq(usersTable.isActive, true),
+  ];
+  if (resolvedFpTenantId !== null) fpConditions.push(eq(usersTable.tenantId, resolvedFpTenantId));
+
   const [user] = await db
     .select()
     .from(usersTable)
-    .where(
-      and(
-        eq(usersTable.tenantId, tenant.id),
-        eq(usersTable.email, String(email)),
-        eq(usersTable.phoneNumber, String(phoneNumber)),
-        eq(usersTable.isActive, true),
-      )
-    );
+    .where(and(...fpConditions));
 
   if (!user) {
     // Silent — avoid user enumeration
@@ -354,7 +403,7 @@ router.post("/auth/forgot-password", async (req, res) => {
   const resetToken = crypto.randomBytes(4).toString("hex").toUpperCase().slice(0, 6);
   resetTokens.set(resetToken, {
     userId:    user.id,
-    tenantId:  tenant.id,
+    tenantId:  user.tenantId ?? null,
     expiresAt: Date.now() + 3 * 60 * 1000,
   });
 

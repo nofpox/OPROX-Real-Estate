@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   useListStaff, getListStaffQueryKey, useCreateStaff, useUpdateStaff, useDeleteStaff, useListProperties,
 } from "@workspace/api-client-react";
+import { useRole } from "@/contexts/role-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,11 +22,29 @@ import { useToast } from "@/hooks/use-toast";
 import StaffShifts from "./staff-shifts";
 import { useTranslation } from "react-i18next";
 
-const ROLES = [
+const ALL_ROLES = [
   "Front Desk Manager", "Concierge", "Housekeeping Supervisor", "Housekeeping Staff",
   "Maintenance Lead", "Maintenance Technician", "Security Supervisor", "Security Officer",
   "Property Manager", "Estate Manager", "Groundskeeper", "General Staff",
 ];
+
+// Maps each display role to the hierarchy level required to BE that role.
+// Callers can only create roles strictly below their own level.
+const ROLE_LEVEL_MAP: Record<string, number> = {
+  "Property Manager": 3, "Estate Manager": 3,
+  "Front Desk Manager": 2, "Housekeeping Supervisor": 2,
+  "Maintenance Lead": 2, "Security Supervisor": 2,
+  "Concierge": 1, "Housekeeping Staff": 1,
+  "Maintenance Technician": 1, "Security Officer": 1,
+  "Groundskeeper": 1, "General Staff": 1,
+};
+
+function getCallerLevel(dbRole: string): number {
+  if (dbRole === "owner" || dbRole === "admin" || dbRole === "super_admin") return 4;
+  if (dbRole === "manager") return 3;
+  if (dbRole === "supervisor" || dbRole === "site-supervisor" || dbRole === "property-manager" || dbRole === "front-desk") return 2;
+  return 1;
+}
 
 const staffSchema = z.object({
   name: z.string().min(1),
@@ -58,6 +77,10 @@ type Tab = "directory" | "schedule";
 
 export default function Staff() {
   const { t } = useTranslation();
+  const { actualDbRole } = useRole();
+  const callerLevel = getCallerLevel(actualDbRole);
+  // Only show roles the caller is allowed to assign (strictly below their own level)
+  const assignableRoles = ALL_ROLES.filter((r) => (ROLE_LEVEL_MAP[r] ?? 1) < callerLevel);
   const [activeTab, setActiveTab] = useState<Tab>("directory");
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
@@ -151,7 +174,7 @@ export default function Staff() {
           <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{t("staff.title")}</h1>
           <p className="text-muted-foreground mt-1">{t("staff.subtitle")}</p>
         </div>
-        {activeTab === "directory" && (
+        {activeTab === "directory" && callerLevel >= 2 && (
           <Button onClick={openCreate} className="font-semibold shadow-sm">
             <Plus className="me-2 h-4 w-4" />
             {t("staff.addMember")}
@@ -266,7 +289,7 @@ export default function Staff() {
                   <FormItem><FormLabel>{t("staff.fields.role")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl><SelectTrigger><SelectValue placeholder={t("staff.fields.selectRole")} /></SelectTrigger></FormControl>
-                      <SelectContent>{ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                      <SelectContent>{(editingStaff ? ALL_ROLES : assignableRoles).map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                     </Select><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="status" render={({ field }) => (

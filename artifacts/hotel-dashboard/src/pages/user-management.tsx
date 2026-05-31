@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useRole } from "@/contexts/role-context";
 import {
   useListFieldUsers, useCreateFieldUser, useUpdateFieldUser, useDeleteFieldUser,
   getListFieldUsersQueryKey, useListProperties, type FieldUser,
@@ -125,11 +126,18 @@ const EMPTY_FORM = {
 // ─── System roles ─────────────────────────────────────────────────────────────
 
 const SYSTEM_ROLES = [
-  { id: "admin",      label: "مدير النظام", labelEn: "System Admin",  dot: "bg-purple-500", badgeClass: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" },
-  { id: "manager",    label: "مدير",         labelEn: "Manager",        dot: "bg-blue-500",   badgeClass: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
-  { id: "supervisor", label: "مشرف",         labelEn: "Supervisor",     dot: "bg-amber-500",  badgeClass: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-  { id: "staff",      label: "موظف",         labelEn: "Staff",          dot: "bg-slate-500",  badgeClass: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400" },
+  { id: "admin",      label: "مدير النظام", labelEn: "System Admin",  dot: "bg-purple-500", badgeClass: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400", level: 4 },
+  { id: "manager",    label: "مدير",         labelEn: "Manager",        dot: "bg-blue-500",   badgeClass: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",   level: 3 },
+  { id: "supervisor", label: "مشرف",         labelEn: "Supervisor",     dot: "bg-amber-500",  badgeClass: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400", level: 2 },
+  { id: "staff",      label: "موظف",         labelEn: "Staff",          dot: "bg-slate-500",  badgeClass: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400",   level: 1 },
 ];
+
+function getCallerLevelNum(dbRole: string): number {
+  if (dbRole === "owner" || dbRole === "admin" || dbRole === "super_admin") return 4;
+  if (dbRole === "manager") return 3;
+  if (dbRole === "supervisor" || dbRole === "site-supervisor" || dbRole === "property-manager" || dbRole === "front-desk") return 2;
+  return 1;
+}
 
 function SystemRoleBadge({ role }: { role: string }) {
   const def = SYSTEM_ROLES.find(r => r.id === role);
@@ -148,6 +156,10 @@ const EMPTY_USER_FORM = {
 function SystemAccounts() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { actualDbRole } = useRole();
+  const callerLevel = getCallerLevelNum(actualDbRole);
+  // Roles the caller is allowed to create (strictly below their own level)
+  const creatableRoles = SYSTEM_ROLES.filter(r => r.level < callerLevel);
 
   const { data: users, isLoading } = useListUsers();
   const createUser = useCreateUser();
@@ -265,9 +277,11 @@ function SystemAccounts() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={openAdd} size="sm" className="shrink-0 font-semibold shadow-sm">
-          <Plus className="me-2 h-4 w-4" />إضافة حساب جديد
-        </Button>
+        {callerLevel >= 2 && (
+          <Button onClick={openAdd} size="sm" className="shrink-0 font-semibold shadow-sm">
+            <Plus className="me-2 h-4 w-4" />إضافة حساب جديد
+          </Button>
+        )}
       </div>
 
       {/* KPI row */}
@@ -411,7 +425,7 @@ function SystemAccounts() {
               <Select value={form.role} onValueChange={v => setForm({ ...form, role: v })}>
                 <SelectTrigger id="su-role"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {SYSTEM_ROLES.map(r => (
+                  {(editing ? SYSTEM_ROLES : creatableRoles).map(r => (
                     <SelectItem key={r.id} value={r.id}>
                       <div className="flex items-center gap-2">
                         <span className={`inline-block w-2 h-2 rounded-full ${r.dot}`} />

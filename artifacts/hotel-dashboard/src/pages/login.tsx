@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Eye, EyeOff, Building2, ArrowRight, KeyRound,
+  Eye, EyeOff, ArrowRight, KeyRound,
   Smartphone, Mail, RefreshCw, Clock, CheckCircle2,
   LayoutDashboard, Tablet, Home,
 } from "lucide-react";
@@ -59,7 +59,6 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
   const [step, setStep]               = useState<FpStep>("identify");
 
   // identity fields (step 1)
-  const [tenantSlug,   setTenantSlug]   = useState("");
   const [email,        setEmail]        = useState("");
   const [phoneNumber,  setPhoneNumber]  = useState("");
 
@@ -82,7 +81,7 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
   // ── Reset all state ────────────────────────────────────────────────────────
   function resetAll() {
     setStep("identify");
-    setTenantSlug(""); setEmail(""); setPhoneNumber("");
+    setEmail(""); setPhoneNumber("");
     setMaskedEmail(""); setMaskedPhone("");
     setDemoToken(null); setResetToken(""); setNewPassword(""); setConfirmPwd("");
     setShowPwd(false); setDeliveryMethod(null);
@@ -93,13 +92,13 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
   // ── Step 1: verify identity (Mode A — no deliveryMethod) ──────────────────
   async function handleIdentify(e: React.FormEvent) {
     e.preventDefault();
-    if (!tenantSlug || !email || !phoneNumber) return;
+    if (!email || !phoneNumber) return;
     setLoading(true);
     try {
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantSlug, email, phoneNumber }),
+        body: JSON.stringify({ email, phoneNumber }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -126,7 +125,7 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantSlug, email, phoneNumber, deliveryMethod: method }),
+        body: JSON.stringify({ email, phoneNumber, deliveryMethod: method }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -191,7 +190,7 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
     verify:   "Enter Verification Code",
   };
   const descs: Record<FpStep, string> = {
-    identify: "Enter your Company Code, email and phone number to verify your identity.",
+    identify: "Enter your email and phone number to verify your identity.",
     choose:   "We'll send a 6-character verification code to your chosen contact method.",
     verify:   "Enter the code we sent you, then choose a new password.",
   };
@@ -210,16 +209,6 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
         {/* ── Step 1: Identify ─────────────────────────────────────────── */}
         {step === "identify" && (
           <form onSubmit={handleIdentify} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="fp-tenant">Company Code</Label>
-              <Input
-                id="fp-tenant"
-                value={tenantSlug}
-                onChange={(e) => setTenantSlug(e.target.value)}
-                placeholder="rakz"
-                required
-              />
-            </div>
             <div className="space-y-1.5">
               <Label htmlFor="fp-email">Email</Label>
               <Input
@@ -430,7 +419,6 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
 // ── Login page ────────────────────────────────────────────────────────────────
 
 export default function Login({ onLogin }: LoginProps) {
-  const [tenantSlug,   setTenantSlug]   = useState("");
   const [username,     setUsername]     = useState("");
   const [password,     setPassword]     = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -447,7 +435,7 @@ export default function Login({ onLogin }: LoginProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ username, password, tenantSlug: tenantSlug.trim() || undefined }),
+        body: JSON.stringify({ username, password }),
       });
       if (res.ok) {
         const user = await res.json();
@@ -491,34 +479,7 @@ export default function Login({ onLogin }: LoginProps) {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
 
-              {/* Step 1: Company Code */}
-              <div className="space-y-1.5">
-                <Label htmlFor="tenantSlug" className="flex items-center gap-1.5">
-                  <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                  Company Code
-                </Label>
-                <Input
-                  id="tenantSlug"
-                  value={tenantSlug}
-                  onChange={(e) => setTenantSlug(e.target.value)}
-                  placeholder="rakz"
-                  autoComplete="organization"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Your organisation's unique identifier
-                </p>
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Your credentials</span>
-                </div>
-              </div>
-
-              {/* Step 2: Username */}
+              {/* Username */}
               <div className="space-y-1.5">
                 <Label htmlFor="username">Username</Label>
                 <Input

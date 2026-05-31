@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
-import { hashPwd, getRoleTier } from "./auth.js";
+import { hashPwd, getRoleTier, getHierarchyLevel } from "./auth.js";
 import { sessions } from "../lib/session-store.js";
 
 const router = Router();
@@ -45,6 +45,17 @@ router.post("/users", async (req, res) => {
   if (!username || !displayName || !password) {
     res.status(400).json({ error: "username, displayName, and password required" }); return;
   }
+
+  // Hierarchy: caller can only create users at strictly lower levels than themselves
+  const caller = getCallerSession(req);
+  if (caller) {
+    const callerLevel = getHierarchyLevel(caller.role);
+    const targetLevel = getHierarchyLevel(String(role ?? "staff"));
+    if (callerLevel < 4 && targetLevel >= callerLevel) {
+      res.status(403).json({ error: "You can only create users with a role below your own level" }); return;
+    }
+  }
+
   const [user] = await db.insert(usersTable).values({
     tenantId,
     username:    String(username),
