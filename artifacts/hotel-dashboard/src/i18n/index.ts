@@ -47,7 +47,7 @@ for (const lang of LANGUAGES) {
 
 const savedLang =
   typeof localStorage !== "undefined"
-    ? localStorage.getItem("grand-pms-lang") || "en"
+    ? localStorage.getItem("rakz-lang") || localStorage.getItem("grand-pms-lang") || "en"
     : "en";
 
 const validLang = LANGUAGES.some((l) => l.code === savedLang) ? savedLang : "en";

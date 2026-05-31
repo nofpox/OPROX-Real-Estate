@@ -19,7 +19,7 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
   function AuthGuard({ children }: { children: React.ReactNode }) {
     const [, navigate] = useLocation();
     useEffect(() => {
-      if (!localStorage.getItem("grand_pms_session")) {
+      if (!localStorage.getItem("rakz_session")) {
         navigate("/login");
       }
     }, []);

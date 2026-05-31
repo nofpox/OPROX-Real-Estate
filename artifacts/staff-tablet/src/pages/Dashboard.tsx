@@ -36,7 +36,7 @@ import { useState } from "react";
     const [, navigate] = useLocation();
     const [propertyFilter, setPropertyFilter] = useState<number | null>(null);
 
-    const session = JSON.parse(localStorage.getItem("grand_pms_session") || "{}");
+    const session = JSON.parse(localStorage.getItem("rakz_session") || "{}");
 
     const { data: rooms, isLoading: roomsLoading, refetch } = useQuery<Room[]>({
       queryKey: ["rooms"],
@@ -55,7 +55,7 @@ import { useState } from "react";
 
     const handleLogout = async () => {
       await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-      localStorage.removeItem("grand_pms_session");
+      localStorage.removeItem("rakz_session");
       navigate("/login");
     };
 
@@ -77,7 +77,7 @@ import { useState } from "react";
               <Building2 size={18} className="text-black" />
             </div>
             <div>
-              <h1 className="font-serif font-bold text-foreground leading-tight">Grand PMS</h1>
+              <h1 className="font-serif font-bold text-foreground leading-tight">Rakz</h1>
               <p className="text-xs text-muted-foreground">Staff Dashboard</p>
             </div>
           </div>

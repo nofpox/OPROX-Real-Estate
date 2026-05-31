@@ -185,7 +185,7 @@ const pt: Translations = {
     updateSuccess: "Propriedade atualizada", updateFailed: "Falha ao atualizar",
     createSuccess: "Propriedade criada", createFailed: "Falha ao criar",
     kpi: { totalProperties: "Total de Propriedades", activeUnits: "Unidades Ativas", portfolioRevenue: "Receita Total do Portfólio" },
-    fields: { name: "Nome da Propriedade", namePlaceholder: "Grand PMS", type: "Tipo de Propriedade", selectType: "Selecionar tipo", status: "Status", selectStatus: "Selecionar status", address: "Endereço", addressPlaceholder: "Rua Principal, 123", city: "Cidade", cityPlaceholder: "São Paulo", country: "País", countryPlaceholder: "Brasil", description: "Descrição (Opcional)", descriptionPlaceholder: "Descrição da propriedade..." },
+    fields: { name: "Nome da Propriedade", namePlaceholder: "Rakz", type: "Tipo de Propriedade", selectType: "Selecionar tipo", status: "Status", selectStatus: "Selecionar status", address: "Endereço", addressPlaceholder: "Rua Principal, 123", city: "Cidade", cityPlaceholder: "São Paulo", country: "País", countryPlaceholder: "Brasil", description: "Descrição (Opcional)", descriptionPlaceholder: "Descrição da propriedade..." },
     detail: { backToProperties: "Voltar para Propriedades", notFound: "Propriedade não encontrada", rooms: "Unidades", workOrders: "Ordens de Serviço", revenue: "Receita", expenses: "Despesas", netProfit: "Lucro Líquido", occupancyRate: "Taxa de Ocupação", totalRooms: "Total de Unidades", activeBookings: "Reservas Ativas", openWorkOrders: "Ordens de Serviço Abertas", noRooms: "Nenhuma unidade nesta propriedade.", noWorkOrders: "Nenhuma ordem de serviço aberta." },
     revenue: "Receita", netIncome: "Renda Líquida", units: "Unidades",
   },

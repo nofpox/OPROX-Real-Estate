@@ -215,7 +215,7 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
                 id="fp-tenant"
                 value={tenantSlug}
                 onChange={(e) => setTenantSlug(e.target.value)}
-                placeholder="grand-pms"
+                placeholder="rakz"
                 required
               />
             </div>
@@ -490,7 +490,7 @@ export default function Login({ onLogin }: LoginProps) {
                   id="tenantSlug"
                   value={tenantSlug}
                   onChange={(e) => setTenantSlug(e.target.value)}
-                  placeholder="grand-pms"
+                  placeholder="rakz"
                   autoComplete="organization"
                 />
                 <p className="text-xs text-muted-foreground">

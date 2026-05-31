@@ -185,7 +185,7 @@ const ne: Translations = {
     updateSuccess: "सम्पत्ति सफलतापूर्वक अपडेट भयो", updateFailed: "अपडेट असफल",
     createSuccess: "सम्पत्ति सफलतापूर्वक बनाइयो", createFailed: "बनाउन असफल",
     kpi: { totalProperties: "कुल सम्पत्तिहरू", activeUnits: "सक्रिय एकाइहरू", portfolioRevenue: "कुल पोर्टफोलियो राजस्व" },
-    fields: { name: "सम्पत्तिको नाम", namePlaceholder: "Grand PMS", type: "सम्पत्ति प्रकार", selectType: "प्रकार छान्नुहोस्", status: "स्थिति", selectStatus: "स्थिति छान्नुहोस्", address: "ठेगाना", addressPlaceholder: "१२३ मुख्य सडक", city: "शहर", cityPlaceholder: "काठमाडौं", country: "देश", countryPlaceholder: "नेपाल", description: "विवरण (वैकल्पिक)", descriptionPlaceholder: "सम्पत्ति विवरण..." },
+    fields: { name: "सम्पत्तिको नाम", namePlaceholder: "Rakz", type: "सम्पत्ति प्रकार", selectType: "प्रकार छान्नुहोस्", status: "स्थिति", selectStatus: "स्थिति छान्नुहोस्", address: "ठेगाना", addressPlaceholder: "१२३ मुख्य सडक", city: "शहर", cityPlaceholder: "काठमाडौं", country: "देश", countryPlaceholder: "नेपाल", description: "विवरण (वैकल्पिक)", descriptionPlaceholder: "सम्पत्ति विवरण..." },
     detail: { backToProperties: "सम्पत्तिहरूमा फर्कनुहोस्", notFound: "सम्पत्ति भेटिएन", rooms: "एकाइहरू", workOrders: "कार्य आदेशहरू", revenue: "राजस्व", expenses: "खर्च", netProfit: "खुद नाफा", occupancyRate: "अधिभोग दर", totalRooms: "कुल एकाइहरू", activeBookings: "सक्रिय बुकिङहरू", openWorkOrders: "खुला कार्य आदेशहरू", noRooms: "यो सम्पत्तिमा कुनै एकाइ छैन।", noWorkOrders: "कुनै खुला कार्य आदेश छैन।" },
     revenue: "राजस्व", netIncome: "खुद आय", units: "एकाइहरू",
   },

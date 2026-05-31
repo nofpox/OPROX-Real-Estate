@@ -1204,7 +1204,7 @@ function ReportDialog({
         tasks:         scopedTasks,
         dateFrom,
         dateTo,
-        companyName:   "Grand PMS",
+        companyName:   "Rakz",
         propertyLabel,
         generatedBy:   role.label ?? role.id,
         includePhotos,

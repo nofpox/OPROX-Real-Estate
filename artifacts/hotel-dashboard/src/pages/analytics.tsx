@@ -78,7 +78,7 @@ function generateAnalyticsPdf(opts: {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.setTextColor(...PALETTE.white);
-  doc.text("Grand PMS", ML, 17);
+  doc.text("Rakz", ML, 17);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...PALETTE.primary);
@@ -215,7 +215,7 @@ function generateAnalyticsPdf(opts: {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(...PALETTE.muted);
-    doc.text("Grand PMS — Confidential", ML, H - 8);
+    doc.text("Rakz — Confidential", ML, H - 8);
     doc.text(`Page ${p} of ${total}`, W / 2, H - 8, { align: "center" });
     doc.text(new Date().getFullYear().toString(), W - MR, H - 8, { align: "right" });
   }
@@ -724,7 +724,7 @@ export default function Analytics() {
 
       {/* Print-only footer */}
       <div className="hidden print:block text-center text-xs text-muted-foreground pt-4 border-t">
-        Grand PMS — Company Performance Report — {fmtDate(new Date().toISOString())} — Confidential
+        Rakz — Operations Performance Report — {fmtDate(new Date().toISOString())} — Confidential
       </div>
     </div>
   );

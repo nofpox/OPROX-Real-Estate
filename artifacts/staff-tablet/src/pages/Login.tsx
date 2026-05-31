@@ -26,7 +26,7 @@ import { useState } from "react";
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Login failed");
-        localStorage.setItem("grand_pms_session", JSON.stringify(data));
+        localStorage.setItem("rakz_session", JSON.stringify(data));
         navigate("/");
       } catch(e: any) {
         setError(e.message || "Invalid credentials. Please try again.");
@@ -42,7 +42,7 @@ import { useState } from "react";
             <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-500 rounded-2xl shadow-lg mb-4">
               <Building2 className="text-black" size={28} />
             </div>
-            <h1 className="text-3xl font-serif font-bold text-foreground">Grand PMS</h1>
+            <h1 className="text-3xl font-serif font-bold text-foreground">Rakz</h1>
             <p className="text-muted-foreground text-sm mt-1">Staff Dashboard</p>
           </div>
 

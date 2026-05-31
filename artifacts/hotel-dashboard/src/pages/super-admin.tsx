@@ -527,16 +527,16 @@ export default function SuperAdminPage() {
                     <div className="space-y-1.5">
                       <Label htmlFor="propertyName">Property Name</Label>
                       <Input id="propertyName" value={propertyName}
-                        onChange={(e) => { setPropertyName(e.target.value); setDirty(true); }} placeholder="Grand PMS" />
+                        onChange={(e) => { setPropertyName(e.target.value); setDirty(true); }} placeholder="Rakz" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
                         <Label>Logo — Main Word</Label>
-                        <Input value={logoText} onChange={(e) => { setLogoText(e.target.value); setDirty(true); }} placeholder="Grand" className="font-serif" />
+                        <Input value={logoText} onChange={(e) => { setLogoText(e.target.value); setDirty(true); }} placeholder="Rakz" className="font-serif" />
                       </div>
                       <div className="space-y-1.5">
                         <Label>Logo — Sub Word</Label>
-                        <Input value={logoSub} onChange={(e) => { setLogoSub(e.target.value); setDirty(true); }} placeholder="PMS" />
+                        <Input value={logoSub} onChange={(e) => { setLogoSub(e.target.value); setDirty(true); }} placeholder="OMS" />
                       </div>
                       <div className="flex items-end pb-0.5">
                         <div className="text-sm text-muted-foreground border rounded-md px-3 py-2 w-full bg-muted/40">

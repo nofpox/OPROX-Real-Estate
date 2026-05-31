@@ -185,7 +185,7 @@ const fr: Translations = {
     updateSuccess: "Propriété mise à jour", updateFailed: "Échec de la mise à jour",
     createSuccess: "Propriété créée", createFailed: "Échec de la création",
     kpi: { totalProperties: "Total propriétés", activeUnits: "Unités actives", portfolioRevenue: "Chiffre d'affaires total du portefeuille" },
-    fields: { name: "Nom de la propriété", namePlaceholder: "Grand PMS", type: "Type de propriété", selectType: "Sélectionner le type", status: "Statut", selectStatus: "Sélectionner le statut", address: "Adresse", addressPlaceholder: "123 rue Principale", city: "Ville", cityPlaceholder: "Paris", country: "Pays", countryPlaceholder: "France", description: "Description (optionnel)", descriptionPlaceholder: "Description de la propriété..." },
+    fields: { name: "Nom de la propriété", namePlaceholder: "Rakz", type: "Type de propriété", selectType: "Sélectionner le type", status: "Statut", selectStatus: "Sélectionner le statut", address: "Adresse", addressPlaceholder: "123 rue Principale", city: "Ville", cityPlaceholder: "Paris", country: "Pays", countryPlaceholder: "France", description: "Description (optionnel)", descriptionPlaceholder: "Description de la propriété..." },
     detail: { backToProperties: "Retour aux propriétés", notFound: "Propriété introuvable", rooms: "Unités", workOrders: "Bons de travail", revenue: "Chiffre d'affaires", expenses: "Dépenses", netProfit: "Bénéfice net", occupancyRate: "Taux d'occupation", totalRooms: "Total unités", activeBookings: "Réservations actives", openWorkOrders: "Bons de travail ouverts", noRooms: "Aucune unité pour cette propriété.", noWorkOrders: "Aucun bon de travail ouvert." },
     revenue: "Chiffre d'affaires", netIncome: "Revenu net", units: "Unités",
   },

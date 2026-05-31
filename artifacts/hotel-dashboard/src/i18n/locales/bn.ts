@@ -185,7 +185,7 @@ const bn: Translations = {
     updateSuccess: "সম্পত্তি সফলভাবে আপডেট হয়েছে", updateFailed: "আপডেট ব্যর্থ",
     createSuccess: "সম্পত্তি সফলভাবে তৈরি হয়েছে", createFailed: "তৈরি করতে ব্যর্থ",
     kpi: { totalProperties: "মোট সম্পত্তি", activeUnits: "সক্রিয় ইউনিট", portfolioRevenue: "মোট পোর্টফোলিও রাজস্ব" },
-    fields: { name: "সম্পত্তির নাম", namePlaceholder: "Grand PMS", type: "সম্পত্তির ধরন", selectType: "ধরন নির্বাচন", status: "অবস্থা", selectStatus: "অবস্থা নির্বাচন", address: "ঠিকানা", addressPlaceholder: "১২৩ প্রধান সড়ক", city: "শহর", cityPlaceholder: "ঢাকা", country: "দেশ", countryPlaceholder: "বাংলাদেশ", description: "বিবরণ (ঐচ্ছিক)", descriptionPlaceholder: "সম্পত্তির বিবরণ..." },
+    fields: { name: "সম্পত্তির নাম", namePlaceholder: "Rakz", type: "সম্পত্তির ধরন", selectType: "ধরন নির্বাচন", status: "অবস্থা", selectStatus: "অবস্থা নির্বাচন", address: "ঠিকানা", addressPlaceholder: "১২৩ প্রধান সড়ক", city: "শহর", cityPlaceholder: "ঢাকা", country: "দেশ", countryPlaceholder: "বাংলাদেশ", description: "বিবরণ (ঐচ্ছিক)", descriptionPlaceholder: "সম্পত্তির বিবরণ..." },
     detail: { backToProperties: "সম্পত্তিতে ফিরুন", notFound: "সম্পত্তি পাওয়া যায়নি", rooms: "ইউনিট", workOrders: "কাজের আদেশ", revenue: "রাজস্ব", expenses: "ব্যয়", netProfit: "নিট মুনাফা", occupancyRate: "দখলের হার", totalRooms: "মোট ইউনিট", activeBookings: "সক্রিয় বুকিং", openWorkOrders: "খোলা কাজের আদেশ", noRooms: "এই সম্পত্তিতে কোনো ইউনিট নেই।", noWorkOrders: "কোনো খোলা কাজের আদেশ নেই।" },
     revenue: "রাজস্ব", netIncome: "নিট আয়", units: "ইউনিট",
   },

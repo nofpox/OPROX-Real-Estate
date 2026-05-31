@@ -132,7 +132,7 @@ import { useState, useRef } from "react";
           </button>
           <div className="flex items-center gap-2">
             <Building2 size={18} className="text-amber-500" />
-            <span className="font-semibold text-sm text-foreground">Grand PMS</span>
+            <span className="font-semibold text-sm text-foreground">Rakz</span>
           </div>
         </div>
 

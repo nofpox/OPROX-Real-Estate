@@ -39,7 +39,7 @@ export default function ForcePasswordChange({ username, onSuccess }: Props) {
         body: JSON.stringify({ currentPassword: current, newPassword: next }),
       });
       if (res.ok) {
-        toast({ title: "Password updated. Welcome to Grand PMS." });
+        toast({ title: "Password updated. Welcome to Rakz." });
         onSuccess();
       } else {
         const body = await res.json().catch(() => ({}));

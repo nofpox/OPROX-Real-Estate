@@ -461,7 +461,7 @@ function TaskCard({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function MyTasks() {
   const qc      = useQueryClient();
-  const session = JSON.parse(localStorage.getItem("grand_pms_session") || "{}");
+  const session = JSON.parse(localStorage.getItem("rakz_session") || "{}");
 
   const [tab, setTab]                     = useState<"pending" | "active" | "done">("pending");
   const [completingTask, setCompletingTask] = useState<Task | null>(null);

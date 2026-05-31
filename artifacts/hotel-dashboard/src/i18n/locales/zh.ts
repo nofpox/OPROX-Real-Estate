@@ -185,7 +185,7 @@ const zh: Translations = {
     updateSuccess: "物业已更新", updateFailed: "更新失败",
     createSuccess: "物业已创建", createFailed: "创建失败",
     kpi: { totalProperties: "总物业数", activeUnits: "活跃单元", portfolioRevenue: "组合总营收" },
-    fields: { name: "物业名称", namePlaceholder: "Grand PMS", type: "物业类型", selectType: "选择类型", status: "状态", selectStatus: "选择状态", address: "地址", addressPlaceholder: "主街123号", city: "城市", cityPlaceholder: "北京", country: "国家", countryPlaceholder: "中国", description: "描述（可选）", descriptionPlaceholder: "物业描述..." },
+    fields: { name: "物业名称", namePlaceholder: "Rakz", type: "物业类型", selectType: "选择类型", status: "状态", selectStatus: "选择状态", address: "地址", addressPlaceholder: "主街123号", city: "城市", cityPlaceholder: "北京", country: "国家", countryPlaceholder: "中国", description: "描述（可选）", descriptionPlaceholder: "物业描述..." },
     detail: { backToProperties: "返回物业", notFound: "未找到物业", rooms: "单元", workOrders: "工单", revenue: "营收", expenses: "支出", netProfit: "净利润", occupancyRate: "入住率", totalRooms: "总单元数", activeBookings: "活跃预订", openWorkOrders: "未结工单", noRooms: "此物业无单元。", noWorkOrders: "无未结工单。" },
     revenue: "营收", netIncome: "净收入", units: "单元",
   },

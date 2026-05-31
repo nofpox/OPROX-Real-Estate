@@ -15,7 +15,7 @@ interface QueueEntry {
   timestamp: number;
 }
 
-const QUEUE_KEY = "grand-pms:offline-queue";
+const QUEUE_KEY = "rakz:offline-queue";
 
 export function getQueue(): QueueEntry[] {
   try {

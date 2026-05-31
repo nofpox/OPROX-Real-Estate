@@ -184,7 +184,7 @@ const hi: Translations = {
     updateSuccess: "संपत्ति सफलतापूर्वक अपडेट हुई", updateFailed: "अपडेट विफल",
     createSuccess: "संपत्ति सफलतापूर्वक बनाई गई", createFailed: "बनाने में विफल",
     kpi: { totalProperties: "कुल संपत्तियाँ", activeUnits: "सक्रिय इकाइयाँ", portfolioRevenue: "कुल पोर्टफोलियो राजस्व" },
-    fields: { name: "संपत्ति का नाम", namePlaceholder: "Grand PMS", type: "संपत्ति प्रकार", selectType: "प्रकार चुनें", status: "स्थिति", selectStatus: "स्थिति चुनें", address: "पता", addressPlaceholder: "123 मुख्य सड़क", city: "शहर", cityPlaceholder: "मुंबई", country: "देश", countryPlaceholder: "भारत", description: "विवरण (वैकल्पिक)", descriptionPlaceholder: "संपत्ति विवरण..." },
+    fields: { name: "संपत्ति का नाम", namePlaceholder: "Rakz", type: "संपत्ति प्रकार", selectType: "प्रकार चुनें", status: "स्थिति", selectStatus: "स्थिति चुनें", address: "पता", addressPlaceholder: "123 मुख्य सड़क", city: "शहर", cityPlaceholder: "मुंबई", country: "देश", countryPlaceholder: "भारत", description: "विवरण (वैकल्पिक)", descriptionPlaceholder: "संपत्ति विवरण..." },
     detail: { backToProperties: "संपत्तियों पर वापस", notFound: "संपत्ति नहीं मिली", rooms: "इकाइयाँ", workOrders: "वर्क ऑर्डर", revenue: "राजस्व", expenses: "खर्च", netProfit: "शुद्ध लाभ", occupancyRate: "अधिभोग दर", totalRooms: "कुल इकाइयाँ", activeBookings: "सक्रिय बुकिंग", openWorkOrders: "खुले वर्क ऑर्डर", noRooms: "इस संपत्ति में कोई इकाई नहीं।", noWorkOrders: "कोई खुला वर्क ऑर्डर नहीं।" },
     revenue: "राजस्व", netIncome: "शुद्ध आय", units: "इकाइयाँ",
   },

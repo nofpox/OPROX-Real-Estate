@@ -27,7 +27,7 @@ import { useState } from "react";
           <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-500 rounded-2xl shadow-lg mb-4">
             <Building2 className="text-white" size={28} />
           </div>
-          <h1 className="text-3xl font-serif font-bold text-slate-900">Grand PMS</h1>
+          <h1 className="text-3xl font-serif font-bold text-slate-900">Rakz</h1>
           <p className="mt-1 text-slate-500 text-sm">Resident Services Portal</p>
         </header>
 
@@ -72,7 +72,7 @@ import { useState } from "react";
         </main>
 
         <footer className="text-center py-6 text-xs text-slate-400">
-          Powered by Grand PMS
+          Powered by Rakz
         </footer>
       </div>
     );

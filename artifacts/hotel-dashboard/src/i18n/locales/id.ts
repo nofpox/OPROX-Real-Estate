@@ -185,7 +185,7 @@ const id: Translations = {
     updateSuccess: "Properti diperbarui", updateFailed: "Gagal memperbarui",
     createSuccess: "Properti dibuat", createFailed: "Gagal membuat",
     kpi: { totalProperties: "Total Properti", activeUnits: "Unit Aktif", portfolioRevenue: "Total Pendapatan Portofolio" },
-    fields: { name: "Nama Properti", namePlaceholder: "Grand PMS", type: "Tipe Properti", selectType: "Pilih tipe", status: "Status", selectStatus: "Pilih status", address: "Alamat", addressPlaceholder: "Jl. Utama No. 123", city: "Kota", cityPlaceholder: "Jakarta", country: "Negara", countryPlaceholder: "Indonesia", description: "Deskripsi (Opsional)", descriptionPlaceholder: "Deskripsi properti..." },
+    fields: { name: "Nama Properti", namePlaceholder: "Rakz", type: "Tipe Properti", selectType: "Pilih tipe", status: "Status", selectStatus: "Pilih status", address: "Alamat", addressPlaceholder: "Jl. Utama No. 123", city: "Kota", cityPlaceholder: "Jakarta", country: "Negara", countryPlaceholder: "Indonesia", description: "Deskripsi (Opsional)", descriptionPlaceholder: "Deskripsi properti..." },
     detail: { backToProperties: "Kembali ke Properti", notFound: "Properti tidak ditemukan", rooms: "Unit", workOrders: "Pesanan Kerja", revenue: "Pendapatan", expenses: "Pengeluaran", netProfit: "Laba Bersih", occupancyRate: "Tingkat Hunian", totalRooms: "Total Unit", activeBookings: "Pemesanan Aktif", openWorkOrders: "Pesanan Kerja Terbuka", noRooms: "Tidak ada unit.", noWorkOrders: "Tidak ada pesanan kerja terbuka." },
     revenue: "Pendapatan", netIncome: "Pendapatan Bersih", units: "Unit",
   },

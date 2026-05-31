@@ -5,11 +5,11 @@
 
 const branding = {
   // The full name displayed as the dashboard hero heading and in the sidebar.
-  propertyName: "Grand PMS",
+  propertyName: "Rakz",
 
   // Sidebar logo — two-part text: large serif word + smaller sans word.
-  logoText: "Grand",
-  logoSub: "PMS",
+  logoText: "Rakz",
+  logoSub: "OMS",
 } as const;
 
 export default branding;

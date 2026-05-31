@@ -185,7 +185,7 @@ const ml: Translations = {
     updateSuccess: "പ്രോപ്പർട്ടി വിജയകരമായി അപ്ഡേറ്റ് ചെയ്തു", updateFailed: "അപ്ഡേറ്റ് പരാജയം",
     createSuccess: "പ്രോപ്പർട്ടി വിജയകരമായി നിർമ്മിച്ചു", createFailed: "നിർമ്മാണം പരാജയം",
     kpi: { totalProperties: "ആകെ പ്രോപ്പർട്ടികൾ", activeUnits: "സജീവ യൂണിറ്റുകൾ", portfolioRevenue: "ആകെ പോർട്ട്ഫോളിയോ വരുമാനം" },
-    fields: { name: "പ്രോപ്പർട്ടിയുടെ പേര്", namePlaceholder: "Grand PMS", type: "പ്രോപ്പർട്ടി തരം", selectType: "തരം തിരഞ്ഞെടുക്കുക", status: "സ്ഥിതി", selectStatus: "സ്ഥിതി തിരഞ്ഞെടുക്കുക", address: "വിലാസം", addressPlaceholder: "123 പ്രധാന റോഡ്", city: "നഗരം", cityPlaceholder: "കൊച്ചി", country: "രാജ്യം", countryPlaceholder: "ഇന്ത്യ", description: "വിവരണം (ഐച്ഛിക)", descriptionPlaceholder: "പ്രോപ്പർട്ടി വിവരണം..." },
+    fields: { name: "പ്രോപ്പർട്ടിയുടെ പേര്", namePlaceholder: "Rakz", type: "പ്രോപ്പർട്ടി തരം", selectType: "തരം തിരഞ്ഞെടുക്കുക", status: "സ്ഥിതി", selectStatus: "സ്ഥിതി തിരഞ്ഞെടുക്കുക", address: "വിലാസം", addressPlaceholder: "123 പ്രധാന റോഡ്", city: "നഗരം", cityPlaceholder: "കൊച്ചി", country: "രാജ്യം", countryPlaceholder: "ഇന്ത്യ", description: "വിവരണം (ഐച്ഛിക)", descriptionPlaceholder: "പ്രോപ്പർട്ടി വിവരണം..." },
     detail: { backToProperties: "പ്രോപ്പർട്ടികളിലേക്ക് മടങ്ങുക", notFound: "പ്രോപ്പർട്ടി കണ്ടെത്തിയില്ല", rooms: "യൂണിറ്റുകൾ", workOrders: "വർക്ക് ഓർഡറുകൾ", revenue: "വരുമാനം", expenses: "ചെലവ്", netProfit: "അറ്റ ലാഭം", occupancyRate: "ഒക്കുപ്പൻസി നിരക്ക്", totalRooms: "ആകെ യൂണിറ്റുകൾ", activeBookings: "സജീവ ബുക്കിംഗ്", openWorkOrders: "തുറന്ന വർക്ക് ഓർഡറുകൾ", noRooms: "ഈ പ്രോപ്പർട്ടിക്ക് യൂണിറ്റ് ഇല്ല.", noWorkOrders: "തുറന്ന വർക്ക് ഓർഡർ ഇല്ല." },
     revenue: "വരുമാനം", netIncome: "അറ്റ വരുമാനം", units: "യൂണിറ്റുകൾ",
   },

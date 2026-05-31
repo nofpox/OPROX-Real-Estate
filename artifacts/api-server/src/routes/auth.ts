@@ -33,8 +33,8 @@ export async function ensureAdmin() {
     // Ensure default tenant exists
     await db.execute(sql`
       INSERT INTO tenants (id, name, slug, plan, status, logo_text, logo_sub)
-      VALUES (1, 'Grand PMS Demo', 'grand-pms', 'enterprise', 'active', 'Grand', 'PMS')
-      ON CONFLICT (slug) DO NOTHING
+      VALUES (1, 'Rakz', 'rakz', 'enterprise', 'active', 'Rakz', 'OMS')
+      ON CONFLICT (id) DO UPDATE SET name='Rakz', slug='rakz', logo_text='Rakz', logo_sub='OMS'
     `);
 
     // Ensure admin user exists (scoped to tenant 1)

@@ -418,7 +418,7 @@ const en = {
     },
     fields: {
       name: "Property Name",
-      namePlaceholder: "Grand PMS",
+      namePlaceholder: "Rakz",
       type: "Property Type",
       selectType: "Select type",
       status: "Status",

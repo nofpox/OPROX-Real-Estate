@@ -185,7 +185,7 @@ const th: Translations = {
     updateSuccess: "อัปเดตทรัพย์สินสำเร็จ", updateFailed: "การอัปเดตล้มเหลว",
     createSuccess: "สร้างทรัพย์สินสำเร็จ", createFailed: "ไม่สามารถสร้างได้",
     kpi: { totalProperties: "ทรัพย์สินทั้งหมด", activeUnits: "ยูนิตที่ใช้งาน", portfolioRevenue: "รายได้พอร์ตโฟลิโอรวม" },
-    fields: { name: "ชื่อทรัพย์สิน", namePlaceholder: "Grand PMS", type: "ประเภทอสังหาริมทรัพย์", selectType: "เลือกประเภท", status: "สถานะ", selectStatus: "เลือกสถานะ", address: "ที่อยู่", addressPlaceholder: "123 ถนนสายหลัก", city: "เมือง", cityPlaceholder: "กรุงเทพฯ", country: "ประเทศ", countryPlaceholder: "ไทย", description: "คำอธิบาย (ไม่บังคับ)", descriptionPlaceholder: "คำอธิบายทรัพย์สิน..." },
+    fields: { name: "ชื่อทรัพย์สิน", namePlaceholder: "Rakz", type: "ประเภทอสังหาริมทรัพย์", selectType: "เลือกประเภท", status: "สถานะ", selectStatus: "เลือกสถานะ", address: "ที่อยู่", addressPlaceholder: "123 ถนนสายหลัก", city: "เมือง", cityPlaceholder: "กรุงเทพฯ", country: "ประเทศ", countryPlaceholder: "ไทย", description: "คำอธิบาย (ไม่บังคับ)", descriptionPlaceholder: "คำอธิบายทรัพย์สิน..." },
     detail: { backToProperties: "กลับไปทรัพย์สิน", notFound: "ไม่พบทรัพย์สิน", rooms: "ยูนิต", workOrders: "ใบสั่งงาน", revenue: "รายได้", expenses: "ค่าใช้จ่าย", netProfit: "กำไรสุทธิ", occupancyRate: "อัตราการเข้าพัก", totalRooms: "ยูนิตทั้งหมด", activeBookings: "การจองที่กำลังดำเนินการ", openWorkOrders: "ใบสั่งงานที่เปิดอยู่", noRooms: "ทรัพย์สินนี้ไม่มียูนิต", noWorkOrders: "ไม่มีใบสั่งงานที่เปิดอยู่" },
     revenue: "รายได้", netIncome: "รายได้สุทธิ", units: "ยูนิต",
   },
