@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useListTasks, useListStaff, useListProperties } from "@workspace/api-client-react";
 import { useRole } from "@/contexts/role-context";
+import { useSettings } from "@/hooks/use-settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,8 +66,9 @@ function generateAnalyticsPdf(opts: {
   staffRows: { name: string; role: string; total: number; completed: number; inProgress: number; rate: number }[];
   propertyRows: { name: string; total: number; completed: number; rate: number }[];
   generatedBy: string;
+  companyName?: string;
 }) {
-  const { totalTasks, completed, inProgress, late, compRate, chartData, staffRows, propertyRows, generatedBy } = opts;
+  const { totalTasks, completed, inProgress, late, compRate, chartData, staffRows, propertyRows, generatedBy, companyName = "Company" } = opts;
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -78,7 +80,7 @@ function generateAnalyticsPdf(opts: {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.setTextColor(...PALETTE.white);
-  doc.text("Rakz", ML, 17);
+  doc.text(companyName, ML, 17);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...PALETTE.primary);
@@ -215,7 +217,7 @@ function generateAnalyticsPdf(opts: {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(...PALETTE.muted);
-    doc.text("Rakz — Confidential", ML, H - 8);
+    doc.text(`${companyName} — Confidential`, ML, H - 8);
     doc.text(`Page ${p} of ${total}`, W / 2, H - 8, { align: "center" });
     doc.text(new Date().getFullYear().toString(), W - MR, H - 8, { align: "right" });
   }
@@ -278,7 +280,8 @@ const PIE_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444"];
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function Analytics() {
-  const { role } = useRole();
+  const { role }     = useRole();
+  const settings     = useSettings();
 
   const { data: tasks = [],      isLoading: tasksLoading }      = useListTasks({}) as { data: any[]; isLoading: boolean };
   const { data: staff = [],      isLoading: staffLoading }      = useListStaff({})  as { data: any[]; isLoading: boolean };
@@ -391,7 +394,8 @@ export default function Analytics() {
       chartData,
       staffRows,
       propertyRows,
-      generatedBy: role.label,
+      generatedBy:  role.label,
+      companyName:  settings.companyName || settings.logoText || "Company",
     });
   }
 
@@ -724,7 +728,7 @@ export default function Analytics() {
 
       {/* Print-only footer */}
       <div className="hidden print:block text-center text-xs text-muted-foreground pt-4 border-t">
-        Rakz — Operations Performance Report — {fmtDate(new Date().toISOString())} — Confidential
+        {settings.companyName || settings.logoText || "Company"} — Operations Performance Report — {fmtDate(new Date().toISOString())} — Confidential
       </div>
     </div>
   );

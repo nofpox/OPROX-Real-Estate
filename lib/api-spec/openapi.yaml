@@ -2083,6 +2083,14 @@ components:
         permissionMatrix:
           $ref: "#/components/schemas/PermissionMatrix"
           description: Role-to-routes access matrix; owner-tier roles always bypass this
+        primaryColor:
+          type: string
+          nullable: true
+          description: Brand primary color as hex (e.g. #f59e0b); applied to buttons and active states
+        secondaryColor:
+          type: string
+          nullable: true
+          description: Brand sidebar/secondary color as hex (e.g. #1e293b)
 
     SettingsInput:
       type: object
@@ -2122,6 +2130,12 @@ components:
             $ref: "#/components/schemas/NavConfigItem"
         permissionMatrix:
           $ref: "#/components/schemas/PermissionMatrix"
+        primaryColor:
+          type: string
+          nullable: true
+        secondaryColor:
+          type: string
+          nullable: true
 
     TaskType:
       type: object

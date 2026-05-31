@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useSettings } from "@/hooks/use-settings";
 import { QRCodeCanvas } from "qrcode.react";
 import { useTranslation } from "react-i18next";
 import {
@@ -1162,9 +1163,10 @@ function ReportDialog({
   properties:         any[];
   defaultApprovedOnly?: boolean;
 }) {
-  const { t }    = useTranslation();
-  const { role } = useRole();
-  const { toast } = useToast();
+  const { t }        = useTranslation();
+  const { role }     = useRole();
+  const settings     = useSettings();
+  const { toast }    = useToast();
 
   // Default: last 30 days
   const today  = new Date().toISOString().split("T")[0];
@@ -1204,7 +1206,7 @@ function ReportDialog({
         tasks:         scopedTasks,
         dateFrom,
         dateTo,
-        companyName:   "Rakz",
+        companyName:   settings.companyName || settings.logoText || "Company",
         propertyLabel,
         generatedBy:   role.label ?? role.id,
         includePhotos,

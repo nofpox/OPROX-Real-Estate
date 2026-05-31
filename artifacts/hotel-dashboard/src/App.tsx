@@ -1,5 +1,6 @@
 import i18n from "@/i18n";
 import { useState, useEffect, useRef } from "react";
+import { useTheme } from "@/hooks/use-theme";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider } from "react-i18next";
@@ -82,6 +83,12 @@ function Router() {
 /** Mounts the global offline queue replay — works on every page, not just Tasks. */
 function GlobalOfflineSync() {
   useOfflineSync();
+  return null;
+}
+
+/** Reads primaryColor + secondaryColor from settings and injects CSS vars into :root. */
+function ThemeApplier() {
+  useTheme();
   return null;
 }
 
@@ -208,6 +215,7 @@ function App() {
             <RoleProvider initialRole={authUser.role}>
               <ActorHeaderSync displayName={authUser.displayName} />
               <GlobalOfflineSync />
+              <ThemeApplier />
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
                 <Switch>
                   <Route path="/super-admin" component={SuperAdmin} />

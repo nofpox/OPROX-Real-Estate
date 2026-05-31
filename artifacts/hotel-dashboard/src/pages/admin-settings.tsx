@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -33,13 +33,15 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Pencil, Trash2, SlidersHorizontal, Tag, ToggleLeft,
   Building2, ListChecks, CheckSquare, ShieldCheck, Shield,
+  Palette, Upload,
 } from "lucide-react";
 import type { PermissionMatrix } from "@workspace/api-client-react";
+import { applyPrimaryColor, applySidebarColor, HEX_RE } from "@/hooks/use-theme";
 import { useLanguage } from "@/contexts/language-context";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type MainTab = "systemInfo" | "taskTypes" | "taskRequirements" | "customFields" | "permissions";
+type MainTab = "systemInfo" | "taskTypes" | "taskRequirements" | "customFields" | "permissions" | "appearance";
 type EntityTab = "asset" | "task";
 type FieldType = "text" | "number" | "select" | "date" | "boolean";
 
@@ -93,6 +95,7 @@ const TAB_META: Array<{ key: MainTab; icon: React.ReactNode; label?: string }> =
   { key: "taskRequirements", icon: <CheckSquare className="h-4 w-4" /> },
   { key: "customFields",     icon: <SlidersHorizontal className="h-4 w-4" /> },
   { key: "permissions",      icon: <ShieldCheck className="h-4 w-4" />, label: "Role Permissions" },
+  { key: "appearance",       icon: <Palette className="h-4 w-4" />,     label: "Appearance" },
 ];
 
 // ─── Permission rows (for owner-level role permission editing) ────────────────
@@ -915,7 +918,360 @@ function CustomFieldsTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECTION 5 — Role Permissions (Owner-level matrix)
+// SECTION 5 — Appearance / Branding Engine
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const PRIMARY_SWATCHES  = ["#f59e0b","#3b82f6","#10b981","#ef4444","#8b5cf6","#f97316","#06b6d4","#ec4899"];
+const SIDEBAR_SWATCHES  = ["#1e293b","#0f172a","#1e3a5f","#14532d","#3b0764","#1c1917","#f1f5f9","#ffffff"];
+
+function AppearanceTab() {
+  const { toast }                          = useToast();
+  const { data }                           = useGetSettings();
+  const { mutateAsync: saveSettings,
+          isPending: saving }              = useUpdateSettings();
+  const queryClient                        = useQueryClient();
+  const fileRef                            = useRef<HTMLInputElement>(null);
+
+  const [logoUrl,        setLogoUrl]        = useState("");
+  const [primaryColor,   setPrimaryColor]   = useState("#f59e0b");
+  const [secondaryColor, setSecondaryColor] = useState("#1e293b");
+  const [companyName,    setCompanyName]    = useState("");
+  const [logoText,       setLogoText]       = useState("");
+  const [logoSub,        setLogoSub]        = useState("");
+  const [dirty,          setDirty]          = useState(false);
+  const [uploading,      setUploading]      = useState(false);
+
+  React.useEffect(() => {
+    if (!data) return;
+    setLogoUrl(data.logoUrl ?? "");
+    setPrimaryColor(data.primaryColor || "#f59e0b");
+    setSecondaryColor(data.secondaryColor || "#1e293b");
+    setCompanyName(data.companyName ?? "");
+    setLogoText(data.logoText ?? "");
+    setLogoSub(data.logoSub ?? "");
+    setDirty(false);
+  }, [data]);
+
+  function changePrimary(hex: string) {
+    setPrimaryColor(hex); setDirty(true);
+    if (HEX_RE.test(hex)) applyPrimaryColor(hex);
+  }
+
+  function changeSidebar(hex: string) {
+    setSecondaryColor(hex); setDirty(true);
+    if (HEX_RE.test(hex)) applySidebarColor(hex);
+  }
+
+  async function handleLogoUpload(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Please select an image file", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    try {
+      const res = await fetch("/api/storage/uploads/request-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      });
+      if (!res.ok) throw new Error("Failed to get upload URL");
+      const { uploadURL, objectPath } = await res.json() as { uploadURL: string; objectPath: string };
+      const uploadRes = await fetch(uploadURL, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!uploadRes.ok) throw new Error("Upload failed");
+      setLogoUrl(`/api/storage/${objectPath}`);
+      setDirty(true);
+      toast({ title: "Logo uploaded", description: "Click Save to apply globally." });
+    } catch {
+      toast({ title: "Upload failed", description: "Could not upload logo image.", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleSave() {
+    try {
+      await saveSettings({
+        data: {
+          logoUrl:       logoUrl.trim(),
+          primaryColor:  primaryColor.trim(),
+          secondaryColor: secondaryColor.trim(),
+          companyName:   companyName.trim(),
+          logoText:      logoText.trim(),
+          logoSub:       logoSub.trim(),
+        },
+      });
+      queryClient.invalidateQueries({ queryKey: getGetSettingsQueryKey() });
+      setDirty(false);
+      toast({ title: "Appearance saved", description: "Branding applied to all pages." });
+    } catch {
+      toast({ title: "Save failed", variant: "destructive" });
+    }
+  }
+
+  const previewPrimary = HEX_RE.test(primaryColor)  ? primaryColor  : "#f59e0b";
+  const previewSidebar = HEX_RE.test(secondaryColor) ? secondaryColor : "#1e293b";
+
+  return (
+    <div className="space-y-8">
+
+      {/* ── Logo ──────────────────────────────────────────────────────────── */}
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold">Company Logo</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Replaces the text in the sidebar, header, and login page.
+            Recommended: PNG or SVG with transparent background, min 200 × 60 px.
+          </p>
+        </div>
+
+        <div className="flex items-start gap-6 flex-wrap">
+          {/* Preview box */}
+          <div
+            className="w-52 h-20 rounded-lg border-2 border-dashed flex items-center justify-center shrink-0"
+            style={{ backgroundColor: previewSidebar + "22" }}
+          >
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt="Logo preview"
+                className="max-h-14 max-w-44 object-contain"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            ) : (
+              <span className="text-muted-foreground text-xs">No logo uploaded</span>
+            )}
+          </div>
+
+          {/* Upload / remove */}
+          <div className="flex flex-col gap-2 pt-1">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleLogoUpload(f);
+                e.target.value = "";
+              }}
+            />
+            <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading} className="w-36">
+              <Upload className="h-3.5 w-3.5 mr-2" />
+              {uploading ? "Uploading…" : "Upload Logo"}
+            </Button>
+            {logoUrl && (
+              <button
+                type="button"
+                onClick={() => { setLogoUrl(""); setDirty(true); }}
+                className="text-xs text-destructive hover:underline text-left"
+              >
+                Remove logo
+              </button>
+            )}
+          </div>
+
+          {/* Or paste URL */}
+          <div className="flex-1 min-w-52 space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Or paste an image URL</Label>
+            <Input
+              value={logoUrl}
+              onChange={(e) => { setLogoUrl(e.target.value); setDirty(true); }}
+              placeholder="https://example.com/logo.png"
+              className="text-xs font-mono"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Colors ────────────────────────────────────────────────────────── */}
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold">Color Scheme</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Changes apply instantly as you pick a color. Click <strong>Save</strong> to persist across all sessions.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {/* Primary */}
+          <div className="rounded-lg border p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span
+                className="h-4 w-4 rounded-full border shadow-sm"
+                style={{ backgroundColor: previewPrimary }}
+              />
+              <span className="text-sm font-medium">Primary / Accent</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Buttons, active nav items, ring focus, highlights.</p>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={primaryColor}
+                onChange={(e) => changePrimary(e.target.value)}
+                className="h-9 w-14 cursor-pointer rounded border p-0.5 bg-background"
+              />
+              <Input
+                value={primaryColor}
+                onChange={(e) => changePrimary(e.target.value)}
+                placeholder="#f59e0b"
+                className="font-mono text-sm w-28"
+                maxLength={7}
+              />
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {PRIMARY_SWATCHES.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => changePrimary(c)}
+                  title={c}
+                  className="h-6 w-6 rounded-full border transition-transform hover:scale-110"
+                  style={{
+                    backgroundColor: c,
+                    outline: primaryColor === c ? `2px solid ${c}` : "none",
+                    outlineOffset: 2,
+                    borderColor: primaryColor === c ? "transparent" : "#e2e8f0",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Sidebar / secondary */}
+          <div className="rounded-lg border p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span
+                className="h-4 w-4 rounded-full border shadow-sm"
+                style={{ backgroundColor: previewSidebar }}
+              />
+              <span className="text-sm font-medium">Sidebar Background</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Background color of the navigation sidebar panel.</p>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={secondaryColor}
+                onChange={(e) => changeSidebar(e.target.value)}
+                className="h-9 w-14 cursor-pointer rounded border p-0.5 bg-background"
+              />
+              <Input
+                value={secondaryColor}
+                onChange={(e) => changeSidebar(e.target.value)}
+                placeholder="#1e293b"
+                className="font-mono text-sm w-28"
+                maxLength={7}
+              />
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {SIDEBAR_SWATCHES.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => changeSidebar(c)}
+                  title={c}
+                  className="h-6 w-6 rounded-full border transition-transform hover:scale-110"
+                  style={{
+                    backgroundColor: c,
+                    outline: secondaryColor === c ? `2px solid ${c}` : "none",
+                    outlineOffset: 2,
+                    borderColor: secondaryColor === c ? "transparent" : "#e2e8f0",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Live mini-preview */}
+        <div className="rounded-lg border overflow-hidden" style={{ maxWidth: 340 }}>
+          <p className="text-xs text-muted-foreground px-3 pt-2 pb-1 font-medium">Live Preview</p>
+          <div className="flex h-24 overflow-hidden rounded-b-lg">
+            {/* Sidebar strip */}
+            <div
+              className="w-28 flex flex-col px-2 py-2 gap-1"
+              style={{ backgroundColor: previewSidebar }}
+            >
+              <div
+                className="rounded px-2 py-1 text-xs font-medium"
+                style={{ backgroundColor: previewPrimary, color: "#fff" }}
+              >
+                {logoText || companyName || "Company"}
+              </div>
+              {["Dashboard","Bookings","Rooms"].map((l) => (
+                <div key={l} className="text-xs px-2 py-0.5 rounded opacity-70" style={{ color: "#e2e8f0" }}>{l}</div>
+              ))}
+            </div>
+            {/* Content area */}
+            <div className="flex-1 bg-background p-2 flex flex-col gap-1.5">
+              <div className="h-4 rounded bg-muted w-3/4" />
+              <div className="h-6 rounded w-20" style={{ backgroundColor: previewPrimary }} />
+              <div className="h-3 rounded bg-muted w-1/2 mt-1" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Company identity ──────────────────────────────────────────────── */}
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold">Company Identity</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Shown in the sidebar, PDF report headers, and the login page.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="ap-company">Company Name</Label>
+            <Input
+              id="ap-company"
+              value={companyName}
+              onChange={(e) => { setCompanyName(e.target.value); setDirty(true); }}
+              placeholder="Rakz Operations"
+            />
+            <p className="text-xs text-muted-foreground">Used in PDF report headers and the login screen.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ap-logotext">Logo Text (short serif name)</Label>
+            <Input
+              id="ap-logotext"
+              value={logoText}
+              onChange={(e) => { setLogoText(e.target.value); setDirty(true); }}
+              placeholder="Grand"
+              className="font-serif"
+            />
+            <p className="text-xs text-muted-foreground">Displayed in sidebar when no image logo is set.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ap-logosub">Logo Subtitle</Label>
+            <Input
+              id="ap-logosub"
+              value={logoSub}
+              onChange={(e) => { setLogoSub(e.target.value); setDirty(true); }}
+              placeholder="PMS"
+            />
+            <p className="text-xs text-muted-foreground">Smaller text next to the logo text in the sidebar.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Save bar ──────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between border-t pt-4 pb-2">
+        <p className="text-sm text-muted-foreground">{dirty ? "You have unsaved changes" : "All changes saved"}</p>
+        <Button onClick={handleSave} disabled={saving || !dirty} className="min-w-40">
+          {saving ? "Saving…" : "Save Appearance"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SECTION 6 — Role Permissions (Owner-level matrix)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function PermissionsTab() {
@@ -1080,6 +1436,7 @@ function AdminSettingsInner() {
       {activeTab === "taskRequirements" && <TaskRequirementsTab />}
       {activeTab === "customFields"     && <CustomFieldsTab />}
       {activeTab === "permissions"      && <PermissionsTab />}
+      {activeTab === "appearance"       && <AppearanceTab />}
     </div>
   );
 }

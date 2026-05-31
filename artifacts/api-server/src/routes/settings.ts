@@ -54,6 +54,7 @@ const DEFAULTS: Record<string, string> = {
   taskTypes: DEFAULT_TASK_TYPES, taskRequirements: DEFAULT_TASK_REQUIREMENTS,
   navConfig: DEFAULT_NAV_CONFIG,
   permissionMatrix: DEFAULT_PERMISSION_MATRIX,
+  primaryColor: "", secondaryColor: "",
 };
 
 async function ensureDefaults(tenantId: number) {
@@ -111,6 +112,7 @@ function buildResponse(s: Record<string, string>) {
     taskTypes, taskRequirements,
     navConfig: navConfig.length > 0 ? navConfig : defaultNavCfg,
     permissionMatrix,
+    primaryColor: s.primaryColor ?? "", secondaryColor: s.secondaryColor ?? "",
   };
 }
 
@@ -138,6 +140,7 @@ router.patch("/settings", async (req, res) => {
   const stringFields = [
     "propertyName", "logoText", "logoSub", "logoUrl", "businessMode",
     "companyName", "contactEmail", "contactPhone", "contactAddress",
+    "primaryColor", "secondaryColor",
   ];
   for (const key of stringFields) {
     if (typeof body[key] === "string") await upsert(key, body[key].trim());

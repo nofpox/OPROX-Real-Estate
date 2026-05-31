@@ -475,6 +475,16 @@ export default function Login({ onLogin }: LoginProps) {
       <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
         <Card className="w-full max-w-sm shadow-lg">
           <CardHeader className="text-center pb-2">
+            {settings.logoUrl && (
+              <div className="flex justify-center mb-3">
+                <img
+                  src={settings.logoUrl}
+                  alt={settings.propertyName}
+                  className="h-12 w-auto object-contain max-w-36"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+              </div>
+            )}
             <CardTitle className="text-2xl font-serif">{settings.propertyName}</CardTitle>
             <CardDescription>Operations &amp; Maintenance Platform</CardDescription>
           </CardHeader>

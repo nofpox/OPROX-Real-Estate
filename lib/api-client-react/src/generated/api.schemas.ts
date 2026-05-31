@@ -64,6 +64,10 @@ export interface Settings {
   navConfig?: NavConfigItem[];
   /** Role-to-routes access matrix; owner-tier roles always bypass this */
   permissionMatrix?: PermissionMatrix;
+  /** Brand primary color as hex (e.g. */
+  primaryColor?: string | null;
+  /** Brand sidebar/secondary color as hex (e.g. */
+  secondaryColor?: string | null;
 }
 
 export interface SettingsInput {
@@ -81,6 +85,8 @@ export interface SettingsInput {
   taskRequirements?: TaskRequirements;
   navConfig?: NavConfigItem[];
   permissionMatrix?: PermissionMatrix;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
 }
 
 export interface CustomField {

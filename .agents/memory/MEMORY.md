@@ -21,3 +21,4 @@
 - [Cluster mode gating](cluster-mode.md) — CLUSTER_WORKERS env var (default=1 = no fork, dev-safe); primary passes POOL_MAX=floor(102/N) to each worker fork; sessions/index.ts uses static imports (primary wastes pool min=2, acceptable)
 - [Per-user notifications pattern](per-user-notifications.md) — userId nullable on notifications; null=broadcast; GET filter: (user_id IS NULL OR user_id = currentUser.id); createTaskNotification accepts optional userId
 - [Pool tuning for scale](pool-tuning.md) — POOL_MAX env var; maxUses=7500; keepAlive=true; min=2; infra/pgbouncer.ini documents production PgBouncer transaction-mode config
+- [Theme engine CSS vars](theme-engine.md) — use-theme.ts: hex→HSL conversion, applyPrimaryColor sets --primary/--sidebar-primary/--ring, applySidebarColor sets --sidebar/--sidebar-foreground; ThemeApplier in App.tsx inside QueryClientProvider; live preview works by calling apply* directly on color picker change

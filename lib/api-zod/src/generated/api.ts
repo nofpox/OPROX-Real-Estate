@@ -39,7 +39,9 @@ export const GetSettingsResponse = zod.object({
   "order": zod.number().describe('Display position in sidebar (0 = top)'),
   "visible": zod.boolean().describe('Whether this item appears in the sidebar')
 })).optional().describe('Ordered list of nav items with per-item visibility flags'),
-  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Role-to-routes access matrix; owner-tier roles always bypass this')
+  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Role-to-routes access matrix; owner-tier roles always bypass this'),
+  "primaryColor": zod.string().nullish().describe('Brand primary color as hex (e.g.'),
+  "secondaryColor": zod.string().nullish().describe('Brand sidebar\/secondary color as hex (e.g.')
 })
 
 
@@ -74,7 +76,9 @@ export const UpdateSettingsBody = zod.object({
   "order": zod.number().describe('Display position in sidebar (0 = top)'),
   "visible": zod.boolean().describe('Whether this item appears in the sidebar')
 })).optional(),
-  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Map of role ID (manager | supervisor | maintenance | cleaning | security) to allowed route hrefs')
+  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Map of role ID (manager | supervisor | maintenance | cleaning | security) to allowed route hrefs'),
+  "primaryColor": zod.string().nullish(),
+  "secondaryColor": zod.string().nullish()
 })
 
 export const UpdateSettingsResponse = zod.object({
@@ -105,7 +109,9 @@ export const UpdateSettingsResponse = zod.object({
   "order": zod.number().describe('Display position in sidebar (0 = top)'),
   "visible": zod.boolean().describe('Whether this item appears in the sidebar')
 })).optional().describe('Ordered list of nav items with per-item visibility flags'),
-  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Role-to-routes access matrix; owner-tier roles always bypass this')
+  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Role-to-routes access matrix; owner-tier roles always bypass this'),
+  "primaryColor": zod.string().nullish().describe('Brand primary color as hex (e.g.'),
+  "secondaryColor": zod.string().nullish().describe('Brand sidebar\/secondary color as hex (e.g.')
 })
 
 

@@ -15,6 +15,9 @@ export type AppSettings = {
   enabledModules: string[];
   navConfig: NavConfigItem[];
   permissionMatrix: PermissionMatrix;
+  primaryColor: string;
+  secondaryColor: string;
+  companyName: string;
 };
 
 const DEFAULT_MODULES = ["bookings", "maintenance", "housekeeping", "serviceRequests"];
@@ -54,6 +57,9 @@ const FALLBACK: AppSettings = {
   enabledModules: DEFAULT_MODULES,
   navConfig: DEFAULT_NAV_CONFIG,
   permissionMatrix: DEFAULT_PERMISSION_MATRIX,
+  primaryColor: "",
+  secondaryColor: "",
+  companyName: "",
 };
 
 export function useSettings(): AppSettings {
@@ -68,5 +74,8 @@ export function useSettings(): AppSettings {
     enabledModules: data.enabledModules?.length ? data.enabledModules : DEFAULT_MODULES,
     navConfig: data.navConfig?.length ? data.navConfig : DEFAULT_NAV_CONFIG,
     permissionMatrix: data.permissionMatrix ?? DEFAULT_PERMISSION_MATRIX,
+    primaryColor: data.primaryColor ?? "",
+    secondaryColor: data.secondaryColor ?? "",
+    companyName: data.companyName ?? "",
   };
 }
