@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, tasksTable, staffTable, propertiesTable, roomsTable, taskCommentsTable, usersTable, notificationsTable } from "@workspace/db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, ne } from "drizzle-orm";
 import { insertTaskSchema, updateTaskSchema, insertTaskCommentSchema } from "@workspace/db";
 import { logActivity, actorFromRequest, getRoleTier } from "./activityLogs";
 
@@ -173,7 +173,10 @@ router.get("/tasks/mine", async (req, res) => {
 
   if (!myStaff) { res.json([]); return; }
 
-  const conds = [eq(tasksTable.assignedToId, myStaff.id)];
+  const conds = [
+    eq(tasksTable.assignedToId, myStaff.id),
+    ne(tasksTable.status, "cancelled"),
+  ];
   if (tenantId !== null) conds.push(eq(tasksTable.tenantId, tenantId));
 
   const rows = await db
@@ -182,7 +185,12 @@ router.get("/tasks/mine", async (req, res) => {
     .leftJoin(propertiesTable, eq(tasksTable.propertyId, propertiesTable.id))
     .leftJoin(roomsTable,      eq(tasksTable.unitId,      roomsTable.id))
     .where(and(...conds))
-    .orderBy(sql`${tasksTable.dueDate} asc nulls last, ${tasksTable.createdAt} desc`);
+    .orderBy(
+      sql`CASE ${tasksTable.priority} WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END`,
+      sql`${tasksTable.dueDate} ASC NULLS LAST`,
+      sql`${tasksTable.createdAt} DESC`,
+    )
+    .limit(200);
 
   res.json(rows.map(({ task, property, room }) =>
     formatTask(task, { assigneeName: myStaff.name, propertyName: property?.name, unitName: room?.name })

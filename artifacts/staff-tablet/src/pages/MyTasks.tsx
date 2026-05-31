@@ -92,9 +92,14 @@ function CompleteModal({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhoto(file);
     setPhotoPreview(URL.createObjectURL(file));
   };
+
+  useEffect(() => {
+    return () => { if (photoPreview) URL.revokeObjectURL(photoPreview); };
+  }, [photoPreview]);
 
   const canSubmit = !!photo && !!gps && !gpsLoading;
 
@@ -462,12 +467,14 @@ export default function MyTasks() {
   const [completingTask, setCompletingTask] = useState<Task | null>(null);
   const [startingId, setStartingId]       = useState<number | null>(null);
 
-  const { data: tasks, isLoading, refetch } = useQuery<Task[]>({
+  const { data: tasks, isLoading, isError, refetch } = useQuery<Task[]>({
     queryKey: ["my-tasks"],
-    queryFn: () =>
-      fetch("/api/tasks/mine", { credentials: "include" }).then(r =>
-        r.ok ? r.json() : []
-      ),
+    queryFn: async () => {
+      const r = await fetch("/api/tasks/mine", { credentials: "include" });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    },
+    retry: 2,
     refetchInterval: 30_000,
   });
 
@@ -563,7 +570,20 @@ export default function MyTasks() {
 
         {/* Task list */}
         <div className="px-4 py-4 space-y-3">
-          {isLoading ? (
+          {isError ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
+                <AlertCircle size={28} className="text-red-400" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">تعذّر تحميل المهام</p>
+                <p className="text-xs text-muted-foreground mt-1">Failed to load tasks</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => refetch()}>
+                <RefreshCw size={14} className="me-2" />إعادة المحاولة
+              </Button>
+            </div>
+          ) : isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-40 rounded-2xl" />
             ))
