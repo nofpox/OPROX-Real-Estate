@@ -133,6 +133,7 @@ const en = {
     taskEscalated:     { title: "Report Escalated",       message: "{{taskTitle}} has been escalated and requires your approval." },
     taskApproved:      { title: "Report Approved",        message: "Your report for {{taskTitle}} has been approved." },
     taskReopened:      { title: "Task Re-opened",         message: "{{taskTitle}} has been re-opened for a fresh submission." },
+    taskStarted:       { title: "Task Started",           message: "{{actorName}} has started working on {{taskTitle}}." },
   },
   dashboard: {
     title: "Dashboard",

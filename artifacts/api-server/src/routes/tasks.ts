@@ -333,13 +333,17 @@ router.patch("/tasks/:id", async (req, res) => {
         supervisorUserId = supUser?.id ?? null;
       }
       createTaskNotification({
-        tenantId:    tenantId ?? 1,
-        type:        "task_started",
-        title:       `Task Started: ${task.title}`,
-        message:     `${actor.actorName ?? "A worker"} has started work on "${task.title}"${property?.name ? ` at ${property.name}` : ""}.`,
-        relatedId:   task.id,
-        userId:      supervisorUserId,
-        notifKey:    `task-started-${task.id}`,
+        tenantId:      tenantId ?? 1,
+        type:          "task_started",
+        title:         `Task Started: ${task.title}`,
+        message:       `${actor.actorName ?? "A worker"} has started working on "${task.title}"${property?.name ? ` at ${property.name}` : ""}.`,
+        relatedId:     task.id,
+        userId:        supervisorUserId,
+        notifKey:      "taskStarted",
+        messageParams: JSON.stringify({
+          actorName: actor.actorName ?? "A worker",
+          taskTitle: task.title,
+        }),
       });
     }
   }

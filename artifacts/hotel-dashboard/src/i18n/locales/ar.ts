@@ -135,6 +135,7 @@ const ar: Translations = {
     taskEscalated:     { title: "تقرير مُصعَّد",       message: "{{taskTitle}} تمت إحالته ويتطلب موافقتك." },
     taskApproved:      { title: "تقرير معتمد",         message: "تمت الموافقة على تقريرك عن {{taskTitle}}." },
     taskReopened:      { title: "مهمة أُعيد فتحها",    message: "تمت إعادة فتح {{taskTitle}}." },
+    taskStarted:       { title: "بدأت المهمة",           message: "{{actorName}} بدأ العمل على {{taskTitle}}." },
   },
   dashboard: {
     title: "لوحة التحكم",
