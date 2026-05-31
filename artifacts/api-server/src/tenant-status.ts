@@ -7,7 +7,7 @@
  * - Checked on every authenticated non-super-admin request (O(1) Set lookup).
  */
 import { db, tenantsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, or, not } from "drizzle-orm";
 
 export const suspendedTenants = new Set<number>();
 
@@ -16,7 +16,7 @@ export async function loadSuspendedTenants(): Promise<void> {
   const rows = await db
     .select({ id: tenantsTable.id })
     .from(tenantsTable)
-    .where(eq(tenantsTable.status, "suspended"));
+    .where(or(eq(tenantsTable.status, "suspended"), not(tenantsTable.isActive)));
   suspendedTenants.clear();
   for (const r of rows) suspendedTenants.add(r.id);
 }

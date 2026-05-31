@@ -23,6 +23,7 @@ import {
   Users, Plus, Search, MoreHorizontal, Pencil, Trash2,
   ShieldCheck, Wrench, Sparkles, Building, HardHat,
   Eye, EyeOff, CheckCircle2, XCircle, ChevronDown, UserCog,
+  ShieldOff, ShieldAlert,
 } from "lucide-react";
 
 // ─── Role definitions ─────────────────────────────────────────────────────────
@@ -358,26 +359,47 @@ function SystemAccounts() {
                   </TableCell>
                   <TableCell><StatusBadge status={user.isActive ? "active" : "inactive"} /></TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEdit(user)}>
-                          <Pencil className="me-2 h-4 w-4" />تعديل
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleActive(user)}>
-                          {user.isActive
-                            ? <><EyeOff className="me-2 h-4 w-4" />تعطيل وإنهاء الجلسات</>
-                            : <><Eye    className="me-2 h-4 w-4" />تفعيل الحساب</>
-                          }
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(user)}>
-                          <Trash2 className="me-2 h-4 w-4" />حذف الحساب
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center gap-1 justify-end">
+                      {/* Prominent inline Block / Unblock button */}
+                      {user.isActive ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-xs gap-1 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+                          onClick={() => handleToggleActive(user)}
+                          disabled={killSwitch.isPending}
+                          title="Block this user and terminate all active sessions immediately"
+                        >
+                          <ShieldOff className="h-3 w-3" />
+                          حظر
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-xs gap-1 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-950/30"
+                          onClick={() => handleToggleActive(user)}
+                          title="Restore access for this user"
+                        >
+                          <ShieldCheck className="h-3 w-3" />
+                          رفع الحظر
+                        </Button>
+                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEdit(user)}>
+                            <Pencil className="me-2 h-4 w-4" />تعديل
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(user)}>
+                            <Trash2 className="me-2 h-4 w-4" />حذف الحساب
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

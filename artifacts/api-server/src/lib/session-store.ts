@@ -60,6 +60,20 @@ export class PgSessionStore {
   }
 
   /**
+   * Bulk-invalidate ALL active sessions for every user belonging to a tenant.
+   * Called immediately when a tenant is suspended / kill-switched so that
+   * currently-logged-in users are evicted within one request cycle.
+   * Returns the number of sessions deleted.
+   */
+  async deleteByTenantId(tenantId: number): Promise<number> {
+    const { rowCount } = await pool.query(
+      "DELETE FROM user_sessions WHERE tenant_id = $1",
+      [tenantId],
+    );
+    return rowCount ?? 0;
+  }
+
+  /**
    * List all active sessions (not expired).
    * Used by the /auth/sessions admin endpoint.
    * Limited to 500 rows to prevent huge result sets.

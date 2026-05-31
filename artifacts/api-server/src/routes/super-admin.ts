@@ -3,6 +3,7 @@ import { db, tenantsTable, usersTable, propertiesTable, settingsTable } from "@w
 import { eq, sql, and } from "drizzle-orm";
 import { hashPwd } from "./auth.js";
 import { suspendedTenants } from "../tenant-status.js";
+import { sessions } from "../lib/session-store.js";
 
 const router = Router();
 
@@ -176,8 +177,14 @@ router.patch("/super-admin/tenants/:id", async (req, res) => {
   if (!tenant) { res.status(404).json({ error: "Tenant not found" }); return; }
 
   // Keep the in-memory kill-switch cache in sync immediately
-  if (tenant.status === "suspended" || tenant.isActive === false) {
+  const isSuspended = tenant.status === "suspended" || tenant.isActive === false;
+  if (isSuspended) {
     suspendedTenants.add(tenant.id);
+    // Evict ALL active sessions for this tenant so logged-in users are
+    // kicked out instantly — not just blocked at next login.
+    void sessions.deleteByTenantId(tenant.id).then((n) => {
+      req.log.info({ tenantId: tenant.id, sessionsCleared: n }, "Tenant suspended — all sessions evicted");
+    });
   } else {
     suspendedTenants.delete(tenant.id);
   }
