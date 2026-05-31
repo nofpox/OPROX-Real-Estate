@@ -37,7 +37,8 @@ export const GetSettingsResponse = zod.object({
   "navConfig": zod.array(zod.object({
   "id": zod.string().describe('Nav item slug (matches route without leading slash; root is \"dashboard\")'),
   "order": zod.number().describe('Display position in sidebar (0 = top)'),
-  "visible": zod.boolean().describe('Whether this item appears in the sidebar')
+  "visible": zod.boolean().describe('Whether this item appears in the sidebar'),
+  "label": zod.string().nullish().describe('Custom display label overriding the default i18n key (optional)')
 })).optional().describe('Ordered list of nav items with per-item visibility flags'),
   "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Role-to-routes access matrix; owner-tier roles always bypass this'),
   "primaryColor": zod.string().nullish().describe('Brand primary color as hex (e.g.'),
@@ -74,7 +75,8 @@ export const UpdateSettingsBody = zod.object({
   "navConfig": zod.array(zod.object({
   "id": zod.string().describe('Nav item slug (matches route without leading slash; root is \"dashboard\")'),
   "order": zod.number().describe('Display position in sidebar (0 = top)'),
-  "visible": zod.boolean().describe('Whether this item appears in the sidebar')
+  "visible": zod.boolean().describe('Whether this item appears in the sidebar'),
+  "label": zod.string().nullish().describe('Custom display label overriding the default i18n key (optional)')
 })).optional(),
   "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Map of role ID (manager | supervisor | maintenance | cleaning | security) to allowed route hrefs'),
   "primaryColor": zod.string().nullish(),
@@ -107,7 +109,8 @@ export const UpdateSettingsResponse = zod.object({
   "navConfig": zod.array(zod.object({
   "id": zod.string().describe('Nav item slug (matches route without leading slash; root is \"dashboard\")'),
   "order": zod.number().describe('Display position in sidebar (0 = top)'),
-  "visible": zod.boolean().describe('Whether this item appears in the sidebar')
+  "visible": zod.boolean().describe('Whether this item appears in the sidebar'),
+  "label": zod.string().nullish().describe('Custom display label overriding the default i18n key (optional)')
 })).optional().describe('Ordered list of nav items with per-item visibility flags'),
   "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Role-to-routes access matrix; owner-tier roles always bypass this'),
   "primaryColor": zod.string().nullish().describe('Brand primary color as hex (e.g.'),
@@ -2198,6 +2201,124 @@ export const UpdateTenantResponse = zod.object({
  */
 export const DeleteTenantParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get full settings for a specific tenant (super-admin only)
+ */
+export const GetTenantSettingsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetTenantSettingsResponse = zod.object({
+  "propertyName": zod.string().describe('Display name shown as the dashboard heading and sidebar logo'),
+  "logoText": zod.string().describe('Large serif word in the sidebar logo'),
+  "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
+  "logoUrl": zod.string().nullish().describe('URL to the brand logo image (overrides text logo when set)'),
+  "businessMode": zod.string().describe('hotel | compound | tower | serviced-apartments'),
+  "enabledModules": zod.array(zod.string()).describe('List of enabled functional module IDs for this client'),
+  "companyName": zod.string().describe('Legal or trading name of the company'),
+  "contactEmail": zod.string().describe('Primary contact email address'),
+  "contactPhone": zod.string().describe('Primary contact phone number'),
+  "contactAddress": zod.string().describe('Office \/ property address'),
+  "taskTypes": zod.array(zod.object({
+  "id": zod.string().describe('Stable slug identifier for the category'),
+  "name": zod.string().describe('Human-readable display name'),
+  "color": zod.string().describe('Tailwind color token: blue | green | orange | red | purple | yellow | pink | gray')
+})).describe('Custom task category definitions'),
+  "taskRequirements": zod.object({
+  "dueDate": zod.boolean(),
+  "photoProof": zod.boolean(),
+  "notes": zod.boolean(),
+  "priority": zod.boolean(),
+  "assignedTo": zod.boolean()
+}),
+  "navConfig": zod.array(zod.object({
+  "id": zod.string().describe('Nav item slug (matches route without leading slash; root is \"dashboard\")'),
+  "order": zod.number().describe('Display position in sidebar (0 = top)'),
+  "visible": zod.boolean().describe('Whether this item appears in the sidebar'),
+  "label": zod.string().nullish().describe('Custom display label overriding the default i18n key (optional)')
+})).optional().describe('Ordered list of nav items with per-item visibility flags'),
+  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Role-to-routes access matrix; owner-tier roles always bypass this'),
+  "primaryColor": zod.string().nullish().describe('Brand primary color as hex (e.g.'),
+  "secondaryColor": zod.string().nullish().describe('Brand sidebar\/secondary color as hex (e.g.')
+})
+
+
+/**
+ * @summary Update settings for a specific tenant (super-admin only)
+ */
+export const UpdateTenantSettingsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateTenantSettingsBody = zod.object({
+  "propertyName": zod.string().optional(),
+  "logoText": zod.string().optional(),
+  "logoSub": zod.string().optional(),
+  "logoUrl": zod.string().nullish(),
+  "businessMode": zod.string().optional(),
+  "enabledModules": zod.array(zod.string()).optional(),
+  "companyName": zod.string().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().optional(),
+  "contactAddress": zod.string().optional(),
+  "taskTypes": zod.array(zod.object({
+  "id": zod.string().describe('Stable slug identifier for the category'),
+  "name": zod.string().describe('Human-readable display name'),
+  "color": zod.string().describe('Tailwind color token: blue | green | orange | red | purple | yellow | pink | gray')
+})).optional(),
+  "taskRequirements": zod.object({
+  "dueDate": zod.boolean(),
+  "photoProof": zod.boolean(),
+  "notes": zod.boolean(),
+  "priority": zod.boolean(),
+  "assignedTo": zod.boolean()
+}).optional(),
+  "navConfig": zod.array(zod.object({
+  "id": zod.string().describe('Nav item slug (matches route without leading slash; root is \"dashboard\")'),
+  "order": zod.number().describe('Display position in sidebar (0 = top)'),
+  "visible": zod.boolean().describe('Whether this item appears in the sidebar'),
+  "label": zod.string().nullish().describe('Custom display label overriding the default i18n key (optional)')
+})).optional(),
+  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Map of role ID (manager | supervisor | maintenance | cleaning | security) to allowed route hrefs'),
+  "primaryColor": zod.string().nullish(),
+  "secondaryColor": zod.string().nullish()
+})
+
+export const UpdateTenantSettingsResponse = zod.object({
+  "propertyName": zod.string().describe('Display name shown as the dashboard heading and sidebar logo'),
+  "logoText": zod.string().describe('Large serif word in the sidebar logo'),
+  "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
+  "logoUrl": zod.string().nullish().describe('URL to the brand logo image (overrides text logo when set)'),
+  "businessMode": zod.string().describe('hotel | compound | tower | serviced-apartments'),
+  "enabledModules": zod.array(zod.string()).describe('List of enabled functional module IDs for this client'),
+  "companyName": zod.string().describe('Legal or trading name of the company'),
+  "contactEmail": zod.string().describe('Primary contact email address'),
+  "contactPhone": zod.string().describe('Primary contact phone number'),
+  "contactAddress": zod.string().describe('Office \/ property address'),
+  "taskTypes": zod.array(zod.object({
+  "id": zod.string().describe('Stable slug identifier for the category'),
+  "name": zod.string().describe('Human-readable display name'),
+  "color": zod.string().describe('Tailwind color token: blue | green | orange | red | purple | yellow | pink | gray')
+})).describe('Custom task category definitions'),
+  "taskRequirements": zod.object({
+  "dueDate": zod.boolean(),
+  "photoProof": zod.boolean(),
+  "notes": zod.boolean(),
+  "priority": zod.boolean(),
+  "assignedTo": zod.boolean()
+}),
+  "navConfig": zod.array(zod.object({
+  "id": zod.string().describe('Nav item slug (matches route without leading slash; root is \"dashboard\")'),
+  "order": zod.number().describe('Display position in sidebar (0 = top)'),
+  "visible": zod.boolean().describe('Whether this item appears in the sidebar'),
+  "label": zod.string().nullish().describe('Custom display label overriding the default i18n key (optional)')
+})).optional().describe('Ordered list of nav items with per-item visibility flags'),
+  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Role-to-routes access matrix; owner-tier roles always bypass this'),
+  "primaryColor": zod.string().nullish().describe('Brand primary color as hex (e.g.'),
+  "secondaryColor": zod.string().nullish().describe('Brand sidebar\/secondary color as hex (e.g.')
 })
 
 

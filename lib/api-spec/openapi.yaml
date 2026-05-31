@@ -1966,6 +1966,48 @@ paths:
         "204":
           description: Deleted
 
+  /super-admin/tenants/{id}/settings:
+    get:
+      operationId: getTenantSettings
+      tags: [superAdmin]
+      summary: Get full settings for a specific tenant (super-admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tenant settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    patch:
+      operationId: updateTenantSettings
+      tags: [superAdmin]
+      summary: Update settings for a specific tenant (super-admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsInput"
+      responses:
+        "200":
+          description: Updated tenant settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+
   /support-tickets:
     get:
       operationId: listSupportTickets
@@ -2179,6 +2221,10 @@ components:
         visible:
           type: boolean
           description: Whether this item appears in the sidebar
+        label:
+          type: string
+          nullable: true
+          description: Custom display label overriding the default i18n key (optional)
 
     PermissionMatrix:
       type: object

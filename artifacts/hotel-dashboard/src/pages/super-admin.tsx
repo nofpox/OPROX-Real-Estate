@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link } from "wouter";
 import {
   useGetSettings, useUpdateSettings,
   useListTenants, useCreateTenant, useUpdateTenant, useDeleteTenant,
+  useGetTenantSettings, useUpdateTenantSettings,
+  getGetTenantSettingsQueryKey,
 } from "@workspace/api-client-react";
 import type { Tenant, CreateTenantInput } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListTenantsQueryKey } from "@workspace/api-client-react";
+import { applyPrimaryColor, applySidebarColor, HEX_RE } from "@/hooks/use-theme";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +24,7 @@ import {
   Trash2, Users, RefreshCw, X,
   ArrowUp, ArrowDown, Eye, EyeOff, Navigation2, ShieldCheck, ImageIcon,
   DoorOpen, MapPin, Wrench, Dumbbell, UserCog, ClipboardList, InboxIcon,
-  History, SlidersHorizontal, BarChart2, Ticket, Shield,
+  History, SlidersHorizontal, BarChart2, Ticket, Shield, Palette, Upload, Settings2,
 } from "lucide-react";
 import type { NavConfigItem, PermissionMatrix } from "@workspace/api-client-react";
 import {
@@ -262,13 +265,14 @@ function TenantFormDialog({
 // ─── Tenant Row ───────────────────────────────────────────────────────────────
 
 function TenantRow({
-  tenant, onEdit, onDelete, onFreeze, onActivate,
+  tenant, onEdit, onDelete, onFreeze, onActivate, onConfigure,
 }: {
   tenant: Tenant;
-  onEdit:     (t: Tenant) => void;
-  onDelete:   (t: Tenant) => void;
-  onFreeze:   (t: Tenant) => void;
-  onActivate: (t: Tenant) => void;
+  onEdit:      (t: Tenant) => void;
+  onDelete:    (t: Tenant) => void;
+  onFreeze:    (t: Tenant) => void;
+  onActivate:  (t: Tenant) => void;
+  onConfigure: (t: Tenant) => void;
 }) {
   const planColor  = PLAN_COLORS[tenant.plan] ?? "bg-gray-100 text-gray-700";
   const suspended  = (tenant as any).status === "suspended" || !tenant.isActive;
@@ -344,6 +348,14 @@ function TenantRow({
             <Lock className="h-3 w-3" />Freeze
           </Button>
         )}
+        <Button
+          size="sm" variant="outline"
+          className="h-7 text-xs gap-1 text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-950/30"
+          onClick={() => onConfigure(tenant)}
+          title="Configure branding & navigation"
+        >
+          <Settings2 className="h-3 w-3" />Configure
+        </Button>
         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onEdit(tenant)}>
           <Pencil className="h-3.5 w-3.5" />
         </Button>
@@ -356,6 +368,307 @@ function TenantRow({
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Tenant Config Panel ──────────────────────────────────────────────────────
+
+function TenantConfigPanel({ tenant, onClose }: { tenant: Tenant; onClose: () => void }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data, isLoading } = useGetTenantSettings(tenant.id);
+  const { mutateAsync: save, isPending: saving } = useUpdateTenantSettings();
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const [tab, setTab]                   = useState<"branding" | "navigation">("branding");
+  const [companyName,    setCompanyName]    = useState("");
+  const [propertyName,   setPropertyName]   = useState("");
+  const [logoText,       setLogoText]       = useState("");
+  const [logoSub,        setLogoSub]        = useState("");
+  const [logoUrl,        setLogoUrl]        = useState("");
+  const [primaryColor,   setPrimaryColor]   = useState("#f59e0b");
+  const [secondaryColor, setSecondaryColor] = useState("#1e293b");
+  const [navConfig,      setNavConfig]      = useState<NavConfigItem[]>(DEFAULT_NAV_CONFIG_SA);
+  const [uploading,      setUploading]      = useState(false);
+  const [dirty,          setDirty]          = useState(false);
+
+  useEffect(() => {
+    if (!data) return;
+    setCompanyName(data.companyName ?? "");
+    setPropertyName(data.propertyName ?? "");
+    setLogoText(data.logoText ?? "");
+    setLogoSub(data.logoSub ?? "");
+    setLogoUrl(data.logoUrl ?? "");
+    setPrimaryColor(data.primaryColor || "#f59e0b");
+    setSecondaryColor(data.secondaryColor || "#1e293b");
+    setNavConfig(data.navConfig?.length ? [...data.navConfig] : DEFAULT_NAV_CONFIG_SA);
+    setDirty(false);
+  }, [data]);
+
+  async function handleLogoUpload(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Please select an image file", variant: "destructive" }); return;
+    }
+    setUploading(true);
+    try {
+      const res = await fetch("/api/storage/uploads/request-url", {
+        method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      });
+      if (!res.ok) throw new Error("Failed to get upload URL");
+      const { uploadURL, objectPath } = await res.json() as { uploadURL: string; objectPath: string };
+      const uploadRes = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+      if (!uploadRes.ok) throw new Error("Upload failed");
+      setLogoUrl(`/api/storage/${objectPath}`);
+      setDirty(true);
+      toast({ title: "Logo uploaded", description: "Click Save to apply." });
+    } catch {
+      toast({ title: "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function moveCfgItem(sortedIdx: number, dir: "up" | "down") {
+    const sorted = [...navConfig].sort((a, b) => a.order - b.order);
+    const swapIdx = dir === "up" ? sortedIdx - 1 : sortedIdx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const newCfg = navConfig.map((c) => {
+      if (c.id === sorted[sortedIdx].id) return { ...c, order: sorted[swapIdx].order };
+      if (c.id === sorted[swapIdx].id)   return { ...c, order: sorted[sortedIdx].order };
+      return c;
+    });
+    setNavConfig(newCfg);
+    setDirty(true);
+  }
+
+  function toggleCfgItem(id: string) {
+    setNavConfig((prev) => prev.map((c) => c.id === id ? { ...c, visible: !c.visible } : c));
+    setDirty(true);
+  }
+
+  function setCfgLabel(id: string, label: string) {
+    setNavConfig((prev) => prev.map((c) => c.id === id ? { ...c, label: label || undefined } : c));
+    setDirty(true);
+  }
+
+  async function handleSave() {
+    try {
+      await save({ id: tenant.id, data: {
+        propertyName: propertyName.trim(),
+        logoText: logoText.trim(),
+        logoSub: logoSub.trim(),
+        logoUrl: logoUrl.trim(),
+        navConfig,
+        companyName:   companyName.trim()    || undefined,
+        primaryColor:  primaryColor.trim()   || undefined,
+        secondaryColor: secondaryColor.trim() || undefined,
+      }});
+      qc.invalidateQueries({ queryKey: getGetTenantSettingsQueryKey(tenant.id) });
+      setDirty(false);
+      toast({ title: "Configuration saved", description: `${tenant.name} branding applied.` });
+    } catch {
+      toast({ title: "Save failed", variant: "destructive" });
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      <div className="flex-1 bg-black/40" onClick={onClose} />
+      <div className="w-full max-w-xl bg-card shadow-2xl flex flex-col overflow-hidden border-l">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <div>
+            <h2 className="font-serif text-lg font-bold">Configure: {tenant.name}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Per-tenant branding &amp; navigation</p>
+          </div>
+          <button onClick={onClose} className="rounded-sm p-1 hover:bg-muted">
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b px-6">
+          <button onClick={() => setTab("branding")} className={`px-0 py-2.5 mr-6 text-sm font-medium border-b-2 transition-colors ${tab === "branding" ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}>
+            <Palette className="h-3.5 w-3.5 inline-block mr-1.5 -mt-0.5" />Branding
+          </button>
+          <button onClick={() => setTab("navigation")} className={`px-0 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === "navigation" ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}>
+            <Navigation2 className="h-3.5 w-3.5 inline-block mr-1.5 -mt-0.5" />Navigation
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : tab === "branding" ? (
+            <div className="space-y-6">
+              {/* Identity */}
+              <section className="space-y-3">
+                <h3 className="text-sm font-semibold">Company Identity</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Company Name</Label>
+                    <Input value={companyName} onChange={(e) => { setCompanyName(e.target.value); setDirty(true); }} placeholder="Acme Hotels" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Dashboard Name</Label>
+                    <Input value={propertyName} onChange={(e) => { setPropertyName(e.target.value); setDirty(true); }} placeholder="Acme HQ" />
+                  </div>
+                </div>
+              </section>
+
+              {/* Logo */}
+              <section className="space-y-3">
+                <h3 className="text-sm font-semibold">Logo</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Main Word</Label>
+                    <Input value={logoText} onChange={(e) => { setLogoText(e.target.value); setDirty(true); }} placeholder="Rakz" className="font-serif" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Sub Word</Label>
+                    <Input value={logoSub} onChange={(e) => { setLogoSub(e.target.value); setDirty(true); }} placeholder="PMS" />
+                  </div>
+                </div>
+                <div className="rounded-lg border border-dashed p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-36 rounded border bg-muted/30 flex items-center justify-center overflow-hidden shrink-0">
+                      {logoUrl ? (
+                        <img src={logoUrl} alt="Logo" className="h-10 w-auto object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      ) : (
+                        <span className="text-xs">
+                          <span className="font-serif font-bold text-foreground">{logoText || "Logo"}</span>
+                          {logoSub && <span className="text-muted-foreground ml-1">{logoSub}</span>}
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <input ref={fileRef} type="file" accept="image/*" className="hidden"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f); e.target.value = ""; }} />
+                      <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading} className="w-36">
+                        <Upload className="h-3.5 w-3.5 mr-1.5" />
+                        {uploading ? "Uploading…" : "Upload Logo"}
+                      </Button>
+                      {logoUrl && (
+                        <Button variant="ghost" size="sm" onClick={() => { setLogoUrl(""); setDirty(true); }} className="w-36 text-muted-foreground">
+                          Clear logo
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Or paste image URL</Label>
+                    <Input value={logoUrl} onChange={(e) => { setLogoUrl(e.target.value); setDirty(true); }} placeholder="https://example.com/logo.png" className="text-xs h-8" />
+                  </div>
+                </div>
+              </section>
+
+              {/* Colors */}
+              <section className="space-y-3">
+                <h3 className="text-sm font-semibold">Brand Colors</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Primary Color</Label>
+                    <p className="text-[11px] text-muted-foreground -mt-1">Buttons, active states</p>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={HEX_RE.test(primaryColor) ? primaryColor : "#f59e0b"}
+                        onChange={(e) => { setPrimaryColor(e.target.value); setDirty(true); applyPrimaryColor(e.target.value); }}
+                        className="h-9 w-12 rounded cursor-pointer border border-border p-0.5 bg-transparent" />
+                      <Input value={primaryColor} onChange={(e) => { setPrimaryColor(e.target.value); setDirty(true); if (HEX_RE.test(e.target.value)) applyPrimaryColor(e.target.value); }}
+                        placeholder="#f59e0b" className="font-mono text-xs h-9 flex-1" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Sidebar Color</Label>
+                    <p className="text-[11px] text-muted-foreground -mt-1">Sidebar background</p>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={HEX_RE.test(secondaryColor) ? secondaryColor : "#1e293b"}
+                        onChange={(e) => { setSecondaryColor(e.target.value); setDirty(true); applySidebarColor(e.target.value); }}
+                        className="h-9 w-12 rounded cursor-pointer border border-border p-0.5 bg-transparent" />
+                      <Input value={secondaryColor} onChange={(e) => { setSecondaryColor(e.target.value); setDirty(true); if (HEX_RE.test(e.target.value)) applySidebarColor(e.target.value); }}
+                        placeholder="#1e293b" className="font-mono text-xs h-9 flex-1" />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3 items-center rounded-lg border p-3">
+                  <div className="h-8 w-8 rounded-full shrink-0" style={{ backgroundColor: HEX_RE.test(primaryColor) ? primaryColor : "#f59e0b" }} />
+                  <div className="flex-1 h-8 rounded" style={{ backgroundColor: HEX_RE.test(secondaryColor) ? secondaryColor : "#1e293b" }} />
+                  <span className="text-xs text-muted-foreground shrink-0">preview</span>
+                </div>
+              </section>
+            </div>
+          ) : (
+            /* Navigation tab */
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Reorder, show/hide, or rename sidebar items. Click a label to rename it.</p>
+                <Badge variant="secondary" className="shrink-0">
+                  {navConfig.filter((c) => c.visible).length} / {navConfig.length} visible
+                </Badge>
+              </div>
+              <div className="space-y-1.5">
+                {[...navConfig].sort((a, b) => a.order - b.order).map((item, idx, arr) => {
+                  const def = NAV_DEFINITIONS.find((d) => d.id === item.id);
+                  if (!def) return null;
+                  const Icon = def.icon;
+                  return (
+                    <div key={item.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${item.visible ? "bg-card border-border" : "bg-muted/40 border-border/50 opacity-60"}`}>
+                      <span className="text-[10px] font-mono text-muted-foreground w-4 text-center shrink-0">{idx + 1}</span>
+                      <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <input
+                        type="text"
+                        value={item.label ?? def.label}
+                        onChange={(e) => setCfgLabel(item.id, e.target.value === def.label ? "" : e.target.value)}
+                        placeholder={def.label}
+                        className="flex-1 min-w-0 text-sm font-medium bg-transparent border-none outline-none focus:bg-muted/50 rounded px-1 py-0.5"
+                        title="Click to rename"
+                      />
+                      {item.label && item.label !== def.label && (
+                        <button type="button" onClick={() => setCfgLabel(item.id, "")}
+                          className="text-[10px] text-muted-foreground hover:text-foreground shrink-0 underline" title="Reset">reset</button>
+                      )}
+                      <button type="button" onClick={() => toggleCfgItem(item.id)}
+                        className={`relative inline-flex h-4 w-7 rounded-full shrink-0 transition-colors ${item.visible ? "bg-primary" : "bg-muted-foreground/30"}`}>
+                        <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform ${item.visible ? "translate-x-[14px]" : "translate-x-0.5"}`} />
+                      </button>
+                      <div className="flex flex-col shrink-0">
+                        <button type="button" onClick={() => moveCfgItem(idx, "up")} disabled={idx === 0}
+                          className="p-0.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed">
+                          <ArrowUp className="h-3 w-3" />
+                        </button>
+                        <button type="button" onClick={() => moveCfgItem(idx, "down")} disabled={idx === arr.length - 1}
+                          className="p-0.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed">
+                          <ArrowDown className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <button type="button" onClick={() => { setNavConfig(DEFAULT_NAV_CONFIG_SA); setDirty(true); }}
+                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">
+                Reset to default order &amp; names
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t px-6 py-4 flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">{dirty ? "Unsaved changes" : "All changes saved"}</p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+            <Button size="sm" onClick={handleSave} disabled={saving || !dirty} className="min-w-24">
+              {saving ? "Saving…" : "Save Changes"}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -381,6 +694,11 @@ export default function SuperAdminPage() {
   const [navConfig,        setNavConfig]        = useState<NavConfigItem[]>(DEFAULT_NAV_CONFIG_SA);
   const [permissionMatrix, setPermissionMatrix] = useState<PermissionMatrix>(DEFAULT_PERMISSION_MATRIX_SA);
   const [dirty,            setDirty]            = useState(false);
+  const [primaryColor,     setPrimaryColor]     = useState("#f59e0b");
+  const [secondaryColor,   setSecondaryColor]   = useState("#1e293b");
+  const [uploading,        setUploading]        = useState(false);
+  const [configTenant,     setConfigTenant]     = useState<Tenant | null>(null);
+  const ownFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!data) return;
@@ -392,6 +710,8 @@ export default function SuperAdminPage() {
     setEnabledModules(data.enabledModules?.length ? data.enabledModules : []);
     setNavConfig(data.navConfig?.length ? [...data.navConfig] : DEFAULT_NAV_CONFIG_SA);
     setPermissionMatrix(data.permissionMatrix ?? DEFAULT_PERMISSION_MATRIX_SA);
+    setPrimaryColor(data.primaryColor || "#f59e0b");
+    setSecondaryColor(data.secondaryColor || "#1e293b");
     setDirty(false);
   }, [data]);
 
@@ -439,6 +759,35 @@ export default function SuperAdminPage() {
     setDirty(true);
   }
 
+  async function handleOwnLogoUpload(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Please select an image file", variant: "destructive" }); return;
+    }
+    setUploading(true);
+    try {
+      const res = await fetch("/api/storage/uploads/request-url", {
+        method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      });
+      if (!res.ok) throw new Error("Failed to get upload URL");
+      const { uploadURL, objectPath } = await res.json() as { uploadURL: string; objectPath: string };
+      const uploadRes = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+      if (!uploadRes.ok) throw new Error("Upload failed");
+      setLogoUrl(`/api/storage/${objectPath}`);
+      setDirty(true);
+      toast({ title: "Logo uploaded", description: "Click Save to apply." });
+    } catch {
+      toast({ title: "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function setNavLabel(id: string, label: string) {
+    setNavConfig((prev) => prev.map((c) => c.id === id ? { ...c, label: label || undefined } : c));
+    setDirty(true);
+  }
+
   async function handleSave() {
     try {
       await saveSettings({ data: {
@@ -450,7 +799,11 @@ export default function SuperAdminPage() {
         enabledModules,
         navConfig,
         permissionMatrix,
+        primaryColor: primaryColor.trim() || undefined,
+        secondaryColor: secondaryColor.trim() || undefined,
       }});
+      if (HEX_RE.test(primaryColor))   applyPrimaryColor(primaryColor);
+      if (HEX_RE.test(secondaryColor)) applySidebarColor(secondaryColor);
       setDirty(false);
       toast({ title: "Configuration saved", description: "All changes applied instantly." });
     } catch {
@@ -634,6 +987,7 @@ export default function SuperAdminPage() {
                     onDelete={(tenant) => setDeleteConf(tenant)}
                     onFreeze={(tenant) => setFreezeConf(tenant)}
                     onActivate={handleActivate}
+                    onConfigure={(tenant) => setConfigTenant(tenant)}
                   />
                 ))}
               </div>
@@ -698,31 +1052,96 @@ export default function SuperAdminPage() {
                       </div>
                     </div>
 
-                    {/* Logo Image URL */}
+                    {/* Logo Image Upload + URL */}
                     <div className="space-y-1.5">
                       <Label className="flex items-center gap-1.5">
                         <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                        Logo Image URL
+                        Logo Image
                         <span className="text-xs text-muted-foreground font-normal">(optional — overrides text logo)</span>
                       </Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={logoUrl}
-                          onChange={(e) => { setLogoUrl(e.target.value); setDirty(true); }}
-                          placeholder="https://your-domain.com/logo.png"
-                          className="flex-1"
-                        />
-                        {logoUrl && (
-                          <button
-                            type="button"
-                            onClick={() => { setLogoUrl(""); setDirty(true); }}
-                            className="px-3 py-1.5 text-xs rounded-md border text-muted-foreground hover:bg-muted"
-                          >
-                            Clear
-                          </button>
-                        )}
+                      <div className="rounded-lg border border-dashed p-4 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-12 w-36 rounded border bg-muted/30 flex items-center justify-center overflow-hidden shrink-0">
+                            {logoUrl ? (
+                              <img src={logoUrl} alt="Logo" className="h-10 w-auto object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                            ) : (
+                              <span className="text-xs">
+                                <span className="font-serif font-bold text-foreground">{logoText || "Grand"}</span>
+                                <span className="text-muted-foreground ml-1">{logoSub || "PMS"}</span>
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <input ref={ownFileRef} type="file" accept="image/*" className="hidden"
+                              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleOwnLogoUpload(f); e.target.value = ""; }} />
+                            <Button variant="outline" size="sm" onClick={() => ownFileRef.current?.click()} disabled={uploading} className="w-36">
+                              <Upload className="h-3.5 w-3.5 mr-1.5" />
+                              {uploading ? "Uploading…" : "Upload Logo"}
+                            </Button>
+                            {logoUrl && (
+                              <Button variant="ghost" size="sm" onClick={() => { setLogoUrl(""); setDirty(true); }} className="w-36 text-muted-foreground text-xs">
+                                Clear logo
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Or paste image URL</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              value={logoUrl}
+                              onChange={(e) => { setLogoUrl(e.target.value); setDirty(true); }}
+                              placeholder="https://your-domain.com/logo.png"
+                              className="flex-1 text-xs h-8"
+                            />
+                            {logoUrl && (
+                              <button type="button" onClick={() => { setLogoUrl(""); setDirty(true); }}
+                                className="px-3 py-1.5 text-xs rounded-md border text-muted-foreground hover:bg-muted">
+                                Clear
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">Paste a direct link to any image (PNG, SVG, WebP). Leave blank to use the text logo.</p>
+                    </div>
+
+                    {/* Brand Colors */}
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5">
+                        <Palette className="h-3.5 w-3.5 text-muted-foreground" />
+                        Brand Colors
+                      </Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Primary Color</Label>
+                          <p className="text-[11px] text-muted-foreground">Buttons, active states</p>
+                          <div className="flex items-center gap-2">
+                            <input type="color" value={HEX_RE.test(primaryColor) ? primaryColor : "#f59e0b"}
+                              onChange={(e) => { setPrimaryColor(e.target.value); setDirty(true); applyPrimaryColor(e.target.value); }}
+                              className="h-9 w-12 rounded cursor-pointer border border-border p-0.5 bg-transparent" />
+                            <Input value={primaryColor}
+                              onChange={(e) => { setPrimaryColor(e.target.value); setDirty(true); if (HEX_RE.test(e.target.value)) applyPrimaryColor(e.target.value); }}
+                              placeholder="#f59e0b" className="font-mono text-xs h-9" />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Sidebar Color</Label>
+                          <p className="text-[11px] text-muted-foreground">Sidebar background</p>
+                          <div className="flex items-center gap-2">
+                            <input type="color" value={HEX_RE.test(secondaryColor) ? secondaryColor : "#1e293b"}
+                              onChange={(e) => { setSecondaryColor(e.target.value); setDirty(true); applySidebarColor(e.target.value); }}
+                              className="h-9 w-12 rounded cursor-pointer border border-border p-0.5 bg-transparent" />
+                            <Input value={secondaryColor}
+                              onChange={(e) => { setSecondaryColor(e.target.value); setDirty(true); if (HEX_RE.test(e.target.value)) applySidebarColor(e.target.value); }}
+                              placeholder="#1e293b" className="font-mono text-xs h-9" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3 items-center rounded-lg border p-2.5 mt-1">
+                        <div className="h-7 w-7 rounded-full shrink-0" style={{ backgroundColor: HEX_RE.test(primaryColor) ? primaryColor : "#f59e0b" }} />
+                        <div className="flex-1 h-7 rounded" style={{ backgroundColor: HEX_RE.test(secondaryColor) ? secondaryColor : "#1e293b" }} />
+                        <span className="text-xs text-muted-foreground shrink-0">preview</span>
+                      </div>
                     </div>
 
                     <div className="space-y-1.5">
@@ -874,11 +1293,20 @@ export default function SuperAdminPage() {
                         {/* Icon */}
                         <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
 
-                        {/* Label + section */}
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium ${item.visible ? "text-foreground" : "text-muted-foreground"}`}>
-                            {def.label}
-                          </p>
+                        {/* Editable label */}
+                        <div className="flex-1 min-w-0 flex items-center gap-1">
+                          <input
+                            type="text"
+                            value={item.label ?? def.label}
+                            onChange={(e) => setNavLabel(item.id, e.target.value === def.label ? "" : e.target.value)}
+                            placeholder={def.label}
+                            className={`flex-1 min-w-0 text-sm font-medium bg-transparent border-none outline-none focus:bg-muted/50 rounded px-1 py-0.5 ${item.visible ? "text-foreground" : "text-muted-foreground"}`}
+                            title="Click to rename"
+                          />
+                          {item.label && item.label !== def.label && (
+                            <button type="button" onClick={() => setNavLabel(item.id, "")}
+                              className="text-[10px] text-muted-foreground hover:text-foreground shrink-0 underline" title="Reset">reset</button>
+                          )}
                         </div>
 
                         <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${
@@ -1139,6 +1567,11 @@ export default function SuperAdminPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* ── Tenant Config Panel ────────────────────────────────────────────── */}
+      {configTenant && (
+        <TenantConfigPanel tenant={configTenant} onClose={() => setConfigTenant(null)} />
       )}
 
       <Toaster />

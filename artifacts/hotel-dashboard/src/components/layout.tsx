@@ -127,6 +127,8 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
   const renderNavItem = (item: (typeof NAV_ITEMS)[0]) => {
     const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
     const Icon = item.icon;
+    const navId = hrefToNavId(item.href);
+    const customLabel = navCfgById[navId]?.label;
     return (
       <Link
         key={item.href}
@@ -139,7 +141,7 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
         data-testid={`nav-${item.href.replace("/", "") || "dashboard"}`}
       >
         <Icon className="h-5 w-5 shrink-0" />
-        {t(item.labelKey)}
+        {customLabel ?? t(item.labelKey)}
       </Link>
     );
   };

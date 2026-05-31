@@ -29,6 +29,8 @@ export interface NavConfigItem {
   order: number;
   /** Whether this item appears in the sidebar */
   visible: boolean;
+  /** Custom display label overriding the default i18n key (optional) */
+  label?: string | null;
 }
 
 /**
