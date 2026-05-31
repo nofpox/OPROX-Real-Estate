@@ -40,6 +40,13 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
 });
 
+/** Mirror of the server-side normTier — decides which portal a user belongs to. */
+function normTier(role: string): "admin" | "supervisor" | "worker" {
+  if (["owner", "admin", "super_admin"].includes(role)) return "admin";
+  if (["manager", "property-manager", "site-supervisor"].includes(role)) return "supervisor";
+  return "worker";
+}
+
 export type AuthUser = {
   id: number; username: string; displayName: string; role: string; permissions: string[];
   mustChangePassword?: boolean;
@@ -121,7 +128,15 @@ function App() {
     fetch("/api/auth/me", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
-      .then((user) => { setAuthUser(user); setAuthChecked(true); });
+      .then((user) => {
+        // Workers belong in the Staff portal — redirect silently
+        if (user && normTier(user.role) === "worker") {
+          window.location.replace("/staff");
+          return;
+        }
+        setAuthUser(user);
+        setAuthChecked(true);
+      });
   }, []);
 
   if (!authChecked) {
@@ -155,7 +170,14 @@ function App() {
         <LanguageProvider>
           <QueryClientProvider client={queryClient}>
             <Toaster />
-            <Login onLogin={(user) => setAuthUser(user as AuthUser)} />
+            <Login onLogin={(user: any) => {
+              // Smart redirect: workers go to the Staff Tablet portal
+              if (normTier(user.role) === "worker") {
+                window.location.replace("/staff");
+              } else {
+                setAuthUser(user as AuthUser);
+              }
+            }} />
           </QueryClientProvider>
         </LanguageProvider>
       </I18nextProvider>

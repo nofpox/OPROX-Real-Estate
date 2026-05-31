@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Eye, EyeOff, Building2, ArrowRight, KeyRound,
   Smartphone, Mail, RefreshCw, Clock, CheckCircle2,
+  LayoutDashboard, Tablet, Home,
 } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
 
@@ -475,7 +476,7 @@ export default function Login({ onLogin }: LoginProps) {
         <Card className="w-full max-w-sm shadow-lg">
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-2xl font-serif">{settings.propertyName}</CardTitle>
-            <CardDescription>Sign in to your account</CardDescription>
+            <CardDescription>Operations &amp; Maintenance Platform</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -561,6 +562,42 @@ export default function Login({ onLogin }: LoginProps) {
             </form>
           </CardContent>
         </Card>
+
+        {/* Portal quick-access */}
+        <div className="w-full max-w-sm mt-4 space-y-2">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border/50" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-muted/30 px-3 text-muted-foreground">Other portals</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => (window.location.href = "/staff")}
+              className="flex items-center gap-2 rounded-lg border border-border/60 bg-card px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/40 transition-colors"
+            >
+              <Tablet className="h-4 w-4 shrink-0 text-amber-500" />
+              <div className="text-left">
+                <p className="font-medium text-xs text-foreground">Field Staff</p>
+                <p className="text-[11px]">Staff tablet app</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => (window.location.href = "/guest")}
+              className="flex items-center gap-2 rounded-lg border border-border/60 bg-card px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/40 transition-colors"
+            >
+              <Home className="h-4 w-4 shrink-0 text-emerald-500" />
+              <div className="text-left">
+                <p className="font-medium text-xs text-foreground">Guest Portal</p>
+                <p className="text-[11px]">Residents &amp; visitors</p>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
 
       <ForgotPasswordDialog open={forgotOpen} onClose={() => setForgotOpen(false)} />

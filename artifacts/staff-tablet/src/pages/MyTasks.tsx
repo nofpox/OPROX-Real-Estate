@@ -460,8 +460,13 @@ function TaskCard({
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function MyTasks() {
-  const qc      = useQueryClient();
-  const session = JSON.parse(localStorage.getItem("rakz_session") || "{}");
+  const qc = useQueryClient();
+
+  const { data: authUser } = useQuery<{ id: number; username: string; displayName: string }>({
+    queryKey: ["auth-me"],
+    queryFn: () => fetch("/api/auth/me", { credentials: "include" }).then(r => r.ok ? r.json() : null),
+    staleTime: Infinity,
+  });
 
   const [tab, setTab]                     = useState<"pending" | "active" | "done">("pending");
   const [completingTask, setCompletingTask] = useState<Task | null>(null);
@@ -530,7 +535,7 @@ export default function MyTasks() {
                 مهامي الحالية
               </h1>
               <p className="text-xs text-muted-foreground">
-                {session.displayName || session.username}
+                {authUser?.displayName || authUser?.username}
               </p>
             </div>
             <Button

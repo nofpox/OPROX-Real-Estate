@@ -36,7 +36,11 @@ import { useState } from "react";
     const [, navigate] = useLocation();
     const [propertyFilter, setPropertyFilter] = useState<number | null>(null);
 
-    const session = JSON.parse(localStorage.getItem("rakz_session") || "{}");
+    const { data: authUser } = useQuery<{ id: number; username: string; displayName: string }>({
+      queryKey: ["auth-me"],
+      queryFn: () => fetch("/api/auth/me", { credentials: "include" }).then(r => r.ok ? r.json() : null),
+      staleTime: Infinity,
+    });
 
     const { data: rooms, isLoading: roomsLoading, refetch } = useQuery<Room[]>({
       queryKey: ["rooms"],
@@ -55,8 +59,7 @@ import { useState } from "react";
 
     const handleLogout = async () => {
       await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-      localStorage.removeItem("rakz_session");
-      navigate("/login");
+      window.location.replace("/login");
     };
 
     const filtered = rooms?.filter(r => propertyFilter === null ? true : true); // TODO: match by property
@@ -82,7 +85,7 @@ import { useState } from "react";
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground hidden sm:block">{session.displayName || session.username}</span>
+            <span className="text-sm text-muted-foreground hidden sm:block">{authUser?.displayName || authUser?.username}</span>
             <Button size="sm" variant="ghost" onClick={() => refetch()} className="h-8 w-8 p-0">
               <RefreshCw size={15} />
             </Button>

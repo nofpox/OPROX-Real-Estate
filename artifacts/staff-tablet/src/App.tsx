@@ -1,8 +1,8 @@
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter } from "wouter";
   import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
   import { Toaster } from "@/components/ui/toaster";
   import { TooltipProvider } from "@/components/ui/tooltip";
-  import { useEffect } from "react";
+  import { useEffect, useState } from "react";
   import { useOnlineStatus } from "@/hooks/use-online-status";
   import { getQueue, dequeue } from "@/lib/offline-queue";
   import { OfflineBanner } from "@/components/OfflineBanner";
@@ -16,13 +16,34 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
     defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
   });
 
+  /**
+   * Checks the server-side session cookie via /api/auth/me.
+   * If not authenticated → redirects to the unified login at /login.
+   * This means a single sign-in at the main portal grants access here too.
+   */
   function AuthGuard({ children }: { children: React.ReactNode }) {
-    const [, navigate] = useLocation();
+    const [status, setStatus] = useState<"loading" | "ok">("loading");
+
     useEffect(() => {
-      if (!localStorage.getItem("rakz_session")) {
-        navigate("/login");
-      }
+      fetch("/api/auth/me", { credentials: "include" })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null)
+        .then((user) => {
+          if (!user) {
+            window.location.replace("/login");
+          } else {
+            setStatus("ok");
+          }
+        });
     }, []);
+
+    if (status === "loading") {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+        </div>
+      );
+    }
     return <>{children}</>;
   }
 
