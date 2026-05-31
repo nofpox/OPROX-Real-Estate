@@ -32,13 +32,14 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Pencil, Trash2, SlidersHorizontal, Tag, ToggleLeft,
-  Building2, ListChecks, CheckSquare,
+  Building2, ListChecks, CheckSquare, ShieldCheck, Shield,
 } from "lucide-react";
+import type { PermissionMatrix } from "@workspace/api-client-react";
 import { useLanguage } from "@/contexts/language-context";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type MainTab = "systemInfo" | "taskTypes" | "taskRequirements" | "customFields";
+type MainTab = "systemInfo" | "taskTypes" | "taskRequirements" | "customFields" | "permissions";
 type EntityTab = "asset" | "task";
 type FieldType = "text" | "number" | "select" | "date" | "boolean";
 
@@ -86,12 +87,49 @@ function genId(name: string): string {
 
 // ─── Tab bar ─────────────────────────────────────────────────────────────────
 
-const TAB_META: Array<{ key: MainTab; icon: React.ReactNode }> = [
+const TAB_META: Array<{ key: MainTab; icon: React.ReactNode; label?: string }> = [
   { key: "systemInfo",       icon: <Building2 className="h-4 w-4" /> },
   { key: "taskTypes",        icon: <Tag className="h-4 w-4" /> },
   { key: "taskRequirements", icon: <CheckSquare className="h-4 w-4" /> },
   { key: "customFields",     icon: <SlidersHorizontal className="h-4 w-4" /> },
+  { key: "permissions",      icon: <ShieldCheck className="h-4 w-4" />, label: "Role Permissions" },
 ];
+
+// ─── Permission rows (for owner-level role permission editing) ────────────────
+
+const OWNER_PERMISSION_ROUTES = [
+  { href: "/",                   label: "Dashboard" },
+  { href: "/properties",         label: "Properties" },
+  { href: "/rooms",              label: "Rooms / Units" },
+  { href: "/unit-map",           label: "Unit Map" },
+  { href: "/maintenance",        label: "Maintenance" },
+  { href: "/facilities",         label: "Facilities" },
+  { href: "/staff",              label: "Staff" },
+  { href: "/tasks",              label: "Tasks" },
+  { href: "/guest-requests",     label: "Guest Requests" },
+  { href: "/activity-log",       label: "Activity Log" },
+  { href: "/user-management",    label: "User Management" },
+  { href: "/admin-settings",     label: "Admin Settings" },
+  { href: "/security-dashboard", label: "Security Dashboard" },
+  { href: "/analytics",          label: "Analytics" },
+  { href: "/support-tickets",    label: "Support Tickets" },
+];
+
+const OWNER_CONFIGURABLE_ROLES = [
+  { id: "manager",     label: "Manager",     color: "bg-purple-100 text-purple-700" },
+  { id: "supervisor",  label: "Supervisor",  color: "bg-amber-100 text-amber-700" },
+  { id: "maintenance", label: "Maintenance", color: "bg-orange-100 text-orange-700" },
+  { id: "cleaning",    label: "Cleaning",    color: "bg-green-100 text-green-700" },
+  { id: "security",    label: "Security",    color: "bg-blue-100 text-blue-700" },
+];
+
+const DEFAULT_PERM: PermissionMatrix = {
+  manager:     ["/", "/tasks", "/activity-log", "/user-management", "/analytics", "/support-tickets"],
+  supervisor:  ["/", "/tasks"],
+  maintenance: ["/", "/tasks"],
+  cleaning:    ["/", "/tasks"],
+  security:    ["/", "/tasks"],
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SECTION 1 — System Information
@@ -877,6 +915,130 @@ function CustomFieldsTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// SECTION 5 — Role Permissions (Owner-level matrix)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function PermissionsTab() {
+  const { toast } = useToast();
+  const { data } = useGetSettings();
+  const { mutateAsync: saveSettings, isPending: saving } = useUpdateSettings();
+
+  const [matrix, setMatrix] = useState<PermissionMatrix>(DEFAULT_PERM);
+  const [dirty, setDirty] = useState(false);
+
+  React.useEffect(() => {
+    if (!data) return;
+    setMatrix((data.permissionMatrix as PermissionMatrix | undefined) ?? DEFAULT_PERM);
+    setDirty(false);
+  }, [data]);
+
+  function toggle(roleId: string, href: string) {
+    setMatrix((prev) => {
+      const cur = prev[roleId] ?? [];
+      const next = cur.includes(href) ? cur.filter((h) => h !== href) : [...cur, href];
+      return { ...prev, [roleId]: next };
+    });
+    setDirty(true);
+  }
+
+  function toggleAll(roleId: string) {
+    const all = OWNER_PERMISSION_ROUTES.map((r) => r.href);
+    const cur = matrix[roleId] ?? [];
+    setMatrix((prev) => ({ ...prev, [roleId]: cur.length === all.length ? ["/"] : all }));
+    setDirty(true);
+  }
+
+  async function handleSave() {
+    try {
+      await saveSettings({ data: { permissionMatrix: matrix } });
+      setDirty(false);
+      toast({ title: "Permissions saved", description: "Role access matrix updated." });
+    } catch {
+      toast({ title: "Save failed", variant: "destructive" });
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg border border-border/50 bg-muted/30 px-4 py-3">
+        <div className="flex items-start gap-2.5">
+          <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-medium">Owner-Level Access Control</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Define which pages each staff role can access. <strong>Manager</strong> and above: full access by default.
+              Click a role header to toggle all pages at once. Changes take effect immediately after saving.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50">
+            <tr>
+              <th className="text-left font-medium py-3 px-4 min-w-36 text-muted-foreground">Page</th>
+              {OWNER_CONFIGURABLE_ROLES.map((r) => {
+                const cur = matrix[r.id] ?? [];
+                const all = cur.length === OWNER_PERMISSION_ROUTES.length;
+                return (
+                  <th key={r.id} className="text-center py-3 px-2 min-w-24">
+                    <button
+                      type="button"
+                      onClick={() => toggleAll(r.id)}
+                      title={all ? "Revoke all" : "Grant all"}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-opacity hover:opacity-70 ${r.color}`}
+                    >
+                      {r.label}
+                    </button>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {OWNER_PERMISSION_ROUTES.map((page) => (
+              <tr key={page.href} className="border-t hover:bg-muted/20">
+                <td className="py-2.5 px-4 font-medium text-sm">{page.label}</td>
+                {OWNER_CONFIGURABLE_ROLES.map((r) => {
+                  const allowed = (matrix[r.id] ?? []).includes(page.href);
+                  return (
+                    <td key={r.id} className="text-center py-2.5 px-2">
+                      <input
+                        type="checkbox"
+                        checked={allowed}
+                        onChange={() => toggle(r.id, page.href)}
+                        className="h-4 w-4 accent-primary cursor-pointer"
+                      />
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex items-center justify-between pb-4">
+        <button
+          type="button"
+          onClick={() => { setMatrix(DEFAULT_PERM); setDirty(true); }}
+          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+        >
+          Reset to defaults
+        </button>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-muted-foreground">{dirty ? "Unsaved changes" : "Saved"}</p>
+          <Button onClick={handleSave} disabled={saving || !dirty} className="min-w-36">
+            {saving ? "Saving…" : "Save Permissions"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Main page
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -896,7 +1058,7 @@ function AdminSettingsInner() {
 
       {/* Tab bar */}
       <div className="flex gap-2 flex-wrap">
-        {TAB_META.map(({ key, icon }) => (
+        {TAB_META.map(({ key, icon, label }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
@@ -907,7 +1069,7 @@ function AdminSettingsInner() {
             }`}
           >
             {icon}
-            {t(`adminSettings.tabs.${key}`)}
+            {label ?? t(`adminSettings.tabs.${key}`)}
           </button>
         ))}
       </div>
@@ -917,6 +1079,7 @@ function AdminSettingsInner() {
       {activeTab === "taskTypes"        && <TaskTypesTab />}
       {activeTab === "taskRequirements" && <TaskRequirementsTab />}
       {activeTab === "customFields"     && <CustomFieldsTab />}
+      {activeTab === "permissions"      && <PermissionsTab />}
     </div>
   );
 }

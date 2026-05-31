@@ -68,6 +68,10 @@ interface SidebarContentProps {
   onClose: () => void;
 }
 
+function hrefToNavId(href: string): string {
+  return href === "/" ? "dashboard" : href.replace(/^\//, "");
+}
+
 function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
   const [location] = useLocation();
   const { t } = useTranslation();
@@ -76,11 +80,43 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
   const settings = useSettings();
 
   const enabledNavKeys = getEnabledNavKeys(settings.enabledModules);
-  const visibleNavItems = NAV_ITEMS.filter((item) => {
+  const isOwnerTierRole = role.allowedNav.includes("*");
+
+  // Build navConfig lookup
+  const navCfgById = Object.fromEntries(
+    (settings.navConfig ?? []).map((c) => [c.id, c])
+  );
+
+  // Sort NAV_ITEMS by configured order
+  const sortedNavItems = [...NAV_ITEMS].sort((a, b) => {
+    const aOrd = navCfgById[hrefToNavId(a.href)]?.order ?? 999;
+    const bOrd = navCfgById[hrefToNavId(b.href)]?.order ?? 999;
+    return aOrd - bOrd;
+  });
+
+  // Permission matrix for current role (only for non-owner tiers)
+  const permMatrix = settings.permissionMatrix ?? {};
+  const roleMatrix: string[] | null = !isOwnerTierRole ? (permMatrix[role.id] ?? null) : null;
+
+  const visibleNavItems = sortedNavItems.filter((item) => {
+    // NavConfig visibility gate (owners bypass)
+    if (!isOwnerTierRole) {
+      const cfg = navCfgById[hrefToNavId(item.href)];
+      if (cfg && !cfg.visible) return false;
+    }
+    // Permission matrix overrides static RBAC for configurable roles
+    if (roleMatrix !== null) {
+      if (!roleMatrix.includes(item.href)) return false;
+      // Still check module enablement
+      if (item.featureKey !== null && !enabledNavKeys.has(item.featureKey)) return false;
+      return true;
+    }
+    // Standard RBAC + module check
     if (!can(item.href)) return false;
     if (item.featureKey === null) return true;
     return enabledNavKeys.has(item.featureKey);
   });
+
   const mainNav = visibleNavItems.filter((i) => i.section === "main");
   const opsNav  = visibleNavItems.filter((i) => i.section === "operations");
   const showOpsSection = opsNav.length > 0;
@@ -261,8 +297,14 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
         >
           <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-sidebar-border">
             <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
-              <span className="text-xl">{settings.logoText}</span>
-              <span className="text-sidebar-foreground font-sans font-medium text-lg">{settings.logoSub}</span>
+              {settings.logoUrl ? (
+                <img src={settings.logoUrl} alt={settings.logoText} className="h-8 w-auto object-contain max-w-28" />
+              ) : (
+                <>
+                  <span className="text-xl">{settings.logoText}</span>
+                  <span className="text-sidebar-foreground font-sans font-medium text-lg">{settings.logoSub}</span>
+                </>
+              )}
             </Link>
             <button
               onClick={() => setMobileOpen(false)}
@@ -280,8 +322,14 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
       <aside className={`hidden w-64 flex-col bg-sidebar text-sidebar-foreground lg:flex fixed inset-y-0 z-10 ${sidebarSide} ${sidebarBorder}`}>
         <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border">
           <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
-            <span className="text-xl">{settings.logoText}</span>
-            <span className="text-sidebar-foreground font-sans font-medium text-lg">{settings.logoSub}</span>
+            {settings.logoUrl ? (
+              <img src={settings.logoUrl} alt={settings.logoText} className="h-8 w-auto object-contain max-w-28" />
+            ) : (
+              <>
+                <span className="text-xl">{settings.logoText}</span>
+                <span className="text-sidebar-foreground font-sans font-medium text-lg">{settings.logoSub}</span>
+              </>
+            )}
           </Link>
         </div>
         <SidebarContent authUser={authUser} onLogout={onLogout} onClose={() => {}} />

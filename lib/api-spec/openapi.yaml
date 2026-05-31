@@ -2044,6 +2044,10 @@ components:
         logoSub:
           type: string
           description: Smaller sans-serif word in the sidebar logo
+        logoUrl:
+          type: string
+          nullable: true
+          description: URL to the brand logo image (overrides text logo when set)
         businessMode:
           type: string
           description: "hotel | compound | tower | serviced-apartments"
@@ -2071,6 +2075,14 @@ components:
           description: Custom task category definitions
         taskRequirements:
           $ref: "#/components/schemas/TaskRequirements"
+        navConfig:
+          type: array
+          items:
+            $ref: "#/components/schemas/NavConfigItem"
+          description: Ordered list of nav items with per-item visibility flags
+        permissionMatrix:
+          $ref: "#/components/schemas/PermissionMatrix"
+          description: Role-to-routes access matrix; owner-tier roles always bypass this
 
     SettingsInput:
       type: object
@@ -2081,6 +2093,9 @@ components:
           type: string
         logoSub:
           type: string
+        logoUrl:
+          type: string
+          nullable: true
         businessMode:
           type: string
         enabledModules:
@@ -2101,6 +2116,12 @@ components:
             $ref: "#/components/schemas/TaskType"
         taskRequirements:
           $ref: "#/components/schemas/TaskRequirements"
+        navConfig:
+          type: array
+          items:
+            $ref: "#/components/schemas/NavConfigItem"
+        permissionMatrix:
+          $ref: "#/components/schemas/PermissionMatrix"
 
     TaskType:
       type: object
@@ -2130,6 +2151,28 @@ components:
           type: boolean
         assignedTo:
           type: boolean
+
+    NavConfigItem:
+      type: object
+      required: [id, order, visible]
+      properties:
+        id:
+          type: string
+          description: Nav item slug (matches route without leading slash; root is "dashboard")
+        order:
+          type: integer
+          description: Display position in sidebar (0 = top)
+        visible:
+          type: boolean
+          description: Whether this item appears in the sidebar
+
+    PermissionMatrix:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      description: "Map of role ID (manager | supervisor | maintenance | cleaning | security) to allowed route hrefs"
 
     CustomField:
       type: object

@@ -22,6 +22,20 @@ export interface TaskRequirements {
   assignedTo: boolean;
 }
 
+export interface NavConfigItem {
+  /** Nav item slug (matches route without leading slash; root is "dashboard") */
+  id: string;
+  /** Display position in sidebar (0 = top) */
+  order: number;
+  /** Whether this item appears in the sidebar */
+  visible: boolean;
+}
+
+/**
+ * Map of role ID (manager | supervisor | maintenance | cleaning | security) to allowed route hrefs
+ */
+export interface PermissionMatrix {[key: string]: string[]}
+
 export interface Settings {
   /** Display name shown as the dashboard heading and sidebar logo */
   propertyName: string;
@@ -29,6 +43,8 @@ export interface Settings {
   logoText: string;
   /** Smaller sans-serif word in the sidebar logo */
   logoSub: string;
+  /** URL to the brand logo image (overrides text logo when set) */
+  logoUrl?: string | null;
   /** hotel | compound | tower | serviced-apartments */
   businessMode: string;
   /** List of enabled functional module IDs for this client */
@@ -44,12 +60,17 @@ export interface Settings {
   /** Custom task category definitions */
   taskTypes: TaskType[];
   taskRequirements: TaskRequirements;
+  /** Ordered list of nav items with per-item visibility flags */
+  navConfig?: NavConfigItem[];
+  /** Role-to-routes access matrix; owner-tier roles always bypass this */
+  permissionMatrix?: PermissionMatrix;
 }
 
 export interface SettingsInput {
   propertyName?: string;
   logoText?: string;
   logoSub?: string;
+  logoUrl?: string | null;
   businessMode?: string;
   enabledModules?: string[];
   companyName?: string;
@@ -58,6 +79,8 @@ export interface SettingsInput {
   contactAddress?: string;
   taskTypes?: TaskType[];
   taskRequirements?: TaskRequirements;
+  navConfig?: NavConfigItem[];
+  permissionMatrix?: PermissionMatrix;
 }
 
 export interface CustomField {

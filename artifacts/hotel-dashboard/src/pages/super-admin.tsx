@@ -19,12 +19,16 @@ import {
   ArrowLeft, ShieldAlert, LayoutDashboard, CheckCircle2,
   Lock, Unlock, ShieldOff, Layers, Building, Building2, Globe, Plus, Pencil,
   Trash2, Users, RefreshCw, X,
+  ArrowUp, ArrowDown, Eye, EyeOff, Navigation2, ShieldCheck, ImageIcon,
+  DoorOpen, MapPin, Wrench, Dumbbell, UserCog, ClipboardList, InboxIcon,
+  History, SlidersHorizontal, BarChart2, Ticket, Shield,
 } from "lucide-react";
+import type { NavConfigItem, PermissionMatrix } from "@workspace/api-client-react";
 import {
   MODULE_REGISTRY,
   type BusinessMode,
 } from "@/config/modules";
-import { isSuperAdmin, useRole } from "@/contexts/role-context";
+import { isSuperAdmin, isOwnerTier, useRole } from "@/contexts/role-context";
 
 // ─── Business mode options ────────────────────────────────────────────────────
 
@@ -36,6 +40,66 @@ const PROPERTY_TYPES: { value: BusinessMode; label: string; icon: React.ElementT
 ];
 
 const CORE_ITEMS = ["Dashboard", "Properties", "Unit Status", "Staff"];
+
+// ─── Nav Controller definitions ───────────────────────────────────────────────
+
+const NAV_DEFINITIONS = [
+  { id: "dashboard",          label: "Dashboard",          section: "main",       icon: LayoutDashboard },
+  { id: "properties",         label: "Properties",         section: "main",       icon: Building2 },
+  { id: "rooms",              label: "Rooms / Units",      section: "main",       icon: DoorOpen },
+  { id: "unit-map",           label: "Unit Map",           section: "main",       icon: MapPin },
+  { id: "maintenance",        label: "Maintenance",        section: "operations", icon: Wrench },
+  { id: "facilities",         label: "Facilities",         section: "operations", icon: Dumbbell },
+  { id: "staff",              label: "Staff",              section: "operations", icon: UserCog },
+  { id: "tasks",              label: "Tasks",              section: "operations", icon: ClipboardList },
+  { id: "guest-requests",     label: "Guest Requests",     section: "operations", icon: InboxIcon },
+  { id: "activity-log",       label: "Activity Log",       section: "operations", icon: History },
+  { id: "user-management",    label: "User Management",    section: "operations", icon: UserCog },
+  { id: "admin-settings",     label: "Admin Settings",     section: "operations", icon: SlidersHorizontal },
+  { id: "security-dashboard", label: "Security Dashboard", section: "operations", icon: ShieldAlert },
+  { id: "analytics",          label: "Analytics",          section: "operations", icon: BarChart2 },
+  { id: "support-tickets",    label: "Support Tickets",    section: "operations", icon: Ticket },
+] as const;
+
+// ─── Permission Matrix definitions ────────────────────────────────────────────
+
+const PERMISSION_ROUTES = [
+  { href: "/",                   label: "Dashboard" },
+  { href: "/properties",         label: "Properties" },
+  { href: "/rooms",              label: "Rooms / Units" },
+  { href: "/unit-map",           label: "Unit Map" },
+  { href: "/maintenance",        label: "Maintenance" },
+  { href: "/facilities",         label: "Facilities" },
+  { href: "/staff",              label: "Staff" },
+  { href: "/tasks",              label: "Tasks" },
+  { href: "/guest-requests",     label: "Guest Requests" },
+  { href: "/activity-log",       label: "Activity Log" },
+  { href: "/user-management",    label: "User Management" },
+  { href: "/admin-settings",     label: "Admin Settings" },
+  { href: "/security-dashboard", label: "Security Dashboard" },
+  { href: "/analytics",          label: "Analytics" },
+  { href: "/support-tickets",    label: "Support Tickets" },
+];
+
+const CONFIGURABLE_ROLES = [
+  { id: "manager",     label: "Manager",     color: "bg-purple-100 text-purple-700" },
+  { id: "supervisor",  label: "Supervisor",  color: "bg-amber-100 text-amber-700" },
+  { id: "maintenance", label: "Maintenance", color: "bg-orange-100 text-orange-700" },
+  { id: "cleaning",    label: "Cleaning",    color: "bg-green-100 text-green-700" },
+  { id: "security",    label: "Security",    color: "bg-blue-100 text-blue-700" },
+];
+
+const DEFAULT_NAV_CONFIG_SA: NavConfigItem[] = NAV_DEFINITIONS.map((d, i) => ({
+  id: d.id, order: i, visible: true,
+}));
+
+const DEFAULT_PERMISSION_MATRIX_SA: PermissionMatrix = {
+  manager:     ["/", "/tasks", "/activity-log", "/user-management", "/analytics", "/support-tickets"],
+  supervisor:  ["/", "/tasks"],
+  maintenance: ["/", "/tasks"],
+  cleaning:    ["/", "/tasks"],
+  security:    ["/", "/tasks"],
+};
 
 const PLAN_COLORS: Record<string, string> = {
   starter:    "bg-slate-100 text-slate-700",
@@ -301,26 +365,33 @@ function TenantRow({
 
 export default function SuperAdminPage() {
   const { actualDbRole } = useRole();
-  const showTenants = isSuperAdmin(actualDbRole);
+  const showTenants  = isSuperAdmin(actualDbRole);
+  const isAdminUser  = isOwnerTier(actualDbRole);
 
-  // Settings tab state
+  // Settings state
   const { data, isLoading } = useGetSettings();
   const { mutateAsync: saveSettings, isPending: saving } = useUpdateSettings();
   const { toast } = useToast();
-  const [propertyName,   setPropertyName]   = useState("");
-  const [logoText,       setLogoText]       = useState("");
-  const [logoSub,        setLogoSub]        = useState("");
-  const [businessMode,   setBusinessMode]   = useState<BusinessMode>("hotel");
-  const [enabledModules, setEnabledModules] = useState<string[]>([]);
-  const [dirty,          setDirty]          = useState(false);
+  const [propertyName,     setPropertyName]     = useState("");
+  const [logoText,         setLogoText]         = useState("");
+  const [logoSub,          setLogoSub]          = useState("");
+  const [logoUrl,          setLogoUrl]          = useState("");
+  const [businessMode,     setBusinessMode]     = useState<BusinessMode>("hotel");
+  const [enabledModules,   setEnabledModules]   = useState<string[]>([]);
+  const [navConfig,        setNavConfig]        = useState<NavConfigItem[]>(DEFAULT_NAV_CONFIG_SA);
+  const [permissionMatrix, setPermissionMatrix] = useState<PermissionMatrix>(DEFAULT_PERMISSION_MATRIX_SA);
+  const [dirty,            setDirty]            = useState(false);
 
   useEffect(() => {
     if (!data) return;
     setPropertyName(data.propertyName || "");
     setLogoText(data.logoText || "");
     setLogoSub(data.logoSub || "");
+    setLogoUrl(data.logoUrl ?? "");
     setBusinessMode((data.businessMode as BusinessMode) || "hotel");
     setEnabledModules(data.enabledModules?.length ? data.enabledModules : []);
+    setNavConfig(data.navConfig?.length ? [...data.navConfig] : DEFAULT_NAV_CONFIG_SA);
+    setPermissionMatrix(data.permissionMatrix ?? DEFAULT_PERMISSION_MATRIX_SA);
     setDirty(false);
   }, [data]);
 
@@ -329,18 +400,68 @@ export default function SuperAdminPage() {
     setDirty(true);
   }
 
+  function moveNavItem(sortedIdx: number, dir: "up" | "down") {
+    const sorted = [...navConfig].sort((a, b) => a.order - b.order);
+    const swapIdx = dir === "up" ? sortedIdx - 1 : sortedIdx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const newCfg = navConfig.map((c) => {
+      if (c.id === sorted[sortedIdx].id) return { ...c, order: sorted[swapIdx].order };
+      if (c.id === sorted[swapIdx].id)   return { ...c, order: sorted[sortedIdx].order };
+      return c;
+    });
+    setNavConfig(newCfg);
+    setDirty(true);
+  }
+
+  function toggleNavItem(id: string) {
+    setNavConfig((prev) => prev.map((c) => c.id === id ? { ...c, visible: !c.visible } : c));
+    setDirty(true);
+  }
+
+  function togglePermission(roleId: string, href: string) {
+    setPermissionMatrix((prev) => {
+      const current = prev[roleId] ?? [];
+      const updated = current.includes(href)
+        ? current.filter((h) => h !== href)
+        : [...current, href];
+      return { ...prev, [roleId]: updated };
+    });
+    setDirty(true);
+  }
+
+  function toggleRoleAll(roleId: string) {
+    const current = permissionMatrix[roleId] ?? [];
+    const all = PERMISSION_ROUTES.map((r) => r.href);
+    setPermissionMatrix((prev) => ({
+      ...prev,
+      [roleId]: current.length === all.length ? ["/"] : all,
+    }));
+    setDirty(true);
+  }
+
   async function handleSave() {
     try {
-      await saveSettings({ data: { propertyName: propertyName.trim(), logoText: logoText.trim(), logoSub: logoSub.trim(), businessMode, enabledModules } });
+      await saveSettings({ data: {
+        propertyName: propertyName.trim(),
+        logoText: logoText.trim(),
+        logoSub: logoSub.trim(),
+        logoUrl: logoUrl.trim(),
+        businessMode,
+        enabledModules,
+        navConfig,
+        permissionMatrix,
+      }});
       setDirty(false);
-      toast({ title: "Configuration saved" });
+      toast({ title: "Configuration saved", description: "All changes applied instantly." });
     } catch {
       toast({ title: "Save failed", variant: "destructive" });
     }
   }
 
   // Tenant tab state
-  const [activeTab, setActiveTab] = useState<"settings" | "tenants">(showTenants ? "tenants" : "settings");
+  const [activeTab, setActiveTab] = useState<"tenants" | "settings" | "navigation" | "permissions">(
+    showTenants ? "tenants" : "settings"
+  );
   const { data: tenants, isLoading: tenantsLoading, refetch } = useListTenants({ query: { enabled: showTenants, queryKey: getListTenantsQueryKey() } });
   const { mutateAsync: updateTenant } = useUpdateTenant();
   const { mutateAsync: deleteTenant } = useDeleteTenant();
@@ -413,30 +534,54 @@ export default function SuperAdminPage() {
           </Link>
         </div>
 
-        {/* ── Tabs (only if super admin) ─── */}
-        {showTenants && (
-          <div className="max-w-4xl mx-auto px-6 flex gap-1 pb-0 border-t border-border/50">
-            <button
-              onClick={() => setActiveTab("tenants")}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "tenants"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Globe className="h-3.5 w-3.5 inline-block mr-1.5 -mt-0.5" />
-              Tenants
-            </button>
+        {/* ── Tabs (visible to all admin-tier users) ─── */}
+        {isAdminUser && (
+          <div className="max-w-4xl mx-auto px-6 flex gap-1 pb-0 border-t border-border/50 overflow-x-auto">
+            {showTenants && (
+              <button
+                onClick={() => setActiveTab("tenants")}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors shrink-0 ${
+                  activeTab === "tenants"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Globe className="h-3.5 w-3.5 inline-block mr-1.5 -mt-0.5" />
+                Tenants
+              </button>
+            )}
             <button
               onClick={() => setActiveTab("settings")}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors shrink-0 ${
                 activeTab === "settings"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               <LayoutDashboard className="h-3.5 w-3.5 inline-block mr-1.5 -mt-0.5" />
-              Settings
+              Branding & Modules
+            </button>
+            <button
+              onClick={() => setActiveTab("navigation")}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors shrink-0 ${
+                activeTab === "navigation"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Navigation2 className="h-3.5 w-3.5 inline-block mr-1.5 -mt-0.5" />
+              Navigation
+            </button>
+            <button
+              onClick={() => setActiveTab("permissions")}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors shrink-0 ${
+                activeTab === "permissions"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <ShieldCheck className="h-3.5 w-3.5 inline-block mr-1.5 -mt-0.5" />
+              Permissions
             </button>
           </div>
         )}
@@ -539,12 +684,47 @@ export default function SuperAdminPage() {
                         <Input value={logoSub} onChange={(e) => { setLogoSub(e.target.value); setDirty(true); }} placeholder="OMS" />
                       </div>
                       <div className="flex items-end pb-0.5">
-                        <div className="text-sm text-muted-foreground border rounded-md px-3 py-2 w-full bg-muted/40">
-                          Preview: <span className="font-serif font-bold text-foreground">{logoText || "Grand"}</span>{" "}
-                          <span className="font-medium text-muted-foreground">{logoSub || "PMS"}</span>
+                        <div className="text-sm text-muted-foreground border rounded-md px-3 py-2 w-full bg-muted/40 flex items-center gap-3">
+                          {logoUrl ? (
+                            <img src={logoUrl} alt="Logo preview" className="h-8 w-auto object-contain shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                          ) : (
+                            <>
+                              <span className="font-serif font-bold text-foreground">{logoText || "Grand"}</span>{" "}
+                              <span className="font-medium text-muted-foreground">{logoSub || "PMS"}</span>
+                            </>
+                          )}
+                          <span className="text-xs text-muted-foreground">preview</span>
                         </div>
                       </div>
                     </div>
+
+                    {/* Logo Image URL */}
+                    <div className="space-y-1.5">
+                      <Label className="flex items-center gap-1.5">
+                        <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                        Logo Image URL
+                        <span className="text-xs text-muted-foreground font-normal">(optional — overrides text logo)</span>
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={logoUrl}
+                          onChange={(e) => { setLogoUrl(e.target.value); setDirty(true); }}
+                          placeholder="https://your-domain.com/logo.png"
+                          className="flex-1"
+                        />
+                        {logoUrl && (
+                          <button
+                            type="button"
+                            onClick={() => { setLogoUrl(""); setDirty(true); }}
+                            className="px-3 py-1.5 text-xs rounded-md border text-muted-foreground hover:bg-muted"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Paste a direct link to any image (PNG, SVG, WebP). Leave blank to use the text logo.</p>
+                    </div>
+
                     <div className="space-y-1.5">
                       <Label>Business Mode</Label>
                       <p className="text-xs text-muted-foreground">Controls unit labels and available features.</p>
@@ -644,6 +824,252 @@ export default function SuperAdminPage() {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* ══ Navigation Controller tab ════════════════════════════════════════ */}
+        {activeTab === "navigation" && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="font-serif text-xl font-bold">Navigation Controller</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Reorder sidebar items using the arrows. Toggle items off to hide them from all non-owner users.
+                Owner and Super Admin always see every item.
+              </p>
+            </div>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Navigation2 className="h-4 w-4 text-muted-foreground" />
+                    Sidebar Items
+                  </CardTitle>
+                  <Badge variant="secondary">
+                    {navConfig.filter((c) => c.visible).length} / {navConfig.length} visible
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-1.5 pb-4">
+                {[...navConfig]
+                  .sort((a, b) => a.order - b.order)
+                  .map((item, idx, arr) => {
+                    const def = NAV_DEFINITIONS.find((d) => d.id === item.id);
+                    if (!def) return null;
+                    const Icon = def.icon;
+                    return (
+                      <div
+                        key={item.id}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors ${
+                          item.visible
+                            ? "bg-card border-border"
+                            : "bg-muted/40 border-border/50 opacity-60"
+                        }`}
+                      >
+                        {/* Order badge */}
+                        <span className="text-[11px] font-mono text-muted-foreground w-5 text-center shrink-0">
+                          {idx + 1}
+                        </span>
+
+                        {/* Icon */}
+                        <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+
+                        {/* Label + section */}
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium ${item.visible ? "text-foreground" : "text-muted-foreground"}`}>
+                            {def.label}
+                          </p>
+                        </div>
+
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${
+                          def.section === "main"
+                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                            : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                        }`}>
+                          {def.section}
+                        </span>
+
+                        {/* Visibility toggle */}
+                        <button
+                          type="button"
+                          onClick={() => toggleNavItem(item.id)}
+                          title={item.visible ? "Hide from sidebar" : "Show in sidebar"}
+                          className={`relative inline-flex h-5 w-9 rounded-full shrink-0 transition-colors ${
+                            item.visible ? "bg-primary" : "bg-muted-foreground/30"
+                          }`}
+                        >
+                          <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                            item.visible ? "translate-x-[18px]" : "translate-x-0.5"
+                          }`} />
+                        </button>
+
+                        {/* Up / Down */}
+                        <div className="flex flex-col shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => moveNavItem(idx, "up")}
+                            disabled={idx === 0}
+                            className="p-0.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed"
+                          >
+                            <ArrowUp className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveNavItem(idx, "down")}
+                            disabled={idx === arr.length - 1}
+                            className="p-0.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed"
+                          >
+                            <ArrowDown className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </CardContent>
+            </Card>
+
+            <div className="flex items-center justify-between pb-8">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setNavConfig(DEFAULT_NAV_CONFIG_SA); setDirty(true); }}
+                  className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+                >
+                  Reset to default order
+                </button>
+              </div>
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-muted-foreground">
+                  {dirty ? "Unsaved changes" : "Saved"}
+                </p>
+                <Button onClick={handleSave} disabled={saving || !dirty} className="min-w-36">
+                  {saving ? "Saving…" : "Save Navigation"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ Permissions tab ══════════════════════════════════════════════════ */}
+        {activeTab === "permissions" && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="font-serif text-xl font-bold">Permission Matrix</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Define which pages each role can access. <strong>Owner</strong> and <strong>Super Admin</strong> always
+                have full access. Changes apply instantly after saving.
+              </p>
+            </div>
+
+            {/* Always-full-access roles banner */}
+            <div className="rounded-lg border border-border/50 bg-muted/30 px-4 py-3">
+              <div className="flex items-center gap-2 mb-2.5">
+                <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Full Access (cannot be restricted)</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[{ id: "super_admin", label: "Super Admin", color: "bg-red-100 text-red-700" }, { id: "owner", label: "Owner", color: "bg-yellow-100 text-yellow-700" }].map((r) => (
+                  <span key={r.id} className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${r.color}`}>
+                    <CheckCircle2 className="h-3 w-3" />{r.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                  Role Access Grid
+                </CardTitle>
+                <CardDescription>
+                  Check a cell to grant that role access to the page. Uncheck to revoke it.
+                  Click a role header to toggle all pages at once.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pb-4">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr>
+                        <th className="text-left font-medium py-2 pe-4 min-w-40 text-muted-foreground">Page</th>
+                        {CONFIGURABLE_ROLES.map((r) => {
+                          const allowed = permissionMatrix[r.id] ?? [];
+                          const all = allowed.length === PERMISSION_ROUTES.length;
+                          return (
+                            <th key={r.id} className="text-center py-2 px-2 min-w-28">
+                              <button
+                                type="button"
+                                onClick={() => toggleRoleAll(r.id)}
+                                title={all ? "Revoke all pages" : "Grant all pages"}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-colors ${r.color} hover:opacity-80`}
+                              >
+                                {r.label}
+                              </button>
+                            </th>
+                          );
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {PERMISSION_ROUTES.map((page) => (
+                        <tr key={page.href} className="border-t border-border/50 hover:bg-muted/20">
+                          <td className="py-2 pe-4 font-medium text-sm text-foreground">{page.label}</td>
+                          {CONFIGURABLE_ROLES.map((r) => {
+                            const allowed = (permissionMatrix[r.id] ?? []).includes(page.href);
+                            return (
+                              <td key={r.id} className="text-center py-2 px-2">
+                                <input
+                                  type="checkbox"
+                                  checked={allowed}
+                                  onChange={() => togglePermission(r.id, page.href)}
+                                  className="h-4 w-4 accent-primary cursor-pointer"
+                                />
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Owner sub-hierarchy note */}
+            <div className="rounded-lg border border-border/50 bg-muted/30 px-4 py-3">
+              <div className="flex items-start gap-2.5">
+                <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Hierarchical Control</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    This matrix sets the maximum access for your entire platform. Owners can further restrict
+                    access for their own managers and workers via <strong>Admin Settings → Role Permissions</strong>.
+                    The effective permission is always the most restrictive setting in the chain.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pb-8">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setPermissionMatrix(DEFAULT_PERMISSION_MATRIX_SA); setDirty(true); }}
+                  className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+                >
+                  Reset to defaults
+                </button>
+              </div>
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-muted-foreground">
+                  {dirty ? "Unsaved changes" : "Saved"}
+                </p>
+                <Button onClick={handleSave} disabled={saving || !dirty} className="min-w-36">
+                  {saving ? "Saving…" : "Save Permissions"}
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </main>

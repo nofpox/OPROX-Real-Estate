@@ -15,6 +15,7 @@ export const GetSettingsResponse = zod.object({
   "propertyName": zod.string().describe('Display name shown as the dashboard heading and sidebar logo'),
   "logoText": zod.string().describe('Large serif word in the sidebar logo'),
   "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
+  "logoUrl": zod.string().nullish().describe('URL to the brand logo image (overrides text logo when set)'),
   "businessMode": zod.string().describe('hotel | compound | tower | serviced-apartments'),
   "enabledModules": zod.array(zod.string()).describe('List of enabled functional module IDs for this client'),
   "companyName": zod.string().describe('Legal or trading name of the company'),
@@ -32,7 +33,13 @@ export const GetSettingsResponse = zod.object({
   "notes": zod.boolean(),
   "priority": zod.boolean(),
   "assignedTo": zod.boolean()
-})
+}),
+  "navConfig": zod.array(zod.object({
+  "id": zod.string().describe('Nav item slug (matches route without leading slash; root is \"dashboard\")'),
+  "order": zod.number().describe('Display position in sidebar (0 = top)'),
+  "visible": zod.boolean().describe('Whether this item appears in the sidebar')
+})).optional().describe('Ordered list of nav items with per-item visibility flags'),
+  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Role-to-routes access matrix; owner-tier roles always bypass this')
 })
 
 
@@ -43,6 +50,7 @@ export const UpdateSettingsBody = zod.object({
   "propertyName": zod.string().optional(),
   "logoText": zod.string().optional(),
   "logoSub": zod.string().optional(),
+  "logoUrl": zod.string().nullish(),
   "businessMode": zod.string().optional(),
   "enabledModules": zod.array(zod.string()).optional(),
   "companyName": zod.string().optional(),
@@ -60,13 +68,20 @@ export const UpdateSettingsBody = zod.object({
   "notes": zod.boolean(),
   "priority": zod.boolean(),
   "assignedTo": zod.boolean()
-}).optional()
+}).optional(),
+  "navConfig": zod.array(zod.object({
+  "id": zod.string().describe('Nav item slug (matches route without leading slash; root is \"dashboard\")'),
+  "order": zod.number().describe('Display position in sidebar (0 = top)'),
+  "visible": zod.boolean().describe('Whether this item appears in the sidebar')
+})).optional(),
+  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Map of role ID (manager | supervisor | maintenance | cleaning | security) to allowed route hrefs')
 })
 
 export const UpdateSettingsResponse = zod.object({
   "propertyName": zod.string().describe('Display name shown as the dashboard heading and sidebar logo'),
   "logoText": zod.string().describe('Large serif word in the sidebar logo'),
   "logoSub": zod.string().describe('Smaller sans-serif word in the sidebar logo'),
+  "logoUrl": zod.string().nullish().describe('URL to the brand logo image (overrides text logo when set)'),
   "businessMode": zod.string().describe('hotel | compound | tower | serviced-apartments'),
   "enabledModules": zod.array(zod.string()).describe('List of enabled functional module IDs for this client'),
   "companyName": zod.string().describe('Legal or trading name of the company'),
@@ -84,7 +99,13 @@ export const UpdateSettingsResponse = zod.object({
   "notes": zod.boolean(),
   "priority": zod.boolean(),
   "assignedTo": zod.boolean()
-})
+}),
+  "navConfig": zod.array(zod.object({
+  "id": zod.string().describe('Nav item slug (matches route without leading slash; root is \"dashboard\")'),
+  "order": zod.number().describe('Display position in sidebar (0 = top)'),
+  "visible": zod.boolean().describe('Whether this item appears in the sidebar')
+})).optional().describe('Ordered list of nav items with per-item visibility flags'),
+  "permissionMatrix": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Role-to-routes access matrix; owner-tier roles always bypass this')
 })
 
 
