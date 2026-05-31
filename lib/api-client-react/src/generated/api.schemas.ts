@@ -581,6 +581,16 @@ export interface AppNotification {
   relatedId?: number | null;
   /** @nullable */
   relatedType?: string | null;
+  /**
+     * i18n key base (e.g. 'checkin'). Client translates via t(`notif.${notifKey}.title`) / t(`notif.${notifKey}.message`, params).
+     * @nullable
+     */
+  notifKey?: string | null;
+  /**
+     * JSON-encoded interpolation params for notifKey translation, e.g. {"guestName":"Ali","roomName":"101"}.
+     * @nullable
+     */
+  messageParams?: string | null;
   createdAt: string;
 }
 

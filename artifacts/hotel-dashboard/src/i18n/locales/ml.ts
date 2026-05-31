@@ -60,6 +60,7 @@ const ml: Translations = {
     emptyDesc: "അറ്റകുറ്റ അലർട്ടുകൾ, ജോലി അപ്ഡേറ്റുകൾ, സിസ്റ്റം അറിയിപ്പുകൾ ഇവിടെ ദൃശ്യമാകും.",
     justNow: "ഇപ്പോൾ", minsAgo: "{{count}} മിനിറ്റ് മുൻപ്", hoursAgo: "{{count}} മണിക്കൂർ മുൻപ്",
   },
+  notif: { checkin: { title: "ഇന്നത്തെ ചെക്ക്-ഇൻ", message: "{{guestName}} ഇന്ന് {{roomName}}-ൽ ചെക്ക്-ഇൻ ചെയ്യുന്നു." }, checkout: { title: "ഇന്നത്തെ ചെക്ക്-ഔട്ട്", message: "{{guestName}} ഇന്ന് {{roomName}}-ൽ നിന്ന് ചെക്ക്-ഔട്ട് ചെയ്യുന്നു." }, urgentMaintenance: { title: "അടിയന്തര അറ്റകുറ്റപ്പണി", message: "{{woTitle}}-ന് ഉടനടി ശ്രദ്ധ ആവശ്യമാണ്." }, overdueOrder: { title: "കാലാവധി കഴിഞ്ഞ ജോലി", message: "{{woTitle}} അവസാന തീയതി കഴിഞ്ഞു." }, taskReport: { title: "പുതിയ റിപ്പോർട്ട് സമർപ്പിച്ചു", message: "{{actorName}} {{taskTitle}} പൂർത്തിയാക്കി, നിങ്ങളുടെ അവലോകനം കാത്തിരിക്കുന്നു." }, taskRejected: { title: "റിപ്പോർട്ട് നിരസിച്ചു", message: "{{taskTitle}}-നുള്ള നിങ്ങളുടെ റിപ്പോർട്ട് നിരസിക്കപ്പെട്ടു." }, taskEscalated: { title: "റിപ്പോർട്ട് എസ്കലേറ്റ് ചെയ്തു", message: "{{taskTitle}} എസ്കലേറ്റ് ചെയ്യപ്പെട്ടു, നിങ്ങളുടെ അനുമതി ആവശ്യമാണ്." }, taskApproved: { title: "റിപ്പോർട്ട് അംഗീകരിച്ചു", message: "{{taskTitle}}-നുള്ള നിങ്ങളുടെ റിപ്പോർട്ട് അംഗീകരിക്കപ്പെട്ടു." }, taskReopened: { title: "ടാസ്ക് വീണ്ടും തുറന്നു", message: "{{taskTitle}} വീണ്ടും തുറന്നിരിക്കുന്നു." } },
   dashboard: {
     title: "ഡാഷ്ബോർഡ്", subtitle: "തത്സമയ പ്രവർത്തന സ്ഥിതി — ഇപ്പോൾ ശ്രദ്ധ ആവശ്യമുള്ളത്",
     overviewSubtitle: "എല്ലാ ആസ്തികളുടെയും സജീവ ജോലികളുടെയും അവലോകനം.",

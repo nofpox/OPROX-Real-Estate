@@ -59,6 +59,7 @@ const tl: Translations = {
     emptyDesc: "Ang mga alerto sa pagpapanatili, mga update sa gawain, at mga abiso ng sistema ay lilitaw dito.",
     justNow: "Ngayon lang", minsAgo: "{{count}} min ang nakalipas", hoursAgo: "{{count}} oras ang nakalipas",
   },
+  notif: { checkin: { title: "Check-in Ngayon", message: "Nag-check in si {{guestName}} sa {{roomName}} ngayon." }, checkout: { title: "Check-out Ngayon", message: "Nag-check out si {{guestName}} mula sa {{roomName}} ngayon." }, urgentMaintenance: { title: "Agarang Pagpapanatili", message: "Ang {{woTitle}} ay nangangailangan ng agarang pansin." }, overdueOrder: { title: "Nahuling Work Order", message: "Ang {{woTitle}} ay nalagpasan na ang takdang petsa." }, taskReport: { title: "Bagong Ulat Isinumite", message: "Natapos ni {{actorName}} ang {{taskTitle}}, naghihintay ng iyong pagsusuri." }, taskRejected: { title: "Ulat Tinanggihan", message: "Ang iyong ulat para sa {{taskTitle}} ay tinanggihan." }, taskEscalated: { title: "Ulat Ini-escalate", message: "Ang {{taskTitle}} ay ini-escalate at nangangailangan ng iyong pahintulot." }, taskApproved: { title: "Ulat Naaprubahan", message: "Ang iyong ulat para sa {{taskTitle}} ay naaprubahan." }, taskReopened: { title: "Gawain Muling Binuksan", message: "Ang {{taskTitle}} ay muling binuksan." } },
   dashboard: {
     title: "Dashboard", subtitle: "Real-time na katayuan ng operasyon — ano ang kailangan ng pansin ngayon",
     overviewSubtitle: "Pangkalahatang-ideya ng lahat ng asset at aktibong gawain.",

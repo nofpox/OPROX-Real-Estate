@@ -58,11 +58,14 @@ router.post("/notifications/generate", async (req, res) => {
         AND date_trunc('day', ${notificationsTable.createdAt}) = date_trunc('day', now())`
     );
     if (!existing) {
+      const roomName = room?.name ?? `room ${booking.roomId}`;
       await db.insert(notificationsTable).values({
         tenantId,
         type: "check-in", title: "Check-in Today",
-        message: `${booking.guestName} is checking into ${room?.name ?? `room ${booking.roomId}`} today.`,
+        message: `${booking.guestName} is checking into ${roomName} today.`,
         isRead: false, relatedId: booking.id, relatedType: "booking-checkin",
+        notifKey: "checkin",
+        messageParams: JSON.stringify({ guestName: booking.guestName, roomName }),
       });
       generated++;
     }
@@ -82,11 +85,14 @@ router.post("/notifications/generate", async (req, res) => {
         AND date_trunc('day', ${notificationsTable.createdAt}) = date_trunc('day', now())`
     );
     if (!existing) {
+      const roomName = room?.name ?? `room ${booking.roomId}`;
       await db.insert(notificationsTable).values({
         tenantId,
         type: "check-out", title: "Check-out Today",
-        message: `${booking.guestName} is checking out of ${room?.name ?? `room ${booking.roomId}`} today.`,
+        message: `${booking.guestName} is checking out of ${roomName} today.`,
         isRead: false, relatedId: booking.id, relatedType: "booking-checkout",
+        notifKey: "checkout",
+        messageParams: JSON.stringify({ guestName: booking.guestName, roomName }),
       });
       generated++;
     }
@@ -112,12 +118,16 @@ router.post("/notifications/generate", async (req, res) => {
     );
     if (!existing) {
       const isOverdue = wo.dueDate && wo.dueDate < today;
+      const location = [property?.name, room?.name].filter(Boolean).join(" · ");
+      const woTitle  = location ? `${wo.title} — ${location}` : wo.title;
       await db.insert(notificationsTable).values({
         tenantId,
         type: "maintenance-alert",
         title: isOverdue ? "Overdue Work Order" : "Urgent Maintenance",
-        message: `${wo.title}${property ? ` — ${property.name}` : ""}${room ? ` (${room.name})` : ""}${isOverdue ? " is overdue." : " requires immediate attention."}`,
+        message: `${woTitle}${isOverdue ? " is overdue." : " requires immediate attention."}`,
         isRead: false, relatedId: wo.id, relatedType: "work-order-alert",
+        notifKey: isOverdue ? "overdueOrder" : "urgentMaintenance",
+        messageParams: JSON.stringify({ woTitle }),
       });
       generated++;
     }

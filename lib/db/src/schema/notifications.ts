@@ -10,10 +10,14 @@ export const notificationsTable = pgTable("notifications", {
   type:        text("type").notNull(),
   title:       text("title").notNull(),
   message:     text("message").notNull(),
-  isRead:      boolean("is_read").notNull().default(false),
-  relatedId:   integer("related_id"),
-  relatedType: text("related_type"),
-  createdAt:   timestamp("created_at").defaultNow().notNull(),
+  isRead:       boolean("is_read").notNull().default(false),
+  relatedId:    integer("related_id"),
+  relatedType:  text("related_type"),
+  /** i18n key base, e.g. "checkin". Frontend translates via t(`notif.${notifKey}.title/message`). */
+  notifKey:     text("notif_key"),
+  /** JSON-encoded interpolation params for notifKey, e.g. {"guestName":"John","roomName":"101"} */
+  messageParams: text("message_params"),
+  createdAt:    timestamp("created_at").defaultNow().notNull(),
 }, (t) => [
   // Per-user bell query: WHERE tenant_id = ? AND (user_id IS NULL OR user_id = ?) AND is_read = false
   index("notifications_tenant_user_unread_idx").on(t.tenantId, t.userId, t.isRead, t.createdAt),

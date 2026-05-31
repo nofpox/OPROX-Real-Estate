@@ -59,6 +59,7 @@ const id: Translations = {
     emptyDesc: "Peringatan pemeliharaan, pembaruan tugas, dan notifikasi sistem akan muncul di sini.",
     justNow: "Baru saja", minsAgo: "{{count}} mnt lalu", hoursAgo: "{{count}} jam lalu",
   },
+  notif: { checkin: { title: "Check-in Hari Ini", message: "{{guestName}} sedang check-in ke {{roomName}} hari ini." }, checkout: { title: "Check-out Hari Ini", message: "{{guestName}} sedang check-out dari {{roomName}} hari ini." }, urgentMaintenance: { title: "Pemeliharaan Mendesak", message: "{{woTitle}} memerlukan perhatian segera." }, overdueOrder: { title: "Work Order Terlambat", message: "{{woTitle}} sudah melewati tenggat waktu." }, taskReport: { title: "Laporan Baru Diajukan", message: "{{actorName}} menyelesaikan {{taskTitle}}, menunggu tinjauan Anda." }, taskRejected: { title: "Laporan Ditolak", message: "Laporan Anda untuk {{taskTitle}} ditolak." }, taskEscalated: { title: "Laporan Dieskalasi", message: "{{taskTitle}} telah dieskalasi dan memerlukan persetujuan Anda." }, taskApproved: { title: "Laporan Disetujui", message: "Laporan Anda untuk {{taskTitle}} telah disetujui." }, taskReopened: { title: "Tugas Dibuka Kembali", message: "{{taskTitle}} telah dibuka kembali." } },
   dashboard: {
     title: "Dasbor", subtitle: "Status operasional real-time — apa yang perlu perhatian sekarang",
     overviewSubtitle: "Ikhtisar semua aset dan tugas aktif.", assetSummary: "Ringkasan Aset",

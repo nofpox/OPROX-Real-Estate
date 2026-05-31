@@ -46,16 +46,20 @@ function createTaskNotification(params: {
   message: string;
   relatedId: number;
   userId?: number | null;
+  notifKey?: string;
+  messageParams?: string;
 }): void {
   db.insert(notificationsTable).values({
-    tenantId:    params.tenantId,
-    userId:      params.userId ?? null,
-    type:        params.type,
-    title:       params.title,
-    message:     params.message,
-    isRead:      false,
-    relatedId:   params.relatedId,
-    relatedType: "task",
+    tenantId:      params.tenantId,
+    userId:        params.userId ?? null,
+    type:          params.type,
+    title:         params.title,
+    message:       params.message,
+    isRead:        false,
+    relatedId:     params.relatedId,
+    relatedType:   "task",
+    notifKey:      params.notifKey ?? null,
+    messageParams: params.messageParams ?? null,
   }).catch(() => { /* non-critical — never block the main response */ });
 }
 
@@ -398,6 +402,8 @@ router.post("/tasks/:id/submit", async (req, res) => {
     message: `${actor.actorName ?? "عامل"} أنهى "${task.title}"${gpsNote} — بانتظار اعتمادك`,
     relatedId: task.id,
     userId: supervisorUserId,
+    notifKey: "taskReport",
+    messageParams: JSON.stringify({ actorName: actor.actorName ?? "Worker", taskTitle: task.title }),
   });
 
   res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
@@ -457,6 +463,8 @@ router.post("/tasks/:id/reject", async (req, res) => {
     title: "Report Rejected",
     message: `Your report for "${task.title}" was rejected: ${notes}`,
     relatedId: task.id,
+    notifKey: "taskRejected",
+    messageParams: JSON.stringify({ taskTitle: task.title }),
   });
 
   res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
@@ -510,6 +518,8 @@ router.post("/tasks/:id/escalate", async (req, res) => {
     title: "Report Escalated for Approval",
     message: `"${task.title}" has been escalated and requires your approval`,
     relatedId: task.id,
+    notifKey: "taskEscalated",
+    messageParams: JSON.stringify({ taskTitle: task.title }),
   });
 
   res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
@@ -563,6 +573,8 @@ router.post("/tasks/:id/approve", async (req, res) => {
     title: "Report Approved ✓",
     message: `Your report for "${task.title}" has been approved`,
     relatedId: task.id,
+    notifKey: "taskApproved",
+    messageParams: JSON.stringify({ taskTitle: task.title }),
   });
 
   res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));
@@ -665,6 +677,8 @@ router.post("/tasks/:id/reopen", async (req, res) => {
     title: "Task Re-opened",
     message: `"${task.title}" has been re-opened for a fresh submission`,
     relatedId: task.id,
+    notifKey: "taskReopened",
+    messageParams: JSON.stringify({ taskTitle: task.title }),
   });
 
   res.json(formatTask(updated, { assigneeName: staff?.name, propertyName: property?.name }));

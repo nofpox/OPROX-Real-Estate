@@ -21,6 +21,15 @@ function NotificationIcon({ type }: { type: string }) {
   }
 }
 
+/**
+ * Parse the messageParams JSON string safely.
+ * Returns an empty object on any parse failure.
+ */
+function parseParams(raw: string | null | undefined): Record<string, string> {
+  if (!raw) return {};
+  try { return JSON.parse(raw) as Record<string, string>; } catch { return {}; }
+}
+
 export function NotificationBell() {
   const { t } = useTranslation();
   const { lang } = useLanguage();
@@ -71,6 +80,25 @@ export function NotificationBell() {
     return date.toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US");
   }
 
+  /**
+   * Resolve a localised title/message for a notification.
+   * If the server has set `notifKey`, translate it with `messageParams`.
+   * Falls back gracefully to the stored English string.
+   */
+  function localise(
+    notifKey: string | null | undefined,
+    messageParams: string | null | undefined,
+    fallback: string,
+    suffix: "title" | "message",
+  ): string {
+    if (!notifKey) return fallback;
+    const key = `notif.${notifKey}.${suffix}`;
+    const params = parseParams(messageParams);
+    const translated = t(key, params);
+    // i18next returns the key itself when the key is missing — treat that as a fallback signal
+    return translated === key ? fallback : translated;
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -108,27 +136,31 @@ export function NotificationBell() {
             </div>
           ) : (
             <div className="divide-y divide-border/50">
-              {notifications.map((n) => (
-                <button
-                  key={n.id}
-                  className={`w-full text-start px-4 py-3 ${!n.isRead ? "bg-primary/5" : ""}`}
-                  onClick={() => !n.isRead && handleMarkRead(n.id)}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5"><NotificationIcon type={n.type} /></div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className={`text-xs font-semibold ${!n.isRead ? "text-foreground" : "text-muted-foreground"}`}>
-                          {n.title}
-                        </p>
-                        {!n.isRead && <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />}
+              {notifications.map((n) => {
+                const title   = localise(n.notifKey, n.messageParams, n.title,   "title");
+                const message = localise(n.notifKey, n.messageParams, n.message, "message");
+                return (
+                  <button
+                    key={n.id}
+                    className={`w-full text-start px-4 py-3 ${!n.isRead ? "bg-primary/5" : ""}`}
+                    onClick={() => !n.isRead && handleMarkRead(n.id)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5"><NotificationIcon type={n.type} /></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={`text-xs font-semibold ${!n.isRead ? "text-foreground" : "text-muted-foreground"}`}>
+                            {title}
+                          </p>
+                          {!n.isRead && <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{message}</p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-1.5">{formatTime(n.createdAt)}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{n.message}</p>
-                      <p className="text-[10px] text-muted-foreground/60 mt-1.5">{formatTime(n.createdAt)}</p>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

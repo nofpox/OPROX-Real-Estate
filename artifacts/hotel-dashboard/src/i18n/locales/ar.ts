@@ -125,6 +125,17 @@ const ar: Translations = {
     minsAgo: "منذ {{count}} دقيقة",
     hoursAgo: "منذ {{count}} ساعة",
   },
+  notif: {
+    checkin:           { title: "تسجيل وصول اليوم",   message: "{{guestName}} يسجل وصوله إلى {{roomName}} اليوم." },
+    checkout:          { title: "تسجيل مغادرة اليوم", message: "{{guestName}} يغادر {{roomName}} اليوم." },
+    urgentMaintenance: { title: "صيانة عاجلة",         message: "{{woTitle}} يتطلب اهتماماً فورياً." },
+    overdueOrder:      { title: "أمر عمل متأخر",       message: "{{woTitle}} متأخر عن الموعد." },
+    taskReport:        { title: "تقرير جديد مُقدَّم", message: "{{actorName}} أنهى {{taskTitle}} وينتظر مراجعتك." },
+    taskRejected:      { title: "تقرير مرفوض",         message: "تم رفض تقريرك عن {{taskTitle}}." },
+    taskEscalated:     { title: "تقرير مُصعَّد",       message: "{{taskTitle}} تمت إحالته ويتطلب موافقتك." },
+    taskApproved:      { title: "تقرير معتمد",         message: "تمت الموافقة على تقريرك عن {{taskTitle}}." },
+    taskReopened:      { title: "مهمة أُعيد فتحها",    message: "تمت إعادة فتح {{taskTitle}}." },
+  },
   dashboard: {
     title: "لوحة التحكم",
     subtitle: "الحالة التشغيلية الفورية — ما يحتاج انتباهك الآن",

@@ -1355,6 +1355,8 @@ export const ListNotificationsResponseItem = zod.object({
   "isRead": zod.boolean(),
   "relatedId": zod.number().nullish(),
   "relatedType": zod.string().nullish(),
+  "notifKey": zod.string().nullish().describe('i18n key base (e.g. \'checkin\'). Client translates via t(`notif.${notifKey}.title`) \/ t(`notif.${notifKey}.message`, params).'),
+  "messageParams": zod.string().nullish().describe('JSON-encoded interpolation params for notifKey translation, e.g. {\"guestName\":\"Ali\",\"roomName\":\"101\"}.'),
   "createdAt": zod.string()
 })
 export const ListNotificationsResponse = zod.array(ListNotificationsResponseItem)
@@ -1385,6 +1387,8 @@ export const MarkNotificationReadResponse = zod.object({
   "isRead": zod.boolean(),
   "relatedId": zod.number().nullish(),
   "relatedType": zod.string().nullish(),
+  "notifKey": zod.string().nullish().describe('i18n key base (e.g. \'checkin\'). Client translates via t(`notif.${notifKey}.title`) \/ t(`notif.${notifKey}.message`, params).'),
+  "messageParams": zod.string().nullish().describe('JSON-encoded interpolation params for notifKey translation, e.g. {\"guestName\":\"Ali\",\"roomName\":\"101\"}.'),
   "createdAt": zod.string()
 })
 

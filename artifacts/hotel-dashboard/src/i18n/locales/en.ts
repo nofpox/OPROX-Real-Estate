@@ -123,6 +123,17 @@ const en = {
     minsAgo: "{{count}}m ago",
     hoursAgo: "{{count}}h ago",
   },
+  notif: {
+    checkin:           { title: "Check-in Today",        message: "{{guestName}} is checking into {{roomName}} today." },
+    checkout:          { title: "Check-out Today",        message: "{{guestName}} is checking out of {{roomName}} today." },
+    urgentMaintenance: { title: "Urgent Maintenance",     message: "{{woTitle}} requires immediate attention." },
+    overdueOrder:      { title: "Overdue Work Order",     message: "{{woTitle}} is overdue." },
+    taskReport:        { title: "New Report Submitted",   message: "{{actorName}} completed {{taskTitle}} and is awaiting your review." },
+    taskRejected:      { title: "Report Rejected",        message: "Your report for {{taskTitle}} was rejected." },
+    taskEscalated:     { title: "Report Escalated",       message: "{{taskTitle}} has been escalated and requires your approval." },
+    taskApproved:      { title: "Report Approved",        message: "Your report for {{taskTitle}} has been approved." },
+    taskReopened:      { title: "Task Re-opened",         message: "{{taskTitle}} has been re-opened for a fresh submission." },
+  },
   dashboard: {
     title: "Dashboard",
     subtitle: "Real-time operational status — what needs attention right now",

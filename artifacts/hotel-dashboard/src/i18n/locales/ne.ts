@@ -60,6 +60,7 @@ const ne: Translations = {
     emptyDesc: "मर्मत अलर्ट, कार्य अपडेट र प्रणाली सूचनाहरू यहाँ देखिनेछन्।",
     justNow: "भर्खरै", minsAgo: "{{count}} मिनेट अघि", hoursAgo: "{{count}} घण्टा अघि",
   },
+  notif: { checkin: { title: "आजको चेक-इन", message: "{{guestName}} आज {{roomName}} मा चेक-इन गर्दैछन्।" }, checkout: { title: "आजको चेक-आउट", message: "{{guestName}} आज {{roomName}} बाट चेक-आउट गर्दैछन्।" }, urgentMaintenance: { title: "अत्यावश्यक मर्मत", message: "{{woTitle}} लाई तत्काल ध्यान चाहिन्छ।" }, overdueOrder: { title: "ढिलाइएको कार्य आदेश", message: "{{woTitle}} समयसीमा नाघिसक्यो।" }, taskReport: { title: "नयाँ रिपोर्ट पेश", message: "{{actorName}} ले {{taskTitle}} सम्पन्न गरे, तपाईंको समीक्षाको प्रतीक्षामा।" }, taskRejected: { title: "रिपोर्ट अस्वीकार", message: "{{taskTitle}} को तपाईंको रिपोर्ट अस्वीकार गरियो।" }, taskEscalated: { title: "रिपोर्ट एस्केलेट", message: "{{taskTitle}} एस्केलेट गरियो र तपाईंको स्वीकृति चाहिन्छ।" }, taskApproved: { title: "रिपोर्ट स्वीकृत", message: "{{taskTitle}} को तपाईंको रिपोर्ट स्वीकृत भयो।" }, taskReopened: { title: "कार्य पुनः खोलियो", message: "{{taskTitle}} पुनः खोलिएको छ।" } },
   dashboard: {
     title: "ड्यासबोर्ड", subtitle: "रियल-टाइम सञ्चालन स्थिति — अहिले के ध्यान चाहिन्छ",
     overviewSubtitle: "सबै सम्पत्ति र सक्रिय कार्यहरूको अवलोकन।",

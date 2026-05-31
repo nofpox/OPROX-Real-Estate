@@ -3006,6 +3006,12 @@ components:
           type: ["integer", "null"]
         relatedType:
           type: ["string", "null"]
+        notifKey:
+          type: ["string", "null"]
+          description: "i18n key base (e.g. 'checkin'). Client translates via t(`notif.${notifKey}.title`) / t(`notif.${notifKey}.message`, params)."
+        messageParams:
+          type: ["string", "null"]
+          description: "JSON-encoded interpolation params for notifKey translation, e.g. {\"guestName\":\"Ali\",\"roomName\":\"101\"}."
         createdAt:
           type: string
 

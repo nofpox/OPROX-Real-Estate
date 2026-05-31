@@ -59,6 +59,7 @@ const zh: Translations = {
     emptyDesc: "维护警报、任务更新和系统通知将在此显示。",
     justNow: "刚刚", minsAgo: "{{count}}分钟前", hoursAgo: "{{count}}小时前",
   },
+  notif: { checkin: { title: "今日入住", message: "{{guestName}} 今天正在入住 {{roomName}}。" }, checkout: { title: "今日退房", message: "{{guestName}} 今天正在退出 {{roomName}}。" }, urgentMaintenance: { title: "紧急维修", message: "{{woTitle}} 需要立即处理。" }, overdueOrder: { title: "逾期工单", message: "{{woTitle}} 已超过截止日期。" }, taskReport: { title: "新报告已提交", message: "{{actorName}} 完成了 {{taskTitle}}，等待您的审核。" }, taskRejected: { title: "报告已拒绝", message: "您关于 {{taskTitle}} 的报告已被拒绝。" }, taskEscalated: { title: "报告已升级", message: "{{taskTitle}} 已升级，需要您的批准。" }, taskApproved: { title: "报告已批准", message: "您关于 {{taskTitle}} 的报告已获批准。" }, taskReopened: { title: "任务已重新开启", message: "{{taskTitle}} 已重新开启。" } },
   dashboard: {
     title: "仪表板", subtitle: "实时运营状态 — 现在需要关注的事项",
     overviewSubtitle: "所有资产和活跃任务概览。", assetSummary: "资产摘要",

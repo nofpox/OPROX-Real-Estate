@@ -59,6 +59,7 @@ const fr: Translations = {
     emptyDesc: "Les alertes de maintenance, mises à jour de tâches et notifications système apparaîtront ici.",
     justNow: "À l'instant", minsAgo: "Il y a {{count}} min", hoursAgo: "Il y a {{count}} h",
   },
+  notif: { checkin: { title: "Arrivée Aujourd'hui", message: "{{guestName}} arrive dans {{roomName}} aujourd'hui." }, checkout: { title: "Départ Aujourd'hui", message: "{{guestName}} quitte {{roomName}} aujourd'hui." }, urgentMaintenance: { title: "Maintenance Urgente", message: "{{woTitle}} nécessite une attention immédiate." }, overdueOrder: { title: "Bon de Travail En Retard", message: "{{woTitle}} est en retard." }, taskReport: { title: "Rapport Soumis", message: "{{actorName}} a terminé {{taskTitle}} et attend votre révision." }, taskRejected: { title: "Rapport Rejeté", message: "Votre rapport pour {{taskTitle}} a été rejeté." }, taskEscalated: { title: "Rapport Escaladé", message: "{{taskTitle}} a été escaladé et nécessite votre approbation." }, taskApproved: { title: "Rapport Approuvé", message: "Votre rapport pour {{taskTitle}} a été approuvé." }, taskReopened: { title: "Tâche Réouverte", message: "{{taskTitle}} a été réouvert." } },
   dashboard: {
     title: "Tableau de bord", subtitle: "État opérationnel en temps réel — ce qui nécessite une attention immédiate",
     overviewSubtitle: "Vue d'ensemble de tous les actifs et tâches actives.", assetSummary: "Résumé des actifs",
