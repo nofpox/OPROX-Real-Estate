@@ -16,7 +16,9 @@ export const roomsTable = pgTable("rooms", {
   createdAt:    timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertRoomSchema = createInsertSchema(roomsTable).omit({ id: true, createdAt: true });
+export const insertRoomSchema = createInsertSchema(roomsTable, {
+  pricePerNight: z.coerce.string(),
+}).omit({ id: true, createdAt: true });
 export const updateRoomSchema = insertRoomSchema.partial();
 export type InsertRoom = z.infer<typeof insertRoomSchema>;
 export type UpdateRoom = z.infer<typeof updateRoomSchema>;

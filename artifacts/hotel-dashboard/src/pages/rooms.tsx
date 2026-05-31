@@ -45,7 +45,7 @@ function daysSince(dateStr: string): number {
 // ─── Form schema ──────────────────────────────────────────────────────────────
 
 const unitSchema = z.object({
-  name:     z.string().min(1),
+  name:     z.string().min(1, "رقم / اسم الوحدة مطلوب"),
   type:     z.string().min(1),
   status:   z.string().min(1),
   capacity: z.coerce.number().min(1),
