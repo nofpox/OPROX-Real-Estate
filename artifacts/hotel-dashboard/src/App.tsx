@@ -108,14 +108,33 @@ function App() {
   const [authUser,    setAuthUser]    = useState<AuthUser>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
-  // Ref so the fetch interceptor always reads the latest setter without re-running the effect
-  const setSuspendedRef = useRef(setIsSuspended);
+  // Refs so the fetch interceptor always reads the latest setters without re-running the effect
+  const setSuspendedRef  = useRef(setIsSuspended);
+  const setAuthUserRef   = useRef(setAuthUser);
+  const setAuthCheckedRef = useRef(setAuthChecked);
 
-  // ── Global fetch interceptor: catch TENANT_SUSPENDED on any API response ───
+  // ── Global fetch interceptor ─────────────────────────────────────────────
+  // • 401 on any non-auth route  → session expired; return to login screen
+  // • 403 TENANT_SUSPENDED       → show the suspended wall
   useEffect(() => {
     const origFetch = window.fetch.bind(window);
     window.fetch = async (...args: Parameters<typeof fetch>) => {
       const res = await origFetch(...args);
+
+      // Resolve the URL string regardless of how fetch was called
+      const rawUrl = typeof args[0] === "string"
+        ? args[0]
+        : args[0] instanceof URL
+          ? args[0].href
+          : (args[0] as Request).url;
+      const isAuthRoute = rawUrl.includes("/api/auth/");
+
+      if (res.status === 401 && !isAuthRoute) {
+        // Session is gone — silently return user to the login screen
+        setAuthUserRef.current(null);
+        setAuthCheckedRef.current(true);
+      }
+
       if (res.status === 403) {
         res.clone().json().then((data: unknown) => {
           if (
@@ -126,6 +145,7 @@ function App() {
           }
         }).catch(() => {});
       }
+
       return res;
     };
     return () => { window.fetch = origFetch; };
