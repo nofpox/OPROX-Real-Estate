@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, usersTable, tenantsTable } from "@workspace/db";
 import { eq, sql, and } from "drizzle-orm";
 import crypto from "node:crypto";
+import { Resend } from "resend";
 import {
   checkLoginAllowed,
   recordFailedAttempt,
@@ -17,6 +18,36 @@ export type { SessionUser };
 
 // token → { userId, tenantId, expiresAt }
 const resetTokens = new Map<string, { userId: number; tenantId: number | null; expiresAt: number }>();
+
+// Lazy-init Resend client (only if key is present)
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+/**
+ * Send a password-reset OTP email via Resend.
+ * Falls back silently when RESEND_API_KEY is not set (demo mode).
+ */
+async function sendResetEmail(to: string, token: string): Promise<void> {
+  if (!resend) return;
+  await resend.emails.send({
+    from:    "Rakz PMS <onboarding@resend.dev>",
+    to:      [to],
+    subject: "Your password reset code",
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
+        <h2 style="margin:0 0 8px;font-size:20px;color:#111">Password Reset</h2>
+        <p style="margin:0 0 24px;color:#555;font-size:15px">
+          Use the one-time code below to reset your password. It expires in <strong>3 minutes</strong>.
+        </p>
+        <div style="background:#f4f4f5;border-radius:8px;padding:20px 24px;text-align:center;letter-spacing:8px;font-size:32px;font-weight:700;color:#111">
+          ${token}
+        </div>
+        <p style="margin:24px 0 0;color:#888;font-size:12px">
+          If you did not request this, you can safely ignore this email.
+        </p>
+      </div>
+    `,
+  });
+}
 
 export function getRoleTier(role: string): "admin" | "supervisor" | "worker" {
   if (role === "owner" || role === "admin" || role === "super_admin") return "admin";
@@ -329,12 +360,21 @@ router.post("/auth/forgot-password", async (req, res) => {
 
   req.log.info({ userId: user.id, deliveryMethod }, "Password reset token issued");
 
-  // Production hook: plug in your SMS/email provider here.
-  // if (deliveryMethod === "sms")   await sendSms(user.phoneNumber, resetToken);
-  // if (deliveryMethod === "email") await sendEmail(user.email, resetToken);
+  if (deliveryMethod === "email") {
+    try {
+      await sendResetEmail(user.email ?? String(email), resetToken);
+      req.log.info({ userId: user.id }, "Reset email dispatched via Resend");
+    } catch (err) {
+      req.log.error({ err }, "Failed to send reset email — returning token in body as fallback");
+      // Still return the token so the UI doesn't leave the user stuck
+      return res.json({ ok: true, resetToken, deliveryMethod, emailError: true });
+    }
+    // Email sent — do NOT expose the token in the response
+    return res.json({ ok: true, deliveryMethod });
+  }
 
-  // Demo mode: return token in response body so the UI can display it.
-  res.json({ ok: true, resetToken, deliveryMethod });
+  // SMS path (not yet wired) + demo fallback: return token in body
+  return res.json({ ok: true, resetToken, deliveryMethod });
 });
 
 // ── Reset password ────────────────────────────────────────────────────────────
