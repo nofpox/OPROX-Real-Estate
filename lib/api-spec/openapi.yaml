@@ -772,6 +772,31 @@ paths:
         "204":
           description: Deleted
 
+  /staff/{id}/resend-invite:
+    post:
+      operationId: resendStaffInvite
+      tags: [staff]
+      summary: Resend (or create) the invitation email for a staff member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Invite dispatched
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sent]
+                properties:
+                  sent:
+                    type: boolean
+                  message:
+                    type: string
+
   /tasks:
     get:
       operationId: listTasks
@@ -2803,6 +2828,15 @@ components:
           description: "active, inactive"
         createdAt:
           type: string
+        hasAccount:
+          type: boolean
+          description: "true if a login account exists for this staff member"
+        invitePending:
+          type: boolean
+          description: "true if account exists but password has not yet been changed"
+        welcomeEmailSent:
+          type: boolean
+          description: "returned on create — whether the invite email was dispatched"
 
     StaffInput:
       type: object

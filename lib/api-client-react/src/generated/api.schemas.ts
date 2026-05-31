@@ -413,6 +413,12 @@ export interface StaffMember {
   /** active, inactive */
   status: string;
   createdAt: string;
+  /** true if a login account exists for this staff member */
+  hasAccount?: boolean;
+  /** true if account exists but password has not yet been changed */
+  invitePending?: boolean;
+  /** returned on create — whether the invite email was dispatched */
+  welcomeEmailSent?: boolean;
 }
 
 export interface StaffInput {
@@ -987,6 +993,11 @@ priority?: string;
 export type ListStaffParams = {
 propertyId?: number;
 role?: string;
+};
+
+export type ResendStaffInvite200 = {
+  sent: boolean;
+  message?: string;
 };
 
 export type ListTasksParams = {

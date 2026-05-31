@@ -15,8 +15,18 @@ function getCaller(req: import("express").Request): SessionUser | undefined {
   return (req as any).sessionUser as SessionUser | undefined;
 }
 
-function formatStaff(s: typeof staffTable.$inferSelect, propertyName?: string | null) {
-  return { ...s, createdAt: s.createdAt.toISOString(), propertyName: propertyName ?? null };
+function formatStaff(
+  s: typeof staffTable.$inferSelect,
+  propertyName?: string | null,
+  userInfo?: { hasAccount: boolean; invitePending: boolean } | null,
+) {
+  return {
+    ...s,
+    createdAt: s.createdAt.toISOString(),
+    propertyName: propertyName ?? null,
+    hasAccount: userInfo?.hasAccount ?? false,
+    invitePending: userInfo?.invitePending ?? false,
+  };
 }
 
 /** Derive a unique username from an email prefix or full name, scoped to tenant. */
@@ -56,7 +66,21 @@ router.get("/staff", async (req, res) => {
     .leftJoin(propertiesTable, eq(staffTable.propertyId, propertiesTable.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(staffTable.name);
-  res.json(rows.map(({ staff, property }) => formatStaff(staff, property?.name)));
+
+  // Batch-load user accounts so we can surface invite/account status
+  const userConds = tenantId !== null ? [eq(usersTable.tenantId, tenantId)] : [];
+  const users = await db
+    .select({ email: usersTable.email, mustChangePassword: usersTable.mustChangePassword })
+    .from(usersTable)
+    .where(userConds.length > 0 ? and(...userConds) : undefined);
+  const userMap = new Map(users.filter(u => u.email).map(u => [u.email!, u]));
+
+  res.json(rows.map(({ staff, property }) => {
+    const u = userMap.get(staff.email);
+    return formatStaff(staff, property?.name, u
+      ? { hasAccount: true, invitePending: u.mustChangePassword }
+      : { hasAccount: false, invitePending: false });
+  }));
 });
 
 router.post("/staff", async (req, res) => {
@@ -114,6 +138,60 @@ router.post("/staff", async (req, res) => {
   }
 
   res.status(201).json({ ...formatStaff(staff), welcomeEmailSent });
+});
+
+router.post("/staff/:id/resend-invite", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const tenantId = tid(req) ?? 1;
+
+  const conds = [eq(staffTable.id, id), eq(staffTable.tenantId, tenantId)];
+  const [staff] = await db.select().from(staffTable).where(and(...conds));
+  if (!staff) { res.status(404).json({ error: "Staff not found" }); return; }
+
+  const email = staff.email;
+  if (!email) { res.status(400).json({ error: "Staff member has no email address" }); return; }
+
+  try {
+    const [existing] = await db
+      .select()
+      .from(usersTable)
+      .where(and(eq(usersTable.email, email), eq(usersTable.tenantId, tenantId)));
+
+    if (!existing) {
+      // Account doesn't exist yet — create it
+      const emailPrefix = email.split("@")[0] ?? "user";
+      const username = await generateUsername(emailPrefix, tenantId);
+      const tempPassword = generateTempPassword();
+      await db.insert(usersTable).values({
+        tenantId,
+        username,
+        displayName: staff.name,
+        email,
+        phoneNumber: staff.phone ?? null,
+        passwordHash: hashPwd(tempPassword),
+        role: "staff",
+        permissions: "[]",
+        isActive: true,
+        mustChangePassword: true,
+      });
+      await sendWelcomeEmail(email, username, tempPassword);
+      req.log.info({ staffId: id, username }, "Invite sent (new account created) for staff member");
+      res.json({ sent: true, message: "Account created and invitation email sent" });
+    } else {
+      // Account exists — reset temp password and resend
+      const tempPassword = generateTempPassword();
+      await db.update(usersTable)
+        .set({ passwordHash: hashPwd(tempPassword), mustChangePassword: true })
+        .where(eq(usersTable.id, existing.id));
+      await sendWelcomeEmail(email, existing.username, tempPassword);
+      req.log.info({ staffId: id, userId: existing.id }, "Invite resent with fresh temp password");
+      res.json({ sent: true, message: "Invitation resent with a new temporary password" });
+    }
+  } catch (err) {
+    req.log.error({ err, staffId: id }, "Failed to resend staff invite");
+    res.status(500).json({ error: "Failed to send invitation email" });
+  }
 });
 
 router.patch("/staff/:id", async (req, res) => {

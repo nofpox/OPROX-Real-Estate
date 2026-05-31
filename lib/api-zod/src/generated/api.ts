@@ -758,7 +758,10 @@ export const ListStaffResponseItem = zod.object({
   "propertyId": zod.number().nullish(),
   "propertyName": zod.string().nullish(),
   "status": zod.string().describe('active, inactive'),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "hasAccount": zod.boolean().optional().describe('true if a login account exists for this staff member'),
+  "invitePending": zod.boolean().optional().describe('true if account exists but password has not yet been changed'),
+  "welcomeEmailSent": zod.boolean().optional().describe('returned on create — whether the invite email was dispatched')
 })
 export const ListStaffResponse = zod.array(ListStaffResponseItem)
 
@@ -801,7 +804,10 @@ export const UpdateStaffResponse = zod.object({
   "propertyId": zod.number().nullish(),
   "propertyName": zod.string().nullish(),
   "status": zod.string().describe('active, inactive'),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "hasAccount": zod.boolean().optional().describe('true if a login account exists for this staff member'),
+  "invitePending": zod.boolean().optional().describe('true if account exists but password has not yet been changed'),
+  "welcomeEmailSent": zod.boolean().optional().describe('returned on create — whether the invite email was dispatched')
 })
 
 
@@ -810,6 +816,19 @@ export const UpdateStaffResponse = zod.object({
  */
 export const DeleteStaffParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Resend (or create) the invitation email for a staff member
+ */
+export const ResendStaffInviteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ResendStaffInviteResponse = zod.object({
+  "sent": zod.boolean(),
+  "message": zod.string().optional()
 })
 
 

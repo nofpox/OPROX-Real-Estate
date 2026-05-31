@@ -71,35 +71,76 @@ export function hashPwd(password: string): string {
 }
 
 /**
- * Send a welcome email to a newly created employee with their login credentials.
+ * Send a welcome / invitation email to a newly created employee with their login credentials.
+ * Falls back silently when RESEND_API_KEY is not set (demo mode).
  */
 export async function sendWelcomeEmail(to: string, username: string, tempPassword: string): Promise<void> {
   if (!resend) return;
+  // Best-effort derive app URL from Replit env or fall back to generic instructions
+  const domains = process.env.REPLIT_DOMAINS ?? "";
+  const appUrl  = domains.split(",")[0]?.trim()
+    ? `https://${domains.split(",")[0].trim()}`
+    : null;
+  const loginLine = appUrl
+    ? `<a href="${appUrl}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#f59e0b;color:#fff;font-weight:700;font-size:15px;border-radius:8px;text-decoration:none;">Open Rakz PMS →</a>`
+    : `<p style="margin:16px 0 0;color:#555;font-size:14px">Open the Rakz PMS app and sign in with the credentials below.</p>`;
+
   await resend.emails.send({
     from:    "Rakz PMS <onboarding@resend.dev>",
     to:      [to],
-    subject: "Welcome to Rakz PMS — Your account is ready",
+    subject: "You're invited — Your Rakz PMS account is ready",
     html: `
-      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
-        <h2 style="margin:0 0 8px;font-size:20px;color:#111">Welcome to Rakz PMS</h2>
-        <p style="margin:0 0 24px;color:#555;font-size:15px">
-          Your account has been created by your manager. Use the credentials below to sign in for the first time.
-          You will be asked to set a new password immediately after logging in.
-        </p>
-        <div style="background:#f4f4f5;border-radius:8px;padding:16px 20px;margin:0 0 12px">
-          <p style="margin:0 0 4px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Username</p>
-          <p style="margin:0;font-size:22px;font-weight:700;color:#111;letter-spacing:1px">${username}</p>
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
+
+        <!-- Header -->
+        <div style="background:#1e293b;padding:28px 32px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.5px;font-family:Georgia,serif">Rakz</span>
+          <span style="font-size:14px;color:#94a3b8;font-weight:500">Property Management System</span>
         </div>
-        <div style="background:#f4f4f5;border-radius:8px;padding:16px 20px;margin:0 0 24px">
-          <p style="margin:0 0 4px;font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Temporary Password</p>
-          <p style="margin:0;font-size:22px;font-weight:700;color:#111;letter-spacing:4px;font-family:monospace">${tempPassword}</p>
+
+        <!-- Body -->
+        <div style="padding:32px">
+          <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111">Welcome aboard! 🎉</h2>
+          <p style="margin:0 0 24px;color:#555;font-size:15px;line-height:1.6">
+            Your manager has created a Rakz PMS account for you. Use the access code below to sign in for
+            the <strong>first time</strong> — you'll be prompted to set your own password immediately.
+          </p>
+
+          <!-- Username block -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin:0 0 12px">
+            <p style="margin:0 0 4px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Username</p>
+            <p style="margin:0;font-size:20px;font-weight:700;color:#111;letter-spacing:0.5px;font-family:monospace">${username}</p>
+          </div>
+
+          <!-- OTP / Temp-password block -->
+          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:20px 24px;margin:0 0 24px;text-align:center">
+            <p style="margin:0 0 8px;font-size:11px;color:#92400e;font-weight:700;text-transform:uppercase;letter-spacing:0.1em">One-Time Access Code</p>
+            <p style="margin:0;font-size:36px;font-weight:900;color:#92400e;letter-spacing:8px;font-family:monospace">${tempPassword}</p>
+            <p style="margin:8px 0 0;font-size:12px;color:#b45309">This code expires when you first log in and set your password.</p>
+          </div>
+
+          <!-- CTA -->
+          ${loginLine}
+
+          <!-- Steps -->
+          <div style="margin:24px 0 0;background:#f8fafc;border-radius:8px;padding:16px 20px">
+            <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.06em">Steps to get started</p>
+            <ol style="margin:0;padding-left:18px;color:#555;font-size:13px;line-height:1.8">
+              <li>Click the button above (or navigate to the Rakz PMS app)</li>
+              <li>Enter your <strong>Username</strong> and the <strong>One-Time Access Code</strong></li>
+              <li>Set your personal password when prompted</li>
+              <li>You're in — explore your dashboard!</li>
+            </ol>
+          </div>
         </div>
-        <p style="margin:0 0 8px;color:#555;font-size:13px">
-          This is a one-time password. You will be prompted to change it on first login.
-        </p>
-        <p style="margin:0;color:#aaa;font-size:12px">
-          If you did not expect this account, please contact your administrator.
-        </p>
+
+        <!-- Footer -->
+        <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e2e8f0">
+          <p style="margin:0;color:#94a3b8;font-size:12px">
+            If you were not expecting this invitation, you can safely ignore this email.
+            No action will be taken unless you sign in.
+          </p>
+        </div>
       </div>
     `,
   });

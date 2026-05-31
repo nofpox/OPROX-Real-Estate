@@ -75,6 +75,7 @@ import type {
   PropertyUpdate,
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
+  ResendStaffInvite200,
   ResetPassword200,
   ResetPasswordBody,
   Room,
@@ -3045,6 +3046,76 @@ export const useDeleteStaff = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteStaffMutationOptions(options));
+    }
+
+export const getResendStaffInviteUrl = (id: number,) => {
+
+
+
+
+  return `/api/staff/${id}/resend-invite`
+}
+
+/**
+ * @summary Resend (or create) the invitation email for a staff member
+ */
+export const resendStaffInvite = async (id: number, options?: RequestInit): Promise<ResendStaffInvite200> => {
+
+  return customFetch<ResendStaffInvite200>(getResendStaffInviteUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getResendStaffInviteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resendStaffInvite>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resendStaffInvite>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['resendStaffInvite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resendStaffInvite>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  resendStaffInvite(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResendStaffInviteMutationResult = NonNullable<Awaited<ReturnType<typeof resendStaffInvite>>>
+
+    export type ResendStaffInviteMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Resend (or create) the invitation email for a staff member
+ */
+export const useResendStaffInvite = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resendStaffInvite>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resendStaffInvite>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getResendStaffInviteMutationOptions(options));
     }
 
 export const getListTasksUrl = (params?: ListTasksParams,) => {

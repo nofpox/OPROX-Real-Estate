@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   useListStaff, getListStaffQueryKey, useCreateStaff, useUpdateStaff, useDeleteStaff, useListProperties,
+  useResendStaffInvite,
 } from "@workspace/api-client-react";
 import { useRole } from "@/contexts/role-context";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,7 +18,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Users, MoreVertical, Phone, Mail, Building2, UserCheck, UserX, CalendarDays } from "lucide-react";
+import { Plus, Users, MoreVertical, Phone, Mail, Building2, UserCheck, UserX, CalendarDays, Send, Clock, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import StaffShifts from "./staff-shifts";
 import { useTranslation } from "react-i18next";
@@ -100,11 +101,12 @@ export default function Staff() {
 
   const { data: staff, isLoading } = useListStaff(params);
   const { data: properties } = useListProperties();
-  const createStaff = useCreateStaff();
-  const updateStaff = useUpdateStaff();
-  const deleteStaff = useDeleteStaff();
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const createStaff    = useCreateStaff();
+  const updateStaff    = useUpdateStaff();
+  const deleteStaff    = useDeleteStaff();
+  const resendInvite   = useResendStaffInvite();
+  const queryClient    = useQueryClient();
+  const { toast }      = useToast();
 
   const form = useForm<z.infer<typeof staffSchema>>({
     resolver: zodResolver(staffSchema),
@@ -140,7 +142,19 @@ export default function Staff() {
       });
     } else {
       createStaff.mutate({ data: payload as any }, {
-        onSuccess: () => { toast({ title: t("staff.toast.added") }); queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) }); setIsDialogOpen(false); },
+        onSuccess: (created) => {
+          const emailSent = (created as any).welcomeEmailSent as boolean;
+          toast({
+            title: emailSent
+              ? `Invitation sent to ${data.email}`
+              : t("staff.toast.added"),
+            description: emailSent
+              ? "They'll receive an email with a one-time access code and a link to set their password."
+              : undefined,
+          });
+          queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) });
+          setIsDialogOpen(false);
+        },
         onError: () => toast({ title: t("staff.toast.addFailed"), variant: "destructive" }),
       });
     }
@@ -150,6 +164,19 @@ export default function Staff() {
     updateStaff.mutate({ id: s.id, data: { status: s.status === "active" ? "inactive" : "active" } }, {
       onSuccess: () => { toast({ title: t("staff.toast.statusUpdated") }); queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) }); },
       onError: () => toast({ title: t("staff.toast.updateFailed"), variant: "destructive" }),
+    });
+  };
+
+  const handleResendInvite = (s: any) => {
+    resendInvite.mutate({ id: s.id }, {
+      onSuccess: (res) => {
+        toast({
+          title: "Invitation sent",
+          description: (res as any).message ?? `New access code emailed to ${s.email}`,
+        });
+        queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) });
+      },
+      onError: () => toast({ title: "Failed to send invitation", variant: "destructive" }),
     });
   };
 
@@ -251,6 +278,14 @@ export default function Staff() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => openEdit(s)}>{t("common.edit")}</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleToggleStatus(s)}>{s.status === "active" ? t("staff.markInactive") : t("staff.markActive")}</DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleResendInvite(s)}
+                                disabled={resendInvite.isPending}
+                                className="flex items-center gap-2"
+                              >
+                                <Send className="h-3.5 w-3.5" />
+                                {s.invitePending ? "Resend Invite" : s.hasAccount ? "Resend Invite" : "Send Invite"}
+                              </DropdownMenuItem>
                               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(s)}>{t("staff.remove")}</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -263,10 +298,25 @@ export default function Staff() {
                         </div>
                       </div>
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-4 flex items-center gap-2 flex-wrap">
                       <Badge className={`text-xs font-medium border-0 ${s.status === "active" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"}`}>
                         {s.status === "active" ? t("status.active") : t("status.inactive")}
                       </Badge>
+                      {s.invitePending && (
+                        <Badge className="text-xs font-medium border-0 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 flex items-center gap-1">
+                          <Clock className="h-3 w-3" />Setup pending
+                        </Badge>
+                      )}
+                      {s.hasAccount && !s.invitePending && (
+                        <Badge className="text-xs font-medium border-0 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" />Account active
+                        </Badge>
+                      )}
+                      {!s.hasAccount && (
+                        <Badge className="text-xs font-medium border-0 bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 flex items-center gap-1">
+                          <Mail className="h-3 w-3" />No account
+                        </Badge>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
