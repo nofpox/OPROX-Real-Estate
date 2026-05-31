@@ -18,9 +18,9 @@ const ar: Translations = {
     userManagement: "إدارة المستخدمين",
     facilities: "حجز المرافق",
     adminSettings: "إعدادات المسؤول",
-    securityDashboard: "Security",
-    analytics: "Analytics",
-    supportTickets: "Support Tickets",
+    securityDashboard: "لوحة الأمن",
+    analytics: "التحليلات",
+    supportTickets: "تذاكر الدعم",
   },
   common: {
     save: "حفظ",

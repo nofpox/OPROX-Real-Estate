@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import {
   useGetSettings, useUpdateSettings,
@@ -67,21 +68,21 @@ const NAV_DEFINITIONS = [
 // ─── Permission Matrix definitions ────────────────────────────────────────────
 
 const PERMISSION_ROUTES = [
-  { href: "/",                   label: "Dashboard" },
-  { href: "/properties",         label: "Properties" },
-  { href: "/rooms",              label: "Rooms / Units" },
-  { href: "/unit-map",           label: "Unit Map" },
-  { href: "/maintenance",        label: "Maintenance" },
-  { href: "/facilities",         label: "Facilities" },
-  { href: "/staff",              label: "Staff" },
-  { href: "/tasks",              label: "Tasks" },
-  { href: "/guest-requests",     label: "Guest Requests" },
-  { href: "/activity-log",       label: "Activity Log" },
-  { href: "/user-management",    label: "User Management" },
-  { href: "/admin-settings",     label: "Admin Settings" },
-  { href: "/security-dashboard", label: "Security Dashboard" },
-  { href: "/analytics",          label: "Analytics" },
-  { href: "/support-tickets",    label: "Support Tickets" },
+  { href: "/",                   label: "Dashboard",          i18nKey: "nav.dashboard"         },
+  { href: "/properties",         label: "Properties",         i18nKey: "nav.properties"        },
+  { href: "/rooms",              label: "Rooms / Units",      i18nKey: "nav.rooms"             },
+  { href: "/unit-map",           label: "Unit Map",           i18nKey: "nav.unitMap"           },
+  { href: "/maintenance",        label: "Maintenance",        i18nKey: "nav.maintenance"       },
+  { href: "/facilities",         label: "Facilities",         i18nKey: "nav.facilities"        },
+  { href: "/staff",              label: "Staff",              i18nKey: "nav.staff"             },
+  { href: "/tasks",              label: "Tasks",              i18nKey: "nav.tasks"             },
+  { href: "/guest-requests",     label: "Guest Requests",     i18nKey: "nav.guestRequests"     },
+  { href: "/activity-log",       label: "Activity Log",       i18nKey: "nav.activityLog"       },
+  { href: "/user-management",    label: "User Management",    i18nKey: "nav.userManagement"    },
+  { href: "/admin-settings",     label: "Admin Settings",     i18nKey: "nav.adminSettings"     },
+  { href: "/security-dashboard", label: "Security Dashboard", i18nKey: "nav.securityDashboard" },
+  { href: "/analytics",          label: "Analytics",          i18nKey: "nav.analytics"         },
+  { href: "/support-tickets",    label: "Support Tickets",    i18nKey: "nav.supportTickets"    },
 ];
 
 const CONFIGURABLE_ROLES = [
@@ -677,6 +678,7 @@ function TenantConfigPanel({ tenant, onClose }: { tenant: Tenant; onClose: () =>
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function SuperAdminPage() {
+  const { t } = useTranslation();
   const { actualDbRole } = useRole();
   const showTenants  = isSuperAdmin(actualDbRole);
   const isAdminUser  = isOwnerTier(actualDbRole);
@@ -1442,7 +1444,7 @@ export default function SuperAdminPage() {
                     <tbody>
                       {PERMISSION_ROUTES.map((page) => (
                         <tr key={page.href} className="border-t border-border/50 hover:bg-muted/20">
-                          <td className="py-2 pe-4 font-medium text-sm text-foreground">{page.label}</td>
+                          <td className="py-2 pe-4 font-medium text-sm text-foreground">{t(page.i18nKey, { defaultValue: page.label })}</td>
                           {CONFIGURABLE_ROLES.map((r) => {
                             const allowed = (permissionMatrix[r.id] ?? []).includes(page.href);
                             return (
