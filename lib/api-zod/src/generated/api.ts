@@ -632,7 +632,8 @@ export const GetFinanceMonthlyResponse = zod.array(GetFinanceMonthlyResponseItem
 export const ListWorkOrdersQueryParams = zod.object({
   "propertyId": zod.coerce.number().optional(),
   "status": zod.coerce.string().optional(),
-  "priority": zod.coerce.string().optional()
+  "priority": zod.coerce.string().optional(),
+  "assignedToId": zod.coerce.number().optional()
 })
 
 export const ListWorkOrdersResponseItem = zod.object({
@@ -670,6 +671,58 @@ export const CreateWorkOrderBody = zod.object({
   "assignedTo": zod.string().optional().describe('Legacy free-text; auto-populated from staff name when assignedToId is provided'),
   "cost": zod.number().optional(),
   "dueDate": zod.string().optional()
+})
+
+
+/**
+ * @summary List work orders assigned to the currently authenticated staff member
+ */
+export const ListMyWorkOrdersQueryParams = zod.object({
+  "status": zod.coerce.string().optional()
+})
+
+export const ListMyWorkOrdersResponseItem = zod.object({
+  "id": zod.number(),
+  "propertyId": zod.number(),
+  "propertyName": zod.string().nullish(),
+  "unitId": zod.number().nullish(),
+  "unitName": zod.string().nullish(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "priority": zod.string().describe('low, medium, high, urgent'),
+  "status": zod.string().describe('pending, in-progress, on-hold, completed'),
+  "assignedTo": zod.string().nullish().describe('Legacy free-text name (mirrors staff name when assignedToId is set)'),
+  "assignedToId": zod.number().nullish().describe('FK to staff.id — use this for structured assignment'),
+  "assignedStaffName": zod.string().nullish().describe('Resolved staff name from assignedToId join'),
+  "cost": zod.number().nullish(),
+  "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListMyWorkOrdersResponse = zod.array(ListMyWorkOrdersResponseItem)
+
+
+/**
+ * @summary Get basic public unit info for the service request form (no auth required)
+ */
+export const GetUnitInfoParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetUnitInfoResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "propertyName": zod.string().nullish()
+})
+
+
+/**
+ * @summary Submit an anonymous service request for a unit (no auth required)
+ */
+export const CreateUnitRequestBody = zod.object({
+  "unitId": zod.number(),
+  "type": zod.enum(['electrical', 'plumbing', 'ac', 'cleaning', 'maintenance', 'noise', 'other']),
+  "description": zod.string()
 })
 
 

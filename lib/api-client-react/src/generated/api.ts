@@ -56,6 +56,7 @@ import type {
   ListExpensesParams,
   ListGuestRequestsParams,
   ListGuestsParams,
+  ListMyWorkOrdersParams,
   ListNotificationsParams,
   ListShiftsParams,
   ListStaffParams,
@@ -101,6 +102,9 @@ import type {
   Tenant,
   UnitFinancial,
   UnitFinancialUpdate,
+  UnitInfo,
+  UnitRequestInput,
+  UnitRequestResult,
   UpdateCustomFieldInput,
   UpdateGuestRequestBody,
   UpdateTenantInput,
@@ -2529,6 +2533,238 @@ export const useCreateWorkOrder = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateWorkOrderMutationOptions(options));
+    }
+
+export const getListMyWorkOrdersUrl = (params?: ListMyWorkOrdersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/work-orders/mine?${stringifiedParams}` : `/api/work-orders/mine`
+}
+
+/**
+ * @summary List work orders assigned to the currently authenticated staff member
+ */
+export const listMyWorkOrders = async (params?: ListMyWorkOrdersParams, options?: RequestInit): Promise<WorkOrder[]> => {
+
+  return customFetch<WorkOrder[]>(getListMyWorkOrdersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyWorkOrdersQueryKey = (params?: ListMyWorkOrdersParams,) => {
+    return [
+    `/api/work-orders/mine`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyWorkOrdersQueryOptions = <TData = Awaited<ReturnType<typeof listMyWorkOrders>>, TError = ErrorType<unknown>>(params?: ListMyWorkOrdersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyWorkOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyWorkOrdersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyWorkOrders>>> = ({ signal }) => listMyWorkOrders(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyWorkOrders>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyWorkOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof listMyWorkOrders>>>
+export type ListMyWorkOrdersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List work orders assigned to the currently authenticated staff member
+ */
+
+export function useListMyWorkOrders<TData = Awaited<ReturnType<typeof listMyWorkOrders>>, TError = ErrorType<unknown>>(
+ params?: ListMyWorkOrdersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyWorkOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyWorkOrdersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetUnitInfoUrl = (id: number,) => {
+
+
+
+
+  return `/api/unit-info/${id}`
+}
+
+/**
+ * @summary Get basic public unit info for the service request form (no auth required)
+ */
+export const getUnitInfo = async (id: number, options?: RequestInit): Promise<UnitInfo> => {
+
+  return customFetch<UnitInfo>(getGetUnitInfoUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUnitInfoQueryKey = (id: number,) => {
+    return [
+    `/api/unit-info/${id}`
+    ] as const;
+    }
+
+
+export const getGetUnitInfoQueryOptions = <TData = Awaited<ReturnType<typeof getUnitInfo>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUnitInfo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUnitInfoQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUnitInfo>>> = ({ signal }) => getUnitInfo(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUnitInfo>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUnitInfoQueryResult = NonNullable<Awaited<ReturnType<typeof getUnitInfo>>>
+export type GetUnitInfoQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get basic public unit info for the service request form (no auth required)
+ */
+
+export function useGetUnitInfo<TData = Awaited<ReturnType<typeof getUnitInfo>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUnitInfo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUnitInfoQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateUnitRequestUrl = () => {
+
+
+
+
+  return `/api/unit-requests`
+}
+
+/**
+ * @summary Submit an anonymous service request for a unit (no auth required)
+ */
+export const createUnitRequest = async (unitRequestInput: UnitRequestInput, options?: RequestInit): Promise<UnitRequestResult> => {
+
+  return customFetch<UnitRequestResult>(getCreateUnitRequestUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      unitRequestInput,)
+  }
+);}
+
+
+
+
+export const getCreateUnitRequestMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUnitRequest>>, TError,{data: BodyType<UnitRequestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createUnitRequest>>, TError,{data: BodyType<UnitRequestInput>}, TContext> => {
+
+const mutationKey = ['createUnitRequest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createUnitRequest>>, {data: BodyType<UnitRequestInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createUnitRequest(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateUnitRequestMutationResult = NonNullable<Awaited<ReturnType<typeof createUnitRequest>>>
+    export type CreateUnitRequestMutationBody = BodyType<UnitRequestInput>
+    export type CreateUnitRequestMutationError = ErrorType<void>
+
+    /**
+ * @summary Submit an anonymous service request for a unit (no auth required)
+ */
+export const useCreateUnitRequest = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUnitRequest>>, TError,{data: BodyType<UnitRequestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createUnitRequest>>,
+        TError,
+        {data: BodyType<UnitRequestInput>},
+        TContext
+      > => {
+      return useMutation(getCreateUnitRequestMutationOptions(options));
     }
 
 export const getGetWorkOrderUrl = (id: number,) => {

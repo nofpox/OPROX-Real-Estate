@@ -25,14 +25,52 @@ function formatWorkOrder(
   };
 }
 
+router.get("/work-orders/mine", async (req, res) => {
+  const session = (req as any).sessionUser as import("../types.js").SessionUser | undefined;
+  if (!session) { res.status(401).json({ error: "Not authenticated" }); return; }
+
+  const tenantId = session.tenantId;
+  const { status } = req.query as { status?: string };
+
+  if (!session.email) { res.json([]); return; }
+
+  const conditions: ReturnType<typeof eq>[] = [eq(staffTable.email, session.email)];
+  if (tenantId !== null) conditions.push(eq(staffTable.tenantId, tenantId));
+
+  const [staffRow] = await db.select({ id: staffTable.id })
+    .from(staffTable)
+    .where(and(...conditions));
+
+  if (!staffRow) { res.json([]); return; }
+
+  const woConds: ReturnType<typeof eq>[] = [eq(workOrdersTable.assignedToId, staffRow.id)];
+  if (tenantId !== null) woConds.push(eq(workOrdersTable.tenantId, tenantId));
+  if (status) woConds.push(eq(workOrdersTable.status, status));
+
+  const rows = await db
+    .select({ workOrder: workOrdersTable, property: propertiesTable, room: roomsTable, staff: staffTable })
+    .from(workOrdersTable)
+    .leftJoin(propertiesTable, eq(workOrdersTable.propertyId, propertiesTable.id))
+    .leftJoin(roomsTable,      eq(workOrdersTable.unitId, roomsTable.id))
+    .leftJoin(staffTable,      eq(workOrdersTable.assignedToId, staffTable.id))
+    .where(and(...woConds))
+    .orderBy(sql`${workOrdersTable.createdAt} desc`);
+
+  res.json(rows.map(({ workOrder, property, room, staff }) =>
+    formatWorkOrder(workOrder, property?.name, room?.name, staff?.name ?? null)));
+});
+
 router.get("/work-orders", async (req, res) => {
-  const { propertyId, status, priority } = req.query as { propertyId?: string; status?: string; priority?: string };
+  const { propertyId, status, priority, assignedToId } = req.query as {
+    propertyId?: string; status?: string; priority?: string; assignedToId?: string;
+  };
   const tenantId = tid(req);
   const conditions = [];
-  if (tenantId !== null) conditions.push(eq(workOrdersTable.tenantId, tenantId));
-  if (propertyId) conditions.push(eq(workOrdersTable.propertyId, parseInt(propertyId)));
-  if (status)     conditions.push(eq(workOrdersTable.status, status));
-  if (priority)   conditions.push(eq(workOrdersTable.priority, priority));
+  if (tenantId !== null)  conditions.push(eq(workOrdersTable.tenantId, tenantId));
+  if (propertyId)         conditions.push(eq(workOrdersTable.propertyId, parseInt(propertyId)));
+  if (status)             conditions.push(eq(workOrdersTable.status, status));
+  if (priority)           conditions.push(eq(workOrdersTable.priority, priority));
+  if (assignedToId)       conditions.push(eq(workOrdersTable.assignedToId, parseInt(assignedToId)));
 
   const rows = await db
     .select({ workOrder: workOrdersTable, property: propertiesTable, room: roomsTable, staff: staffTable })

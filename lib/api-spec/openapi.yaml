@@ -605,6 +605,11 @@ paths:
           required: false
           schema:
             type: string
+        - name: assignedToId
+          in: query
+          required: false
+          schema:
+            type: integer
       responses:
         "200":
           description: List of work orders
@@ -631,6 +636,71 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkOrder"
+
+  /work-orders/mine:
+    get:
+      operationId: listMyWorkOrders
+      tags: [workOrders]
+      summary: List work orders assigned to the currently authenticated staff member
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Work orders assigned to me
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkOrder"
+
+  /unit-info/{id}:
+    get:
+      operationId: getUnitInfo
+      tags: [unitRequests]
+      summary: Get basic public unit info for the service request form (no auth required)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unit info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnitInfo"
+        "404":
+          description: Not found
+
+  /unit-requests:
+    post:
+      operationId: createUnitRequest
+      tags: [unitRequests]
+      summary: Submit an anonymous service request for a unit (no auth required)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnitRequestInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnitRequestResult"
+        "400":
+          description: Validation error
+        "404":
+          description: Unit not found
 
   /work-orders/{id}:
     get:
@@ -3716,4 +3786,39 @@ components:
         status:
           type: string
         adminNotes:
+          type: string
+
+    UnitInfo:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        propertyName:
+          type: string
+          nullable: true
+
+    UnitRequestInput:
+      type: object
+      required: [unitId, type, description]
+      properties:
+        unitId:
+          type: integer
+        type:
+          type: string
+          enum: [electrical, plumbing, ac, cleaning, maintenance, noise, other]
+        description:
+          type: string
+
+    UnitRequestResult:
+      type: object
+      required: [refCode, workOrderId]
+      properties:
+        refCode:
+          type: string
+        workOrderId:
+          type: integer
+        message:
           type: string

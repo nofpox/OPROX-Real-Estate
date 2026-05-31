@@ -92,7 +92,7 @@ import { useState } from "react";
       onSuccess: () => { toast({ title: "Request resolved" }); refetchRequests(); },
     });
 
-    const guestPortalUrl = `${window.location.origin}/guest-portal/unit/${id}`;
+    const serviceRequestUrl = `${window.location.origin}/guest-portal/unit/${id}`;
 
     return (
       <div className="min-h-screen bg-background">
@@ -142,7 +142,7 @@ import { useState } from "react";
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="icon" onClick={() => setQrOpen(true)} title="Show Guest QR Code">
+                  <Button variant="outline" size="icon" onClick={() => setQrOpen(true)} title="Show Service Request QR Code">
                     <QrCode size={16} />
                   </Button>
                 </div>
@@ -287,7 +287,7 @@ import { useState } from "react";
         <Dialog open={qrOpen} onOpenChange={setQrOpen}>
           <DialogContent className="sm:max-w-xs">
             <DialogHeader>
-              <DialogTitle className="font-serif">Guest Portal QR — {room?.name}</DialogTitle>
+              <DialogTitle className="font-serif">Service Request QR — {room?.name}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col items-center gap-4 py-2">
               <div className="bg-white p-4 rounded-xl">
@@ -299,8 +299,8 @@ import { useState } from "react";
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground text-center break-all">{guestPortalUrl}</p>
-              <Button variant="outline" size="sm" onClick={() => { navigator.clipboard?.writeText(guestPortalUrl); toast({ title: "Link copied!" }); }}>
+              <p className="text-xs text-muted-foreground text-center break-all">{serviceRequestUrl}</p>
+              <Button variant="outline" size="sm" onClick={() => { navigator.clipboard?.writeText(serviceRequestUrl); toast({ title: "Link copied!" }); }}>
                 Copy Link
               </Button>
             </div>

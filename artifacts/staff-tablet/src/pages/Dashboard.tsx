@@ -169,7 +169,7 @@ import { useState } from "react";
               })}
           </div>
         </div>
-        <BottomNav active="rooms" />
+        <BottomNav active="units" />
       </div>
     );
   }

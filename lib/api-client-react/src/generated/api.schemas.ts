@@ -976,6 +976,37 @@ export interface SupportTicketUpdate {
   adminNotes?: string;
 }
 
+export interface UnitInfo {
+  id: number;
+  name: string;
+  propertyName?: string | null;
+}
+
+export type UnitRequestInputType = typeof UnitRequestInputType[keyof typeof UnitRequestInputType];
+
+
+export const UnitRequestInputType = {
+  electrical: 'electrical',
+  plumbing: 'plumbing',
+  ac: 'ac',
+  cleaning: 'cleaning',
+  maintenance: 'maintenance',
+  noise: 'noise',
+  other: 'other',
+} as const;
+
+export interface UnitRequestInput {
+  unitId: number;
+  type: UnitRequestInputType;
+  description: string;
+}
+
+export interface UnitRequestResult {
+  refCode: string;
+  workOrderId: number;
+  message?: string;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
@@ -1002,6 +1033,11 @@ export type ListWorkOrdersParams = {
 propertyId?: number;
 status?: string;
 priority?: string;
+assignedToId?: number;
+};
+
+export type ListMyWorkOrdersParams = {
+status?: string;
 };
 
 export type ListStaffParams = {

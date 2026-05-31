@@ -1,14 +1,15 @@
 import { useLocation } from "wouter";
-import { Building2, CheckSquare } from "lucide-react";
+import { Building2, CheckSquare, Wrench } from "lucide-react";
 
-type Tab = "rooms" | "tasks";
+export type NavTab = "units" | "work-orders" | "tasks";
 
-export default function BottomNav({ active }: { active: Tab }) {
+export default function BottomNav({ active }: { active: NavTab }) {
   const [, navigate] = useLocation();
 
-  const tabs: { key: Tab; labelAr: string; labelEn: string; icon: typeof Building2; path: string }[] = [
-    { key: "rooms", labelAr: "الغرف",  labelEn: "Rooms", icon: Building2,   path: "/"      },
-    { key: "tasks", labelAr: "مهامي",  labelEn: "Tasks", icon: CheckSquare, path: "/tasks" },
+  const tabs: { key: NavTab; labelAr: string; labelEn: string; icon: typeof Building2; path: string }[] = [
+    { key: "units",       labelAr: "الوحدات",     labelEn: "Units",       icon: Building2,   path: "/"            },
+    { key: "work-orders", labelAr: "أوامر العمل", labelEn: "Work Orders", icon: Wrench,      path: "/work-orders" },
+    { key: "tasks",       labelAr: "مهامي",       labelEn: "Tasks",       icon: CheckSquare, path: "/tasks"       },
   ];
 
   return (

@@ -10,6 +10,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
   import Dashboard from "@/pages/Dashboard";
   import UnitDetail from "@/pages/UnitDetail";
   import MyTasks from "@/pages/MyTasks";
+  import WorkOrders from "@/pages/WorkOrders";
   import NotFound from "@/pages/not-found";
 
   const queryClient = new QueryClient({
@@ -106,6 +107,9 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
         <Route path="/login" component={Login} />
         <Route path="/tasks">
           <AuthGuard><MyTasks /></AuthGuard>
+        </Route>
+        <Route path="/work-orders">
+          <AuthGuard><WorkOrders /></AuthGuard>
         </Route>
         <Route path="/">
           <AuthGuard><Dashboard /></AuthGuard>
