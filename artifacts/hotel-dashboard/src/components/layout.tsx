@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard, DoorOpen, Menu, Building2,
@@ -257,6 +257,32 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
   const [location, navigate] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // ── Swipe-to-close gesture ─────────────────────────────────────────────
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    touchStartX.current = null;
+    touchStartY.current = null;
+
+    // Ignore mostly-vertical swipes (scrolling)
+    if (Math.abs(deltaY) > Math.abs(deltaX)) return;
+
+    const THRESHOLD = 60;
+    // LTR: sidebar on left  → swipe left  (negative deltaX) to close
+    // RTL: sidebar on right → swipe right (positive deltaX) to close
+    if (!isRTL && deltaX < -THRESHOLD) setMobileOpen(false);
+    if (isRTL  && deltaX >  THRESHOLD) setMobileOpen(false);
+  }
+
   /* Close the drawer on every route change */
   React.useEffect(() => { setMobileOpen(false); }, [location]);
 
@@ -288,36 +314,48 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
 
       {/*
        * Mobile sidebar — conditionally rendered, ZERO CSS animation, ZERO transition.
-       * NO backdrop overlay div — it was the rgba(0,0,0,0.6) compositor layer
-       * that caused the GPU glitch. The sidebar has a ✕ close button and every
-       * nav item click also closes it.
+       * Backdrop is fully transparent (no fill color) so it adds zero GPU compositor
+       * overhead — the rgba(0,0,0,0.6) fill was the original cause of Android Chrome
+       * horizontal-stripe glitches. Click-outside and swipe-to-close are handled via
+       * the backdrop div and touch events on the <aside> respectively.
        */}
       {mobileOpen && (
-        <aside
-          className={`fixed inset-y-0 z-50 w-72 flex flex-col bg-sidebar text-sidebar-foreground ${sidebarSide} ${sidebarBorder}`}
-          style={{ boxShadow: isRTL ? "-4px 0 24px rgba(0,0,0,0.35)" : "4px 0 24px rgba(0,0,0,0.35)" }}
-        >
-          <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-sidebar-border">
-            <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
-              {settings.logoUrl ? (
-                <img src={settings.logoUrl} alt={settings.logoText} className="h-8 w-auto object-contain max-w-28" />
-              ) : (
-                <>
-                  <span className="text-xl">{settings.logoText}</span>
-                  <span className="text-sidebar-foreground font-sans font-medium text-lg">{settings.logoSub}</span>
-                </>
-              )}
-            </Link>
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="rounded p-1 text-sidebar-foreground"
-              aria-label="Close menu"
-            >
-              ✕
-            </button>
-          </div>
-          <SidebarContent authUser={authUser} onLogout={onLogout} onClose={() => setMobileOpen(false)} />
-        </aside>
+        <>
+          {/* Click-outside backdrop — transparent so no GPU compositor layer */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+
+          <aside
+            className={`fixed inset-y-0 z-50 w-72 flex flex-col bg-sidebar text-sidebar-foreground ${sidebarSide} ${sidebarBorder}`}
+            style={{ boxShadow: isRTL ? "-4px 0 24px rgba(0,0,0,0.35)" : "4px 0 24px rgba(0,0,0,0.35)" }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-sidebar-border">
+              <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
+                {settings.logoUrl ? (
+                  <img src={settings.logoUrl} alt={settings.logoText} className="h-8 w-auto object-contain max-w-28" />
+                ) : (
+                  <>
+                    <span className="text-xl">{settings.logoText}</span>
+                    <span className="text-sidebar-foreground font-sans font-medium text-lg">{settings.logoSub}</span>
+                  </>
+                )}
+              </Link>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="rounded p-1 text-sidebar-foreground"
+                aria-label="Close menu"
+              >
+                ✕
+              </button>
+            </div>
+            <SidebarContent authUser={authUser} onLogout={onLogout} onClose={() => setMobileOpen(false)} />
+          </aside>
+        </>
       )}
 
       {/* Desktop sidebar — always in DOM on lg+, hidden on mobile via lg:flex */}
