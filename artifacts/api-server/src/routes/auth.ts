@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, usersTable, tenantsTable } from "@workspace/db";
 import { eq, sql, and } from "drizzle-orm";
 import crypto from "node:crypto";
+import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import {
   checkLoginAllowed,
@@ -66,8 +67,28 @@ export function getHierarchyLevel(role: string): number {
   return 1;
 }
 
+const BCRYPT_ROUNDS = 12;
+
+/** Hash a password with bcrypt (used for new passwords and rehashing). */
 export function hashPwd(password: string): string {
-  return crypto.createHash("sha256").update(`grand-pms::${password}`).digest("hex");
+  return bcrypt.hashSync(password, BCRYPT_ROUNDS);
+}
+
+/**
+ * Verify a password against a stored hash.
+ * Supports bcrypt (new hashes starting with $2b$) and legacy SHA-256
+ * (64-char hex) so existing accounts continue to work after the upgrade.
+ * Returns { valid, needsRehash } — callers should transparently rehash when
+ * needsRehash is true so accounts silently migrate to bcrypt on next login.
+ */
+export function verifyPwd(stored: string, candidate: string): { valid: boolean; needsRehash: boolean } {
+  if (stored.startsWith("$2")) {
+    return { valid: bcrypt.compareSync(candidate, stored), needsRehash: false };
+  }
+  // Legacy SHA-256 path
+  const legacyHash = crypto.createHash("sha256").update(`grand-pms::${candidate}`).digest("hex");
+  const valid = stored === legacyHash;
+  return { valid, needsRehash: valid };
 }
 
 /**
@@ -233,7 +254,8 @@ router.post("/auth/login", async (req, res) => {
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.username, String(username)));
 
-  if (!user || !user.isActive || user.passwordHash !== hashPwd(String(password))) {
+  const pwdCheck = user && user.isActive ? verifyPwd(user.passwordHash, String(password)) : { valid: false, needsRehash: false };
+  if (!pwdCheck.valid) {
     const result = recordFailedAttempt(ip, String(username));
     if (!result.allowed) {
       res.status(429).json({
@@ -244,6 +266,10 @@ router.post("/auth/login", async (req, res) => {
       res.status(401).json({ error: "Invalid credentials", attemptsLeft: result.attemptsLeft });
     }
     return;
+  }
+  // Transparent bcrypt migration: silently upgrade legacy SHA-256 hashes on login
+  if (pwdCheck.needsRehash) {
+    await db.execute(sql`UPDATE users SET password_hash = ${hashPwd(String(password))} WHERE id = ${user!.id}`);
   }
 
   const isSuperAdmin = user.role === "super_admin";
@@ -342,7 +368,8 @@ router.post("/auth/change-password", async (req, res) => {
   }
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, session.id));
-  if (!user || user.passwordHash !== hashPwd(String(currentPassword))) {
+  const pwdCheck = user ? verifyPwd(user.passwordHash, String(currentPassword)) : { valid: false };
+  if (!pwdCheck.valid) {
     res.status(401).json({ error: "Current password is incorrect" }); return;
   }
 
@@ -491,6 +518,7 @@ router.post("/auth/reset-password", async (req, res) => {
     sql`UPDATE users SET password_hash = ${hashPwd(String(newPassword))}, must_change_password = false WHERE id = ${data.userId}`
   );
   resetTokens.delete(String(resetToken).toUpperCase());
+
 
   req.log.info({ userId: data.userId }, "Password reset completed");
   res.json({ ok: true });

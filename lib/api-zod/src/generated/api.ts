@@ -645,7 +645,9 @@ export const ListWorkOrdersResponseItem = zod.object({
   "description": zod.string().nullish(),
   "priority": zod.string().describe('low, medium, high, urgent'),
   "status": zod.string().describe('pending, in-progress, on-hold, completed'),
-  "assignedTo": zod.string().nullish(),
+  "assignedTo": zod.string().nullish().describe('Legacy free-text name (mirrors staff name when assignedToId is set)'),
+  "assignedToId": zod.number().nullish().describe('FK to staff.id — use this for structured assignment'),
+  "assignedStaffName": zod.string().nullish().describe('Resolved staff name from assignedToId join'),
   "cost": zod.number().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
@@ -664,7 +666,8 @@ export const CreateWorkOrderBody = zod.object({
   "description": zod.string().optional(),
   "priority": zod.string(),
   "status": zod.string().optional(),
-  "assignedTo": zod.string().optional(),
+  "assignedToId": zod.number().optional().describe('FK to staff.id — server validates staff exists in tenant'),
+  "assignedTo": zod.string().optional().describe('Legacy free-text; auto-populated from staff name when assignedToId is provided'),
   "cost": zod.number().optional(),
   "dueDate": zod.string().optional()
 })
@@ -687,7 +690,9 @@ export const GetWorkOrderResponse = zod.object({
   "description": zod.string().nullish(),
   "priority": zod.string().describe('low, medium, high, urgent'),
   "status": zod.string().describe('pending, in-progress, on-hold, completed'),
-  "assignedTo": zod.string().nullish(),
+  "assignedTo": zod.string().nullish().describe('Legacy free-text name (mirrors staff name when assignedToId is set)'),
+  "assignedToId": zod.number().nullish().describe('FK to staff.id — use this for structured assignment'),
+  "assignedStaffName": zod.string().nullish().describe('Resolved staff name from assignedToId join'),
   "cost": zod.number().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
@@ -709,7 +714,8 @@ export const UpdateWorkOrderBody = zod.object({
   "description": zod.string().optional(),
   "priority": zod.string().optional(),
   "status": zod.string().optional(),
-  "assignedTo": zod.string().optional(),
+  "assignedToId": zod.number().nullish().describe('FK to staff.id — set to null to unassign'),
+  "assignedTo": zod.string().nullish(),
   "cost": zod.number().optional(),
   "dueDate": zod.string().optional(),
   "completedAt": zod.string().optional()
@@ -725,7 +731,9 @@ export const UpdateWorkOrderResponse = zod.object({
   "description": zod.string().nullish(),
   "priority": zod.string().describe('low, medium, high, urgent'),
   "status": zod.string().describe('pending, in-progress, on-hold, completed'),
-  "assignedTo": zod.string().nullish(),
+  "assignedTo": zod.string().nullish().describe('Legacy free-text name (mirrors staff name when assignedToId is set)'),
+  "assignedToId": zod.number().nullish().describe('FK to staff.id — use this for structured assignment'),
+  "assignedStaffName": zod.string().nullish().describe('Resolved staff name from assignedToId join'),
   "cost": zod.number().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
@@ -1555,6 +1563,7 @@ export const GetGuestParams = zod.object({
 })
 
 export const GetGuestResponse = zod.object({
+  "id": zod.number().describe('Primary key from the guests table'),
   "guestName": zod.string(),
   "guestEmail": zod.string(),
   "guestPhone": zod.string().nullish(),
@@ -1967,85 +1976,6 @@ export const CreateMaintenanceRequestBody = zod.object({
   "category": zod.string().optional().describe('electrical | plumbing | ac | emergency | general'),
   "description": zod.string(),
   "source": zod.string().optional().describe('guest_portal | staff_report')
-})
-
-
-/**
- * @summary List field operations users
- */
-export const ListFieldUsersQueryParams = zod.object({
-  "propertyId": zod.coerce.number().optional(),
-  "role": zod.coerce.string().optional(),
-  "status": zod.coerce.string().optional()
-})
-
-export const ListFieldUsersResponseItem = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "role": zod.string(),
-  "email": zod.string().nullish(),
-  "phone": zod.string().nullish(),
-  "propertyId": zod.number().nullish(),
-  "propertyName": zod.string().nullish(),
-  "status": zod.string(),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-})
-export const ListFieldUsersResponse = zod.array(ListFieldUsersResponseItem)
-
-
-/**
- * @summary Create a field user
- */
-export const CreateFieldUserBody = zod.object({
-  "name": zod.string(),
-  "role": zod.string(),
-  "email": zod.string().optional(),
-  "phone": zod.string().optional(),
-  "propertyId": zod.number().optional(),
-  "status": zod.string().optional(),
-  "notes": zod.string().optional()
-})
-
-
-/**
- * @summary Update a field user
- */
-export const UpdateFieldUserParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const UpdateFieldUserBody = zod.object({
-  "name": zod.string(),
-  "role": zod.string(),
-  "email": zod.string().optional(),
-  "phone": zod.string().optional(),
-  "propertyId": zod.number().optional(),
-  "status": zod.string().optional(),
-  "notes": zod.string().optional()
-})
-
-export const UpdateFieldUserResponse = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "role": zod.string(),
-  "email": zod.string().nullish(),
-  "phone": zod.string().nullish(),
-  "propertyId": zod.number().nullish(),
-  "propertyName": zod.string().nullish(),
-  "status": zod.string(),
-  "notes": zod.string().nullish(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-})
-
-
-/**
- * @summary Delete a field user
- */
-export const DeleteFieldUserParams = zod.object({
-  "id": zod.coerce.number()
 })
 
 

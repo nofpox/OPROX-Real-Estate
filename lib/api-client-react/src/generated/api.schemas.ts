@@ -363,8 +363,21 @@ export interface WorkOrder {
   priority: string;
   /** pending, in-progress, on-hold, completed */
   status: string;
-  /** @nullable */
+  /**
+     * Legacy free-text name (mirrors staff name when assignedToId is set)
+     * @nullable
+     */
   assignedTo?: string | null;
+  /**
+     * FK to staff.id — use this for structured assignment
+     * @nullable
+     */
+  assignedToId?: number | null;
+  /**
+     * Resolved staff name from assignedToId join
+     * @nullable
+     */
+  assignedStaffName?: string | null;
   /** @nullable */
   cost?: number | null;
   /** @nullable */
@@ -381,6 +394,9 @@ export interface WorkOrderInput {
   description?: string;
   priority: string;
   status?: string;
+  /** FK to staff.id — server validates staff exists in tenant */
+  assignedToId?: number;
+  /** Legacy free-text; auto-populated from staff name when assignedToId is provided */
   assignedTo?: string;
   cost?: number;
   dueDate?: string;
@@ -393,7 +409,9 @@ export interface WorkOrderUpdate {
   description?: string;
   priority?: string;
   status?: string;
-  assignedTo?: string;
+  /** FK to staff.id — set to null to unassign */
+  assignedToId?: number | null;
+  assignedTo?: string | null;
   cost?: number;
   dueDate?: string;
   completedAt?: string;
@@ -643,6 +661,8 @@ export interface Guest {
 }
 
 export interface GuestProfile {
+  /** Primary key from the guests table */
+  id: number;
   guestName: string;
   guestEmail: string;
   /** @nullable */
@@ -865,30 +885,6 @@ export interface MaintenanceRequestInput {
   source?: string;
 }
 
-export interface FieldUser {
-  id: number;
-  name: string;
-  role: string;
-  email?: string | null;
-  phone?: string | null;
-  propertyId?: number | null;
-  propertyName?: string | null;
-  status: string;
-  notes?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface FieldUserInput {
-  name: string;
-  role: string;
-  email?: string;
-  phone?: string;
-  propertyId?: number;
-  status?: string;
-  notes?: string;
-}
-
 export interface RequestUploadUrlBody {
   name: string;
   size: number;
@@ -1093,12 +1089,6 @@ offset?: number;
 entityType?: string;
 actorRole?: string;
 propertyId?: number;
-};
-
-export type ListFieldUsersParams = {
-propertyId?: number;
-role?: string;
-status?: string;
 };
 
 export type ListCustomFieldsParams = {

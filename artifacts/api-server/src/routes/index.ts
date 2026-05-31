@@ -40,7 +40,7 @@ const ADMIN_PREFIXES = ["/expenses", "/unit-financials", "/settings"];
 const SUPERVISOR_PREFIXES = [
   "/users", "/activity-logs", "/staff", "/properties", "/rooms",
   "/bookings", "/stats", "/guests", "/work-orders", "/shifts",
-  "/maintenance-requests", "/field-users", "/admin/",
+  "/maintenance-requests", "/admin/",
 ];
 
 async function tierGate(req: Request, res: Response, next: NextFunction): Promise<void> {

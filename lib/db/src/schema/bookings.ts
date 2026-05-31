@@ -14,6 +14,7 @@ export const bookingsTable = pgTable("bookings", {
   status:      text("status").notNull().default("confirmed"),
   totalAmount: numeric("total_amount", { precision: 10, scale: 2 }).notNull(),
   notes:       text("notes"),
+  guestId:     integer("guest_id"),
   createdAt:   timestamp("created_at").defaultNow().notNull(),
 });
 

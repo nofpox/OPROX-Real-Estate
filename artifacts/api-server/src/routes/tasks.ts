@@ -3,6 +3,7 @@ import { db, tasksTable, staffTable, propertiesTable, roomsTable, taskCommentsTa
 import { eq, and, sql, ne } from "drizzle-orm";
 import { insertTaskSchema, updateTaskSchema, insertTaskCommentSchema } from "@workspace/db";
 import { logActivity, actorFromRequest, getRoleTier } from "./activityLogs";
+import { getHierarchyLevel } from "./auth.js";
 
 const router = Router();
 
@@ -10,9 +11,9 @@ function tid(req: import("express").Request): number | null {
   return ((req as any).sessionUser as any)?.tenantId ?? null;
 }
 
-/** Roles that can verify a completed task */
+/** Level 2+ (supervisor, manager, owner) can verify a completed task */
 function canVerify(role: string | undefined): boolean {
-  return role === "owner" || role === "manager" || role === "super_admin";
+  return getHierarchyLevel(role ?? "") >= 2;
 }
 
 /** Roles that bypass photo requirements */

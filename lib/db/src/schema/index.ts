@@ -1,4 +1,5 @@
 export * from "./tenants";
+export * from "./guests";
 export * from "./rooms";
 export * from "./bookings";
 export * from "./properties";
