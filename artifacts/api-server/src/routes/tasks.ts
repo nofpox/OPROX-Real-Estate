@@ -310,6 +310,7 @@ router.patch("/tasks/:id", async (req, res) => {
   if (newStatus && newStatus !== before.status) {
     const isVerifying   = newStatus === "verified";
     const isCompleting  = newStatus === "completed";
+    const isStarting    = newStatus === "in-progress" && before.status === "pending";
     logActivity({
       ...actor, tenantId: tenantId ?? 1,
       action: "task.status_changed", entityType: "task", entityId: task.id, entityLabel: task.title,
@@ -320,6 +321,27 @@ router.patch("/tasks/:id", async (req, res) => {
       proofPhotoUrl:   isCompleting  ? (task.afterPhotoUrl ?? task.proofPhotoUrl ?? undefined) : undefined,
       ...(isVerifying ? { details: `Verified by ${actor.actorName ?? "manager"}` } : {}),
     });
+
+    // Notify supervisor when a worker starts the task
+    if (isStarting && task.supervisorId) {
+      const [supStaff] = await db.select().from(staffTable).where(eq(staffTable.id, task.supervisorId));
+      let supervisorUserId: number | null = null;
+      if (supStaff?.email) {
+        const supConds = [eq(usersTable.email, supStaff.email)];
+        if (tenantId !== null) supConds.push(eq(usersTable.tenantId, tenantId));
+        const [supUser] = await db.select({ id: usersTable.id }).from(usersTable).where(and(...supConds));
+        supervisorUserId = supUser?.id ?? null;
+      }
+      createTaskNotification({
+        tenantId:    tenantId ?? 1,
+        type:        "task_started",
+        title:       `Task Started: ${task.title}`,
+        message:     `${actor.actorName ?? "A worker"} has started work on "${task.title}"${property?.name ? ` at ${property.name}` : ""}.`,
+        relatedId:   task.id,
+        userId:      supervisorUserId,
+        notifKey:    `task-started-${task.id}`,
+      });
+    }
   }
 
   if (parsed.data.assignedToId !== undefined && parsed.data.assignedToId !== before.assignedToId) {

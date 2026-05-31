@@ -76,9 +76,9 @@ const taskSchema = z.object({
   description:  z.string().optional().or(z.literal("")),
   status:       z.enum(["pending", "in-progress", "completed", "verified"]).default("pending"),
 })
-.refine(d => !!d.propertyId && Number(d.propertyId) > 0, { message: "Property is required", path: ["propertyId"] })
-.refine(d => !!d.assignedToId && Number(d.assignedToId) > 0, { message: "Assignee is required", path: ["assignedToId"] })
-.refine(d => !!d.dueDate && String(d.dueDate).length > 0, { message: "Due date is required", path: ["dueDate"] });
+.refine(d => !!d.propertyId && Number(d.propertyId) > 0, { message: "الأصل مطلوب", path: ["propertyId"] })
+.refine(d => !!d.assignedToId && Number(d.assignedToId) > 0, { message: "يجب تحديد المُسند إليه", path: ["assignedToId"] })
+.refine(d => !!d.dueDate && String(d.dueDate).length > 0, { message: "تاريخ الاستحقاق مطلوب", path: ["dueDate"] });
 
 const commentSchema = z.object({
   authorName: z.string().min(1),
