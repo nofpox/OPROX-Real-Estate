@@ -402,7 +402,10 @@ export interface WorkOrderUpdate {
 export interface StaffMember {
   id: number;
   name: string;
+  /** Free-form job title (e.g. CEO, HVAC Technician) */
   role: string;
+  /** Permission role: manager | supervisor | maintenance | cleaning | security */
+  systemRole: string;
   email: string;
   /** @nullable */
   phone?: string | null;
@@ -423,7 +426,10 @@ export interface StaffMember {
 
 export interface StaffInput {
   name: string;
+  /** Free-form job title */
   role: string;
+  /** Permission role: manager | supervisor | maintenance | cleaning | security */
+  systemRole: string;
   email: string;
   phone?: string;
   propertyId?: number;
@@ -433,10 +439,22 @@ export interface StaffInput {
 export interface StaffUpdate {
   name?: string;
   role?: string;
+  systemRole?: string;
   email?: string;
   phone?: string;
   propertyId?: number;
   status?: string;
+}
+
+export type BulkImportResultErrorsItem = {
+  row: number;
+  name?: string;
+  error: string;
+};
+
+export interface BulkImportResult {
+  created: number;
+  errors: BulkImportResultErrorsItem[];
 }
 
 export interface Task {
@@ -993,6 +1011,10 @@ priority?: string;
 export type ListStaffParams = {
 propertyId?: number;
 role?: string;
+};
+
+export type BulkCreateStaffBody = {
+  members: StaffInput[];
 };
 
 export type ResendStaffInvite200 = {

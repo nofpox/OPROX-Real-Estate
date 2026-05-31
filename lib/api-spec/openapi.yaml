@@ -772,6 +772,31 @@ paths:
         "204":
           description: Deleted
 
+  /staff/bulk:
+    post:
+      operationId: bulkCreateStaff
+      tags: [staff]
+      summary: Bulk import staff members from CSV data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [members]
+              properties:
+                members:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/StaffInput"
+      responses:
+        "200":
+          description: Bulk import results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkImportResult"
+
   /staff/{id}/resend-invite:
     post:
       operationId: resendStaffInvite
@@ -2807,7 +2832,7 @@ components:
 
     StaffMember:
       type: object
-      required: [id, name, role, email, status, createdAt]
+      required: [id, name, role, systemRole, email, status, createdAt]
       properties:
         id:
           type: integer
@@ -2815,6 +2840,10 @@ components:
           type: string
         role:
           type: string
+          description: "Free-form job title (e.g. CEO, HVAC Technician)"
+        systemRole:
+          type: string
+          description: "Permission role: manager | supervisor | maintenance | cleaning | security"
         email:
           type: string
         phone:
@@ -2840,12 +2869,16 @@ components:
 
     StaffInput:
       type: object
-      required: [name, role, email]
+      required: [name, role, systemRole, email]
       properties:
         name:
           type: string
         role:
           type: string
+          description: "Free-form job title"
+        systemRole:
+          type: string
+          description: "Permission role: manager | supervisor | maintenance | cleaning | security"
         email:
           type: string
         phone:
@@ -2862,6 +2895,8 @@ components:
           type: string
         role:
           type: string
+        systemRole:
+          type: string
         email:
           type: string
         phone:
@@ -2870,6 +2905,25 @@ components:
           type: integer
         status:
           type: string
+
+    BulkImportResult:
+      type: object
+      required: [created, errors]
+      properties:
+        created:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            required: [row, error]
+            properties:
+              row:
+                type: integer
+              name:
+                type: string
+              error:
+                type: string
 
     Task:
       type: object

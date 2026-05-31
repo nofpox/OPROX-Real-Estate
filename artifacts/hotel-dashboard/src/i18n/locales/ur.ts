@@ -229,7 +229,9 @@ const ur: Translations = {
     toast: { added: "عملے کا رکن شامل ہوا", addFailed: "شامل کرنے میں ناکامی", updated: "عملے کا رکن اپ ڈیٹ ہوا", updateFailed: "اپ ڈیٹ ناکام", statusUpdated: "حیثیت اپ ڈیٹ ہوئی", removed: "عملے کا رکن ہٹا دیا گیا", removeFailed: "ہٹانے میں ناکامی" },
     kpi: { total: "کل", active: "فعال", inactive: "غیر فعال" },
     roleCategories: { management: "انتظام", housekeeping: "ہاؤس کیپنگ", maintenance: "دیکھ بھال", security: "سیکیورٹی", reception: "استقبالیہ" },
-    fields: { name: "پورا نام *", namePlaceholder: "جیسے سارہ خان", role: "کردار *", selectRole: "کردار منتخب کریں", status: "حیثیت", email: "ای میل *", phone: "فون", property: "تفویض شدہ جائیداد", noProperty: "کوئی خاص جائیداد نہیں" },
+    bulkImport: "بلک امپورٹ",
+    bulkImportDialog: { title: "عملے کی بلک درآمد", subtitle: "ایک ساتھ کئی اراکین شامل کرنے کے لیے CSV اپ لوڈ کریں۔", downloadTemplate: "CSV ٹیمپلیٹ ڈاؤن لوڈ کریں", uploadCSV: "CSV اپ لوڈ کریں", dragDrop: "اپ لوڈ کرنے کے لیے کلک کریں", csvHint: "ضروری کالم: name, jobTitle, systemRole, email", preview: "پیش نظارہ — {{count}} قطاریں", importing: "درآمد ہو رہا ہے…", importButton: "{{count}} اراکین درآمد کریں", success: "{{created}} اراکین کامیابی سے درآمد ہوئے۔", partialSuccess: "{{created}} درآمد، {{errors}} خرابیاں۔", allFailed: "{{errors}} قطاریں ناکام۔", failedRows: "ناکام قطاریں:", close: "مکمل", noRows: "کوئی درست قطار نہیں۔" },
+    fields: { name: "پورا نام *", namePlaceholder: "جیسے سارہ خان", jobTitle: "عہدہ *", jobTitlePlaceholder: "جیسے CEO، HVAC تکنیشین", systemRole: "سسٹم کردار *", selectSystemRole: "سسٹم کردار منتخب کریں", role: "کردار *", selectRole: "کردار منتخب کریں", status: "حیثیت", email: "ای میل *", phone: "فون", property: "تفویض شدہ جائیداد", noProperty: "کوئی خاص جائیداد نہیں" },
   },
   tasks: {
     title: "کام", subtitle: "روزانہ آپریشنل کام تفویض اور ٹریک کریں۔",

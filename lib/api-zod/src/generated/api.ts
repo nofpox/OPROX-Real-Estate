@@ -752,7 +752,8 @@ export const ListStaffQueryParams = zod.object({
 export const ListStaffResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "role": zod.string(),
+  "role": zod.string().describe('Free-form job title (e.g. CEO, HVAC Technician)'),
+  "systemRole": zod.string().describe('Permission role: manager | supervisor | maintenance | cleaning | security'),
   "email": zod.string(),
   "phone": zod.string().nullish(),
   "propertyId": zod.number().nullish(),
@@ -771,7 +772,8 @@ export const ListStaffResponse = zod.array(ListStaffResponseItem)
  */
 export const CreateStaffBody = zod.object({
   "name": zod.string(),
-  "role": zod.string(),
+  "role": zod.string().describe('Free-form job title'),
+  "systemRole": zod.string().describe('Permission role: manager | supervisor | maintenance | cleaning | security'),
   "email": zod.string(),
   "phone": zod.string().optional(),
   "propertyId": zod.number().optional(),
@@ -789,6 +791,7 @@ export const UpdateStaffParams = zod.object({
 export const UpdateStaffBody = zod.object({
   "name": zod.string().optional(),
   "role": zod.string().optional(),
+  "systemRole": zod.string().optional(),
   "email": zod.string().optional(),
   "phone": zod.string().optional(),
   "propertyId": zod.number().optional(),
@@ -798,7 +801,8 @@ export const UpdateStaffBody = zod.object({
 export const UpdateStaffResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "role": zod.string(),
+  "role": zod.string().describe('Free-form job title (e.g. CEO, HVAC Technician)'),
+  "systemRole": zod.string().describe('Permission role: manager | supervisor | maintenance | cleaning | security'),
   "email": zod.string(),
   "phone": zod.string().nullish(),
   "propertyId": zod.number().nullish(),
@@ -816,6 +820,31 @@ export const UpdateStaffResponse = zod.object({
  */
 export const DeleteStaffParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Bulk import staff members from CSV data
+ */
+export const BulkCreateStaffBody = zod.object({
+  "members": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string().describe('Free-form job title'),
+  "systemRole": zod.string().describe('Permission role: manager | supervisor | maintenance | cleaning | security'),
+  "email": zod.string(),
+  "phone": zod.string().optional(),
+  "propertyId": zod.number().optional(),
+  "status": zod.string().optional()
+}))
+})
+
+export const BulkCreateStaffResponse = zod.object({
+  "created": zod.number(),
+  "errors": zod.array(zod.object({
+  "row": zod.number(),
+  "name": zod.string().optional(),
+  "error": zod.string()
+}))
 })
 
 

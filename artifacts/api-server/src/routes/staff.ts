@@ -67,7 +67,6 @@ router.get("/staff", async (req, res) => {
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(staffTable.name);
 
-  // Batch-load user accounts so we can surface invite/account status
   const userConds = tenantId !== null ? [eq(usersTable.tenantId, tenantId)] : [];
   const users = await db
     .select({ email: usersTable.email, mustChangePassword: usersTable.mustChangePassword })
@@ -87,7 +86,6 @@ router.post("/staff", async (req, res) => {
   const tenantId = tid(req) ?? 1;
   const caller = getCaller(req);
 
-  // Hierarchy: only supervisor (level 2) or above can add staff
   if (caller) {
     const callerLevel = getHierarchyLevel(caller.role);
     if (callerLevel < 2) {
@@ -100,7 +98,6 @@ router.post("/staff", async (req, res) => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [staff] = await db.insert(staffTable).values(parsed.data).returning();
 
-  // Auto-create login account + send welcome email when email is provided
   let welcomeEmailSent = false;
   const email = (parsed.data as any).email as string | undefined;
   if (email) {
@@ -122,7 +119,7 @@ router.post("/staff", async (req, res) => {
           email,
           phoneNumber: (parsed.data as any).phone ?? null,
           passwordHash: hashPwd(tempPassword),
-          role: "staff",
+          role: (parsed.data as any).systemRole ?? "staff",
           permissions: "[]",
           isActive: true,
           mustChangePassword: true,
@@ -138,6 +135,72 @@ router.post("/staff", async (req, res) => {
   }
 
   res.status(201).json({ ...formatStaff(staff), welcomeEmailSent });
+});
+
+// POST /staff/bulk — must be registered before /staff/:id to avoid route shadowing
+router.post("/staff/bulk", async (req, res) => {
+  const tenantId = tid(req) ?? 1;
+  const caller = getCaller(req);
+
+  if (caller) {
+    const callerLevel = getHierarchyLevel(caller.role);
+    if (callerLevel < 2) {
+      res.status(403).json({ error: "Insufficient permissions to add staff" });
+      return;
+    }
+  }
+
+  const { members } = req.body as { members?: unknown[] };
+  if (!Array.isArray(members) || members.length === 0) {
+    res.status(400).json({ error: "members must be a non-empty array" });
+    return;
+  }
+
+  let created = 0;
+  const errors: Array<{ row: number; name?: string; error: string }> = [];
+
+  for (let i = 0; i < members.length; i++) {
+    const raw = members[i] as Record<string, unknown>;
+    const parsed = insertStaffSchema.safeParse({ ...raw, tenantId });
+    if (!parsed.success) {
+      errors.push({ row: i + 1, name: String(raw.name ?? ""), error: "Validation failed: " + parsed.error.issues.map(e => e.message).join(", ") });
+      continue;
+    }
+    try {
+      await db.insert(staffTable).values(parsed.data).returning();
+
+      const email = parsed.data.email;
+      if (email) {
+        const [existing] = await db
+          .select({ id: usersTable.id })
+          .from(usersTable)
+          .where(and(eq(usersTable.email, email), eq(usersTable.tenantId, tenantId)));
+        if (!existing) {
+          const username = await generateUsername(email.split("@")[0] ?? "user", tenantId);
+          const tempPassword = generateTempPassword();
+          await db.insert(usersTable).values({
+            tenantId,
+            username,
+            displayName: parsed.data.name,
+            email,
+            phoneNumber: (parsed.data as any).phone ?? null,
+            passwordHash: hashPwd(tempPassword),
+            role: (parsed.data as any).systemRole ?? "staff",
+            permissions: "[]",
+            isActive: true,
+            mustChangePassword: true,
+          });
+          await sendWelcomeEmail(email, username, tempPassword);
+        }
+      }
+      created++;
+    } catch (err: any) {
+      errors.push({ row: i + 1, name: String(raw.name ?? ""), error: err?.message ?? "Insert failed" });
+      req.log.error({ err, row: i + 1 }, "Bulk staff import row failed");
+    }
+  }
+
+  res.json({ created, errors });
 });
 
 router.post("/staff/:id/resend-invite", async (req, res) => {
@@ -159,7 +222,6 @@ router.post("/staff/:id/resend-invite", async (req, res) => {
       .where(and(eq(usersTable.email, email), eq(usersTable.tenantId, tenantId)));
 
     if (!existing) {
-      // Account doesn't exist yet — create it
       const emailPrefix = email.split("@")[0] ?? "user";
       const username = await generateUsername(emailPrefix, tenantId);
       const tempPassword = generateTempPassword();
@@ -170,7 +232,7 @@ router.post("/staff/:id/resend-invite", async (req, res) => {
         email,
         phoneNumber: staff.phone ?? null,
         passwordHash: hashPwd(tempPassword),
-        role: "staff",
+        role: staff.systemRole ?? "staff",
         permissions: "[]",
         isActive: true,
         mustChangePassword: true,
@@ -179,7 +241,6 @@ router.post("/staff/:id/resend-invite", async (req, res) => {
       req.log.info({ staffId: id, username }, "Invite sent (new account created) for staff member");
       res.json({ sent: true, message: "Account created and invitation email sent" });
     } else {
-      // Account exists — reset temp password and resend
       const tempPassword = generateTempPassword();
       await db.update(usersTable)
         .set({ passwordHash: hashPwd(tempPassword), mustChangePassword: true })

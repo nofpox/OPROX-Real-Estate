@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   useListStaff, getListStaffQueryKey, useCreateStaff, useUpdateStaff, useDeleteStaff, useListProperties,
-  useResendStaffInvite,
+  useResendStaffInvite, useBulkCreateStaff,
 } from "@workspace/api-client-react";
 import { useRole } from "@/contexts/role-context";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,33 +12,41 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Users, MoreVertical, Phone, Mail, Building2, UserCheck, UserX, CalendarDays, Send, Clock, CheckCircle2 } from "lucide-react";
+import {
+  Plus, Users, MoreVertical, Phone, Mail, Building2, UserCheck, UserX,
+  CalendarDays, Send, Clock, CheckCircle2, Upload, Download, FileText,
+  AlertCircle, ShieldCheck, X,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import StaffShifts from "./staff-shifts";
 import { useTranslation } from "react-i18next";
 
-const ALL_ROLES = [
-  "Front Desk Manager", "Concierge", "Housekeeping Supervisor", "Housekeeping Staff",
-  "Maintenance Lead", "Maintenance Technician", "Security Supervisor", "Security Officer",
-  "Property Manager", "Estate Manager", "Groundskeeper", "General Staff",
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const SYSTEM_ROLES = [
+  { value: "manager",     colorClass: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+  { value: "supervisor",  colorClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  { value: "maintenance", colorClass: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
+  { value: "cleaning",    colorClass: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  { value: "security",    colorClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
 ];
 
-// Maps each display role to the hierarchy level required to BE that role.
-// Callers can only create roles strictly below their own level.
-const ROLE_LEVEL_MAP: Record<string, number> = {
-  "Property Manager": 3, "Estate Manager": 3,
-  "Front Desk Manager": 2, "Housekeeping Supervisor": 2,
-  "Maintenance Lead": 2, "Security Supervisor": 2,
-  "Concierge": 1, "Housekeeping Staff": 1,
-  "Maintenance Technician": 1, "Security Officer": 1,
-  "Groundskeeper": 1, "General Staff": 1,
-};
+const VALID_SYSTEM_ROLES = SYSTEM_ROLES.map((r) => r.value) as [string, ...string[]];
+
+const CSV_HEADERS = ["name", "jobTitle", "systemRole", "email", "phone", "propertyId", "status"];
+const CSV_EXAMPLE_ROWS = [
+  ["Ahmed Al-Rashidi", "Civil Engineer", "supervisor", "ahmed@company.com", "+966501234567", "", "active"],
+  ["Sara Al-Qahtani", "HVAC Technician", "maintenance", "sara@company.com", "+966509876543", "", "active"],
+  ["Khalid Al-Dosari", "Site Inspector", "security", "khalid@company.com", "+966512345678", "", "active"],
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getCallerLevel(dbRole: string): number {
   if (dbRole === "owner" || dbRole === "admin" || dbRole === "super_admin") return 4;
@@ -47,26 +55,8 @@ function getCallerLevel(dbRole: string): number {
   return 1;
 }
 
-const staffSchema = z.object({
-  name: z.string().min(1),
-  role: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().optional().or(z.literal("")),
-  propertyId: z.coerce.number().optional().or(z.literal("")),
-  status: z.enum(["active", "inactive"]).default("active"),
-});
-
 function getInitials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-}
-
-function getRoleColor(role: string) {
-  if (role.includes("Manager") || role.includes("Supervisor")) return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
-  if (role.includes("Maintenance")) return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
-  if (role.includes("Security")) return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-  if (role.includes("Housekeeping")) return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-  if (role.includes("Desk") || role.includes("Concierge")) return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
-  return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400";
 }
 
 function getAvatarColor(name: string) {
@@ -74,27 +64,325 @@ function getAvatarColor(name: string) {
   return colors[name.charCodeAt(0) % colors.length];
 }
 
+function getSystemRoleColor(systemRole: string): string {
+  return SYSTEM_ROLES.find((r) => r.value === systemRole)?.colorClass
+    ?? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400";
+}
+
+function downloadCSVTemplate() {
+  const header = CSV_HEADERS.join(",");
+  const rows = CSV_EXAMPLE_ROWS.map((r) => r.join(",")).join("\n");
+  const blob = new Blob([header + "\n" + rows], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "staff_import_template.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Simple CSV parser — handles quoted fields with embedded commas. */
+function parseCSV(text: string): Array<Record<string, string>> {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const rawHeaders = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase().replace(/\s+/g, ""));
+  return lines.slice(1).filter((l) => l.trim()).map((line) => {
+    const values: string[] = [];
+    let current = "";
+    let inQuotes = false;
+    for (const ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === "," && !inQuotes) { values.push(current.trim()); current = ""; }
+      else { current += ch; }
+    }
+    values.push(current.trim());
+    return Object.fromEntries(rawHeaders.map((h, i) => [h, values[i] ?? ""]));
+  });
+}
+
+// ─── Zod schema ───────────────────────────────────────────────────────────────
+
+const staffSchema = z.object({
+  name:       z.string().min(1),
+  role:       z.string().min(1),
+  systemRole: z.enum(["manager", "supervisor", "maintenance", "cleaning", "security"]),
+  email:      z.string().email(),
+  phone:      z.string().optional().or(z.literal("")),
+  propertyId: z.coerce.number().optional().or(z.literal("")),
+  status:     z.enum(["active", "inactive"]).default("active"),
+});
+
+// ─── Bulk Import Modal ────────────────────────────────────────────────────────
+
+type BulkStep = "upload" | "preview" | "done";
+
+interface BulkImportModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+function BulkImportModal({ open, onClose, onSuccess }: BulkImportModalProps) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const bulkCreate = useBulkCreateStaff();
+
+  const [step, setStep] = useState<BulkStep>("upload");
+  const [rows, setRows] = useState<Array<Record<string, string>>>([]);
+  const [fileName, setFileName] = useState("");
+  const [result, setResult] = useState<{ created: number; errors: Array<{ row: number; name?: string; error: string }> } | null>(null);
+
+  function reset() {
+    setStep("upload");
+    setRows([]);
+    setFileName("");
+    setResult(null);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  function handleClose() {
+    reset();
+    onClose();
+  }
+
+  function handleFile(file: File) {
+    if (!file.name.match(/\.(csv|txt)$/i)) {
+      toast({ title: "Invalid file type", description: "Please upload a CSV file.", variant: "destructive" });
+      return;
+    }
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const parsed = parseCSV(text);
+      if (parsed.length === 0) {
+        toast({ title: t("staff.bulkImportDialog.noRows"), variant: "destructive" });
+        return;
+      }
+      setRows(parsed);
+      setStep("preview");
+    };
+    reader.readAsText(file);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }
+
+  function rowToStaffInput(row: Record<string, string>) {
+    return {
+      name:       row.name ?? "",
+      role:       row.jobtitle ?? row.role ?? "",
+      systemRole: row.systemrole ?? row.systemRole ?? "supervisor",
+      email:      row.email ?? "",
+      phone:      row.phone || undefined,
+      propertyId: row.propertyid ? parseInt(row.propertyid) : undefined,
+      status:     (row.status as "active" | "inactive") || "active",
+    };
+  }
+
+  async function handleImport() {
+    const members = rows.map(rowToStaffInput);
+    bulkCreate.mutate({ data: { members: members as any } }, {
+      onSuccess: (res: any) => {
+        setResult({ created: res.created, errors: res.errors ?? [] });
+        setStep("done");
+        if (res.created > 0) onSuccess();
+      },
+      onError: () => {
+        toast({ title: "Import failed", variant: "destructive" });
+      },
+    });
+  }
+
+  const previewRows = rows.slice(0, 10);
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
+      <DialogContent className="sm:max-w-[660px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5 text-primary" />
+            {t("staff.bulkImportDialog.title")}
+          </DialogTitle>
+          <DialogDescription>{t("staff.bulkImportDialog.subtitle")}</DialogDescription>
+        </DialogHeader>
+
+        {/* ── Step 1: Upload ── */}
+        {step === "upload" && (
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={downloadCSVTemplate}
+              className="w-full flex items-center justify-between rounded-lg border border-dashed border-primary/40 bg-primary/5 px-4 py-3 text-sm text-primary hover:bg-primary/10 transition-colors"
+            >
+              <span className="flex items-center gap-2 font-medium">
+                <Download className="h-4 w-4" />
+                {t("staff.bulkImportDialog.downloadTemplate")}
+              </span>
+              <span className="text-xs text-muted-foreground">staff_import_template.csv</span>
+            </button>
+
+            <div
+              className="rounded-lg border-2 border-dashed border-border/60 bg-muted/20 p-8 text-center cursor-pointer hover:bg-muted/40 transition-colors"
+              onClick={() => fileRef.current?.click()}
+              onDrop={handleDrop}
+              onDragOver={(e) => e.preventDefault()}
+            >
+              <FileText className="mx-auto h-10 w-10 text-muted-foreground/40 mb-3" />
+              <p className="text-sm font-medium">{t("staff.bulkImportDialog.dragDrop")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("staff.bulkImportDialog.csvHint")}</p>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv,.txt"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+              />
+            </div>
+
+            <div className="rounded-md bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground space-y-1">
+              <p className="font-medium text-foreground/80">Valid systemRole values:</p>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {SYSTEM_ROLES.map((r) => (
+                  <span key={r.value} className={`px-2 py-0.5 rounded-full text-xs font-medium ${r.colorClass}`}>{r.value}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 2: Preview ── */}
+        {step === "preview" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">{fileName}</span>
+              </div>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                {t("staff.bulkImportDialog.preview", { count: rows.length })}
+              </span>
+            </div>
+
+            <div className="overflow-x-auto rounded-lg border text-xs">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    {["name", "jobTitle", "systemRole", "email"].map((h) => (
+                      <th key={h} className="text-left font-medium py-2 px-3 text-muted-foreground">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {previewRows.map((row, i) => (
+                    <tr key={i} className="border-t">
+                      <td className="py-2 px-3 font-medium">{row.name || row.name}</td>
+                      <td className="py-2 px-3">{row.jobtitle || row.role || "—"}</td>
+                      <td className="py-2 px-3">
+                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${getSystemRoleColor(row.systemrole || row.systemRole || "")}`}>
+                          {row.systemrole || row.systemRole || "—"}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-muted-foreground">{row.email}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {rows.length > 10 && (
+                <p className="text-xs text-muted-foreground text-center py-2 bg-muted/20">
+                  +{rows.length - 10} more rows not shown
+                </p>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={reset}>
+                <X className="me-1.5 h-3.5 w-3.5" />
+                Change File
+              </Button>
+              <Button onClick={handleImport} disabled={bulkCreate.isPending}>
+                {bulkCreate.isPending
+                  ? t("staff.bulkImportDialog.importing")
+                  : t("staff.bulkImportDialog.importButton", { count: rows.length })}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+
+        {/* ── Step 3: Results ── */}
+        {step === "done" && result && (
+          <div className="space-y-4">
+            {result.created > 0 && result.errors.length === 0 && (
+              <div className="flex items-center gap-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3">
+                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0" />
+                <p className="text-sm font-medium text-green-800 dark:text-green-300">
+                  {t("staff.bulkImportDialog.success", { created: result.created })}
+                </p>
+              </div>
+            )}
+            {result.created > 0 && result.errors.length > 0 && (
+              <div className="flex items-center gap-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                  {t("staff.bulkImportDialog.partialSuccess", { created: result.created, errors: result.errors.length })}
+                </p>
+              </div>
+            )}
+            {result.created === 0 && (
+              <div className="flex items-center gap-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3">
+                <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+                <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                  {t("staff.bulkImportDialog.allFailed", { errors: result.errors.length })}
+                </p>
+              </div>
+            )}
+
+            {result.errors.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {t("staff.bulkImportDialog.failedRows")}
+                </p>
+                <div className="rounded-lg border divide-y max-h-48 overflow-y-auto text-xs">
+                  {result.errors.map((e) => (
+                    <div key={e.row} className="flex items-start gap-2 px-3 py-2">
+                      <span className="shrink-0 font-mono text-muted-foreground w-10">#{e.row}</span>
+                      <span className="font-medium shrink-0">{e.name || "—"}</span>
+                      <span className="text-red-600 dark:text-red-400 truncate">{e.error}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button onClick={handleClose}>{t("staff.bulkImportDialog.close")}</Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 type Tab = "directory" | "schedule";
 
 export default function Staff() {
   const { t } = useTranslation();
   const { actualDbRole } = useRole();
   const callerLevel = getCallerLevel(actualDbRole);
-  // Only show roles the caller is allowed to assign (strictly below their own level)
-  const assignableRoles = ALL_ROLES.filter((r) => (ROLE_LEVEL_MAP[r] ?? 1) < callerLevel);
+
   const [activeTab, setActiveTab] = useState<Tab>("directory");
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [systemRoleFilter, setSystemRoleFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<any>(null);
-
-  const ROLE_CATEGORIES = [
-    { value: "management", label: t("staff.roleCategories.management") },
-    { value: "housekeeping", label: t("staff.roleCategories.housekeeping") },
-    { value: "maintenance", label: t("staff.roleCategories.maintenance") },
-    { value: "security", label: t("staff.roleCategories.security") },
-    { value: "reception", label: t("staff.roleCategories.reception") },
-  ];
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
 
   const params: any = {};
   if (selectedProperty !== "all") params.propertyId = parseInt(selectedProperty);
@@ -110,26 +398,29 @@ export default function Staff() {
 
   const form = useForm<z.infer<typeof staffSchema>>({
     resolver: zodResolver(staffSchema),
-    defaultValues: { name: "", role: "", email: "", phone: "", propertyId: "", status: "active" },
+    defaultValues: { name: "", role: "", systemRole: "supervisor", email: "", phone: "", propertyId: "", status: "active" },
   });
 
   const filteredStaff = staff?.filter((s) => {
-    if (roleFilter === "all") return true;
-    return s.role.toLowerCase().includes(roleFilter.toLowerCase());
+    if (systemRoleFilter === "all") return true;
+    return (s as any).systemRole === systemRoleFilter;
   }) || [];
 
-  const activeCount = staff?.filter((s) => s.status === "active").length || 0;
+  const activeCount   = staff?.filter((s) => s.status === "active").length || 0;
   const inactiveCount = staff?.filter((s) => s.status === "inactive").length || 0;
 
   const openCreate = () => {
     setEditingStaff(null);
-    form.reset({ name: "", role: "", email: "", phone: "", propertyId: "", status: "active" });
+    form.reset({ name: "", role: "", systemRole: "supervisor", email: "", phone: "", propertyId: "", status: "active" });
     setIsDialogOpen(true);
   };
 
   const openEdit = (s: any) => {
     setEditingStaff(s);
-    form.reset({ name: s.name, role: s.role, email: s.email, phone: s.phone || "", propertyId: s.propertyId || "", status: s.status });
+    form.reset({
+      name: s.name, role: s.role, systemRole: s.systemRole ?? "supervisor",
+      email: s.email, phone: s.phone || "", propertyId: s.propertyId || "", status: s.status,
+    });
     setIsDialogOpen(true);
   };
 
@@ -145,12 +436,8 @@ export default function Staff() {
         onSuccess: (created) => {
           const emailSent = (created as any).welcomeEmailSent as boolean;
           toast({
-            title: emailSent
-              ? `Invitation sent to ${data.email}`
-              : t("staff.toast.added"),
-            description: emailSent
-              ? "They'll receive an email with a one-time access code and a link to set their password."
-              : undefined,
+            title: emailSent ? `Invitation sent to ${data.email}` : t("staff.toast.added"),
+            description: emailSent ? "They'll receive an email with a one-time access code." : undefined,
           });
           queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) });
           setIsDialogOpen(false);
@@ -170,10 +457,7 @@ export default function Staff() {
   const handleResendInvite = (s: any) => {
     resendInvite.mutate({ id: s.id }, {
       onSuccess: (res) => {
-        toast({
-          title: "Invitation sent",
-          description: (res as any).message ?? `New access code emailed to ${s.email}`,
-        });
+        toast({ title: "Invitation sent", description: (res as any).message ?? `New access code emailed to ${s.email}` });
         queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) });
       },
       onError: () => toast({ title: "Failed to send invitation", variant: "destructive" }),
@@ -202,10 +486,16 @@ export default function Staff() {
           <p className="text-muted-foreground mt-1">{t("staff.subtitle")}</p>
         </div>
         {activeTab === "directory" && callerLevel >= 2 && (
-          <Button onClick={openCreate} className="font-semibold shadow-sm">
-            <Plus className="me-2 h-4 w-4" />
-            {t("staff.addMember")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setIsBulkOpen(true)} className="font-semibold">
+              <Upload className="me-2 h-4 w-4" />
+              {t("staff.bulkImport")}
+            </Button>
+            <Button onClick={openCreate} className="font-semibold shadow-sm">
+              <Plus className="me-2 h-4 w-4" />
+              {t("staff.addMember")}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -242,11 +532,13 @@ export default function Staff() {
                 {properties?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <Select value={systemRoleFilter} onValueChange={setSystemRoleFilter}>
               <SelectTrigger className="w-full sm:w-[200px] bg-background"><SelectValue placeholder={t("staff.allRoles")} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("staff.allRoles")}</SelectItem>
-                {ROLE_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                {SYSTEM_ROLES.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>{t(`roles.${r.value}` as any)}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -278,11 +570,7 @@ export default function Staff() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => openEdit(s)}>{t("common.edit")}</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleToggleStatus(s)}>{s.status === "active" ? t("staff.markInactive") : t("staff.markActive")}</DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleResendInvite(s)}
-                                disabled={resendInvite.isPending}
-                                className="flex items-center gap-2"
-                              >
+                              <DropdownMenuItem onClick={() => handleResendInvite(s)} disabled={resendInvite.isPending} className="flex items-center gap-2">
                                 <Send className="h-3.5 w-3.5" />
                                 {s.invitePending ? "Resend Invite" : s.hasAccount ? "Resend Invite" : "Send Invite"}
                               </DropdownMenuItem>
@@ -290,8 +578,16 @@ export default function Staff() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${getRoleColor(s.role)}`}>{s.role}</span>
-                        <div className="mt-3 space-y-1.5">
+                        {/* Job title */}
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.role}</p>
+                        {/* System role badge */}
+                        <div className="mt-1.5">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${getSystemRoleColor((s as any).systemRole ?? "")}`}>
+                            <ShieldCheck className="h-2.5 w-2.5" />
+                            {t(`roles.${(s as any).systemRole ?? ""}` as any, { defaultValue: (s as any).systemRole ?? "" })}
+                          </span>
+                        </div>
+                        <div className="mt-2.5 space-y-1.5">
                           {s.propertyName && <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Building2 className="h-3 w-3 shrink-0" /><span className="truncate">{s.propertyName}</span></div>}
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Mail className="h-3 w-3 shrink-0" /><span className="truncate">{s.email}</span></div>
                           {s.phone && <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Phone className="h-3 w-3 shrink-0" /><span>{s.phone}</span></div>}
@@ -326,22 +622,45 @@ export default function Staff() {
         </>
       )}
 
+      {/* ── Add / Edit Staff Dialog ── */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[540px]">
           <DialogHeader><DialogTitle>{editingStaff ? t("staff.dialog.editTitle") : t("staff.dialog.addTitle")}</DialogTitle></DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
+                {/* Full name */}
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem className="col-span-2"><FormLabel>{t("staff.fields.name")}</FormLabel><FormControl><Input placeholder={t("staff.fields.namePlaceholder")} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
+
+                {/* Job title — free-form text */}
                 <FormField control={form.control} name="role" render={({ field }) => (
-                  <FormItem><FormLabel>{t("staff.fields.role")}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder={t("staff.fields.selectRole")} /></SelectTrigger></FormControl>
-                      <SelectContent>{(editingStaff ? ALL_ROLES : assignableRoles).map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                    </Select><FormMessage /></FormItem>
+                  <FormItem className="col-span-2"><FormLabel>{t("staff.fields.jobTitle")}</FormLabel><FormControl><Input placeholder={t("staff.fields.jobTitlePlaceholder")} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
+
+                {/* System role — dropdown */}
+                <FormField control={form.control} name="systemRole" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("staff.fields.systemRole")}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder={t("staff.fields.selectSystemRole")} /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {SYSTEM_ROLES.map((r) => (
+                          <SelectItem key={r.value} value={r.value}>
+                            <span className="flex items-center gap-2">
+                              <span className={`w-2 h-2 rounded-full inline-block ${r.colorClass.split(" ")[0]}`} />
+                              {t(`roles.${r.value}` as any)}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                {/* Status */}
                 <FormField control={form.control} name="status" render={({ field }) => (
                   <FormItem><FormLabel>{t("staff.fields.status")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
@@ -349,12 +668,18 @@ export default function Staff() {
                       <SelectContent><SelectItem value="active">{t("status.active")}</SelectItem><SelectItem value="inactive">{t("status.inactive")}</SelectItem></SelectContent>
                     </Select><FormMessage /></FormItem>
                 )} />
+
+                {/* Email */}
                 <FormField control={form.control} name="email" render={({ field }) => (
-                  <FormItem><FormLabel>{t("staff.fields.email")}</FormLabel><FormControl><Input type="email" placeholder="email@property.com" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>{t("staff.fields.email")}</FormLabel><FormControl><Input type="email" placeholder="email@company.com" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
+
+                {/* Phone */}
                 <FormField control={form.control} name="phone" render={({ field }) => (
-                  <FormItem><FormLabel>{t("staff.fields.phone")}</FormLabel><FormControl><Input placeholder="+1 555-0000" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>{t("staff.fields.phone")}</FormLabel><FormControl><Input placeholder="+966 5X XXX XXXX" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
+
+                {/* Property */}
                 <FormField control={form.control} name="propertyId" render={({ field }) => (
                   <FormItem className="col-span-2"><FormLabel>{t("staff.fields.property")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value?.toString() || ""}>
@@ -375,6 +700,13 @@ export default function Staff() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* ── Bulk Import Modal ── */}
+      <BulkImportModal
+        open={isBulkOpen}
+        onClose={() => setIsBulkOpen(false)}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) })}
+      />
     </div>
   );
 }

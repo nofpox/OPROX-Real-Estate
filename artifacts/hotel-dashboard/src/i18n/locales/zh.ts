@@ -229,7 +229,9 @@ const zh: Translations = {
     toast: { added: "员工已添加", addFailed: "添加失败", updated: "员工已更新", updateFailed: "更新失败", statusUpdated: "状态已更新", removed: "员工已删除", removeFailed: "删除失败" },
     kpi: { total: "总计", active: "活跃", inactive: "不活跃" },
     roleCategories: { management: "管理", housekeeping: "客房", maintenance: "维护", security: "安保", reception: "前台" },
-    fields: { name: "全名 *", namePlaceholder: "例如 李明", role: "角色 *", selectRole: "选择角色", status: "状态", email: "电子邮件 *", phone: "电话", property: "分配物业", noProperty: "无特定物业" },
+    bulkImport: "批量导入",
+    bulkImportDialog: { title: "批量导入员工", subtitle: "上传CSV文件一次导入多名员工。", downloadTemplate: "下载CSV模板", uploadCSV: "上传CSV文件", dragDrop: "点击上传或拖放", csvHint: "必填列：name、jobTitle、systemRole、email", preview: "预览 — {{count}} 行", importing: "导入中…", importButton: "导入 {{count}} 名员工", success: "成功导入 {{created}} 名员工。", partialSuccess: "导入 {{created}} 名，{{errors}} 行出错。", allFailed: "{{errors}} 行均失败。", failedRows: "失败行：", close: "完成", noRows: "未找到有效行。" },
+    fields: { name: "全名 *", namePlaceholder: "例如 李明", jobTitle: "职称 *", jobTitlePlaceholder: "例如 CEO、HVAC技术员", systemRole: "系统角色 *", selectSystemRole: "选择系统角色", role: "角色 *", selectRole: "选择角色", status: "状态", email: "电子邮件 *", phone: "电话", property: "分配物业", noProperty: "无特定物业" },
   },
   tasks: {
     title: "任务", subtitle: "分配和跟踪日常运营任务。",

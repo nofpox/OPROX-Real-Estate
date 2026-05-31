@@ -229,7 +229,9 @@ const bn: Translations = {
     toast: { added: "কর্মী সদস্য যোগ হয়েছে", addFailed: "যোগ করতে ব্যর্থ", updated: "কর্মী সদস্য আপডেট হয়েছে", updateFailed: "আপডেট ব্যর্থ", statusUpdated: "অবস্থা আপডেট হয়েছে", removed: "কর্মী সরানো হয়েছে", removeFailed: "সরাতে ব্যর্থ" },
     kpi: { total: "মোট", active: "সক্রিয়", inactive: "নিষ্ক্রিয়" },
     roleCategories: { management: "ব্যবস্থাপনা", housekeeping: "হাউসকিপিং", maintenance: "রক্ষণাবেক্ষণ", security: "নিরাপত্তা", reception: "রিসেপশন" },
-    fields: { name: "পুরো নাম *", namePlaceholder: "যেমন সালমা বেগম", role: "ভূমিকা *", selectRole: "ভূমিকা নির্বাচন", status: "অবস্থা", email: "ইমেইল *", phone: "ফোন", property: "নির্ধারিত সম্পত্তি", noProperty: "কোনো নির্দিষ্ট সম্পত্তি নয়" },
+    bulkImport: "বাল্ক আমদানি",
+    bulkImportDialog: { title: "কর্মী বাল্ক আমদানি", subtitle: "একাধিক কর্মী একসাথে যোগ করতে CSV আপলোড করুন।", downloadTemplate: "CSV টেমপ্লেট ডাউনলোড", uploadCSV: "CSV আপলোড করুন", dragDrop: "আপলোড করতে ক্লিক করুন", csvHint: "প্রয়োজনীয় কলাম: name, jobTitle, systemRole, email", preview: "প্রিভিউ — {{count}} সারি", importing: "আমদানি হচ্ছে…", importButton: "{{count}} সদস্য আমদানি করুন", success: "{{created}} কর্মী সফলভাবে আমদানি হয়েছে।", partialSuccess: "{{created}} আমদানি, {{errors}} ত্রুটি।", allFailed: "{{errors}} সারি ব্যর্থ।", failedRows: "ব্যর্থ সারি:", close: "সম্পন্ন", noRows: "কোনো বৈধ সারি নেই।" },
+    fields: { name: "পুরো নাম *", namePlaceholder: "যেমন সালমা বেগম", jobTitle: "পদবী *", jobTitlePlaceholder: "যেমন CEO, HVAC টেকনিশিয়ান", systemRole: "সিস্টেম ভূমিকা *", selectSystemRole: "সিস্টেম ভূমিকা নির্বাচন করুন", role: "ভূমিকা *", selectRole: "ভূমিকা নির্বাচন", status: "অবস্থা", email: "ইমেইল *", phone: "ফোন", property: "নির্ধারিত সম্পত্তি", noProperty: "কোনো নির্দিষ্ট সম্পত্তি নয়" },
   },
   tasks: {
     title: "কাজ", subtitle: "দৈনিক অপারেশনাল কাজ নির্ধারণ ও ট্র্যাক করুন।",

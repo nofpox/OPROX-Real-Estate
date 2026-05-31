@@ -229,7 +229,9 @@ const pt: Translations = {
     toast: { added: "Membro adicionado", addFailed: "Falha ao adicionar", updated: "Membro atualizado", updateFailed: "Falha ao atualizar", statusUpdated: "Status atualizado", removed: "Membro removido", removeFailed: "Falha ao remover" },
     kpi: { total: "Total", active: "Ativos", inactive: "Inativos" },
     roleCategories: { management: "Gerência", housekeeping: "Governança", maintenance: "Manutenção", security: "Segurança", reception: "Recepção" },
-    fields: { name: "Nome Completo *", namePlaceholder: "ex. Ana Souza", role: "Perfil *", selectRole: "Selecionar perfil", status: "Status", email: "E-mail *", phone: "Telefone", property: "Propriedade Atribuída", noProperty: "Nenhuma propriedade específica" },
+    bulkImport: "Importação em Massa",
+    bulkImportDialog: { title: "Importação em Massa de Funcionários", subtitle: "Carregue um CSV para importar vários membros de uma vez.", downloadTemplate: "Baixar Modelo CSV", uploadCSV: "Carregar CSV", dragDrop: "Clique para carregar", csvHint: "Colunas obrigatórias: name, jobTitle, systemRole, email", preview: "Pré-visualizar — {{count}} linhas", importing: "Importando…", importButton: "Importar {{count}} membros", success: "{{created}} membros importados.", partialSuccess: "{{created}} importados, {{errors}} erros.", allFailed: "{{errors}} linhas falharam.", failedRows: "Linhas com erro:", close: "Concluído", noRows: "Nenhuma linha válida." },
+    fields: { name: "Nome Completo *", namePlaceholder: "ex. Ana Souza", jobTitle: "Cargo *", jobTitlePlaceholder: "ex. CEO, Técnico HVAC", systemRole: "Função no Sistema *", selectSystemRole: "Selecionar função", role: "Perfil *", selectRole: "Selecionar perfil", status: "Status", email: "E-mail *", phone: "Telefone", property: "Propriedade Atribuída", noProperty: "Nenhuma propriedade específica" },
   },
   tasks: {
     title: "Tarefas", subtitle: "Atribuir e acompanhar tarefas operacionais diárias.",

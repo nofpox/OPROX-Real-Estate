@@ -231,7 +231,9 @@ const tl: Translations = {
     toast: { added: "Naidagdag ang miyembro ng kawani", addFailed: "Nabigo ang pagdaragdag", updated: "Na-update ang miyembro ng kawani", updateFailed: "Nabigo ang pag-update", statusUpdated: "Na-update ang katayuan", removed: "Naalis ang kawani", removeFailed: "Nabigo ang pag-alis" },
     kpi: { total: "Kabuuan", active: "Aktibo", inactive: "Hindi Aktibo" },
     roleCategories: { management: "Pamamahala", housekeeping: "Housekeeping", maintenance: "Pagpapanatili", security: "Seguridad", reception: "Resepsyon" },
-    fields: { name: "Buong Pangalan *", namePlaceholder: "hal. Maria Santos", role: "Papel *", selectRole: "Pumili ng papel", status: "Katayuan", email: "Email *", phone: "Telepono", property: "Itinalagang Ari-arian", noProperty: "Walang tiyak na ari-arian" },
+    bulkImport: "Bulk Import",
+    bulkImportDialog: { title: "Bulk Import ng Staff", subtitle: "Mag-upload ng CSV file para mag-import ng maraming miyembro nang sabay.", downloadTemplate: "I-download ang CSV Template", uploadCSV: "Mag-upload ng CSV", dragDrop: "Mag-click para mag-upload", csvHint: "Mga kinakailangang kolum: name, jobTitle, systemRole, email", preview: "Preview — {{count}} row", importing: "Ina-import…", importButton: "I-import ang {{count}} miyembro", success: "Matagumpay na na-import ang {{created}} miyembro.", partialSuccess: "Na-import ang {{created}}, {{errors}} may error.", allFailed: "{{errors}} row ang nabigo.", failedRows: "Mga nabigong row:", close: "Tapos", noRows: "Walang valid na row." },
+    fields: { name: "Buong Pangalan *", namePlaceholder: "hal. Maria Santos", jobTitle: "Titulo ng Trabaho *", jobTitlePlaceholder: "hal. CEO, HVAC Technician", systemRole: "Papel ng Sistema *", selectSystemRole: "Pumili ng papel ng sistema", role: "Papel *", selectRole: "Pumili ng papel", status: "Katayuan", email: "Email *", phone: "Telepono", property: "Itinalagang Ari-arian", noProperty: "Walang tiyak na ari-arian" },
   },
   tasks: {
     title: "Mga Gawain", subtitle: "Magtalaga at subaybayan ang mga pang-araw-araw na gawain sa operasyon.",

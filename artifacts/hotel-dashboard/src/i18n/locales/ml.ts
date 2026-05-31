@@ -229,7 +229,9 @@ const ml: Translations = {
     toast: { added: "ജീവനക്കാരൻ ചേർത്തു", addFailed: "ചേർക്കൽ പരാജയം", updated: "ജീവനക്കാരൻ അപ്ഡേറ്റ് ചെയ്തു", updateFailed: "അപ്ഡേറ്റ് പരാജയം", statusUpdated: "സ്ഥിതി അപ്ഡേറ്റ് ചെയ്തു", removed: "ജീവനക്കാരൻ നീക്കി", removeFailed: "നീക്കൽ പരാജയം" },
     kpi: { total: "ആകെ", active: "സജീവം", inactive: "നിഷ്‌ക്രിയം" },
     roleCategories: { management: "മാനേജ്മെന്റ്", housekeeping: "ഹൗസ്കീപ്പിംഗ്", maintenance: "അറ്റകുറ്റം", security: "സുരക്ഷ", reception: "റിസപ്ഷൻ" },
-    fields: { name: "പൂർണ്ണ നാമം *", namePlaceholder: "ഉദാ. മേരി ജോൺ", role: "റോൾ *", selectRole: "റോൾ തിരഞ്ഞെടുക്കുക", status: "സ്ഥിതി", email: "ഇമെയിൽ *", phone: "ഫോൺ", property: "നിയോഗിച്ച പ്രോപ്പർട്ടി", noProperty: "നിർദ്ദിഷ്ട പ്രോപ്പർട്ടി ഇല്ല" },
+    bulkImport: "ബൾക്ക് ഇമ്പോർട്ട്",
+    bulkImportDialog: { title: "ജീവനക്കാരെ ഒരുമിച്ച് ഇമ്പോർട്ട് ചെയ്യുക", subtitle: "ഒരേ സമയം ഒന്നിലധികം ജീവനക്കാരെ ഇമ്പോർട്ട് ചെയ്യാൻ CSV അപ്‌ലോഡ് ചെയ്യുക.", downloadTemplate: "CSV ടെംപ്ലേറ്റ് ഡൗൺലോഡ് ചെയ്യുക", uploadCSV: "CSV അപ്‌ലോഡ് ചെയ്യുക", dragDrop: "അപ്‌ലോഡ് ചെയ്യാൻ ക്ലിക്ക് ചെയ്യുക", csvHint: "ആവശ്യമായ കോളങ്ങൾ: name, jobTitle, systemRole, email", preview: "പ്രിവ്യൂ — {{count}} വരികൾ", importing: "ഇമ്പോർട്ട് ചെയ്യുന്നു…", importButton: "{{count}} അംഗങ്ങളെ ഇമ്പോർട്ട് ചെയ്യുക", success: "{{created}} ജീവനക്കാരെ വിജയകരമായി ഇമ്പോർട്ട് ചെയ്തു.", partialSuccess: "{{created}} ഇമ്പോർട്ട് ചെയ്തു, {{errors}} പിശകുകൾ.", allFailed: "{{errors}} വരികൾ പരാജയപ്പെട്ടു.", failedRows: "പരാജയപ്പെട്ട വരികൾ:", close: "പൂർത്തിയായി", noRows: "സാധുതയുള്ള വരികൾ കണ്ടെത്തിയില്ല." },
+    fields: { name: "പൂർണ്ണ നാമം *", namePlaceholder: "ഉദാ. മേരി ജോൺ", jobTitle: "ജോലി ശീർഷകം *", jobTitlePlaceholder: "ഉദാ. CEO, HVAC ടെക്നീഷ്യൻ", systemRole: "സിസ്റ്റം റോൾ *", selectSystemRole: "സിസ്റ്റം റോൾ തിരഞ്ഞെടുക്കുക", role: "റോൾ *", selectRole: "റോൾ തിരഞ്ഞെടുക്കുക", status: "സ്ഥിതി", email: "ഇമെയിൽ *", phone: "ഫോൺ", property: "നിയോഗിച്ച പ്രോപ്പർട്ടി", noProperty: "നിർദ്ദിഷ്ട പ്രോപ്പർട്ടി ഇല്ല" },
   },
   tasks: {
     title: "ജോലികൾ", subtitle: "ദൈനംദിന പ്രവർത്തന ജോലികൾ നിയോഗിക്കുകയും ട്രാക്ക് ചെയ്യുകയും ചെയ്യുക.",

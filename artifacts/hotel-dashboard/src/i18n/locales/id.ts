@@ -229,7 +229,9 @@ const id: Translations = {
     toast: { added: "Anggota staf ditambahkan", addFailed: "Gagal menambahkan", updated: "Anggota staf diperbarui", updateFailed: "Gagal memperbarui", statusUpdated: "Status diperbarui", removed: "Staf dihapus", removeFailed: "Gagal menghapus" },
     kpi: { total: "Total", active: "Aktif", inactive: "Tidak Aktif" },
     roleCategories: { management: "Manajemen", housekeeping: "Tata Graha", maintenance: "Pemeliharaan", security: "Keamanan", reception: "Resepsi" },
-    fields: { name: "Nama Lengkap *", namePlaceholder: "mis. Sari Dewi", role: "Peran *", selectRole: "Pilih peran", status: "Status", email: "Email *", phone: "Telepon", property: "Properti Ditugaskan", noProperty: "Tidak ada properti tertentu" },
+    bulkImport: "Impor Massal",
+    bulkImportDialog: { title: "Impor Massal Staf", subtitle: "Unggah file CSV untuk mengimpor banyak anggota staf sekaligus.", downloadTemplate: "Unduh Template CSV", uploadCSV: "Unggah File CSV", dragDrop: "Klik untuk mengunggah", csvHint: "Kolom wajib: name, jobTitle, systemRole, email", preview: "Pratinjau — {{count}} baris", importing: "Mengimpor…", importButton: "Impor {{count}} Anggota", success: "{{created}} anggota berhasil diimpor.", partialSuccess: "{{created}} diimpor, {{errors}} error.", allFailed: "{{errors}} baris gagal.", failedRows: "Baris gagal:", close: "Selesai", noRows: "Tidak ada baris valid." },
+    fields: { name: "Nama Lengkap *", namePlaceholder: "mis. Sari Dewi", jobTitle: "Jabatan *", jobTitlePlaceholder: "mis. CEO, Teknisi HVAC", systemRole: "Peran Sistem *", selectSystemRole: "Pilih peran sistem", role: "Peran *", selectRole: "Pilih peran", status: "Status", email: "Email *", phone: "Telepon", property: "Properti Ditugaskan", noProperty: "Tidak ada properti tertentu" },
   },
   tasks: {
     title: "Tugas", subtitle: "Tugaskan dan lacak tugas operasional harian.",

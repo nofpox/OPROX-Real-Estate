@@ -229,7 +229,9 @@ const th: Translations = {
     toast: { added: "เพิ่มพนักงานแล้ว", addFailed: "ไม่สามารถเพิ่มได้", updated: "อัปเดตพนักงานแล้ว", updateFailed: "การอัปเดตล้มเหลว", statusUpdated: "อัปเดตสถานะแล้ว", removed: "ลบพนักงานแล้ว", removeFailed: "ไม่สามารถลบได้" },
     kpi: { total: "ทั้งหมด", active: "ใช้งานอยู่", inactive: "ไม่ได้ใช้งาน" },
     roleCategories: { management: "การจัดการ", housekeeping: "แม่บ้าน", maintenance: "ช่างซ่อมบำรุง", security: "รักษาความปลอดภัย", reception: "แผนกต้อนรับ" },
-    fields: { name: "ชื่อ-นามสกุล *", namePlaceholder: "เช่น สมหญิง ใจงาม", role: "บทบาท *", selectRole: "เลือกบทบาท", status: "สถานะ", email: "อีเมล *", phone: "โทรศัพท์", property: "ทรัพย์สินที่มอบหมาย", noProperty: "ไม่มีทรัพย์สินที่เฉพาะเจาะจง" },
+    bulkImport: "นำเข้าจำนวนมาก",
+    bulkImportDialog: { title: "นำเข้าพนักงานจำนวนมาก", subtitle: "อัปโหลดไฟล์ CSV เพื่อนำเข้าพนักงานหลายคนพร้อมกัน", downloadTemplate: "ดาวน์โหลดเทมเพลต CSV", uploadCSV: "อัปโหลดไฟล์ CSV", dragDrop: "คลิกเพื่ออัปโหลด", csvHint: "คอลัมน์ที่ต้องการ: name, jobTitle, systemRole, email", preview: "ตัวอย่าง — {{count}} แถว", importing: "กำลังนำเข้า…", importButton: "นำเข้า {{count}} คน", success: "นำเข้า {{created}} คนสำเร็จ", partialSuccess: "นำเข้า {{created}} คน, {{errors}} ผิดพลาด", allFailed: "{{errors}} แถวล้มเหลว", failedRows: "แถวที่ล้มเหลว:", close: "เสร็จสิ้น", noRows: "ไม่พบแถวที่ถูกต้อง" },
+    fields: { name: "ชื่อ-นามสกุล *", namePlaceholder: "เช่น สมหญิง ใจงาม", jobTitle: "ตำแหน่ง *", jobTitlePlaceholder: "เช่น CEO, ช่าง HVAC", systemRole: "บทบาทระบบ *", selectSystemRole: "เลือกบทบาทระบบ", role: "บทบาท *", selectRole: "เลือกบทบาท", status: "สถานะ", email: "อีเมล *", phone: "โทรศัพท์", property: "ทรัพย์สินที่มอบหมาย", noProperty: "ไม่มีทรัพย์สินที่เฉพาะเจาะจง" },
   },
   tasks: {
     title: "งาน", subtitle: "มอบหมายและติดตามงานการดำเนินงานประจำวัน",

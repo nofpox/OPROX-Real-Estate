@@ -228,7 +228,9 @@ const hi: Translations = {
     toast: { added: "कर्मचारी सदस्य जोड़ा गया", addFailed: "जोड़ने में विफल", updated: "कर्मचारी सदस्य अपडेट हुआ", updateFailed: "अपडेट विफल", statusUpdated: "स्थिति अपडेट हुई", removed: "कर्मचारी हटाया गया", removeFailed: "हटाने में विफल" },
     kpi: { total: "कुल", active: "सक्रिय", inactive: "निष्क्रिय" },
     roleCategories: { management: "प्रबंधन", housekeeping: "हाउसकीपिंग", maintenance: "रखरखाव", security: "सुरक्षा", reception: "स्वागत" },
-    fields: { name: "पूरा नाम *", namePlaceholder: "जैसे सरला वर्मा", role: "भूमिका *", selectRole: "भूमिका चुनें", status: "स्थिति", email: "ईमेल *", phone: "फोन", property: "आवंटित संपत्ति", noProperty: "कोई विशेष संपत्ति नहीं" },
+    bulkImport: "बल्क आयात",
+    bulkImportDialog: { title: "Bulk Import Staff", subtitle: "Upload a CSV file to import multiple staff members at once.", downloadTemplate: "Download CSV Template", uploadCSV: "Upload CSV File", dragDrop: "Click to upload or drag & drop", csvHint: "Required columns: name, jobTitle, systemRole, email", preview: "Preview — {{count}} rows found", importing: "Importing…", importButton: "Import {{count}} Members", success: "{{created}} members imported.", partialSuccess: "{{created}} imported, {{errors}} errors.", allFailed: "{{errors}} rows failed.", failedRows: "Failed rows:", close: "Done", noRows: "No valid rows found." },
+    fields: { name: "पूरा नाम *", namePlaceholder: "जैसे सरला वर्मा", jobTitle: "पदनाम *", jobTitlePlaceholder: "जैसे CEO, HVAC तकनीशियन", systemRole: "सिस्टम भूमिका *", selectSystemRole: "सिस्टम भूमिका चुनें", role: "भूमिका *", selectRole: "भूमिका चुनें", status: "स्थिति", email: "ईमेल *", phone: "फोन", property: "आवंटित संपत्ति", noProperty: "कोई विशेष संपत्ति नहीं" },
   },
   tasks: {
     title: "कार्य", subtitle: "दैनिक परिचालन कार्य सौंपें और ट्रैक करें।",
