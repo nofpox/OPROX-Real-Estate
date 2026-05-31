@@ -75,7 +75,10 @@ const taskSchema = z.object({
   dueDate:      z.string().optional().or(z.literal("")),
   description:  z.string().optional().or(z.literal("")),
   status:       z.enum(["pending", "in-progress", "completed", "verified"]).default("pending"),
-});
+})
+.refine(d => !!d.propertyId && Number(d.propertyId) > 0, { message: "Property is required", path: ["propertyId"] })
+.refine(d => !!d.assignedToId && Number(d.assignedToId) > 0, { message: "Assignee is required", path: ["assignedToId"] })
+.refine(d => !!d.dueDate && String(d.dueDate).length > 0, { message: "Due date is required", path: ["dueDate"] });
 
 const commentSchema = z.object({
   authorName: z.string().min(1),
@@ -180,7 +183,7 @@ interface PhotoUploadDialogProps {
   open: boolean;
   onClose: () => void;
   onUpload: (taskId: number, photoUrl: string) => void;
-  onSkip: (taskId: number) => void;
+  onSkip?: (taskId: number) => void;
   isSubmitting: boolean;
 }
 
@@ -291,12 +294,14 @@ function PhotoUploadDialog({ task, mode, open, onClose, onUpload, onSkip, isSubm
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button type="button" variant="ghost" size="sm" className="text-muted-foreground"
-            onClick={() => { reset(); onSkip(task.id); }}
-            disabled={uploading || isSubmitting}
-          >
-            {t("tasks.skipAdmin")}
-          </Button>
+          {onSkip && (
+            <Button type="button" variant="ghost" size="sm" className="text-muted-foreground"
+              onClick={() => { reset(); onSkip(task.id); }}
+              disabled={uploading || isSubmitting}
+            >
+              {t("tasks.skipAdmin")}
+            </Button>
+          )}
           <div className="flex gap-2 flex-1 justify-end">
             <Button type="button" variant="outline" onClick={handleClose} disabled={uploading || isSubmitting}>
               {t("tasks.cancel")}
@@ -1369,12 +1374,11 @@ function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => voi
   function onSubmit(data: z.infer<typeof taskSchema>) {
     const payload = {
       ...data,
-      propertyId:   data.propertyId   ? Number(data.propertyId)   : undefined,
+      propertyId:   Number(data.propertyId),
       unitId:       data.unitId       ? Number(data.unitId)       : undefined,
       supervisorId: data.supervisorId ? Number(data.supervisorId) : undefined,
-      assignedToId: data.assignedToId ? Number(data.assignedToId) : undefined,
+      assignedToId: Number(data.assignedToId),
       description:  data.description  || undefined,
-      dueDate:      data.dueDate      || undefined,
     };
     createTask.mutate({ data: payload as any }, {
       onSuccess: () => {
@@ -1408,11 +1412,10 @@ function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => voi
 
             <FormField control={form.control} name="propertyId" render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("tasks.fields.asset")}</FormLabel>
+                <FormLabel>{t("tasks.fields.asset")} <span className="text-destructive">*</span></FormLabel>
                 <Select onValueChange={(v) => { field.onChange(v); form.setValue("unitId", ""); }} value={field.value?.toString() ?? ""}>
                   <FormControl><SelectTrigger><SelectValue placeholder={t("tasks.fields.selectAsset")} /></SelectTrigger></FormControl>
                   <SelectContent>
-                    <SelectItem value="none">{t("tasks.fields.noAsset")}</SelectItem>
                     {properties?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -1439,7 +1442,7 @@ function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => voi
             <div className="grid grid-cols-2 gap-4">
               <FormField control={form.control} name="category" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("tasks.fields.category")}</FormLabel>
+                  <FormLabel>{t("tasks.fields.category")} <span className="text-destructive">*</span></FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
@@ -1476,7 +1479,7 @@ function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => voi
 
               <FormField control={form.control} name="dueDate" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("tasks.fields.dueDate")}</FormLabel>
+                  <FormLabel>{t("tasks.fields.dueDate")} <span className="text-destructive">*</span></FormLabel>
                   <FormControl><Input type="date" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -1484,11 +1487,10 @@ function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => voi
 
               <FormField control={form.control} name="assignedToId" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("tasks.fields.assignTo")}</FormLabel>
+                  <FormLabel>{t("tasks.fields.assignTo")} <span className="text-destructive">*</span></FormLabel>
                   <Select onValueChange={field.onChange} value={field.value?.toString() ?? ""}>
-                    <FormControl><SelectTrigger><SelectValue placeholder={t("tasks.unassigned")} /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger><SelectValue placeholder={t("tasks.fields.selectAssignee", { defaultValue: "Select assignee" })} /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="none">{t("tasks.unassigned")}</SelectItem>
                       {activeStaff.map((s) => (
                         <SelectItem key={s.id} value={s.id.toString()}>{s.name} — {s.role}</SelectItem>
                       ))}
@@ -1552,13 +1554,13 @@ export default function Tasks() {
   const [reportOpen,      setReportOpen]      = useState(false);
   const [rejectTaskId,    setRejectTaskId]    = useState<number | null>(null);
   const [selectedTask,    setSelectedTask]    = useState<any | null>(null);
-  const [beforePhotoTask, setBeforePhotoTask] = useState<any | null>(null);
   const [afterPhotoTask,  setAfterPhotoTask]  = useState<any | null>(null);
   const [qrTask,          setQrTask]          = useState<any | null>(null);
 
   const queryClient = useQueryClient();
   const { toast }   = useToast();
 
+  const canCreate      = role.id === "owner" || role.id === "manager" || role.id === "super_admin" || role.id === "supervisor";
   const canVerify      = role.id === "owner" || role.id === "manager" || role.id === "super_admin";
   const canReport      = role.id === "owner" || role.id === "manager" || role.id === "super_admin" || role.id === "supervisor";
   const canReviewRpt   = role.id === "supervisor" || role.id === "manager" || role.id === "owner" || role.id === "super_admin";
@@ -1625,7 +1627,8 @@ export default function Tasks() {
     if (!task) return;
 
     if (newStatus === "in-progress" && task.status === "pending") {
-      setBeforePhotoTask(task);
+      // Start immediately — no before-photo required
+      doUpdate(id, { status: "in-progress" as any }, t("tasks.toast.started", { defaultValue: "Task started" }));
       return;
     }
     if (newStatus === "completed" && task.status === "in-progress") {
@@ -1742,44 +1745,6 @@ export default function Tasks() {
     });
   }
 
-  // ── Before photo callbacks ─────────────────────────────────────────────────
-
-  function handleStartWithPhoto(taskId: number, objectPath: string) {
-    updateTask.mutate(
-      { id: taskId, data: { status: "in-progress" as any, beforePhotoUrl: objectPath } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
-          setSelectedTask((prev: any) => prev?.id === taskId ? { ...prev, status: "in-progress", beforePhotoUrl: objectPath } : prev);
-          setBeforePhotoTask(null);
-          toast({ title: t("tasks.toast.started", { defaultValue: "Task started" }) });
-        },
-        onError: (err: any) => {
-          const msg = err?.body?.message ?? t("tasks.toast.updateFailed");
-          toast({ title: msg, variant: "destructive" });
-        },
-      }
-    );
-  }
-
-  function handleSkipBeforePhoto(taskId: number) {
-    updateTask.mutate(
-      { id: taskId, data: { status: "in-progress" as any } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
-          setSelectedTask((prev: any) => prev?.id === taskId ? { ...prev, status: "in-progress" } : prev);
-          setBeforePhotoTask(null);
-          toast({ title: t("tasks.toast.statusUpdated") });
-        },
-        onError: (err: any) => {
-          const msg = err?.body?.message ?? t("tasks.toast.updateFailed");
-          toast({ title: msg, variant: "destructive" });
-        },
-      }
-    );
-  }
-
   // ── After photo callbacks ──────────────────────────────────────────────────
 
   function handleCompleteWithPhoto(taskId: number, objectPath: string) {
@@ -1791,24 +1756,6 @@ export default function Tasks() {
           setSelectedTask((prev: any) => prev?.id === taskId ? { ...prev, status: "completed", afterPhotoUrl: objectPath } : prev);
           setAfterPhotoTask(null);
           toast({ title: t("tasks.toast.completed", { defaultValue: "Task completed" }) });
-        },
-        onError: (err: any) => {
-          const msg = err?.body?.message ?? t("tasks.toast.updateFailed");
-          toast({ title: msg, variant: "destructive" });
-        },
-      }
-    );
-  }
-
-  function handleSkipAfterPhoto(taskId: number) {
-    updateTask.mutate(
-      { id: taskId, data: { status: "completed" as any } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(params) });
-          setSelectedTask((prev: any) => prev?.id === taskId ? { ...prev, status: "completed" } : prev);
-          setAfterPhotoTask(null);
-          toast({ title: t("tasks.toast.statusUpdated") });
         },
         onError: (err: any) => {
           const msg = err?.body?.message ?? t("tasks.toast.updateFailed");
@@ -1850,9 +1797,11 @@ export default function Tasks() {
               {t("tasks.report.generate", { defaultValue: "Generate Report" })}
             </Button>
           )}
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="me-2 h-4 w-4" />{t("tasks.newTask")}
-          </Button>
+          {canCreate && (
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="me-2 h-4 w-4" />{t("tasks.newTask")}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -1975,31 +1924,19 @@ export default function Tasks() {
         onClose={() => setSelectedTask(null)}
         canVerify={canVerify}
         canReopen={canReviewRpt}
-        onMarkStart={selectedTask ? () => { setBeforePhotoTask(selectedTask); } : undefined}
+        onMarkStart={selectedTask ? () => { doUpdate(selectedTask.id, { status: "in-progress" as any }, t("tasks.toast.started", { defaultValue: "Task started" })); } : undefined}
         onMarkComplete={selectedTask ? () => { setAfterPhotoTask(selectedTask); } : undefined}
         onRecall={handleRecallReport}
         onReopen={handleReopenTask}
       />
 
-      {/* Before-photo dialog */}
-      <PhotoUploadDialog
-        task={beforePhotoTask}
-        mode="before"
-        open={!!beforePhotoTask}
-        onClose={() => setBeforePhotoTask(null)}
-        onUpload={handleStartWithPhoto}
-        onSkip={handleSkipBeforePhoto}
-        isSubmitting={updateTask.isPending}
-      />
-
-      {/* After-photo dialog */}
+      {/* After-photo dialog — photo is mandatory to complete */}
       <PhotoUploadDialog
         task={afterPhotoTask}
         mode="after"
         open={!!afterPhotoTask}
         onClose={() => setAfterPhotoTask(null)}
         onUpload={handleCompleteWithPhoto}
-        onSkip={handleSkipAfterPhoto}
         isSubmitting={updateTask.isPending}
       />
 

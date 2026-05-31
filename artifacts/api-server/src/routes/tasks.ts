@@ -142,6 +142,19 @@ router.post("/tasks", async (req, res) => {
   const actor = actorFromRequest(req);
   const parsed = insertTaskSchema.safeParse({ ...req.body, tenantId });
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  // Mandatory field validation
+  const { propertyId, assignedToId, dueDate, category } = parsed.data;
+  const missing: string[] = [];
+  if (!propertyId)   missing.push("propertyId");
+  if (!assignedToId) missing.push("assignedToId");
+  if (!dueDate)      missing.push("dueDate");
+  if (!category)     missing.push("category");
+  if (missing.length) {
+    res.status(422).json({ error: "missing_required_fields", fields: missing, message: `Required fields missing: ${missing.join(", ")}` });
+    return;
+  }
+
   const data = { ...parsed.data, assignedByUserId: actor.actorId ?? null };
   const [task] = await db.insert(tasksTable).values(data).returning();
 
