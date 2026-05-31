@@ -37,7 +37,7 @@ const ne: Translations = {
   },
   priority: { urgent: "अत्यावश्यक", high: "उच्च", medium: "मध्यम", low: "न्यून" },
   roles: {
-    owner: "मालिक",
+    owner: "कम्पनी",
     super_admin: "सुपर प्रशासक",
     manager: "प्रबन्धक", supervisor: "सुपरभाइजर", maintenance: "मर्मत",
     cleaning: "सरसफाइ", security: "सुरक्षा", viewingAs: "को रूपमा हेर्दै",

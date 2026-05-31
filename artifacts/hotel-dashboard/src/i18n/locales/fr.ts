@@ -37,7 +37,7 @@ const fr: Translations = {
   priority: { urgent: "Urgent", high: "Élevé", medium: "Moyen", low: "Faible" },
   roles: {
     super_admin: "Super Admin",
-    owner: "Propriétaire",
+    owner: "Société",
     manager: "Responsable", supervisor: "Superviseur", maintenance: "Maintenance",
     cleaning: "Nettoyage", security: "Sécurité", viewingAs: "Vue en tant que",
     switchRole: "Changer de rôle", active: "actif",

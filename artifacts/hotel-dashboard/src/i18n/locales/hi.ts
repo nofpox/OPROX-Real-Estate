@@ -37,7 +37,7 @@ const hi: Translations = {
   priority: { urgent: "अत्यावश्यक", high: "उच्च", medium: "मध्यम", low: "निम्न" },
   roles: {
     super_admin: "सुपर प्रशासक",
-    owner: "स्वामी",
+    owner: "कंपनी",
     manager: "प्रबंधक", supervisor: "पर्यवेक्षक", maintenance: "रखरखाव",
     cleaning: "सफाई", security: "सुरक्षा", viewingAs: "इस रूप में देख रहे हैं",
     switchRole: "भूमिका बदलें", active: "सक्रिय",

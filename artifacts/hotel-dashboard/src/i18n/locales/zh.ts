@@ -37,7 +37,7 @@ const zh: Translations = {
   priority: { urgent: "紧急", high: "高", medium: "中", low: "低" },
   roles: {
     super_admin: "超级管理员",
-    owner: "业主",
+    owner: "公司",
     manager: "经理", supervisor: "主管", maintenance: "维护",
     cleaning: "清洁", security: "安保", viewingAs: "当前视角",
     switchRole: "切换角色", active: "活跃",

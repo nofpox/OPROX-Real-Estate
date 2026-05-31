@@ -86,7 +86,7 @@ const en = {
   },
   roles: {
     super_admin: "Super Admin",
-    owner: "Owner",
+    owner: "Company",
     manager: "Manager",
     supervisor: "Supervisor",
     maintenance: "Maintenance",

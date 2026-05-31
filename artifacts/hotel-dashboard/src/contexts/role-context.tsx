@@ -39,7 +39,7 @@ export const ROLES: RoleDefinition[] = [
   },
   {
     id: "owner",
-    label: "Owner",
+    label: "Company",
     description: "Full system access including finance and settings",
     allowedNav: ["*"],
     taskCategories: null,

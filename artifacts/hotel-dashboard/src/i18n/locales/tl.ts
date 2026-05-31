@@ -36,7 +36,7 @@ const tl: Translations = {
   },
   priority: { urgent: "Apurahan", high: "Mataas", medium: "Katamtaman", low: "Mababa" },
   roles: {
-    owner: "May-ari",
+    owner: "Kumpanya",
     super_admin: "Super Admin",
     manager: "Manager", supervisor: "Superbisor", maintenance: "Pagpapanatili",
     cleaning: "Paglilinis", security: "Seguridad", viewingAs: "Tinitingnan bilang",

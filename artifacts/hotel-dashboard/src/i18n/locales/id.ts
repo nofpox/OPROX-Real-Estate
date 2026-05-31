@@ -37,7 +37,7 @@ const id: Translations = {
   priority: { urgent: "Mendesak", high: "Tinggi", medium: "Sedang", low: "Rendah" },
   roles: {
     super_admin: "Super Admin",
-    owner: "Pemilik",
+    owner: "Perusahaan",
     manager: "Manajer", supervisor: "Supervisor", maintenance: "Pemeliharaan",
     cleaning: "Kebersihan", security: "Keamanan", viewingAs: "Dilihat sebagai",
     switchRole: "Ganti Peran", active: "aktif",

@@ -37,7 +37,7 @@ const ml: Translations = {
   },
   priority: { urgent: "അടിയന്തിരം", high: "ഉയർന്ന", medium: "ഇടത്തരം", low: "കുറഞ്ഞ" },
   roles: {
-    owner: "ഉടമ",
+    owner: "കമ്പനി",
     super_admin: "സൂപ്പർ അഡ്മിൻ",
     manager: "മാനേജർ", supervisor: "സൂപ്പർവൈസർ", maintenance: "അറ്റകുറ്റം",
     cleaning: "ക്ലീനിംഗ്", security: "സുരക്ഷ", viewingAs: "ആയി കാണുന്നത്",

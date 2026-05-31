@@ -37,7 +37,7 @@ const th: Translations = {
   priority: { urgent: "เร่งด่วน", high: "สูง", medium: "ปานกลาง", low: "ต่ำ" },
   roles: {
     super_admin: "ผู้ดูแลระบบสูงสุด",
-    owner: "เจ้าของ",
+    owner: "บริษัท",
     manager: "ผู้จัดการ", supervisor: "หัวหน้างาน", maintenance: "ซ่อมบำรุง",
     cleaning: "ทำความสะอาด", security: "รักษาความปลอดภัย", viewingAs: "กำลังดูในฐานะ",
     switchRole: "เปลี่ยนบทบาท", active: "ใช้งานอยู่",

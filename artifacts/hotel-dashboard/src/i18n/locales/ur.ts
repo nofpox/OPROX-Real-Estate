@@ -38,7 +38,7 @@ const ur: Translations = {
   priority: { urgent: "فوری", high: "زیادہ", medium: "درمیانہ", low: "کم" },
   roles: {
     super_admin: "سپر ایڈمن",
-    owner: "مالک",
+    owner: "کمپنی",
     manager: "مینیجر", supervisor: "سپروائزر", maintenance: "مینٹیننس",
     cleaning: "صفائی", security: "سیکیورٹی", viewingAs: "بطور دیکھ رہے ہیں",
     switchRole: "کردار تبدیل کریں", active: "فعال",

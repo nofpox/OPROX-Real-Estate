@@ -1398,9 +1398,12 @@ export default function SuperAdminPage() {
                 <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Full Access (cannot be restricted)</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {[{ id: "super_admin", label: "Super Admin", color: "bg-red-100 text-red-700" }, { id: "owner", label: "Owner", color: "bg-yellow-100 text-yellow-700" }].map((r) => (
+                {([
+                  { id: "super_admin", color: "bg-red-100 text-red-700" },
+                  { id: "owner",       color: "bg-yellow-100 text-yellow-700" },
+                ] as { id: string; color: string }[]).map((r) => (
                   <span key={r.id} className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${r.color}`}>
-                    <CheckCircle2 className="h-3 w-3" />{r.label}
+                    <CheckCircle2 className="h-3 w-3" />{t(`roles.${r.id}` as any)}
                   </span>
                 ))}
               </div>
@@ -1423,6 +1426,12 @@ export default function SuperAdminPage() {
                     <thead>
                       <tr>
                         <th className="text-left font-medium py-2 pe-4 min-w-40 text-muted-foreground">Page</th>
+                        {/* Company column — always full access, locked */}
+                        <th className="text-center py-2 px-2 min-w-28">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 cursor-default" title="Always full access — cannot be restricted">
+                            <Lock className="h-2.5 w-2.5" />{t("roles.owner")}
+                          </span>
+                        </th>
                         {CONFIGURABLE_ROLES.map((r) => {
                           const allowed = permissionMatrix[r.id] ?? [];
                           const all = allowed.length === PERMISSION_ROUTES.length;
@@ -1445,6 +1454,10 @@ export default function SuperAdminPage() {
                       {PERMISSION_ROUTES.map((page) => (
                         <tr key={page.href} className="border-t border-border/50 hover:bg-muted/20">
                           <td className="py-2 pe-4 font-medium text-sm text-foreground">{t(page.i18nKey, { defaultValue: page.label })}</td>
+                          {/* Company always has access — locked checkbox */}
+                          <td className="text-center py-2 px-2">
+                            <input type="checkbox" checked readOnly disabled className="h-4 w-4 opacity-50 cursor-not-allowed" title="Company always has full access" />
+                          </td>
                           {CONFIGURABLE_ROLES.map((r) => {
                             const allowed = (permissionMatrix[r.id] ?? []).includes(page.href);
                             return (
@@ -1473,7 +1486,7 @@ export default function SuperAdminPage() {
                 <div>
                   <p className="text-sm font-medium">Hierarchical Control</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    This matrix sets the maximum access for your entire platform. Owners can further restrict
+                    This matrix sets the maximum access for your entire platform. Company-level accounts can further restrict
                     access for their own managers and workers via <strong>Admin Settings → Role Permissions</strong>.
                     The effective permission is always the most restrictive setting in the chain.
                   </p>

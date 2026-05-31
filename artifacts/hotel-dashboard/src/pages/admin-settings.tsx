@@ -32,7 +32,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Pencil, Trash2, SlidersHorizontal, Tag, ToggleLeft,
-  Building2, ListChecks, CheckSquare, ShieldCheck, Shield,
+  Building2, ListChecks, CheckSquare, ShieldCheck, Shield, Lock,
   Palette, Upload,
 } from "lucide-react";
 import type { PermissionMatrix } from "@workspace/api-client-react";
@@ -1320,7 +1320,7 @@ function PermissionsTab() {
         <div className="flex items-start gap-2.5">
           <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm font-medium">Owner-Level Access Control</p>
+            <p className="text-sm font-medium">Company-Level Access Control</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               Define which pages each staff role can access. <strong>Manager</strong> and above: full access by default.
               Click a role header to toggle all pages at once. Changes take effect immediately after saving.
@@ -1334,6 +1334,12 @@ function PermissionsTab() {
           <thead className="bg-muted/50">
             <tr>
               <th className="text-left font-medium py-3 px-4 min-w-36 text-muted-foreground">Page</th>
+              {/* Company column — always full access, locked */}
+              <th className="text-center py-3 px-2 min-w-24">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 cursor-default" title="Always full access — cannot be restricted">
+                  <Lock className="h-2.5 w-2.5" />Company
+                </span>
+              </th>
               {OWNER_CONFIGURABLE_ROLES.map((r) => {
                 const cur = matrix[r.id] ?? [];
                 const all = cur.length === OWNER_PERMISSION_ROUTES.length;
@@ -1356,6 +1362,10 @@ function PermissionsTab() {
             {OWNER_PERMISSION_ROUTES.map((page) => (
               <tr key={page.href} className="border-t hover:bg-muted/20">
                 <td className="py-2.5 px-4 font-medium text-sm">{page.label}</td>
+                {/* Company always has access — locked checkbox */}
+                <td className="text-center py-2.5 px-2">
+                  <input type="checkbox" checked readOnly disabled className="h-4 w-4 opacity-50 cursor-not-allowed" title="Company always has full access" />
+                </td>
                 {OWNER_CONFIGURABLE_ROLES.map((r) => {
                   const allowed = (matrix[r.id] ?? []).includes(page.href);
                   return (
