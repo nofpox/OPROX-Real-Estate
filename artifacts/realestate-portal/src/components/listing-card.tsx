@@ -9,10 +9,15 @@ interface ListingCardProps {
   listing: Listing;
 }
 
-const TYPE_LABELS: Record<string, string> = {
+const TYPE_LABELS_EN: Record<string, string> = {
   sale: 'FOR SALE',
   rent: 'FOR RENT',
   operational: 'OPERATIONAL',
+};
+const TYPE_LABELS_AR: Record<string, string> = {
+  sale: 'للبيع',
+  rent: 'للإيجار',
+  operational: 'تشغيلي',
 };
 
 export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
@@ -20,7 +25,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
 
   const formatPrice = (price: number, currency: string) => {
     if (!price) return null;
-    return new Intl.NumberFormat('en-SA', {
+    return new Intl.NumberFormat(isRtl ? 'ar-SA' : 'en-SA', {
       style:               'currency',
       currency:            currency || 'SAR',
       notation:            price >= 1_000_000 ? 'compact' : 'standard',
@@ -28,7 +33,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
     }).format(price);
   };
 
-  const priceSuffix = listing.listingType === 'rent' ? '/yr' : '';
+  const priceSuffix = listing.listingType === 'rent' ? (isRtl ? '/سنة' : '/yr') : '';
 
   const hasMedia = listing.media != null && Array.isArray(listing.media) && listing.media.length > 0;
   const mainImage = hasMedia ? (listing.media![0] as { url: string }).url : null;
@@ -74,7 +79,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
                 ? 'bg-secondary text-secondary-foreground'
                 : 'bg-background/90 backdrop-blur text-primary'
             }`}>
-              {TYPE_LABELS[listing.listingType] ?? listing.listingType.toUpperCase()}
+              {(isRtl ? TYPE_LABELS_AR : TYPE_LABELS_EN)[listing.listingType] ?? listing.listingType.toUpperCase()}
             </span>
           </div>
 
@@ -93,7 +98,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
             <div className={`absolute top-3 ${isRtl ? 'left-3' : 'right-3'}`}>
               <span className="flex items-center gap-1 px-2 py-1 bg-secondary text-secondary-foreground text-xs font-semibold rounded shadow-sm">
                 <Star className="w-3 h-3 fill-current" />
-                Featured
+                {isRtl ? 'مميز' : 'Featured'}
               </span>
             </div>
           )}
@@ -155,9 +160,13 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
                   )}
                 </>
               ) : isOperational ? (
-                <span className="text-xs text-muted-foreground">Direct booking</span>
+                <span className="text-xs text-muted-foreground">
+                  {isRtl ? 'حجز مباشر' : 'Direct booking'}
+                </span>
               ) : (
-                <span className="text-xs text-muted-foreground">Contact for price</span>
+                <span className="text-xs text-muted-foreground">
+                  {isRtl ? 'اتصل للسعر' : 'Contact for price'}
+                </span>
               )}
             </div>
             <Button

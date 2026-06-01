@@ -310,7 +310,7 @@ export const ListingDetail: React.FC = () => {
                           ? 'شكراً لاهتمامك. سيتواصل معك فريقنا قريباً.'
                           : 'Thank you for your interest. Our team will contact you shortly.'}
                       </p>
-                      <Button variant="outline" className="mt-6 w-full" onClick={() => setSubmitted(false)}>
+                      <Button variant="outline" className="mt-6 w-full" onClick={() => { setSubmitted(false); setFormData({ name: '', email: '', phone: '', message: '' }); }}>
                         {isRtl ? 'إرسال استفسار آخر' : 'Send Another Inquiry'}
                       </Button>
                     </div>

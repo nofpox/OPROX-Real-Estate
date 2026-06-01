@@ -52,7 +52,9 @@ router.get("/bookings", async (req, res) => {
 
 router.post("/bookings", async (req, res) => {
   const tenantId = tid(req) ?? 1;
-  const parsed = insertBookingSchema.safeParse({ ...req.body, tenantId });
+  const body = { ...req.body, tenantId };
+  if (body.totalAmount !== undefined) body.totalAmount = String(body.totalAmount);
+  const parsed = insertBookingSchema.safeParse(body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [booking] = await db.insert(bookingsTable).values(parsed.data).returning();
   const [room] = await db.select().from(roomsTable).where(eq(roomsTable.id, booking.roomId));
