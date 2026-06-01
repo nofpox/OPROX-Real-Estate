@@ -30,11 +30,14 @@ import { useTranslation } from "react-i18next";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SYSTEM_ROLES = [
-  { value: "manager",     colorClass: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
-  { value: "supervisor",  colorClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  { value: "maintenance", colorClass: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
-  { value: "cleaning",    colorClass: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  { value: "security",    colorClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  { value: "owner",         colorClass: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" },
+  { value: "admin_manager", colorClass: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" },
+  { value: "manager",       colorClass: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+  { value: "administrator", colorClass: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400" },
+  { value: "supervisor",    colorClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  { value: "maintenance",   colorClass: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
+  { value: "cleaning",      colorClass: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  { value: "security",      colorClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
 ];
 
 const VALID_SYSTEM_ROLES = SYSTEM_ROLES.map((r) => r.value) as [string, ...string[]];
@@ -49,10 +52,13 @@ const CSV_EXAMPLE_ROWS = [
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getCallerLevel(dbRole: string): number {
-  if (dbRole === "owner" || dbRole === "admin" || dbRole === "super_admin") return 4;
+  if (dbRole === "super_admin") return 6;
+  if (dbRole === "owner") return 5;
+  if (dbRole === "admin_manager" || dbRole === "admin" ) return 4;
   if (dbRole === "manager") return 3;
-  if (dbRole === "supervisor" || dbRole === "site-supervisor" || dbRole === "property-manager" || dbRole === "front-desk") return 2;
-  return 1;
+  if (dbRole === "administrator") return 2;
+  if (dbRole === "supervisor" || dbRole === "site-supervisor" || dbRole === "property-manager" || dbRole === "front-desk") return 1;
+  return 0;
 }
 
 function getInitials(name: string) {
@@ -105,7 +111,7 @@ function parseCSV(text: string): Array<Record<string, string>> {
 const staffSchema = z.object({
   name:       z.string().min(1),
   role:       z.string().min(1),
-  systemRole: z.enum(["manager", "supervisor", "maintenance", "cleaning", "security"]),
+  systemRole: z.enum(["owner", "admin_manager", "manager", "administrator", "supervisor", "maintenance", "cleaning", "security"]),
   email:      z.string().email(),
   phone:      z.string().optional().or(z.literal("")),
   propertyId: z.coerce.number().optional().or(z.literal("")),
