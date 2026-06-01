@@ -25,3 +25,4 @@
 - [Worker shell merge](worker-shell-merge.md) — staff-tablet absorbed into hotel-dashboard; worker roles get inline WorkerDashboard/Tasks/WorkOrders/UnitDetail with BottomNav; locale keys under worker.* section; API tier gate: WORKER_ALLOWED_PREFIXES exempts /tasks /work-orders /rooms /unit-financials from supervisor gate
 - [Portal listing propertyId](portal-listing-propertyid.md) — operational listings must have propertyId set in DB or booking wizard falls back to inquiry form; seed with UPDATE listings SET property_id=X WHERE listing_type='operational'
 - [AuthUser cast pattern](authuser-cast.md) — AuthUser has no index signature; cast via (user as unknown as Record<string,unknown>) not directly to Record<string,unknown> or TS2352 fires
+- [Bundler moduleResolution declarations](bundler-declaration-pattern.md) — with moduleResolution:bundler, use ESM named exports in .d.ts; namespace+export= pattern causes TS2503; callables need interface with method props

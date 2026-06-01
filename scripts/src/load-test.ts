@@ -12,6 +12,7 @@
  */
 
 import autocannon from "autocannon";
+import type { Result as ACResult, Request as ACRequest } from "autocannon";
 
 const BASE = "http://localhost:80";
 
@@ -41,12 +42,12 @@ function runScenario(opts: {
   headers?:    Record<string, string>;
   connections: number;
   duration:    number;
-}): Promise<autocannon.Result> {
+}): Promise<ACResult> {
   console.log(`\n  → ${opts.title}  (${opts.connections} connections × ${opts.duration}s)`);
   return new Promise((resolve, reject) => {
     const inst = autocannon({
       url:         opts.url,
-      method:      (opts.method as autocannon.Request["method"]) ?? "GET",
+      method:      (opts.method as ACRequest["method"]) ?? "GET",
       body:        opts.body,
       headers:     opts.headers ?? {},
       connections: opts.connections,
@@ -66,7 +67,7 @@ function ms(n: number): string {
 }
 
 // ── Print results as a tidy table ─────────────────────────────────────────────
-function printReport(results: Array<{ title: string; result: autocannon.Result }>): void {
+function printReport(results: Array<{ title: string; result: ACResult }>): void {
   const LINE = "─".repeat(100);
   const HEADER = [
     "Endpoint".padEnd(40),
@@ -129,7 +130,7 @@ async function main() {
     ? { Cookie: cookie }
     : {};
 
-  const results: Array<{ title: string; result: autocannon.Result }> = [];
+  const results: Array<{ title: string; result: ACResult }> = [];
 
   // 2. Health check — baseline (unauth, minimal overhead)
   console.log("\n[2/6] Health check — baseline");

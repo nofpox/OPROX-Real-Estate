@@ -38,6 +38,8 @@ import Analytics from "@/pages/analytics";
 import SupportTickets from "@/pages/support-tickets";
 import SuspendedPage from "@/pages/suspended";
 import ServiceConfig from "@/pages/service-config";
+import Finance from "@/pages/finance";
+import Guests from "@/pages/guests";
 import WorkerDashboard from "@/pages/worker-dashboard";
 import WorkerTasks from "@/pages/worker-tasks";
 import WorkerWorkOrders from "@/pages/worker-work-orders";
@@ -82,6 +84,8 @@ function Router() {
       <Route path="/analytics" component={Analytics} />
       <Route path="/support-tickets" component={SupportTickets} />
       <Route path="/service-config" component={ServiceConfig} />
+      <Route path="/finance" component={Finance} />
+      <Route path="/guests" component={Guests} />
       <Route component={NotFound} />
     </Switch>
   );

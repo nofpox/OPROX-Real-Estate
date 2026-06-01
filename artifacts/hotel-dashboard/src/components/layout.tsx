@@ -5,6 +5,7 @@ import {
   Wrench, UserCog, ClipboardList, ChevronDown, Shield,
   MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert, BarChart2,
   Ticket, MessageCircleQuestion, Settings2, HelpCircle,
+  Calendar, Users, DollarSign,
 } from "lucide-react";
 import { SupportDialog } from "@/components/support-dialog";
 import { Button } from "@/components/ui/button";
@@ -27,10 +28,13 @@ import { SmartHintBar } from "@/components/tour/smart-hint-bar";
 import { useTour } from "@/components/tour/tour-context";
 
 const NAV_ITEMS = [
-  { href: "/",               labelKey: "nav.dashboard",      icon: LayoutDashboard, section: "main",       featureKey: null },
+  { href: "/",               labelKey: "nav.dashboard",      icon: LayoutDashboard, section: "main",       featureKey: null       },
+  { href: "/bookings",       labelKey: "nav.bookings",       icon: Calendar,        section: "main",       featureKey: "bookings" },
   { href: "/properties",     labelKey: "nav.properties",     icon: Building2,       section: "main",       featureKey: "properties" },
-  { href: "/rooms",          labelKey: "nav.rooms",          icon: DoorOpen,        section: "main",       featureKey: "rooms" },
-  { href: "/unit-map",       labelKey: "nav.unitMap",        icon: MapPin,          section: "main",       featureKey: "unitMap" },
+  { href: "/rooms",          labelKey: "nav.rooms",          icon: DoorOpen,        section: "main",       featureKey: "rooms"    },
+  { href: "/guests",         labelKey: "nav.guests",         icon: Users,           section: "main",       featureKey: "guests"   },
+  { href: "/unit-map",       labelKey: "nav.unitMap",        icon: MapPin,          section: "main",       featureKey: "unitMap"  },
+  { href: "/finance",        labelKey: "nav.finance",        icon: DollarSign,      section: "operations", featureKey: null       },
   { href: "/maintenance",    labelKey: "nav.maintenance",    icon: Wrench,          section: "operations", featureKey: "maintenance" },
   { href: "/facilities",     labelKey: "nav.facilities",     icon: Dumbbell,        section: "operations", featureKey: "facilities" },
   { href: "/staff",          labelKey: "nav.staff",          icon: UserCog,         section: "operations", featureKey: "staff" },

@@ -106,6 +106,7 @@ export const CORE_NAV_KEYS = new Set([
   "staff",
   "activityLog",
   "userManagement",
+  "guests",
 ]);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
