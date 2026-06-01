@@ -30,6 +30,8 @@ const hi: Translations = {
       keepCode: "अनुवर्ती कार्रवाई के लिए अपना संदर्भ कोड रखें",
       newRequest: "नया अनुरोध",
     },
+    status: { label: "अनुरोध की स्थिति", pending: "प्रतीक्षारत", hint: "हर 30 सेकंड में स्वतः रीफ्रेश होता है" },
+    rating: { title: "अपना अनुभव रेट करें", subtitle: "हमारी सेवा कैसी थी?", commentPlaceholder: "टिप्पणी लिखें (वैकल्पिक)…", submit: "रेटिंग सबमिट करें", thankyou: "आपकी प्रतिक्रिया के लिए धन्यवाद!" },
   },
   landing: {
     accessUnit: "अपनी इकाई तक पहुँचें",

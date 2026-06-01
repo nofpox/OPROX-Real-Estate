@@ -30,6 +30,8 @@ const tl: Translations = {
       keepCode: "Itago ang iyong reference code para sa follow-up",
       newRequest: "Bagong Kahilingan",
     },
+    status: { label: "Katayuan ng Kahilingan", pending: "Nakabinbin", hint: "Awtomatikong nire-refresh tuwing 30 segundo" },
+    rating: { title: "I-rate ang Iyong Karanasan", subtitle: "Kumusta ang aming serbisyo?", commentPlaceholder: "Mag-iwan ng komento (opsyonal)…", submit: "Isumite ang Rating", thankyou: "Salamat sa iyong feedback!" },
   },
   landing: {
     accessUnit: "I-access ang Iyong Unit",

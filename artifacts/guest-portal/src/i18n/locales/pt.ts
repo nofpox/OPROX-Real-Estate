@@ -30,6 +30,8 @@ const pt: Translations = {
       keepCode: "Guarde seu código de referência para acompanhamento",
       newRequest: "Nova Solicitação",
     },
+    status: { label: "Status da Solicitação", pending: "Pendente", hint: "Atualiza automaticamente a cada 30 segundos" },
+    rating: { title: "Avalie sua Experiência", subtitle: "Como foi o nosso serviço?", commentPlaceholder: "Deixe um comentário (opcional)…", submit: "Enviar Avaliação", thankyou: "Obrigado pelo seu feedback!" },
   },
   landing: {
     accessUnit: "Acesse sua unidade",

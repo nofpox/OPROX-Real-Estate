@@ -49,7 +49,7 @@ export const ROLES: RoleDefinition[] = [
     id: "admin_manager",
     label: "إداري / الإدارة",
     description: "Reports, unit data management, service request tracking, billing",
-    allowedNav: ["/", "/properties", "/rooms", "/unit-map", "/guest-requests", "/analytics", "/bookings"],
+    allowedNav: ["/", "/properties", "/rooms", "/unit-map", "/guest-requests", "/analytics", "/bookings", "/user-management", "/admin-settings"],
     taskCategories: null,
   },
   {

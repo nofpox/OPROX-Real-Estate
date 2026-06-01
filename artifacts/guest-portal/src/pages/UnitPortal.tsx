@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,7 @@ import {
   Zap, Droplets, Wind, Brush, Wrench, Volume2, DoorOpen,
   CheckCircle2, Loader2, Building2, AlertCircle, Clock,
   Key, Wifi, Car, Thermometer, Trash2, Shield, Coffee, Package,
-  Phone, Camera, Utensils, Trees,
+  Phone, Camera, Utensils, Trees, Star, RefreshCw,
 } from "lucide-react";
 
 type IconComponent = React.ComponentType<{ size?: number; className?: string }>;
@@ -86,6 +86,36 @@ type ServiceCategory = {
 };
 
 type Result = { refCode: string; workOrderId: number; message: string };
+type RequestStatus = { id: number; status: string; title: string; unitId: number; refCode: string };
+
+const RESOLVED_STATUSES = ["completed", "resolved", "closed", "done"];
+
+function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div className="flex gap-1 justify-center">
+      {[1, 2, 3, 4, 5].map(star => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          onMouseEnter={() => setHovered(star)}
+          onMouseLeave={() => setHovered(0)}
+          className="p-1 transition-transform hover:scale-110"
+        >
+          <Star
+            size={36}
+            className={`transition-colors ${
+              star <= (hovered || value)
+                ? "text-amber-400 fill-amber-400"
+                : "text-slate-300"
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function UnitPortal() {
   const params = useParams<{ id: string }>();
@@ -98,6 +128,14 @@ export default function UnitPortal() {
   const [submitting,   setSubmitting]   = useState(false);
   const [error,        setError]        = useState<string | null>(null);
   const [result,       setResult]       = useState<Result | null>(null);
+
+  // Rating state
+  const [reqStatus,      setReqStatus]      = useState<RequestStatus | null>(null);
+  const [statusChecking, setStatusChecking] = useState(false);
+  const [rating,         setRating]         = useState(0);
+  const [comment,        setComment]        = useState("");
+  const [ratingDone,     setRatingDone]     = useState(false);
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
   const { data: unit, isLoading: unitLoading } = useQuery<UnitInfo>({
     queryKey: ["unit-info", unitId],
@@ -122,6 +160,29 @@ export default function UnitPortal() {
   });
 
   const selectedCat = categories.find(c => c.id === selectedId) ?? null;
+
+  // Poll for status change every 30 seconds after submission
+  const checkStatus = useCallback(async (refCode: string) => {
+    setStatusChecking(true);
+    try {
+      const res = await fetch(`/api/unit-requests/by-ref/${refCode}`);
+      if (res.ok) {
+        const data = await res.json();
+        setReqStatus(data);
+      }
+    } finally {
+      setStatusChecking(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!result) return;
+    checkStatus(result.refCode);
+    const interval = setInterval(() => checkStatus(result.refCode), 30_000);
+    return () => clearInterval(interval);
+  }, [result, checkStatus]);
+
+  const isResolved = reqStatus ? RESOLVED_STATUSES.includes(reqStatus.status) : false;
 
   async function handleSubmit() {
     if (!selectedCat || !description.trim()) return;
@@ -154,12 +215,31 @@ export default function UnitPortal() {
     }
   }
 
+  async function handleRatingSubmit() {
+    if (!rating || !unitId) return;
+    setRatingSubmitting(true);
+    try {
+      await fetch("/api/guest/feedback", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ roomId: unitId, rating: String(rating), comment: comment.trim() || undefined }),
+      });
+      setRatingDone(true);
+    } finally {
+      setRatingSubmitting(false);
+    }
+  }
+
   function reset() {
     setSelectedId(null);
     setDescription("");
     setTimeSlot("");
     setResult(null);
     setError(null);
+    setReqStatus(null);
+    setRating(0);
+    setComment("");
+    setRatingDone(false);
   }
 
   const isFormValid = selectedCat && description.trim() && (!isResidential || timeSlot);
@@ -167,20 +247,105 @@ export default function UnitPortal() {
   /* ── Success screen ────────────────────────────────────────────────────── */
   if (result) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-6 py-12 text-center">
-        <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
-          <CheckCircle2 size={40} className="text-emerald-600" />
-        </div>
-        <h1 className="text-2xl font-bold text-slate-800 mb-1">{t("request.success.title")}</h1>
-        <p className="text-slate-500 text-sm mb-6">{t("request.success.subtitle")}</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-start px-6 py-12">
 
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-8 py-6 w-full max-w-xs mb-6">
-          <p className="text-xs text-slate-400 mb-1">{t("request.success.refCode")}</p>
-          <p className="text-3xl font-bold tracking-widest text-slate-800">{result.refCode}</p>
+        {/* Confirmation card */}
+        <div className="w-full max-w-xs">
+          <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6 mx-auto">
+            <CheckCircle2 size={40} className="text-emerald-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-800 mb-1 text-center">{t("request.success.title")}</h1>
+          <p className="text-slate-500 text-sm mb-6 text-center">{t("request.success.subtitle")}</p>
+
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-8 py-6 w-full mb-6">
+            <p className="text-xs text-slate-400 mb-1 text-center">{t("request.success.refCode")}</p>
+            <p className="text-3xl font-bold tracking-widest text-slate-800 text-center">{result.refCode}</p>
+          </div>
+
+          <p className="text-sm text-slate-600 max-w-xs leading-relaxed mb-2 text-center">{result.message}</p>
+          <p className="text-slate-400 text-xs mb-8 text-center">{t("request.success.keepCode")}</p>
         </div>
 
-        <p className="text-sm text-slate-600 max-w-xs leading-relaxed mb-2">{result.message}</p>
-        <p className="text-slate-400 text-xs mb-8">{t("request.success.keepCode")}</p>
+        {/* ── Status tracker ──────────────────────────────────────────────── */}
+        <div className="w-full max-w-xs mb-6">
+          <div className={`rounded-2xl border px-5 py-4 ${
+            isResolved
+              ? "bg-emerald-50 border-emerald-200"
+              : "bg-white border-slate-200"
+          }`}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                {t("request.status.label")}
+              </p>
+              <button
+                onClick={() => checkStatus(result.refCode)}
+                disabled={statusChecking}
+                className="text-slate-400 hover:text-amber-500 transition-colors"
+              >
+                <RefreshCw size={14} className={statusChecking ? "animate-spin" : ""} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${
+                isResolved               ? "bg-emerald-500" :
+                reqStatus?.status === "in-progress" ? "bg-amber-400 animate-pulse" :
+                "bg-slate-300"
+              }`} />
+              <span className={`text-sm font-semibold capitalize ${
+                isResolved ? "text-emerald-700" : "text-slate-700"
+              }`}>
+                {reqStatus?.status
+                  ? reqStatus.status.replace(/-/g, " ")
+                  : t("request.status.pending")}
+              </span>
+            </div>
+            {!isResolved && (
+              <p className="text-[11px] text-slate-400 mt-2">{t("request.status.hint")}</p>
+            )}
+          </div>
+        </div>
+
+        {/* ── Rating section — appears once resolved ──────────────────────── */}
+        {isResolved && !ratingDone && (
+          <div className="w-full max-w-xs mb-6">
+            <div className="bg-white rounded-2xl border border-amber-200 shadow-sm px-6 py-6">
+              <h2 className="text-base font-bold text-slate-800 mb-1 text-center">
+                {t("request.rating.title")}
+              </h2>
+              <p className="text-xs text-slate-400 mb-5 text-center">
+                {t("request.rating.subtitle")}
+              </p>
+
+              <StarRating value={rating} onChange={setRating} />
+
+              <Textarea
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                placeholder={t("request.rating.commentPlaceholder")}
+                className="mt-4 min-h-[80px] bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 resize-none text-sm"
+              />
+
+              <Button
+                onClick={handleRatingSubmit}
+                disabled={!rating || ratingSubmitting}
+                className="mt-4 w-full bg-amber-500 hover:bg-amber-600 text-black font-bold"
+              >
+                {ratingSubmitting
+                  ? <Loader2 size={16} className="animate-spin" />
+                  : t("request.rating.submit")}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {ratingDone && (
+          <div className="w-full max-w-xs mb-6">
+            <div className="bg-emerald-50 rounded-2xl border border-emerald-200 px-6 py-5 text-center">
+              <CheckCircle2 size={28} className="text-emerald-600 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-emerald-800">{t("request.rating.thankyou")}</p>
+            </div>
+          </div>
+        )}
 
         <Button variant="outline" onClick={reset} className="w-full max-w-xs">
           {t("request.success.newRequest")}
@@ -194,7 +359,7 @@ export default function UnitPortal() {
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-5">
-        <div className="max-w-md mx-auto">
+        <div className="max-md mx-auto" style={{ maxWidth: 448 }}>
           <div className="flex items-center justify-between mb-2">
             {unitLoading ? (
               <Skeleton className="h-6 w-40" />
@@ -218,7 +383,7 @@ export default function UnitPortal() {
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-6 py-6 space-y-6">
+      <div className="max-md mx-auto px-6 py-6 space-y-6" style={{ maxWidth: 448 }}>
         {/* Service type selector — dynamically loaded from DB */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-3">

@@ -30,6 +30,8 @@ const fr: Translations = {
       keepCode: "Conservez votre code de référence pour le suivi",
       newRequest: "Nouvelle demande",
     },
+    status: { label: "Statut de la demande", pending: "En attente", hint: "Actualisation automatique toutes les 30 secondes" },
+    rating: { title: "Évaluez votre expérience", subtitle: "Comment était notre service ?", commentPlaceholder: "Laissez un commentaire (optionnel)…", submit: "Soumettre l'évaluation", thankyou: "Merci pour votre retour !" },
   },
   landing: {
     accessUnit: "Accéder à votre unité",

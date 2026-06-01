@@ -30,6 +30,8 @@ const id: Translations = {
       keepCode: "Simpan kode referensi Anda untuk tindak lanjut",
       newRequest: "Permintaan Baru",
     },
+    status: { label: "Status Permintaan", pending: "Menunggu", hint: "Diperbarui otomatis setiap 30 detik" },
+    rating: { title: "Nilai Pengalaman Anda", subtitle: "Bagaimana layanan kami?", commentPlaceholder: "Tinggalkan komentar (opsional)…", submit: "Kirim Penilaian", thankyou: "Terima kasih atas masukan Anda!" },
   },
   landing: {
     accessUnit: "Akses Unit Anda",

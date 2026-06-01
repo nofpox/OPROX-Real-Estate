@@ -28,6 +28,18 @@ const en = {
       keepCode: "Keep your reference code for follow-up",
       newRequest: "New Request",
     },
+    status: {
+      label: "Request Status",
+      pending: "Pending",
+      hint: "Auto-refreshes every 30 seconds",
+    },
+    rating: {
+      title: "Rate Your Experience",
+      subtitle: "How was our service?",
+      commentPlaceholder: "Leave a comment (optional)…",
+      submit: "Submit Rating",
+      thankyou: "Thank you for your feedback!",
+    },
   },
   landing: {
     accessUnit: "Access Your Unit",

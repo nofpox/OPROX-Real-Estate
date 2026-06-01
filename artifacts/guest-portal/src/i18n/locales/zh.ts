@@ -30,6 +30,8 @@ const zh: Translations = {
       keepCode: "请保留您的参考编号以便跟进",
       newRequest: "新请求",
     },
+    status: { label: "请求状态", pending: "待处理", hint: "每30秒自动刷新" },
+    rating: { title: "评价您的体验", subtitle: "我们的服务如何？", commentPlaceholder: "留下评论（可选）…", submit: "提交评分", thankyou: "感谢您的反馈！" },
   },
   landing: {
     accessUnit: "访问您的单元",

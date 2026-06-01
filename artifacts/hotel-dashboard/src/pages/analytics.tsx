@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useListTasks, useListStaff, useListProperties } from "@workspace/api-client-react";
 import { useRole } from "@/contexts/role-context";
 import { useSettings } from "@/hooks/use-settings";
@@ -9,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   CheckCircle2, Clock, AlertCircle, TrendingUp, Download,
   Printer, Building2, Users, BadgeCheck, Target,
+  Timer, BarChart3, ListChecks,
 } from "lucide-react";
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid,
@@ -282,10 +284,17 @@ const PIE_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444"];
 export default function Analytics() {
   const { role }     = useRole();
   const settings     = useSettings();
+  const [activeTab, setActiveTab] = useState<"overview" | "operational">("overview");
 
   const { data: tasks = [],      isLoading: tasksLoading }      = useListTasks({}) as { data: any[]; isLoading: boolean };
   const { data: staff = [],      isLoading: staffLoading }      = useListStaff({})  as { data: any[]; isLoading: boolean };
   const { data: properties = [], isLoading: propsLoading }      = useListProperties() as { data: any[]; isLoading: boolean };
+
+  const { data: opStats, isLoading: opLoading } = useQuery({
+    queryKey: ["stats", "operational"],
+    queryFn: () => fetch("/api/stats/operational").then(r => r.json()),
+    staleTime: 60_000,
+  });
 
   const isLoading = tasksLoading || staffLoading || propsLoading;
 
@@ -427,22 +436,46 @@ export default function Analytics() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <div>
-          <h1 className="text-2xl font-semibold font-serif text-foreground">Company Performance</h1>
+          <h1 className="text-2xl font-semibold font-serif text-foreground">Analytics</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Overview across all properties · {fmtDate(new Date().toISOString())}
+            Performance & operations · {fmtDate(new Date().toISOString())}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="me-2 h-4 w-4" />Print
-          </Button>
-          <Button size="sm" onClick={handleExportPdf}>
-            <Download className="me-2 h-4 w-4" />Export PDF
-          </Button>
-        </div>
+        {activeTab === "overview" && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handlePrint}>
+              <Printer className="me-2 h-4 w-4" />Print
+            </Button>
+            <Button size="sm" onClick={handleExportPdf}>
+              <Download className="me-2 h-4 w-4" />Export PDF
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Tab switcher ───────────────────────────────────────────────────── */}
+      <div className="flex border-b border-border gap-0 print:hidden">
+        {([
+          { id: "overview",    label: "Overview",    icon: BarChart3  },
+          { id: "operational", label: "Operational", icon: ListChecks },
+        ] as const).map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              activeTab === tab.id
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* ── Section 1: KPI Cards ───────────────────────────────────────────── */}
+      {activeTab === "overview" && (<>
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
         <KpiCard
           icon={Target}
@@ -730,6 +763,184 @@ export default function Analytics() {
       <div className="hidden print:block text-center text-xs text-muted-foreground pt-4 border-t">
         {settings.companyName || settings.logoText || "Company"} — Operations Performance Report — {fmtDate(new Date().toISOString())} — Confidential
       </div>
+      </>)}
+
+      {/* ── Operational tab ──────────────────────────────────────────────────── */}
+      {activeTab === "operational" && (
+        <div className="space-y-8">
+          {opLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-32 rounded-xl" />
+              ))}
+            </div>
+          ) : (
+            <>
+              {/* KPI row */}
+              <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <KpiCard
+                  icon={Timer}
+                  label="Avg Response Time"
+                  value={
+                    opStats?.tasks?.avgResponseMinutes
+                      ? opStats.tasks.avgResponseMinutes < 60
+                        ? `${opStats.tasks.avgResponseMinutes}m`
+                        : `${(opStats.tasks.avgResponseMinutes / 60).toFixed(1)}h`
+                      : "—"
+                  }
+                  sub="From creation to completion"
+                  iconCls="bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"
+                />
+                <KpiCard
+                  icon={CheckCircle2}
+                  label="Tasks Completed"
+                  value={opStats?.tasks?.totalCompleted ?? 0}
+                  sub={`of ${opStats?.tasks?.totalAll ?? 0} total`}
+                  iconCls="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+                />
+                <KpiCard
+                  icon={Clock}
+                  label="Tasks Pending"
+                  value={opStats?.tasks?.totalPending ?? 0}
+                  sub={`${opStats?.tasks?.totalInProgress ?? 0} in progress`}
+                  iconCls="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
+                />
+                <KpiCard
+                  icon={AlertCircle}
+                  label="Open Work Orders"
+                  value={(opStats?.workOrders?.pending ?? 0) + (opStats?.workOrders?.inProgress ?? 0)}
+                  sub={`${opStats?.workOrders?.completed ?? 0} completed`}
+                  iconCls="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+                />
+              </div>
+
+              {/* Per-worker breakdown */}
+              <Card className="shadow-none border-border">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-base font-semibold">Tasks per Worker</CardTitle>
+                    <Badge variant="outline" className="ms-auto text-xs">{opStats?.workerRows?.length ?? 0} workers</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {!opStats?.workerRows?.length ? (
+                    <p className="text-sm text-muted-foreground py-4 text-center">No assigned tasks found.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-xs text-muted-foreground uppercase tracking-wide">
+                            <th className="pb-2 text-start font-medium">Name</th>
+                            <th className="pb-2 text-start font-medium">Role</th>
+                            <th className="pb-2 text-center font-medium">Total</th>
+                            <th className="pb-2 text-center font-medium">Pending</th>
+                            <th className="pb-2 text-center font-medium">In Progress</th>
+                            <th className="pb-2 text-center font-medium">Completed</th>
+                            <th className="pb-2 text-end font-medium">Avg Time</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {opStats.workerRows.map((row: any, i: number) => (
+                            <tr key={i} className="hover:bg-muted/50 transition-colors">
+                              <td className="py-2.5 font-medium text-foreground">{row.name}</td>
+                              <td className="py-2.5">
+                                <Badge variant="outline" className="text-[10px] font-normal capitalize">{row.role}</Badge>
+                              </td>
+                              <td className="py-2.5 text-center tabular-nums">{row.total}</td>
+                              <td className="py-2.5 text-center tabular-nums text-muted-foreground">{row.pending}</td>
+                              <td className="py-2.5 text-center tabular-nums text-amber-600">{row.inProgress}</td>
+                              <td className="py-2.5 text-center tabular-nums text-emerald-600 font-medium">{row.completed}</td>
+                              <td className="py-2.5 text-end text-xs text-muted-foreground tabular-nums">
+                                {row.avgMinutes
+                                  ? row.avgMinutes < 60
+                                    ? `${row.avgMinutes}m`
+                                    : `${(row.avgMinutes / 60).toFixed(1)}h`
+                                  : "—"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Per-unit work orders */}
+              <Card className="shadow-none border-border">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-base font-semibold">Service Requests per Unit</CardTitle>
+                    <Badge variant="outline" className="ms-auto text-xs">{opStats?.unitRows?.length ?? 0} units</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {!opStats?.unitRows?.length ? (
+                    <p className="text-sm text-muted-foreground py-4 text-center">No service requests found.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {opStats.unitRows.map((row: any, i: number) => {
+                        const total = row.total || 1;
+                        const compPct = Math.round((row.completed / total) * 100);
+                        return (
+                          <div key={i} className="space-y-1.5">
+                            <div className="flex items-center justify-between text-sm">
+                              <div>
+                                <span className="font-medium text-foreground">{row.unitName}</span>
+                                {row.propertyName && (
+                                  <span className="text-xs text-muted-foreground ms-2">· {row.propertyName}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                <span className="text-amber-600">{row.pending} pending</span>
+                                <span className="text-emerald-600">{row.completed} done</span>
+                                <span className={`font-semibold tabular-nums ${compPct >= 80 ? "text-emerald-600" : compPct >= 50 ? "text-amber-600" : "text-red-500"}`}>
+                                  {compPct}%
+                                </span>
+                              </div>
+                            </div>
+                            <div className="h-2 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-500 ${compPct >= 80 ? "bg-emerald-500" : compPct >= 50 ? "bg-amber-400" : "bg-red-400"}`}
+                                style={{ width: `${compPct}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Work order status summary */}
+              <Card className="shadow-none border-border">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold">Work Order Summary</CardTitle>
+                  <p className="text-xs text-muted-foreground -mt-1">All service requests submitted via QR portal</p>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {[
+                      { label: "Total",       value: opStats?.workOrders?.total ?? 0,      cls: "text-foreground"      },
+                      { label: "Pending",     value: opStats?.workOrders?.pending ?? 0,    cls: "text-muted-foreground" },
+                      { label: "In Progress", value: opStats?.workOrders?.inProgress ?? 0, cls: "text-amber-600"       },
+                      { label: "Completed",   value: opStats?.workOrders?.completed ?? 0,  cls: "text-emerald-600"     },
+                    ].map(s => (
+                      <div key={s.label} className="bg-muted/40 rounded-xl p-4 text-center">
+                        <p className={`text-2xl font-bold tabular-nums ${s.cls}`}>{s.value}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

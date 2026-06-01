@@ -30,6 +30,18 @@ const ar: Translations = {
       keepCode: "احتفظ برمز الطلب للمتابعة",
       newRequest: "تقديم طلب جديد",
     },
+    status: {
+      label: "حالة الطلب",
+      pending: "قيد الانتظار",
+      hint: "يتجدد تلقائياً كل 30 ثانية",
+    },
+    rating: {
+      title: "قيّم تجربتك",
+      subtitle: "كيف كانت خدمتنا؟",
+      commentPlaceholder: "أضف تعليقاً (اختياري)…",
+      submit: "إرسال التقييم",
+      thankyou: "شكراً على ملاحظاتك!",
+    },
   },
   landing: {
     accessUnit: "الوصول إلى وحدتك",

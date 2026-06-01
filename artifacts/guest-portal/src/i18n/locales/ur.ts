@@ -30,6 +30,8 @@ const ur: Translations = {
       keepCode: "پیروی کے لیے اپنا حوالہ کوڈ محفوظ رکھیں",
       newRequest: "نئی درخواست",
     },
+    status: { label: "درخواست کی حالت", pending: "زیر التواء", hint: "ہر 30 سیکنڈ میں خودبخود تازہ ہوتا ہے" },
+    rating: { title: "اپنا تجربہ درج کریں", subtitle: "ہماری خدمت کیسی تھی؟", commentPlaceholder: "تبصرہ لکھیں (اختیاری)…", submit: "تشخیص جمع کریں", thankyou: "آپ کے تاثرات کا شکریہ!" },
   },
   landing: {
     accessUnit: "اپنے یونٹ تک رسائی",

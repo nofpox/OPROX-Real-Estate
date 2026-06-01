@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db, workOrdersTable, roomsTable, propertiesTable, serviceCategoriesTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { db, workOrdersTable, roomsTable, propertiesTable, serviceCategoriesTable, notificationsTable } from "@workspace/db";
+import { eq, and, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -82,11 +82,47 @@ router.post("/unit-requests", async (req, res) => {
 
   const refCode = `URQ-${workOrder.id}`;
 
+  // Broadcast notification to all dashboard users on this tenant
+  db.insert(notificationsTable).values({
+    tenantId:    room.tenantId,
+    userId:      null,
+    type:        "service_request",
+    title:       `New Service Request — ${room.name}`,
+    message:     `${String(type)} · ${String(description).trim().slice(0, 80)}`,
+    isRead:      false,
+    relatedId:   workOrder.id,
+    relatedType: "work-order",
+    notifKey:    "notif.newServiceRequest",
+    messageParams: JSON.stringify({ unit: room.name, type: String(type), ref: refCode }),
+  }).catch(() => { /* non-critical */ });
+
   res.status(201).json({
     refCode,
     workOrderId: workOrder.id,
     message: "طلبك تم استلامه · Your request has been received",
   });
+});
+
+/** Public: look up a work order by its URQ-{id} ref code — used by guest portal for status check */
+router.get("/unit-requests/by-ref/:refCode", async (req, res) => {
+  const { refCode } = req.params;
+  const idPart = String(refCode).replace(/^URQ-/i, "");
+  const id = parseInt(idPart);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ref code" }); return; }
+
+  const [row] = await db
+    .select({
+      id:        workOrdersTable.id,
+      status:    workOrdersTable.status,
+      title:     workOrdersTable.title,
+      unitId:    workOrdersTable.unitId,
+      createdAt: workOrdersTable.createdAt,
+    })
+    .from(workOrdersTable)
+    .where(eq(workOrdersTable.id, id));
+
+  if (!row) { res.status(404).json({ error: "Request not found" }); return; }
+  res.json({ ...row, refCode, createdAt: row.createdAt.toISOString() });
 });
 
 export default router;

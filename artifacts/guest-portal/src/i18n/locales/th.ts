@@ -30,6 +30,8 @@ const th: Translations = {
       keepCode: "เก็บรหัสอ้างอิงเพื่อติดตาม",
       newRequest: "คำขอใหม่",
     },
+    status: { label: "สถานะคำขอ", pending: "รอดำเนินการ", hint: "รีเฟรชอัตโนมัติทุก 30 วินาที" },
+    rating: { title: "ให้คะแนนประสบการณ์ของคุณ", subtitle: "บริการของเราเป็นอย่างไร?", commentPlaceholder: "แสดงความคิดเห็น (ไม่บังคับ)…", submit: "ส่งคะแนน", thankyou: "ขอบคุณสำหรับความคิดเห็นของคุณ!" },
   },
   landing: {
     accessUnit: "เข้าถึงยูนิตของคุณ",
