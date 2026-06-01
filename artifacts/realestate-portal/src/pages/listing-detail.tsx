@@ -260,7 +260,7 @@ export const ListingDetail: React.FC = () => {
               {isOperational && listing.propertyId ? (
                 <>
                   <h3 className="text-xl font-bold text-primary mb-6">Book This Property</h3>
-                  <BookingWizard propertyId={listing.propertyId} />
+                  <BookingWizard propertyId={listing.propertyId} propertyName={listing.title} />
                   <div className="mt-6 pt-5 border-t border-border">
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <Info className="h-4 w-4 text-primary shrink-0" />
