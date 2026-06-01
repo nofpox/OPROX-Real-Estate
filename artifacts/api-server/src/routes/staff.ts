@@ -99,6 +99,9 @@ router.post("/staff", async (req, res) => {
   const [staff] = await db.insert(staffTable).values(parsed.data).returning();
 
   let welcomeEmailSent = false;
+  let inviteCode: string | null = null;
+  let inviteUsername: string | null = null;
+
   const email = (parsed.data as any).email as string | undefined;
   if (email) {
     try {
@@ -125,16 +128,29 @@ router.post("/staff", async (req, res) => {
           mustChangePassword: true,
         });
 
-        await sendWelcomeEmail(email, username, tempPassword);
-        welcomeEmailSent = true;
-        req.log.info({ staffId: staff.id, username }, "Welcome email dispatched for new staff member");
+        inviteUsername = username;
+        // Always hold the code — cleared only if the email actually delivers.
+        inviteCode = tempPassword;
+
+        try {
+          const sent = await sendWelcomeEmail(email, username, tempPassword);
+          if (sent) {
+            welcomeEmailSent = true;
+            inviteCode = null; // Email delivered — no need to surface code in UI
+            req.log.info({ staffId: staff.id, username }, "Welcome email dispatched");
+          } else {
+            req.log.info({ staffId: staff.id }, "Resend not configured — invite code returned for manual sharing");
+          }
+        } catch (emailErr) {
+          req.log.warn({ err: emailErr, staffId: staff.id }, "Email delivery failed — invite code returned for manual sharing");
+        }
       }
     } catch (err) {
-      req.log.error({ err, staffId: staff.id }, "Failed to create user account or send welcome email");
+      req.log.error({ err, staffId: staff.id }, "Failed to create user account");
     }
   }
 
-  res.status(201).json({ ...formatStaff(staff), welcomeEmailSent });
+  res.status(201).json({ ...formatStaff(staff), welcomeEmailSent, inviteCode, inviteUsername });
 });
 
 // POST /staff/bulk — must be registered before /staff/:id to avoid route shadowing
@@ -237,21 +253,33 @@ router.post("/staff/:id/resend-invite", async (req, res) => {
         isActive: true,
         mustChangePassword: true,
       });
-      await sendWelcomeEmail(email, username, tempPassword);
-      req.log.info({ staffId: id, username }, "Invite sent (new account created) for staff member");
-      res.json({ sent: true, message: "Account created and invitation email sent" });
+      let sent = false;
+      try { sent = await sendWelcomeEmail(email, username, tempPassword); } catch { /* fall through */ }
+      req.log.info({ staffId: id, username, sent }, "Invite sent (new account created)");
+      res.json({
+        sent,
+        inviteCode: sent ? null : tempPassword,
+        inviteUsername: sent ? null : username,
+        message: sent ? "Account created and invitation email sent" : "Account created — share the access code manually",
+      });
     } else {
       const tempPassword = generateTempPassword();
       await db.update(usersTable)
         .set({ passwordHash: hashPwd(tempPassword), mustChangePassword: true })
         .where(eq(usersTable.id, existing.id));
-      await sendWelcomeEmail(email, existing.username, tempPassword);
-      req.log.info({ staffId: id, userId: existing.id }, "Invite resent with fresh temp password");
-      res.json({ sent: true, message: "Invitation resent with a new temporary password" });
+      let sent = false;
+      try { sent = await sendWelcomeEmail(email, existing.username, tempPassword); } catch { /* fall through */ }
+      req.log.info({ staffId: id, userId: existing.id, sent }, "Invite resent with fresh temp password");
+      res.json({
+        sent,
+        inviteCode: sent ? null : tempPassword,
+        inviteUsername: sent ? null : existing.username,
+        message: sent ? "Invitation resent with a new temporary password" : "Password reset — share the access code manually",
+      });
     }
   } catch (err) {
     req.log.error({ err, staffId: id }, "Failed to resend staff invite");
-    res.status(500).json({ error: "Failed to send invitation email" });
+    res.status(500).json({ error: "Failed to send invitation" });
   }
 });
 

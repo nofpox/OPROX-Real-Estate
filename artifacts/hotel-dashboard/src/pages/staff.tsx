@@ -21,7 +21,7 @@ import * as z from "zod";
 import {
   Plus, Users, MoreVertical, Phone, Mail, Building2, UserCheck, UserX,
   CalendarDays, Send, Clock, CheckCircle2, Upload, Download, FileText,
-  AlertCircle, ShieldCheck, X,
+  AlertCircle, ShieldCheck, X, Copy, Check,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import StaffShifts from "./staff-shifts";
@@ -389,6 +389,8 @@ export default function Staff() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<any>(null);
   const [isBulkOpen, setIsBulkOpen] = useState(false);
+  const [inviteCodeData, setInviteCodeData] = useState<{ code: string; username: string; email: string } | null>(null);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const params: any = {};
   if (selectedProperty !== "all") params.propertyId = parseInt(selectedProperty);
@@ -440,13 +442,22 @@ export default function Staff() {
     } else {
       createStaff.mutate({ data: payload as any }, {
         onSuccess: (created) => {
-          const emailSent = (created as any).welcomeEmailSent as boolean;
-          toast({
-            title: emailSent ? `Invitation sent to ${data.email}` : t("staff.toast.added"),
-            description: emailSent ? "They'll receive an email with a one-time access code." : undefined,
-          });
+          const emailSent    = (created as any).welcomeEmailSent as boolean;
+          const inviteCode   = (created as any).inviteCode as string | null;
+          const inviteUser   = (created as any).inviteUsername as string | null;
           queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) });
           setIsDialogOpen(false);
+          if (emailSent) {
+            toast({
+              title: `Invitation sent to ${data.email}`,
+              description: "They'll receive an email with a one-time access code.",
+            });
+          } else if (inviteCode && inviteUser) {
+            setCodeCopied(false);
+            setInviteCodeData({ code: inviteCode, username: inviteUser, email: data.email });
+          } else {
+            toast({ title: t("staff.toast.added") });
+          }
         },
         onError: () => toast({ title: t("staff.toast.addFailed"), variant: "destructive" }),
       });
@@ -462,9 +473,16 @@ export default function Staff() {
 
   const handleResendInvite = (s: any) => {
     resendInvite.mutate({ id: s.id }, {
-      onSuccess: (res) => {
-        toast({ title: "Invitation sent", description: (res as any).message ?? `New access code emailed to ${s.email}` });
+      onSuccess: (res: any) => {
         queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) });
+        if (res.sent) {
+          toast({ title: "Invitation sent", description: res.message ?? `New access code emailed to ${s.email}` });
+        } else if (res.inviteCode && res.inviteUsername) {
+          setCodeCopied(false);
+          setInviteCodeData({ code: res.inviteCode, username: res.inviteUsername, email: s.email });
+        } else {
+          toast({ title: res.message ?? "Invitation updated" });
+        }
       },
       onError: () => toast({ title: "Failed to send invitation", variant: "destructive" }),
     });
@@ -713,6 +731,66 @@ export default function Staff() {
         onClose={() => setIsBulkOpen(false)}
         onSuccess={() => queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) })}
       />
+
+      {/* ── Invite Code Dialog (shown when email delivery fails) ── */}
+      <Dialog open={!!inviteCodeData} onOpenChange={(open) => { if (!open) setInviteCodeData(null); }}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                <Send className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              </div>
+              Share Access Code Manually
+            </DialogTitle>
+            <DialogDescription>
+              Email delivery was unavailable. Share these credentials with{" "}
+              <strong>{inviteCodeData?.email}</strong> via any channel — the employee must change their password on first login.
+            </DialogDescription>
+          </DialogHeader>
+
+          {inviteCodeData && (
+            <div className="space-y-3 py-1">
+              {/* Username */}
+              <div className="rounded-lg border bg-muted/40 px-4 py-3 space-y-0.5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Username</p>
+                <p className="font-mono text-base font-semibold tracking-wide">{inviteCodeData.username}</p>
+              </div>
+
+              {/* One-time code */}
+              <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-4 text-center space-y-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">One-Time Access Code</p>
+                <p className="font-mono text-3xl font-black tracking-[0.25em] text-amber-900 dark:text-amber-200">{inviteCodeData.code}</p>
+                <p className="text-[11px] text-amber-700 dark:text-amber-400">Expires on first login — employee sets their own password immediately after.</p>
+              </div>
+
+              {/* Copy button */}
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => {
+                  const text = `Username: ${inviteCodeData.username}\nOne-Time Code: ${inviteCodeData.code}`;
+                  navigator.clipboard.writeText(text).then(() => {
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 2500);
+                  });
+                }}
+              >
+                {codeCopied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                {codeCopied ? "Copied!" : "Copy Username & Code"}
+              </Button>
+
+              {/* Tip */}
+              <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                Once the employee logs in and changes their password, the <span className="font-medium">Setup pending</span> badge on their card will clear automatically.
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setInviteCodeData(null)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -60,15 +60,17 @@ export function getRoleTier(role: string): "admin" | "supervisor" | "worker" {
 }
 
 /**
- * 5-level hierarchy:  owner=5 → admin-manager=4 → manager=3 → supervisor=2 → worker=1
+ * 6-level hierarchy: super_admin=6 → owner=5 → admin_manager=4 → manager=3 → administrator=2 → supervisor/workers=1
  * Used for RBAC checks: callers can only create/manage users at strictly lower levels.
  */
 export function getHierarchyLevel(role: string): number {
-  if (role === "owner" || role === "admin" || role === "super_admin") return 5;
-  if (role === "admin-manager") return 4;
+  if (role === "super_admin") return 6;
+  if (role === "owner") return 5;
+  if (role === "admin_manager" || role === "admin-manager" || role === "admin") return 4;
   if (role === "manager" || role === "property-manager" || role === "site-supervisor") return 3;
-  if (role === "supervisor" || role === "front-desk") return 2;
-  return 1;
+  if (role === "administrator") return 2;
+  if (role === "supervisor" || role === "front-desk") return 1;
+  return 0;
 }
 
 const BCRYPT_ROUNDS = 12;
@@ -99,8 +101,8 @@ export function verifyPwd(stored: string, candidate: string): { valid: boolean; 
  * Send a welcome / invitation email to a newly created employee with their login credentials.
  * Falls back silently when RESEND_API_KEY is not set (demo mode).
  */
-export async function sendWelcomeEmail(to: string, username: string, tempPassword: string): Promise<void> {
-  if (!resend) return;
+export async function sendWelcomeEmail(to: string, username: string, tempPassword: string): Promise<boolean> {
+  if (!resend) return false;
   // Best-effort derive app URL from Replit env or fall back to generic instructions
   const domains = process.env.REPLIT_DOMAINS ?? "";
   const appUrl  = domains.split(",")[0]?.trim()
@@ -169,6 +171,7 @@ export async function sendWelcomeEmail(to: string, username: string, tempPasswor
       </div>
     `,
   });
+  return true;
 }
 
 export async function ensureAdmin() {
