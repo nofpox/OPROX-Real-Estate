@@ -4,7 +4,7 @@ import {
   LayoutDashboard, DoorOpen, Menu, Building2,
   Wrench, UserCog, ClipboardList, ChevronDown, Shield,
   MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert, BarChart2,
-  Ticket, MessageCircleQuestion, Settings2,
+  Ticket, MessageCircleQuestion, Settings2, HelpCircle,
 } from "lucide-react";
 import { SupportDialog } from "@/components/support-dialog";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,10 @@ import { useTranslation } from "react-i18next";
 import type { AuthUser } from "@/App";
 import { useSettings } from "@/hooks/use-settings";
 import { getEnabledNavKeys } from "@/config/modules";
+import { useToast } from "@/hooks/use-toast";
+import { TourOverlay } from "@/components/tour/tour-overlay";
+import { SmartHintBar } from "@/components/tour/smart-hint-bar";
+import { useTour } from "@/components/tour/tour-context";
 
 const NAV_ITEMS = [
   { href: "/",               labelKey: "nav.dashboard",      icon: LayoutDashboard, section: "main",       featureKey: null },
@@ -141,6 +145,7 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
             : "text-sidebar-foreground hover:bg-sidebar-accent"
         }`}
         data-testid={`nav-${item.href.replace("/", "") || "dashboard"}`}
+        data-tour={`nav-${item.href === "/" ? "dashboard" : item.href.slice(1)}`}
       >
         <Icon className="h-5 w-5 shrink-0" />
         {customLabel ?? t(item.labelKey)}
@@ -185,7 +190,7 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
           {isOwnerTier(authUser?.role ?? "") ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 bg-sidebar-accent text-sm font-medium">
+                <button data-tour="tour-role-switcher" className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 bg-sidebar-accent text-sm font-medium">
                   <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${ROLE_ICON_COLORS[role.id] ?? ""}`}>
                     <Shield className="h-3 w-3" />
                   </span>
@@ -258,6 +263,8 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
 export function Layout({ children, authUser, onLogout }: LayoutProps) {
   const [location, navigate] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { toast } = useToast();
+  const { startTour } = useTour();
 
   // ── Swipe-to-close gesture ─────────────────────────────────────────────
   const touchStartX = useRef<number | null>(null);
@@ -294,6 +301,11 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
     if (!can(location)) {
       const firstAllowed = role.allowedNav.find((p) => p !== "*") ?? "/tasks";
       navigate(firstAllowed);
+      toast({
+        title: "Page not available",
+        description: `This page isn't accessible in the current role view. Redirecting you to a permitted page.`,
+        duration: 4000,
+      });
     }
   }, [location, role.id]);
 
@@ -393,15 +405,28 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
             </span>
           </div>
           <div className="flex items-center gap-2 ms-auto">
+            {/* Help / tour launcher */}
+            <button
+              onClick={startTour}
+              title="Start guided tour"
+              className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              aria-label="Start guided tour"
+            >
+              <HelpCircle className="h-4 w-4" />
+            </button>
             <LanguageSwitcher />
             <NotificationBell />
           </div>
         </header>
 
         <main key={lang} className="flex-1 p-4 md:p-6 lg:p-8">
+          <SmartHintBar />
           {children}
         </main>
       </div>
+
+      {/* Onboarding tour overlay — rendered via portal at document.body */}
+      <TourOverlay />
     </div>
   );
 }

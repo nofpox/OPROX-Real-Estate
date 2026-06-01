@@ -12,6 +12,7 @@ import { Layout } from "@/components/layout";
 import { RoleProvider, useRole } from "@/contexts/role-context";
 import { LanguageProvider } from "@/contexts/language-context";
 import { setDefaultHeaders } from "@workspace/api-client-react";
+import { TourProvider } from "@/components/tour/tour-context";
 import Dashboard from "@/pages/dashboard";
 import Bookings from "@/pages/bookings";
 import NewBooking from "@/pages/booking-new";
@@ -251,6 +252,7 @@ function App() {
   }
 
   return (
+    <TourProvider userId={authUser.id}>
     <I18nextProvider i18n={i18n}>
       <LanguageProvider>
         <QueryClientProvider client={queryClient}>
@@ -276,6 +278,7 @@ function App() {
         </QueryClientProvider>
       </LanguageProvider>
     </I18nextProvider>
+    </TourProvider>
   );
 }
 
