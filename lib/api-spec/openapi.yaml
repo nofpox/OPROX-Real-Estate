@@ -2362,6 +2362,43 @@ paths:
         "401":
           description: Unauthorized
 
+  /portal/availability:
+    get:
+      operationId: getPortalAvailability
+      summary: Available rooms for a property during a date range (requires auth)
+      tags: [portal]
+      parameters:
+        - { name: propertyId, in: query, required: true,  schema: { type: integer } }
+        - { name: checkIn,    in: query, required: true,  schema: { type: string, format: date } }
+        - { name: checkOut,   in: query, required: true,  schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Available rooms
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalAvailabilityPage"
+        "401":
+          description: Unauthorized
+
+  /portal/financials:
+    get:
+      operationId: getPortalFinancials
+      summary: Financial summary for managed properties (requires auth)
+      tags: [portal]
+      parameters:
+        - { name: propertyId, in: query, schema: { type: integer } }
+        - { name: months,     in: query, schema: { type: integer, default: 6 } }
+      responses:
+        "200":
+          description: Financial summary with monthly breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalFinancialsPage"
+        "401":
+          description: Unauthorized
+
 components:
   schemas:
     Settings:
@@ -4348,4 +4385,54 @@ components:
             page:       { type: integer }
             limit:      { type: integer }
             totalPages: { type: integer }
+        timestamp: { type: string }
+
+    PortalAvailableRoom:
+      type: object
+      required: [id, name, type, pricePerNight, capacity, status]
+      properties:
+        id:            { type: integer }
+        name:          { type: string }
+        type:          { type: string }
+        pricePerNight: { type: string, nullable: true }
+        capacity:      { type: integer, nullable: true }
+        status:        { type: string }
+
+    PortalAvailabilityPage:
+      type: object
+      required: [status, data, timestamp]
+      properties:
+        status:    { type: string }
+        data:      { type: array, items: { $ref: "#/components/schemas/PortalAvailableRoom" } }
+        meta:      { type: object, nullable: true }
+        timestamp: { type: string }
+
+    PortalFinancialsMonthly:
+      type: object
+      required: [month, revenue, expenses, netIncome]
+      properties:
+        month:     { type: string }
+        revenue:   { type: number }
+        expenses:  { type: number }
+        netIncome: { type: number }
+
+    PortalFinancialsSummary:
+      type: object
+      required: [totalRevenue, totalExpenses, netProfit, profitMargin, monthly]
+      properties:
+        totalRevenue:   { type: number }
+        totalExpenses:  { type: number }
+        netProfit:      { type: number }
+        profitMargin:   { type: number }
+        monthly:
+          type: array
+          items: { $ref: "#/components/schemas/PortalFinancialsMonthly" }
+
+    PortalFinancialsPage:
+      type: object
+      required: [status, data, timestamp]
+      properties:
+        status:    { type: string }
+        data:      { $ref: "#/components/schemas/PortalFinancialsSummary" }
+        meta:      { type: object, nullable: true }
         timestamp: { type: string }

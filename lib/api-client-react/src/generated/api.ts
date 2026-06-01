@@ -44,7 +44,9 @@ import type {
   GetListingInquiriesParams,
   GetListingsParams,
   GetOccupancyHeatmapParams,
+  GetPortalAvailabilityParams,
   GetPortalBookingsParams,
+  GetPortalFinancialsParams,
   GetPortalPropertiesParams,
   Guest,
   GuestFeedback,
@@ -79,7 +81,9 @@ import type {
   OccupancyHeatmapEntry,
   OccupancyStat,
   PmsUser,
+  PortalAvailabilityPage,
   PortalBookingsPage,
+  PortalFinancialsPage,
   PortalPropertiesPage,
   Property,
   PropertyInput,
@@ -8858,6 +8862,174 @@ export function useGetPortalBookings<TData = Awaited<ReturnType<typeof getPortal
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetPortalBookingsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPortalAvailabilityUrl = (params: GetPortalAvailabilityParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/portal/availability?${stringifiedParams}` : `/api/portal/availability`
+}
+
+/**
+ * @summary Available rooms for a property during a date range (requires auth)
+ */
+export const getPortalAvailability = async (params: GetPortalAvailabilityParams, options?: RequestInit): Promise<PortalAvailabilityPage> => {
+
+  return customFetch<PortalAvailabilityPage>(getGetPortalAvailabilityUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPortalAvailabilityQueryKey = (params?: GetPortalAvailabilityParams,) => {
+    return [
+    `/api/portal/availability`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPortalAvailabilityQueryOptions = <TData = Awaited<ReturnType<typeof getPortalAvailability>>, TError = ErrorType<void>>(params: GetPortalAvailabilityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalAvailability>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPortalAvailabilityQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPortalAvailability>>> = ({ signal }) => getPortalAvailability(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPortalAvailability>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPortalAvailabilityQueryResult = NonNullable<Awaited<ReturnType<typeof getPortalAvailability>>>
+export type GetPortalAvailabilityQueryError = ErrorType<void>
+
+
+/**
+ * @summary Available rooms for a property during a date range (requires auth)
+ */
+
+export function useGetPortalAvailability<TData = Awaited<ReturnType<typeof getPortalAvailability>>, TError = ErrorType<void>>(
+ params: GetPortalAvailabilityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalAvailability>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPortalAvailabilityQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPortalFinancialsUrl = (params?: GetPortalFinancialsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/portal/financials?${stringifiedParams}` : `/api/portal/financials`
+}
+
+/**
+ * @summary Financial summary for managed properties (requires auth)
+ */
+export const getPortalFinancials = async (params?: GetPortalFinancialsParams, options?: RequestInit): Promise<PortalFinancialsPage> => {
+
+  return customFetch<PortalFinancialsPage>(getGetPortalFinancialsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPortalFinancialsQueryKey = (params?: GetPortalFinancialsParams,) => {
+    return [
+    `/api/portal/financials`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPortalFinancialsQueryOptions = <TData = Awaited<ReturnType<typeof getPortalFinancials>>, TError = ErrorType<void>>(params?: GetPortalFinancialsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalFinancials>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPortalFinancialsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPortalFinancials>>> = ({ signal }) => getPortalFinancials(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPortalFinancials>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPortalFinancialsQueryResult = NonNullable<Awaited<ReturnType<typeof getPortalFinancials>>>
+export type GetPortalFinancialsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Financial summary for managed properties (requires auth)
+ */
+
+export function useGetPortalFinancials<TData = Awaited<ReturnType<typeof getPortalFinancials>>, TError = ErrorType<void>>(
+ params?: GetPortalFinancialsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalFinancials>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPortalFinancialsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -2782,3 +2782,60 @@ export const GetPortalBookingsResponse = zod.object({
 })
 
 
+/**
+ * @summary Available rooms for a property during a date range (requires auth)
+ */
+export const GetPortalAvailabilityQueryParams = zod.object({
+  "propertyId": zod.coerce.number(),
+  "checkIn": zod.date(),
+  "checkOut": zod.date()
+})
+
+export const GetPortalAvailabilityResponse = zod.object({
+  "status": zod.string(),
+  "data": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "pricePerNight": zod.string().nullable(),
+  "capacity": zod.number().nullable(),
+  "status": zod.string()
+})),
+  "meta": zod.object({
+
+}).passthrough().nullish(),
+  "timestamp": zod.string()
+})
+
+
+/**
+ * @summary Financial summary for managed properties (requires auth)
+ */
+export const getPortalFinancialsQueryMonthsDefault = 6;
+
+export const GetPortalFinancialsQueryParams = zod.object({
+  "propertyId": zod.coerce.number().optional(),
+  "months": zod.coerce.number().default(getPortalFinancialsQueryMonthsDefault)
+})
+
+export const GetPortalFinancialsResponse = zod.object({
+  "status": zod.string(),
+  "data": zod.object({
+  "totalRevenue": zod.number(),
+  "totalExpenses": zod.number(),
+  "netProfit": zod.number(),
+  "profitMargin": zod.number(),
+  "monthly": zod.array(zod.object({
+  "month": zod.string(),
+  "revenue": zod.number(),
+  "expenses": zod.number(),
+  "netIncome": zod.number()
+}))
+}),
+  "meta": zod.object({
+
+}).passthrough().nullish(),
+  "timestamp": zod.string()
+})
+
+

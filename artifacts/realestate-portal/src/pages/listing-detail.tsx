@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { MapPin, BedDouble, Bath, Square, Building2, Phone, Mail, User, Info, CheckCircle2, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { BookingWizard } from '@/components/booking-wizard';
 
 export const ListingDetail: React.FC = () => {
   const [, params] = useRoute('/listings/:id');
@@ -252,93 +253,109 @@ export const ListingDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Sidebar / Inquiry Form */}
+          {/* Sidebar — Booking Wizard (operational) or Inquiry Form */}
           <div className="lg:col-span-1">
             <div className="bg-card rounded-xl p-6 shadow-md border border-border sticky top-24">
-              <h3 className="text-xl font-bold text-primary mb-6">{getInquiryHeading()}</h3>
-              
-              {submitted ? (
-                <div className="bg-green-50 border border-green-200 p-6 rounded-lg text-center">
-                  <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                  <h4 className="text-lg font-bold text-green-900 mb-2">Inquiry Sent!</h4>
-                  <p className="text-green-800 text-sm">Thank you for your interest. Our team will contact you shortly.</p>
-                  <Button variant="outline" className="mt-6 w-full" onClick={() => setSubmitted(false)}>
-                    Send Another Inquiry
-                  </Button>
-                </div>
+
+              {isOperational && listing.propertyId ? (
+                <>
+                  <h3 className="text-xl font-bold text-primary mb-6">Book This Property</h3>
+                  <BookingWizard propertyId={listing.propertyId} />
+                  <div className="mt-6 pt-5 border-t border-border">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <Info className="h-4 w-4 text-primary shrink-0" />
+                      <p>Questions? Email <a href="mailto:sales@rakez.sa" className="text-secondary font-medium hover:underline">sales@rakez.sa</a></p>
+                    </div>
+                  </div>
+                </>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-primary mb-1">Full Name</label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        required 
-                        className="pl-9" 
-                        value={formData.name}
-                        onChange={e => setFormData({...formData, name: e.target.value})}
-                      />
+                <>
+                  <h3 className="text-xl font-bold text-primary mb-6">{getInquiryHeading()}</h3>
+
+                  {submitted ? (
+                    <div className="bg-green-50 border border-green-200 p-6 rounded-lg text-center">
+                      <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                      <h4 className="text-lg font-bold text-green-900 mb-2">Inquiry Sent!</h4>
+                      <p className="text-green-800 text-sm">Thank you for your interest. Our team will contact you shortly.</p>
+                      <Button variant="outline" className="mt-6 w-full" onClick={() => setSubmitted(false)}>
+                        Send Another Inquiry
+                      </Button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-primary mb-1">Full Name</label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            required
+                            className="pl-9"
+                            value={formData.name}
+                            onChange={e => setFormData({...formData, name: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-primary mb-1">Email</label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type="email"
+                            required
+                            className="pl-9"
+                            value={formData.email}
+                            onChange={e => setFormData({...formData, email: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-primary mb-1">Phone</label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type="tel"
+                            required
+                            className="pl-9"
+                            value={formData.phone}
+                            onChange={e => setFormData({...formData, phone: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-primary mb-1">Message</label>
+                        <Textarea
+                          rows={4}
+                          placeholder="I am interested in this property..."
+                          value={formData.message}
+                          onChange={e => setFormData({...formData, message: e.target.value})}
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                        disabled={submitInquiry.isPending}
+                      >
+                        {submitInquiry.isPending ? 'Sending...' : getInquiryBtnText()}
+                      </Button>
+                    </form>
+                  )}
+
+                  <div className="mt-8 pt-6 border-t border-border space-y-4">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <Info className="h-5 w-5 text-primary shrink-0" />
+                      <p>Or contact us directly at <a href="mailto:sales@rakez.sa" className="text-secondary font-medium hover:underline">sales@rakez.sa</a></p>
+                    </div>
+                    <div className="pt-4 border-t border-border">
+                      <p className="text-sm text-muted-foreground mb-2">{t('detail.portalPrompt')}</p>
+                      <Link href="/portal" className="text-sm font-semibold text-primary hover:text-secondary flex items-center gap-1 transition-colors">
+                        {t('detail.portalLink')}
+                        {isRtl ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                      </Link>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-primary mb-1">Email</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        type="email" 
-                        required 
-                        className="pl-9"
-                        value={formData.email}
-                        onChange={e => setFormData({...formData, email: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-primary mb-1">Phone</label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        type="tel" 
-                        required 
-                        className="pl-9"
-                        value={formData.phone}
-                        onChange={e => setFormData({...formData, phone: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-primary mb-1">Message</label>
-                    <Textarea 
-                      rows={4} 
-                      placeholder="I am interested in this property..."
-                      value={formData.message}
-                      onChange={e => setFormData({...formData, message: e.target.value})}
-                    ></Textarea>
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                    disabled={submitInquiry.isPending}
-                  >
-                    {submitInquiry.isPending ? 'Sending...' : getInquiryBtnText()}
-                  </Button>
-                </form>
+                </>
               )}
-              
-              <div className="mt-8 pt-6 border-t border-border space-y-4">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <Info className="h-5 w-5 text-primary shrink-0" />
-                  <p>Or contact us directly at <a href="mailto:sales@rakez.sa" className="text-secondary font-medium hover:underline">sales@rakez.sa</a></p>
-                </div>
-                
-                <div className="pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground mb-2">{t('detail.portalPrompt')}</p>
-                  <Link href="/portal" className="text-sm font-semibold text-primary hover:text-secondary flex items-center gap-1 transition-colors">
-                    {t('detail.portalLink')} 
-                    {isRtl ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
-                  </Link>
-                </div>
-              </div>
+
             </div>
           </div>
         </div>

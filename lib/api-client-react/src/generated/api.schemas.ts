@@ -1211,6 +1211,48 @@ export interface PortalBookingsPage {
   timestamp: string;
 }
 
+export interface PortalAvailableRoom {
+  id: number;
+  name: string;
+  type: string;
+  pricePerNight: string | null;
+  capacity: number | null;
+  status: string;
+}
+
+export type PortalAvailabilityPageMeta = { [key: string]: unknown } | null;
+
+export interface PortalAvailabilityPage {
+  status: string;
+  data: PortalAvailableRoom[];
+  meta?: PortalAvailabilityPageMeta;
+  timestamp: string;
+}
+
+export interface PortalFinancialsMonthly {
+  month: string;
+  revenue: number;
+  expenses: number;
+  netIncome: number;
+}
+
+export interface PortalFinancialsSummary {
+  totalRevenue: number;
+  totalExpenses: number;
+  netProfit: number;
+  profitMargin: number;
+  monthly: PortalFinancialsMonthly[];
+}
+
+export type PortalFinancialsPageMeta = { [key: string]: unknown } | null;
+
+export interface PortalFinancialsPage {
+  status: string;
+  data: PortalFinancialsSummary;
+  meta?: PortalFinancialsPageMeta;
+  timestamp: string;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
@@ -1375,5 +1417,16 @@ propertyId?: number;
 status?: string;
 page?: number;
 limit?: number;
+};
+
+export type GetPortalAvailabilityParams = {
+propertyId: number;
+checkIn: string;
+checkOut: string;
+};
+
+export type GetPortalFinancialsParams = {
+propertyId?: number;
+months?: number;
 };
 

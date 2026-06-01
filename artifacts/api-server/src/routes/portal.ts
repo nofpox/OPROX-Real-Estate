@@ -5,8 +5,9 @@ import {
   bookingsTable,
   roomsTable,
   listingsTable,
+  expensesTable,
 } from "@workspace/db";
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, sql, desc, inArray, ne } from "drizzle-orm";
 import { sendSuccess, sendError, parsePagination, buildMeta } from "../utils/response.js";
 import { portalCache, TTL } from "../utils/cache.js";
 
@@ -168,6 +169,144 @@ router.get("/portal/bookings", requireAuth, async (req, res) => {
   } catch (err) {
     req.log?.error({ err }, "GET /portal/bookings failed");
     sendError(res, 500, "Failed to fetch portal bookings");
+  }
+});
+
+// GET /portal/availability — rooms available for a property during a date range
+router.get("/portal/availability", requireAuth, async (req, res) => {
+  try {
+    const { propertyId, checkIn, checkOut } = req.query as Record<string, string>;
+    if (!propertyId || !checkIn || !checkOut) {
+      sendError(res, 400, "propertyId, checkIn and checkOut are required");
+      return;
+    }
+    const propId = parseInt(propertyId, 10);
+
+    // All rooms for this property
+    const allRooms = await db
+      .select()
+      .from(roomsTable)
+      .where(eq(roomsTable.propertyId, propId));
+
+    // Rooms with an overlapping active booking
+    const bookedRows = await db
+      .select({ roomId: bookingsTable.roomId })
+      .from(bookingsTable)
+      .where(
+        and(
+          sql`${bookingsTable.status} NOT IN ('cancelled', 'checked_out')`,
+          sql`${bookingsTable.checkIn}::date  < ${checkOut}::date`,
+          sql`${bookingsTable.checkOut}::date > ${checkIn}::date`,
+        ),
+      );
+
+    const bookedIds = new Set(bookedRows.map((b) => b.roomId));
+    const available = allRooms.filter(
+      (r) => !bookedIds.has(r.id) && r.status === "available",
+    );
+
+    sendSuccess(
+      res,
+      available.map((r) => ({
+        id:            r.id,
+        name:          r.name,
+        type:          r.type,
+        pricePerNight: r.pricePerNight ?? null,
+        capacity:      r.capacity ?? null,
+        status:        r.status,
+      })),
+    );
+  } catch (err) {
+    req.log?.error({ err }, "GET /portal/availability failed");
+    sendError(res, 500, "Failed to check availability");
+  }
+});
+
+// GET /portal/financials — monthly revenue vs expenses for managed properties
+router.get("/portal/financials", requireAuth, async (req, res) => {
+  try {
+    const tenantId = tid(req);
+    const { propertyId } = req.query as Record<string, string>;
+    const months = Math.min(24, Math.max(1, parseInt((req.query.months as string) || "6") || 6));
+
+    // Resolve property IDs scoped to this tenant
+    const propConds: import("drizzle-orm").SQL[] = [];
+    if (tenantId !== null) propConds.push(eq(propertiesTable.tenantId, tenantId));
+    if (propertyId)        propConds.push(eq(propertiesTable.id, parseInt(propertyId, 10)));
+
+    const props = await db
+      .select({ id: propertiesTable.id })
+      .from(propertiesTable)
+      .where(propConds.length ? and(...propConds) : undefined);
+
+    const propIds = props.map((p) => p.id);
+    if (propIds.length === 0) {
+      sendSuccess(res, { totalRevenue: 0, totalExpenses: 0, netProfit: 0, profitMargin: 0, monthly: [] });
+      return;
+    }
+
+    // Monthly expenses grouped by YYYY-MM
+    const expenseRows = await db
+      .select({
+        month: sql<string>`to_char(${expensesTable.expenseDate}::date, 'YYYY-MM')`,
+        total: sql<number>`sum(${expensesTable.amount})::float`,
+      })
+      .from(expensesTable)
+      .where(
+        and(
+          inArray(expensesTable.propertyId, propIds),
+          sql`${expensesTable.expenseDate}::date >= (now() - make_interval(months => ${months}))::date`,
+        ),
+      )
+      .groupBy(sql`to_char(${expensesTable.expenseDate}::date, 'YYYY-MM')`)
+      .orderBy(sql`to_char(${expensesTable.expenseDate}::date, 'YYYY-MM')`);
+
+    // Monthly revenue from non-cancelled bookings
+    const revenueRows = await db
+      .select({
+        month: sql<string>`to_char(${bookingsTable.checkIn}::date, 'YYYY-MM')`,
+        total: sql<number>`sum(${bookingsTable.totalAmount})::float`,
+      })
+      .from(bookingsTable)
+      .innerJoin(roomsTable, eq(bookingsTable.roomId, roomsTable.id))
+      .where(
+        and(
+          inArray(roomsTable.propertyId, propIds),
+          ne(bookingsTable.status, "cancelled"),
+          sql`${bookingsTable.checkIn}::date >= (now() - make_interval(months => ${months}))::date`,
+        ),
+      )
+      .groupBy(sql`to_char(${bookingsTable.checkIn}::date, 'YYYY-MM')`)
+      .orderBy(sql`to_char(${bookingsTable.checkIn}::date, 'YYYY-MM')`);
+
+    // Merge into a single month map
+    const monthMap = new Map<string, { revenue: number; expenses: number }>();
+    for (const r of revenueRows) {
+      monthMap.set(r.month, { revenue: r.total ?? 0, expenses: 0 });
+    }
+    for (const e of expenseRows) {
+      const prev = monthMap.get(e.month) ?? { revenue: 0, expenses: 0 };
+      monthMap.set(e.month, { ...prev, expenses: e.total ?? 0 });
+    }
+
+    const monthly = Array.from(monthMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, { revenue, expenses }]) => ({
+        month,
+        revenue:   Math.round(revenue),
+        expenses:  Math.round(expenses),
+        netIncome: Math.round(revenue - expenses),
+      }));
+
+    const totalRevenue  = monthly.reduce((s, m) => s + m.revenue,  0);
+    const totalExpenses = monthly.reduce((s, m) => s + m.expenses, 0);
+    const netProfit     = totalRevenue - totalExpenses;
+    const profitMargin  = totalRevenue > 0 ? Math.round((netProfit / totalRevenue) * 100) : 0;
+
+    sendSuccess(res, { totalRevenue, totalExpenses, netProfit, profitMargin, monthly });
+  } catch (err) {
+    req.log?.error({ err }, "GET /portal/financials failed");
+    sendError(res, 500, "Failed to fetch financial summary");
   }
 });
 
