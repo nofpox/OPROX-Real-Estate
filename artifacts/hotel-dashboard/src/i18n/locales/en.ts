@@ -88,7 +88,8 @@ const en = {
   roles: {
     super_admin: "Super Admin",
     owner: "Company",
-    manager: "Manager",
+    admin_manager: "إداري / الإدارة",
+    manager: "Supervisor",
     supervisor: "Supervisor",
     maintenance: "Maintenance",
     cleaning: "Cleaning",
@@ -99,11 +100,12 @@ const en = {
     desc: {
       super_admin: "Platform-level access: tenant management and all settings",
       owner: "Full system access including finance and settings",
-      manager: "Tasks, activity logs, and user management",
-      supervisor: "Assigned tasks and own profile",
-      maintenance: "Assigned tasks and own profile",
-      cleaning: "Assigned tasks and own profile",
-      security: "Assigned tasks and own profile",
+      admin_manager: "Reports, unit data management, service request tracking, billing",
+      manager: "Field operations monitoring, maintenance/service requests, team performance",
+      supervisor: "Field operations monitoring, maintenance/service requests, team performance",
+      maintenance: "Assigned field tasks only",
+      cleaning: "Assigned field tasks only",
+      security: "Assigned field tasks only",
     },
   },
   header: {

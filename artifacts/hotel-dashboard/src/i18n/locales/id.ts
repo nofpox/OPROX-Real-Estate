@@ -38,13 +38,13 @@ const id: Translations = {
   priority: { urgent: "Mendesak", high: "Tinggi", medium: "Sedang", low: "Rendah" },
   roles: {
     super_admin: "Super Admin",
-    owner: "Perusahaan",
+    owner: "Perusahaan", admin_manager: "Administratif / Manajemen",
     manager: "Manajer", supervisor: "Supervisor", maintenance: "Pemeliharaan",
     cleaning: "Kebersihan", security: "Keamanan", viewingAs: "Dilihat sebagai",
     switchRole: "Ganti Peran", active: "aktif",
     desc: {
       super_admin: "Akses tingkat platform: manajemen tenant dan semua pengaturan",
-      owner: "Akses sistem penuh termasuk keuangan dan pengaturan",
+      owner: "Akses sistem penuh termasuk keuangan dan pengaturan", admin_manager: "Laporan, manajemen data unit, pelacakan permintaan layanan, penagihan",
       manager: "Tugas, log aktivitas, dan manajemen pengguna",
       supervisor: "Tugas yang ditetapkan dan profil sendiri",
       maintenance: "Tugas yang ditetapkan dan profil sendiri",

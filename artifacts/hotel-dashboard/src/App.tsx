@@ -49,7 +49,7 @@ const queryClient = new QueryClient({
 /** Mirror of the server-side normTier — decides which portal a user belongs to. */
 function normTier(role: string): "admin" | "supervisor" | "worker" {
   if (["owner", "admin", "super_admin"].includes(role)) return "admin";
-  if (["manager", "property-manager", "site-supervisor"].includes(role)) return "supervisor";
+  if (["manager", "property-manager", "site-supervisor", "admin-manager", "front-desk", "supervisor"].includes(role)) return "supervisor";
   return "worker";
 }
 

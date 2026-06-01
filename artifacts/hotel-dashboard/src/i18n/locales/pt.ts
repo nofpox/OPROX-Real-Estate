@@ -38,13 +38,13 @@ const pt: Translations = {
   priority: { urgent: "Urgente", high: "Alto", medium: "Médio", low: "Baixo" },
   roles: {
     super_admin: "Super Admin",
-    owner: "Empresa",
+    owner: "Empresa", admin_manager: "Administrativo / Gestão",
     manager: "Gerente", supervisor: "Supervisor", maintenance: "Manutenção",
     cleaning: "Limpeza", security: "Segurança", viewingAs: "Visualizando como",
     switchRole: "Trocar Perfil", active: "ativo",
     desc: {
       super_admin: "Acesso à plataforma: gestão de inquilinos e todas as configurações",
-      owner: "Acesso completo ao sistema incluindo finanças e configurações",
+      owner: "Acesso completo ao sistema incluindo finanças e configurações", admin_manager: "Relatórios, gestão de dados de unidades, rastreamento de pedidos de serviço, faturamento",
       manager: "Tarefas, registros de atividades e gestão de usuários",
       supervisor: "Tarefas atribuídas e perfil próprio",
       maintenance: "Tarefas atribuídas e perfil próprio",

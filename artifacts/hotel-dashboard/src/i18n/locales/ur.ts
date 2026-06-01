@@ -39,13 +39,13 @@ const ur: Translations = {
   priority: { urgent: "فوری", high: "زیادہ", medium: "درمیانہ", low: "کم" },
   roles: {
     super_admin: "سپر ایڈمن",
-    owner: "کمپنی",
+    owner: "کمپنی", admin_manager: "انتظامی / انتظامیہ",
     manager: "مینیجر", supervisor: "سپروائزر", maintenance: "مینٹیننس",
     cleaning: "صفائی", security: "سیکیورٹی", viewingAs: "بطور دیکھ رہے ہیں",
     switchRole: "کردار تبدیل کریں", active: "فعال",
     desc: {
       super_admin: "پلیٹ فارم سطح کی رسائی: ٹیننٹ مینجمنٹ اور تمام سیٹنگز",
-      owner: "فنانس اور سیٹنگز سمیت مکمل سسٹم رسائی",
+      owner: "فنانس اور سیٹنگز سمیت مکمل سسٹم رسائی", admin_manager: "رپورٹس، یونٹ ڈیٹا انتظام، سروس درخواست ٹریکنگ، بلنگ",
       manager: "کام، سرگرمی لاگز اور صارف انتظام",
       supervisor: "مقررہ کام اور اپنا پروفائل",
       maintenance: "مقررہ کام اور اپنا پروفائل",

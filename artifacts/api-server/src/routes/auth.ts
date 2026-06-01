@@ -52,18 +52,22 @@ async function sendResetEmail(to: string, token: string): Promise<void> {
 
 export function getRoleTier(role: string): "admin" | "supervisor" | "worker" {
   if (role === "owner" || role === "admin" || role === "super_admin") return "admin";
-  if (role === "manager" || role === "property-manager" || role === "site-supervisor") return "supervisor";
+  if (
+    role === "manager" || role === "property-manager" || role === "site-supervisor" ||
+    role === "admin-manager" || role === "front-desk" || role === "supervisor"
+  ) return "supervisor";
   return "worker";
 }
 
 /**
- * 4-level hierarchy:  owner=4 → manager=3 → supervisor=2 → worker=1
+ * 5-level hierarchy:  owner=5 → admin-manager=4 → manager=3 → supervisor=2 → worker=1
  * Used for RBAC checks: callers can only create/manage users at strictly lower levels.
  */
 export function getHierarchyLevel(role: string): number {
-  if (role === "owner" || role === "admin" || role === "super_admin") return 4;
-  if (role === "manager") return 3;
-  if (role === "supervisor" || role === "site-supervisor" || role === "property-manager" || role === "front-desk") return 2;
+  if (role === "owner" || role === "admin" || role === "super_admin") return 5;
+  if (role === "admin-manager") return 4;
+  if (role === "manager" || role === "property-manager" || role === "site-supervisor") return 3;
+  if (role === "supervisor" || role === "front-desk") return 2;
   return 1;
 }
 

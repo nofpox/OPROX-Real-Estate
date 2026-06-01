@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 
-export type AppRole = "super_admin" | "owner" | "manager" | "supervisor" | "maintenance" | "cleaning" | "security";
+export type AppRole = "super_admin" | "owner" | "admin_manager" | "manager" | "supervisor" | "maintenance" | "cleaning" | "security";
 
 export interface RoleDefinition {
   id: AppRole;
@@ -13,6 +13,7 @@ export interface RoleDefinition {
 export function mapDbRoleToAppRole(dbRole: string): AppRole {
   if (dbRole === "super_admin") return "super_admin";
   if (dbRole === "owner" || dbRole === "admin") return "owner";
+  if (dbRole === "admin-manager") return "admin_manager";
   if (dbRole === "manager" || dbRole === "property-manager" || dbRole === "site-supervisor") return "manager";
   if (dbRole === "front-desk" || dbRole === "supervisor") return "supervisor";
   if (dbRole === "housekeeping" || dbRole === "cleaning-staff" || dbRole === "cleaning") return "cleaning";
@@ -45,37 +46,44 @@ export const ROLES: RoleDefinition[] = [
     taskCategories: null,
   },
   {
+    id: "admin_manager",
+    label: "إداري / الإدارة",
+    description: "Reports, unit data management, service request tracking, billing",
+    allowedNav: ["/", "/properties", "/rooms", "/unit-map", "/guest-requests", "/analytics", "/bookings"],
+    taskCategories: null,
+  },
+  {
     id: "manager",
-    label: "Manager",
-    description: "Tasks, activity logs, and user management",
-    allowedNav: ["/tasks", "/activity-log", "/user-management", "/analytics", "/support-tickets"],
+    label: "Supervisor",
+    description: "Field operations monitoring, maintenance/service requests, team performance",
+    allowedNav: ["/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log"],
     taskCategories: null,
   },
   {
     id: "supervisor",
     label: "Supervisor",
-    description: "Assigned tasks and own profile",
-    allowedNav: ["/tasks"],
-    taskCategories: ["reception", "general"],
+    description: "Field operations monitoring, maintenance/service requests, team performance",
+    allowedNav: ["/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log"],
+    taskCategories: null,
   },
   {
     id: "maintenance",
     label: "Maintenance",
-    description: "Assigned tasks and own profile",
+    description: "Assigned field tasks only",
     allowedNav: ["/tasks"],
     taskCategories: ["maintenance"],
   },
   {
     id: "cleaning",
     label: "Cleaning",
-    description: "Assigned tasks and own profile",
+    description: "Assigned field tasks only",
     allowedNav: ["/tasks"],
     taskCategories: ["housekeeping"],
   },
   {
     id: "security",
     label: "Security",
-    description: "Assigned tasks and own profile",
+    description: "Assigned field tasks only",
     allowedNav: ["/tasks"],
     taskCategories: ["security"],
   },

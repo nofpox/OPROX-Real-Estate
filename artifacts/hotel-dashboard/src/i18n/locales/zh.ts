@@ -38,13 +38,13 @@ const zh: Translations = {
   priority: { urgent: "紧急", high: "高", medium: "中", low: "低" },
   roles: {
     super_admin: "超级管理员",
-    owner: "公司",
+    owner: "公司", admin_manager: "行政 / 管理",
     manager: "经理", supervisor: "主管", maintenance: "维护",
     cleaning: "清洁", security: "安保", viewingAs: "当前视角",
     switchRole: "切换角色", active: "活跃",
     desc: {
       super_admin: "平台级访问：租户管理和所有设置",
-      owner: "完整系统访问，包括财务和设置",
+      owner: "完整系统访问，包括财务和设置", admin_manager: "报告、单元数据管理、服务请求跟踪、账单",
       manager: "任务、活动日志和用户管理",
       supervisor: "已分配任务和个人资料",
       maintenance: "已分配任务和个人资料",
