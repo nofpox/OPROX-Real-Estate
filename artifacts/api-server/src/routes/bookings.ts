@@ -3,6 +3,7 @@ import { db, bookingsTable, roomsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { insertBookingSchema, updateBookingSchema } from "@workspace/db";
 import { logActivity, actorFromRequest } from "./activityLogs";
+import { availabilityCache, portalCache } from "../utils/cache.js";
 
 const router = Router();
 
@@ -15,6 +16,20 @@ function formatBooking(b: typeof bookingsTable.$inferSelect, room?: typeof rooms
     ...b, totalAmount: Number(b.totalAmount), createdAt: b.createdAt.toISOString(),
     roomName: room?.name ?? null, roomType: room?.type ?? null,
   };
+}
+
+/**
+ * Invalidate all cache entries that could be affected by a booking mutation
+ * on the given property. Also clears the portal bookings list cache.
+ */
+function invalidateBookingCaches(propertyId?: number | null): void {
+  if (propertyId != null) {
+    availabilityCache.invalidatePrefix(`avail:${propertyId}:`);
+  } else {
+    availabilityCache.invalidatePrefix("avail:");
+  }
+  portalCache.invalidatePrefix("bkgs:");
+  portalCache.invalidatePrefix("props:");
 }
 
 router.get("/bookings", async (req, res) => {
@@ -50,6 +65,7 @@ router.post("/bookings", async (req, res) => {
     entityLabel: `Booking #${booking.id}${room ? ` — ${room.name}` : ""}`,
     details: `Status: ${booking.status}, Guest: ${booking.guestName ?? "—"}`,
   });
+  invalidateBookingCaches(room?.propertyId);
   res.status(201).json(formatBooking(booking, room));
 });
 
@@ -102,6 +118,7 @@ router.patch("/bookings/:id", async (req, res) => {
       details: `${before.b.status} → ${parsed.data.status}`,
     });
   }
+  invalidateBookingCaches(room?.propertyId);
   res.json(formatBooking(booking, room));
 });
 
@@ -116,6 +133,15 @@ router.delete("/bookings/:id", async (req, res) => {
   if (booking?.status === "checked-in" && booking.roomId) {
     await db.update(roomsTable).set({ status: "available" }).where(eq(roomsTable.id, booking.roomId));
   }
+  invalidateBookingCaches(
+    booking?.roomId
+      ? (await db.select({ pId: roomsTable.propertyId })
+          .from(roomsTable)
+          .where(eq(roomsTable.id, booking.roomId))
+          .then(([r]) => r?.pId ?? null)
+          .catch(() => null))
+      : null,
+  );
   res.status(204).end();
 });
 
@@ -136,6 +162,7 @@ router.patch("/bookings/:id/cancel", async (req, res) => {
     entityLabel: `Booking #${booking.id}${room ? ` — ${room.name}` : ""}`,
     details: `Guest: ${booking.guestName ?? "—"}`,
   });
+  invalidateBookingCaches(room?.propertyId);
   res.json(formatBooking(booking, room));
 });
 

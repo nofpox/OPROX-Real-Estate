@@ -74,6 +74,14 @@ router.get("/listings", async (req, res) => {
     const meta  = buildMeta(total, page, limit);
 
     listingsCache.set(cacheKey, { data, meta }, TTL.LISTINGS_LIST);
+    // Public list — CDN-cacheable; private if tenant-scoped
+    const tenantScoped = tenantId !== null;
+    res.set(
+      "Cache-Control",
+      tenantScoped
+        ? "private, max-age=60, must-revalidate"
+        : "public, max-age=60, s-maxage=120, stale-while-revalidate=30",
+    );
     sendSuccess(res, data, meta);
   } catch (err) {
     req.log?.error({ err }, "GET /listings failed");
@@ -116,6 +124,14 @@ router.get("/listings/:id", async (req, res) => {
 
     const data = formatListing(listing);
     listingsCache.set(cacheKey, data, TTL.LISTINGS_ITEM);
+    // Individual listing — public unless tenant-scoped
+    const tenantScoped = tenantId !== null;
+    res.set(
+      "Cache-Control",
+      tenantScoped
+        ? "private, max-age=60, must-revalidate"
+        : "public, max-age=60, s-maxage=120, stale-while-revalidate=30",
+    );
     sendSuccess(res, data);
   } catch (err) {
     req.log?.error({ err }, "GET /listings/:id failed");
