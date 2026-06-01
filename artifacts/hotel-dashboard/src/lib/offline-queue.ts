@@ -1,13 +1,15 @@
 /**
- * Lightweight offline queue backed by localStorage.
- * Used to persist pending task mutations across page refreshes.
- * Only text-only operations (no binary/file uploads) can be safely queued.
+ * Unified offline queue backed by localStorage.
+ * Handles both management-side task mutations and worker-side room/request ops.
+ * Only text/JSON operations — no binary uploads.
  */
 
 export type QueuedAction =
   | { type: "submit"; taskId: number }
   | { type: "recall"; taskId: number }
-  | { type: "reopen"; taskId: number };
+  | { type: "reopen"; taskId: number }
+  | { type: "updateStatus"; roomId: number; status: string }
+  | { type: "resolveRequest"; requestId: number };
 
 interface QueueEntry {
   id: string;

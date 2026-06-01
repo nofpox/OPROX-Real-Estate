@@ -434,6 +434,13 @@ const zh: Translations = {
     verifiedCheck: "Verified ✓", pageOf: "Page {{current}} of {{total}}",
   },
   offline: { banner: "您当前处于离线状态", tapToSync: "重新连接后更改将自动同步", syncing: "正在同步 {{count}} 个待处理更改…", synced: "已重新联机 — 所有更改已保存", pendingBadge: "{{count}} 个待处理" },
+  worker: {
+      dashboard: { appSubtitle: "Staff Dashboard", totalUnits: "Total Units", allProperties: "All Properties", logout: "Logout" },
+      workOrders: { title: "Work Orders", subtitle: "My Work Orders", pending: "Pending", inProgress: "In Progress", done: "Done", all: "All", startWork: "Start Work", complete: "Complete", completedDone: "Completed", empty: "No Work Orders", emptyDesc: "No work orders assigned", failedLoad: "Failed to load", retry: "Retry", toastStarted: "Started", toastCompleted: "Completed", toastFailed: "Update failed" },
+      tasks: { title: "My Tasks", pending: "Pending", active: "Active", done: "Done", startTask: "Start Task", endTask: "End Task", awaitingApproval: "Awaiting Approval", completedAwaiting: "Completed — Awaiting Approval", approved: "Approved", completeTask: "Complete Task", taskLabel: "Task", completionPhoto: "Completion Photo", tapPhoto: "Tap to take a photo", gpsLocation: "GPS Location", locationGetting: "Getting your location...", locationDone: "Location recorded", locationFailed: "Could not get location", allowLocation: "Please allow location access in browser settings", retryGps: "Retry", requirements: "Requirements", photo: "Photo", submitReport: "Submit Report", submitting: "Submitting...", cancel: "Cancel" },
+      unitDetail: { unitStatus: "Unit Status", financialData: "Financial Data", serviceRequests: "Service Requests", setStatus: "Set status", type: "Type", capacity: "Capacity", rate: "Rate", status: "Status", amountDue: "Amount Due", dueDate: "Due Date", checkIn: "Check-In", checkOut: "Check-Out", saveChanges: "Save Changes", noFinancial: "No financial data", addFinancial: "Add Financial Data", noRequests: "No requests for this unit", resolve: "Resolve", qrTitle: "Service Request QR", copyLink: "Copy Link", copied: "Link copied!", guests: "guests", perNight: "/nt", loading: "Loading…", edit: "Edit", cancel: "Cancel", new: "new", offline: "Offline — queued, will sync on reconnect" },
+      nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
+    },
 };
 
 export default zh;

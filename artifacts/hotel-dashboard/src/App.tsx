@@ -37,6 +37,10 @@ import Analytics from "@/pages/analytics";
 import SupportTickets from "@/pages/support-tickets";
 import SuspendedPage from "@/pages/suspended";
 import ServiceConfig from "@/pages/service-config";
+import WorkerDashboard from "@/pages/worker-dashboard";
+import WorkerTasks from "@/pages/worker-tasks";
+import WorkerWorkOrders from "@/pages/worker-work-orders";
+import WorkerUnitDetail from "@/pages/worker-unit-detail";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
@@ -158,11 +162,6 @@ function App() {
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
       .then((user) => {
-        // Workers belong in the Staff portal — redirect silently
-        if (user && normTier(user.role) === "worker") {
-          window.location.replace("/staff");
-          return;
-        }
         setAuthUser(user);
         setAuthChecked(true);
       });
@@ -200,12 +199,7 @@ function App() {
           <QueryClientProvider client={queryClient}>
             <Toaster />
             <Login onLogin={(user: any) => {
-              // Smart redirect: workers go to the Staff Tablet portal
-              if (normTier(user.role) === "worker") {
-                window.location.replace("/staff");
-              } else {
-                setAuthUser(user as AuthUser);
-              }
+              setAuthUser(user as AuthUser);
             }} />
           </QueryClientProvider>
         </LanguageProvider>
@@ -223,6 +217,33 @@ function App() {
               username={authUser.displayName}
               onSuccess={() => setAuthUser({ ...authUser, mustChangePassword: false })}
             />
+          </QueryClientProvider>
+        </LanguageProvider>
+      </I18nextProvider>
+    );
+  }
+
+  const isWorker = normTier(authUser.role) === "worker";
+
+  if (isWorker) {
+    return (
+      <I18nextProvider i18n={i18n}>
+        <LanguageProvider>
+          <QueryClientProvider client={queryClient}>
+            <Toaster />
+            <OfflineBanner />
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Switch>
+                <Route path="/worker/unit/:id">
+                  {(params) => <WorkerUnitDetail id={Number(params.id)} />}
+                </Route>
+                <Route path="/worker/tasks" component={WorkerTasks} />
+                <Route path="/worker/work-orders" component={WorkerWorkOrders} />
+                <Route>
+                  <WorkerDashboard onLogout={handleLogout} />
+                </Route>
+              </Switch>
+            </WouterRouter>
           </QueryClientProvider>
         </LanguageProvider>
       </I18nextProvider>

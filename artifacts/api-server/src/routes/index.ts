@@ -37,12 +37,17 @@ const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/", "/unit-requests", "/uni
 
 const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
 
-const ADMIN_PREFIXES = ["/expenses", "/unit-financials", "/settings"];
+const ADMIN_PREFIXES = ["/expenses", "/settings"];
 
 const SUPERVISOR_PREFIXES = [
-  "/users", "/activity-logs", "/staff", "/properties", "/rooms",
-  "/bookings", "/stats", "/guests", "/work-orders", "/shifts",
+  "/users", "/activity-logs", "/staff", "/properties",
+  "/bookings", "/stats", "/guests", "/shifts",
   "/maintenance-requests", "/admin/",
+];
+
+// Paths workers may access even though they are below supervisor tier
+const WORKER_ALLOWED_PREFIXES = [
+  "/tasks", "/work-orders", "/rooms", "/notifications", "/unit-financials",
 ];
 
 async function tierGate(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -100,7 +105,9 @@ async function tierGate(req: Request, res: Response, next: NextFunction): Promis
   }
 
   if (SUPERVISOR_PREFIXES.some((p) => path.startsWith(p))) {
-    if (level < TIER_LEVEL.supervisor) {
+    // Workers may still access specific allowed sub-paths
+    const isWorkerAllowed = tier === "worker" && WORKER_ALLOWED_PREFIXES.some((p) => path.startsWith(p));
+    if (!isWorkerAllowed && level < TIER_LEVEL.supervisor) {
       res.status(403).json({ error: "Forbidden" }); return;
     }
   }
