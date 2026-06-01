@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { db, workOrdersTable, roomsTable, propertiesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, workOrdersTable, roomsTable, propertiesTable, serviceCategoriesTable } from "@workspace/db";
+import { eq, and } from "drizzle-orm";
 
 const router = Router();
 
-const TYPE_PRIORITY: Record<string, string> = {
+const FALLBACK_PRIORITY: Record<string, string> = {
   electrical:  "high",
   plumbing:    "high",
   maintenance: "high",
@@ -12,16 +12,6 @@ const TYPE_PRIORITY: Record<string, string> = {
   noise:       "medium",
   cleaning:    "low",
   other:       "low",
-};
-
-const TYPE_LABEL: Record<string, string> = {
-  electrical:  "Electrical",
-  plumbing:    "Plumbing",
-  maintenance: "Maintenance",
-  ac:          "AC / Heating",
-  noise:       "Noise",
-  cleaning:    "Cleaning",
-  other:       "Other",
 };
 
 router.get("/unit-info/:id", async (req, res) => {
@@ -37,14 +27,15 @@ router.get("/unit-info/:id", async (req, res) => {
   if (!row) { res.status(404).json({ error: "Unit not found" }); return; }
 
   res.json({
-    id: row.room.id,
-    name: row.room.name,
+    id:           row.room.id,
+    name:         row.room.name,
     propertyName: row.property?.name ?? null,
+    propertyType: row.property?.type ?? null,
   });
 });
 
 router.post("/unit-requests", async (req, res) => {
-  const { unitId, type, description } = req.body ?? {};
+  const { unitId, type, description, preferredTimeSlot } = req.body ?? {};
 
   if (!unitId || !type || !String(description ?? "").trim()) {
     res.status(400).json({ error: "unitId, type, and description are required" });
@@ -58,25 +49,33 @@ router.post("/unit-requests", async (req, res) => {
   }
 
   const [room] = await db.select().from(roomsTable).where(eq(roomsTable.id, roomId));
-  if (!room) {
-    res.status(404).json({ error: "Unit not found" });
-    return;
-  }
-  if (!room.propertyId) {
-    res.status(422).json({ error: "Unit has no property assigned" });
-    return;
-  }
+  if (!room) { res.status(404).json({ error: "Unit not found" }); return; }
+  if (!room.propertyId) { res.status(422).json({ error: "Unit has no property assigned" }); return; }
 
-  const priority = TYPE_PRIORITY[type] ?? "medium";
-  const typeLabel = TYPE_LABEL[type] ?? type;
-  const title = `${typeLabel} Request — ${room.name}`;
+  // Resolve priority from dynamic service category (falls back to hardcoded map)
+  let priority = FALLBACK_PRIORITY[String(type).toLowerCase()] ?? "medium";
+  const [cat] = await db
+    .select()
+    .from(serviceCategoriesTable)
+    .where(and(
+      eq(serviceCategoriesTable.tenantId, room.tenantId),
+      eq(serviceCategoriesTable.name, String(type)),
+    ));
+  if (cat) priority = cat.priority;
+
+  const title = `${String(type)} — ${room.name}`;
+
+  let fullDescription = String(description).trim();
+  if (preferredTimeSlot) {
+    fullDescription += `\nPreferred Time Slot: ${String(preferredTimeSlot)}`;
+  }
 
   const [workOrder] = await db.insert(workOrdersTable).values({
-    tenantId: room.tenantId,
+    tenantId:   room.tenantId,
     propertyId: room.propertyId,
-    unitId: roomId,
+    unitId:     roomId,
     title,
-    description: String(description).trim(),
+    description: fullDescription,
     priority,
     status: "pending",
   }).returning();

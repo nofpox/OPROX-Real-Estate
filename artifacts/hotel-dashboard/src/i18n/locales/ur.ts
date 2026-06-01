@@ -12,6 +12,7 @@ const ur: Translations = {
     securityDashboard: "Security",
     analytics: "Analytics",
     supportTickets: "Support Tickets",
+    serviceConfig: "تہیئہ خدمات",
   },
   common: {
     save: "محفوظ کریں", cancel: "منسوخ کریں", delete: "حذف کریں",

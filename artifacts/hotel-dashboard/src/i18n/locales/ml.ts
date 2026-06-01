@@ -12,6 +12,7 @@ const ml: Translations = {
     securityDashboard: "Security",
     analytics: "Analytics",
     supportTickets: "Support Tickets",
+    serviceConfig: "Service Config",
   },
   common: {
     save: "സംരക്ഷിക്കുക", cancel: "റദ്ദാക്കുക", delete: "ഇല്ലാതാക്കുക",

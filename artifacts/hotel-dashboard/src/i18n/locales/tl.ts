@@ -12,6 +12,7 @@ const tl: Translations = {
     securityDashboard: "Seguridad",
     analytics: "Mga Analytics",
     supportTickets: "Mga Ticket ng Suporta",
+    serviceConfig: "Service Config",
   },
   common: {
     save: "I-save", cancel: "Kanselahin", delete: "Burahin", edit: "I-edit", add: "Idagdag",

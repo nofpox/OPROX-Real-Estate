@@ -20,6 +20,9 @@ const fr: Translations = {
       noise: "Bruit",
       other: "Autre",
     },
+    timeSlot: "Créneau horaire souhaité",
+    timeSlotPlaceholder: "Sélectionnez une plage horaire",
+    timeSlotHint: "Veuillez être présent pendant le créneau sélectionné afin que notre équipe puisse vous aider.",
     success: {
       title: "Demande reçue",
       subtitle: "Votre demande a bien été reçue.",

@@ -12,6 +12,7 @@ const hi: Translations = {
     securityDashboard: "Security",
     analytics: "Analytics",
     supportTickets: "Support Tickets",
+    serviceConfig: "Service Config",
   },
   common: {
     save: "सहेजें", cancel: "रद्द करें", delete: "हटाएं", edit: "संपादित करें", add: "जोड़ें",

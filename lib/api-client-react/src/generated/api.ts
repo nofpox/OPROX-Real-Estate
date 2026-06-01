@@ -58,6 +58,7 @@ import type {
   ListGuestsParams,
   ListMyWorkOrdersParams,
   ListNotificationsParams,
+  ListServiceCategoriesParams,
   ListShiftsParams,
   ListStaffParams,
   ListSupportTicketsParams,
@@ -81,6 +82,9 @@ import type {
   Room,
   RoomInput,
   RoomUpdate,
+  ServiceCategory,
+  ServiceCategoryInput,
+  ServiceCategoryUpdate,
   Settings,
   SettingsInput,
   Shift,
@@ -2618,6 +2622,303 @@ export function useListMyWorkOrders<TData = Awaited<ReturnType<typeof listMyWork
 
 
 
+
+export const getListServiceCategoriesUrl = (params?: ListServiceCategoriesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/service-categories?${stringifiedParams}` : `/api/service-categories`
+}
+
+/**
+ * @summary List active service categories (public — no auth required)
+ */
+export const listServiceCategories = async (params?: ListServiceCategoriesParams, options?: RequestInit): Promise<ServiceCategory[]> => {
+
+  return customFetch<ServiceCategory[]>(getListServiceCategoriesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListServiceCategoriesQueryKey = (params?: ListServiceCategoriesParams,) => {
+    return [
+    `/api/service-categories`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListServiceCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof listServiceCategories>>, TError = ErrorType<unknown>>(params?: ListServiceCategoriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listServiceCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListServiceCategoriesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listServiceCategories>>> = ({ signal }) => listServiceCategories(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listServiceCategories>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListServiceCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof listServiceCategories>>>
+export type ListServiceCategoriesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List active service categories (public — no auth required)
+ */
+
+export function useListServiceCategories<TData = Awaited<ReturnType<typeof listServiceCategories>>, TError = ErrorType<unknown>>(
+ params?: ListServiceCategoriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listServiceCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListServiceCategoriesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateServiceCategoryUrl = () => {
+
+
+
+
+  return `/api/service-categories`
+}
+
+/**
+ * @summary Create a service category (admin only)
+ */
+export const createServiceCategory = async (serviceCategoryInput: ServiceCategoryInput, options?: RequestInit): Promise<ServiceCategory> => {
+
+  return customFetch<ServiceCategory>(getCreateServiceCategoryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      serviceCategoryInput,)
+  }
+);}
+
+
+
+
+export const getCreateServiceCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createServiceCategory>>, TError,{data: BodyType<ServiceCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createServiceCategory>>, TError,{data: BodyType<ServiceCategoryInput>}, TContext> => {
+
+const mutationKey = ['createServiceCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createServiceCategory>>, {data: BodyType<ServiceCategoryInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createServiceCategory(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateServiceCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof createServiceCategory>>>
+    export type CreateServiceCategoryMutationBody = BodyType<ServiceCategoryInput>
+    export type CreateServiceCategoryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a service category (admin only)
+ */
+export const useCreateServiceCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createServiceCategory>>, TError,{data: BodyType<ServiceCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createServiceCategory>>,
+        TError,
+        {data: BodyType<ServiceCategoryInput>},
+        TContext
+      > => {
+      return useMutation(getCreateServiceCategoryMutationOptions(options));
+    }
+
+export const getUpdateServiceCategoryUrl = (id: number,) => {
+
+
+
+
+  return `/api/service-categories/${id}`
+}
+
+/**
+ * @summary Update a service category (admin only)
+ */
+export const updateServiceCategory = async (id: number,
+    serviceCategoryUpdate: ServiceCategoryUpdate, options?: RequestInit): Promise<ServiceCategory> => {
+
+  return customFetch<ServiceCategory>(getUpdateServiceCategoryUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      serviceCategoryUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateServiceCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateServiceCategory>>, TError,{id: number;data: BodyType<ServiceCategoryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateServiceCategory>>, TError,{id: number;data: BodyType<ServiceCategoryUpdate>}, TContext> => {
+
+const mutationKey = ['updateServiceCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateServiceCategory>>, {id: number;data: BodyType<ServiceCategoryUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateServiceCategory(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateServiceCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof updateServiceCategory>>>
+    export type UpdateServiceCategoryMutationBody = BodyType<ServiceCategoryUpdate>
+    export type UpdateServiceCategoryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a service category (admin only)
+ */
+export const useUpdateServiceCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateServiceCategory>>, TError,{id: number;data: BodyType<ServiceCategoryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateServiceCategory>>,
+        TError,
+        {id: number;data: BodyType<ServiceCategoryUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateServiceCategoryMutationOptions(options));
+    }
+
+export const getDeleteServiceCategoryUrl = (id: number,) => {
+
+
+
+
+  return `/api/service-categories/${id}`
+}
+
+/**
+ * @summary Delete a service category (admin only)
+ */
+export const deleteServiceCategory = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteServiceCategoryUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteServiceCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteServiceCategory>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteServiceCategory>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteServiceCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteServiceCategory>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteServiceCategory(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteServiceCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof deleteServiceCategory>>>
+
+    export type DeleteServiceCategoryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a service category (admin only)
+ */
+export const useDeleteServiceCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteServiceCategory>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteServiceCategory>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteServiceCategoryMutationOptions(options));
+    }
 
 export const getGetUnitInfoUrl = (id: number,) => {
 

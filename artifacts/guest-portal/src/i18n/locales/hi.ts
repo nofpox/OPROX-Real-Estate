@@ -20,6 +20,9 @@ const hi: Translations = {
       noise: "शोर",
       other: "अन्य",
     },
+    timeSlot: "पसंदीदा समय स्लॉट",
+    timeSlotPlaceholder: "एक समय विंडो चुनें",
+    timeSlotHint: "कृपया चुने गए समय के दौरान उपस्थित रहें ताकि हमारी टीम आपकी सहायता कर सके।",
     success: {
       title: "अनुरोध प्राप्त हुआ",
       subtitle: "आपका अनुरोध प्राप्त हो गया है।",

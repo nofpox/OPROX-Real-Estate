@@ -36,6 +36,7 @@ import SecurityDashboard from "@/pages/security-dashboard";
 import Analytics from "@/pages/analytics";
 import SupportTickets from "@/pages/support-tickets";
 import SuspendedPage from "@/pages/suspended";
+import ServiceConfig from "@/pages/service-config";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
@@ -75,6 +76,7 @@ function Router() {
       <Route path="/security-dashboard" component={SecurityDashboard} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/support-tickets" component={SupportTickets} />
+      <Route path="/service-config" component={ServiceConfig} />
       <Route component={NotFound} />
     </Switch>
   );

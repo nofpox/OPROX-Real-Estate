@@ -21,6 +21,7 @@ const ar: Translations = {
     securityDashboard: "لوحة الأمن",
     analytics: "التحليلات",
     supportTickets: "تذاكر الدعم",
+    serviceConfig: "تهيئة الخدمات",
   },
   common: {
     save: "حفظ",

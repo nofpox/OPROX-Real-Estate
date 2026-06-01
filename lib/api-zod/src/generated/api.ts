@@ -703,6 +703,85 @@ export const ListMyWorkOrdersResponse = zod.array(ListMyWorkOrdersResponseItem)
 
 
 /**
+ * @summary List active service categories (public — no auth required)
+ */
+export const ListServiceCategoriesQueryParams = zod.object({
+  "propertyType": zod.coerce.string().optional()
+})
+
+export const ListServiceCategoriesResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "name": zod.string(),
+  "icon": zod.string(),
+  "color": zod.string(),
+  "propertyTypes": zod.string(),
+  "isActive": zod.boolean(),
+  "sortOrder": zod.number(),
+  "priority": zod.string(),
+  "requiresTimeSlot": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const ListServiceCategoriesResponse = zod.array(ListServiceCategoriesResponseItem)
+
+
+/**
+ * @summary Create a service category (admin only)
+ */
+export const CreateServiceCategoryBody = zod.object({
+  "name": zod.string(),
+  "icon": zod.string(),
+  "color": zod.string().optional(),
+  "propertyTypes": zod.string().optional(),
+  "isActive": zod.boolean().optional(),
+  "sortOrder": zod.number().optional(),
+  "priority": zod.string().optional(),
+  "requiresTimeSlot": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Update a service category (admin only)
+ */
+export const UpdateServiceCategoryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateServiceCategoryBody = zod.object({
+  "name": zod.string().optional(),
+  "icon": zod.string().optional(),
+  "color": zod.string().optional(),
+  "propertyTypes": zod.string().optional(),
+  "isActive": zod.boolean().optional(),
+  "sortOrder": zod.number().optional(),
+  "priority": zod.string().optional(),
+  "requiresTimeSlot": zod.boolean().optional()
+})
+
+export const UpdateServiceCategoryResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "name": zod.string(),
+  "icon": zod.string(),
+  "color": zod.string(),
+  "propertyTypes": zod.string(),
+  "isActive": zod.boolean(),
+  "sortOrder": zod.number(),
+  "priority": zod.string(),
+  "requiresTimeSlot": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a service category (admin only)
+ */
+export const DeleteServiceCategoryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary Get basic public unit info for the service request form (no auth required)
  */
 export const GetUnitInfoParams = zod.object({
@@ -712,7 +791,8 @@ export const GetUnitInfoParams = zod.object({
 export const GetUnitInfoResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "propertyName": zod.string().nullish()
+  "propertyName": zod.string().nullish(),
+  "propertyType": zod.string().nullish()
 })
 
 
@@ -721,8 +801,9 @@ export const GetUnitInfoResponse = zod.object({
  */
 export const CreateUnitRequestBody = zod.object({
   "unitId": zod.number(),
-  "type": zod.enum(['electrical', 'plumbing', 'ac', 'cleaning', 'maintenance', 'noise', 'other']),
-  "description": zod.string()
+  "type": zod.string(),
+  "description": zod.string(),
+  "preferredTimeSlot": zod.string().nullish()
 })
 
 

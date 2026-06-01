@@ -20,6 +20,9 @@ const tl: Translations = {
       noise: "Ingay",
       other: "Iba pa",
     },
+    timeSlot: "Gustong Oras na Window",
+    timeSlotPlaceholder: "Pumili ng oras na window",
+    timeSlotHint: "Mangyaring manatili sa napiling oras para matulungan kayo ng aming koponan.",
     success: {
       title: "Natanggap ang Kahilingan",
       subtitle: "Natanggap na ang iyong kahilingan.",

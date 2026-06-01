@@ -20,6 +20,9 @@ const ar: Translations = {
       noise: "ضوضاء",
       other: "أخرى",
     },
+    timeSlot: "الوقت المفضّل للزيارة",
+    timeSlotPlaceholder: "اختر نافذة زمنية",
+    timeSlotHint: "يرجى التواجد خلال الفترة المحددة ليتمكن فريقنا من مساعدتك.",
     success: {
       title: "تم الاستلام",
       subtitle: "تم استلام طلبك.",

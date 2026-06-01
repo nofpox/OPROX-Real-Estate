@@ -12,6 +12,7 @@ const ne: Translations = {
     securityDashboard: "Security",
     analytics: "Analytics",
     supportTickets: "Support Tickets",
+    serviceConfig: "Service Config",
   },
   common: {
     save: "सुरक्षित गर्नुहोस्", cancel: "रद्द गर्नुहोस्", delete: "मेट्नुहोस्",

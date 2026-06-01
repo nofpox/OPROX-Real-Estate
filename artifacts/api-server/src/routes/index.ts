@@ -27,12 +27,13 @@ import storageRouter from "./storage";
 import unitRequestsRouter from "./unitRequests";
 import superAdminRouter from "./super-admin";
 import supportTicketsRouter from "./support-tickets";
+import serviceCategoriesRouter from "./serviceCategories";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
   worker: 0, supervisor: 1, admin: 2,
 };
 
-const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/", "/unit-requests", "/unit-info/"];
+const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/", "/unit-requests", "/unit-info/", "/service-categories"];
 
 const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
 
@@ -136,6 +137,7 @@ router.use(storageRouter);
 router.use(guestRouter);
 router.use(unitRequestsRouter);
 router.use(supportTicketsRouter);
+router.use(serviceCategoriesRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

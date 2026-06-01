@@ -12,6 +12,7 @@ const th: Translations = {
     securityDashboard: "Security",
     analytics: "Analytics",
     supportTickets: "Support Tickets",
+    serviceConfig: "ตั้งค่าบริการ",
   },
   common: {
     save: "บันทึก", cancel: "ยกเลิก", delete: "ลบ", edit: "แก้ไข", add: "เพิ่ม",

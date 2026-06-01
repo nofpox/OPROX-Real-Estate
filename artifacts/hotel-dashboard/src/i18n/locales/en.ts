@@ -19,6 +19,7 @@ const en = {
     securityDashboard: "Security",
     analytics: "Analytics",
     supportTickets: "Support Tickets",
+    serviceConfig: "Service Config",
   },
   common: {
     save: "Save",

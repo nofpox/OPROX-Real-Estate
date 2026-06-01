@@ -20,6 +20,9 @@ const pt: Translations = {
       noise: "Barulho",
       other: "Outro",
     },
+    timeSlot: "Horário Preferencial",
+    timeSlotPlaceholder: "Selecione uma janela de horário",
+    timeSlotHint: "Por favor, esteja presente durante o horário selecionado para que nossa equipe possa ajudá-lo.",
     success: {
       title: "Solicitação Recebida",
       subtitle: "Sua solicitação foi recebida.",

@@ -980,31 +980,56 @@ export interface UnitInfo {
   id: number;
   name: string;
   propertyName?: string | null;
+  propertyType?: string | null;
 }
-
-export type UnitRequestInputType = typeof UnitRequestInputType[keyof typeof UnitRequestInputType];
-
-
-export const UnitRequestInputType = {
-  electrical: 'electrical',
-  plumbing: 'plumbing',
-  ac: 'ac',
-  cleaning: 'cleaning',
-  maintenance: 'maintenance',
-  noise: 'noise',
-  other: 'other',
-} as const;
 
 export interface UnitRequestInput {
   unitId: number;
-  type: UnitRequestInputType;
+  type: string;
   description: string;
+  preferredTimeSlot?: string | null;
 }
 
 export interface UnitRequestResult {
   refCode: string;
   workOrderId: number;
   message?: string;
+}
+
+export interface ServiceCategory {
+  id: number;
+  tenantId: number;
+  name: string;
+  icon: string;
+  color: string;
+  propertyTypes: string;
+  isActive: boolean;
+  sortOrder: number;
+  priority: string;
+  requiresTimeSlot: boolean;
+  createdAt: string;
+}
+
+export interface ServiceCategoryInput {
+  name: string;
+  icon: string;
+  color?: string;
+  propertyTypes?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+  priority?: string;
+  requiresTimeSlot?: boolean;
+}
+
+export interface ServiceCategoryUpdate {
+  name?: string;
+  icon?: string;
+  color?: string;
+  propertyTypes?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+  priority?: string;
+  requiresTimeSlot?: boolean;
 }
 
 export type ListBookingsParams = {
@@ -1038,6 +1063,10 @@ assignedToId?: number;
 
 export type ListMyWorkOrdersParams = {
 status?: string;
+};
+
+export type ListServiceCategoriesParams = {
+propertyType?: string;
 };
 
 export type ListStaffParams = {

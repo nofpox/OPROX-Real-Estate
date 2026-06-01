@@ -6,6 +6,7 @@ export const propertiesTable = pgTable("properties", {
   id:       serial("id").primaryKey(),
   tenantId: integer("tenant_id").notNull().default(1),
   name:     text("name").notNull(),
+  type:     text("type").notNull().default("hotel"),
   address:  text("address").notNull(),
   city:     text("city").notNull(),
   country:  text("country").notNull().default("USA"),

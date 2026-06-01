@@ -20,6 +20,9 @@ const ur: Translations = {
       noise: "شور",
       other: "دیگر",
     },
+    timeSlot: "پسندیدہ وقت کی کھڑکی",
+    timeSlotPlaceholder: "وقت کی کھڑکی منتخب کریں",
+    timeSlotHint: "براہ کرم منتخب وقت کے دوران موجود رہیں تاکہ ہماری ٹیم آپ کی مدد کر سکے۔",
     success: {
       title: "درخواست موصول ہوئی",
       subtitle: "آپ کی درخواست موصول ہو گئی ہے۔",

@@ -20,6 +20,9 @@ const ne: Translations = {
       noise: "आवाज",
       other: "अन्य",
     },
+    timeSlot: "मनपर्ने समय स्लट",
+    timeSlotPlaceholder: "समय विन्डो छान्नुहोस्",
+    timeSlotHint: "छानिएको समयमा उपस्थित रहनुहोस् ताकि हाम्रो टोलीले तपाईंलाई सहयोग गर्न सकोस्।",
     success: {
       title: "अनुरोध प्राप्त भयो",
       subtitle: "तपाईंको अनुरोध प्राप्त भयो।",

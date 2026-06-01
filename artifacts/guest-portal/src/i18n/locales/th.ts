@@ -20,6 +20,9 @@ const th: Translations = {
       noise: "เสียงดัง",
       other: "อื่นๆ",
     },
+    timeSlot: "ช่วงเวลาที่ต้องการ",
+    timeSlotPlaceholder: "เลือกช่วงเวลา",
+    timeSlotHint: "กรุณาอยู่ในสถานที่ในช่วงเวลาที่เลือกเพื่อให้ทีมของเราให้ความช่วยเหลือ",
     success: {
       title: "ได้รับคำขอแล้ว",
       subtitle: "ได้รับคำขอของคุณแล้ว",

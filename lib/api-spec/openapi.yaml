@@ -658,6 +658,81 @@ paths:
                 items:
                   $ref: "#/components/schemas/WorkOrder"
 
+  /service-categories:
+    get:
+      operationId: listServiceCategories
+      tags: [serviceCategories]
+      summary: List active service categories (public — no auth required)
+      parameters:
+        - name: propertyType
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of service categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceCategory"
+    post:
+      operationId: createServiceCategory
+      tags: [serviceCategories]
+      summary: Create a service category (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceCategoryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceCategory"
+
+  /service-categories/{id}:
+    patch:
+      operationId: updateServiceCategory
+      tags: [serviceCategories]
+      summary: Update a service category (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceCategoryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceCategory"
+    delete:
+      operationId: deleteServiceCategory
+      tags: [serviceCategories]
+      summary: Delete a service category (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /unit-info/{id}:
     get:
       operationId: getUnitInfo
@@ -3799,6 +3874,9 @@ components:
         propertyName:
           type: string
           nullable: true
+        propertyType:
+          type: string
+          nullable: true
 
     UnitRequestInput:
       type: object
@@ -3808,9 +3886,11 @@ components:
           type: integer
         type:
           type: string
-          enum: [electrical, plumbing, ac, cleaning, maintenance, noise, other]
         description:
           type: string
+        preferredTimeSlot:
+          type: string
+          nullable: true
 
     UnitRequestResult:
       type: object
@@ -3822,3 +3902,71 @@ components:
           type: integer
         message:
           type: string
+
+    ServiceCategory:
+      type: object
+      required: [id, tenantId, name, icon, color, propertyTypes, isActive, sortOrder, priority, requiresTimeSlot, createdAt]
+      properties:
+        id:
+          type: integer
+        tenantId:
+          type: integer
+        name:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        propertyTypes:
+          type: string
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+        priority:
+          type: string
+        requiresTimeSlot:
+          type: boolean
+        createdAt:
+          type: string
+
+    ServiceCategoryInput:
+      type: object
+      required: [name, icon]
+      properties:
+        name:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        propertyTypes:
+          type: string
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+        priority:
+          type: string
+        requiresTimeSlot:
+          type: boolean
+
+    ServiceCategoryUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        propertyTypes:
+          type: string
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+        priority:
+          type: string
+        requiresTimeSlot:
+          type: boolean

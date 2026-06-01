@@ -20,6 +20,9 @@ const zh: Translations = {
       noise: "噪音",
       other: "其他",
     },
+    timeSlot: "首选时间段",
+    timeSlotPlaceholder: "选择时间窗口",
+    timeSlotHint: "请在所选时间段内在场，以便我们的团队为您提供帮助。",
     success: {
       title: "请求已收到",
       subtitle: "您的请求已收到。",

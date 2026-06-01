@@ -18,6 +18,9 @@ const en = {
       noise: "Noise",
       other: "Other",
     },
+    timeSlot: "Preferred Time Slot",
+    timeSlotPlaceholder: "Select a time window",
+    timeSlotHint: "Please be present during the selected window for our team to assist you.",
     success: {
       title: "Request Received",
       subtitle: "Your request has been received.",

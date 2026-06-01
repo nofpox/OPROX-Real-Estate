@@ -12,6 +12,7 @@ const pt: Translations = {
     securityDashboard: "Segurança",
     analytics: "Análises",
     supportTickets: "Tickets de Suporte",
+    serviceConfig: "Config. de Serviços",
   },
   common: {
     save: "Salvar", cancel: "Cancelar", delete: "Excluir", edit: "Editar", add: "Adicionar",

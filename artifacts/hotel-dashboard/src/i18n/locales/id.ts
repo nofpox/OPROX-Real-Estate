@@ -12,6 +12,7 @@ const id: Translations = {
     securityDashboard: "Security",
     analytics: "Analytics",
     supportTickets: "Support Tickets",
+    serviceConfig: "Konfigurasi Layanan",
   },
   common: {
     save: "Simpan", cancel: "Batal", delete: "Hapus", edit: "Edit", add: "Tambah",

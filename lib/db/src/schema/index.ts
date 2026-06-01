@@ -20,3 +20,4 @@ export * from "./fieldUsers";
 export * from "./customFields";
 export * from "./supportTickets";
 export * from "./user-sessions";
+export * from "./serviceCategories";

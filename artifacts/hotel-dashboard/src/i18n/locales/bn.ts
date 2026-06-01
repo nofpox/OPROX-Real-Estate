@@ -12,6 +12,7 @@ const bn: Translations = {
     securityDashboard: "Security",
     analytics: "Analytics",
     supportTickets: "Support Tickets",
+    serviceConfig: "Service Config",
   },
   common: {
     save: "সংরক্ষণ করুন", cancel: "বাতিল করুন", delete: "মুছুন",

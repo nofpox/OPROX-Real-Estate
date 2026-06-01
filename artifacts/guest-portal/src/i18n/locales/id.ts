@@ -20,6 +20,9 @@ const id: Translations = {
       noise: "Kebisingan",
       other: "Lainnya",
     },
+    timeSlot: "Slot Waktu yang Diinginkan",
+    timeSlotPlaceholder: "Pilih jendela waktu",
+    timeSlotHint: "Harap berada di tempat selama jendela waktu yang dipilih agar tim kami dapat membantu Anda.",
     success: {
       title: "Permintaan Diterima",
       subtitle: "Permintaan Anda telah diterima.",
