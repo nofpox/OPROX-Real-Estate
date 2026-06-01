@@ -1231,7 +1231,7 @@ function AppearanceTab() {
               id="ap-company"
               value={companyName}
               onChange={(e) => { setCompanyName(e.target.value); setDirty(true); }}
-              placeholder="Rakz Operations"
+              placeholder="ركز للحلول الذكية"
             />
             <p className="text-xs text-muted-foreground">Used in PDF report headers and the login screen.</p>
           </div>

@@ -9,6 +9,7 @@ const hi: Translations = {
     submit: "अनुरोध सबमिट करें",
     submitting: "सबमिट हो रहा है...",
     unitNotFound: "इकाई नहीं मिली",
+    invalidUnit: "कृपया एक वैध इकाई नंबर दर्ज करें।",
     errorGeneric: "एक त्रुटि हुई। कृपया पुनः प्रयास करें।",
     types: {
       electrical: "बिजली",
@@ -26,6 +27,14 @@ const hi: Translations = {
       keepCode: "अनुवर्ती कार्रवाई के लिए अपना संदर्भ कोड रखें",
       newRequest: "नया अनुरोध",
     },
+  },
+  landing: {
+    accessUnit: "अपनी इकाई तक पहुँचें",
+    enterUnit: "शुरू करने के लिए अपना इकाई नंबर दर्ज करें",
+    accessPortal: "पोर्टल एक्सेस करें",
+    submitRequests: "अनुरोध सबमिट करें",
+    rateStay: "अपने प्रवास को रेट करें",
+    unitDetails: "इकाई विवरण",
   },
   lang: { select: "भाषा" },
 };

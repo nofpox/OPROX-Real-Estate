@@ -9,6 +9,7 @@ const ne: Translations = {
     submit: "अनुरोध पेश गर्नुहोस्",
     submitting: "पेश हुँदैछ...",
     unitNotFound: "एकाइ फेला परेन",
+    invalidUnit: "कृपया सही एकाइ नम्बर हाल्नुहोस्।",
     errorGeneric: "त्रुटि भयो। पुनः प्रयास गर्नुहोस्।",
     types: {
       electrical: "विद्युत",
@@ -26,6 +27,14 @@ const ne: Translations = {
       keepCode: "अनुगमनका लागि सन्दर्भ कोड राख्नुहोस्",
       newRequest: "नयाँ अनुरोध",
     },
+  },
+  landing: {
+    accessUnit: "आफ्नो एकाइ पहुँच गर्नुहोस्",
+    enterUnit: "सुरु गर्न एकाइ नम्बर हाल्नुहोस्",
+    accessPortal: "पोर्टल पहुँच गर्नुहोस्",
+    submitRequests: "अनुरोध पेश गर्नुहोस्",
+    rateStay: "आफ्नो बसाइको मूल्याङ्कन गर्नुहोस्",
+    unitDetails: "एकाइ विवरण",
   },
   lang: { select: "भाषा" },
 };

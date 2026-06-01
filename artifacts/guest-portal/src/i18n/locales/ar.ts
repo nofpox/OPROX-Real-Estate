@@ -9,6 +9,7 @@ const ar: Translations = {
     submit: "إرسال الطلب",
     submitting: "جاري الإرسال...",
     unitNotFound: "الوحدة غير موجودة",
+    invalidUnit: "يرجى إدخال رقم وحدة صحيح.",
     errorGeneric: "حدث خطأ. يرجى المحاولة مرة أخرى.",
     types: {
       electrical: "كهرباء",
@@ -26,6 +27,14 @@ const ar: Translations = {
       keepCode: "احتفظ برمز الطلب للمتابعة",
       newRequest: "تقديم طلب جديد",
     },
+  },
+  landing: {
+    accessUnit: "الوصول إلى وحدتك",
+    enterUnit: "أدخل رقم وحدتك للبدء",
+    accessPortal: "دخول البوابة",
+    submitRequests: "تقديم الطلبات",
+    rateStay: "تقييم إقامتك",
+    unitDetails: "تفاصيل الوحدة",
   },
   lang: { select: "اللغة" },
 };

@@ -9,6 +9,7 @@ const tl: Translations = {
     submit: "Isumite ang Kahilingan",
     submitting: "Isinusumite...",
     unitNotFound: "Hindi nahanap ang unit",
+    invalidUnit: "Mangyaring maglagay ng wastong numero ng unit.",
     errorGeneric: "May naganap na error. Subukan ulit.",
     types: {
       electrical: "Elektrikal",
@@ -26,6 +27,14 @@ const tl: Translations = {
       keepCode: "Itago ang iyong reference code para sa follow-up",
       newRequest: "Bagong Kahilingan",
     },
+  },
+  landing: {
+    accessUnit: "I-access ang Iyong Unit",
+    enterUnit: "Ilagay ang iyong numero ng unit para magsimula",
+    accessPortal: "I-access ang Portal",
+    submitRequests: "Magsumite ng Kahilingan",
+    rateStay: "I-rate ang Iyong Pananatili",
+    unitDetails: "Mga Detalye ng Unit",
   },
   lang: { select: "Wika" },
 };

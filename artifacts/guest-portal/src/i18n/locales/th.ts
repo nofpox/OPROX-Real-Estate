@@ -9,6 +9,7 @@ const th: Translations = {
     submit: "ส่งคำขอ",
     submitting: "กำลังส่ง...",
     unitNotFound: "ไม่พบยูนิต",
+    invalidUnit: "โปรดป้อนหมายเลขยูนิตที่ถูกต้อง",
     errorGeneric: "เกิดข้อผิดพลาด โปรดลองอีกครั้ง",
     types: {
       electrical: "ไฟฟ้า",
@@ -26,6 +27,14 @@ const th: Translations = {
       keepCode: "เก็บรหัสอ้างอิงเพื่อติดตาม",
       newRequest: "คำขอใหม่",
     },
+  },
+  landing: {
+    accessUnit: "เข้าถึงยูนิตของคุณ",
+    enterUnit: "ป้อนหมายเลขยูนิตของคุณเพื่อเริ่มต้น",
+    accessPortal: "เข้าสู่พอร์ทัล",
+    submitRequests: "ส่งคำขอ",
+    rateStay: "ให้คะแนนการเข้าพัก",
+    unitDetails: "รายละเอียดยูนิต",
   },
   lang: { select: "ภาษา" },
 };

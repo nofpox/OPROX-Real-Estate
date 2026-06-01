@@ -9,6 +9,7 @@ const fr: Translations = {
     submit: "Soumettre la demande",
     submitting: "Envoi en cours...",
     unitNotFound: "Unité introuvable",
+    invalidUnit: "Veuillez entrer un numéro d'unité valide.",
     errorGeneric: "Une erreur s'est produite. Veuillez réessayer.",
     types: {
       electrical: "Électricité",
@@ -26,6 +27,14 @@ const fr: Translations = {
       keepCode: "Conservez votre code de référence pour le suivi",
       newRequest: "Nouvelle demande",
     },
+  },
+  landing: {
+    accessUnit: "Accéder à votre unité",
+    enterUnit: "Entrez votre numéro d'unité pour commencer",
+    accessPortal: "Accéder au portail",
+    submitRequests: "Soumettre des demandes",
+    rateStay: "Évaluer votre séjour",
+    unitDetails: "Détails de l'unité",
   },
   lang: { select: "Langue" },
 };

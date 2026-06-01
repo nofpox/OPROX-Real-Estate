@@ -30,7 +30,7 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 async function sendResetEmail(to: string, token: string): Promise<void> {
   if (!resend) return;
   await resend.emails.send({
-    from:    "Rakz PMS <onboarding@resend.dev>",
+    from:    "ركز للحلول الذكية <onboarding@resend.dev>",
     to:      [to],
     subject: "Your password reset code",
     html: `
@@ -107,7 +107,7 @@ export async function sendWelcomeEmail(to: string, username: string, tempPasswor
     : `<p style="margin:16px 0 0;color:#555;font-size:14px">Open the Rakz PMS app and sign in with the credentials below.</p>`;
 
   await resend.emails.send({
-    from:    "Rakz PMS <onboarding@resend.dev>",
+    from:    "ركز للحلول الذكية <onboarding@resend.dev>",
     to:      [to],
     subject: "You're invited — Your Rakz PMS account is ready",
     html: `
@@ -172,8 +172,8 @@ export async function ensureAdmin() {
     // Ensure default tenant exists
     await db.execute(sql`
       INSERT INTO tenants (id, name, slug, plan, status, logo_text, logo_sub)
-      VALUES (1, 'Rakz', 'rakz', 'enterprise', 'active', 'Rakz', 'OMS')
-      ON CONFLICT (id) DO UPDATE SET name='Rakz', slug='rakz', logo_text='Rakz', logo_sub='OMS'
+      VALUES (1, 'ركز للحلول الذكية', 'rakez', 'enterprise', 'active', 'ركز', 'للحلول الذكية')
+      ON CONFLICT (id) DO UPDATE SET name='ركز للحلول الذكية', slug='rakez', logo_text='ركز', logo_sub='للحلول الذكية'
     `);
 
     // Ensure admin user exists (scoped to tenant 1)

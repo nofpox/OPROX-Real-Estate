@@ -9,6 +9,7 @@ const ml: Translations = {
     submit: "അഭ്യർത്ഥന സമർപ്പിക്കുക",
     submitting: "സമർപ്പിക്കുന്നു...",
     unitNotFound: "യൂണിറ്റ് കണ്ടെത്തിയില്ല",
+    invalidUnit: "ദയവായി ഒരു സാധുവായ യൂണിറ്റ് നമ്പർ നൽകുക.",
     errorGeneric: "ഒരു പിശക് സംഭവിച്ചു. വീണ്ടും ശ്രമിക്കുക.",
     types: {
       electrical: "വൈദ്യുതി",
@@ -26,6 +27,14 @@ const ml: Translations = {
       keepCode: "ഫോളോ-അപ്പിനായി റഫറൻസ് കോഡ് സൂക്ഷിക്കുക",
       newRequest: "പുതിയ അഭ്യർത്ഥന",
     },
+  },
+  landing: {
+    accessUnit: "നിങ്ങളുടെ യൂണിറ്റ് ആക്സസ് ചെയ്യുക",
+    enterUnit: "ആരംഭിക്കാൻ യൂണിറ്റ് നമ്പർ നൽകുക",
+    accessPortal: "പോർട്ടൽ ആക്സസ് ചെയ്യുക",
+    submitRequests: "അഭ്യർത്ഥനകൾ സമർപ്പിക്കുക",
+    rateStay: "താമസം വിലയിരുത്തുക",
+    unitDetails: "യൂണിറ്റ് വിശദാംശങ്ങൾ",
   },
   lang: { select: "ഭാഷ" },
 };
