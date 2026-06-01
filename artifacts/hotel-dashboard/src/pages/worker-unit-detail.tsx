@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -17,6 +17,7 @@ import {
   DollarSign, Loader2, RefreshCw, QrCode, CheckCircle2,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { QRCodeCanvas } from "qrcode.react";
 
 type Room     = { id: number; name: string; type: string; status: string; capacity: number; pricePerNight: number };
 type Financial = { roomId: number; status: string; dueDate: string | null; amountDue: number | null; checkIn: string | null; checkOut: string | null };
@@ -44,6 +45,7 @@ export default function WorkerUnitDetail({ id }: { id: number }) {
   const queryClient  = useQueryClient();
   const { isOnline } = useOnlineStatus();
   const [qrOpen, setQrOpen]               = useState(false);
+  const qrCanvasRef                        = useRef<HTMLCanvasElement>(null);
   const [financialForm, setFinancialForm] = useState<Partial<Financial>>({});
   const [editFinancial, setEditFinancial] = useState(false);
 
@@ -301,21 +303,52 @@ export default function WorkerUnitDetail({ id }: { id: number }) {
             <DialogTitle className="font-serif">{t("worker.unitDetail.qrTitle")} — {room?.name}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-2">
-            <div className="bg-white p-4 rounded-xl">
-              <div className="w-48 h-48 bg-slate-100 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <QrCode size={48} className="text-slate-400 mx-auto mb-2" />
-                  <p className="text-xs text-slate-500">QR Code</p>
-                </div>
-              </div>
+            <div className="bg-white p-4 rounded-xl shadow-inner">
+              <QRCodeCanvas
+                ref={qrCanvasRef}
+                value={serviceRequestUrl}
+                size={200}
+                level="H"
+                includeMargin={false}
+              />
             </div>
-            <p className="text-xs text-muted-foreground text-center break-all">{serviceRequestUrl}</p>
-            <Button variant="outline" size="sm" onClick={() => {
-              navigator.clipboard?.writeText(serviceRequestUrl);
-              toast({ title: t("worker.unitDetail.copied") });
-            }}>
-              {t("worker.unitDetail.copyLink")}
-            </Button>
+            <p className="text-xs text-muted-foreground text-center break-all px-2">{serviceRequestUrl}</p>
+            <div className="flex gap-2 flex-wrap justify-center">
+              <Button size="sm" onClick={() => {
+                const canvas = qrCanvasRef.current;
+                if (!canvas) return;
+                const link = document.createElement("a");
+                link.download = `unit-${room?.name ?? id}-qr.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+              }}>
+                ⬇ Download PNG
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => {
+                const canvas = qrCanvasRef.current;
+                if (!canvas) return;
+                const dataUrl = canvas.toDataURL("image/png");
+                const win = window.open("", "_blank");
+                if (!win) return;
+                win.document.write(`<!DOCTYPE html><html><head><title>${room?.name ?? ""} — QR</title>
+                  <style>body{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#fff}
+                  img{width:260px;height:260px}h2{margin:16px 0 4px;font-size:20px}p{margin:0;font-size:11px;color:#555;word-break:break-all;max-width:280px;text-align:center}
+                  @media print{button{display:none}}</style></head>
+                  <body><img src="${dataUrl}" /><h2>${room?.name ?? ""}</h2><p>${serviceRequestUrl}</p>
+                  <br/><button onclick="window.print()" style="margin-top:12px;padding:8px 20px;cursor:pointer">Print</button></body></html>`);
+                win.document.close();
+                win.focus();
+                setTimeout(() => win.print(), 400);
+              }}>
+                🖨 Print
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => {
+                navigator.clipboard?.writeText(serviceRequestUrl);
+                toast({ title: t("worker.unitDetail.copied") });
+              }}>
+                {t("worker.unitDetail.copyLink")}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
