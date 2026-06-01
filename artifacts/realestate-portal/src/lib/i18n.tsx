@@ -1,6 +1,18 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 type Language = 'en' | 'ar';
+
+const STORAGE_KEY = 'rakez-re-lang';
+
+function getSavedLang(): Language {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === 'en' || saved === 'ar') return saved;
+  } catch {
+    // ignore
+  }
+  return 'ar';
+}
 
 interface LanguageContextType {
   language: Language;
@@ -25,12 +37,10 @@ const translations = {
     'contact.title': 'Get in Touch',
     'search.placeholder': 'Search properties...',
     
-    // Listing Card CTAs
     'cta.sale': 'Inquire to Purchase',
     'cta.rent': 'Book a Viewing',
     'cta.operational': 'Inquire for Management',
     
-    // Listing Detail
     'detail.operationalHeading': 'Under Rakez Management',
     'detail.operationalText': 'This property is actively managed by Rakez Smart Solutions. Our team handles operations, staffing, maintenance, and reporting.',
     'detail.inquiry.saleHeading': 'Purchase Inquiry',
@@ -42,7 +52,6 @@ const translations = {
     'detail.portalPrompt': 'Already a Rakez client?',
     'detail.portalLink': 'Sign in to your portal →',
     
-    // Portal
     'portal.loginTitle': 'Client Portal Login',
     'portal.loginSubtitle': 'Access your managed properties and reports',
     'portal.organizationId': 'Organization ID',
@@ -78,12 +87,10 @@ const translations = {
     'contact.title': 'تواصل معنا',
     'search.placeholder': 'ابحث عن العقارات...',
     
-    // Listing Card CTAs
     'cta.sale': 'استفسار للشراء',
     'cta.rent': 'حجز موعد للمعاينة',
     'cta.operational': 'استفسار عن الإدارة',
     
-    // Listing Detail
     'detail.operationalHeading': 'تحت إدارة ركز',
     'detail.operationalText': 'يُدار هذا العقار بفعالية من قبل ركز للحلول الذكية. يتولى فريقنا العمليات، التوظيف، الصيانة، وتقديم التقارير.',
     'detail.inquiry.saleHeading': 'استفسار شراء',
@@ -95,7 +102,6 @@ const translations = {
     'detail.portalPrompt': 'هل أنت عميل لركز؟',
     'detail.portalLink': 'تسجيل الدخول إلى بوابتك ←',
     
-    // Portal
     'portal.loginTitle': 'تسجيل الدخول لبوابة العملاء',
     'portal.loginSubtitle': 'قم بالوصول إلى عقاراتك المدارة وتقاريرك',
     'portal.organizationId': 'معرف المؤسسة',
@@ -121,24 +127,34 @@ const translations = {
 const LanguageContext = createContext<LanguageContextType>({
   language: 'ar',
   setLanguage: () => {},
-  t: () => '',
+  t: (key) => key,
   isRtl: true
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('ar');
+  const [language, setLanguageState] = useState<Language>(getSavedLang);
+
+  const setLanguage = useCallback((lang: Language) => {
+    try { localStorage.setItem(STORAGE_KEY, lang); } catch { /* ignore */ }
+    setLanguageState(lang);
+  }, []);
 
   useEffect(() => {
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = language;
   }, [language]);
 
-  const t = (key: string) => {
+  const t = useCallback((key: string): string => {
     return translations[language][key as keyof typeof translations['en']] || key;
-  };
+  }, [language]);
+
+  const contextValue = useMemo<LanguageContextType>(
+    () => ({ language, setLanguage, t, isRtl: language === 'ar' }),
+    [language, setLanguage, t]
+  );
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, isRtl: language === 'ar' }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );
