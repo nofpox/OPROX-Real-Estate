@@ -3,6 +3,7 @@ import { db, workOrdersTable, propertiesTable, roomsTable, staffTable } from "@w
 import { eq, and, sql } from "drizzle-orm";
 import { insertWorkOrderSchema, updateWorkOrderSchema } from "@workspace/db";
 import { logActivity, actorFromRequest } from "./activityLogs";
+import { notifyNewWorkOrder, notifyWorkOrderCompleted } from "../utils/notifications.js";
 
 const router = Router();
 
@@ -119,6 +120,13 @@ router.post("/work-orders", async (req, res) => {
     propertyId: property?.id ?? undefined, propertyName: property?.name ?? undefined,
     details: `Priority: ${workOrder.priority ?? "—"}${assignedStaffName ? ` | Assigned to: ${assignedStaffName}` : ""}`,
   });
+  notifyNewWorkOrder({
+    tenantId,
+    workOrderId:  workOrder.id,
+    title:        workOrder.title,
+    propertyName: property?.name ?? "Unknown Property",
+    priority:     workOrder.priority ?? "normal",
+  });
   res.status(201).json(formatWorkOrder(workOrder, property?.name, null, assignedStaffName));
 });
 
@@ -187,6 +195,14 @@ router.patch("/work-orders/:id", async (req, res) => {
       propertyId: property?.id ?? undefined, propertyName: property?.name ?? undefined,
       details: `${before.status} → ${parsed.data.status}`,
     });
+    if (parsed.data.status === "completed") {
+      notifyWorkOrderCompleted({
+        tenantId:     tenantId ?? 1,
+        workOrderId:  workOrder.id,
+        title:        workOrder.title,
+        propertyName: property?.name ?? "Unknown Property",
+      });
+    }
   }
   res.json(formatWorkOrder(workOrder, property?.name, null, assignedStaffName));
 });

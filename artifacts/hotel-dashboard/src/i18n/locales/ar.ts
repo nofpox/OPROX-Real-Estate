@@ -908,6 +908,8 @@ const ar: Translations = {
       tasks: "المهام",
       workOrders: "أوامر العمل",
       teamChanges: "تغييرات الفريق",
+      bookings: "الحجوزات",
+      expenses: "المصروفات",
     },
     entityType: {
       task: "مهمة",
@@ -920,6 +922,7 @@ const ar: Translations = {
       work_order: "أوامر العمل",
       booking: "الحجوزات",
       field_user: "أعضاء الفريق",
+      expense: "المصروفات",
     },
     role: {
       "property-manager": "مدير العقار",

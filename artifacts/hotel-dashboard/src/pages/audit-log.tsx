@@ -146,9 +146,9 @@ function AuditLogInner() {
       <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
         {[
           { key: "total",       value: (logs ?? []).length },
-          { key: "tasks",       value: (logs ?? []).filter(l => l.entityType === "task").length },
+          { key: "bookings",    value: (logs ?? []).filter(l => l.entityType === "booking").length },
           { key: "workOrders",  value: (logs ?? []).filter(l => l.entityType === "work_order").length },
-          { key: "teamChanges", value: (logs ?? []).filter(l => l.entityType === "field_user").length },
+          { key: "expenses",    value: (logs ?? []).filter(l => l.entityType === "expense").length },
         ].map((k) => (
           <div key={k.key} style={{ flex: "1 1 100px", border: "1px solid #e5e7eb", borderRadius: 8, padding: "14px 16px", background: "white" }}>
             <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1 }}>{isLoading ? "—" : k.value}</div>
@@ -172,9 +172,10 @@ function AuditLogInner() {
           style={{ padding: "6px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, background: "white" }}
         >
           <option value="all">{t("activityLog.allTypes")}</option>
-          <option value="task">{t("activityLog.filterType.task")}</option>
-          <option value="work_order">{t("activityLog.filterType.work_order")}</option>
           <option value="booking">{t("activityLog.filterType.booking")}</option>
+          <option value="work_order">{t("activityLog.filterType.work_order")}</option>
+          <option value="expense">{t("activityLog.filterType.expense")}</option>
+          <option value="task">{t("activityLog.filterType.task")}</option>
           <option value="field_user">{t("activityLog.filterType.field_user")}</option>
         </select>
         <select

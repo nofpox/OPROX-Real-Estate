@@ -8,6 +8,7 @@
     "backup": "tsx ./src/backup-db.ts",
     "generate-locale": "tsx ./src/generate-locale.ts",
     "migrate-tenants": "tsx ./src/migrate-tenants.ts",
+    "load-test": "tsx ./src/load-test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

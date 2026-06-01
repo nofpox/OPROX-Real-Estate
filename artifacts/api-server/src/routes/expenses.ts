@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, expensesTable, propertiesTable, roomsTable, bookingsTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { insertExpenseSchema, updateExpenseSchema } from "@workspace/db";
+import { logActivity, actorFromRequest } from "./activityLogs";
 
 const router = Router();
 
@@ -38,6 +39,14 @@ router.post("/expenses", async (req, res) => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [expense] = await db.insert(expensesTable).values(parsed.data).returning();
   const [property] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, expense.propertyId));
+  const actor = actorFromRequest(req);
+  logActivity({
+    ...actor, tenantId,
+    action: "expense.created", entityType: "expense", entityId: expense.id,
+    entityLabel: expense.title ?? `Expense #${expense.id}`,
+    propertyId: property?.id ?? undefined, propertyName: property?.name ?? undefined,
+    details: `Category: ${expense.category ?? "—"} | Amount: ${Number(expense.amount).toFixed(2)}`,
+  });
   res.status(201).json(formatExpense(expense, property?.name));
 });
 
@@ -66,7 +75,21 @@ router.delete("/expenses/:id", async (req, res) => {
   const tenantId = tid(req);
   const conds = [eq(expensesTable.id, id)];
   if (tenantId !== null) conds.push(eq(expensesTable.tenantId, tenantId));
+  const [expense] = await db.select({ e: expensesTable, p: propertiesTable })
+    .from(expensesTable)
+    .leftJoin(propertiesTable, eq(expensesTable.propertyId, propertiesTable.id))
+    .where(and(...conds));
   await db.delete(expensesTable).where(and(...conds));
+  if (expense) {
+    const actor = actorFromRequest(req);
+    logActivity({
+      ...actor, tenantId: tenantId ?? 1,
+      action: "expense.deleted", entityType: "expense", entityId: id,
+      entityLabel: expense.e.title ?? `Expense #${id}`,
+      propertyId: expense.p?.id ?? undefined, propertyName: expense.p?.name ?? undefined,
+      details: `Category: ${expense.e.category ?? "—"} | Amount: ${Number(expense.e.amount).toFixed(2)}`,
+    });
+  }
   res.status(204).end();
 });
 

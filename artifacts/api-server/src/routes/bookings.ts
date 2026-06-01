@@ -4,6 +4,7 @@ import { eq, and } from "drizzle-orm";
 import { insertBookingSchema, updateBookingSchema } from "@workspace/db";
 import { logActivity, actorFromRequest } from "./activityLogs";
 import { availabilityCache, portalCache } from "../utils/cache.js";
+import { notifyNewBooking, notifyBookingCancelled } from "../utils/notifications.js";
 
 const router = Router();
 
@@ -64,6 +65,14 @@ router.post("/bookings", async (req, res) => {
     action: "booking.created", entityType: "booking", entityId: booking.id,
     entityLabel: `Booking #${booking.id}${room ? ` — ${room.name}` : ""}`,
     details: `Status: ${booking.status}, Guest: ${booking.guestName ?? "—"}`,
+  });
+  notifyNewBooking({
+    tenantId,
+    bookingId: booking.id,
+    guestName: booking.guestName ?? "Guest",
+    roomName:  room?.name ?? `Room ${booking.roomId}`,
+    checkIn:   typeof booking.checkIn  === "string" ? booking.checkIn  : String(booking.checkIn),
+    checkOut:  typeof booking.checkOut === "string" ? booking.checkOut : String(booking.checkOut),
   });
   invalidateBookingCaches(room?.propertyId);
   res.status(201).json(formatBooking(booking, room));
@@ -161,6 +170,12 @@ router.patch("/bookings/:id/cancel", async (req, res) => {
     action: "booking.cancelled", entityType: "booking", entityId: booking.id,
     entityLabel: `Booking #${booking.id}${room ? ` — ${room.name}` : ""}`,
     details: `Guest: ${booking.guestName ?? "—"}`,
+  });
+  notifyBookingCancelled({
+    tenantId:  tenantId ?? 1,
+    bookingId: booking.id,
+    guestName: booking.guestName ?? "Guest",
+    roomName:  room?.name ?? `Room ${booking.roomId}`,
   });
   invalidateBookingCaches(room?.propertyId);
   res.json(formatBooking(booking, room));

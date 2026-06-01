@@ -951,6 +951,8 @@ const en = {
       tasks: "Tasks",
       workOrders: "Work Orders",
       teamChanges: "Team Changes",
+      bookings: "Bookings",
+      expenses: "Expenses",
     },
     entityType: {
       task: "Task",
@@ -963,6 +965,7 @@ const en = {
       work_order: "Work Orders",
       booking: "Bookings",
       field_user: "Team Members",
+      expense: "Expenses",
     },
     role: {
       "property-manager": "Property Manager",
