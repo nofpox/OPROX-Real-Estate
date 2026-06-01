@@ -99,13 +99,26 @@ router.post("/staff", async (req, res) => {
 
   // Enforce unique email per tenant before inserting
   const newEmail = (parsed.data as any).email as string;
-  const [duplicate] = await db
+  const [dupEmail] = await db
     .select({ id: staffTable.id })
     .from(staffTable)
     .where(and(eq(staffTable.email, newEmail), eq(staffTable.tenantId, tenantId)));
-  if (duplicate) {
+  if (dupEmail) {
     res.status(409).json({ error: "This email is already registered to another employee." });
     return;
+  }
+
+  // Enforce unique phone per tenant before inserting (only when phone is provided)
+  const newPhone = (parsed.data as any).phone as string | undefined;
+  if (newPhone) {
+    const [dupPhone] = await db
+      .select({ id: staffTable.id })
+      .from(staffTable)
+      .where(and(eq(staffTable.phone, newPhone), eq(staffTable.tenantId, tenantId)));
+    if (dupPhone) {
+      res.status(409).json({ error: "This phone number is already registered to another employee." });
+      return;
+    }
   }
 
   const [staff] = await db.insert(staffTable).values(parsed.data).returning();
@@ -302,15 +315,28 @@ router.patch("/staff/:id", async (req, res) => {
   const parsed = updateStaffSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
+  const tId = tenantId ?? 1;
+
   // If email is being updated, check it isn't already used by a different employee
   if (parsed.data.email) {
-    const tId = tenantId ?? 1;
-    const [dup] = await db
+    const [dupEmail] = await db
       .select({ id: staffTable.id })
       .from(staffTable)
       .where(and(eq(staffTable.email, parsed.data.email), eq(staffTable.tenantId, tId), ne(staffTable.id, id)));
-    if (dup) {
+    if (dupEmail) {
       res.status(409).json({ error: "This email is already registered to another employee." });
+      return;
+    }
+  }
+
+  // If phone is being updated, check it isn't already used by a different employee
+  if (parsed.data.phone) {
+    const [dupPhone] = await db
+      .select({ id: staffTable.id })
+      .from(staffTable)
+      .where(and(eq(staffTable.phone, parsed.data.phone), eq(staffTable.tenantId, tId), ne(staffTable.id, id)));
+    if (dupPhone) {
+      res.status(409).json({ error: "This phone number is already registered to another employee." });
       return;
     }
   }

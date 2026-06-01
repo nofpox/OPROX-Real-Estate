@@ -1,4 +1,5 @@
 import { pgTable, serial, text, boolean, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -17,6 +18,7 @@ export const usersTable = pgTable("users", {
   createdAt:          timestamp("created_at").defaultNow().notNull(),
 }, (t) => [
   uniqueIndex("users_email_tenant_uniq").on(t.tenantId, t.email),
+  uniqueIndex("users_phone_tenant_uniq").on(t.tenantId, t.phoneNumber).where(sql`phone_number IS NOT NULL AND phone_number != '' AND tenant_id IS NOT NULL`),
 ]);
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true });
