@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { Building2, MapPin, BedDouble, Bath, Square, ShieldCheck } from 'lucide-react';
+import { Building2, MapPin, BedDouble, Bath, Square, ShieldCheck, Star } from 'lucide-react';
 import { Listing } from '@workspace/api-client-react';
 import { useLanguage } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
@@ -9,17 +9,32 @@ interface ListingCardProps {
   listing: Listing;
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  sale: 'FOR SALE',
+  rent: 'FOR RENT',
+  operational: 'OPERATIONAL',
+};
+
 export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
-  const { t } = useLanguage();
-  
+  const { t, isRtl } = useLanguage();
+
   const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('en-SA', { style: 'currency', currency: currency || 'SAR', maximumFractionDigits: 0 }).format(price);
+    if (!price) return null;
+    return new Intl.NumberFormat('en-SA', {
+      style:               'currency',
+      currency:            currency || 'SAR',
+      notation:            price >= 1_000_000 ? 'compact' : 'standard',
+      maximumFractionDigits: price >= 1_000_000 ? 1 : 0,
+    }).format(price);
   };
+
+  const priceSuffix = listing.listingType === 'rent' ? '/yr' : '';
 
   const hasMedia = listing.media != null && Array.isArray(listing.media) && listing.media.length > 0;
   const mainImage = hasMedia ? (listing.media![0] as { url: string }).url : null;
-  
+
   const isOperational = listing.listingType === 'operational';
+  const formattedPrice  = formatPrice(listing.price ?? 0, listing.currency ?? 'SAR');
 
   const getCtaText = () => {
     if (isOperational) return t('cta.operational');
@@ -30,87 +45,128 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
 
   return (
     <Link href={`/listings/${listing.id}`}>
-      <div className="bg-card rounded-lg overflow-hidden border border-border shadow-sm hover:shadow-md transition-shadow group cursor-pointer h-full flex flex-col">
-        <div className="relative h-48 bg-muted overflow-hidden">
+      <div className="bg-card rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group cursor-pointer h-full flex flex-col">
+
+        {/* Image */}
+        <div className="relative h-52 bg-muted overflow-hidden flex-shrink-0">
           {mainImage ? (
-            <img 
-              src={mainImage} 
-              alt={listing.title} 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            <img
+              src={mainImage}
+              alt={listing.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-              <Building2 className="w-12 h-12 text-primary/20" />
+            <div className="w-full h-full bg-gradient-to-br from-primary/10 via-primary/5 to-secondary/10 flex items-center justify-center">
+              <Building2 className="w-14 h-14 text-primary/15" />
             </div>
           )}
-          
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            <span className="px-2.5 py-1 bg-background/90 backdrop-blur text-primary text-xs font-semibold rounded shadow-sm uppercase tracking-wider">
-              {listing.listingType}
+
+          {/* Gradient overlay on image bottom */}
+          {mainImage && (
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          )}
+
+          {/* Type badge — top start */}
+          <div className={`absolute top-3 ${isRtl ? 'right-3' : 'left-3'}`}>
+            <span className={`px-2.5 py-1 text-xs font-bold rounded tracking-wider shadow-sm ${
+              isOperational
+                ? 'bg-secondary text-secondary-foreground'
+                : 'bg-background/90 backdrop-blur text-primary'
+            }`}>
+              {TYPE_LABELS[listing.listingType] ?? listing.listingType.toUpperCase()}
             </span>
           </div>
-          
+
+          {/* Managed badge — top end */}
           {isOperational && (
-            <div className="absolute top-3 right-3">
-              <span className="flex items-center gap-1 px-2.5 py-1 bg-secondary text-secondary-foreground text-xs font-semibold rounded shadow-sm">
+            <div className={`absolute top-3 ${isRtl ? 'left-3' : 'right-3'}`}>
+              <span className="flex items-center gap-1 px-2 py-1 bg-primary/80 backdrop-blur text-primary-foreground text-xs font-medium rounded shadow-sm">
                 <ShieldCheck className="w-3 h-3" />
-                Managed by Rakez
+                Rakez
               </span>
             </div>
           )}
-          
-          {!isOperational && (
-            <div className="absolute bottom-3 right-3">
-              <span className="px-2.5 py-1 bg-secondary text-secondary-foreground text-xs font-semibold rounded shadow-sm uppercase tracking-wider">
-                {listing.propertyType}
+
+          {/* Featured star — top end (non-operational) */}
+          {!isOperational && listing.featured && (
+            <div className={`absolute top-3 ${isRtl ? 'left-3' : 'right-3'}`}>
+              <span className="flex items-center gap-1 px-2 py-1 bg-secondary text-secondary-foreground text-xs font-semibold rounded shadow-sm">
+                <Star className="w-3 h-3 fill-current" />
+                Featured
               </span>
             </div>
           )}
+
+          {/* Property type pill — bottom end */}
+          <div className={`absolute bottom-3 ${isRtl ? 'left-3' : 'right-3'}`}>
+            <span className="px-2 py-0.5 bg-background/80 backdrop-blur text-primary text-xs font-medium rounded-full uppercase tracking-wide">
+              {listing.propertyType}
+            </span>
+          </div>
         </div>
-        
-        <div className="p-4 flex-1 flex flex-col">
-          <div className="mb-2">
-            <h3 className="text-lg font-bold text-primary line-clamp-1 group-hover:text-secondary transition-colors">
+
+        {/* Body */}
+        <div className="p-4 flex-1 flex flex-col gap-2">
+
+          {/* Title + location */}
+          <div>
+            <h3 className="text-base font-bold text-primary line-clamp-1 group-hover:text-secondary transition-colors">
               {listing.title}
             </h3>
-            <div className="flex items-center text-muted-foreground text-sm mt-1">
-              <MapPin className="h-3.5 w-3.5 mr-1" />
+            <div className="flex items-center text-muted-foreground text-xs mt-0.5">
+              <MapPin className={`h-3 w-3 flex-shrink-0 ${isRtl ? 'ml-1' : 'mr-1'}`} />
               <span className="line-clamp-1">{listing.district}, {listing.city}</span>
             </div>
           </div>
-          
-          <div className="mt-auto pt-4 flex items-center justify-between mb-4">
-            <div className="text-lg font-bold text-secondary-foreground">
-              {formatPrice(listing.price ?? 0, listing.currency)}
-            </div>
-            
-            <div className="flex items-center gap-3 text-muted-foreground text-sm">
+
+          {/* Specs row */}
+          {(listing.bedrooms != null || listing.bathrooms != null || listing.areaSqm != null) && (
+            <div className="flex items-center gap-3 text-muted-foreground text-xs">
               {listing.bedrooms != null && (
-                <div className="flex items-center gap-1" title="Bedrooms">
-                  <BedDouble className="h-4 w-4" />
-                  <span>{listing.bedrooms}</span>
-                </div>
+                <span className="flex items-center gap-1">
+                  <BedDouble className="h-3.5 w-3.5" />
+                  {listing.bedrooms}
+                </span>
               )}
               {listing.bathrooms != null && (
-                <div className="flex items-center gap-1" title="Bathrooms">
-                  <Bath className="h-4 w-4" />
-                  <span>{listing.bathrooms}</span>
-                </div>
+                <span className="flex items-center gap-1">
+                  <Bath className="h-3.5 w-3.5" />
+                  {listing.bathrooms}
+                </span>
               )}
               {listing.areaSqm != null && (
-                <div className="flex items-center gap-1" title="Area (sqm)">
-                  <Square className="h-4 w-4" />
-                  <span>{listing.areaSqm}</span>
-                </div>
+                <span className="flex items-center gap-1">
+                  <Square className="h-3.5 w-3.5" />
+                  {listing.areaSqm} m²
+                </span>
               )}
             </div>
-          </div>
-          
-          <div className="mt-2">
-            <Button 
-              className={`w-full ${isOperational ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}
-              variant="default"
+          )}
+
+          {/* Price + CTA */}
+          <div className="mt-auto pt-3 border-t border-border/60 flex items-center justify-between gap-2">
+            <div>
+              {formattedPrice && !isOperational ? (
+                <>
+                  <span className="text-secondary font-bold text-base">{formattedPrice}</span>
+                  {priceSuffix && (
+                    <span className="text-muted-foreground text-xs ms-0.5">{priceSuffix}</span>
+                  )}
+                </>
+              ) : isOperational ? (
+                <span className="text-xs text-muted-foreground">Direct booking</span>
+              ) : (
+                <span className="text-xs text-muted-foreground">Contact for price</span>
+              )}
+            </div>
+            <Button
+              size="sm"
+              className={`text-xs h-8 px-3 flex-shrink-0 ${
+                isOperational
+                  ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
+              }`}
             >
               {getCtaText()}
             </Button>
