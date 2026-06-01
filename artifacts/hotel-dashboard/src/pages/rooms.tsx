@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "wouter";
 import {
-  useListRooms, getListRoomsQueryKey, useCreateRoom, useUpdateRoom, useDeleteRoom,
-  useListWorkOrders,
+  useListRooms, getListRoomsQueryKey, useUpdateRoom, useDeleteRoom,
+  useListWorkOrders, useListProperties,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,12 +13,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Search, Plus, MoreHorizontal, Pencil, Trash2, CalendarCheck, DoorOpen, Wrench, Sparkles } from "lucide-react";
+import { Search, MoreHorizontal, Pencil, Trash2, CalendarCheck, DoorOpen, Wrench, Sparkles, Building2, Info, ExternalLink } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { type Room } from "@workspace/api-client-react";
@@ -45,7 +46,7 @@ function daysSince(dateStr: string): number {
 // ─── Form schema ──────────────────────────────────────────────────────────────
 
 const unitSchema = z.object({
-  name:     z.string().min(1, "رقم / اسم الوحدة مطلوب"),
+  name:     z.string().min(1, "Unit name is required"),
   type:     z.string().min(1),
   status:   z.string().min(1),
   capacity: z.coerce.number().min(1),
@@ -74,18 +75,26 @@ function StatusBadge({ status, t }: { status: string; t: (k: string, opts?: Reco
 
 export default function UnitStatus() {
   const { t } = useTranslation();
-  const [searchQuery,   setSearchQuery]   = useState("");
-  const [statusFilter,  setStatusFilter]  = useState("all");
-  const [isDialogOpen,  setIsDialogOpen]  = useState(false);
-  const [editingRoom,   setEditingRoom]   = useState<Room | null>(null);
+  const [searchQuery,      setSearchQuery]   = useState("");
+  const [statusFilter,     setStatusFilter]  = useState("all");
+  const [propertyFilter,   setPropertyFilter] = useState("all");
+  const [isEditOpen,       setIsEditOpen]    = useState(false);
+  const [editingRoom,      setEditingRoom]   = useState<Room | null>(null);
 
-  const { data: rooms,           isLoading: roomsLoading } = useListRooms();
+  const { data: rooms,      isLoading: roomsLoading }      = useListRooms();
+  const { data: properties, isLoading: propertiesLoading } = useListProperties();
   const { data: completedOrders }                          = useListWorkOrders({ status: "completed" } as any);
-  const createRoom  = useCreateRoom();
   const updateRoom  = useUpdateRoom();
   const deleteRoom  = useDeleteRoom();
   const queryClient = useQueryClient();
   const { toast }   = useToast();
+
+  // Property id → name map
+  const propertyMap = React.useMemo<Record<number, string>>(() => {
+    const m: Record<number, string> = {};
+    for (const p of properties ?? []) m[p.id] = p.name;
+    return m;
+  }, [properties]);
 
   // Map unitId → latest completedAt across completed work orders
   const lastServiceMap = React.useMemo<Record<number, string>>(() => {
@@ -106,7 +115,7 @@ export default function UnitStatus() {
   const handleEdit = (room: Room) => {
     setEditingRoom(room);
     form.reset({ name: room.name, type: room.type, status: room.status, capacity: room.capacity || 1 });
-    setIsDialogOpen(true);
+    setIsEditOpen(true);
   };
 
   const handleDelete = (id: number) => {
@@ -118,23 +127,21 @@ export default function UnitStatus() {
     }
   };
 
-  const onSubmit = (data: z.infer<typeof unitSchema>) => {
-    const payload = { ...data, pricePerNight: editingRoom?.pricePerNight ?? 0 };
-    if (editingRoom) {
-      updateRoom.mutate({ id: editingRoom.id, data: payload }, {
-        onSuccess: () => { toast({ title: t("unitStatus.updated") }); queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() }); setIsDialogOpen(false); },
-        onError:   () => { toast({ title: t("unitStatus.updateFailed"), variant: "destructive" }); },
-      });
-    } else {
-      createRoom.mutate({ data: payload }, {
-        onSuccess: () => { toast({ title: t("unitStatus.added") }); queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() }); setIsDialogOpen(false); },
-        onError:   () => { toast({ title: t("unitStatus.addFailed"), variant: "destructive" }); },
-      });
-    }
+  const onSubmitEdit = (data: z.infer<typeof unitSchema>) => {
+    if (!editingRoom) return;
+    updateRoom.mutate({ id: editingRoom.id, data: { ...data, pricePerNight: editingRoom.pricePerNight ?? 0 } }, {
+      onSuccess: () => {
+        toast({ title: t("unitStatus.updated") });
+        queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() });
+        setIsEditOpen(false);
+        setEditingRoom(null);
+      },
+      onError: () => { toast({ title: t("unitStatus.updateFailed"), variant: "destructive" }); },
+    });
   };
 
-  const onOpenChange = (open: boolean) => {
-    setIsDialogOpen(open);
+  const onEditOpenChange = (open: boolean) => {
+    setIsEditOpen(open);
     if (!open) { setEditingRoom(null); form.reset({ name: "", type: "Studio", status: "available", capacity: 1 }); }
   };
 
@@ -142,19 +149,24 @@ export default function UnitStatus() {
   const filtered = [...(rooms ?? [])]
     .filter((r) => {
       const q = searchQuery.toLowerCase();
-      const matchesSearch  = r.name.toLowerCase().includes(q) || r.type.toLowerCase().includes(q);
-      const matchesStatus  = statusFilter === "all" || r.status.toLowerCase() === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesSearch   = r.name.toLowerCase().includes(q) || r.type.toLowerCase().includes(q)
+        || (r.propertyId ? propertyMap[r.propertyId] ?? "" : "").toLowerCase().includes(q);
+      const matchesStatus   = statusFilter === "all"   || r.status.toLowerCase() === statusFilter;
+      const matchesProperty = propertyFilter === "all" || String(r.propertyId) === propertyFilter;
+      return matchesSearch && matchesStatus && matchesProperty;
     })
     .sort((a, b) => (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3));
 
   // ── KPI counts ─────────────────────────────────────────────────────────────
-  const all = rooms ?? [];
+  const scopedRooms = propertyFilter === "all"
+    ? (rooms ?? [])
+    : (rooms ?? []).filter((r) => String(r.propertyId) === propertyFilter);
+
   const counts = {
-    maintenance: all.filter((r) => r.status === "maintenance").length,
-    cleaning:    all.filter((r) => r.status === "cleaning").length,
-    available:   all.filter((r) => r.status === "available").length,
-    occupied:    all.filter((r) => r.status === "occupied").length,
+    maintenance: scopedRooms.filter((r) => r.status === "maintenance").length,
+    cleaning:    scopedRooms.filter((r) => r.status === "cleaning").length,
+    available:   scopedRooms.filter((r) => r.status === "available").length,
+    occupied:    scopedRooms.filter((r) => r.status === "occupied").length,
   };
 
   const kpis = [
@@ -170,7 +182,7 @@ export default function UnitStatus() {
     <div className="space-y-6">
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">
             {t("unitStatus.title")}
@@ -178,88 +190,16 @@ export default function UnitStatus() {
           <p className="text-muted-foreground mt-1">{t("unitStatus.subtitle")}</p>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={onOpenChange}>
-          <DialogTrigger asChild>
-            <Button className="font-semibold shadow-sm">
-              <Plus className="me-2 h-4 w-4" />
-              {t("unitStatus.addUnit")}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="font-serif">
-                {editingRoom ? t("unitStatus.editUnit") : t("unitStatus.addNewUnit")}
-              </DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-
-                <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("unitStatus.unitNameLabel")}</FormLabel>
-                    <FormControl>
-                      <Input placeholder={t("unitStatus.unitNamePlaceholder")} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="type" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("unitStatus.columns.type")}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue placeholder={t("unitStatus.selectType")} /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {UNIT_TYPES.map((tp) => (
-                            <SelectItem key={tp} value={tp}>
-                              {t(`unitStatus.types.${tp}`, { defaultValue: tp })}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="capacity" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("unitStatus.columns.capacity")}</FormLabel>
-                      <FormControl><Input type="number" min="1" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </div>
-
-                <FormField control={form.control} name="status" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("unitStatus.columns.status")}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder={t("unitStatus.selectStatus")} /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {(["available", "occupied", "maintenance", "cleaning"] as const).map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {t(`unitStatus.status.${s}`)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <DialogFooter className="pt-4">
-                  <Button type="submit" disabled={createRoom.isPending || updateRoom.isPending}>
-                    {editingRoom ? t("unitStatus.saveChanges") : t("unitStatus.addUnit")}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        {/* Add-unit hint — directs users to the property page */}
+        <div className="flex items-start gap-2 bg-muted/60 border border-border/50 rounded-lg px-3 py-2 text-sm text-muted-foreground max-w-sm">
+          <Info className="h-4 w-4 mt-0.5 shrink-0 text-primary/60" />
+          <span>
+            {t("unitStatus.addHint")}{" "}
+            <Link href="/properties" className="text-primary underline underline-offset-2 hover:text-primary/80 inline-flex items-center gap-1">
+              {t("nav.properties")} <ExternalLink className="h-3 w-3" />
+            </Link>
+          </span>
+        </div>
       </div>
 
       {/* ── Status summary KPIs ──────────────────────────────────────────────── */}
@@ -296,9 +236,10 @@ export default function UnitStatus() {
       {/* ── Unit table ───────────────────────────────────────────────────────── */}
       <Card className="shadow-sm border-border/50">
         <CardHeader className="pb-0">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3">
             <CardTitle className="sr-only">{t("unitStatus.title")}</CardTitle>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center w-full">
+              {/* Search */}
               <div className="relative flex-1 sm:max-w-sm">
                 <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -309,6 +250,20 @@ export default function UnitStatus() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
+              {/* Property filter */}
+              <Select value={propertyFilter} onValueChange={(v) => { setPropertyFilter(v); setStatusFilter("all"); }}>
+                <SelectTrigger className="w-full sm:w-52 bg-background">
+                  <Building2 className="me-2 h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder={t("unitStatus.allProperties")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("unitStatus.allProperties")}</SelectItem>
+                  {(properties ?? []).map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* Status filter */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-44 bg-background">
                   <SelectValue placeholder={t("unitStatus.allStatuses")} />
@@ -321,6 +276,21 @@ export default function UnitStatus() {
                 </SelectContent>
               </Select>
             </div>
+            {/* Active property banner */}
+            {propertyFilter !== "all" && propertyMap[Number(propertyFilter)] && (
+              <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <span>{propertyMap[Number(propertyFilter)]}</span>
+                  <span className="text-muted-foreground font-normal">— {scopedRooms.length} {t("properties.units")}</span>
+                </div>
+                <Link href={`/properties/${propertyFilter}`}>
+                  <Button variant="ghost" size="sm" className="h-7 text-primary hover:text-primary/80 text-xs gap-1 px-2">
+                    {t("unitStatus.manageInProperty")} <ExternalLink className="h-3 w-3" />
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent className="p-0 mt-4">
@@ -328,6 +298,7 @@ export default function UnitStatus() {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="ps-6">{t("unitStatus.columns.unit")}</TableHead>
+                <TableHead>{t("unitStatus.columns.property")}</TableHead>
                 <TableHead>{t("unitStatus.columns.type")}</TableHead>
                 <TableHead>{t("unitStatus.columns.capacity")}</TableHead>
                 <TableHead>{t("unitStatus.columns.status")}</TableHead>
@@ -336,10 +307,10 @@ export default function UnitStatus() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {roomsLoading ? (
+              {roomsLoading || propertiesLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <TableRow key={i}>
-                    {[100, 80, 40, 120, 100].map((w, j) => (
+                    {[100, 120, 80, 40, 120, 100].map((w, j) => (
                       <TableCell key={j}><Skeleton className={`h-4 w-[${w}px]`} /></TableCell>
                     ))}
                     <TableCell><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
@@ -347,15 +318,17 @@ export default function UnitStatus() {
                 ))
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
-                    {searchQuery || statusFilter !== "all"
+                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                    {searchQuery || statusFilter !== "all" || propertyFilter !== "all"
                       ? t("unitStatus.noMatch")
                       : t("unitStatus.noUnits")}
                   </TableCell>
                 </TableRow>
               ) : (
                 filtered.map((room) => {
-                  const lastService = lastServiceMap[room.id];
+                  const lastService  = lastServiceMap[room.id];
+                  const propertyName = room.propertyId ? (propertyMap[room.propertyId] ?? "—") : "—";
+                  const propertyIdStr = room.propertyId ? String(room.propertyId) : null;
                   const ageLabel = lastService
                     ? (() => {
                         const d = daysSince(lastService);
@@ -372,6 +345,17 @@ export default function UnitStatus() {
                       className={room.status === "maintenance" ? "bg-amber-50/40 dark:bg-amber-950/10" : ""}
                     >
                       <TableCell className="ps-6 font-semibold">{room.name}</TableCell>
+                      <TableCell>
+                        {propertyIdStr ? (
+                          <Link href={`/properties/${propertyIdStr}`}>
+                            <span className="text-sm text-primary hover:underline cursor-pointer flex items-center gap-1">
+                              {propertyName}
+                            </span>
+                          </Link>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {t(`unitStatus.types.${room.type}`, { defaultValue: room.type })}
                       </TableCell>
@@ -401,6 +385,13 @@ export default function UnitStatus() {
                             <DropdownMenuItem className="cursor-pointer" onClick={() => handleEdit(room)}>
                               <Pencil className="me-2 h-4 w-4" /> {t("unitStatus.editUnit")}
                             </DropdownMenuItem>
+                            {propertyIdStr && (
+                              <DropdownMenuItem className="cursor-pointer" asChild>
+                                <Link href={`/properties/${propertyIdStr}`}>
+                                  <Building2 className="me-2 h-4 w-4" /> {t("unitStatus.goToProperty")}
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive cursor-pointer"
                               onClick={() => handleDelete(room.id)}
@@ -418,6 +409,89 @@ export default function UnitStatus() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* ── Edit dialog (no create) ───────────────────────────────────────────── */}
+      <Dialog open={isEditOpen} onOpenChange={onEditOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-serif">{t("unitStatus.editUnit")}</DialogTitle>
+            {editingRoom?.propertyId && propertyMap[editingRoom.propertyId] && (
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                <Building2 className="h-3.5 w-3.5" />
+                {propertyMap[editingRoom.propertyId]}
+              </p>
+            )}
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmitEdit)} className="space-y-4">
+
+              <FormField control={form.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("unitStatus.unitNameLabel")}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t("unitStatus.unitNamePlaceholder")} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="type" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("unitStatus.columns.type")}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder={t("unitStatus.selectType")} /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {UNIT_TYPES.map((tp) => (
+                          <SelectItem key={tp} value={tp}>
+                            {t(`unitStatus.types.${tp}`, { defaultValue: tp })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="capacity" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("unitStatus.columns.capacity")}</FormLabel>
+                    <FormControl><Input type="number" min="1" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+
+              <FormField control={form.control} name="status" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("unitStatus.columns.status")}</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder={t("unitStatus.selectStatus")} /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {(["available", "occupied", "maintenance", "cleaning"] as const).map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {t(`unitStatus.status.${s}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <DialogFooter className="pt-4">
+                <Button type="button" variant="outline" onClick={() => onEditOpenChange(false)}>{t("common.cancel")}</Button>
+                <Button type="submit" disabled={updateRoom.isPending}>
+                  {updateRoom.isPending ? t("common.saving") : t("unitStatus.saveChanges")}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
