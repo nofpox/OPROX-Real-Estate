@@ -437,7 +437,10 @@ export default function Staff() {
     if (editingStaff) {
       updateStaff.mutate({ id: editingStaff.id, data: payload }, {
         onSuccess: () => { toast({ title: t("staff.toast.updated") }); queryClient.invalidateQueries({ queryKey: getListStaffQueryKey(params) }); setIsDialogOpen(false); },
-        onError: () => toast({ title: t("staff.toast.updateFailed"), variant: "destructive" }),
+        onError: (err: any) => {
+          const msg = err?.data?.error ?? t("staff.toast.updateFailed");
+          toast({ title: msg, variant: "destructive" });
+        },
       });
     } else {
       createStaff.mutate({ data: payload as any }, {
@@ -459,7 +462,10 @@ export default function Staff() {
             toast({ title: t("staff.toast.added") });
           }
         },
-        onError: () => toast({ title: t("staff.toast.addFailed"), variant: "destructive" }),
+        onError: (err: any) => {
+          const msg = err?.data?.error ?? t("staff.toast.addFailed");
+          toast({ title: msg, variant: "destructive" });
+        },
       });
     }
   };

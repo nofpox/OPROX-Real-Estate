@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, staffTable, propertiesTable, usersTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { insertStaffSchema, updateStaffSchema } from "@workspace/db";
 import { hashPwd, sendWelcomeEmail, getHierarchyLevel } from "./auth.js";
 import type { SessionUser } from "./auth.js";
@@ -96,6 +96,18 @@ router.post("/staff", async (req, res) => {
 
   const parsed = insertStaffSchema.safeParse({ ...req.body, tenantId });
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  // Enforce unique email per tenant before inserting
+  const newEmail = (parsed.data as any).email as string;
+  const [duplicate] = await db
+    .select({ id: staffTable.id })
+    .from(staffTable)
+    .where(and(eq(staffTable.email, newEmail), eq(staffTable.tenantId, tenantId)));
+  if (duplicate) {
+    res.status(409).json({ error: "This email is already registered to another employee." });
+    return;
+  }
+
   const [staff] = await db.insert(staffTable).values(parsed.data).returning();
 
   let welcomeEmailSent = false;
@@ -289,6 +301,20 @@ router.patch("/staff/:id", async (req, res) => {
   const tenantId = tid(req);
   const parsed = updateStaffSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  // If email is being updated, check it isn't already used by a different employee
+  if (parsed.data.email) {
+    const tId = tenantId ?? 1;
+    const [dup] = await db
+      .select({ id: staffTable.id })
+      .from(staffTable)
+      .where(and(eq(staffTable.email, parsed.data.email), eq(staffTable.tenantId, tId), ne(staffTable.id, id)));
+    if (dup) {
+      res.status(409).json({ error: "This email is already registered to another employee." });
+      return;
+    }
+  }
+
   const conds = [eq(staffTable.id, id)];
   if (tenantId !== null) conds.push(eq(staffTable.tenantId, tenantId));
   const [staff] = await db.update(staffTable).set(parsed.data).where(and(...conds)).returning();

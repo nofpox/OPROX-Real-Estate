@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -15,7 +15,9 @@ export const usersTable = pgTable("users", {
   isActive:           boolean("is_active").notNull().default(true),
   mustChangePassword: boolean("must_change_password").notNull().default(false),
   createdAt:          timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  uniqueIndex("users_email_tenant_uniq").on(t.tenantId, t.email),
+]);
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true });
 export const updateUserSchema = insertUserSchema.partial();

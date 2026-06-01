@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -13,7 +13,9 @@ export const staffTable = pgTable("staff", {
   propertyId:   integer("property_id"),
   status:       text("status").notNull().default("active"),
   createdAt:    timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  uniqueIndex("staff_email_tenant_uniq").on(t.tenantId, t.email),
+]);
 
 export const insertStaffSchema = createInsertSchema(staffTable).omit({ id: true, createdAt: true });
 export const updateStaffSchema = insertStaffSchema.partial();
