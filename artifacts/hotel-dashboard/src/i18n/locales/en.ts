@@ -87,7 +87,7 @@ const en = {
   },
   roles: {
     super_admin: "Super Admin",
-    owner: "Administrator (Owner/System)",
+    owner: "Owner",
     admin_manager: "Company",
     administrator: "Administrator (Departmental)",
     manager: "Manager",
@@ -100,7 +100,7 @@ const en = {
     active: "active",
     desc: {
       super_admin: "Platform-level access: tenant management and all settings",
-      owner: "Full system authority — sovereign, unrestricted control over all settings and roles",
+      owner: "Company-level authority — permissions granted by the System Administrator and delegated downward to all roles",
       admin_manager: "Corporate-level access — company-wide management and financial oversight",
       administrator: "Departmental administration — reporting, unit data, service request tracking, billing",
       manager: "Management-level oversight — property performance, team coordination, scheduling",

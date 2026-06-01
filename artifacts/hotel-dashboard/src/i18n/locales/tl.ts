@@ -37,14 +37,14 @@ const tl: Translations = {
   },
   priority: { urgent: "Apurahan", high: "Mataas", medium: "Katamtaman", low: "Mababa" },
   roles: {
-    owner: "Administrador (May-ari / Sistema)", admin_manager: "Kumpanya", administrator: "Administrador (Departamental)",
+    owner: "May-ari", admin_manager: "Kumpanya", administrator: "Administrador (Departamental)",
     super_admin: "Super Admin",
     manager: "Manager", supervisor: "Superbisor", maintenance: "Pagpapanatili",
     cleaning: "Paglilinis", security: "Seguridad", viewingAs: "Tinitingnan bilang",
     switchRole: "Palitan ang Papel", active: "aktibo",
     desc: {
       super_admin: "Pag-access sa antas ng platform: pamamahala ng tenant at lahat ng setting",
-      owner: "Buong awtoridad sa sistema — soberanong kontrol sa lahat ng setting at papel", admin_manager: "Access sa antas ng korporasyon — pamamahala sa buong kumpanya at financial oversight", administrator: "Departmental na pamamahala — mga ulat, datos ng unit, pagsubaybay sa serbisyo, pagsingil",
+      owner: "Awtoridad sa antas ng kumpanya — mga pahintulot na ibinibigay ng System Administrator at ipinapasa pababa", admin_manager: "Access sa antas ng korporasyon — pamamahala sa buong kumpanya at financial oversight", administrator: "Departmental na pamamahala — mga ulat, datos ng unit, pagsubaybay sa serbisyo, pagsingil",
       manager: "Pamamahala sa antas ng management — pagganap ng ari-arian, koordinasyon ng koponan",
       supervisor: "Mga nakatalagang gawain at sariling profile",
       maintenance: "Mga itinalagang gawain sa larangan lamang",
