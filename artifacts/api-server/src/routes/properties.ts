@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, propertiesTable, roomsTable, bookingsTable, expensesTable, workOrdersTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { insertPropertySchema, updatePropertySchema } from "@workspace/db";
+import { logActivity, actorFromRequest } from "./activityLogs.js";
 
 const router = Router();
 
@@ -35,6 +36,8 @@ router.post("/properties", async (req, res) => {
   const parsed = insertPropertySchema.safeParse({ ...req.body, tenantId });
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [prop] = await db.insert(propertiesTable).values(parsed.data).returning();
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId, action: "property.created", entityType: "property", entityId: prop.id, entityLabel: prop.name, propertyId: prop.id });
   res.status(201).json(formatProperty(prop, 0));
 });
 
@@ -63,6 +66,8 @@ router.patch("/properties/:id", async (req, res) => {
   if (tenantId !== null) conds.push(eq(propertiesTable.tenantId, tenantId));
   const [prop] = await db.update(propertiesTable).set(parsed.data).where(and(...conds)).returning();
   if (!prop) { res.status(404).json({ error: "Property not found" }); return; }
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId: tenantId ?? 1, action: "property.updated", entityType: "property", entityId: prop.id, entityLabel: prop.name, propertyId: prop.id });
   res.json(formatProperty(prop));
 });
 
@@ -72,7 +77,10 @@ router.delete("/properties/:id", async (req, res) => {
   const tenantId = tid(req);
   const conds = [eq(propertiesTable.id, id)];
   if (tenantId !== null) conds.push(eq(propertiesTable.tenantId, tenantId));
+  const [existing] = await db.select({ name: propertiesTable.name }).from(propertiesTable).where(and(...conds));
   await db.delete(propertiesTable).where(and(...conds));
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId: tenantId ?? 1, action: "property.deleted", entityType: "property", entityId: id, entityLabel: existing?.name });
   res.status(204).end();
 });
 

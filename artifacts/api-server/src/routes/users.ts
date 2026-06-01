@@ -3,6 +3,7 @@ import { db, usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { hashPwd, getRoleTier, getHierarchyLevel } from "./auth.js";
 import { sessions } from "../lib/session-store.js";
+import { logActivity, actorFromRequest } from "./activityLogs.js";
 
 const router = Router();
 
@@ -67,6 +68,8 @@ router.post("/users", async (req, res) => {
     permissions: JSON.stringify(Array.isArray(permissions) ? permissions : []),
     isActive:    isActive !== false,
   }).returning();
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId, action: "user.created", entityType: "user", entityId: user.id, entityLabel: user.displayName, details: `role=${user.role}` });
   res.status(201).json(fmt(user));
 });
 
@@ -90,9 +93,13 @@ router.patch("/users/:id", async (req, res) => {
 
   const [user] = await db.update(usersTable).set(update).where(and(...conds)).returning();
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  const actor = actorFromRequest(req);
   if (update.isActive === false) {
     const cleared = await clearUserSessions(id);
     req.log.info({ userId: id, sessionsCleared: cleared }, "User deactivated — sessions cleared");
+    logActivity({ ...actor, tenantId: tenantId ?? 1, action: "user.deactivated", entityType: "user", entityId: user.id, entityLabel: user.displayName });
+  } else {
+    logActivity({ ...actor, tenantId: tenantId ?? 1, action: "user.updated", entityType: "user", entityId: user.id, entityLabel: user.displayName });
   }
   res.json(fmt(user));
 });
@@ -103,8 +110,11 @@ router.delete("/users/:id", async (req, res) => {
   const tenantId = tid(req);
   const conds = [eq(usersTable.id, id)];
   if (tenantId !== null) conds.push(eq(usersTable.tenantId, tenantId));
+  const [existing] = await db.select({ displayName: usersTable.displayName }).from(usersTable).where(and(...conds));
   await clearUserSessions(id);
   await db.delete(usersTable).where(and(...conds));
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId: tenantId ?? 1, action: "user.deleted", entityType: "user", entityId: id, entityLabel: existing?.displayName });
   res.status(204).end();
 });
 
@@ -137,6 +147,7 @@ router.post("/users/:id/kill-switch", async (req, res) => {
   const [user] = await db.update(usersTable).set({ isActive: false }).where(and(...conds)).returning();
   const cleared = await clearUserSessions(id);
   req.log.info({ targetUserId: id, sessionsCleared: cleared, triggeredBy: caller.id }, "Kill switch triggered");
+  logActivity({ actorId: caller.id, actorName: caller.displayName, actorRole: caller.role, tenantId: tenantId ?? 1, action: "user.kill_switch", entityType: "user", entityId: user.id, entityLabel: user.displayName, details: `triggered_by=${caller.username}` });
   res.json(fmt(user));
 });
 

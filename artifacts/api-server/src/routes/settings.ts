@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, settingsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { logActivity, actorFromRequest } from "./activityLogs.js";
 
 const router: IRouter = Router();
 
@@ -163,6 +164,13 @@ router.patch("/settings", async (req, res) => {
   }
 
   const s = await getAllSettings(tenantId);
+  const actor = actorFromRequest(req);
+  const changedKeys = Object.keys(body).filter(k =>
+    ["propertyName","logoText","logoSub","logoUrl","businessMode","companyName","contactEmail","contactPhone","contactAddress","primaryColor","secondaryColor","enabledModules","taskTypes","taskRequirements","navConfig","permissionMatrix"].includes(k)
+  );
+  if (changedKeys.length > 0) {
+    logActivity({ ...actor, tenantId, action: "settings.updated", entityType: "settings", entityLabel: "System Settings", details: `keys=${changedKeys.join(",")}` });
+  }
   res.json(buildResponse(s));
 });
 

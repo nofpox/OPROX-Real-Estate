@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, roomsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { insertRoomSchema, updateRoomSchema } from "@workspace/db";
+import { logActivity, actorFromRequest } from "./activityLogs.js";
 
 const router = Router();
 
@@ -28,6 +29,8 @@ router.post("/rooms", async (req, res) => {
   const parsed = insertRoomSchema.safeParse({ ...req.body, tenantId });
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [room] = await db.insert(roomsTable).values(parsed.data).returning();
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId, action: "room.created", entityType: "room", entityId: room.id, entityLabel: room.name, propertyId: room.propertyId ?? undefined });
   res.status(201).json(fmt(room));
 });
 
@@ -79,6 +82,8 @@ router.patch("/rooms/:id", async (req, res) => {
   if (tenantId !== null) conds.push(eq(roomsTable.tenantId, tenantId));
   const [room] = await db.update(roomsTable).set(parsed.data).where(and(...conds)).returning();
   if (!room) { res.status(404).json({ error: "Room not found" }); return; }
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId: tenantId ?? 1, action: "room.updated", entityType: "room", entityId: room.id, entityLabel: room.name, propertyId: room.propertyId ?? undefined });
   res.json(fmt(room));
 });
 
@@ -88,7 +93,10 @@ router.delete("/rooms/:id", async (req, res) => {
   const tenantId = tid(req);
   const conds = [eq(roomsTable.id, id)];
   if (tenantId !== null) conds.push(eq(roomsTable.tenantId, tenantId));
+  const [existing] = await db.select({ name: roomsTable.name, propertyId: roomsTable.propertyId }).from(roomsTable).where(and(...conds));
   await db.delete(roomsTable).where(and(...conds));
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId: tenantId ?? 1, action: "room.deleted", entityType: "room", entityId: id, entityLabel: existing?.name, propertyId: existing?.propertyId ?? undefined });
   res.status(204).end();
 });
 

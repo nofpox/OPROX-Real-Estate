@@ -4,6 +4,7 @@ import { eq, sql, and } from "drizzle-orm";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
+import { logActivity } from "./activityLogs.js";
 import {
   checkLoginAllowed,
   recordFailedAttempt,
@@ -337,6 +338,7 @@ router.post("/auth/login", async (req, res) => {
     isSuperAdmin,
   };
   await sessions.set(sessionId, sessionUser);
+  logActivity({ actorId: user.id, actorName: user.displayName, actorRole: user.role, tenantId: resolvedTenantId ?? undefined, action: "auth.login", entityType: "user", entityId: user.id, entityLabel: user.username });
   res.setHeader("Set-Cookie", `pms_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`);
   res.json(sessionUser);
 });
@@ -345,7 +347,11 @@ router.post("/auth/login", async (req, res) => {
 
 router.post("/auth/logout", async (req, res) => {
   const sessionId = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
+  const session = sessionId ? await sessions.get(sessionId) : undefined;
   if (sessionId) await sessions.delete(sessionId);
+  if (session) {
+    logActivity({ actorId: session.id, actorName: session.displayName, actorRole: session.role, tenantId: session.tenantId ?? undefined, action: "auth.logout", entityType: "user", entityId: session.id, entityLabel: session.username });
+  }
   res.setHeader("Set-Cookie", "pms_session=; Path=/; HttpOnly; Max-Age=0");
   res.json({ ok: true });
 });

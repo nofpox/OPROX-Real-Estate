@@ -4,6 +4,7 @@ import { eq, and, ne } from "drizzle-orm";
 import { insertStaffSchema, updateStaffSchema } from "@workspace/db";
 import { hashPwd, sendWelcomeEmail, getHierarchyLevel } from "./auth.js";
 import type { SessionUser } from "./auth.js";
+import { logActivity, actorFromRequest } from "./activityLogs.js";
 
 const router = Router();
 
@@ -175,6 +176,8 @@ router.post("/staff", async (req, res) => {
     }
   }
 
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId, action: "staff.created", entityType: "staff", entityId: staff.id, entityLabel: staff.name });
   res.status(201).json({ ...formatStaff(staff), welcomeEmailSent, inviteCode, inviteUsername });
 });
 
@@ -345,6 +348,8 @@ router.patch("/staff/:id", async (req, res) => {
   if (tenantId !== null) conds.push(eq(staffTable.tenantId, tenantId));
   const [staff] = await db.update(staffTable).set(parsed.data).where(and(...conds)).returning();
   if (!staff) { res.status(404).json({ error: "Staff not found" }); return; }
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId: tenantId ?? 1, action: "staff.updated", entityType: "staff", entityId: staff.id, entityLabel: staff.name });
   res.json(formatStaff(staff));
 });
 
@@ -354,7 +359,10 @@ router.delete("/staff/:id", async (req, res) => {
   const tenantId = tid(req);
   const conds = [eq(staffTable.id, id)];
   if (tenantId !== null) conds.push(eq(staffTable.tenantId, tenantId));
+  const [existing] = await db.select({ name: staffTable.name }).from(staffTable).where(and(...conds));
   await db.delete(staffTable).where(and(...conds));
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId: tenantId ?? 1, action: "staff.deleted", entityType: "staff", entityId: id, entityLabel: existing?.name });
   res.status(204).end();
 });
 

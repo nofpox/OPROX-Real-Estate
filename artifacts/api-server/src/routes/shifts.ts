@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, shiftsTable, staffTable, propertiesTable } from "@workspace/db";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { insertShiftSchema, updateShiftSchema } from "@workspace/db";
+import { logActivity, actorFromRequest } from "./activityLogs.js";
 
 const router = Router();
 
@@ -50,6 +51,8 @@ router.post("/shifts", async (req, res) => {
   const parsed = insertShiftSchema.safeParse({ ...req.body, tenantId });
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [shift] = await db.insert(shiftsTable).values(parsed.data).returning();
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId, action: "shift.created", entityType: "shift", entityId: shift.id, entityLabel: `${shift.date} ${shift.shiftType}`, propertyId: shift.propertyId ?? undefined });
   res.status(201).json(formatShift(shift, {}));
 });
 
@@ -72,7 +75,10 @@ router.delete("/shifts/:id", async (req, res) => {
   const tenantId = tid(req);
   const conds = [eq(shiftsTable.id, id)];
   if (tenantId !== null) conds.push(eq(shiftsTable.tenantId, tenantId));
+  const [existing] = await db.select({ date: shiftsTable.date, shiftType: shiftsTable.shiftType, propertyId: shiftsTable.propertyId }).from(shiftsTable).where(and(...conds));
   await db.delete(shiftsTable).where(and(...conds));
+  const actor = actorFromRequest(req);
+  logActivity({ ...actor, tenantId: tenantId ?? 1, action: "shift.deleted", entityType: "shift", entityId: id, entityLabel: existing ? `${existing.date} ${existing.shiftType}` : undefined, propertyId: existing?.propertyId ?? undefined });
   res.status(204).end();
 });
 
