@@ -1,6 +1,15 @@
 import React, { createContext, useContext, useState } from "react";
 
-export type AppRole = "super_admin" | "owner" | "admin_manager" | "manager" | "supervisor" | "maintenance" | "cleaning" | "security";
+export type AppRole =
+  | "super_admin"
+  | "owner"
+  | "administrator"
+  | "admin_manager"
+  | "manager"
+  | "supervisor"
+  | "maintenance"
+  | "cleaning"
+  | "security";
 
 export interface RoleDefinition {
   id: AppRole;
@@ -13,6 +22,7 @@ export interface RoleDefinition {
 export function mapDbRoleToAppRole(dbRole: string): AppRole {
   if (dbRole === "super_admin") return "super_admin";
   if (dbRole === "owner" || dbRole === "admin") return "owner";
+  if (dbRole === "administrator") return "administrator";
   if (dbRole === "admin-manager") return "admin_manager";
   if (dbRole === "manager" || dbRole === "property-manager" || dbRole === "site-supervisor") return "manager";
   if (dbRole === "front-desk" || dbRole === "supervisor") return "supervisor";
@@ -23,7 +33,7 @@ export function mapDbRoleToAppRole(dbRole: string): AppRole {
 }
 
 export function isOwnerTier(dbRole: string): boolean {
-  return dbRole === "owner" || dbRole === "admin" || dbRole === "super_admin";
+  return dbRole === "owner" || dbRole === "admin" || dbRole === "super_admin" || dbRole === "administrator";
 }
 
 export function isSuperAdmin(dbRole: string): boolean {
@@ -40,8 +50,15 @@ export const ROLES: RoleDefinition[] = [
   },
   {
     id: "owner",
-    label: "Company",
-    description: "Full system access including finance and settings",
+    label: "Owner",
+    description: "Sovereign access — full, unrestricted control over all settings and roles",
+    allowedNav: ["*"],
+    taskCategories: null,
+  },
+  {
+    id: "administrator",
+    label: "Administrator",
+    description: "Highest delegated authority — full system access, configurable by Owner",
     allowedNav: ["*"],
     taskCategories: null,
   },
@@ -54,7 +71,7 @@ export const ROLES: RoleDefinition[] = [
   },
   {
     id: "manager",
-    label: "Supervisor",
+    label: "Manager",
     description: "Field operations monitoring, maintenance/service requests, team performance",
     allowedNav: ["/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log"],
     taskCategories: null,

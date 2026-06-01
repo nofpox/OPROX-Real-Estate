@@ -118,20 +118,27 @@ const OWNER_PERMISSION_ROUTES = [
   { href: "/support-tickets",    label: "Support Tickets" },
 ];
 
+// Tier = visual hierarchy level (0 = highest delegated authority)
 const OWNER_CONFIGURABLE_ROLES = [
-  { id: "manager",     label: "Manager",     color: "bg-purple-100 text-purple-700" },
-  { id: "supervisor",  label: "Supervisor",  color: "bg-amber-100 text-amber-700" },
-  { id: "maintenance", label: "Maintenance", color: "bg-orange-100 text-orange-700" },
-  { id: "cleaning",    label: "Cleaning",    color: "bg-green-100 text-green-700" },
-  { id: "security",    label: "Security",    color: "bg-blue-100 text-blue-700" },
+  { id: "administrator", label: "Administrator", color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",     tier: 0, desc: "Highest delegated authority" },
+  { id: "company",       label: "Company",       color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400", tier: 1, desc: "Company-wide management" },
+  { id: "manager",       label: "Manager",       color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400", tier: 2, desc: "Property management" },
+  { id: "supervisor",    label: "Supervisor",    color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",    tier: 3, desc: "Field operations" },
+  { id: "maintenance",   label: "Maintenance",   color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400", tier: 4, desc: "Field tasks" },
+  { id: "cleaning",      label: "Cleaning",      color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",    tier: 4, desc: "Field tasks" },
+  { id: "security",      label: "Security",      color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",        tier: 4, desc: "Field tasks" },
 ];
 
+const ALL_ROUTES = OWNER_PERMISSION_ROUTES.map((r) => r.href);
+
 const DEFAULT_PERM: PermissionMatrix = {
-  manager:     ["/", "/tasks", "/activity-log", "/user-management", "/analytics", "/support-tickets"],
-  supervisor:  ["/", "/tasks"],
-  maintenance: ["/", "/tasks"],
-  cleaning:    ["/", "/tasks"],
-  security:    ["/", "/tasks"],
+  administrator: ALL_ROUTES,
+  company:       ALL_ROUTES,
+  manager:       ["/", "/tasks", "/activity-log", "/user-management", "/analytics", "/support-tickets"],
+  supervisor:    ["/", "/tasks"],
+  maintenance:   ["/", "/tasks"],
+  cleaning:      ["/", "/tasks"],
+  security:      ["/", "/tasks"],
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1274,6 +1281,7 @@ function AppearanceTab() {
 // SECTION 6 — Role Permissions (Owner-level matrix)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+
 function PermissionsTab() {
   const { toast } = useToast();
   const { data } = useGetSettings();
@@ -1298,9 +1306,9 @@ function PermissionsTab() {
   }
 
   function toggleAll(roleId: string) {
-    const all = OWNER_PERMISSION_ROUTES.map((r) => r.href);
     const cur = matrix[roleId] ?? [];
-    setMatrix((prev) => ({ ...prev, [roleId]: cur.length === all.length ? ["/"] : all }));
+    const isAll = cur.length === ALL_ROUTES.length;
+    setMatrix((prev) => ({ ...prev, [roleId]: isAll ? [] : [...ALL_ROUTES] }));
     setDirty(true);
   }
 
@@ -1308,74 +1316,132 @@ function PermissionsTab() {
     try {
       await saveSettings({ data: { permissionMatrix: matrix } });
       setDirty(false);
-      toast({ title: "Permissions saved", description: "Role access matrix updated." });
+      toast({ title: "Permissions saved", description: "Role access matrix updated successfully." });
     } catch {
       toast({ title: "Save failed", variant: "destructive" });
     }
   }
 
+  // Per-role counts for "X / Y" display
+  function grantCount(roleId: string) { return (matrix[roleId] ?? []).length; }
+
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg border border-border/50 bg-muted/30 px-4 py-3">
-        <div className="flex items-start gap-2.5">
-          <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-          <div>
-            <p className="text-sm font-medium">Company-Level Access Control</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Define which pages each staff role can access. <strong>Manager</strong> and above: full access by default.
-              Click a role header to toggle all pages at once. Changes take effect immediately after saving.
+    <div className="space-y-5">
+
+      {/* ── Sovereignty banner ───────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-primary/30 bg-primary/5 px-4 py-3.5">
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <div className="space-y-1 min-w-0">
+            <p className="text-sm font-semibold">Owner Sovereignty — Full Control</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              As the Owner, you have unrestricted authority over every role. Every checkbox below is fully editable — enable or disable any page for any role with no hard-coded restrictions. Click a role header to grant/revoke all pages at once.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border">
+      {/* ── Hierarchy legend ─────────────────────────────────────────────────── */}
+      <div className="rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2.5">Delegation Chain</p>
+        <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-xs">
+          {/* Owner node */}
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-semibold bg-primary text-primary-foreground shadow-sm">
+            <Shield className="h-3 w-3" /> Owner (You)
+          </span>
+          <span className="text-muted-foreground font-medium mx-0.5">→</span>
+          {OWNER_CONFIGURABLE_ROLES.slice(0, 2).map((r, i) => (
+            <React.Fragment key={r.id}>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold text-xs ${r.color}`}>{r.label}</span>
+              {i === 0 && <span className="text-muted-foreground mx-0.5">→</span>}
+            </React.Fragment>
+          ))}
+          <span className="text-muted-foreground font-medium mx-0.5">→</span>
+          {OWNER_CONFIGURABLE_ROLES.slice(2).map((r, i) => (
+            <React.Fragment key={r.id}>
+              {i > 0 && <span className="text-muted-foreground">/</span>}
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold text-xs ${r.color}`}>{r.label}</span>
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Permission matrix table ───────────────────────────────────────────── */}
+      <div className="overflow-x-auto rounded-xl border border-border/60 shadow-sm">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="text-left font-medium py-3 px-4 min-w-36 text-muted-foreground">Page</th>
-              {/* Company column — always full access, locked */}
-              <th className="text-center py-3 px-2 min-w-24">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 cursor-default" title="Always full access — cannot be restricted">
-                  <Lock className="h-2.5 w-2.5" />Company
-                </span>
+          <thead>
+            <tr className="bg-muted/40 border-b border-border/60">
+              {/* Page column */}
+              <th className="text-left font-semibold py-3.5 px-5 text-muted-foreground min-w-44 sticky left-0 bg-muted/40 z-10">
+                Page / Route
               </th>
+              {/* Owner reference column — always full, read-only */}
+              <th className="text-center py-3.5 px-3 min-w-24 border-s border-primary/20 bg-primary/5">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary text-primary-foreground">
+                    <Shield className="h-3 w-3" /> Owner
+                  </span>
+                  <span className="text-[10px] text-primary/70 font-medium">{ALL_ROUTES.length}/{ALL_ROUTES.length}</span>
+                </div>
+              </th>
+              {/* Configurable role columns */}
               {OWNER_CONFIGURABLE_ROLES.map((r) => {
-                const cur = matrix[r.id] ?? [];
-                const all = cur.length === OWNER_PERMISSION_ROUTES.length;
+                const count = grantCount(r.id);
+                const isAll = count === ALL_ROUTES.length;
                 return (
-                  <th key={r.id} className="text-center py-3 px-2 min-w-24">
-                    <button
-                      type="button"
-                      onClick={() => toggleAll(r.id)}
-                      title={all ? "Revoke all" : "Grant all"}
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-opacity hover:opacity-70 ${r.color}`}
-                    >
-                      {r.label}
-                    </button>
+                  <th key={r.id} className={`text-center py-3.5 px-3 min-w-28 border-s border-border/40`}>
+                    <div className="flex flex-col items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => toggleAll(r.id)}
+                        title={isAll ? `Revoke all pages from ${r.label}` : `Grant all pages to ${r.label}`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold transition-all hover:opacity-80 hover:scale-105 ${r.color}`}
+                      >
+                        {r.label}
+                      </button>
+                      <span className="text-[10px] text-muted-foreground font-medium">{count}/{ALL_ROUTES.length}</span>
+                      <span className="text-[9px] text-muted-foreground/60 hidden sm:block">{r.desc}</span>
+                    </div>
                   </th>
                 );
               })}
             </tr>
           </thead>
           <tbody>
-            {OWNER_PERMISSION_ROUTES.map((page) => (
-              <tr key={page.href} className="border-t hover:bg-muted/20">
-                <td className="py-2.5 px-4 font-medium text-sm">{page.label}</td>
-                {/* Company always has access — locked checkbox */}
-                <td className="text-center py-2.5 px-2">
-                  <input type="checkbox" checked readOnly disabled className="h-4 w-4 opacity-50 cursor-not-allowed" title="Company always has full access" />
+            {OWNER_PERMISSION_ROUTES.map((page, idx) => (
+              <tr
+                key={page.href}
+                className={`border-t border-border/40 transition-colors hover:bg-muted/30 ${idx % 2 === 0 ? "" : "bg-muted/10"}`}
+              >
+                {/* Page name */}
+                <td className="py-2.5 px-5 font-medium text-sm sticky left-0 bg-background hover:bg-muted/30 z-10">
+                  <div className="flex flex-col">
+                    <span>{page.label}</span>
+                    <span className="text-[10px] text-muted-foreground/60 font-normal">{page.href}</span>
+                  </div>
                 </td>
+                {/* Owner — always checked, read-only */}
+                <td className="text-center py-2.5 px-3 border-s border-primary/20 bg-primary/5">
+                  <div className="flex justify-center">
+                    <div className="h-4 w-4 rounded bg-primary/20 border-2 border-primary flex items-center justify-center" title="Owner always has full access">
+                      <div className="h-2 w-2 rounded-sm bg-primary" />
+                    </div>
+                  </div>
+                </td>
+                {/* Configurable role checkboxes */}
                 {OWNER_CONFIGURABLE_ROLES.map((r) => {
                   const allowed = (matrix[r.id] ?? []).includes(page.href);
                   return (
-                    <td key={r.id} className="text-center py-2.5 px-2">
-                      <input
-                        type="checkbox"
-                        checked={allowed}
-                        onChange={() => toggle(r.id, page.href)}
-                        className="h-4 w-4 accent-primary cursor-pointer"
-                      />
+                    <td key={r.id} className="text-center py-2.5 px-3 border-s border-border/40">
+                      <div className="flex justify-center">
+                        <input
+                          type="checkbox"
+                          checked={allowed}
+                          onChange={() => toggle(r.id, page.href)}
+                          className="h-4 w-4 accent-primary cursor-pointer rounded"
+                          title={`${allowed ? "Revoke" : "Grant"} ${page.label} access for ${r.label}`}
+                        />
+                      </div>
                     </td>
                   );
                 })}
@@ -1385,16 +1451,23 @@ function PermissionsTab() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between pb-4">
+      {/* ── Footer actions ───────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between pt-1 pb-4">
         <button
           type="button"
           onClick={() => { setMatrix(DEFAULT_PERM); setDirty(true); }}
-          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
         >
           Reset to defaults
         </button>
         <div className="flex items-center gap-3">
-          <p className="text-sm text-muted-foreground">{dirty ? "Unsaved changes" : "Saved"}</p>
+          {dirty && (
+            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Unsaved changes
+            </span>
+          )}
+          {!dirty && <span className="text-xs text-muted-foreground">All changes saved</span>}
           <Button onClick={handleSave} disabled={saving || !dirty} className="min-w-36">
             {saving ? "Saving…" : "Save Permissions"}
           </Button>
