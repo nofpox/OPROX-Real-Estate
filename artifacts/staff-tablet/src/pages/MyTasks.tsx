@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Camera, MapPin, CheckCircle2, Clock, AlertCircle, X, Send, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import BottomNav from "@/components/BottomNav";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 type Task = {
   id: number;
@@ -29,10 +31,6 @@ const PRIORITY_BADGE: Record<string, string> = {
   low:    "bg-slate-500/20 text-slate-400 border-slate-500/30",
 };
 
-const PRIORITY_AR: Record<string, string> = {
-  urgent: "عاجل", high: "عالي", medium: "متوسط", low: "منخفض",
-};
-
 async function uploadPhoto(file: File): Promise<string> {
   const metaRes = await fetch("/api/storage/uploads/request-url", {
     method: "POST",
@@ -40,14 +38,14 @@ async function uploadPhoto(file: File): Promise<string> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contentType: file.type }),
   });
-  if (!metaRes.ok) throw new Error("فشل في رفع الصورة · Upload failed");
+  if (!metaRes.ok) throw new Error("Upload failed");
   const { uploadURL, objectPath } = await metaRes.json();
   const putRes = await fetch(uploadURL, {
     method: "PUT",
     body: file,
     headers: { "Content-Type": file.type },
   });
-  if (!putRes.ok) throw new Error("فشل في حفظ الصورة · Storage failed");
+  if (!putRes.ok) throw new Error("Storage failed");
   return objectPath as string;
 }
 
@@ -61,6 +59,7 @@ function CompleteModal({
   onClose: () => void;
   onDone: () => void;
 }) {
+  const { t } = useTranslation();
   const [photo, setPhoto]             = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [gps, setGps]                 = useState<{ lat: number; lng: number } | null>(null);
@@ -72,7 +71,7 @@ function CompleteModal({
 
   useEffect(() => {
     if (!navigator.geolocation) {
-      setGpsError("المتصفح لا يدعم تحديد الموقع");
+      setGpsError(t("tasks.allowLocation"));
       setGpsLoading(false);
       return;
     }
@@ -82,12 +81,12 @@ function CompleteModal({
         setGpsLoading(false);
       },
       () => {
-        setGpsError("يرجى السماح بتحديد الموقع من إعدادات المتصفح");
+        setGpsError(t("tasks.allowLocation"));
         setGpsLoading(false);
       },
       { timeout: 15_000, enableHighAccuracy: true }
     );
-  }, []);
+  }, [t]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -123,7 +122,7 @@ function CompleteModal({
       });
       if (!patchRes.ok) {
         const err = await patchRes.json();
-        throw new Error(err.message || err.error || "خطأ في تحديث المهمة");
+        throw new Error(err.message || err.error || "Task update error");
       }
 
       const submitRes = await fetch(`/api/tasks/${task.id}/submit`, {
@@ -133,12 +132,12 @@ function CompleteModal({
       });
       if (!submitRes.ok) {
         const err = await submitRes.json();
-        throw new Error(err.message || err.error || "خطأ في إرسال التقرير");
+        throw new Error(err.message || err.error || "Report submit error");
       }
 
       onDone();
     } catch (err: any) {
-      setSubmitError(err.message || "حدث خطأ. يرجى المحاولة مرة أخرى.");
+      setSubmitError(err.message || "An error occurred. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -149,7 +148,7 @@ function CompleteModal({
     setGpsError(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => { setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setGpsLoading(false); },
-      () => { setGpsError("تعذّر الوصول للموقع."); setGpsLoading(false); },
+      () => { setGpsError(t("tasks.locationFailed")); setGpsLoading(false); },
       { timeout: 15_000, enableHighAccuracy: true }
     );
   };
@@ -159,8 +158,7 @@ function CompleteModal({
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border/50">
         <div>
-          <h2 className="text-xl font-bold text-foreground">إنهاء المهمة</h2>
-          <p className="text-xs text-muted-foreground">Complete Task</p>
+          <h2 className="text-xl font-bold text-foreground">{t("tasks.completeTask")}</h2>
         </div>
         <button
           onClick={onClose}
@@ -173,7 +171,7 @@ function CompleteModal({
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
         {/* Task info */}
         <div className="bg-card border border-border/50 rounded-xl p-4">
-          <p className="text-xs text-muted-foreground mb-1">المهمة · Task</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("tasks.taskLabel")}</p>
           <p className="font-bold text-foreground text-base">{task.title}</p>
           {task.propertyName && (
             <p className="text-sm text-muted-foreground mt-0.5">📍 {task.propertyName}</p>
@@ -185,16 +183,15 @@ function CompleteModal({
           <div className="flex items-center gap-2 mb-3">
             <Camera size={16} className="text-amber-400" />
             <span className="text-sm font-semibold text-foreground">
-              صورة إثبات الإنجاز <span className="text-red-400">*</span>
+              {t("tasks.completionPhoto")} <span className="text-red-400">*</span>
             </span>
-            <span className="text-xs text-muted-foreground">Completion Photo</span>
           </div>
 
           {photoPreview ? (
             <div className="relative">
               <img
                 src={photoPreview}
-                alt="صورة المهمة"
+                alt={t("tasks.completionPhoto")}
                 className="w-full h-52 object-cover rounded-xl border border-border/50"
               />
               <button
@@ -219,10 +216,7 @@ function CompleteModal({
               <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center">
                 <Camera size={28} className="text-amber-400" />
               </div>
-              <div className="text-center">
-                <p className="font-bold text-amber-400 text-sm">اضغط لالتقاط صورة</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Tap to take a photo</p>
-              </div>
+              <p className="font-bold text-amber-400 text-sm">{t("tasks.tapPhoto")}</p>
             </button>
           )}
 
@@ -241,9 +235,8 @@ function CompleteModal({
           <div className="flex items-center gap-2 mb-3">
             <MapPin size={16} className="text-blue-400" />
             <span className="text-sm font-semibold text-foreground">
-              الموقع الجغرافي <span className="text-red-400">*</span>
+              {t("tasks.gpsLocation")} <span className="text-red-400">*</span>
             </span>
-            <span className="text-xs text-muted-foreground">GPS Location</span>
           </div>
 
           <div
@@ -260,10 +253,7 @@ function CompleteModal({
                 <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 animate-pulse">
                   <MapPin size={17} className="text-amber-400" />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-amber-400">جاري تحديد الموقع...</p>
-                  <p className="text-xs text-muted-foreground">Getting your location...</p>
-                </div>
+                <p className="text-sm font-semibold text-amber-400">{t("tasks.locationGetting")}</p>
               </>
             ) : gps ? (
               <>
@@ -271,7 +261,7 @@ function CompleteModal({
                   <CheckCircle2 size={17} className="text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-emerald-400">تم تسجيل موقعك ✓</p>
+                  <p className="text-sm font-semibold text-emerald-400">{t("tasks.locationDone")} ✓</p>
                   <p className="text-xs text-muted-foreground font-mono">
                     {gps.lat.toFixed(5)}, {gps.lng.toFixed(5)}
                   </p>
@@ -283,10 +273,10 @@ function CompleteModal({
                   <AlertCircle size={17} className="text-red-400" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-red-400">تعذّر تحديد الموقع</p>
+                  <p className="text-sm font-semibold text-red-400">{t("tasks.locationFailed")}</p>
                   <p className="text-xs text-muted-foreground">{gpsError}</p>
                   <button onClick={retryGps} className="text-xs text-blue-400 underline mt-1">
-                    إعادة المحاولة · Retry
+                    {t("tasks.retryGps")}
                   </button>
                 </div>
               </>
@@ -297,11 +287,11 @@ function CompleteModal({
         {/* ── Checklist ─────────────────────────────────────────────────── */}
         <div className="bg-card border border-border/50 rounded-xl p-4 space-y-3">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            متطلبات الإنهاء · Requirements
+            {t("tasks.requirements")}
           </p>
           {[
-            { label: "صورة الإنجاز · Photo", done: !!photo },
-            { label: "الموقع الجغرافي · GPS", done: !!gps },
+            { label: t("tasks.photo"), done: !!photo },
+            { label: t("tasks.gpsLocation"), done: !!gps },
           ].map(({ label, done }) => (
             <div key={label} className="flex items-center gap-3">
               <div
@@ -338,9 +328,9 @@ function CompleteModal({
           className="w-full h-14 text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 gap-2"
         >
           {submitting ? (
-            <><RefreshCw size={18} className="animate-spin" /> جاري الإرسال...</>
+            <><RefreshCw size={18} className="animate-spin" /> {t("tasks.submitting")}</>
           ) : (
-            <><Send size={18} /> إرسال التقرير · Submit Report</>
+            <><Send size={18} /> {t("tasks.submitReport")}</>
           )}
         </Button>
         <Button
@@ -349,7 +339,7 @@ function CompleteModal({
           disabled={submitting}
           className="w-full h-11 text-muted-foreground"
         >
-          إلغاء · Cancel
+          {t("tasks.cancel")}
         </Button>
       </div>
     </div>
@@ -368,6 +358,7 @@ function TaskCard({
   onEnd: (task: Task) => void;
   starting: number | null;
 }) {
+  const { t, i18n } = useTranslation();
   const isSubmitted = task.reportStatus !== "none";
   const isStarting  = starting === task.id;
 
@@ -382,7 +373,7 @@ function TaskCard({
                 PRIORITY_BADGE[task.priority] || PRIORITY_BADGE.medium
               }`}
             >
-              {PRIORITY_AR[task.priority] || task.priority}
+              {t(`priority.${task.priority}`, task.priority)}
             </span>
             <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
               {task.category}
@@ -395,7 +386,7 @@ function TaskCard({
         </div>
         {isSubmitted && (
           <div className="shrink-0 px-2.5 py-1 rounded-full bg-blue-500/15 border border-blue-500/30">
-            <p className="text-[10px] font-bold text-blue-400 whitespace-nowrap">بانتظار الاعتماد</p>
+            <p className="text-[10px] font-bold text-blue-400 whitespace-nowrap">{t("tasks.awaitingApproval")}</p>
           </div>
         )}
       </div>
@@ -411,7 +402,7 @@ function TaskCard({
         {task.dueDate && (
           <span className="flex items-center gap-1">
             <Clock size={11} />
-            {new Date(task.dueDate + "T00:00:00").toLocaleDateString("ar-SA")}
+            {new Date(task.dueDate + "T00:00:00").toLocaleDateString(i18n.language)}
           </span>
         )}
       </div>
@@ -429,7 +420,7 @@ function TaskCard({
                 ? <RefreshCw size={16} className="animate-spin" />
                 : "▶"
               }
-              بدء المهمة · Start Task
+              {t("tasks.startTask")}
             </Button>
           )}
           {task.status === "in-progress" && (
@@ -437,19 +428,19 @@ function TaskCard({
               onClick={() => onEnd(task)}
               className="w-full h-12 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
             >
-              ✓ إنهاء المهمة · End Task
+              ✓ {t("tasks.endTask")}
             </Button>
           )}
           {task.status === "completed" && (
             <div className="flex items-center justify-center gap-2 py-2">
               <CheckCircle2 size={16} className="text-emerald-400" />
-              <span className="text-sm text-emerald-400 font-medium">مكتملة — بانتظار الاعتماد</span>
+              <span className="text-sm text-emerald-400 font-medium">{t("tasks.completedAwaiting")}</span>
             </div>
           )}
           {task.status === "verified" && (
             <div className="flex items-center justify-center gap-2 py-2">
               <CheckCircle2 size={16} className="text-blue-400" />
-              <span className="text-sm text-blue-400 font-medium">معتمدة ✓</span>
+              <span className="text-sm text-blue-400 font-medium">{t("tasks.approved")} ✓</span>
             </div>
           )}
         </div>
@@ -461,6 +452,7 @@ function TaskCard({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function MyTasks() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
 
   const { data: authUser } = useQuery<{ id: number; username: string; displayName: string }>({
     queryKey: ["auth-me"],
@@ -483,10 +475,10 @@ export default function MyTasks() {
     refetchInterval: 30_000,
   });
 
-  const pendingTasks = tasks?.filter(t => t.status === "pending") ?? [];
-  const activeTasks  = tasks?.filter(t => t.status === "in-progress") ?? [];
+  const pendingTasks = tasks?.filter(t2 => t2.status === "pending") ?? [];
+  const activeTasks  = tasks?.filter(t2 => t2.status === "in-progress") ?? [];
   const doneTasks    = tasks?.filter(
-    t => t.status === "completed" || t.status === "verified"
+    t2 => t2.status === "completed" || t2.status === "verified"
   ) ?? [];
 
   const handleStart = async (taskId: number) => {
@@ -514,9 +506,9 @@ export default function MyTasks() {
   };
 
   const TABS = [
-    { key: "pending" as const, label: "قيد الانتظار", sub: "Pending", count: pendingTasks.length },
-    { key: "active"  as const, label: "جارية",        sub: "Active",  count: activeTasks.length  },
-    { key: "done"    as const, label: "المنتهية",     sub: "Done",    count: doneTasks.length    },
+    { key: "pending" as const, label: t("tasks.pending"), count: pendingTasks.length },
+    { key: "active"  as const, label: t("tasks.active"),  count: activeTasks.length  },
+    { key: "done"    as const, label: t("tasks.done"),    count: doneTasks.length    },
   ];
 
   const displayed =
@@ -532,41 +524,44 @@ export default function MyTasks() {
           <div className="flex items-center justify-between mb-3">
             <div>
               <h1 className="font-serif font-bold text-foreground text-xl leading-tight">
-                مهامي الحالية
+                {t("tasks.title")}
               </h1>
               <p className="text-xs text-muted-foreground">
                 {authUser?.displayName || authUser?.username}
               </p>
             </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => refetch()}
-              className="w-9 h-9 p-0"
-            >
-              <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
-            </Button>
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => refetch()}
+                className="w-9 h-9 p-0"
+              >
+                <RefreshCw size={15} className={isLoading ? "animate-spin" : ""} />
+              </Button>
+            </div>
           </div>
 
           {/* Status tabs */}
           <div className="flex gap-2">
-            {TABS.map(t => (
+            {TABS.map(tab2 => (
               <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
+                key={tab2.key}
+                onClick={() => setTab(tab2.key)}
                 className={`flex-1 py-2 px-1 rounded-xl text-xs font-semibold transition-all ${
-                  tab === t.key
+                  tab === tab2.key
                     ? "bg-amber-500 text-black"
                     : "bg-background border border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <div>{t.label}</div>
+                <div>{tab2.label}</div>
                 <div
                   className={`text-[10px] font-normal ${
-                    tab === t.key ? "text-black/70" : "text-muted-foreground"
+                    tab === tab2.key ? "text-black/70" : "text-muted-foreground"
                   }`}
                 >
-                  {t.sub} ({t.count})
+                  ({tab2.count})
                 </div>
               </button>
             ))}
@@ -578,25 +573,18 @@ export default function MyTasks() {
           {isError ? (
             <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
               <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
-                <AlertCircle size={28} className="text-red-400" />
+                <AlertCircle size={26} className="text-red-400" />
               </div>
-              <div>
-                <p className="font-semibold text-foreground">تعذّر تحميل المهام</p>
-                <p className="text-xs text-muted-foreground mt-1">Failed to load tasks</p>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => refetch()}>
-                <RefreshCw size={14} className="me-2" />إعادة المحاولة
-              </Button>
+              <p className="text-muted-foreground text-sm">Failed to load tasks</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
             </div>
           ) : isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-40 rounded-2xl" />
+              <Skeleton key={i} className="h-40 w-full rounded-2xl" />
             ))
           ) : displayed.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <CheckCircle2 size={44} className="text-muted-foreground/25 mb-4" />
-              <p className="text-muted-foreground font-semibold">لا توجد مهام في هذا القسم</p>
-              <p className="text-xs text-muted-foreground mt-1">No tasks in this section</p>
+            <div className="text-center py-16 text-muted-foreground">
+              <p className="text-sm">{t("workOrders.empty")}</p>
             </div>
           ) : (
             displayed.map(task => (
@@ -604,15 +592,13 @@ export default function MyTasks() {
                 key={task.id}
                 task={task}
                 onStart={handleStart}
-                onEnd={setCompletingTask}
+                onEnd={(t2) => setCompletingTask(t2)}
                 starting={startingId}
               />
             ))
           )}
         </div>
       </div>
-
-      <BottomNav active="tasks" />
 
       {completingTask && (
         <CompleteModal
@@ -621,6 +607,8 @@ export default function MyTasks() {
           onDone={handleDone}
         />
       )}
+
+      <BottomNav active="tasks" />
     </>
   );
 }

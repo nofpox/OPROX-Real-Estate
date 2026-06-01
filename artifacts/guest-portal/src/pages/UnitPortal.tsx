@@ -1,23 +1,27 @@
 import { useState } from "react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   Zap, Droplets, Wind, Brush, Wrench, Volume2, DoorOpen,
   CheckCircle2, Loader2, Building2, AlertCircle,
 } from "lucide-react";
 
-const REQUEST_TYPES = [
-  { value: "electrical",  labelAr: "كهرباء",       labelEn: "Electrical",   icon: Zap,      color: "text-yellow-500" },
-  { value: "plumbing",    labelAr: "سباكة",         labelEn: "Plumbing",     icon: Droplets, color: "text-blue-500"   },
-  { value: "ac",          labelAr: "تكييف / تدفئة", labelEn: "AC / Heating", icon: Wind,     color: "text-cyan-500"   },
-  { value: "cleaning",    labelAr: "تنظيف",         labelEn: "Cleaning",     icon: Brush,    color: "text-green-500"  },
-  { value: "maintenance", labelAr: "صيانة عامة",    labelEn: "Maintenance",  icon: Wrench,   color: "text-orange-500" },
-  { value: "noise",       labelAr: "ضوضاء",         labelEn: "Noise",        icon: Volume2,  color: "text-red-500"    },
-  { value: "other",       labelAr: "أخرى",          labelEn: "Other",        icon: DoorOpen, color: "text-slate-400"  },
-];
+const REQUEST_ICONS: Record<string, { icon: typeof Zap; color: string }> = {
+  electrical:  { icon: Zap,      color: "text-yellow-500" },
+  plumbing:    { icon: Droplets, color: "text-blue-500"   },
+  ac:          { icon: Wind,     color: "text-cyan-500"   },
+  cleaning:    { icon: Brush,    color: "text-green-500"  },
+  maintenance: { icon: Wrench,   color: "text-orange-500" },
+  noise:       { icon: Volume2,  color: "text-red-500"    },
+  other:       { icon: DoorOpen, color: "text-slate-400"  },
+};
+
+const REQUEST_TYPE_KEYS = ["electrical", "plumbing", "ac", "cleaning", "maintenance", "noise", "other"] as const;
 
 type UnitInfo = { id: number; name: string; propertyName: string | null };
 type Result   = { refCode: string; workOrderId: number; message: string };
@@ -25,6 +29,7 @@ type Result   = { refCode: string; workOrderId: number; message: string };
 export default function UnitPortal() {
   const params = useParams<{ id: string }>();
   const unitId = Number(params.id);
+  const { t } = useTranslation();
 
   const [selected,    setSelected]    = useState("");
   const [description, setDescription] = useState("");
@@ -55,11 +60,11 @@ export default function UnitPortal() {
       });
       if (!res.ok) {
         const body = await res.json();
-        throw new Error(body.error || "Failed to submit");
+        throw new Error(body.error || t("request.errorGeneric"));
       }
       setResult(await res.json());
     } catch (err: any) {
-      setError(err.message || "حدث خطأ. يرجى المحاولة مرة أخرى.");
+      setError(err.message || t("request.errorGeneric"));
     } finally {
       setSubmitting(false);
     }
@@ -79,22 +84,21 @@ export default function UnitPortal() {
         <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
           <CheckCircle2 size={40} className="text-emerald-600" />
         </div>
-        <h1 className="text-2xl font-bold text-slate-800 mb-1">تم الاستلام</h1>
-        <p className="text-slate-500 text-sm mb-6">Request Received</p>
+        <h1 className="text-2xl font-bold text-slate-800 mb-1">{t("request.success.title")}</h1>
+        <p className="text-slate-500 text-sm mb-6">{t("request.success.subtitle")}</p>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-8 py-6 w-full max-w-xs mb-6">
-          <p className="text-xs text-slate-400 mb-1">رمز الطلب · Reference Code</p>
+          <p className="text-xs text-slate-400 mb-1">{t("request.success.refCode")}</p>
           <p className="text-3xl font-bold tracking-widest text-slate-800">{result.refCode}</p>
         </div>
 
-        <p className="text-sm text-slate-600 max-w-xs leading-relaxed mb-8">
+        <p className="text-sm text-slate-600 max-w-xs leading-relaxed mb-2">
           {result.message}
-          <br />
-          <span className="text-slate-400 text-xs mt-1 block">احتفظ برمز الطلب للمتابعة · Keep your reference code</span>
         </p>
+        <p className="text-slate-400 text-xs mb-8">{t("request.success.keepCode")}</p>
 
         <Button variant="outline" onClick={reset} className="w-full max-w-xs">
-          تقديم طلب آخر · New Request
+          {t("request.success.newRequest")}
         </Button>
       </div>
     );
@@ -106,23 +110,26 @@ export default function UnitPortal() {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-5">
         <div className="max-w-md mx-auto">
-          {unitLoading ? (
-            <Skeleton className="h-6 w-40 mb-1" />
-          ) : unit ? (
-            <>
-              <div className="flex items-center gap-2 mb-0.5">
-                <Building2 size={15} className="text-amber-500" />
-                <p className="text-xs text-slate-400">{unit.propertyName}</p>
+          <div className="flex items-center justify-between mb-2">
+            {unitLoading ? (
+              <Skeleton className="h-6 w-40" />
+            ) : unit ? (
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <Building2 size={15} className="text-amber-500" />
+                  <p className="text-xs text-slate-400">{unit.propertyName}</p>
+                </div>
+                <h1 className="text-xl font-bold text-slate-800">{unit.name}</h1>
               </div>
-              <h1 className="text-xl font-bold text-slate-800">{unit.name}</h1>
-            </>
-          ) : (
-            <div className="flex items-center gap-2 text-red-500">
-              <AlertCircle size={16} />
-              <p className="text-sm">الوحدة غير موجودة · Unit not found</p>
-            </div>
-          )}
-          <p className="text-xs text-slate-400 mt-1">طلب خدمة · Service Request</p>
+            ) : (
+              <div className="flex items-center gap-2 text-red-500">
+                <AlertCircle size={16} />
+                <p className="text-sm">{t("request.unitNotFound")}</p>
+              </div>
+            )}
+            <LanguageSwitcher />
+          </div>
+          <p className="text-xs text-slate-400">{t("request.serviceRequest")}</p>
         </div>
       </div>
 
@@ -130,27 +137,26 @@ export default function UnitPortal() {
         {/* Type selector */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-3">
-            نوع الطلب <span className="text-slate-400 font-normal">· Request Type</span>
+            {t("request.requestType")} <span className="text-red-400">*</span>
           </p>
           <div className="grid grid-cols-3 gap-3">
-            {REQUEST_TYPES.map(rt => {
-              const Icon = rt.icon;
-              const isSelected = selected === rt.value;
+            {REQUEST_TYPE_KEYS.map(key => {
+              const { icon: Icon, color } = REQUEST_ICONS[key];
+              const isSelected = selected === key;
               return (
                 <button
-                  key={rt.value}
-                  onClick={() => setSelected(rt.value)}
+                  key={key}
+                  onClick={() => setSelected(key)}
                   className={`flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border-2 transition-all ${
                     isSelected
                       ? "border-amber-400 bg-amber-50 shadow-sm"
                       : "border-slate-200 bg-white hover:border-slate-300"
                   }`}
                 >
-                  <Icon size={22} className={isSelected ? "text-amber-500" : rt.color} />
+                  <Icon size={22} className={isSelected ? "text-amber-500" : color} />
                   <span className="text-xs font-semibold text-slate-700 leading-tight text-center">
-                    {rt.labelAr}
+                    {t(`request.types.${key}`)}
                   </span>
-                  <span className="text-[10px] text-slate-400 leading-none">{rt.labelEn}</span>
                 </button>
               );
             })}
@@ -160,13 +166,12 @@ export default function UnitPortal() {
         {/* Description */}
         <div>
           <p className="text-sm font-semibold text-slate-700 mb-2">
-            وصف المشكلة <span className="text-slate-400 font-normal">· Description</span>
-            <span className="text-red-400 ms-1">*</span>
+            {t("request.description")} <span className="text-red-400">*</span>
           </p>
           <Textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder="اكتب وصفاً مختصراً للمشكلة… · Briefly describe the issue…"
+            placeholder={t("request.descPlaceholder")}
             className="min-h-[120px] bg-white border-slate-200 text-slate-800 placeholder:text-slate-400 resize-none"
           />
         </div>
@@ -187,7 +192,7 @@ export default function UnitPortal() {
         >
           {submitting
             ? <Loader2 size={18} className="animate-spin" />
-            : "إرسال الطلب · Submit Request"
+            : t("request.submit")
           }
         </Button>
       </div>
