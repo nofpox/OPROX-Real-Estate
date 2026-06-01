@@ -38,14 +38,14 @@ const fr: Translations = {
   priority: { urgent: "Urgent", high: "Élevé", medium: "Moyen", low: "Faible" },
   roles: {
     super_admin: "Super Admin",
-    owner: "Société", admin_manager: "Administratif / Direction",
+    owner: "Administrateur (Propriétaire/Système)", admin_manager: "Société", administrator: "Administrateur (Département)",
     manager: "Responsable", supervisor: "Superviseur", maintenance: "Maintenance",
     cleaning: "Nettoyage", security: "Sécurité", viewingAs: "Vue en tant que",
     switchRole: "Changer de rôle", active: "actif",
     desc: {
       super_admin: "Accès plateforme : gestion des locataires et tous les paramètres",
-      owner: "Accès complet au système, y compris la finance et les paramètres", admin_manager: "Rapports, gestion des unités, suivi des demandes de service, facturation",
-      manager: "Tâches, journaux d'activité et gestion des utilisateurs",
+      owner: "Autorité système complète — contrôle souverain sur tous les paramètres et rôles", admin_manager: "Accès au niveau de l'entreprise — gestion globale et supervision financière", administrator: "Administration départementale — rapports, données des unités, suivi des demandes de service, facturation",
+      manager: "Supervision managériale — performance immobilière, coordination d'équipe, planification",
       supervisor: "Tâches assignées et profil personnel",
       maintenance: "Tâches assignées et profil personnel",
       cleaning: "Tâches assignées et profil personnel",

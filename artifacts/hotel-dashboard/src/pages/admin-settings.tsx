@@ -118,24 +118,25 @@ const OWNER_PERMISSION_ROUTES = [
   { href: "/support-tickets",    label: "Support Tickets" },
 ];
 
-// Tier = visual hierarchy level (0 = highest delegated authority)
+// Tier = hierarchy level (0 = highest delegated authority below Owner)
+// Column order matches the user-specified sequence: Company → Manager → Administrator → Supervisor → Staff
 const OWNER_CONFIGURABLE_ROLES = [
-  { id: "administrator", label: "Administrator", color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",     tier: 0, desc: "Highest delegated authority" },
-  { id: "company",       label: "Company",       color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400", tier: 1, desc: "Company-wide management" },
-  { id: "manager",       label: "Manager",       color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400", tier: 2, desc: "Property management" },
-  { id: "supervisor",    label: "Supervisor",    color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",    tier: 3, desc: "Field operations" },
-  { id: "maintenance",   label: "Maintenance",   color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400", tier: 4, desc: "Field tasks" },
-  { id: "cleaning",      label: "Cleaning",      color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",    tier: 4, desc: "Field tasks" },
-  { id: "security",      label: "Security",      color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",        tier: 4, desc: "Field tasks" },
+  { id: "admin_manager",  label: "Company",                    color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",  tier: 0, desc: "Corporate-level access" },
+  { id: "manager",        label: "Manager",                    color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",  tier: 1, desc: "Management oversight" },
+  { id: "administrator",  label: "Administrator (Dept.)",      color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",          tier: 2, desc: "Reporting & unit data" },
+  { id: "supervisor",     label: "Supervisor",                 color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",      tier: 3, desc: "Field operations" },
+  { id: "maintenance",    label: "Maintenance",                color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",  tier: 4, desc: "Field tasks" },
+  { id: "cleaning",       label: "Cleaning",                   color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",      tier: 4, desc: "Field tasks" },
+  { id: "security",       label: "Security",                   color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",          tier: 4, desc: "Field tasks" },
 ];
 
 const ALL_ROUTES = OWNER_PERMISSION_ROUTES.map((r) => r.href);
 
 const DEFAULT_PERM: PermissionMatrix = {
-  administrator: ALL_ROUTES,
-  company:       ALL_ROUTES,
-  manager:       ["/", "/tasks", "/activity-log", "/user-management", "/analytics", "/support-tickets"],
-  supervisor:    ["/", "/tasks"],
+  admin_manager: ALL_ROUTES,
+  manager:       ["/", "/properties", "/rooms", "/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log", "/analytics"],
+  administrator: ["/", "/properties", "/rooms", "/guest-requests", "/analytics", "/bookings", "/user-management", "/admin-settings", "/activity-log"],
+  supervisor:    ["/", "/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log"],
   maintenance:   ["/", "/tasks"],
   cleaning:      ["/", "/tasks"],
   security:      ["/", "/tasks"],

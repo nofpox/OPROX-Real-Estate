@@ -3,9 +3,9 @@ import React, { createContext, useContext, useState } from "react";
 export type AppRole =
   | "super_admin"
   | "owner"
-  | "administrator"
   | "admin_manager"
   | "manager"
+  | "administrator"
   | "supervisor"
   | "maintenance"
   | "cleaning"
@@ -22,9 +22,9 @@ export interface RoleDefinition {
 export function mapDbRoleToAppRole(dbRole: string): AppRole {
   if (dbRole === "super_admin") return "super_admin";
   if (dbRole === "owner" || dbRole === "admin") return "owner";
-  if (dbRole === "administrator") return "administrator";
   if (dbRole === "admin-manager") return "admin_manager";
   if (dbRole === "manager" || dbRole === "property-manager" || dbRole === "site-supervisor") return "manager";
+  if (dbRole === "administrator") return "administrator";
   if (dbRole === "front-desk" || dbRole === "supervisor") return "supervisor";
   if (dbRole === "housekeeping" || dbRole === "cleaning-staff" || dbRole === "cleaning") return "cleaning";
   if (dbRole === "maintenance" || dbRole === "maintenance-tech") return "maintenance";
@@ -33,13 +33,14 @@ export function mapDbRoleToAppRole(dbRole: string): AppRole {
 }
 
 export function isOwnerTier(dbRole: string): boolean {
-  return dbRole === "owner" || dbRole === "admin" || dbRole === "super_admin" || dbRole === "administrator";
+  return dbRole === "owner" || dbRole === "admin" || dbRole === "super_admin";
 }
 
 export function isSuperAdmin(dbRole: string): boolean {
   return dbRole === "super_admin";
 }
 
+/** Ordered top-down from highest to lowest authority. */
 export const ROLES: RoleDefinition[] = [
   {
     id: "super_admin",
@@ -48,41 +49,47 @@ export const ROLES: RoleDefinition[] = [
     allowedNav: ["*"],
     taskCategories: null,
   },
+  // 1 — Top tier: Owner / System Administrator
   {
     id: "owner",
-    label: "Owner",
-    description: "Sovereign access — full, unrestricted control over all settings and roles",
+    label: "Administrator (Owner/System)",
+    description: "Full system authority — sovereign, unrestricted control over all settings, roles, and data",
     allowedNav: ["*"],
     taskCategories: null,
   },
-  {
-    id: "administrator",
-    label: "Administrator",
-    description: "Highest delegated authority — full system access, configurable by Owner",
-    allowedNav: ["*"],
-    taskCategories: null,
-  },
+  // 2 — Company tier: Corporate-level access
   {
     id: "admin_manager",
-    label: "إداري / الإدارة",
-    description: "Reports, unit data management, service request tracking, billing",
+    label: "Company",
+    description: "Corporate-level access — company-wide management, financial oversight, and reporting",
     allowedNav: ["/", "/properties", "/rooms", "/unit-map", "/guest-requests", "/analytics", "/bookings", "/user-management", "/admin-settings"],
     taskCategories: null,
   },
+  // 3 — Management tier: Property & operational management
   {
     id: "manager",
     label: "Manager",
-    description: "Field operations monitoring, maintenance/service requests, team performance",
-    allowedNav: ["/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log"],
+    description: "Management-level oversight — property performance, team coordination, and scheduling",
+    allowedNav: ["/", "/properties", "/rooms", "/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log", "/analytics"],
     taskCategories: null,
   },
+  // 4 — Departmental Administrator: Reporting, unit data, operational monitoring
+  {
+    id: "administrator",
+    label: "Administrator (Departmental)",
+    description: "Departmental administration — reporting, unit data, service request tracking, and billing",
+    allowedNav: ["/", "/properties", "/rooms", "/guest-requests", "/analytics", "/bookings", "/user-management", "/admin-settings", "/activity-log"],
+    taskCategories: null,
+  },
+  // 5 — Supervisor: Field operations oversight
   {
     id: "supervisor",
     label: "Supervisor",
-    description: "Field operations monitoring, maintenance/service requests, team performance",
-    allowedNav: ["/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log"],
+    description: "Field operations oversight — maintenance/service requests and team performance monitoring",
+    allowedNav: ["/", "/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log"],
     taskCategories: null,
   },
+  // 6 — Execution staff
   {
     id: "maintenance",
     label: "Maintenance",
