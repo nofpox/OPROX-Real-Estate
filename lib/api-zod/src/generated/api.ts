@@ -149,6 +149,7 @@ export const ListRoomsResponse = zod.array(ListRoomsResponseItem)
  * @summary Create a room
  */
 export const CreateRoomBody = zod.object({
+  "propertyId": zod.number().optional(),
   "name": zod.string(),
   "type": zod.string(),
   "pricePerNight": zod.number(),
@@ -156,6 +157,21 @@ export const CreateRoomBody = zod.object({
   "description": zod.string().optional(),
   "capacity": zod.number().optional(),
   "amenities": zod.string().optional()
+})
+
+
+/**
+ * @summary Bulk create rooms for a property
+ */
+export const CreateRoomsBulkBody = zod.object({
+  "propertyId": zod.number(),
+  "prefix": zod.string().describe('e.g. \'Unit \', \'Apt \', \'Room \''),
+  "startNumber": zod.number(),
+  "endNumber": zod.number(),
+  "type": zod.string(),
+  "status": zod.string(),
+  "capacity": zod.number().optional(),
+  "pricePerNight": zod.number().optional()
 })
 
 

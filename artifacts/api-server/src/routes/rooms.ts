@@ -31,6 +31,33 @@ router.post("/rooms", async (req, res) => {
   res.status(201).json(fmt(room));
 });
 
+router.post("/rooms/bulk", async (req, res) => {
+  const tenantId = tid(req) ?? 1;
+  const { propertyId, prefix, startNumber, endNumber, type, status, capacity, pricePerNight } = req.body;
+  if (!propertyId || !prefix || startNumber == null || endNumber == null || !type || !status) {
+    res.status(400).json({ error: "Missing required fields" }); return;
+  }
+  const start = parseInt(startNumber, 10);
+  const end = parseInt(endNumber, 10);
+  if (isNaN(start) || isNaN(end) || end < start || (end - start + 1) > 100) {
+    res.status(400).json({ error: "Range must be valid and ≤ 100 units" }); return;
+  }
+  const values = [];
+  for (let i = start; i <= end; i++) {
+    values.push({
+      tenantId,
+      propertyId: parseInt(propertyId, 10),
+      name: `${prefix}${i}`,
+      type,
+      status,
+      capacity: capacity ? parseInt(capacity, 10) : 2,
+      pricePerNight: pricePerNight ? String(pricePerNight) : "0",
+    });
+  }
+  const rooms = await db.insert(roomsTable).values(values).returning();
+  res.status(201).json(rooms.map(fmt));
+});
+
 router.get("/rooms/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }

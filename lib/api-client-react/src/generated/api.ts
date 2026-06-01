@@ -80,6 +80,7 @@ import type {
   ResetPassword200,
   ResetPasswordBody,
   Room,
+  RoomBulkInput,
   RoomInput,
   RoomUpdate,
   ServiceCategory,
@@ -502,6 +503,77 @@ export const useCreateRoom = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateRoomMutationOptions(options));
+    }
+
+export const getCreateRoomsBulkUrl = () => {
+
+
+
+
+  return `/api/rooms/bulk`
+}
+
+/**
+ * @summary Bulk create rooms for a property
+ */
+export const createRoomsBulk = async (roomBulkInput: RoomBulkInput, options?: RequestInit): Promise<Room[]> => {
+
+  return customFetch<Room[]>(getCreateRoomsBulkUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      roomBulkInput,)
+  }
+);}
+
+
+
+
+export const getCreateRoomsBulkMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRoomsBulk>>, TError,{data: BodyType<RoomBulkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRoomsBulk>>, TError,{data: BodyType<RoomBulkInput>}, TContext> => {
+
+const mutationKey = ['createRoomsBulk'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRoomsBulk>>, {data: BodyType<RoomBulkInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createRoomsBulk(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRoomsBulkMutationResult = NonNullable<Awaited<ReturnType<typeof createRoomsBulk>>>
+    export type CreateRoomsBulkMutationBody = BodyType<RoomBulkInput>
+    export type CreateRoomsBulkMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Bulk create rooms for a property
+ */
+export const useCreateRoomsBulk = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRoomsBulk>>, TError,{data: BodyType<RoomBulkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createRoomsBulk>>,
+        TError,
+        {data: BodyType<RoomBulkInput>},
+        TContext
+      > => {
+      return useMutation(getCreateRoomsBulkMutationOptions(options));
     }
 
 export const getGetRoomUrl = (id: number,) => {

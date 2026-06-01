@@ -113,6 +113,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/Room"
 
+  /rooms/bulk:
+    post:
+      operationId: createRoomsBulk
+      tags: [rooms]
+      summary: Bulk create rooms for a property
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoomBulkInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Room"
+
   /rooms/{id}:
     get:
       operationId: getRoom
@@ -2456,10 +2477,34 @@ components:
         createdAt:
           type: string
 
+    RoomBulkInput:
+      type: object
+      required: [propertyId, prefix, startNumber, endNumber, type, status]
+      properties:
+        propertyId:
+          type: integer
+        prefix:
+          type: string
+          description: "e.g. 'Unit ', 'Apt ', 'Room '"
+        startNumber:
+          type: integer
+        endNumber:
+          type: integer
+        type:
+          type: string
+        status:
+          type: string
+        capacity:
+          type: integer
+        pricePerNight:
+          type: number
+
     RoomInput:
       type: object
       required: [name, type, pricePerNight, status]
       properties:
+        propertyId:
+          type: integer
         name:
           type: string
         type:

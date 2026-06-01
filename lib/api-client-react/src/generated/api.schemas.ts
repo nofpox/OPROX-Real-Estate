@@ -150,7 +150,20 @@ export interface Room {
   createdAt: string;
 }
 
+export interface RoomBulkInput {
+  propertyId: number;
+  /** e.g. 'Unit ', 'Apt ', 'Room ' */
+  prefix: string;
+  startNumber: number;
+  endNumber: number;
+  type: string;
+  status: string;
+  capacity?: number;
+  pricePerNight?: number;
+}
+
 export interface RoomInput {
+  propertyId?: number;
   name: string;
   type: string;
   pricePerNight: number;
