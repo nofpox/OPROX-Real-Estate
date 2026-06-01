@@ -1045,6 +1045,118 @@ export interface ServiceCategoryUpdate {
   requiresTimeSlot?: boolean;
 }
 
+export type ListingMediaItem = { [key: string]: unknown };
+
+export interface Listing {
+  id: number;
+  tenantId: number;
+  propertyId?: number | null;
+  title: string;
+  description?: string | null;
+  listingType: string;
+  propertyType: string;
+  price?: number | null;
+  currency: string;
+  areaSqm?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  floor?: number | null;
+  amenities?: string[];
+  media?: ListingMediaItem[];
+  address?: string | null;
+  city?: string | null;
+  district?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  status: string;
+  featured: boolean;
+  viewCount: number;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ListingInput {
+  title: string;
+  description?: string;
+  listingType: string;
+  propertyType: string;
+  propertyId?: number;
+  price?: number;
+  currency?: string;
+  areaSqm?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  floor?: number;
+  amenities?: string;
+  media?: string;
+  address?: string;
+  city?: string;
+  district?: string;
+  lat?: number;
+  lng?: number;
+  status?: string;
+  featured?: boolean;
+  contactEmail?: string;
+  contactPhone?: string;
+}
+
+export interface ListingUpdate {
+  title?: string;
+  description?: string;
+  listingType?: string;
+  propertyType?: string;
+  price?: number;
+  currency?: string;
+  areaSqm?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  status?: string;
+  featured?: boolean;
+  address?: string;
+  city?: string;
+  district?: string;
+  amenities?: string;
+  media?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+}
+
+export type ListingsPageMeta = {
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+};
+
+export interface ListingsPage {
+  status: string;
+  data: Listing[];
+  meta: ListingsPageMeta;
+  timestamp: string;
+}
+
+export type ListingResponseData = { [key: string]: unknown };
+
+export type ListingResponseMeta = { [key: string]: unknown } | null;
+
+export interface ListingResponse {
+  status: string;
+  data: ListingResponseData;
+  meta?: ListingResponseMeta;
+  timestamp: string;
+}
+
+export interface ListingInquiryInput {
+  listingId?: number;
+  name: string;
+  email: string;
+  phone?: string;
+  message?: string;
+  source?: string;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
@@ -1178,5 +1290,24 @@ entityType?: string;
 
 export type ListSupportTicketsParams = {
 status?: string;
+};
+
+export type GetListingsParams = {
+page?: number;
+limit?: number;
+q?: string;
+type?: string;
+status?: string;
+propertyType?: string;
+city?: string;
+featured?: string;
+propertyId?: number;
+minPrice?: string;
+maxPrice?: string;
+};
+
+export type GetListingInquiriesParams = {
+page?: number;
+limit?: number;
 };
 

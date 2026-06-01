@@ -28,12 +28,14 @@ import unitRequestsRouter from "./unitRequests";
 import superAdminRouter from "./super-admin";
 import supportTicketsRouter from "./support-tickets";
 import serviceCategoriesRouter from "./serviceCategories";
+import listingsRouter from "./listings";
+import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
   worker: 0, supervisor: 1, admin: 2,
 };
 
-const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/", "/unit-requests", "/unit-info/", "/service-categories"];
+const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/", "/unit-requests", "/unit-info/", "/service-categories", "/listings"];
 
 const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
 
@@ -117,6 +119,9 @@ async function tierGate(req: Request, res: Response, next: NextFunction): Promis
 
 const router: IRouter = Router();
 
+// ── Global audit log (fire-and-forget on every response) ─────────────────────
+router.use(auditLogMiddleware);
+
 router.use(tierGate);
 
 router.use(authRouter);
@@ -145,6 +150,7 @@ router.use(guestRouter);
 router.use(unitRequestsRouter);
 router.use(supportTicketsRouter);
 router.use(serviceCategoriesRouter);
+router.use(listingsRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

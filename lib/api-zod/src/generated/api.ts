@@ -2516,3 +2516,199 @@ export const UpdateSupportTicketResponse = zod.object({
 })
 
 
+/**
+ * @summary Get paginated, filterable property listings (public)
+ */
+export const getListingsQueryPageDefault = 1;
+export const getListingsQueryLimitDefault = 20;
+export const getListingsQueryStatusDefault = `active`;
+
+export const GetListingsQueryParams = zod.object({
+  "page": zod.coerce.number().default(getListingsQueryPageDefault),
+  "limit": zod.coerce.number().default(getListingsQueryLimitDefault),
+  "q": zod.coerce.string().optional(),
+  "type": zod.coerce.string().optional(),
+  "status": zod.coerce.string().default(getListingsQueryStatusDefault),
+  "propertyType": zod.coerce.string().optional(),
+  "city": zod.coerce.string().optional(),
+  "featured": zod.coerce.string().optional(),
+  "propertyId": zod.coerce.number().optional(),
+  "minPrice": zod.coerce.string().optional(),
+  "maxPrice": zod.coerce.string().optional()
+})
+
+export const GetListingsResponse = zod.object({
+  "status": zod.string(),
+  "data": zod.array(zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number(),
+  "propertyId": zod.number().nullish(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "listingType": zod.string(),
+  "propertyType": zod.string(),
+  "price": zod.number().nullish(),
+  "currency": zod.string(),
+  "areaSqm": zod.number().nullish(),
+  "bedrooms": zod.number().nullish(),
+  "bathrooms": zod.number().nullish(),
+  "floor": zod.number().nullish(),
+  "amenities": zod.array(zod.string()).optional(),
+  "media": zod.array(zod.object({
+
+}).passthrough()).optional(),
+  "address": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "district": zod.string().nullish(),
+  "lat": zod.number().nullish(),
+  "lng": zod.number().nullish(),
+  "status": zod.string(),
+  "featured": zod.boolean(),
+  "viewCount": zod.number(),
+  "contactEmail": zod.string().nullish(),
+  "contactPhone": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})),
+  "meta": zod.object({
+  "total": zod.number().optional(),
+  "page": zod.number().optional(),
+  "limit": zod.number().optional(),
+  "totalPages": zod.number().optional()
+}),
+  "timestamp": zod.string()
+})
+
+
+/**
+ * @summary Create a new listing (auth required)
+ */
+export const CreateListingBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "listingType": zod.string(),
+  "propertyType": zod.string(),
+  "propertyId": zod.number().optional(),
+  "price": zod.number().optional(),
+  "currency": zod.string().optional(),
+  "areaSqm": zod.number().optional(),
+  "bedrooms": zod.number().optional(),
+  "bathrooms": zod.number().optional(),
+  "floor": zod.number().optional(),
+  "amenities": zod.string().optional(),
+  "media": zod.string().optional(),
+  "address": zod.string().optional(),
+  "city": zod.string().optional(),
+  "district": zod.string().optional(),
+  "lat": zod.number().optional(),
+  "lng": zod.number().optional(),
+  "status": zod.string().optional(),
+  "featured": zod.boolean().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().optional()
+})
+
+
+/**
+ * @summary Submit a public inquiry / lead for a listing
+ */
+export const SubmitListingInquiryBody = zod.object({
+  "listingId": zod.number().optional(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().optional(),
+  "message": zod.string().optional(),
+  "source": zod.string().optional()
+})
+
+
+/**
+ * @summary Get all inquiries for this tenant (auth required)
+ */
+export const getListingInquiriesQueryPageDefault = 1;
+export const getListingInquiriesQueryLimitDefault = 20;
+
+export const GetListingInquiriesQueryParams = zod.object({
+  "page": zod.coerce.number().default(getListingInquiriesQueryPageDefault),
+  "limit": zod.coerce.number().default(getListingInquiriesQueryLimitDefault)
+})
+
+export const GetListingInquiriesResponse = zod.object({
+  "status": zod.string(),
+  "data": zod.object({
+
+}).passthrough(),
+  "meta": zod.object({
+
+}).passthrough().nullish(),
+  "timestamp": zod.string()
+})
+
+
+/**
+ * @summary Get a single listing by ID (public)
+ */
+export const GetListingByIdParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetListingByIdResponse = zod.object({
+  "status": zod.string(),
+  "data": zod.object({
+
+}).passthrough(),
+  "meta": zod.object({
+
+}).passthrough().nullish(),
+  "timestamp": zod.string()
+})
+
+
+/**
+ * @summary Update a listing (auth required)
+ */
+export const UpdateListingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateListingBody = zod.object({
+  "title": zod.string().optional(),
+  "description": zod.string().optional(),
+  "listingType": zod.string().optional(),
+  "propertyType": zod.string().optional(),
+  "price": zod.number().optional(),
+  "currency": zod.string().optional(),
+  "areaSqm": zod.number().optional(),
+  "bedrooms": zod.number().optional(),
+  "bathrooms": zod.number().optional(),
+  "status": zod.string().optional(),
+  "featured": zod.boolean().optional(),
+  "address": zod.string().optional(),
+  "city": zod.string().optional(),
+  "district": zod.string().optional(),
+  "amenities": zod.string().optional(),
+  "media": zod.string().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().optional()
+})
+
+export const UpdateListingResponse = zod.object({
+  "status": zod.string(),
+  "data": zod.object({
+
+}).passthrough(),
+  "meta": zod.object({
+
+}).passthrough().nullish(),
+  "timestamp": zod.string()
+})
+
+
+/**
+ * @summary Delete a listing (auth required)
+ */
+export const DeleteListingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+

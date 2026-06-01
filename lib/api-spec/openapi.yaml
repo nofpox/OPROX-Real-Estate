@@ -2202,6 +2202,128 @@ paths:
               schema:
                 $ref: "#/components/schemas/SupportTicket"
 
+  /listings:
+    get:
+      operationId: getListings
+      tags: [listings]
+      summary: Get paginated, filterable property listings (public)
+      parameters:
+        - { name: page,         in: query, schema: { type: integer, default: 1 } }
+        - { name: limit,        in: query, schema: { type: integer, default: 20 } }
+        - { name: q,            in: query, schema: { type: string } }
+        - { name: type,         in: query, schema: { type: string } }
+        - { name: status,       in: query, schema: { type: string, default: active } }
+        - { name: propertyType, in: query, schema: { type: string } }
+        - { name: city,         in: query, schema: { type: string } }
+        - { name: featured,     in: query, schema: { type: string } }
+        - { name: propertyId,   in: query, schema: { type: integer } }
+        - { name: minPrice,     in: query, schema: { type: string } }
+        - { name: maxPrice,     in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Listings page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingsPage"
+    post:
+      operationId: createListing
+      tags: [listings]
+      summary: Create a new listing (auth required)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingResponse"
+
+  /listings/inquiry:
+    post:
+      operationId: submitListingInquiry
+      tags: [listings]
+      summary: Submit a public inquiry / lead for a listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingInquiryInput"
+      responses:
+        "201":
+          description: Inquiry recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingResponse"
+
+  /listings/inquiries:
+    get:
+      operationId: getListingInquiries
+      tags: [listings]
+      summary: Get all inquiries for this tenant (auth required)
+      parameters:
+        - { name: page,  in: query, schema: { type: integer, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        "200":
+          description: Inquiries page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingResponse"
+
+  /listings/{id}:
+    get:
+      operationId: getListingById
+      tags: [listings]
+      summary: Get a single listing by ID (public)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Listing detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingResponse"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateListing
+      tags: [listings]
+      summary: Update a listing (auth required)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListingResponse"
+    delete:
+      operationId: deleteListing
+      tags: [listings]
+      summary: Delete a listing (auth required)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Deleted
+
 components:
   schemas:
     Settings:
@@ -4015,3 +4137,119 @@ components:
           type: string
         requiresTimeSlot:
           type: boolean
+
+    Listing:
+      type: object
+      required: [id, tenantId, title, listingType, propertyType, currency, status, featured, viewCount, createdAt, updatedAt]
+      properties:
+        id:           { type: integer }
+        tenantId:     { type: integer }
+        propertyId:   { type: integer, nullable: true }
+        title:        { type: string }
+        description:  { type: string, nullable: true }
+        listingType:  { type: string }
+        propertyType: { type: string }
+        price:        { type: number, nullable: true }
+        currency:     { type: string }
+        areaSqm:      { type: number, nullable: true }
+        bedrooms:     { type: integer, nullable: true }
+        bathrooms:    { type: integer, nullable: true }
+        floor:        { type: integer, nullable: true }
+        amenities:    { type: array, items: { type: string } }
+        media:        { type: array, items: { type: object } }
+        address:      { type: string, nullable: true }
+        city:         { type: string, nullable: true }
+        district:     { type: string, nullable: true }
+        lat:          { type: number, nullable: true }
+        lng:          { type: number, nullable: true }
+        status:       { type: string }
+        featured:     { type: boolean }
+        viewCount:    { type: integer }
+        contactEmail: { type: string, nullable: true }
+        contactPhone: { type: string, nullable: true }
+        createdAt:    { type: string }
+        updatedAt:    { type: string }
+
+    ListingInput:
+      type: object
+      required: [title, listingType, propertyType]
+      properties:
+        title:        { type: string }
+        description:  { type: string }
+        listingType:  { type: string }
+        propertyType: { type: string }
+        propertyId:   { type: integer }
+        price:        { type: number }
+        currency:     { type: string }
+        areaSqm:      { type: number }
+        bedrooms:     { type: integer }
+        bathrooms:    { type: integer }
+        floor:        { type: integer }
+        amenities:    { type: string }
+        media:        { type: string }
+        address:      { type: string }
+        city:         { type: string }
+        district:     { type: string }
+        lat:          { type: number }
+        lng:          { type: number }
+        status:       { type: string }
+        featured:     { type: boolean }
+        contactEmail: { type: string }
+        contactPhone: { type: string }
+
+    ListingUpdate:
+      type: object
+      properties:
+        title:        { type: string }
+        description:  { type: string }
+        listingType:  { type: string }
+        propertyType: { type: string }
+        price:        { type: number }
+        currency:     { type: string }
+        areaSqm:      { type: number }
+        bedrooms:     { type: integer }
+        bathrooms:    { type: integer }
+        status:       { type: string }
+        featured:     { type: boolean }
+        address:      { type: string }
+        city:         { type: string }
+        district:     { type: string }
+        amenities:    { type: string }
+        media:        { type: string }
+        contactEmail: { type: string }
+        contactPhone: { type: string }
+
+    ListingsPage:
+      type: object
+      required: [status, data, meta, timestamp]
+      properties:
+        status:    { type: string }
+        data:      { type: array, items: { $ref: "#/components/schemas/Listing" } }
+        meta:
+          type: object
+          properties:
+            total:      { type: integer }
+            page:       { type: integer }
+            limit:      { type: integer }
+            totalPages: { type: integer }
+        timestamp: { type: string }
+
+    ListingResponse:
+      type: object
+      required: [status, data, timestamp]
+      properties:
+        status:    { type: string }
+        data:      { type: object }
+        meta:      { type: object, nullable: true }
+        timestamp: { type: string }
+
+    ListingInquiryInput:
+      type: object
+      required: [name, email]
+      properties:
+        listingId: { type: integer }
+        name:      { type: string }
+        email:     { type: string }
+        phone:     { type: string }
+        message:   { type: string }
+        source:    { type: string }
