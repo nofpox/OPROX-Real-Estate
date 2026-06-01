@@ -4,11 +4,11 @@ import { useLanguage } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { MapPin, Phone, Mail, Clock } from 'lucide-react';
+import { MapPin, Phone, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const Contact: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, isRtl } = useLanguage();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
@@ -20,10 +20,11 @@ export const Contact: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would hit a generic contact endpoint
     toast({
-      title: "Message Sent",
-      description: "Thank you for reaching out. We will get back to you soon.",
+      title: isRtl ? 'تم إرسال الرسالة' : 'Message Sent',
+      description: isRtl
+        ? 'شكراً لتواصلك معنا. سيقوم فريقنا بالرد عليك قريباً.'
+        : 'Thank you for reaching out. We will get back to you soon.',
     });
     setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
   };
@@ -31,15 +32,27 @@ export const Contact: React.FC = () => {
   return (
     <div className="bg-muted min-h-screen py-16">
       <Helmet>
-        <title>Contact Us | ركز للحلول الذكية</title>
-        <meta name="description" content="Get in touch with Rakez Smart Solutions for property management inquiries, partnerships, and support." />
+        <title>
+          {isRtl ? 'اتصل بنا | ركز للحلول الذكية' : 'Contact Us | ركز للحلول الذكية'}
+        </title>
+        <meta
+          name="description"
+          content={
+            isRtl
+              ? 'تواصل مع ركز للحلول الذكية لاستفسارات إدارة العقارات والشراكات والدعم.'
+              : 'Get in touch with Rakez Smart Solutions for property management inquiries, partnerships, and support.'
+          }
+        />
         <link rel="canonical" href="https://rakez.sa/realestate/contact" />
       </Helmet>
+
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-primary mb-4">{t('contact.title')}</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Whether you're looking for property management services, seeking a new home, or have a general inquiry, our team is ready to assist you.
+            {isRtl
+              ? 'سواء كنت تبحث عن خدمات إدارة العقارات، أو تبحث عن منزل جديد، أو لديك استفسار عام، فريقنا مستعد لمساعدتك.'
+              : "Whether you're looking for property management services, seeking a new home, or have a general inquiry, our team is ready to assist you."}
           </p>
         </div>
 
@@ -50,11 +63,23 @@ export const Contact: React.FC = () => {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                 <MapPin className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-lg font-bold text-primary mb-2">Head Office</h3>
+              <h3 className="text-lg font-bold text-primary mb-2">
+                {isRtl ? 'المكتب الرئيسي' : 'Head Office'}
+              </h3>
               <p className="text-muted-foreground leading-relaxed">
-                King Fahd Road, Olaya District<br />
-                P.O. Box 12345<br />
-                Riyadh 11471, Saudi Arabia
+                {isRtl ? (
+                  <>
+                    طريق الملك فهد، حي العليا<br />
+                    ص.ب. 12345<br />
+                    الرياض 11471، المملكة العربية السعودية
+                  </>
+                ) : (
+                  <>
+                    King Fahd Road, Olaya District<br />
+                    P.O. Box 12345<br />
+                    Riyadh 11471, Saudi Arabia
+                  </>
+                )}
               </p>
             </div>
 
@@ -62,8 +87,10 @@ export const Contact: React.FC = () => {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                 <Phone className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-lg font-bold text-primary mb-2">Contact Numbers</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <h3 className="text-lg font-bold text-primary mb-2">
+                {isRtl ? 'أرقام التواصل' : 'Contact Numbers'}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed" dir="ltr">
                 Tel: +966 11 234 5678<br />
                 Fax: +966 11 234 5679<br />
                 Support: 9200 12345
@@ -74,8 +101,10 @@ export const Contact: React.FC = () => {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                 <Mail className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-lg font-bold text-primary mb-2">Email Addresses</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <h3 className="text-lg font-bold text-primary mb-2">
+                {isRtl ? 'عناوين البريد الإلكتروني' : 'Email Addresses'}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed" dir="ltr">
                 General: info@rakez-solutions.com<br />
                 Sales: sales@rakez-solutions.com<br />
                 Support: support@rakez-solutions.com
@@ -86,59 +115,75 @@ export const Contact: React.FC = () => {
           {/* Contact Form */}
           <div className="lg:col-span-2">
             <div className="bg-card p-8 rounded-xl border border-border shadow-sm">
-              <h2 className="text-2xl font-bold text-primary mb-6">Send us a Message</h2>
+              <h2 className="text-2xl font-bold text-primary mb-6">
+                {isRtl ? 'أرسل لنا رسالة' : 'Send us a Message'}
+              </h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-primary mb-2">Full Name</label>
-                    <Input 
-                      required 
+                    <label className="block text-sm font-medium text-primary mb-2">
+                      {isRtl ? 'الاسم الكامل' : 'Full Name'}
+                    </label>
+                    <Input
+                      required
                       value={formData.name}
-                      onChange={e => setFormData({...formData, name: e.target.value})}
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-primary mb-2">Email Address</label>
-                    <Input 
-                      type="email" 
-                      required 
+                    <label className="block text-sm font-medium text-primary mb-2">
+                      {isRtl ? 'البريد الإلكتروني' : 'Email Address'}
+                    </label>
+                    <Input
+                      type="email"
+                      required
                       value={formData.email}
-                      onChange={e => setFormData({...formData, email: e.target.value})}
+                      onChange={e => setFormData({ ...formData, email: e.target.value })}
                     />
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-primary mb-2">Phone Number</label>
-                    <Input 
-                      type="tel" 
+                    <label className="block text-sm font-medium text-primary mb-2">
+                      {isRtl ? 'رقم الهاتف' : 'Phone Number'}
+                    </label>
+                    <Input
+                      type="tel"
                       value={formData.phone}
-                      onChange={e => setFormData({...formData, phone: e.target.value})}
+                      onChange={e => setFormData({ ...formData, phone: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-primary mb-2">Subject</label>
-                    <Input 
-                      required 
+                    <label className="block text-sm font-medium text-primary mb-2">
+                      {isRtl ? 'الموضوع' : 'Subject'}
+                    </label>
+                    <Input
+                      required
                       value={formData.subject}
-                      onChange={e => setFormData({...formData, subject: e.target.value})}
+                      onChange={e => setFormData({ ...formData, subject: e.target.value })}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-primary mb-2">Your Message</label>
-                  <Textarea 
-                    required 
+                  <label className="block text-sm font-medium text-primary mb-2">
+                    {isRtl ? 'رسالتك' : 'Your Message'}
+                  </label>
+                  <Textarea
+                    required
                     rows={6}
                     value={formData.message}
-                    onChange={e => setFormData({...formData, message: e.target.value})}
+                    onChange={e => setFormData({ ...formData, message: e.target.value })}
                   />
                 </div>
 
-                <Button type="submit" size="lg" className="w-full md:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 px-12">
-                  Send Message
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full md:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 px-12"
+                >
+                  {isRtl ? 'إرسال الرسالة' : 'Send Message'}
                 </Button>
               </form>
             </div>
