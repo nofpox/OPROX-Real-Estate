@@ -98,14 +98,14 @@ export default function GuestRequests() {
       {/* Status KPI cards */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { key: "new",         label: t("guestRequests.new"),        icon: Clock,        color: "text-red-500",   bg: "bg-red-500/10"   },
-          { key: "in_progress", label: t("guestRequests.inProgress"), icon: Loader2,      color: "text-amber-500", bg: "bg-amber-500/10" },
-          { key: "resolved",    label: t("guestRequests.resolved"),   icon: CheckCircle2, color: "text-green-500", bg: "bg-green-500/10" },
+          { key: "new",         label: t("guestRequests.new"),        icon: Clock,        color: "text-red-600",   bg: "bg-red-50 dark:bg-red-950"   },
+          { key: "in_progress", label: t("guestRequests.inProgress"), icon: Loader2,      color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950" },
+          { key: "resolved",    label: t("guestRequests.resolved"),   icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50 dark:bg-green-950" },
         ].map(({ key, label, icon: Icon, color, bg }) => (
           <button
             key={key}
             onClick={() => setStatusFilter(statusFilter === key ? "all" : key)}
-            className={`text-left p-4 rounded-xl border border-border/50 ${statusFilter === key ? "ring-2 ring-primary ring-offset-1 bg-primary/5" : "bg-card"}`}
+            className={`text-left p-4 rounded-xl border border-border ${statusFilter === key ? "ring-2 ring-primary ring-offset-1 bg-card" : "bg-card"}`}
           >
             <div className={`inline-flex p-2 rounded-lg ${bg} mb-2`}>
               <Icon size={18} className={color} />
@@ -117,8 +117,8 @@ export default function GuestRequests() {
       </div>
 
       {/* Filters */}
-      <Card className="shadow-sm border-border/50">
-        <div className="p-4 border-b border-border/50 bg-muted/20 flex flex-col sm:flex-row gap-3">
+      <Card className="shadow-sm border-border">
+        <div className="p-4 border-b border-border bg-muted flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input

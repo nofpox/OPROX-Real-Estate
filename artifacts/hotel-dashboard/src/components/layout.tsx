@@ -391,7 +391,10 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
 
       {/* Main content */}
       <div className={`flex flex-1 flex-col ${mainPadding}`}>
-        <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6 sticky top-0 z-10">
+        <header
+          className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6 sticky top-0 z-10"
+          style={{ transform: "translateZ(0)", willChange: "transform" }}
+        >
           <div className="flex items-center gap-4 lg:hidden">
             <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
               <Menu className="h-5 w-5" />
@@ -419,7 +422,7 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
           </div>
         </header>
 
-        <main key={lang} className="flex-1 p-4 md:p-6 lg:p-8">
+        <main key={lang} className="flex-1 p-4 md:p-6 lg:p-8" style={{ isolation: "isolate" }}>
           <SmartHintBar />
           {children}
         </main>
