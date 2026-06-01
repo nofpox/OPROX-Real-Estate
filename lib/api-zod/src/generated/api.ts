@@ -2712,3 +2712,73 @@ export const DeleteListingParams = zod.object({
 })
 
 
+/**
+ * @summary Managed properties with live operational stats (requires auth)
+ */
+export const getPortalPropertiesQueryPageDefault = 1;
+export const getPortalPropertiesQueryLimitDefault = 10;
+
+export const GetPortalPropertiesQueryParams = zod.object({
+  "page": zod.coerce.number().default(getPortalPropertiesQueryPageDefault),
+  "limit": zod.coerce.number().default(getPortalPropertiesQueryLimitDefault)
+})
+
+export const GetPortalPropertiesResponse = zod.object({
+  "status": zod.string(),
+  "data": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "status": zod.string(),
+  "address": zod.string(),
+  "totalRooms": zod.number(),
+  "activeBookings": zod.number(),
+  "occupancyRate": zod.number(),
+  "linkedListingId": zod.number().nullish()
+})),
+  "meta": zod.object({
+  "total": zod.number().optional(),
+  "page": zod.number().optional(),
+  "limit": zod.number().optional(),
+  "totalPages": zod.number().optional()
+}).optional(),
+  "timestamp": zod.string()
+})
+
+
+/**
+ * @summary Bookings across managed properties (requires auth)
+ */
+export const getPortalBookingsQueryPageDefault = 1;
+export const getPortalBookingsQueryLimitDefault = 20;
+
+export const GetPortalBookingsQueryParams = zod.object({
+  "propertyId": zod.coerce.number().optional(),
+  "status": zod.coerce.string().optional(),
+  "page": zod.coerce.number().default(getPortalBookingsQueryPageDefault),
+  "limit": zod.coerce.number().default(getPortalBookingsQueryLimitDefault)
+})
+
+export const GetPortalBookingsResponse = zod.object({
+  "status": zod.string(),
+  "data": zod.array(zod.object({
+  "id": zod.number(),
+  "guestName": zod.string(),
+  "checkIn": zod.string(),
+  "checkOut": zod.string(),
+  "status": zod.string(),
+  "roomNumber": zod.string(),
+  "propertyName": zod.string(),
+  "propertyId": zod.number(),
+  "totalAmount": zod.number().nullish()
+})),
+  "meta": zod.object({
+  "total": zod.number().optional(),
+  "page": zod.number().optional(),
+  "limit": zod.number().optional(),
+  "totalPages": zod.number().optional()
+}).optional(),
+  "timestamp": zod.string()
+})
+
+

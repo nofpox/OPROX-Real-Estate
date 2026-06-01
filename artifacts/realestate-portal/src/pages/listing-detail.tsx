@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useRoute } from 'wouter';
+import { useRoute, Link } from 'wouter';
 import { useGetListingById, useSubmitListingInquiry } from '@workspace/api-client-react';
 import { useLanguage } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { MapPin, BedDouble, Bath, Square, Building2, Phone, Mail, User, Info, CheckCircle2 } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Square, Building2, Phone, Mail, User, Info, CheckCircle2, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
@@ -95,6 +95,21 @@ export const ListingDetail: React.FC = () => {
 
   const hasMedia = listing.media && Array.isArray(listing.media) && listing.media.length > 0;
   const mainImage = hasMedia ? (listing.media[0] as any).url : null;
+  const isOperational = listing.listingType === 'operational';
+
+  const getInquiryHeading = () => {
+    if (isOperational) return t('detail.inquiry.operationalHeading');
+    if (listing.listingType === 'sale') return t('detail.inquiry.saleHeading');
+    if (listing.listingType === 'rent') return t('detail.inquiry.rentHeading');
+    return 'Interested in this property?';
+  };
+
+  const getInquiryBtnText = () => {
+    if (isOperational) return t('detail.inquiry.operationalBtn');
+    if (listing.listingType === 'sale') return t('detail.inquiry.saleBtn');
+    if (listing.listingType === 'rent') return t('detail.inquiry.rentBtn');
+    return 'Send Inquiry';
+  };
 
   return (
     <div className="bg-background pb-24">
@@ -144,6 +159,20 @@ export const ListingDetail: React.FC = () => {
                 </div>
               </div>
 
+              {isOperational && (
+                <div className="bg-secondary/10 border border-secondary/20 rounded-lg p-5 mb-8">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-secondary p-2 rounded-full mt-1">
+                      <ShieldCheck className="h-6 w-6 text-secondary-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-primary mb-1">{t('detail.operationalHeading')}</h3>
+                      <p className="text-muted-foreground">{t('detail.operationalText')}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-3 gap-4 py-6 border-y border-border my-6">
                 {listing.bedrooms != null && (
                   <div className="flex flex-col items-center justify-center p-4 bg-muted/50 rounded-lg">
@@ -192,7 +221,7 @@ export const ListingDetail: React.FC = () => {
           {/* Sidebar / Inquiry Form */}
           <div className="lg:col-span-1">
             <div className="bg-card rounded-xl p-6 shadow-md border border-border sticky top-24">
-              <h3 className="text-xl font-bold text-primary mb-6">Interested in this property?</h3>
+              <h3 className="text-xl font-bold text-primary mb-6">{getInquiryHeading()}</h3>
               
               {submitted ? (
                 <div className="bg-green-50 border border-green-200 p-6 rounded-lg text-center">
@@ -257,15 +286,23 @@ export const ListingDetail: React.FC = () => {
                     className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
                     disabled={submitInquiry.isPending}
                   >
-                    {submitInquiry.isPending ? 'Sending...' : 'Send Inquiry'}
+                    {submitInquiry.isPending ? 'Sending...' : getInquiryBtnText()}
                   </Button>
                 </form>
               )}
               
-              <div className="mt-8 pt-6 border-t border-border">
+              <div className="mt-8 pt-6 border-t border-border space-y-4">
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <Info className="h-5 w-5 text-primary" />
+                  <Info className="h-5 w-5 text-primary shrink-0" />
                   <p>Or contact us directly at <a href="mailto:sales@rakez.sa" className="text-secondary font-medium hover:underline">sales@rakez.sa</a></p>
+                </div>
+                
+                <div className="pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground mb-2">{t('detail.portalPrompt')}</p>
+                  <Link href="/portal" className="text-sm font-semibold text-primary hover:text-secondary flex items-center gap-1 transition-colors">
+                    {t('detail.portalLink')} 
+                    {isRtl ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                  </Link>
                 </div>
               </div>
             </div>

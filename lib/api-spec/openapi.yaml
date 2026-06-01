@@ -2324,6 +2324,44 @@ paths:
         "200":
           description: Deleted
 
+  /portal/properties:
+    get:
+      operationId: getPortalProperties
+      summary: Managed properties with live operational stats (requires auth)
+      tags: [portal]
+      parameters:
+        - { name: page,  in: query, schema: { type: integer, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, default: 10 } }
+      responses:
+        "200":
+          description: Properties with occupancy stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalPropertiesPage"
+        "401":
+          description: Unauthorized
+
+  /portal/bookings:
+    get:
+      operationId: getPortalBookings
+      summary: Bookings across managed properties (requires auth)
+      tags: [portal]
+      parameters:
+        - { name: propertyId, in: query, schema: { type: integer } }
+        - { name: status,     in: query, schema: { type: string } }
+        - { name: page,       in: query, schema: { type: integer, default: 1 } }
+        - { name: limit,      in: query, schema: { type: integer, default: 20 } }
+      responses:
+        "200":
+          description: Portal booking list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalBookingsPage"
+        "401":
+          description: Unauthorized
+
 components:
   schemas:
     Settings:
@@ -4253,3 +4291,61 @@ components:
         phone:     { type: string }
         message:   { type: string }
         source:    { type: string }
+
+    PortalProperty:
+      type: object
+      required: [id, name, type, status, address, totalRooms, activeBookings, occupancyRate]
+      properties:
+        id:              { type: integer }
+        name:            { type: string }
+        type:            { type: string }
+        status:          { type: string }
+        address:         { type: string }
+        totalRooms:      { type: integer }
+        activeBookings:  { type: integer }
+        occupancyRate:   { type: number }
+        linkedListingId: { type: ["integer", "null"] }
+
+    PortalPropertiesPage:
+      type: object
+      required: [status, data, timestamp]
+      properties:
+        status:    { type: string }
+        data:      { type: array, items: { $ref: "#/components/schemas/PortalProperty" } }
+        meta:
+          type: object
+          properties:
+            total:      { type: integer }
+            page:       { type: integer }
+            limit:      { type: integer }
+            totalPages: { type: integer }
+        timestamp: { type: string }
+
+    PortalBookingItem:
+      type: object
+      required: [id, guestName, checkIn, checkOut, status, roomNumber, propertyName, propertyId]
+      properties:
+        id:           { type: integer }
+        guestName:    { type: string }
+        checkIn:      { type: string }
+        checkOut:     { type: string }
+        status:       { type: string }
+        roomNumber:   { type: string }
+        propertyName: { type: string }
+        propertyId:   { type: integer }
+        totalAmount:  { type: ["number", "null"] }
+
+    PortalBookingsPage:
+      type: object
+      required: [status, data, timestamp]
+      properties:
+        status:    { type: string }
+        data:      { type: array, items: { $ref: "#/components/schemas/PortalBookingItem" } }
+        meta:
+          type: object
+          properties:
+            total:      { type: integer }
+            page:       { type: integer }
+            limit:      { type: integer }
+            totalPages: { type: integer }
+        timestamp: { type: string }

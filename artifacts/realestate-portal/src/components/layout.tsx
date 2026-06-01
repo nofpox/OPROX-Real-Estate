@@ -27,6 +27,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <Link href="/listings" className="text-sm font-medium hover:text-secondary transition-colors">{t('nav.listings')}</Link>
             <Link href="/services" className="text-sm font-medium hover:text-secondary transition-colors">{t('nav.services')}</Link>
             <Link href="/contact" className="text-sm font-medium hover:text-secondary transition-colors">{t('nav.contact')}</Link>
+            <Link href="/portal" className="text-sm font-medium hover:text-secondary transition-colors">{t('nav.portal')}</Link>
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
@@ -60,6 +61,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <Link href="/listings" className="text-sm font-medium p-2 hover:bg-muted rounded-md" onClick={() => setIsMenuOpen(false)}>{t('nav.listings')}</Link>
             <Link href="/services" className="text-sm font-medium p-2 hover:bg-muted rounded-md" onClick={() => setIsMenuOpen(false)}>{t('nav.services')}</Link>
             <Link href="/contact" className="text-sm font-medium p-2 hover:bg-muted rounded-md" onClick={() => setIsMenuOpen(false)}>{t('nav.contact')}</Link>
+            <Link href="/portal" className="text-sm font-medium p-2 hover:bg-muted rounded-md" onClick={() => setIsMenuOpen(false)}>{t('nav.portal')}</Link>
           </div>
         )}
       </header>
@@ -86,6 +88,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <li><Link href="/listings" className="hover:text-secondary transition-colors">Properties</Link></li>
               <li><Link href="/services" className="hover:text-secondary transition-colors">Services</Link></li>
               <li><Link href="/contact" className="hover:text-secondary transition-colors">Contact</Link></li>
+              <li><Link href="/portal" className="hover:text-secondary transition-colors">Client Portal</Link></li>
             </ul>
           </div>
           <div>

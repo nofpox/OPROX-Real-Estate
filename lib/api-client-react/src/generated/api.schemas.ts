@@ -1157,6 +1157,60 @@ export interface ListingInquiryInput {
   source?: string;
 }
 
+export interface PortalProperty {
+  id: number;
+  name: string;
+  type: string;
+  status: string;
+  address: string;
+  totalRooms: number;
+  activeBookings: number;
+  occupancyRate: number;
+  /** @nullable */
+  linkedListingId?: number | null;
+}
+
+export type PortalPropertiesPageMeta = {
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+};
+
+export interface PortalPropertiesPage {
+  status: string;
+  data: PortalProperty[];
+  meta?: PortalPropertiesPageMeta;
+  timestamp: string;
+}
+
+export interface PortalBookingItem {
+  id: number;
+  guestName: string;
+  checkIn: string;
+  checkOut: string;
+  status: string;
+  roomNumber: string;
+  propertyName: string;
+  propertyId: number;
+  /** @nullable */
+  totalAmount?: number | null;
+}
+
+export type PortalBookingsPageMeta = {
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+};
+
+export interface PortalBookingsPage {
+  status: string;
+  data: PortalBookingItem[];
+  meta?: PortalBookingsPageMeta;
+  timestamp: string;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
@@ -1307,6 +1361,18 @@ maxPrice?: string;
 };
 
 export type GetListingInquiriesParams = {
+page?: number;
+limit?: number;
+};
+
+export type GetPortalPropertiesParams = {
+page?: number;
+limit?: number;
+};
+
+export type GetPortalBookingsParams = {
+propertyId?: number;
+status?: string;
 page?: number;
 limit?: number;
 };

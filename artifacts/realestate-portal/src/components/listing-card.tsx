@@ -1,19 +1,32 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { Building2, MapPin, BedDouble, Bath, Square } from 'lucide-react';
+import { Building2, MapPin, BedDouble, Bath, Square, ShieldCheck } from 'lucide-react';
 import { Listing } from '@workspace/api-client-react';
+import { useLanguage } from '@/lib/i18n';
+import { Button } from '@/components/ui/button';
 
 interface ListingCardProps {
   listing: Listing;
 }
 
 export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
+  const { t } = useLanguage();
+  
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('en-SA', { style: 'currency', currency: currency || 'SAR', maximumFractionDigits: 0 }).format(price);
   };
 
   const hasMedia = listing.media && Array.isArray(listing.media) && listing.media.length > 0;
   const mainImage = hasMedia ? (listing.media[0] as any).url : null;
+  
+  const isOperational = listing.listingType === 'operational';
+
+  const getCtaText = () => {
+    if (isOperational) return t('cta.operational');
+    if (listing.listingType === 'sale') return t('cta.sale');
+    if (listing.listingType === 'rent') return t('cta.rent');
+    return 'View Details';
+  };
 
   return (
     <Link href={`/listings/${listing.id}`}>
@@ -38,11 +51,22 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
             </span>
           </div>
           
-          <div className="absolute bottom-3 right-3">
-            <span className="px-2.5 py-1 bg-secondary text-secondary-foreground text-xs font-semibold rounded shadow-sm uppercase tracking-wider">
-              {listing.propertyType}
-            </span>
-          </div>
+          {isOperational && (
+            <div className="absolute top-3 right-3">
+              <span className="flex items-center gap-1 px-2.5 py-1 bg-secondary text-secondary-foreground text-xs font-semibold rounded shadow-sm">
+                <ShieldCheck className="w-3 h-3" />
+                Managed by Rakez
+              </span>
+            </div>
+          )}
+          
+          {!isOperational && (
+            <div className="absolute bottom-3 right-3">
+              <span className="px-2.5 py-1 bg-secondary text-secondary-foreground text-xs font-semibold rounded shadow-sm uppercase tracking-wider">
+                {listing.propertyType}
+              </span>
+            </div>
+          )}
         </div>
         
         <div className="p-4 flex-1 flex flex-col">
@@ -56,7 +80,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
             </div>
           </div>
           
-          <div className="mt-auto pt-4 flex items-center justify-between">
+          <div className="mt-auto pt-4 flex items-center justify-between mb-4">
             <div className="text-lg font-bold text-secondary-foreground">
               {formatPrice(listing.price, listing.currency)}
             </div>
@@ -81,6 +105,15 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
                 </div>
               )}
             </div>
+          </div>
+          
+          <div className="mt-2">
+            <Button 
+              className={`w-full ${isOperational ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}
+              variant="default"
+            >
+              {getCtaText()}
+            </Button>
           </div>
         </div>
       </div>

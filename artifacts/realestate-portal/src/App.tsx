@@ -10,6 +10,9 @@ import { ListingsBrowser } from "@/pages/listings";
 import { ListingDetail } from "@/pages/listing-detail";
 import { Services } from "@/pages/services";
 import { Contact } from "@/pages/contact";
+import { PortalAuthProvider } from "@/lib/portal-auth";
+import { PortalLogin } from "@/pages/portal-login";
+import { PortalDashboard } from "@/pages/portal-dashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +31,8 @@ function Router() {
       <Route path="/listings/:id" component={ListingDetail} />
       <Route path="/services" component={Services} />
       <Route path="/contact" component={Contact} />
+      <Route path="/portal" component={PortalLogin} />
+      <Route path="/portal/dashboard" component={PortalDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -36,16 +41,18 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Layout>
-              <Router />
-            </Layout>
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
-      </LanguageProvider>
+      <PortalAuthProvider>
+        <LanguageProvider>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Layout>
+                <Router />
+              </Layout>
+            </WouterRouter>
+            <Toaster />
+          </TooltipProvider>
+        </LanguageProvider>
+      </PortalAuthProvider>
     </QueryClientProvider>
   );
 }

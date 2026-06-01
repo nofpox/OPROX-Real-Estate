@@ -44,6 +44,8 @@ import type {
   GetListingInquiriesParams,
   GetListingsParams,
   GetOccupancyHeatmapParams,
+  GetPortalBookingsParams,
+  GetPortalPropertiesParams,
   Guest,
   GuestFeedback,
   GuestFeedbackInput,
@@ -77,6 +79,8 @@ import type {
   OccupancyHeatmapEntry,
   OccupancyStat,
   PmsUser,
+  PortalBookingsPage,
+  PortalPropertiesPage,
   Property,
   PropertyInput,
   PropertyStats,
@@ -8697,4 +8701,172 @@ export const useDeleteListing = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteListingMutationOptions(options));
     }
+
+export const getGetPortalPropertiesUrl = (params?: GetPortalPropertiesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/portal/properties?${stringifiedParams}` : `/api/portal/properties`
+}
+
+/**
+ * @summary Managed properties with live operational stats (requires auth)
+ */
+export const getPortalProperties = async (params?: GetPortalPropertiesParams, options?: RequestInit): Promise<PortalPropertiesPage> => {
+
+  return customFetch<PortalPropertiesPage>(getGetPortalPropertiesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPortalPropertiesQueryKey = (params?: GetPortalPropertiesParams,) => {
+    return [
+    `/api/portal/properties`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPortalPropertiesQueryOptions = <TData = Awaited<ReturnType<typeof getPortalProperties>>, TError = ErrorType<void>>(params?: GetPortalPropertiesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalProperties>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPortalPropertiesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPortalProperties>>> = ({ signal }) => getPortalProperties(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPortalProperties>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPortalPropertiesQueryResult = NonNullable<Awaited<ReturnType<typeof getPortalProperties>>>
+export type GetPortalPropertiesQueryError = ErrorType<void>
+
+
+/**
+ * @summary Managed properties with live operational stats (requires auth)
+ */
+
+export function useGetPortalProperties<TData = Awaited<ReturnType<typeof getPortalProperties>>, TError = ErrorType<void>>(
+ params?: GetPortalPropertiesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalProperties>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPortalPropertiesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPortalBookingsUrl = (params?: GetPortalBookingsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/portal/bookings?${stringifiedParams}` : `/api/portal/bookings`
+}
+
+/**
+ * @summary Bookings across managed properties (requires auth)
+ */
+export const getPortalBookings = async (params?: GetPortalBookingsParams, options?: RequestInit): Promise<PortalBookingsPage> => {
+
+  return customFetch<PortalBookingsPage>(getGetPortalBookingsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPortalBookingsQueryKey = (params?: GetPortalBookingsParams,) => {
+    return [
+    `/api/portal/bookings`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPortalBookingsQueryOptions = <TData = Awaited<ReturnType<typeof getPortalBookings>>, TError = ErrorType<void>>(params?: GetPortalBookingsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPortalBookingsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPortalBookings>>> = ({ signal }) => getPortalBookings(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPortalBookings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPortalBookingsQueryResult = NonNullable<Awaited<ReturnType<typeof getPortalBookings>>>
+export type GetPortalBookingsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Bookings across managed properties (requires auth)
+ */
+
+export function useGetPortalBookings<TData = Awaited<ReturnType<typeof getPortalBookings>>, TError = ErrorType<void>>(
+ params?: GetPortalBookingsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPortalBookingsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 

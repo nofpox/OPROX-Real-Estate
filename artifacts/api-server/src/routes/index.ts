@@ -29,6 +29,7 @@ import superAdminRouter from "./super-admin";
 import supportTicketsRouter from "./support-tickets";
 import serviceCategoriesRouter from "./serviceCategories";
 import listingsRouter from "./listings";
+import portalRouter from "./portal";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
@@ -151,6 +152,7 @@ router.use(unitRequestsRouter);
 router.use(supportTicketsRouter);
 router.use(serviceCategoriesRouter);
 router.use(listingsRouter);
+router.use(portalRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do
