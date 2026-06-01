@@ -1,9 +1,16 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Building2, Key, Users, CheckCircle2 } from 'lucide-react';
 
 export const Services: React.FC = () => {
   return (
     <div className="bg-background min-h-screen">
+      <Helmet>
+        <title>Our Services | ركز للحلول الذكية</title>
+        <meta name="description" content="Hotel operations, residential management, and corporate real estate services by Rakez Smart Solutions." />
+        <meta property="og:title" content="Property Management Services | Rakez Smart Solutions" />
+        <link rel="canonical" href="https://rakez.sa/realestate/services" />
+      </Helmet>
       <div className="bg-primary text-primary-foreground py-20 text-center border-b border-primary-foreground/10">
         <div className="container mx-auto px-4 max-w-4xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">Operational Excellence</h1>

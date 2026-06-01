@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useLocation, Link } from 'wouter';
 import { usePortalAuth } from '@/lib/portal-auth';
 import { useGetPortalProperties, useGetPortalBookings } from '@workspace/api-client-react';
@@ -25,20 +26,22 @@ export const PortalDashboard: React.FC = () => {
     }
   }, [isLoading, isAuthenticated, setLocation]);
 
-  const { data: propertiesRes, isLoading: isLoadingProps } = useGetPortalProperties({
-    params: { page: 1, limit: 50 },
-    query: { enabled: isAuthenticated }
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: propertiesRes, isLoading: isLoadingProps } = useGetPortalProperties(
+    { page: 1, limit: 50 },
+    { query: { enabled: isAuthenticated } } as any
+  );
 
-  const { data: bookingsRes, isLoading: isLoadingBookings } = useGetPortalBookings({
-    params: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: bookingsRes, isLoading: isLoadingBookings } = useGetPortalBookings(
+    {
       page: 1,
       limit: 10,
       ...(propertyIdFilter !== 'all' ? { propertyId: parseInt(propertyIdFilter) } : {}),
-      ...(statusFilter !== 'all' ? { status: statusFilter as any } : {})
+      ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     },
-    query: { enabled: isAuthenticated }
-  });
+    { query: { enabled: isAuthenticated } } as any
+  );
 
   if (isLoading || !isAuthenticated) {
     return <div className="min-h-screen flex items-center justify-center bg-muted"><Skeleton className="h-32 w-32 rounded-full" /></div>;
@@ -60,6 +63,10 @@ export const PortalDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-muted pb-12">
+      <Helmet>
+        <title>My Portfolio | ركز للحلول الذكية</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Top bar */}
       <header className="bg-primary text-primary-foreground py-6 shadow-md">
         <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">

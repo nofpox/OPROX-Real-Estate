@@ -16,8 +16,8 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
     return new Intl.NumberFormat('en-SA', { style: 'currency', currency: currency || 'SAR', maximumFractionDigits: 0 }).format(price);
   };
 
-  const hasMedia = listing.media && Array.isArray(listing.media) && listing.media.length > 0;
-  const mainImage = hasMedia ? (listing.media[0] as any).url : null;
+  const hasMedia = listing.media != null && Array.isArray(listing.media) && listing.media.length > 0;
+  const mainImage = hasMedia ? (listing.media![0] as { url: string }).url : null;
   
   const isOperational = listing.listingType === 'operational';
 
@@ -82,7 +82,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
           
           <div className="mt-auto pt-4 flex items-center justify-between mb-4">
             <div className="text-lg font-bold text-secondary-foreground">
-              {formatPrice(listing.price, listing.currency)}
+              {formatPrice(listing.price ?? 0, listing.currency)}
             </div>
             
             <div className="flex items-center gap-3 text-muted-foreground text-sm">

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'wouter';
 import { useGetListings } from '@workspace/api-client-react';
 import { useLanguage } from '@/lib/i18n';
@@ -11,17 +12,23 @@ export const Home: React.FC = () => {
   const { t, isRtl } = useLanguage();
   
   const { data: featuredResponse, isLoading } = useGetListings({
-    params: {
-      featured: true,
-      status: 'active',
-      limit: 3
-    }
+    featured: 'true',
+    status: 'active',
+    limit: 3,
   });
   
   const featuredListings = featuredResponse?.data || [];
 
   return (
     <div className="flex flex-col w-full">
+      <Helmet>
+        <title>ركز للحلول الذكية | Rakez Smart Solutions</title>
+        <meta name="description" content="Premium property management and real estate services in Saudi Arabia. Hotels, compounds, apartments — managed by Rakez Smart Solutions." />
+        <meta property="og:title" content="ركز للحلول الذكية | Rakez Smart Solutions" />
+        <meta property="og:description" content="Premium property management and real estate services in Saudi Arabia." />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://rakez.sa/realestate/" />
+      </Helmet>
       {/* Hero Section */}
       <section className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden bg-primary">
         <div className="absolute inset-0 z-0">

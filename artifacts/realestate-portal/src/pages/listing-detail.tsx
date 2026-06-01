@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useRoute, Link } from 'wouter';
 import { useGetListingById, useSubmitListingInquiry } from '@workspace/api-client-react';
+import type { Listing } from '@workspace/api-client-react';
 import { useLanguage } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,14 +17,37 @@ export const ListingDetail: React.FC = () => {
   const { t, isRtl } = useLanguage();
   const { toast } = useToast();
   
-  const { data: response, isLoading } = useGetListingById(id, {
-    query: { enabled: !!id }
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: response, isLoading } = useGetListingById(id, { query: { enabled: !!id } } as any);
   
   const submitInquiry = useSubmitListingInquiry();
   
-  const listing = response?.data;
-  
+  const listing = response?.data as Listing | undefined;
+
+  const pageTitle = listing ? `${listing.title} | ركز للحلول الذكية` : 'Property | ركز للحلول الذكية';
+  const pageDesc  = listing?.description ? String(listing.description).slice(0, 155) : 'View property details on Rakez Smart Solutions portal.';
+  const ogImage   = (listing?.media as Array<{ url: string }> | undefined)?.[0]?.url ?? '';
+  const ldJson    = listing ? JSON.stringify({
+    "@context":   "https://schema.org",
+    "@type":      "RealEstateListing",
+    "name":       listing.title,
+    "description": listing.description,
+    "url":        `https://rakez.sa/realestate/listings/${listing.id}`,
+    "image":      ogImage || undefined,
+    "address": {
+      "@type":           "PostalAddress",
+      "addressLocality": listing.city,
+      "addressRegion":   listing.district,
+      "addressCountry":  "SA",
+    },
+    "offers": {
+      "@type":         "Offer",
+      "price":         listing.price,
+      "priceCurrency": (listing.currency as string | undefined) ?? "SAR",
+    },
+    "brand": { "@type": "Organization", "name": "Rakez Smart Solutions" },
+  }) : null;
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -93,8 +118,8 @@ export const ListingDetail: React.FC = () => {
     return new Intl.NumberFormat('en-SA', { style: 'currency', currency: currency || 'SAR', maximumFractionDigits: 0 }).format(price);
   };
 
-  const hasMedia = listing.media && Array.isArray(listing.media) && listing.media.length > 0;
-  const mainImage = hasMedia ? (listing.media[0] as any).url : null;
+  const hasMedia = listing.media != null && Array.isArray(listing.media) && listing.media.length > 0;
+  const mainImage = hasMedia ? (listing.media![0] as { url: string }).url : null;
   const isOperational = listing.listingType === 'operational';
 
   const getInquiryHeading = () => {
@@ -113,6 +138,15 @@ export const ListingDetail: React.FC = () => {
 
   return (
     <div className="bg-background pb-24">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDesc} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDesc} />
+        {ogImage && <meta property="og:image" content={ogImage} />}
+        <meta property="og:type" content="website" />
+        {ldJson && <script type="application/ld+json">{ldJson}</script>}
+      </Helmet>
       {/* Media Gallery / Hero */}
       <div className="w-full h-[40vh] md:h-[60vh] bg-muted relative border-b border-border">
         {mainImage ? (
@@ -153,7 +187,7 @@ export const ListingDetail: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-secondary-foreground">
-                    {formatPrice(listing.price, listing.currency)}
+                    {formatPrice(listing.price ?? 0, listing.currency)}
                   </div>
                   {listing.listingType === 'rent' && <div className="text-muted-foreground text-sm">per year</div>}
                 </div>

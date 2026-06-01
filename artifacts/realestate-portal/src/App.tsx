@@ -1,3 +1,4 @@
+import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -40,6 +41,7 @@ function Router() {
 
 function App() {
   return (
+    <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <PortalAuthProvider>
         <LanguageProvider>
@@ -54,6 +56,7 @@ function App() {
         </LanguageProvider>
       </PortalAuthProvider>
     </QueryClientProvider>
+    </HelmetProvider>
   );
 }
 

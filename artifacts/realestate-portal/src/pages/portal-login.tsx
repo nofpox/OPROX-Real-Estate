@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useLocation, Link } from 'wouter';
 import { usePortalAuth } from '@/lib/portal-auth';
 import { useLanguage } from '@/lib/i18n';
@@ -38,6 +39,10 @@ export const PortalLogin: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-muted flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
+      <Helmet>
+        <title>Client Portal | ركز للحلول الذكية</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <Link href="/" className="inline-flex items-center justify-center gap-2 mb-6">

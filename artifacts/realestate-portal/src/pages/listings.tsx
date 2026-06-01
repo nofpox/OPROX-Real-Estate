@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'wouter';
 import { useGetListings } from '@workspace/api-client-react';
 import { useLanguage } from '@/lib/i18n';
@@ -17,14 +18,12 @@ export const ListingsBrowser: React.FC = () => {
   const [type, setType] = useState<string>('all');
   
   const { data: response, isLoading } = useGetListings({
-    params: {
-      page,
-      limit: 12,
-      ...(q && { q }),
-      ...(propertyType !== 'all' && { propertyType: propertyType as any }),
-      ...(type !== 'all' && { type: type as any }),
-      status: 'active'
-    }
+    page,
+    limit: 12,
+    ...(q && { q }),
+    ...(propertyType !== 'all' && { propertyType }),
+    ...(type !== 'all' && { type }),
+    status: 'active'
   });
 
   const listings = response?.data || [];
@@ -37,6 +36,13 @@ export const ListingsBrowser: React.FC = () => {
 
   return (
     <div className="bg-muted min-h-screen py-12">
+      <Helmet>
+        <title>Property Listings | ركز للحلول الذكية</title>
+        <meta name="description" content="Browse properties for sale, rent, and under professional management by Rakez Smart Solutions." />
+        <meta property="og:title" content="Property Listings | Rakez Smart Solutions" />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://rakez.sa/realestate/listings" />
+      </Helmet>
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-primary mb-4">{t('nav.listings')}</h1>
@@ -123,7 +129,7 @@ export const ListingsBrowser: React.FC = () => {
               ))}
             </div>
 
-            {meta && meta.totalPages > 1 && (
+            {meta && (meta.totalPages ?? 1) > 1 && (
               <div className="flex justify-center items-center mt-12 gap-2">
                 <Button 
                   variant="outline" 
@@ -133,12 +139,12 @@ export const ListingsBrowser: React.FC = () => {
                   Previous
                 </Button>
                 <span className="text-sm text-muted-foreground px-4">
-                  Page {page} of {meta.totalPages}
+                  Page {page} of {meta.totalPages ?? 1}
                 </span>
                 <Button 
                   variant="outline" 
-                  disabled={page === meta.totalPages}
-                  onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
+                  disabled={page === (meta.totalPages ?? 1)}
+                  onClick={() => setPage(p => Math.min(meta.totalPages ?? 1, p + 1))}
                 >
                   Next
                 </Button>

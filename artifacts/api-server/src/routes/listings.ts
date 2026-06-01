@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { db, listingsTable, listingInquiriesTable } from "@workspace/db";
 import { insertListingSchema, updateListingSchema, insertInquirySchema } from "@workspace/db";
-import { eq, and, or, ilike, gte, lte, sql, desc, asc } from "drizzle-orm";
+import { eq, and, or, ilike, gte, lte, sql, desc } from "drizzle-orm";
 import { sendSuccess, sendError, parsePagination, buildMeta } from "../utils/response.js";
+import { listingsCache, TTL, queryCacheKey } from "../utils/cache.js";
 
 const router = Router();
 
@@ -22,6 +23,15 @@ router.get("/listings", async (req, res) => {
     } = req.query as Record<string, string>;
 
     const tenantId = tid(req);
+
+    // ── Cache lookup ─────────────────────────────────────────────────────────
+    const cacheKey = queryCacheKey("list", { ...req.query, _tid: tenantId });
+    const cached = listingsCache.get<{ data: unknown; meta: unknown }>(cacheKey);
+    if (cached) {
+      sendSuccess(res, cached.data, cached.meta as import("../utils/response.js").ApiMeta);
+      return;
+    }
+
     const conds: import("drizzle-orm").SQL[] = [];
 
     if (tenantId !== null) conds.push(eq(listingsTable.tenantId, tenantId));
@@ -60,7 +70,11 @@ router.get("/listings", async (req, res) => {
       .offset(offset);
 
     const total = countRow?.total ?? 0;
-    sendSuccess(res, rows.map(formatListing), buildMeta(total, page, limit));
+    const data  = rows.map(formatListing);
+    const meta  = buildMeta(total, page, limit);
+
+    listingsCache.set(cacheKey, { data, meta }, TTL.LISTINGS_LIST);
+    sendSuccess(res, data, meta);
   } catch (err) {
     req.log?.error({ err }, "GET /listings failed");
     sendError(res, 500, "Failed to fetch listings");
@@ -74,6 +88,20 @@ router.get("/listings/:id", async (req, res) => {
     if (isNaN(id)) { sendError(res, 400, "Invalid listing id"); return; }
 
     const tenantId = tid(req);
+
+    // ── Cache lookup ─────────────────────────────────────────────────────────
+    const cacheKey = `item:${id}:${tenantId ?? "pub"}`;
+    const cached = listingsCache.get<unknown>(cacheKey);
+    if (cached) {
+      sendSuccess(res, cached);
+      // Still increment view count even on cache hit (fire-and-forget)
+      db.update(listingsTable)
+        .set({ viewCount: sql`${listingsTable.viewCount} + 1` })
+        .where(eq(listingsTable.id, id))
+        .catch(() => {});
+      return;
+    }
+
     const conds = [eq(listingsTable.id, id)];
     if (tenantId !== null) conds.push(eq(listingsTable.tenantId, tenantId));
 
@@ -82,11 +110,13 @@ router.get("/listings/:id", async (req, res) => {
 
     // Increment view count (fire-and-forget)
     db.update(listingsTable)
-      .set({ viewCount: listing.viewCount + 1 })
+      .set({ viewCount: sql`${listingsTable.viewCount} + 1` })
       .where(eq(listingsTable.id, id))
       .catch(() => {});
 
-    sendSuccess(res, formatListing(listing));
+    const data = formatListing(listing);
+    listingsCache.set(cacheKey, data, TTL.LISTINGS_ITEM);
+    sendSuccess(res, data);
   } catch (err) {
     req.log?.error({ err }, "GET /listings/:id failed");
     sendError(res, 500, "Failed to fetch listing");
@@ -122,6 +152,7 @@ router.post("/listings", async (req, res) => {
       return;
     }
     const [listing] = await db.insert(listingsTable).values(parsed.data).returning();
+    listingsCache.invalidatePrefix("list:");
     sendSuccess(res, formatListing(listing), undefined, 201);
   } catch (err) {
     req.log?.error({ err }, "POST /listings failed");
@@ -152,6 +183,8 @@ router.patch("/listings/:id", async (req, res) => {
       .returning();
 
     if (!listing) { sendError(res, 404, "Listing not found"); return; }
+    listingsCache.invalidatePrefix("list:");
+    listingsCache.invalidatePrefix(`item:${id}:`);
     sendSuccess(res, formatListing(listing));
   } catch (err) {
     req.log?.error({ err }, "PATCH /listings/:id failed");
@@ -170,6 +203,8 @@ router.delete("/listings/:id", async (req, res) => {
     if (tenantId !== null) conds.push(eq(listingsTable.tenantId, tenantId));
 
     await db.delete(listingsTable).where(and(...conds));
+    listingsCache.invalidatePrefix("list:");
+    listingsCache.invalidatePrefix(`item:${id}:`);
     sendSuccess(res, { deleted: true });
   } catch (err) {
     req.log?.error({ err }, "DELETE /listings/:id failed");

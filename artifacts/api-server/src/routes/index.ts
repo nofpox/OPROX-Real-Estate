@@ -30,13 +30,14 @@ import supportTicketsRouter from "./support-tickets";
 import serviceCategoriesRouter from "./serviceCategories";
 import listingsRouter from "./listings";
 import portalRouter from "./portal";
+import sitemapRouter from "./sitemap";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
   worker: 0, supervisor: 1, admin: 2,
 };
 
-const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/", "/unit-requests", "/unit-info/", "/service-categories", "/listings"];
+const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/", "/unit-requests", "/unit-info/", "/service-categories", "/listings", "/sitemap.xml"];
 
 const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
 
@@ -153,6 +154,7 @@ router.use(supportTicketsRouter);
 router.use(serviceCategoriesRouter);
 router.use(listingsRouter);
 router.use(portalRouter);
+router.use(sitemapRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

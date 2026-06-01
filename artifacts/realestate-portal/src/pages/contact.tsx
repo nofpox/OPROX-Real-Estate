@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,11 @@ export const Contact: React.FC = () => {
 
   return (
     <div className="bg-muted min-h-screen py-16">
+      <Helmet>
+        <title>Contact Us | ركز للحلول الذكية</title>
+        <meta name="description" content="Get in touch with Rakez Smart Solutions for property management inquiries, partnerships, and support." />
+        <link rel="canonical" href="https://rakez.sa/realestate/contact" />
+      </Helmet>
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-primary mb-4">{t('contact.title')}</h1>

@@ -20,11 +20,8 @@ const PortalAuthContext = createContext<PortalAuthContextType>({
 export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   
-  const { data: meData, isLoading: isMeLoading } = useGetMe({
-    query: {
-      retry: false,
-    }
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: meData, isLoading: isMeLoading } = useGetMe({ query: { retry: false } } as any);
 
   useEffect(() => {
     if (meData) {
@@ -39,8 +36,9 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const login = async (credentials: AuthCredentials) => {
     const res = await loginMutation.mutateAsync({ data: credentials });
-    if (res && res.user) {
-      setUser(res.user as unknown as AuthUser);
+    if (res) {
+      // Login response IS the AuthUser (session data returned directly)
+      setUser(res as unknown as AuthUser);
     }
   };
 

@@ -1,2 +1,6 @@
 User-agent: *
-Allow: /
+Allow: /realestate/
+Disallow: /realestate/portal/dashboard
+Disallow: /api/
+
+Sitemap: /api/sitemap.xml

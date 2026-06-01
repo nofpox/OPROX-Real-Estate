@@ -4,11 +4,11 @@ import {
   propertiesTable,
   bookingsTable,
   roomsTable,
-  guestsTable,
   listingsTable,
 } from "@workspace/db";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { sendSuccess, sendError, parsePagination, buildMeta } from "../utils/response.js";
+import { portalCache, TTL } from "../utils/cache.js";
 
 const router = Router();
 
@@ -29,6 +29,14 @@ router.get("/portal/properties", requireAuth, async (req, res) => {
   try {
     const tenantId = tid(req);
     const { page, limit, offset } = parsePagination(req.query as Record<string, unknown>);
+
+    // ── Cache lookup ─────────────────────────────────────────────────────────
+    const cacheKey = `props:${tenantId ?? "all"}:${page}:${limit}`;
+    const cached = portalCache.get<{ data: unknown; meta: unknown }>(cacheKey);
+    if (cached) {
+      sendSuccess(res, cached.data, cached.meta as import("../utils/response.js").ApiMeta);
+      return;
+    }
 
     const conds = tenantId !== null ? [eq(propertiesTable.tenantId, tenantId)] : [];
     const where = conds.length ? and(...conds) : undefined;
@@ -56,9 +64,10 @@ router.get("/portal/properties", requireAuth, async (req, res) => {
         const [bookingStats] = await db
           .select({ activeBookings: sql<number>`count(*)::int` })
           .from(bookingsTable)
+          .innerJoin(roomsTable, eq(bookingsTable.roomId, roomsTable.id))
           .where(
             and(
-              eq(bookingsTable.propertyId, property.id),
+              eq(roomsTable.propertyId, property.id),
               sql`${bookingsTable.status} IN ('confirmed', 'checked_in')`,
             ),
           );
@@ -92,7 +101,9 @@ router.get("/portal/properties", requireAuth, async (req, res) => {
       }),
     );
 
-    sendSuccess(res, enriched, buildMeta(countRow?.total ?? 0, page, limit));
+    const meta = buildMeta(countRow?.total ?? 0, page, limit);
+    portalCache.set(cacheKey, { data: enriched, meta }, TTL.PORTAL_PROPS);
+    sendSuccess(res, enriched, meta);
   } catch (err) {
     req.log?.error({ err }, "GET /portal/properties failed");
     sendError(res, 500, "Failed to fetch portal properties");
@@ -106,16 +117,19 @@ router.get("/portal/bookings", requireAuth, async (req, res) => {
     const { page, limit, offset } = parsePagination(req.query as Record<string, unknown>);
     const { propertyId, status } = req.query as Record<string, string>;
 
+    // Filter by propertyId goes through rooms join (bookings have no direct propertyId)
     const conds: import("drizzle-orm").SQL[] = [];
     if (tenantId !== null) conds.push(eq(bookingsTable.tenantId, tenantId));
-    if (propertyId)        conds.push(eq(bookingsTable.propertyId, parseInt(propertyId)));
+    if (propertyId)        conds.push(eq(roomsTable.propertyId, parseInt(propertyId)));
     if (status)            conds.push(eq(bookingsTable.status, status));
 
     const where = conds.length ? and(...conds) : undefined;
 
+    // Count also needs the rooms join for propertyId filter to work
     const [countRow] = await db
       .select({ total: sql<number>`count(*)::int` })
       .from(bookingsTable)
+      .leftJoin(roomsTable, eq(bookingsTable.roomId, roomsTable.id))
       .where(where);
 
     const rows = await db
@@ -125,15 +139,14 @@ router.get("/portal/bookings", requireAuth, async (req, res) => {
         checkOut:     bookingsTable.checkOut,
         status:       bookingsTable.status,
         totalAmount:  bookingsTable.totalAmount,
-        propertyId:   bookingsTable.propertyId,
-        roomNumber:   roomsTable.roomNumber,
+        guestName:    bookingsTable.guestName,
+        roomName:     roomsTable.name,
+        propertyId:   roomsTable.propertyId,
         propertyName: propertiesTable.name,
-        guestName:    guestsTable.name,
       })
       .from(bookingsTable)
       .leftJoin(roomsTable,      eq(bookingsTable.roomId,     roomsTable.id))
-      .leftJoin(propertiesTable, eq(bookingsTable.propertyId, propertiesTable.id))
-      .leftJoin(guestsTable,     eq(bookingsTable.guestId,    guestsTable.id))
+      .leftJoin(propertiesTable, eq(roomsTable.propertyId,    propertiesTable.id))
       .where(where)
       .orderBy(desc(bookingsTable.checkIn))
       .limit(limit)
@@ -142,12 +155,12 @@ router.get("/portal/bookings", requireAuth, async (req, res) => {
     const formatted = rows.map((r) => ({
       id:           r.id,
       guestName:    r.guestName ?? "Guest",
-      checkIn:      r.checkIn instanceof Date ? r.checkIn.toISOString() : String(r.checkIn),
-      checkOut:     r.checkOut instanceof Date ? r.checkOut.toISOString() : String(r.checkOut),
+      checkIn:      String(r.checkIn),
+      checkOut:     String(r.checkOut),
       status:       r.status,
-      roomNumber:   r.roomNumber ?? "—",
+      roomNumber:   r.roomName ?? "—",
       propertyName: r.propertyName ?? "—",
-      propertyId:   r.propertyId,
+      propertyId:   r.propertyId ?? null,
       totalAmount:  r.totalAmount ? Number(r.totalAmount) : null,
     }));
 
