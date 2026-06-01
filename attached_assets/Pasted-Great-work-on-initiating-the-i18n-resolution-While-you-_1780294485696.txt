@@ -1,0 +1,17 @@
+Great work on initiating the i18n resolution. While you are working on the language setup, I want to define the full structural roadmap for the system to ensure we are aligned on the end goal:
+​1. Unified Branding & Identity:
+​The entire system must reflect 'ركز للحلول الذكية' (Rakez for Smart Solutions) as the primary brand.
+​In the deployment dashboard (seen in 717.png), please replace all fragmented technical project names with the company’s name and logo. This branding must be consistent across all headers and interfaces.
+​2. Centralized Portal (Single Entry Point):
+​Consolidate the fragmented dashboard links (Guest, Hotel, Staff) into one unified application.
+​The system must detect the user's role (Admin, Staff, or Guest) upon login and present the appropriate interface within this single, cohesive environment.
+​3. Dynamic Service Configuration Engine:
+​I need a backend 'Admin Panel' where I can independently create, edit, or delete service categories (the service squares) for each property type (Hotel, Compound, Tower).
+​For every service added, I must be able to select its name, icon, and functionality directly from the Admin Panel.
+​These changes must reflect immediately in the Guest Portal without requiring manual code updates.
+​4. Advanced Localization (14 Languages):
+​Building on your current i18n work, ensure the language switcher is integrated into EVERY page.
+​The entire interface—including system messages, labels, and status indicators—must pull from the central language files to ensure 100% consistency and zero hardcoded errors.
+​5. Role-Based Access Control (RBAC):
+​As the Super Admin, I need a centralized panel to manage roles and permissions, ensuring each user sees only what is relevant to their role.
+​Goal: My goal is a professional, single-branded, and fully flexible system where I have total control over branding, language, and services from a central dashboard. Please proceed with the current i18n work, keeping this structural roadmap as our primary target."
