@@ -34,7 +34,7 @@ const NAV_ITEMS = [
   { href: "/properties",     labelKey: "nav.properties",     icon: Building2,       section: "main",       featureKey: "properties" },
   { href: "/rooms",          labelKey: "nav.rooms",          icon: DoorOpen,        section: "main",       featureKey: "rooms"    },
   { href: "/guests",         labelKey: "nav.guests",         icon: Users,           section: "main",       featureKey: "guests"   },
-  { href: "/unit-map",       labelKey: "nav.unitMap",        icon: MapPin,          section: "main",       featureKey: "unitMap"  },
+  // unit-map hidden — UI on hold, backend/DB intact
   { href: "/finance",        labelKey: "nav.finance",        icon: DollarSign,      section: "operations", featureKey: null       },
   { href: "/maintenance",    labelKey: "nav.maintenance",    icon: Wrench,          section: "operations", featureKey: "maintenance" },
   { href: "/facilities",     labelKey: "nav.facilities",     icon: Dumbbell,        section: "operations", featureKey: "facilities" },

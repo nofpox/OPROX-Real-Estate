@@ -64,7 +64,7 @@ export const ROLES: RoleDefinition[] = [
     id: "admin_manager",
     label: "Company",
     description: "Corporate-level access — company-wide management, financial oversight, and reporting",
-    allowedNav: ["/", "/bookings", "/properties", "/rooms", "/guests", "/unit-map", "/guest-requests", "/analytics", "/finance", "/user-management", "/admin-settings", "/data-archiving", "/content-manager"],
+    allowedNav: ["/", "/bookings", "/properties", "/rooms", "/guests", "/guest-requests", "/analytics", "/finance", "/user-management", "/admin-settings", "/data-archiving", "/content-manager"],
     taskCategories: null,
   },
   // 3 — Management tier: Property & operational management

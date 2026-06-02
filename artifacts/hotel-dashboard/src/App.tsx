@@ -29,7 +29,8 @@ import GuestRequests from "@/pages/guest-requests";
 import UserManagement from "@/pages/user-management";
 import AuditLog from "@/pages/audit-log";
 import AdminSettings from "@/pages/admin-settings";
-import UnitMap from "@/pages/unit-map";
+// UnitMap hidden — UI on hold; backend/DB intact
+// import UnitMap from "@/pages/unit-map";
 import Login from "@/pages/login";
 import ForcePasswordChange from "@/pages/force-password-change";
 import SuperAdmin from "@/pages/super-admin";
@@ -84,7 +85,7 @@ function Router() {
       <Route path="/user-management" component={UserManagement} />
       <Route path="/activity-log" component={AuditLog} />
       <Route path="/admin-settings" component={AdminSettings} />
-      <Route path="/unit-map" component={UnitMap} />
+      {/* /unit-map hidden — UI on hold; restore by un-commenting import + this Route */}
       <Route path="/security-dashboard" component={SecurityDashboard} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/support-tickets" component={SupportTickets} />
