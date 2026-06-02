@@ -1292,10 +1292,13 @@ function PermissionsTab() {
   const [matrix, setMatrix] = useState<PermissionMatrix>(DEFAULT_PERM);
   const [dirty, setDirty] = useState(false);
 
+  // Only initialize from server data once — prevent background refetches from
+  // wiping the user's unsaved checkbox changes (common on Android focus events).
+  const initializedRef = React.useRef(false);
   React.useEffect(() => {
-    if (!data) return;
+    if (!data || initializedRef.current) return;
+    initializedRef.current = true;
     setMatrix((data.permissionMatrix as PermissionMatrix | undefined) ?? DEFAULT_PERM);
-    setDirty(false);
   }, [data]);
 
   function toggle(roleId: string, href: string) {

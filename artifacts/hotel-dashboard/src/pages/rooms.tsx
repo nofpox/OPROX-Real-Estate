@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import {
   useListRooms, getListRoomsQueryKey, useUpdateRoom, useDeleteRoom,
-  useListWorkOrders, useListProperties,
+  useCreateRoom, useListWorkOrders, useListProperties,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Search, MoreHorizontal, Pencil, Trash2, CalendarCheck, DoorOpen, Wrench, Sparkles, Building2, Info, ExternalLink } from "lucide-react";
+import { Search, MoreHorizontal, Pencil, Trash2, CalendarCheck, DoorOpen, Wrench, Sparkles, Building2, Plus, ExternalLink } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { type Room } from "@workspace/api-client-react";
@@ -52,6 +52,16 @@ const unitSchema = z.object({
   capacity: z.coerce.number().min(1),
 });
 
+const createUnitSchema = z.object({
+  name:          z.string().min(1, "Unit name is required"),
+  type:          z.string().min(1),
+  status:        z.string().min(1),
+  capacity:      z.coerce.number().min(1),
+  pricePerNight: z.coerce.number().min(0),
+  propertyId:    z.coerce.number().min(1, "Property is required"),
+  description:   z.string().optional(),
+});
+
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status, t }: { status: string; t: (k: string, opts?: Record<string, unknown>) => string }) {
@@ -80,11 +90,13 @@ export default function UnitStatus() {
   const [propertyFilter,   setPropertyFilter] = useState("all");
   const [isEditOpen,       setIsEditOpen]    = useState(false);
   const [editingRoom,      setEditingRoom]   = useState<Room | null>(null);
+  const [isAddOpen,        setIsAddOpen]     = useState(false);
 
   const { data: rooms,      isLoading: roomsLoading }      = useListRooms();
   const { data: properties, isLoading: propertiesLoading } = useListProperties();
   const { data: completedOrders }                          = useListWorkOrders({ status: "completed" } as any);
   const updateRoom  = useUpdateRoom();
+  const createRoom  = useCreateRoom();
   const deleteRoom  = useDeleteRoom();
   const queryClient = useQueryClient();
   const { toast }   = useToast();
@@ -111,6 +123,26 @@ export default function UnitStatus() {
     resolver: zodResolver(unitSchema),
     defaultValues: { name: "", type: "Studio", status: "available", capacity: 1 },
   });
+
+  const createForm = useForm<z.infer<typeof createUnitSchema>>({
+    resolver: zodResolver(createUnitSchema),
+    defaultValues: { name: "", type: "Studio", status: "available", capacity: 1, pricePerNight: 0, propertyId: 0, description: "" },
+  });
+
+  const onSubmitCreate = (data: z.infer<typeof createUnitSchema>) => {
+    createRoom.mutate(
+      { data: { ...data, pricePerNight: data.pricePerNight, propertyId: data.propertyId } },
+      {
+        onSuccess: () => {
+          toast({ title: t("unitStatus.added", { defaultValue: "Unit added" }) });
+          queryClient.invalidateQueries({ queryKey: getListRoomsQueryKey() });
+          setIsAddOpen(false);
+          createForm.reset();
+        },
+        onError: () => { toast({ title: t("unitStatus.addFailed", { defaultValue: "Failed to add unit" }), variant: "destructive" }); },
+      }
+    );
+  };
 
   const handleEdit = (room: Room) => {
     setEditingRoom(room);
@@ -190,16 +222,10 @@ export default function UnitStatus() {
           <p className="text-muted-foreground mt-1">{t("unitStatus.subtitle")}</p>
         </div>
 
-        {/* Add-unit hint — directs users to the property page */}
-        <div className="flex items-start gap-2 bg-muted/60 border border-border/50 rounded-lg px-3 py-2 text-sm text-muted-foreground max-w-sm">
-          <Info className="h-4 w-4 mt-0.5 shrink-0 text-primary/60" />
-          <span>
-            {t("unitStatus.addHint")}{" "}
-            <Link href="/properties" className="text-primary underline underline-offset-2 hover:text-primary/80 inline-flex items-center gap-1">
-              {t("nav.properties")} <ExternalLink className="h-3 w-3" />
-            </Link>
-          </span>
-        </div>
+        <Button onClick={() => { createForm.reset(); setIsAddOpen(true); }} className="gap-2 shrink-0">
+          <Plus className="h-4 w-4" />
+          {t("unitStatus.addUnit", { defaultValue: "Add Unit" })}
+        </Button>
       </div>
 
       {/* ── Status summary KPIs ──────────────────────────────────────────────── */}
@@ -410,7 +436,119 @@ export default function UnitStatus() {
         </CardContent>
       </Card>
 
-      {/* ── Edit dialog (no create) ───────────────────────────────────────────── */}
+      {/* ── Add Unit dialog ──────────────────────────────────────────────────── */}
+      <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) createForm.reset(); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-serif">{t("unitStatus.addUnit", { defaultValue: "Add Unit" })}</DialogTitle>
+          </DialogHeader>
+          <Form {...createForm}>
+            <form onSubmit={createForm.handleSubmit(onSubmitCreate)} className="space-y-4">
+
+              {/* Property selector */}
+              <FormField control={createForm.control} name="propertyId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("unitStatus.columns.property")}</FormLabel>
+                  <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value ? String(field.value) : ""}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder={t("unitStatus.selectProperty", { defaultValue: "Select property" })} /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {(properties ?? []).map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={createForm.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("unitStatus.unitNameLabel")}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t("unitStatus.unitNamePlaceholder")} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={createForm.control} name="type" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("unitStatus.columns.type")}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder={t("unitStatus.selectType")} /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {UNIT_TYPES.map((tp) => (
+                          <SelectItem key={tp} value={tp}>
+                            {t(`unitStatus.types.${tp}`, { defaultValue: tp })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={createForm.control} name="capacity" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("unitStatus.columns.capacity")}</FormLabel>
+                    <FormControl><Input type="number" min="1" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={createForm.control} name="status" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("unitStatus.columns.status")}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder={t("unitStatus.selectStatus")} /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {(["available", "occupied", "maintenance", "cleaning"] as const).map((s) => (
+                          <SelectItem key={s} value={s}>{t(`unitStatus.status.${s}`)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={createForm.control} name="pricePerNight" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("unitStatus.priceLabel", { defaultValue: "Price / Night" })}</FormLabel>
+                    <FormControl><Input type="number" min="0" step="0.01" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+
+              <FormField control={createForm.control} name="description" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("unitStatus.descriptionLabel", { defaultValue: "Description (optional)" })}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t("unitStatus.descriptionPlaceholder", { defaultValue: "e.g. Sea view, ground floor…" })} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <DialogFooter className="pt-4">
+                <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>{t("common.cancel")}</Button>
+                <Button type="submit" disabled={createRoom.isPending}>
+                  {createRoom.isPending ? t("common.saving") : t("unitStatus.addUnit", { defaultValue: "Add Unit" })}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Edit dialog ───────────────────────────────────────────────────────── */}
       <Dialog open={isEditOpen} onOpenChange={onEditOpenChange}>
         <DialogContent>
           <DialogHeader>
