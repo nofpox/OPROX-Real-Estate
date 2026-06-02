@@ -5,7 +5,7 @@ import {
   Archive, ShieldCheck, Clock, AlertTriangle, CheckCircle2,
   Play, BellOff, Search, Eye, RotateCcw, Database,
   FileJson, ChevronRight, CalendarDays, BarChart3, Loader2,
-  HardDrive, RefreshCw,
+  HardDrive, RefreshCw, Inbox, Wrench, CalendarRange, Ticket, ClipboardList,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,11 +77,11 @@ const apiFetch = async <T,>(url: string, opts?: RequestInit): Promise<T> => {
 };
 
 const ALL_DATASETS = [
-  { id: "guest-requests",  label: "Guest Requests",  icon: "📨" },
-  { id: "work-orders",     label: "Work Orders",     icon: "🔧" },
-  { id: "bookings",        label: "Bookings",        icon: "📅" },
-  { id: "support-tickets", label: "Support Tickets", icon: "🎫" },
-  { id: "activity-logs",   label: "Activity Logs",   icon: "📋" },
+  { id: "guest-requests",  label: "Guest Requests",  Icon: Inbox },
+  { id: "work-orders",     label: "Work Orders",     Icon: Wrench },
+  { id: "bookings",        label: "Bookings",        Icon: CalendarRange },
+  { id: "support-tickets", label: "Support Tickets", Icon: Ticket },
+  { id: "activity-logs",   label: "Activity Logs",   Icon: ClipboardList },
 ];
 
 function formatBytes(bytes: number): string {
@@ -375,30 +375,33 @@ export default function DataArchiving() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {ALL_DATASETS.map(ds => (
-                      <label
-                        key={ds.id}
-                        className={cn(
-                          "flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors",
-                          selectedDatasets.includes(ds.id)
-                            ? "border-primary/50 bg-primary/5 dark:border-primary/30"
-                            : "border-border hover:bg-muted/50"
-                        )}
-                      >
-                        <Checkbox
-                          checked={selectedDatasets.includes(ds.id)}
-                          onCheckedChange={() => toggleDataset(ds.id)}
-                        />
-                        <span className="text-base">{ds.icon}</span>
-                        <span className="text-sm font-medium">{ds.label}</span>
-                      </label>
-                    ))}
+                    {ALL_DATASETS.map(ds => {
+                      const checked = selectedDatasets.includes(ds.id);
+                      return (
+                        <label
+                          key={ds.id}
+                          className={cn(
+                            "flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors select-none",
+                            checked
+                              ? "border-primary/50 bg-primary/5 dark:border-primary/30"
+                              : "border-border hover:bg-muted/50"
+                          )}
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={() => toggleDataset(ds.id)}
+                          />
+                          <ds.Icon className={cn("h-4 w-4 shrink-0", checked ? "text-primary" : "text-muted-foreground")} />
+                          <span className="text-sm font-medium leading-tight">{ds.label}</span>
+                        </label>
+                      );
+                    })}
                   </div>
 
                   <Separator />
 
-                  <div className="flex items-end gap-4 flex-wrap">
-                    <div className="flex-1 min-w-[160px] max-w-[220px]">
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                    <div className="w-full sm:w-48 shrink-0">
                       <Label className="text-xs text-muted-foreground mb-1.5 block">
                         Older than (days)
                       </Label>
@@ -408,12 +411,13 @@ export default function DataArchiving() {
                         max={365}
                         value={olderThanDays}
                         onChange={e => setOlderThanDays(Number(e.target.value))}
-                        className="h-9"
+                        className="h-9 w-full"
                       />
                     </div>
                     <Button
                       onClick={() => setConfirmRun(true)}
                       disabled={runMutation.isPending || selectedDatasets.length === 0}
+                      className="w-full sm:w-auto"
                     >
                       {runMutation.isPending
                         ? <><Loader2 className="h-4 w-4 animate-spin me-1.5" />Archiving…</>
@@ -533,7 +537,10 @@ export default function DataArchiving() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium">{ds?.icon ?? "📁"} {ds?.label ?? archive.dataset}</span>
+                            <span className="text-sm font-medium flex items-center gap-1.5">
+                              {ds ? <ds.Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> : null}
+                              {ds?.label ?? archive.dataset}
+                            </span>
                             <Badge variant="outline" className="text-xs">{archive.period}</Badge>
                           </div>
                           <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
@@ -595,7 +602,10 @@ export default function DataArchiving() {
               return (
                 <div key={id} className="flex items-center gap-2 text-sm">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>{ds?.icon} {ds?.label}</span>
+                  <span className="flex items-center gap-1.5">
+                    {ds ? <ds.Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> : null}
+                    {ds?.label}
+                  </span>
                 </div>
               );
             })}
@@ -670,7 +680,7 @@ export default function DataArchiving() {
             <DialogTitle className="flex items-center gap-2">
               <FileJson className="h-5 w-5" />
               {previewArchive
-                ? `${ALL_DATASETS.find(d => d.id === previewArchive.dataset)?.icon ?? "📁"} ${ALL_DATASETS.find(d => d.id === previewArchive.dataset)?.label ?? previewArchive.dataset}`
+                ? (ALL_DATASETS.find(d => d.id === previewArchive.dataset)?.label ?? previewArchive.dataset)
                 : "Archive Preview"}
             </DialogTitle>
             {previewArchive && (
