@@ -1,0 +1,18 @@
+Subject: Final Notice: Comprehensive System Audit & Full Quality Assurance Required
+​Dear Developer,
+​Following the recent UI fixes, it is now clear that we must move beyond patch-fixing individual bugs. I require a comprehensive, end-to-end system audit of the entire platform and the website to ensure full operational integrity. You are required to follow my instructions precisely and without deviation.
+​Please perform the following actions immediately:
+​1. Full System Audit & Cleanup
+​Conduct a rigorous review of the entire platform and website from initial launch to the current state. Identify and resolve all remaining bugs, rendering errors, or performance bottlenecks across all modules.
+​Do not leave any errors behind. I expect a professional-grade delivery where every feature functions perfectly.
+​2. Permission Matrix Reset
+​Perform a complete reset of the permission matrix. Clear all existing checkboxes across all roles (Manager, Company, Supervisor, etc.), leaving the matrix completely blank.
+​Ensure that I have absolute authority (as Owner) to grant or revoke any permission for any role from scratch, without any system-imposed restrictions.
+​3. Language & Localization (i18n)
+​As shown in 874.png, the system's translation is incomplete. When I switch the language to Arabic, the entire content of the page—including field labels, descriptions, and all operational text—must be fully translated. Mixed languages are not acceptable.
+​4. Permanent Fix for UI/UX & Rendering
+​The rendering glitch on the 'Data Archiving' page (referenced in 873.png) must be permanently resolved. Ensure the layout is fully responsive and renders correctly across all mobile and desktop devices.
+​The roles container in the permission page must be fully scrollable and responsive.
+​Final Requirement:
+This is your final opportunity to ensure the system is stable, bug-free, and fully polished. Follow these instructions precisely. I require a full confirmation report once this comprehensive audit and cleanup process is completed to your satisfaction and mine.
+​Best regards,
