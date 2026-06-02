@@ -19,10 +19,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     href === '/' ? location === '/' || location === '' : location.startsWith(href);
 
   return (
-    <div className="min-h-[100dvh] flex flex-col font-sans">
+    <div className="h-dvh overflow-auto flex flex-col font-sans">
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
 
           {/* Logo */}
@@ -46,7 +46,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 href={href}
                 className={`relative px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                   isActive(href)
-                    ? 'text-secondary bg-secondary/8'
+                    ? 'text-secondary bg-secondary/10'
                     : 'text-foreground/70 hover:text-primary hover:bg-muted'
                 }`}
               >

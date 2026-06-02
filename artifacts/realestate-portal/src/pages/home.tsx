@@ -48,7 +48,7 @@ export const Home: React.FC = () => {
         </div>
 
         <div className="container relative z-20 px-4 text-center text-white max-w-5xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-secondary/20 border border-secondary/30 text-secondary-foreground text-xs font-semibold px-4 py-1.5 rounded-full mb-6 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 bg-secondary/20 border border-secondary/30 text-secondary-foreground text-xs font-semibold px-4 py-1.5 rounded-full mb-6">
             <Award className="h-3.5 w-3.5" />
             {isRtl ? branding.companyNameAr : branding.companyNameEn}
           </div>
@@ -73,7 +73,7 @@ export const Home: React.FC = () => {
             </Button>
             <Button
               asChild size="lg" variant="outline"
-              className="text-white border-white/40 hover:bg-white/10 hover:text-white text-base px-8 h-12 w-full sm:w-auto backdrop-blur-sm"
+              className="text-white border-white/40 hover:bg-white/10 hover:text-white text-base px-8 h-12 w-full sm:w-auto"
             >
               <Link href="/contact">
                 {isRtl ? content.nav.find(n => n.href === '/contact')?.labelAr || 'اتصل بنا'

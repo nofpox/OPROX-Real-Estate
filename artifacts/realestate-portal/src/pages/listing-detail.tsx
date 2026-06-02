@@ -173,10 +173,10 @@ export const ListingDetail: React.FC = () => {
               <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full uppercase tracking-wider">
+                    <span className="px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full uppercase tracking-wider">
                       {listing.listingType}
                     </span>
-                    <span className="px-3 py-1 bg-secondary/10 text-secondary-foreground text-xs font-semibold rounded-full uppercase tracking-wider">
+                    <span className="px-3 py-1 bg-secondary text-secondary-foreground text-xs font-semibold rounded-full uppercase tracking-wider">
                       {listing.propertyType}
                     </span>
                     {listing.status !== 'active' && (
@@ -204,7 +204,7 @@ export const ListingDetail: React.FC = () => {
               </div>
 
               {isOperational && (
-                <div className="bg-secondary/10 border border-secondary/20 rounded-lg p-5 mb-8">
+                <div className="bg-secondary/10 border border-secondary rounded-lg p-5 mb-8">
                   <div className="flex items-start gap-4">
                     <div className="bg-secondary p-2 rounded-full mt-1 shrink-0">
                       <ShieldCheck className="h-6 w-6 text-secondary-foreground" />
@@ -220,7 +220,7 @@ export const ListingDetail: React.FC = () => {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4 py-6 border-y border-border my-6">
                 {listing.bedrooms != null && (
-                  <div className="flex flex-col items-center justify-center p-4 bg-muted/50 rounded-lg">
+                  <div className="flex flex-col items-center justify-center p-4 bg-muted rounded-lg">
                     <BedDouble className="h-8 w-8 text-primary mb-2" />
                     <span className="text-xl font-semibold">{listing.bedrooms}</span>
                     <span className="text-sm text-muted-foreground">
@@ -229,7 +229,7 @@ export const ListingDetail: React.FC = () => {
                   </div>
                 )}
                 {listing.bathrooms != null && (
-                  <div className="flex flex-col items-center justify-center p-4 bg-muted/50 rounded-lg">
+                  <div className="flex flex-col items-center justify-center p-4 bg-muted rounded-lg">
                     <Bath className="h-8 w-8 text-primary mb-2" />
                     <span className="text-xl font-semibold">{listing.bathrooms}</span>
                     <span className="text-sm text-muted-foreground">
@@ -238,7 +238,7 @@ export const ListingDetail: React.FC = () => {
                   </div>
                 )}
                 {listing.areaSqm != null && (
-                  <div className="flex flex-col items-center justify-center p-4 bg-muted/50 rounded-lg">
+                  <div className="flex flex-col items-center justify-center p-4 bg-muted rounded-lg">
                     <Square className="h-8 w-8 text-primary mb-2" />
                     <span className="text-xl font-semibold">{listing.areaSqm}</span>
                     <span className="text-sm text-muted-foreground">

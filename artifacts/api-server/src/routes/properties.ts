@@ -3,6 +3,7 @@ import { db, propertiesTable, roomsTable, bookingsTable, expensesTable, workOrde
 import { eq, and, sql } from "drizzle-orm";
 import { insertPropertySchema, updatePropertySchema } from "@workspace/db";
 import { logActivity, actorFromRequest } from "./activityLogs.js";
+import { portalCache, TTL, propertiesCacheKey } from "../utils/cache.js";
 
 const router = Router();
 
@@ -16,6 +17,17 @@ function formatProperty(p: typeof propertiesTable.$inferSelect, unitCount?: numb
 
 router.get("/properties", async (req, res) => {
   const tenantId = tid(req);
+
+  // ── Cache lookup ────────────────────────────────────────────────────────────
+  const cacheKey = propertiesCacheKey(tenantId);
+  const cached = portalCache.get<ReturnType<typeof formatProperty>[]>(cacheKey);
+  if (cached) {
+    res.set("X-Cache", "HIT");
+    res.json(cached);
+    return;
+  }
+  res.set("X-Cache", "MISS");
+
   const props = await db
     .select()
     .from(propertiesTable)
@@ -28,7 +40,9 @@ router.get("/properties", async (req, res) => {
     .where(tenantId !== null ? eq(roomsTable.tenantId, tenantId) : undefined)
     .groupBy(roomsTable.propertyId);
   const unitMap = new Map(units.map((u) => [u.propertyId, u.count]));
-  res.json(props.map((p) => formatProperty(p, unitMap.get(p.id) ?? 0)));
+  const result = props.map((p) => formatProperty(p, unitMap.get(p.id) ?? 0));
+  portalCache.set(cacheKey, result, TTL.PROPERTIES);
+  res.json(result);
 });
 
 router.post("/properties", async (req, res) => {
@@ -36,6 +50,7 @@ router.post("/properties", async (req, res) => {
   const parsed = insertPropertySchema.safeParse({ ...req.body, tenantId });
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [prop] = await db.insert(propertiesTable).values(parsed.data).returning();
+  portalCache.invalidatePrefix("props:");
   const actor = actorFromRequest(req);
   logActivity({ ...actor, tenantId, action: "property.created", entityType: "property", entityId: prop.id, entityLabel: prop.name, propertyId: prop.id });
   res.status(201).json(formatProperty(prop, 0));
@@ -66,6 +81,7 @@ router.patch("/properties/:id", async (req, res) => {
   if (tenantId !== null) conds.push(eq(propertiesTable.tenantId, tenantId));
   const [prop] = await db.update(propertiesTable).set(parsed.data).where(and(...conds)).returning();
   if (!prop) { res.status(404).json({ error: "Property not found" }); return; }
+  portalCache.invalidatePrefix("props:");
   const actor = actorFromRequest(req);
   logActivity({ ...actor, tenantId: tenantId ?? 1, action: "property.updated", entityType: "property", entityId: prop.id, entityLabel: prop.name, propertyId: prop.id });
   res.json(formatProperty(prop));
@@ -79,6 +95,7 @@ router.delete("/properties/:id", async (req, res) => {
   if (tenantId !== null) conds.push(eq(propertiesTable.tenantId, tenantId));
   const [existing] = await db.select({ name: propertiesTable.name }).from(propertiesTable).where(and(...conds));
   await db.delete(propertiesTable).where(and(...conds));
+  portalCache.invalidatePrefix("props:");
   const actor = actorFromRequest(req);
   logActivity({ ...actor, tenantId: tenantId ?? 1, action: "property.deleted", entityType: "property", entityId: id, entityLabel: existing?.name });
   res.status(204).end();

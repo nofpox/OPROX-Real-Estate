@@ -28,9 +28,11 @@ router.get("/listings", async (req, res) => {
     const cacheKey = queryCacheKey("list", { ...req.query, _tid: tenantId });
     const cached = listingsCache.get<{ data: unknown; meta: unknown }>(cacheKey);
     if (cached) {
+      res.set("X-Cache", "HIT");
       sendSuccess(res, cached.data, cached.meta as import("../utils/response.js").ApiMeta);
       return;
     }
+    res.set("X-Cache", "MISS");
 
     const conds: import("drizzle-orm").SQL[] = [];
 
@@ -101,6 +103,7 @@ router.get("/listings/:id", async (req, res) => {
     const cacheKey = `item:${id}:${tenantId ?? "pub"}`;
     const cached = listingsCache.get<unknown>(cacheKey);
     if (cached) {
+      res.set("X-Cache", "HIT");
       sendSuccess(res, cached);
       // Still increment view count even on cache hit (fire-and-forget)
       db.update(listingsTable)
@@ -109,6 +112,7 @@ router.get("/listings/:id", async (req, res) => {
         .catch(() => {});
       return;
     }
+    res.set("X-Cache", "MISS");
 
     const conds = [eq(listingsTable.id, id)];
     if (tenantId !== null) conds.push(eq(listingsTable.tenantId, tenantId));
