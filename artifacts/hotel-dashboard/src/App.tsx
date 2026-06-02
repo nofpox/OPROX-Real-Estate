@@ -14,9 +14,6 @@ import { LanguageProvider } from "@/contexts/language-context";
 import { setDefaultHeaders } from "@workspace/api-client-react";
 import { TourProvider } from "@/components/tour/tour-context";
 import Dashboard from "@/pages/dashboard";
-import Bookings from "@/pages/bookings";
-import NewBooking from "@/pages/booking-new";
-import BookingDetail from "@/pages/booking-detail";
 // Rooms (حالة الوحدات) hidden — UI on hold; restore by un-commenting import + Route
 // import Rooms from "@/pages/rooms";
 import NotFound from "@/pages/not-found";
@@ -68,9 +65,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
-      <Route path="/bookings" component={Bookings} />
-      <Route path="/bookings/new" component={NewBooking} />
-      <Route path="/bookings/:id" component={BookingDetail} />
       {/* /rooms hidden — UI on hold; restore by un-commenting import + this Route */}
       <Route path="/properties" component={Properties} />
       <Route path="/properties/:id" component={PropertyDetail} />

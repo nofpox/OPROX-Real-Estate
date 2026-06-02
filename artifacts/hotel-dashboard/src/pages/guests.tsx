@@ -8,7 +8,20 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Search, ArrowLeft, Users, UserCheck, DollarSign } from "lucide-react";
-import { BookingStatusBadge } from "./bookings";
+function BookingStatusBadge({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    confirmed:    "bg-blue-100 text-blue-700",
+    "checked-in": "bg-green-100 text-green-700",
+    "checked-out":"bg-gray-100 text-gray-700",
+    cancelled:    "bg-red-100 text-red-700",
+    pending:      "bg-yellow-100 text-yellow-700",
+  };
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] ?? "bg-muted text-muted-foreground"}`}>
+      {status}
+    </span>
+  );
+}
 
 interface Guest {
   id: number;

@@ -30,7 +30,6 @@ import { AppAIAgent } from "@/components/AppAIAgent";
 
 const NAV_ITEMS = [
   { href: "/",               labelKey: "nav.dashboard",      icon: LayoutDashboard, section: "main",       featureKey: null       },
-  { href: "/bookings",       labelKey: "nav.bookings",       icon: Calendar,        section: "main",       featureKey: "bookings" },
   { href: "/properties",     labelKey: "nav.properties",     icon: Building2,       section: "main",       featureKey: "properties" },
   // /rooms (حالة الوحدات) hidden — UI on hold, backend/DB intact
   { href: "/guests",         labelKey: "nav.guests",         icon: Users,           section: "main",       featureKey: "guests"   },
