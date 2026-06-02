@@ -14,6 +14,7 @@ const hi: Translations = {
     supportTickets: "Support Tickets",
     serviceConfig: "Service Config",
     dataArchiving: "डेटा आर्काइव",
+    contentManager: "सामग्री प्रबंधन",
   },
   common: {
     save: "सहेजें", cancel: "रद्द करें", delete: "हटाएं", edit: "संपादित करें", add: "जोड़ें",

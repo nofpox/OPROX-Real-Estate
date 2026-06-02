@@ -14,6 +14,7 @@ const tl: Translations = {
     supportTickets: "Mga Ticket ng Suporta",
     serviceConfig: "Service Config",
     dataArchiving: "Archibo ng Data",
+    contentManager: "Pamamahala ng Nilalaman",
   },
   common: {
     save: "I-save", cancel: "Kanselahin", delete: "Burahin", edit: "I-edit", add: "Idagdag",

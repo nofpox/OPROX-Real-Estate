@@ -23,3 +23,4 @@ export * from "./user-sessions";
 export * from "./serviceCategories";
 export * from "./listings";
 export * from "./archivingLogs";
+export * from "./propertyCategories";

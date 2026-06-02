@@ -14,6 +14,7 @@ const ml: Translations = {
     supportTickets: "Support Tickets",
     serviceConfig: "Service Config",
     dataArchiving: "ഡാറ്റ ആർക്കൈവ്",
+    contentManager: "ഉള്ളടക്ക മാനേജ്മെന്റ്",
   },
   common: {
     save: "സംരക്ഷിക്കുക", cancel: "റദ്ദാക്കുക", delete: "ഇല്ലാതാക്കുക",

@@ -14,6 +14,7 @@ const ur: Translations = {
     supportTickets: "Support Tickets",
     serviceConfig: "تہیئہ خدمات",
     dataArchiving: "ڈیٹا آرکائیو",
+    contentManager: "مواد کا انتظام",
   },
   common: {
     save: "محفوظ کریں", cancel: "منسوخ کریں", delete: "حذف کریں",

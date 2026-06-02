@@ -14,6 +14,7 @@ const th: Translations = {
     supportTickets: "Support Tickets",
     serviceConfig: "ตั้งค่าบริการ",
     dataArchiving: "คลังข้อมูล",
+    contentManager: "การจัดการเนื้อหา",
   },
   common: {
     save: "บันทึก", cancel: "ยกเลิก", delete: "ลบ", edit: "แก้ไข", add: "เพิ่ม",

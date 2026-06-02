@@ -14,6 +14,7 @@ const fr: Translations = {
     supportTickets: "Tickets de support",
     serviceConfig: "Config. Services",
     dataArchiving: "Archivage des données",
+    contentManager: "Gestion du contenu",
   },
   common: {
     save: "Enregistrer", cancel: "Annuler", delete: "Supprimer", edit: "Modifier", add: "Ajouter",

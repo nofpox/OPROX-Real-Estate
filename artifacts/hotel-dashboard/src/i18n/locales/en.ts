@@ -21,6 +21,7 @@ const en = {
     supportTickets: "Support Tickets",
     serviceConfig: "Service Config",
     dataArchiving: "Data Archiving",
+    contentManager: "Content Manager",
   },
   common: {
     save: "Save",

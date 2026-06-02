@@ -23,6 +23,7 @@ const ar: Translations = {
     supportTickets: "تذاكر الدعم",
     serviceConfig: "تهيئة الخدمات",
     dataArchiving: "أرشفة البيانات",
+    contentManager: "إدارة المحتوى",
   },
   common: {
     save: "حفظ",

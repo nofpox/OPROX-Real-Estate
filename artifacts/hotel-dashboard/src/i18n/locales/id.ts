@@ -14,6 +14,7 @@ const id: Translations = {
     supportTickets: "Support Tickets",
     serviceConfig: "Konfigurasi Layanan",
     dataArchiving: "Pengarsipan Data",
+    contentManager: "Manajemen Konten",
   },
   common: {
     save: "Simpan", cancel: "Batal", delete: "Hapus", edit: "Edit", add: "Tambah",
