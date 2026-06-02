@@ -337,7 +337,7 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
      * which makes it the scroll container so position:sticky works within a
      * single, height-constrained context rather than on document.
      */
-    <div className="flex min-h-screen w-full flex-col bg-muted lg:flex-row overflow-hidden">
+    <div className="relative flex h-dvh w-full flex-col bg-muted lg:flex-row overflow-hidden">
 
       {/*
        * Mobile sidebar — conditionally rendered, ZERO CSS animation, ZERO transition.
@@ -348,16 +348,15 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
        */}
       {mobileOpen && (
         <>
-          {/* Click-outside backdrop — transparent so no GPU compositor layer */}
+          {/* Click-outside backdrop — absolute within h-dvh container, no fixed layer */}
           <div
-            className="fixed inset-0 z-40"
+            className="absolute inset-0 z-40"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
 
           <aside
-            className={`fixed inset-y-0 z-50 w-72 flex flex-col bg-sidebar text-sidebar-foreground ${sidebarSide} ${sidebarBorder}`}
-            style={{ boxShadow: isRTL ? "-4px 0 24px rgba(0,0,0,0.35)" : "4px 0 24px rgba(0,0,0,0.35)" }}
+            className={`absolute inset-y-0 z-50 w-72 flex flex-col bg-sidebar text-sidebar-foreground shadow-2xl ${sidebarSide} ${sidebarBorder}`}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
@@ -386,7 +385,7 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
       )}
 
       {/* Desktop sidebar — always in DOM on lg+, hidden on mobile via lg:flex */}
-      <aside className={`hidden w-64 flex-col bg-sidebar text-sidebar-foreground lg:flex fixed inset-y-0 z-10 ${sidebarSide} ${sidebarBorder}`}>
+      <aside className={`hidden lg:flex w-64 flex-shrink-0 flex-col bg-sidebar text-sidebar-foreground ${sidebarBorder}`}>
         <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border">
           <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
             {settings.logoUrl ? (
@@ -408,7 +407,7 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
           the sticky header sticks here (not document), preventing the viewport-
           resize GPU recomposite that produces horizontal-stripe artifacts.
       */}
-      <div className={`flex flex-1 flex-col min-h-0 overflow-auto ${mainPadding}`}>
+      <div className="flex flex-1 flex-col min-h-0 overflow-auto">
         <header
           className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6 sticky top-0 z-20"
         >
