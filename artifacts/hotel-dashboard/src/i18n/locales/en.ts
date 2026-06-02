@@ -1408,6 +1408,26 @@ const en = {
     taskSingular: "task", taskPlural: "tasks", recordSingular: "record", recordPlural: "records",
     verifiedCheck: "Verified ✓", pageOf: "Page {{current}} of {{total}}",
   },
+  analytics: {
+    title: "Analytics",
+    subtitle: "Performance & operations",
+    overview: "Overview",
+    operational: "Operational",
+    print: "Print",
+    exportPdf: "Export PDF",
+    kpi: {
+      totalTasks: "Total Tasks",
+      completed: "Completed",
+      inProgress: "In Progress",
+      lateOverdue: "Late / Overdue",
+      pending: "pending",
+      verified: "verified",
+      compRate: "completion rate",
+      allOnTime: "All on time",
+      pastDueDate: "Past due date",
+    },
+    completionRate: "Overall Completion Rate",
+  },
 };
 
 export default en;

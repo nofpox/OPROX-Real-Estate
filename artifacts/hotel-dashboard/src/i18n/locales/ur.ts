@@ -439,6 +439,7 @@ const ur: Translations = {
       unitDetail: { unitStatus: "Unit Status", financialData: "Financial Data", serviceRequests: "Service Requests", setStatus: "Set status", type: "Type", capacity: "Capacity", rate: "Rate", status: "Status", amountDue: "Amount Due", dueDate: "Due Date", checkIn: "Check-In", checkOut: "Check-Out", saveChanges: "Save Changes", noFinancial: "No financial data", addFinancial: "Add Financial Data", noRequests: "No requests for this unit", resolve: "Resolve", qrTitle: "Service Request QR", copyLink: "Copy Link", copied: "Link copied!", guests: "guests", perNight: "/nt", loading: "Loading…", edit: "Edit", cancel: "Cancel", new: "new", offline: "Offline — queued, will sync on reconnect" },
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
+  analytics: { title: "تجزیات", subtitle: "کارکردگی اور آپریشن", overview: "جائزہ", operational: "آپریشنل", print: "پرنٹ", exportPdf: "PDF برآمد", kpi: { totalTasks: "کل کام", completed: "مکمل", inProgress: "جاری", lateOverdue: "تاخیر / میعاد گزشتہ", pending: "زیر التواء", verified: "تصدیق شدہ", compRate: "تکمیل کی شرح", allOnTime: "سب وقت پر", pastDueDate: "میعاد گزر گئی" }, completionRate: "مجموعی تکمیل کی شرح" },
 };
 
 export default ur;

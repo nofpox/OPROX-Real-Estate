@@ -439,6 +439,7 @@ const ml: Translations = {
       unitDetail: { unitStatus: "Unit Status", financialData: "Financial Data", serviceRequests: "Service Requests", setStatus: "Set status", type: "Type", capacity: "Capacity", rate: "Rate", status: "Status", amountDue: "Amount Due", dueDate: "Due Date", checkIn: "Check-In", checkOut: "Check-Out", saveChanges: "Save Changes", noFinancial: "No financial data", addFinancial: "Add Financial Data", noRequests: "No requests for this unit", resolve: "Resolve", qrTitle: "Service Request QR", copyLink: "Copy Link", copied: "Link copied!", guests: "guests", perNight: "/nt", loading: "Loading…", edit: "Edit", cancel: "Cancel", new: "new", offline: "Offline — queued, will sync on reconnect" },
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
+  analytics: { title: "വിശകലനം", subtitle: "പ്രകടനവും പ്രവർത്തനവും", overview: "അവലോകനം", operational: "പ്രവർത്തനപരം", print: "പ്രിന്റ്", exportPdf: "PDF കയറ്റുമതി", kpi: { totalTasks: "ആകെ ജോലികൾ", completed: "പൂർത്തിയായത്", inProgress: "പ്രക്രിയയിൽ", lateOverdue: "വൈകിയത്", pending: "കാത്തിരിക്കുന്നത്", verified: "പരിശോധിച്ചത്", compRate: "പൂർത്തീകരണ നിരക്ക്", allOnTime: "സമയത്ത് എല്ലാം", pastDueDate: "കാലഹരണം" }, completionRate: "മൊത്തം പൂർത്തീകരണ നിരക്ക്" },
 };
 
 export default ml;

@@ -1235,6 +1235,26 @@ const ar: Translations = {
   },
   pdf: { approvedReport: "APPROVED TASK REPORT", completionReport: "TASK COMPLETION REPORT", completed: "Completed", verified: "Verified", approved: "Approved", avgDuration: "Avg. Duration", categoryBreakdown: "CATEGORY BREAKDOWN", completedTasksSection: "COMPLETED TASKS", auditTrailSection: "REPORT APPROVAL AUDIT TRAIL", photoAppendix: "PHOTO EVIDENCE APPENDIX", colTitle: "Title", colCategory: "Category", colPriority: "Priority", colAssignee: "Assignee", colCompleted: "Completed", colDuration: "Duration", colStatus: "Status", colReport: "Report", colTask: "Task", colSubmitted: "Submitted", colReviewedBy: "Reviewed by Supervisor", colApprovedBy: "Approved by Manager", colReportStatus: "Report Status", colNotes: "Notes", statusSubmitted: "Submitted", statusRejected: "Rejected by Supervisor", statusEscalated: "Reviewed by Supervisor", statusApproved: "Approved by Manager", unassigned: "Unassigned", pending: "Pending", noTasks: "No completed tasks found for the selected period.", confidential: "Confidential", before: "BEFORE", after: "AFTER", noPhoto: "No photo", photoUnavailable: "Photo unavailable", couldNotLoad: "Could not load photo", taskSingular: "task", taskPlural: "tasks", recordSingular: "record", recordPlural: "records", verifiedCheck: "Verified ✓", pageOf: "Page {{current}} of {{total}}" },
   offline: { banner: "أنت غير متصل بالإنترنت", tapToSync: "ستتزامن التغييرات تلقائياً عند إعادة الاتصال", syncing: "جارٍ المزامنة لـ {{count}} تغيير(ات) معلق(ة)…", synced: "أنت متصل مرة أخرى — تم حفظ جميع التغييرات", pendingBadge: "{{count}} في الانتظار" },
+  analytics: {
+    title: "التحليلات",
+    subtitle: "الأداء والعمليات",
+    overview: "نظرة عامة",
+    operational: "تشغيلي",
+    print: "طباعة",
+    exportPdf: "تصدير PDF",
+    kpi: {
+      totalTasks: "إجمالي المهام",
+      completed: "مكتملة",
+      inProgress: "قيد التنفيذ",
+      lateOverdue: "متأخرة / منتهية الصلاحية",
+      pending: "معلقة",
+      verified: "موثقة",
+      compRate: "معدل الإنجاز",
+      allOnTime: "جميعها في الوقت المحدد",
+      pastDueDate: "تجاوزت الموعد",
+    },
+    completionRate: "معدل الإنجاز الإجمالي",
+  },
 };
 
 export default ar;

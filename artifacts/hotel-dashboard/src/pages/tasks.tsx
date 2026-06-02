@@ -1196,8 +1196,8 @@ function ReportDialog({
   });
 
   const propertyLabel = propFilter === "all"
-    ? "All Properties"
-    : (properties.find((p) => String(p.id) === propFilter)?.name ?? "All Properties");
+    ? t("common.allProperties")
+    : (properties.find((p) => String(p.id) === propFilter)?.name ?? t("common.allProperties"));
 
   async function handleGenerate() {
     if (!dateFrom || !dateTo) return;
@@ -1276,7 +1276,7 @@ function ReportDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Properties</SelectItem>
+                <SelectItem value="all">{t("common.allProperties")}</SelectItem>
                 {properties.map((p) => (
                   <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
                 ))}

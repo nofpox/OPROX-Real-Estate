@@ -439,6 +439,7 @@ const ne: Translations = {
       unitDetail: { unitStatus: "Unit Status", financialData: "Financial Data", serviceRequests: "Service Requests", setStatus: "Set status", type: "Type", capacity: "Capacity", rate: "Rate", status: "Status", amountDue: "Amount Due", dueDate: "Due Date", checkIn: "Check-In", checkOut: "Check-Out", saveChanges: "Save Changes", noFinancial: "No financial data", addFinancial: "Add Financial Data", noRequests: "No requests for this unit", resolve: "Resolve", qrTitle: "Service Request QR", copyLink: "Copy Link", copied: "Link copied!", guests: "guests", perNight: "/nt", loading: "Loading…", edit: "Edit", cancel: "Cancel", new: "new", offline: "Offline — queued, will sync on reconnect" },
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
+  analytics: { title: "विश्लेषण", subtitle: "प्रदर्शन र सञ्चालन", overview: "अवलोकन", operational: "सञ्चालनात्मक", print: "प्रिन्ट", exportPdf: "PDF निर्यात", kpi: { totalTasks: "कुल कार्यहरू", completed: "पूरा भयो", inProgress: "प्रगतिमा", lateOverdue: "ढिलो / बाँकी", pending: "विचाराधीन", verified: "प्रमाणित", compRate: "समापन दर", allOnTime: "समयमै सबै", pastDueDate: "म्याद गुज्रियो" }, completionRate: "समग्र समापन दर" },
 };
 
 export default ne;

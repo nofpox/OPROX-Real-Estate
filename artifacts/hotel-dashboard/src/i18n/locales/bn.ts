@@ -439,6 +439,7 @@ const bn: Translations = {
       unitDetail: { unitStatus: "Unit Status", financialData: "Financial Data", serviceRequests: "Service Requests", setStatus: "Set status", type: "Type", capacity: "Capacity", rate: "Rate", status: "Status", amountDue: "Amount Due", dueDate: "Due Date", checkIn: "Check-In", checkOut: "Check-Out", saveChanges: "Save Changes", noFinancial: "No financial data", addFinancial: "Add Financial Data", noRequests: "No requests for this unit", resolve: "Resolve", qrTitle: "Service Request QR", copyLink: "Copy Link", copied: "Link copied!", guests: "guests", perNight: "/nt", loading: "Loading…", edit: "Edit", cancel: "Cancel", new: "new", offline: "Offline — queued, will sync on reconnect" },
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
+  analytics: { title: "বিশ্লেষণ", subtitle: "কর্মক্ষমতা ও পরিচালনা", overview: "সংক্ষিপ্ত বিবরণ", operational: "অপারেশনাল", print: "প্রিন্ট", exportPdf: "PDF রপ্তানি", kpi: { totalTasks: "মোট কাজ", completed: "সম্পন্ন", inProgress: "চলমান", lateOverdue: "দেরি / মেয়াদোত্তীর্ণ", pending: "অপেক্ষামান", verified: "যাচাইকৃত", compRate: "সম্পন্নের হার", allOnTime: "সময়মতো সব", pastDueDate: "মেয়াদ পেরিয়েছে" }, completionRate: "সামগ্রিক সম্পন্নের হার" },
 };
 
 export default bn;

@@ -447,6 +447,7 @@ const zh: Translations = {
       unitDetail: { unitStatus: "Unit Status", financialData: "Financial Data", serviceRequests: "Service Requests", setStatus: "Set status", type: "Type", capacity: "Capacity", rate: "Rate", status: "Status", amountDue: "Amount Due", dueDate: "Due Date", checkIn: "Check-In", checkOut: "Check-Out", saveChanges: "Save Changes", noFinancial: "No financial data", addFinancial: "Add Financial Data", noRequests: "No requests for this unit", resolve: "Resolve", qrTitle: "Service Request QR", copyLink: "Copy Link", copied: "Link copied!", guests: "guests", perNight: "/nt", loading: "Loading…", edit: "Edit", cancel: "Cancel", new: "new", offline: "Offline — queued, will sync on reconnect" },
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
+  analytics: { title: "数据分析", subtitle: "绩效与运营", overview: "概览", operational: "运营", print: "打印", exportPdf: "导出PDF", kpi: { totalTasks: "总任务数", completed: "已完成", inProgress: "进行中", lateOverdue: "逾期/延迟", pending: "待处理", verified: "已核实", compRate: "完成率", allOnTime: "全部准时", pastDueDate: "已超期" }, completionRate: "总体完成率" },
 };
 
 export default zh;

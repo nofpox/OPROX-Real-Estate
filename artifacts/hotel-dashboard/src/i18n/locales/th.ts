@@ -439,6 +439,7 @@ const th: Translations = {
       unitDetail: { unitStatus: "Unit Status", financialData: "Financial Data", serviceRequests: "Service Requests", setStatus: "Set status", type: "Type", capacity: "Capacity", rate: "Rate", status: "Status", amountDue: "Amount Due", dueDate: "Due Date", checkIn: "Check-In", checkOut: "Check-Out", saveChanges: "Save Changes", noFinancial: "No financial data", addFinancial: "Add Financial Data", noRequests: "No requests for this unit", resolve: "Resolve", qrTitle: "Service Request QR", copyLink: "Copy Link", copied: "Link copied!", guests: "guests", perNight: "/nt", loading: "Loading…", edit: "Edit", cancel: "Cancel", new: "new", offline: "Offline — queued, will sync on reconnect" },
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
+  analytics: { title: "การวิเคราะห์", subtitle: "ผลงานและการดำเนินงาน", overview: "ภาพรวม", operational: "ปฏิบัติการ", print: "พิมพ์", exportPdf: "ส่งออก PDF", kpi: { totalTasks: "งานทั้งหมด", completed: "เสร็จสิ้น", inProgress: "กำลังดำเนินการ", lateOverdue: "ล่าช้า / เกินกำหนด", pending: "รอดำเนินการ", verified: "ตรวจสอบแล้ว", compRate: "อัตราความสำเร็จ", allOnTime: "ตรงเวลาทั้งหมด", pastDueDate: "เกินกำหนดแล้ว" }, completionRate: "อัตราความสำเร็จโดยรวม" },
 };
 
 export default th;

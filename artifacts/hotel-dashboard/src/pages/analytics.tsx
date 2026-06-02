@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { useListTasks, useListStaff, useListProperties } from "@workspace/api-client-react";
 import { useRole } from "@/contexts/role-context";
@@ -282,6 +283,7 @@ const PIE_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444"];
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function Analytics() {
+  const { t }        = useTranslation();
   const { role }     = useRole();
   const settings     = useSettings();
   const [activeTab, setActiveTab] = useState<"overview" | "operational">("overview");
@@ -436,18 +438,18 @@ export default function Analytics() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <div>
-          <h1 className="text-2xl font-semibold font-serif text-foreground">Analytics</h1>
+          <h1 className="text-2xl font-semibold font-serif text-foreground">{t("analytics.title")}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Performance & operations · {fmtDate(new Date().toISOString())}
+            {t("analytics.subtitle")} · {fmtDate(new Date().toISOString())}
           </p>
         </div>
         {activeTab === "overview" && (
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handlePrint}>
-              <Printer className="me-2 h-4 w-4" />Print
+              <Printer className="me-2 h-4 w-4" />{t("analytics.print")}
             </Button>
             <Button size="sm" onClick={handleExportPdf}>
-              <Download className="me-2 h-4 w-4" />Export PDF
+              <Download className="me-2 h-4 w-4" />{t("analytics.exportPdf")}
             </Button>
           </div>
         )}
@@ -456,8 +458,8 @@ export default function Analytics() {
       {/* ── Tab switcher ───────────────────────────────────────────────────── */}
       <div className="flex border-b border-border gap-0 print:hidden">
         {([
-          { id: "overview",    label: "Overview",    icon: BarChart3  },
-          { id: "operational", label: "Operational", icon: ListChecks },
+          { id: "overview",    label: t("analytics.overview"),    icon: BarChart3  },
+          { id: "operational", label: t("analytics.operational"), icon: ListChecks },
         ] as const).map(tab => (
           <button
             key={tab.id}
@@ -479,30 +481,30 @@ export default function Analytics() {
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
         <KpiCard
           icon={Target}
-          label="Total Tasks"
+          label={t("analytics.kpi.totalTasks")}
           value={kpis.total}
-          sub={`${kpis.pending} pending`}
+          sub={`${kpis.pending} ${t("analytics.kpi.pending")}`}
           iconCls="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
         />
         <KpiCard
           icon={CheckCircle2}
-          label="Completed"
+          label={t("analytics.kpi.completed")}
           value={kpis.completed}
-          sub={`${kpis.compRate.toFixed(1)}% completion rate`}
+          sub={`${kpis.compRate.toFixed(1)}% ${t("analytics.kpi.compRate")}`}
           iconCls="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
         />
         <KpiCard
           icon={Clock}
-          label="In Progress"
+          label={t("analytics.kpi.inProgress")}
           value={kpis.inProgress}
-          sub={`${kpis.verified} verified`}
+          sub={`${kpis.verified} ${t("analytics.kpi.verified")}`}
           iconCls="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
         />
         <KpiCard
           icon={AlertCircle}
-          label="Late / Overdue"
+          label={t("analytics.kpi.lateOverdue")}
           value={kpis.late}
-          sub={kpis.late === 0 ? "All on time" : "Past due date"}
+          sub={kpis.late === 0 ? t("analytics.kpi.allOnTime") : t("analytics.kpi.pastDueDate")}
           iconCls={kpis.late > 0
             ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
             : "bg-slate-100 text-slate-500"
@@ -514,7 +516,7 @@ export default function Analytics() {
       <Card className="shadow-none border-border">
         <CardContent className="p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium text-foreground">Overall Completion Rate</p>
+            <p className="text-sm font-medium text-foreground">{t("analytics.completionRate")}</p>
             <span className="text-2xl font-bold text-foreground">{kpis.compRate.toFixed(1)}%</span>
           </div>
           <div className="h-3 rounded-full bg-muted overflow-hidden">
@@ -526,10 +528,10 @@ export default function Analytics() {
           <div className="flex justify-between mt-2">
             <div className="flex gap-4 flex-wrap">
               {[
-                { label: "Completed",   val: kpis.completed,  cls: "bg-emerald-500" },
-                { label: "In Progress", val: kpis.inProgress, cls: "bg-amber-400"   },
-                { label: "Pending",     val: kpis.pending,    cls: "bg-slate-300"   },
-                { label: "Late",        val: kpis.late,       cls: "bg-red-500"     },
+                { label: t("analytics.kpi.completed"),  val: kpis.completed,  cls: "bg-emerald-500" },
+                { label: t("analytics.kpi.inProgress"), val: kpis.inProgress, cls: "bg-amber-400"   },
+                { label: t("tasks.status.pending"),     val: kpis.pending,    cls: "bg-slate-300"   },
+                { label: t("analytics.kpi.lateOverdue"), val: kpis.late,      cls: "bg-red-500"     },
               ].map((s) => (
                 <span key={s.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span className={`h-2 w-2 rounded-full ${s.cls}`} />

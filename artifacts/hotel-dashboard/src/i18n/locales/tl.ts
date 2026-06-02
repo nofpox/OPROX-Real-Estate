@@ -441,6 +441,7 @@ const tl: Translations = {
       unitDetail: { unitStatus: "Unit Status", financialData: "Financial Data", serviceRequests: "Service Requests", setStatus: "Set status", type: "Type", capacity: "Capacity", rate: "Rate", status: "Status", amountDue: "Amount Due", dueDate: "Due Date", checkIn: "Check-In", checkOut: "Check-Out", saveChanges: "Save Changes", noFinancial: "No financial data", addFinancial: "Add Financial Data", noRequests: "No requests for this unit", resolve: "Resolve", qrTitle: "Service Request QR", copyLink: "Copy Link", copied: "Link copied!", guests: "guests", perNight: "/nt", loading: "Loading…", edit: "Edit", cancel: "Cancel", new: "new", offline: "Offline — queued, will sync on reconnect" },
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
+  analytics: { title: "Analytics", subtitle: "Pagganap at operasyon", overview: "Pangkalahatang-tanaw", operational: "Operasyonal", print: "I-print", exportPdf: "I-export PDF", kpi: { totalTasks: "Kabuuang gawain", completed: "Nakumpleto", inProgress: "Isinasagawa", lateOverdue: "Huli / Lampas sa oras", pending: "Nakabinbin", verified: "Napatunayan", compRate: "Rate ng pagkumpleto", allOnTime: "Lahat sa oras", pastDueDate: "Lampas na ang takdang araw" }, completionRate: "Pangkalahatang rate ng pagkumpleto" },
 };
 
 export default tl;

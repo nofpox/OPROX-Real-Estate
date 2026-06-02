@@ -36,7 +36,7 @@ const fmtSAR = (n: number) =>
 export const PortalDashboard: React.FC = () => {
   const { user, isAuthenticated, isLoading, logout } = usePortalAuth();
   const [, setLocation] = useLocation();
-  const { t, isRtl } = useLanguage();
+  const { t, isRtl, language } = useLanguage();
 
   const [propertyIdFilter, setPropertyIdFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter]         = useState<string>('all');
@@ -80,9 +80,9 @@ export const PortalDashboard: React.FC = () => {
     );
   }
 
-  const properties    = propertiesRes?.data ?? [];
-  const bookings      = bookingsRes?.data   ?? [];
-  const financials    = financialsRes?.data;
+  const properties = propertiesRes?.data ?? [];
+  const bookings   = bookingsRes?.data   ?? [];
+  const financials = financialsRes?.data;
 
   const totalProperties = properties.length;
   const totalBookings   = properties.reduce((s, p) => s + (p.activeBookings ?? 0), 0);
@@ -92,10 +92,48 @@ export const PortalDashboard: React.FC = () => {
 
   const handleLogout = async () => { await logout(); setLocation('/portal'); };
 
+  /** Translate a property type key to the current language */
+  const propTypeLabel = (type: string | undefined): string => {
+    if (!type) return '';
+    const key = `portal.type.${type.toLowerCase()}`;
+    const translated = t(key);
+    return translated !== key ? translated : type;
+  };
+
+  /** Translate a booking/property status to the current language */
+  const statusLabel = (status: string): string => {
+    const statusMap: Record<string, string> = {
+      active:      t('portal.status.active'),
+      inactive:    t('portal.status.inactive'),
+      confirmed:   t('portal.status.confirmed'),
+      checked_in:  t('portal.status.checkedIn'),
+      checked_out: t('portal.status.checkedOut'),
+      cancelled:   t('portal.status.cancelled'),
+      pending:     t('portal.status.pending'),
+    };
+    return statusMap[status] ?? status.replace(/_/g, ' ');
+  };
+
+  /** Format "Last X months" in the current language */
+  const lastMonths = (n: string) =>
+    isRtl ? `آخر ${n} أشهر` : `Last ${n} months`;
+
+  /** Month label for chart X axis */
+  const fmtMonth = (v: string) => {
+    const [y, m] = v.split('-');
+    return new Date(parseInt(y), parseInt(m) - 1).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US', { month: 'short' });
+  };
+
+  /** Month label for table column */
+  const fmtMonthFull = (v: string) =>
+    new Date(v + '-01T00:00:00').toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US', { month: 'long', year: 'numeric' });
+
   return (
     <div className="min-h-screen bg-muted pb-12">
       <Helmet>
-        <title>My Portfolio | ركز للحلول الذكية</title>
+        <title>
+          {isRtl ? 'محفظتي' : 'My Portfolio'} | ركز للحلول الذكية
+        </title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
@@ -103,19 +141,19 @@ export const PortalDashboard: React.FC = () => {
       <header className="bg-primary text-primary-foreground py-6 shadow-md">
         <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">{t('portal.myPortfolio') || 'My Portfolio'}</h1>
+            <h1 className="text-2xl font-bold">{t('portal.myPortfolio')}</h1>
             <p className="text-primary-foreground/70">
-              {t('portal.welcome') || 'Welcome back,'} {((user as unknown as Record<string,unknown>)?.displayName as string) || ((user as unknown as Record<string,unknown>)?.username as string)}
+              {t('portal.welcome')} {((user as unknown as Record<string,unknown>)?.displayName as string) || ((user as unknown as Record<string,unknown>)?.username as string)}
             </p>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/" className="text-sm hover:underline flex items-center gap-1">
               {isRtl ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
-              {t('portal.backToWebsite') || 'Website'}
+              {t('portal.backToWebsite')}
             </Link>
             <Button variant="secondary" onClick={handleLogout} className="flex items-center gap-2">
               <LogOut className="h-4 w-4" />
-              {t('portal.logout') || 'Logout'}
+              {t('portal.logout')}
             </Button>
           </div>
         </div>
@@ -123,14 +161,14 @@ export const PortalDashboard: React.FC = () => {
 
       <div className="container mx-auto px-4 mt-8 space-y-8">
 
-        {/* Top KPI row — always visible */}
+        {/* Top KPI row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="p-6 flex items-center gap-4 border-border">
             <div className="bg-primary/10 p-4 rounded-full">
               <Building className="h-8 w-8 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">{t('portal.totalProperties') || 'Total Properties'}</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('portal.totalProperties')}</p>
               <p className="text-3xl font-bold text-primary">{totalProperties}</p>
             </div>
           </Card>
@@ -139,7 +177,7 @@ export const PortalDashboard: React.FC = () => {
               <Calendar className="h-8 w-8 text-secondary" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">{t('portal.activeBookings') || 'Active Bookings'}</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('portal.activeBookings')}</p>
               <p className="text-3xl font-bold text-primary">{totalBookings}</p>
             </div>
           </Card>
@@ -148,7 +186,7 @@ export const PortalDashboard: React.FC = () => {
               <Percent className="h-8 w-8 text-green-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">{t('portal.avgOccupancy') || 'Avg. Occupancy'}</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('portal.avgOccupancy')}</p>
               <p className="text-3xl font-bold text-primary">{avgOccupancy}%</p>
             </div>
           </Card>
@@ -158,18 +196,18 @@ export const PortalDashboard: React.FC = () => {
         <Tabs defaultValue="overview" className="w-full">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <TabsList className="h-10">
-              <TabsTrigger value="overview" className="px-6">Overview</TabsTrigger>
-              <TabsTrigger value="financials" className="px-6">Financials</TabsTrigger>
+              <TabsTrigger value="overview"   className="px-6">{t('portal.overview')}</TabsTrigger>
+              <TabsTrigger value="financials" className="px-6">{t('portal.financials')}</TabsTrigger>
             </TabsList>
 
-            {/* Shared filters */}
+            {/* Shared property filter */}
             <div className="flex gap-2 flex-wrap">
               <Select value={propertyIdFilter} onValueChange={setPropertyIdFilter}>
                 <SelectTrigger className="w-[180px] bg-card">
-                  <SelectValue placeholder="All Properties" />
+                  <SelectValue placeholder={t('portal.allProperties')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Properties</SelectItem>
+                  <SelectItem value="all">{t('portal.allProperties')}</SelectItem>
                   {properties.map((p) => (
                     <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
                   ))}
@@ -182,7 +220,7 @@ export const PortalDashboard: React.FC = () => {
           <TabsContent value="overview" className="space-y-8 mt-0">
             {/* Properties grid */}
             <section>
-              <h2 className="text-xl font-bold text-primary mb-4">{t('portal.managedProperties') || 'Managed Properties'}</h2>
+              <h2 className="text-xl font-bold text-primary mb-4">{t('portal.managedProperties')}</h2>
               {isLoadingProps ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[1, 2, 3].map((i) => <Skeleton key={i} className="h-48 w-full rounded-xl" />)}
@@ -194,13 +232,15 @@ export const PortalDashboard: React.FC = () => {
                       <div className="flex justify-between items-start mb-4">
                         <h3 className="font-bold text-lg text-primary">{prop.name}</h3>
                         <Badge variant={prop.status === 'active' ? 'default' : 'secondary'}>
-                          {prop.status}
+                          {statusLabel(prop.status ?? '')}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-4">{prop.type} · {prop.totalRooms} rooms</p>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {propTypeLabel(prop.type)} · {prop.totalRooms} {t('portal.roomsUnit')}
+                      </p>
                       <div className="mt-auto pt-4 border-t border-border">
                         <div className="flex justify-between text-sm mb-2">
-                          <span>{t('portal.occupancy') || 'Occupancy'}</span>
+                          <span>{t('portal.occupancy')}</span>
                           <span className="font-medium">{prop.occupancyRate ?? 0}%</span>
                         </div>
                         <div className="w-full bg-muted rounded-full h-2 mb-4">
@@ -212,7 +252,7 @@ export const PortalDashboard: React.FC = () => {
                         {prop.linkedListingId && (
                           <Button asChild variant="outline" className="w-full justify-between">
                             <Link href={`/listings/${prop.linkedListingId}`}>
-                              {t('portal.viewListing') || 'View Listing'}
+                              {t('portal.viewListing')}
                               {isRtl ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
                             </Link>
                           </Button>
@@ -227,17 +267,17 @@ export const PortalDashboard: React.FC = () => {
             {/* Bookings table */}
             <section>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                <h2 className="text-xl font-bold text-primary">{t('portal.recentBookings') || 'Recent Bookings'}</h2>
+                <h2 className="text-xl font-bold text-primary">{t('portal.recentBookings')}</h2>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[140px] bg-card">
-                    <SelectValue placeholder="All Status" />
+                  <SelectTrigger className="w-[160px] bg-card">
+                    <SelectValue placeholder={t('portal.allStatuses')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="checked_in">Checked In</SelectItem>
-                    <SelectItem value="checked_out">Checked Out</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="all">{t('portal.allStatuses')}</SelectItem>
+                    <SelectItem value="confirmed">{t('portal.status.confirmed')}</SelectItem>
+                    <SelectItem value="checked_in">{t('portal.status.checkedIn')}</SelectItem>
+                    <SelectItem value="checked_out">{t('portal.status.checkedOut')}</SelectItem>
+                    <SelectItem value="cancelled">{t('portal.status.cancelled')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -246,12 +286,12 @@ export const PortalDashboard: React.FC = () => {
                   <table className="w-full text-sm text-left">
                     <thead className="bg-muted text-muted-foreground">
                       <tr>
-                        <th className="px-6 py-3 font-medium">Guest</th>
-                        <th className="px-6 py-3 font-medium">Property</th>
-                        <th className="px-6 py-3 font-medium">Room</th>
-                        <th className="px-6 py-3 font-medium">Check In</th>
-                        <th className="px-6 py-3 font-medium">Check Out</th>
-                        <th className="px-6 py-3 font-medium">Status</th>
+                        <th className="px-6 py-3 font-medium">{t('portal.col.guest')}</th>
+                        <th className="px-6 py-3 font-medium">{t('portal.col.property')}</th>
+                        <th className="px-6 py-3 font-medium">{t('portal.col.room')}</th>
+                        <th className="px-6 py-3 font-medium">{t('portal.col.checkIn')}</th>
+                        <th className="px-6 py-3 font-medium">{t('portal.col.checkOut')}</th>
+                        <th className="px-6 py-3 font-medium">{t('portal.col.status')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -264,7 +304,7 @@ export const PortalDashboard: React.FC = () => {
                       ) : bookings.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
-                            No bookings found.
+                            {t('portal.noBookings')}
                           </td>
                         </tr>
                       ) : (
@@ -274,10 +314,10 @@ export const PortalDashboard: React.FC = () => {
                             <td className="px-6 py-4 text-muted-foreground">{b.propertyName}</td>
                             <td className="px-6 py-4 text-muted-foreground">{b.roomNumber}</td>
                             <td className="px-6 py-4 text-muted-foreground">
-                              {new Date(b.checkIn + 'T00:00:00').toLocaleDateString()}
+                              {new Date(b.checkIn + 'T00:00:00').toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-GB')}
                             </td>
                             <td className="px-6 py-4 text-muted-foreground">
-                              {new Date(b.checkOut + 'T00:00:00').toLocaleDateString()}
+                              {new Date(b.checkOut + 'T00:00:00').toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-GB')}
                             </td>
                             <td className="px-6 py-4">
                               <Badge
@@ -286,7 +326,7 @@ export const PortalDashboard: React.FC = () => {
                                   b.status === 'confirmed'   ? 'secondary' : 'outline'
                                 }
                               >
-                                {b.status.replace('_', ' ')}
+                                {statusLabel(b.status)}
                               </Badge>
                             </td>
                           </tr>
@@ -303,7 +343,7 @@ export const PortalDashboard: React.FC = () => {
           <TabsContent value="financials" className="space-y-8 mt-0">
             {/* Period selector */}
             <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">Period:</span>
+              <span className="text-sm text-muted-foreground">{t('portal.period')}:</span>
               {['3', '6', '12'].map((m) => (
                 <button
                   key={m}
@@ -331,56 +371,64 @@ export const PortalDashboard: React.FC = () => {
                     <div className="bg-green-100 p-2.5 rounded-full">
                       <DollarSign className="h-5 w-5 text-green-600" />
                     </div>
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Revenue</span>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {t('portal.revenue')}
+                    </span>
                   </div>
                   <p className="text-2xl font-bold text-primary">{fmtSAR(financials?.totalRevenue ?? 0)}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Last {months} months</p>
+                  <p className="text-xs text-muted-foreground mt-1">{lastMonths(months)}</p>
                 </Card>
                 <Card className="p-5 border-border">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="bg-red-100 p-2.5 rounded-full">
                       <TrendingDown className="h-5 w-5 text-red-500" />
                     </div>
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Expenses</span>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {t('portal.expenses')}
+                    </span>
                   </div>
                   <p className="text-2xl font-bold text-primary">{fmtSAR(financials?.totalExpenses ?? 0)}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Last {months} months</p>
+                  <p className="text-xs text-muted-foreground mt-1">{lastMonths(months)}</p>
                 </Card>
                 <Card className="p-5 border-border">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="bg-secondary/20 p-2.5 rounded-full">
                       <TrendingUp className="h-5 w-5 text-secondary" />
                     </div>
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Net Profit</span>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {t('portal.netProfit')}
+                    </span>
                   </div>
                   <p className={`text-2xl font-bold ${(financials?.netProfit ?? 0) >= 0 ? 'text-primary' : 'text-destructive'}`}>
                     {fmtSAR(financials?.netProfit ?? 0)}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">Revenue − Expenses</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('portal.revenueMinusExpenses')}</p>
                 </Card>
                 <Card className="p-5 border-border">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="bg-primary/10 p-2.5 rounded-full">
                       <BarChart2 className="h-5 w-5 text-primary" />
                     </div>
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Margin</span>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {t('portal.margin')}
+                    </span>
                   </div>
                   <p className={`text-2xl font-bold ${(financials?.profitMargin ?? 0) >= 0 ? 'text-primary' : 'text-destructive'}`}>
                     {financials?.profitMargin ?? 0}%
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">Profit margin</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('portal.profitMargin')}</p>
                 </Card>
               </div>
             )}
 
             {/* Monthly cash flow chart */}
             <Card className="p-6 border-border">
-              <h3 className="text-lg font-bold text-primary mb-6">Monthly Cash Flow</h3>
+              <h3 className="text-lg font-bold text-primary mb-6">{t('portal.monthlyCashFlow')}</h3>
               {isLoadingFin ? (
                 <Skeleton className="h-64 w-full rounded-lg" />
               ) : (financials?.monthly ?? []).length === 0 ? (
                 <div className="h-64 flex items-center justify-center text-muted-foreground text-sm">
-                  No financial data for the selected period.
+                  {t('portal.noFinancialData')}
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
@@ -389,27 +437,20 @@ export const PortalDashboard: React.FC = () => {
                     <XAxis
                       dataKey="month"
                       tick={{ fontSize: 11 }}
-                      tickFormatter={(v: string) => {
-                        const [y, m] = v.split('-');
-                        return new Date(parseInt(y), parseInt(m) - 1).toLocaleString('default', { month: 'short' });
-                      }}
+                      tickFormatter={fmtMonth}
                     />
                     <YAxis
                       tick={{ fontSize: 11 }}
-                      tickFormatter={(v: number) =>
-                        v >= 1000 ? `${Math.round(v / 1000)}k` : String(v)
-                      }
+                      tickFormatter={(v: number) => v >= 1000 ? `${Math.round(v / 1000)}k` : String(v)}
                     />
-                    <Tooltip
-                      formatter={(value: number, name: string) => [fmtSAR(value), name]}
-                    />
+                    <Tooltip formatter={(value: number, name: string) => [fmtSAR(value), name]} />
                     <Legend />
-                    <Bar dataKey="revenue"   name="Revenue"   fill="hsl(var(--secondary))"       radius={[3, 3, 0, 0]} />
-                    <Bar dataKey="expenses"  name="Expenses"  fill="hsl(var(--destructive)/0.6)"  radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="revenue"  name={t('portal.revenue')}  fill="hsl(var(--secondary))"       radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="expenses" name={t('portal.expenses')} fill="hsl(var(--destructive)/0.6)" radius={[3, 3, 0, 0]} />
                     <Line
                       type="monotone"
                       dataKey="netIncome"
-                      name="Net Income"
+                      name={t('portal.netIncome')}
                       stroke="hsl(var(--primary))"
                       strokeWidth={2}
                       dot={{ r: 3 }}
@@ -426,17 +467,17 @@ export const PortalDashboard: React.FC = () => {
                   <table className="w-full text-sm text-left">
                     <thead className="bg-muted text-muted-foreground">
                       <tr>
-                        <th className="px-6 py-3 font-medium">Month</th>
-                        <th className="px-6 py-3 font-medium text-right">Revenue</th>
-                        <th className="px-6 py-3 font-medium text-right">Expenses</th>
-                        <th className="px-6 py-3 font-medium text-right">Net Income</th>
+                        <th className="px-6 py-3 font-medium">{t('portal.col.month')}</th>
+                        <th className="px-6 py-3 font-medium text-right">{t('portal.revenue')}</th>
+                        <th className="px-6 py-3 font-medium text-right">{t('portal.expenses')}</th>
+                        <th className="px-6 py-3 font-medium text-right">{t('portal.netIncome')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {[...(financials?.monthly ?? [])].reverse().map((row) => (
                         <tr key={row.month} className="hover:bg-muted/50 transition-colors">
                           <td className="px-6 py-3 font-medium text-primary">
-                            {new Date(row.month + '-01T00:00:00').toLocaleString('default', { month: 'long', year: 'numeric' })}
+                            {fmtMonthFull(row.month)}
                           </td>
                           <td className="px-6 py-3 text-right text-green-700">{fmtSAR(row.revenue)}</td>
                           <td className="px-6 py-3 text-right text-red-600">{fmtSAR(row.expenses)}</td>
