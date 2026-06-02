@@ -18,16 +18,40 @@ export const Contact: React.FC = () => {
     subject: '',
     message: ''
   });
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: isRtl ? 'تم إرسال الرسالة' : 'Message Sent',
-      description: isRtl
-        ? 'شكراً لتواصلك معنا. سيقوم فريقنا بالرد عليك قريباً.'
-        : 'Thank you for reaching out. We will get back to you soon.',
-    });
-    setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/guest/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? 'Submission failed');
+      }
+      const data = await res.json() as { refCode: string };
+      toast({
+        title: isRtl ? 'تم إرسال الرسالة' : 'Message Sent',
+        description: isRtl
+          ? `شكراً لتواصلك معنا. رقم طلبك: ${data.refCode}. سيتواصل معك فريقنا قريباً.`
+          : `Thank you for reaching out. Your reference: ${data.refCode}. Our team will contact you shortly.`,
+      });
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    } catch (err) {
+      toast({
+        title: isRtl ? 'حدث خطأ' : 'Submission Failed',
+        description: isRtl
+          ? 'لم نتمكن من إرسال رسالتك. يرجى المحاولة مرة أخرى.'
+          : 'We could not send your message. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -184,9 +208,12 @@ export const Contact: React.FC = () => {
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full md:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 px-12"
+                  disabled={submitting}
+                  className="w-full md:w-auto bg-secondary text-secondary-foreground hover:bg-secondary/90 px-12 disabled:opacity-70"
                 >
-                  {isRtl ? 'إرسال الرسالة' : 'Send Message'}
+                  {submitting
+                    ? (isRtl ? 'جارٍ الإرسال...' : 'Sending...')
+                    : (isRtl ? 'إرسال الرسالة' : 'Send Message')}
                 </Button>
               </form>
             </div>

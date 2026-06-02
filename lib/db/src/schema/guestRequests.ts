@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 export const guestRequestsTable = pgTable("guest_requests", {
   id:           serial("id").primaryKey(),
   tenantId:     integer("tenant_id").notNull().default(1),
-  roomId:       integer("room_id").notNull(),
+  roomId:       integer("room_id"),
   type:         text("type").notNull(),
   description:  text("description").notNull(),
   facilityName: text("facility_name"),

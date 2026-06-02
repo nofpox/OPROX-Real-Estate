@@ -10,12 +10,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import {
   Inbox, Search, Zap, Droplets, Wind, Brush, Volume2, Users, DoorOpen,
-  Clock, Loader2, CheckCircle2, Play, Filter
+  Clock, Loader2, CheckCircle2, Play, Filter, Mail, Phone
 } from "lucide-react";
 
 type GuestRequest = {
   id: number;
-  roomId: number;
+  roomId: number | null;
   type: string;
   description: string;
   status: "new" | "in_progress" | "resolved";
@@ -23,15 +23,19 @@ type GuestRequest = {
   createdAt: string;
   unitName: string | null;
   propertyName: string | null;
+  visitorName: string | null;
+  visitorPhone: string | null;
+  facilityName: string | null;
 };
 
 const TYPE_ICONS: Record<string, React.ComponentType<any>> = {
   electrical: Zap, plumbing: Droplets, ac: Wind,
-  cleaning: Brush, noise: Volume2, visitor: Users, other: DoorOpen,
+  cleaning: Brush, noise: Volume2, visitor: Users, contact: Mail, other: DoorOpen,
 };
 const TYPE_COLOR: Record<string, string> = {
   electrical: "text-yellow-500", plumbing: "text-blue-500", ac: "text-cyan-500",
-  cleaning: "text-green-500", noise: "text-orange-500", visitor: "text-purple-500", other: "text-slate-500",
+  cleaning: "text-green-500", noise: "text-orange-500", visitor: "text-purple-500",
+  contact: "text-indigo-500", other: "text-slate-500",
 };
 const STATUS_BADGE: Record<string, string> = {
   new: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400",
@@ -71,7 +75,9 @@ export default function GuestRequests() {
       r.unitName?.toLowerCase().includes(search.toLowerCase()) ||
       r.type.toLowerCase().includes(search.toLowerCase()) ||
       r.description.toLowerCase().includes(search.toLowerCase()) ||
-      r.refCode.toLowerCase().includes(search.toLowerCase());
+      r.refCode.toLowerCase().includes(search.toLowerCase()) ||
+      r.visitorName?.toLowerCase().includes(search.toLowerCase()) ||
+      r.facilityName?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || r.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -175,15 +181,41 @@ export default function GuestRequests() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start gap-2 flex-wrap">
-                        <span className="font-semibold text-sm text-foreground">{typeLabel}</span>
+                        <span className="font-semibold text-sm text-foreground">
+                          {req.type === "contact" && req.visitorName
+                            ? req.visitorName
+                            : typeLabel}
+                        </span>
                         <Badge className={`border text-[10px] font-semibold ${STATUS_BADGE[req.status]}`}>
                           {statusLabel}
                         </Badge>
+                        {req.type === "contact" && (
+                          <Badge variant="outline" className="text-[10px] font-semibold text-indigo-600 border-indigo-200">
+                            Web Enquiry
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{req.description}</p>
                       <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground/70 flex-wrap">
-                        <span>🏠 {req.unitName || `Unit #${req.roomId}`}</span>
-                        {req.propertyName && <span>🏢 {req.propertyName}</span>}
+                        {req.type === "contact" ? (
+                          <>
+                            {req.facilityName && (
+                              <span className="flex items-center gap-1">
+                                <Mail size={10} /> {req.facilityName}
+                              </span>
+                            )}
+                            {req.visitorPhone && (
+                              <span className="flex items-center gap-1">
+                                <Phone size={10} /> {req.visitorPhone}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <span>🏠 {req.unitName || `Unit #${req.roomId}`}</span>
+                            {req.propertyName && <span>🏢 {req.propertyName}</span>}
+                          </>
+                        )}
                         <span>🔖 {req.refCode}</span>
                         <span>🕐 {formatDate(req.createdAt)}</span>
                       </div>

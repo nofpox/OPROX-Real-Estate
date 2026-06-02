@@ -80,6 +80,32 @@ router.patch("/guest/requests/:id", async (req, res) => {
   res.json({ ...request, createdAt: request.createdAt.toISOString() });
 });
 
+/**
+ * Public endpoint: Contact Us form → stored as a guest_request with type="contact",
+ * roomId=null. Appears in the Service Requests dashboard under type "contact".
+ */
+router.post("/guest/contact", async (req, res) => {
+  const { name, email, phone, subject, message } = req.body ?? {};
+  if (!name || !email || !phone || !subject || !message) {
+    res.status(400).json({ error: "name, email, phone, subject, and message are required" });
+    return;
+  }
+  const refCode = `CNT-${Date.now().toString(36).toUpperCase()}`;
+  const description = `Subject: ${String(subject).trim()}\n\n${String(message).trim()}\n\n---\nEmail: ${String(email).trim()}`;
+  const [request] = await db.insert(guestRequestsTable).values({
+    tenantId:      1,
+    roomId:        null,
+    type:          "contact",
+    description,
+    visitorName:   String(name).trim(),
+    visitorPhone:  String(phone).trim(),
+    facilityName:  String(email).trim(),
+    status:        "new",
+    refCode,
+  }).returning();
+  res.status(201).json({ refCode, id: request.id, createdAt: request.createdAt.toISOString() });
+});
+
 router.post("/guest/feedback", async (req, res) => {
   const { roomId, rating, comment } = req.body ?? {};
   if (!roomId || !rating) { res.status(400).json({ error: "roomId and rating required" }); return; }
