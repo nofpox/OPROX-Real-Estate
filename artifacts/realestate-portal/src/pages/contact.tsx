@@ -147,9 +147,13 @@ export const Contact: React.FC = () => {
                   <div>
                     <label className="block text-sm font-medium text-primary mb-2">
                       {isRtl ? 'رقم الهاتف' : 'Phone Number'}
+                      <span className="text-red-500 ms-1">*</span>
                     </label>
                     <Input
                       type="tel"
+                      required
+                      pattern="[+\d\s\-()]{7,20}"
+                      title={isRtl ? 'أدخل رقم هاتف صحيح' : 'Enter a valid phone number'}
                       value={formData.phone}
                       onChange={e => setFormData({ ...formData, phone: e.target.value })}
                     />
