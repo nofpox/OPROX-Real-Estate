@@ -35,7 +35,6 @@ const NAV_ITEMS = [
   // /rooms (حالة الوحدات) hidden — UI on hold, backend/DB intact
   { href: "/guests",         labelKey: "nav.guests",         icon: Users,           section: "main",       featureKey: "guests"   },
   // unit-map hidden — UI on hold, backend/DB intact
-  { href: "/finance",        labelKey: "nav.finance",        icon: DollarSign,      section: "operations", featureKey: null       },
   { href: "/maintenance",    labelKey: "nav.maintenance",    icon: Wrench,          section: "operations", featureKey: "maintenance" },
   { href: "/facilities",     labelKey: "nav.facilities",     icon: Dumbbell,        section: "operations", featureKey: "facilities" },
   { href: "/staff",          labelKey: "nav.staff",          icon: UserCog,         section: "operations", featureKey: "staff" },
@@ -47,7 +46,6 @@ const NAV_ITEMS = [
   { href: "/security-dashboard",  labelKey: "nav.securityDashboard", icon: ShieldAlert,       section: "operations", featureKey: null },
   { href: "/analytics",           labelKey: "nav.analytics",         icon: BarChart2,          section: "operations", featureKey: null },
   { href: "/support-tickets",    labelKey: "nav.supportTickets",    icon: Ticket,             section: "operations", featureKey: null },
-  { href: "/data-archiving",     labelKey: "nav.dataArchiving",     icon: Archive,             section: "operations", featureKey: null },
 ];
 
 /* Role pill colours — solid only, no opacity modifiers */

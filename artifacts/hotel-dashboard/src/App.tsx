@@ -40,13 +40,11 @@ import Analytics from "@/pages/analytics";
 import SupportTickets from "@/pages/support-tickets";
 import SuspendedPage from "@/pages/suspended";
 import ServiceConfig from "@/pages/service-config";
-import Finance from "@/pages/finance";
 import Guests from "@/pages/guests";
 import WorkerDashboard from "@/pages/worker-dashboard";
 import WorkerTasks from "@/pages/worker-tasks";
 import WorkerWorkOrders from "@/pages/worker-work-orders";
 import WorkerUnitDetail from "@/pages/worker-unit-detail";
-import DataArchiving from "@/pages/data-archiving";
 import ContentManager from "@/pages/content-manager";
 import WebsiteSettings from "@/pages/website-settings";
 
@@ -89,9 +87,7 @@ function Router() {
       <Route path="/analytics" component={Analytics} />
       <Route path="/support-tickets" component={SupportTickets} />
       <Route path="/service-config" component={ServiceConfig} />
-      <Route path="/finance" component={Finance} />
       <Route path="/guests" component={Guests} />
-      <Route path="/data-archiving" component={DataArchiving} />
       <Route path="/content-manager" component={ContentManager} />
       <Route path="/website-settings" component={WebsiteSettings} />
       <Route component={NotFound} />
