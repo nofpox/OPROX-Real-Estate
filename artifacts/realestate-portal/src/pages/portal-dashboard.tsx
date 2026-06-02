@@ -807,6 +807,154 @@ const UnitsPanel: React.FC<UnitsPanelProps> = ({ property, onBack, t, isRtl }) =
 };
 
 // ── Main Dashboard ─────────────────────────────────────────────────────────────
+// ── MasterCommandCenter ───────────────────────────────────────────────────────
+interface MasterCommandCenterProps {
+  properties: PortalProperty[];
+  bookings:   unknown[];
+  financials: unknown;
+  t:          (k: string) => string;
+  isRtl:      boolean;
+  onNavigate: (tab: string) => void;
+}
+
+const MasterCommandCenter: React.FC<MasterCommandCenterProps> = ({
+  properties, bookings, financials, t, onNavigate,
+}) => {
+  const { data: teamRes } = useGetPortalTeam({ query: { enabled: true } } as any);
+  const teamMembers: PortalTeamMember[] = (teamRes as any)?.data ?? [];
+
+  const monthlyData = (financials as any)?.monthly ?? [];
+  const lastMonth   = monthlyData[monthlyData.length - 1];
+  const monthRevenue = lastMonth?.revenue ?? 0;
+
+  const activeBookings = (bookings as any[]).filter(
+    (b) => ['confirmed', 'checked_in'].includes((b as any).status ?? ''),
+  ).length;
+
+  const kpis = [
+    { label: t('mcc.kpi.properties'), value: String(properties.length),  icon: Building,   bg: 'bg-blue-100',   fg: 'text-blue-600'   },
+    { label: t('mcc.kpi.bookings'),   value: String(activeBookings),      icon: Calendar,   bg: 'bg-green-100',  fg: 'text-green-600'  },
+    { label: t('mcc.kpi.revenue'),    value: fmtSAR(monthRevenue),        icon: DollarSign, bg: 'bg-amber-100',  fg: 'text-amber-600'  },
+    { label: t('mcc.kpi.team'),       value: String(teamMembers.length),  icon: Users,      bg: 'bg-purple-100', fg: 'text-purple-600' },
+  ];
+
+  const quickActions = [
+    { label: t('mcc.goManage'),     tab: 'manage',      icon: Building,   color: 'bg-blue-500'    },
+    { label: t('mcc.goFinancials'), tab: 'financials',  icon: BarChart2,  color: 'bg-emerald-500' },
+    { label: t('mcc.goSettings'),   tab: 'ops-control', icon: Settings2,  color: 'bg-amber-500'   },
+    { label: t('mcc.goOverview'),   tab: 'overview',    icon: Layers,     color: 'bg-violet-500'  },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Authority banner */}
+      <div className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 p-6 text-white shadow-md">
+        <div className="flex items-center gap-3 mb-1">
+          <ShieldCheck className="h-5 w-5 opacity-90" />
+          <span className="text-xs font-semibold tracking-wider uppercase opacity-80">{t('mcc.badge')}</span>
+        </div>
+        <h2 className="text-2xl font-serif font-bold">{t('mcc.title')}</h2>
+        <p className="text-amber-100 text-sm mt-1">{t('mcc.subtitle')}</p>
+        <p className="text-amber-200 text-xs mt-3 flex items-center gap-1.5">
+          <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+          {t('mcc.authorityNote')}
+        </p>
+      </div>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpis.map((kpi) => (
+          <Card key={kpi.label} className="p-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg ${kpi.bg} flex items-center justify-center shrink-0`}>
+                <kpi.icon className={`h-5 w-5 ${kpi.fg}`} />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-primary leading-none">{kpi.value}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{kpi.label}</p>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Quick actions + Content control */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-5">
+          <h3 className="text-sm font-semibold text-primary mb-4">{t('mcc.quickActions')}</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {quickActions.map((a) => (
+              <button
+                key={a.tab}
+                onClick={() => onNavigate(a.tab)}
+                className="flex items-center gap-2.5 p-3 rounded-lg border border-border hover:bg-muted transition-colors text-start"
+              >
+                <div className={`w-8 h-8 rounded-lg ${a.color} flex items-center justify-center shrink-0`}>
+                  <a.icon className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-sm font-medium text-primary">{a.label}</span>
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <h3 className="text-sm font-semibold text-primary mb-1">{t('mcc.contentTitle')}</h3>
+          <p className="text-xs text-muted-foreground mb-4 leading-relaxed">{t('mcc.contentDesc')}</p>
+          <div className="space-y-2.5">
+            <Button variant="outline" size="sm" className="w-full justify-start gap-2" onClick={() => onNavigate('manage')}>
+              <Building className="h-4 w-4 text-blue-500" />
+              {t('mcc.goManage')}
+              <ArrowRight className="h-3.5 w-3.5 ms-auto text-muted-foreground" />
+            </Button>
+            <Button variant="outline" size="sm" className="w-full justify-start gap-2" onClick={() => onNavigate('ops-control')}>
+              <Settings2 className="h-4 w-4 text-amber-500" />
+              {t('mcc.delegateBtn')}
+              <ArrowRight className="h-3.5 w-3.5 ms-auto text-muted-foreground" />
+            </Button>
+          </div>
+        </Card>
+      </div>
+
+      {/* Team roster */}
+      <Card className="p-5">
+        <h3 className="text-sm font-semibold text-primary mb-4">{t('mcc.teamTitle')}</h3>
+        {teamMembers.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">{t('mcc.teamEmpty')}</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {teamMembers.map((m) => (
+              <div key={m.id} className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border bg-muted/30">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                  {memberInitials((m as any).displayName ?? m.username ?? '?')}
+                </div>
+                <p className="text-xs font-medium text-primary text-center leading-tight truncate w-full">
+                  {(m as any).displayName ?? m.username}
+                </p>
+                <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4 max-w-full truncate">
+                  {m.role}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* System status */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-primary">{t('mcc.systemTitle')}</h3>
+          <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            {t('mcc.systemOk')}
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+// ── PortalDashboard ───────────────────────────────────────────────────────────
 export const PortalDashboard: React.FC = () => {
   const { user, isAuthenticated, isLoading, logout } = usePortalAuth();
   const [, setLocation] = useLocation();
@@ -816,6 +964,9 @@ export const PortalDashboard: React.FC = () => {
   const [propertyIdFilter, setPropertyIdFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter]         = useState<string>('all');
   const [months, setMonths]                     = useState<string>('6');
+
+  // Active tab (controlled — Owner defaults to command-center, others to manage)
+  const [currentTab, setCurrentTab] = useState('manage');
 
   // Property management state
   const [selectedProp, setSelectedProp]   = useState<PortalProperty | null>(null);
@@ -827,6 +978,14 @@ export const PortalDashboard: React.FC = () => {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) setLocation('/portal');
   }, [isLoading, isAuthenticated, setLocation]);
+
+  // Smart default tab: Owner → command-center
+  useEffect(() => {
+    if (user) {
+      const role = ((user as unknown) as Record<string, string>)?.role ?? '';
+      if (getPortalTierLevel(role) <= 1) setCurrentTab('command-center');
+    }
+  }, [user]);
 
   const { data: propertiesRes, isLoading: isLoadingProps } = useGetPortalProperties(
     { page: 1, limit: 50 },
@@ -1016,8 +1175,15 @@ export const PortalDashboard: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="manage" className="w-full">
+        <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
           <TabsList className="h-10 mb-6 flex-wrap">
+            {/* Command Center: Owner only (tier ≤ 1) */}
+            {dashTierLevel <= 1 && (
+              <TabsTrigger value="command-center" className="px-5 flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                {t('mcc.tab')}
+              </TabsTrigger>
+            )}
             <TabsTrigger value="manage"      className="px-5">{t('portal.manage')}</TabsTrigger>
             <TabsTrigger value="overview"    className="px-5">{t('portal.overview')}</TabsTrigger>
             <TabsTrigger value="financials"  className="px-5">{t('portal.financials')}</TabsTrigger>
@@ -1384,6 +1550,20 @@ export const PortalDashboard: React.FC = () => {
               </Card>
             )}
           </TabsContent>
+
+          {/* ── Master Command Center tab (Owner only — tier ≤ 1) ── */}
+          {dashTierLevel <= 1 && (
+            <TabsContent value="command-center" className="mt-0">
+              <MasterCommandCenter
+                properties={properties}
+                bookings={bookings}
+                financials={financials}
+                t={t}
+                isRtl={isRtl}
+                onNavigate={setCurrentTab}
+              />
+            </TabsContent>
+          )}
 
           {/* ── Admin Settings tab (Owner through Supervisor only — tiers 1-7) ── */}
           {dashTierLevel <= 7 && (

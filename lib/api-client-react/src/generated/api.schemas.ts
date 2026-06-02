@@ -1321,6 +1321,21 @@ export interface PortalTeamMember {
   permissions: string[];
 }
 
+export interface PortalClientRegistration {
+  displayName: string;
+  email: string;
+  phone?: string;
+  username: string;
+  password: string;
+}
+
+export interface PortalRegistrationResult {
+  id?: number;
+  username?: string;
+  displayName?: string;
+  role?: string;
+}
+
 /**
  * Map of role name to array of granted permission strings
  */
@@ -1610,5 +1625,10 @@ export type UpdatePortalRolePermissionsBody = {
 export type UpdatePortalRolePermissions200 = {
   status?: string;
   data?: PortalRolePermissionsMap;
+};
+
+export type RegisterPortalClient200 = {
+  status?: string;
+  data?: PortalRegistrationResult;
 };
 

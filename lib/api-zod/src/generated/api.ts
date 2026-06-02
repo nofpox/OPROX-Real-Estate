@@ -3058,6 +3058,28 @@ export const UpdatePortalRolePermissionsResponse = zod.object({
 
 
 /**
+ * @summary Self-register a new client account (public endpoint)
+ */
+export const RegisterPortalClientBody = zod.object({
+  "displayName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().optional(),
+  "username": zod.string(),
+  "password": zod.string()
+})
+
+export const RegisterPortalClientResponse = zod.object({
+  "status": zod.string().optional(),
+  "data": zod.object({
+  "id": zod.number().optional(),
+  "username": zod.string().optional(),
+  "displayName": zod.string().optional(),
+  "role": zod.string().optional()
+}).optional()
+})
+
+
+/**
  * @summary Equity stake overview for the authenticated partner
  */
 export const GetPartnerEquityResponse = zod.object({

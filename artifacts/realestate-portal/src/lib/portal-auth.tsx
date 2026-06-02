@@ -5,7 +5,7 @@ interface PortalAuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (credentials: AuthCredentials) => Promise<void>;
+  login: (credentials: AuthCredentials) => Promise<AuthUser | null>;
   logout: () => Promise<void>;
 }
 
@@ -13,7 +13,7 @@ const PortalAuthContext = createContext<PortalAuthContextType>({
   user: null,
   isLoading: true,
   isAuthenticated: false,
-  login: async () => {},
+  login: async () => null,
   logout: async () => {},
 });
 
@@ -34,12 +34,14 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const loginMutation = useLogin();
   const logoutMutation = useLogout();
 
-  const login = async (credentials: AuthCredentials) => {
+  const login = async (credentials: AuthCredentials): Promise<AuthUser | null> => {
     const res = await loginMutation.mutateAsync({ data: credentials });
     if (res) {
-      // Login response IS the AuthUser (session data returned directly)
-      setUser(res as unknown as AuthUser);
+      const authedUser = res as unknown as AuthUser;
+      setUser(authedUser);
+      return authedUser;
     }
+    return null;
   };
 
   const logout = async () => {

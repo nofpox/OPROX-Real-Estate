@@ -2639,6 +2639,32 @@ paths:
         "401": { description: Unauthorized }
         "403": { description: Forbidden }
 
+  /portal/register:
+    post:
+      operationId: registerPortalClient
+      summary: Self-register a new client account (public endpoint)
+      tags: [portal]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortalClientRegistration"
+      responses:
+        "200":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  data:
+                    $ref: "#/components/schemas/PortalRegistrationResult"
+        "400": { description: Validation error }
+        "409": { description: Username already taken }
+
   /partner/equity:
     get:
       operationId: getPartnerEquity
@@ -4895,6 +4921,22 @@ components:
           type: array
           items: { type: string }
 
+    PortalClientRegistration:
+      type: object
+      required: [displayName, email, username, password]
+      properties:
+        displayName: { type: string }
+        email:       { type: string }
+        phone:       { type: string }
+        username:    { type: string }
+        password:    { type: string }
+    PortalRegistrationResult:
+      type: object
+      properties:
+        id:          { type: integer }
+        username:    { type: string }
+        displayName: { type: string }
+        role:        { type: string }
     PortalRolePermissionsMap:
       type: object
       description: Map of role name to array of granted permission strings

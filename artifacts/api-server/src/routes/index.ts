@@ -41,7 +41,7 @@ const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
   worker: 0, supervisor: 1, admin: 2,
 };
 
-const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/", "/unit-requests", "/unit-info/", "/service-categories", "/listings", "/sitemap.xml", "/cms"];
+const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/", "/unit-requests", "/unit-info/", "/service-categories", "/listings", "/sitemap.xml", "/cms", "/portal/register"];
 
 const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
 

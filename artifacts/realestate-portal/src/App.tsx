@@ -14,6 +14,7 @@ import { Contact } from "@/pages/contact";
 import { PortalAuthProvider } from "@/lib/portal-auth";
 import { CmsProvider } from "@/lib/cms-context";
 import { PortalLogin } from "@/pages/portal-login";
+import { PortalRegister } from "@/pages/portal-register";
 import { PortalDashboard } from "@/pages/portal-dashboard";
 
 const queryClient = new QueryClient({
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/services" component={Services} />
       <Route path="/contact" component={Contact} />
       <Route path="/portal" component={PortalLogin} />
+      <Route path="/portal/register" component={PortalRegister} />
       <Route path="/portal/dashboard" component={PortalDashboard} />
       <Route component={NotFound} />
     </Switch>

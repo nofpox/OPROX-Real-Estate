@@ -14,7 +14,7 @@ import {
   insertPortalUnitSchema,
   updatePortalUnitSchema,
 } from "@workspace/db";
-import { getRoleTier, getPortalRoleTier } from "./auth.js";
+import { getRoleTier, getPortalRoleTier, hashPwd } from "./auth.js";
 import { eq, and, sql, desc, inArray, ne } from "drizzle-orm";
 import { sendSuccess, sendError, parsePagination, buildMeta } from "../utils/response.js";
 import {
@@ -42,6 +42,57 @@ function requireAuth(req: Request, res: Response, next: NextFunction): void {
 function setPrivateCache(res: Response): void {
   res.set("Cache-Control", "private, no-cache, must-revalidate");
 }
+
+// ── POST /portal/register (public — client self-registration) ─────────────────
+router.post("/portal/register", async (req, res) => {
+  try {
+    const { displayName, email, phone, username, password } = req.body ?? {};
+    if (!displayName || !email || !username || !password) {
+      sendError(res, 400, "displayName, email, username and password are required");
+      return;
+    }
+    if (String(password).length < 8) {
+      sendError(res, 400, "Password must be at least 8 characters");
+      return;
+    }
+    const uname = String(username).trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,30}$/.test(uname)) {
+      sendError(res, 400, "Username must be 3-30 characters: letters, numbers, underscores only");
+      return;
+    }
+    const [existing] = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.username, uname))
+      .limit(1);
+    if (existing) {
+      sendError(res, 409, "Username already taken");
+      return;
+    }
+    const [newUser] = await db
+      .insert(usersTable)
+      .values({
+        username:     uname,
+        displayName:  String(displayName).trim(),
+        email:        String(email).trim().toLowerCase(),
+        phoneNumber:  phone ? String(phone).trim() : null,
+        passwordHash: hashPwd(String(password)),
+        role:         "client",
+        tenantId:     1,
+        isActive:     true,
+      })
+      .returning({
+        id:          usersTable.id,
+        username:    usersTable.username,
+        displayName: usersTable.displayName,
+        role:        usersTable.role,
+      });
+    sendSuccess(res, newUser);
+  } catch (err) {
+    req.log?.error({ err }, "POST /portal/register failed");
+    sendError(res, 500, "Registration failed");
+  }
+});
 
 // ── GET /portal/properties — platform-only portfolio properties ────────────────
 router.get("/portal/properties", requireAuth, async (req, res) => {

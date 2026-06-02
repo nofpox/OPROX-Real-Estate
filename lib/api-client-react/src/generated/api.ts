@@ -93,6 +93,7 @@ import type {
   PmsUser,
   PortalAvailabilityPage,
   PortalBookingsPage,
+  PortalClientRegistration,
   PortalFinancialsPage,
   PortalPermissionsInput,
   PortalPropertiesPage,
@@ -105,6 +106,7 @@ import type {
   PropertyInput,
   PropertyStats,
   PropertyUpdate,
+  RegisterPortalClient200,
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
   ResendStaffInvite200,
@@ -9871,6 +9873,77 @@ export const useUpdatePortalRolePermissions = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUpdatePortalRolePermissionsMutationOptions(options));
+    }
+
+export const getRegisterPortalClientUrl = () => {
+
+
+
+
+  return `/api/portal/register`
+}
+
+/**
+ * @summary Self-register a new client account (public endpoint)
+ */
+export const registerPortalClient = async (portalClientRegistration: PortalClientRegistration, options?: RequestInit): Promise<RegisterPortalClient200> => {
+
+  return customFetch<RegisterPortalClient200>(getRegisterPortalClientUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      portalClientRegistration,)
+  }
+);}
+
+
+
+
+export const getRegisterPortalClientMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerPortalClient>>, TError,{data: BodyType<PortalClientRegistration>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registerPortalClient>>, TError,{data: BodyType<PortalClientRegistration>}, TContext> => {
+
+const mutationKey = ['registerPortalClient'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registerPortalClient>>, {data: BodyType<PortalClientRegistration>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  registerPortalClient(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegisterPortalClientMutationResult = NonNullable<Awaited<ReturnType<typeof registerPortalClient>>>
+    export type RegisterPortalClientMutationBody = BodyType<PortalClientRegistration>
+    export type RegisterPortalClientMutationError = ErrorType<void>
+
+    /**
+ * @summary Self-register a new client account (public endpoint)
+ */
+export const useRegisterPortalClient = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerPortalClient>>, TError,{data: BodyType<PortalClientRegistration>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registerPortalClient>>,
+        TError,
+        {data: BodyType<PortalClientRegistration>},
+        TContext
+      > => {
+      return useMutation(getRegisterPortalClientMutationOptions(options));
     }
 
 export const getGetPartnerEquityUrl = () => {
