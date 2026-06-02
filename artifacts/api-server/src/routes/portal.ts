@@ -1,11 +1,16 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import {
   db,
-  propertiesTable,
   bookingsTable,
   roomsTable,
-  listingsTable,
   expensesTable,
+  propertiesTable,
+  portalPropertiesTable,
+  portalUnitsTable,
+  insertPortalPropertySchema,
+  updatePortalPropertySchema,
+  insertPortalUnitSchema,
+  updatePortalUnitSchema,
 } from "@workspace/db";
 import { eq, and, sql, desc, inArray, ne } from "drizzle-orm";
 import { sendSuccess, sendError, parsePagination, buildMeta } from "../utils/response.js";
@@ -31,20 +36,17 @@ function requireAuth(req: Request, res: Response, next: NextFunction): void {
   next();
 }
 
-// ── Cache-Control helper for authenticated portal responses ────────────────────
-// Data is user-specific so we tell CDNs not to cache; the server-side
-// in-memory cache handles repeat requests within the TTL window.
 function setPrivateCache(res: Response): void {
   res.set("Cache-Control", "private, no-cache, must-revalidate");
 }
 
-// ── GET /portal/properties — managed properties with live occupancy stats ──────
+// ── GET /portal/properties — platform-only portfolio properties ────────────────
 router.get("/portal/properties", requireAuth, async (req, res) => {
   try {
     const tenantId = tid(req);
     const { page, limit, offset } = parsePagination(req.query as Record<string, unknown>);
 
-    const cacheKey = `props:${tenantId ?? "all"}:${page}:${limit}`;
+    const cacheKey = `pprops:${tenantId ?? "all"}:${page}:${limit}`;
     const cached = portalCache.get<{ data: unknown; meta: unknown }>(cacheKey);
     if (cached) {
       setPrivateCache(res);
@@ -52,65 +54,40 @@ router.get("/portal/properties", requireAuth, async (req, res) => {
       return;
     }
 
-    const conds = tenantId !== null ? [eq(propertiesTable.tenantId, tenantId)] : [];
+    const conds = tenantId !== null ? [eq(portalPropertiesTable.tenantId, tenantId)] : [];
     const where = conds.length ? and(...conds) : undefined;
 
     const [countRow] = await db
       .select({ total: sql<number>`count(*)::int` })
-      .from(propertiesTable)
+      .from(portalPropertiesTable)
       .where(where);
 
     const properties = await db
       .select()
-      .from(propertiesTable)
+      .from(portalPropertiesTable)
       .where(where)
-      .orderBy(desc(propertiesTable.createdAt))
+      .orderBy(desc(portalPropertiesTable.createdAt))
       .limit(limit)
       .offset(offset);
 
     const enriched = await Promise.all(
       properties.map(async (property) => {
-        const [roomStats] = await db
-          .select({ totalRooms: sql<number>`count(*)::int` })
-          .from(roomsTable)
-          .where(eq(roomsTable.propertyId, property.id));
-
-        const [bookingStats] = await db
-          .select({ activeBookings: sql<number>`count(*)::int` })
-          .from(bookingsTable)
-          .innerJoin(roomsTable, eq(bookingsTable.roomId, roomsTable.id))
-          .where(
-            and(
-              eq(roomsTable.propertyId, property.id),
-              sql`${bookingsTable.status} IN ('confirmed', 'checked_in')`,
-            ),
-          );
-
-        const totalRooms     = roomStats?.totalRooms     ?? 0;
-        const activeBookings = bookingStats?.activeBookings ?? 0;
-        const occupancyRate  = totalRooms > 0 ? Math.round((activeBookings / totalRooms) * 100) : 0;
-
-        const [linked] = await db
-          .select({ id: listingsTable.id })
-          .from(listingsTable)
-          .where(
-            and(
-              eq(listingsTable.propertyId, property.id),
-              eq(listingsTable.status, "active"),
-            ),
-          )
-          .limit(1);
+        const [unitStats] = await db
+          .select({ unitCount: sql<number>`count(*)::int` })
+          .from(portalUnitsTable)
+          .where(eq(portalUnitsTable.portalPropertyId, property.id));
 
         return {
-          id:              property.id,
-          name:            property.name,
-          type:            property.type,
-          status:          property.status,
-          address:         property.address ?? "",
-          totalRooms,
-          activeBookings,
-          occupancyRate,
-          linkedListingId: linked?.id ?? null,
+          id:          property.id,
+          name:        property.name,
+          type:        property.type,
+          status:      property.status,
+          address:     property.address,
+          city:        property.city,
+          country:     property.country,
+          description: property.description ?? null,
+          unitCount:   unitStats?.unitCount ?? 0,
+          createdAt:   property.createdAt.toISOString(),
         };
       }),
     );
@@ -125,6 +102,315 @@ router.get("/portal/properties", requireAuth, async (req, res) => {
   }
 });
 
+// ── POST /portal/properties ────────────────────────────────────────────────────
+router.post("/portal/properties", requireAuth, async (req, res) => {
+  try {
+    const tenantId = tid(req);
+    const parsed = insertPortalPropertySchema.safeParse({
+      ...req.body,
+      tenantId: tenantId ?? 1,
+    });
+    if (!parsed.success) {
+      sendError(res, 400, "Invalid input");
+      return;
+    }
+
+    const [created] = await db
+      .insert(portalPropertiesTable)
+      .values(parsed.data)
+      .returning();
+
+    portalCache.invalidatePrefix("");
+
+    const result = {
+      id:          created.id,
+      name:        created.name,
+      type:        created.type,
+      status:      created.status,
+      address:     created.address,
+      city:        created.city,
+      country:     created.country,
+      description: created.description ?? null,
+      unitCount:   0,
+      createdAt:   created.createdAt.toISOString(),
+    };
+
+    sendSuccess(res, result, undefined, 201);
+  } catch (err) {
+    req.log?.error({ err }, "POST /portal/properties failed");
+    sendError(res, 500, "Failed to create portal property");
+  }
+});
+
+// ── PATCH /portal/properties/:id ──────────────────────────────────────────────
+router.patch("/portal/properties/:id", requireAuth, async (req, res) => {
+  try {
+    const tenantId = tid(req);
+    const id = parseInt(req.params.id as string, 10);
+    if (isNaN(id)) { sendError(res, 400, "Invalid id"); return; }
+
+    const existing = await db
+      .select()
+      .from(portalPropertiesTable)
+      .where(
+        tenantId !== null
+          ? and(eq(portalPropertiesTable.id, id), eq(portalPropertiesTable.tenantId, tenantId))
+          : eq(portalPropertiesTable.id, id),
+      )
+      .limit(1);
+
+    if (!existing.length) { sendError(res, 404, "Property not found"); return; }
+
+    const parsed = updatePortalPropertySchema.safeParse(req.body);
+    if (!parsed.success) {
+      sendError(res, 400, "Invalid input");
+      return;
+    }
+
+    const [updated] = await db
+      .update(portalPropertiesTable)
+      .set(parsed.data)
+      .where(eq(portalPropertiesTable.id, id))
+      .returning();
+
+    portalCache.invalidatePrefix("");
+
+    const [unitStats] = await db
+      .select({ unitCount: sql<number>`count(*)::int` })
+      .from(portalUnitsTable)
+      .where(eq(portalUnitsTable.portalPropertyId, id));
+
+    sendSuccess(res, {
+      id:          updated.id,
+      name:        updated.name,
+      type:        updated.type,
+      status:      updated.status,
+      address:     updated.address,
+      city:        updated.city,
+      country:     updated.country,
+      description: updated.description ?? null,
+      unitCount:   unitStats?.unitCount ?? 0,
+      createdAt:   updated.createdAt.toISOString(),
+    });
+  } catch (err) {
+    req.log?.error({ err }, "PATCH /portal/properties/:id failed");
+    sendError(res, 500, "Failed to update portal property");
+  }
+});
+
+// ── DELETE /portal/properties/:id ─────────────────────────────────────────────
+router.delete("/portal/properties/:id", requireAuth, async (req, res) => {
+  try {
+    const tenantId = tid(req);
+    const id = parseInt(req.params.id as string, 10);
+    if (isNaN(id)) { sendError(res, 400, "Invalid id"); return; }
+
+    const existing = await db
+      .select()
+      .from(portalPropertiesTable)
+      .where(
+        tenantId !== null
+          ? and(eq(portalPropertiesTable.id, id), eq(portalPropertiesTable.tenantId, tenantId))
+          : eq(portalPropertiesTable.id, id),
+      )
+      .limit(1);
+
+    if (!existing.length) { sendError(res, 404, "Property not found"); return; }
+
+    await db.delete(portalPropertiesTable).where(eq(portalPropertiesTable.id, id));
+    portalCache.invalidatePrefix("");
+    sendSuccess(res, { deleted: true });
+  } catch (err) {
+    req.log?.error({ err }, "DELETE /portal/properties/:id failed");
+    sendError(res, 500, "Failed to delete portal property");
+  }
+});
+
+// ── GET /portal/properties/:id/units ──────────────────────────────────────────
+router.get("/portal/properties/:id/units", requireAuth, async (req, res) => {
+  try {
+    const tenantId = tid(req);
+    const propertyId = parseInt(req.params.id as string, 10);
+    if (isNaN(propertyId)) { sendError(res, 400, "Invalid id"); return; }
+
+    const { page, limit, offset } = parsePagination(req.query as Record<string, unknown>);
+
+    const propWhere = tenantId !== null
+      ? and(eq(portalPropertiesTable.id, propertyId), eq(portalPropertiesTable.tenantId, tenantId))
+      : eq(portalPropertiesTable.id, propertyId);
+
+    const [prop] = await db.select().from(portalPropertiesTable).where(propWhere).limit(1);
+    if (!prop) { sendError(res, 404, "Property not found"); return; }
+
+    const [countRow] = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(portalUnitsTable)
+      .where(eq(portalUnitsTable.portalPropertyId, propertyId));
+
+    const units = await db
+      .select()
+      .from(portalUnitsTable)
+      .where(eq(portalUnitsTable.portalPropertyId, propertyId))
+      .orderBy(portalUnitsTable.unitNumber)
+      .limit(limit)
+      .offset(offset);
+
+    const data = units.map((u) => ({
+      id:               u.id,
+      portalPropertyId: u.portalPropertyId,
+      tenantId:         u.tenantId,
+      unitNumber:       u.unitNumber,
+      floor:            u.floor ?? null,
+      type:             u.type,
+      area:             u.area ? Number(u.area) : null,
+      bedroomCount:     u.bedroomCount ?? 0,
+      bathroomCount:    u.bathroomCount ?? 1,
+      status:           u.status,
+      monthlyRent:      u.monthlyRent ? Number(u.monthlyRent) : null,
+      notes:            u.notes ?? null,
+      createdAt:        u.createdAt.toISOString(),
+    }));
+
+    const meta = buildMeta(countRow?.total ?? 0, page, limit);
+    setPrivateCache(res);
+    sendSuccess(res, data, meta);
+  } catch (err) {
+    req.log?.error({ err }, "GET /portal/properties/:id/units failed");
+    sendError(res, 500, "Failed to fetch portal units");
+  }
+});
+
+// ── POST /portal/units ────────────────────────────────────────────────────────
+router.post("/portal/units", requireAuth, async (req, res) => {
+  try {
+    const tenantId = tid(req);
+    const body = req.body as Record<string, unknown>;
+    const parsed = insertPortalUnitSchema.safeParse({
+      ...body,
+      tenantId:    tenantId ?? 1,
+      area:        body.area        != null ? String(body.area)        : undefined,
+      monthlyRent: body.monthlyRent != null ? String(body.monthlyRent) : undefined,
+    });
+    if (!parsed.success) {
+      sendError(res, 400, "Invalid input");
+      return;
+    }
+
+    const [created] = await db
+      .insert(portalUnitsTable)
+      .values(parsed.data)
+      .returning();
+
+    portalCache.invalidatePrefix("");
+
+    sendSuccess(res, {
+      id:               created.id,
+      portalPropertyId: created.portalPropertyId,
+      tenantId:         created.tenantId,
+      unitNumber:       created.unitNumber,
+      floor:            created.floor ?? null,
+      type:             created.type,
+      area:             created.area ? Number(created.area) : null,
+      bedroomCount:     created.bedroomCount ?? 0,
+      bathroomCount:    created.bathroomCount ?? 1,
+      status:           created.status,
+      monthlyRent:      created.monthlyRent ? Number(created.monthlyRent) : null,
+      notes:            created.notes ?? null,
+      createdAt:        created.createdAt.toISOString(),
+    }, undefined, 201);
+  } catch (err) {
+    req.log?.error({ err }, "POST /portal/units failed");
+    sendError(res, 500, "Failed to create portal unit");
+  }
+});
+
+// ── PATCH /portal/units/:id ───────────────────────────────────────────────────
+router.patch("/portal/units/:id", requireAuth, async (req, res) => {
+  try {
+    const tenantId = tid(req);
+    const id = parseInt(req.params.id as string, 10);
+    if (isNaN(id)) { sendError(res, 400, "Invalid id"); return; }
+
+    const existing = await db
+      .select()
+      .from(portalUnitsTable)
+      .where(
+        tenantId !== null
+          ? and(eq(portalUnitsTable.id, id), eq(portalUnitsTable.tenantId, tenantId))
+          : eq(portalUnitsTable.id, id),
+      )
+      .limit(1);
+
+    if (!existing.length) { sendError(res, 404, "Unit not found"); return; }
+
+    const body2 = req.body as Record<string, unknown>;
+    const parsed = updatePortalUnitSchema.safeParse({
+      ...body2,
+      area:        body2.area        != null ? String(body2.area)        : undefined,
+      monthlyRent: body2.monthlyRent != null ? String(body2.monthlyRent) : undefined,
+    });
+    if (!parsed.success) {
+      sendError(res, 400, "Invalid input");
+      return;
+    }
+
+    const [updated] = await db
+      .update(portalUnitsTable)
+      .set(parsed.data)
+      .where(eq(portalUnitsTable.id, id))
+      .returning();
+
+    portalCache.invalidatePrefix("");
+
+    sendSuccess(res, {
+      id:               updated.id,
+      portalPropertyId: updated.portalPropertyId,
+      tenantId:         updated.tenantId,
+      unitNumber:       updated.unitNumber,
+      floor:            updated.floor ?? null,
+      type:             updated.type,
+      area:             updated.area ? Number(updated.area) : null,
+      bedroomCount:     updated.bedroomCount ?? 0,
+      bathroomCount:    updated.bathroomCount ?? 1,
+      status:           updated.status,
+      monthlyRent:      updated.monthlyRent ? Number(updated.monthlyRent) : null,
+      notes:            updated.notes ?? null,
+      createdAt:        updated.createdAt.toISOString(),
+    });
+  } catch (err) {
+    req.log?.error({ err }, "PATCH /portal/units/:id failed");
+    sendError(res, 500, "Failed to update portal unit");
+  }
+});
+
+// ── DELETE /portal/units/:id ──────────────────────────────────────────────────
+router.delete("/portal/units/:id", requireAuth, async (req, res) => {
+  try {
+    const tenantId = tid(req);
+    const id = parseInt(req.params.id as string, 10);
+    if (isNaN(id)) { sendError(res, 400, "Invalid id"); return; }
+
+    const existing = await db
+      .select()
+      .from(portalUnitsTable)
+      .where(
+        tenantId !== null
+          ? and(eq(portalUnitsTable.id, id), eq(portalUnitsTable.tenantId, tenantId))
+          : eq(portalUnitsTable.id, id),
+      )
+      .limit(1);
+
+    if (!existing.length) { sendError(res, 404, "Unit not found"); return; }
+
+    await db.delete(portalUnitsTable).where(eq(portalUnitsTable.id, id));
+    portalCache.invalidatePrefix("");
+    sendSuccess(res, { deleted: true });
+  } catch (err) {
+    req.log?.error({ err }, "DELETE /portal/units/:id failed");
+    sendError(res, 500, "Failed to delete portal unit");
+  }
+});
+
 // ── GET /portal/bookings — bookings across tenant's properties ─────────────────
 router.get("/portal/bookings", requireAuth, async (req, res) => {
   try {
@@ -132,7 +418,6 @@ router.get("/portal/bookings", requireAuth, async (req, res) => {
     const { page, limit, offset } = parsePagination(req.query as Record<string, unknown>);
     const { propertyId, status } = req.query as Record<string, string>;
 
-    // ── Cache lookup ──────────────────────────────────────────────────────────
     const cacheKey = `bkgs:${tenantId ?? "all"}:${propertyId ?? "all"}:${status ?? "all"}:${page}:${limit}`;
     const cached = portalCache.get<{ data: unknown; meta: unknown }>(cacheKey);
     if (cached) {
@@ -141,7 +426,6 @@ router.get("/portal/bookings", requireAuth, async (req, res) => {
       return;
     }
 
-    // Filter by propertyId goes through rooms join (bookings have no direct propertyId)
     const conds: import("drizzle-orm").SQL[] = [];
     if (tenantId !== null) conds.push(eq(bookingsTable.tenantId, tenantId));
     if (propertyId)        conds.push(eq(roomsTable.propertyId, parseInt(propertyId)));
@@ -149,7 +433,6 @@ router.get("/portal/bookings", requireAuth, async (req, res) => {
 
     const where = conds.length ? and(...conds) : undefined;
 
-    // Count also needs the rooms join for propertyId filter to work
     const [countRow] = await db
       .select({ total: sql<number>`count(*)::int` })
       .from(bookingsTable)
@@ -198,7 +481,7 @@ router.get("/portal/bookings", requireAuth, async (req, res) => {
   }
 });
 
-// ── GET /portal/availability — available rooms for a property + date range ─────
+// ── GET /portal/availability ───────────────────────────────────────────────────
 router.get("/portal/availability", requireAuth, async (req, res) => {
   try {
     const { propertyId, checkIn, checkOut } = req.query as Record<string, string>;
@@ -209,7 +492,6 @@ router.get("/portal/availability", requireAuth, async (req, res) => {
     const propId = parseInt(propertyId, 10);
     if (isNaN(propId)) { sendError(res, 400, "propertyId must be an integer"); return; }
 
-    // ── Cache lookup ──────────────────────────────────────────────────────────
     const cacheKey = availKey(propId, checkIn, checkOut);
     const cached   = availabilityCache.get<unknown[]>(cacheKey);
     if (cached) {
@@ -218,13 +500,11 @@ router.get("/portal/availability", requireAuth, async (req, res) => {
       return;
     }
 
-    // All rooms for this property
     const allRooms = await db
       .select()
       .from(roomsTable)
       .where(eq(roomsTable.propertyId, propId));
 
-    // Rooms with an overlapping active booking
     const bookedRows = await db
       .select({ roomId: bookingsTable.roomId })
       .from(bookingsTable)
@@ -259,14 +539,13 @@ router.get("/portal/availability", requireAuth, async (req, res) => {
   }
 });
 
-// ── GET /portal/financials — monthly revenue vs expenses for managed properties ─
+// ── GET /portal/financials ─────────────────────────────────────────────────────
 router.get("/portal/financials", requireAuth, async (req, res) => {
   try {
     const tenantId   = tid(req);
     const { propertyId } = req.query as Record<string, string>;
     const months     = Math.min(24, Math.max(1, parseInt((req.query.months as string) || "6") || 6));
 
-    // ── Cache lookup ──────────────────────────────────────────────────────────
     const cacheKey = financialsKey(tenantId, propertyId, months);
     const cached   = portalCache.get<Record<string, unknown>>(cacheKey);
     if (cached) {
@@ -275,7 +554,6 @@ router.get("/portal/financials", requireAuth, async (req, res) => {
       return;
     }
 
-    // Resolve property IDs scoped to this tenant
     const propConds: import("drizzle-orm").SQL[] = [];
     if (tenantId !== null) propConds.push(eq(propertiesTable.tenantId, tenantId));
     if (propertyId)        propConds.push(eq(propertiesTable.id, parseInt(propertyId, 10)));
@@ -292,7 +570,6 @@ router.get("/portal/financials", requireAuth, async (req, res) => {
       return;
     }
 
-    // Monthly expenses grouped by YYYY-MM
     const expenseRows = await db
       .select({
         month: sql<string>`to_char(${expensesTable.expenseDate}::date, 'YYYY-MM')`,
@@ -308,7 +585,6 @@ router.get("/portal/financials", requireAuth, async (req, res) => {
       .groupBy(sql`to_char(${expensesTable.expenseDate}::date, 'YYYY-MM')`)
       .orderBy(sql`to_char(${expensesTable.expenseDate}::date, 'YYYY-MM')`);
 
-    // Monthly revenue from non-cancelled bookings
     const revenueRows = await db
       .select({
         month: sql<string>`to_char(${bookingsTable.checkIn}::date, 'YYYY-MM')`,
@@ -326,7 +602,6 @@ router.get("/portal/financials", requireAuth, async (req, res) => {
       .groupBy(sql`to_char(${bookingsTable.checkIn}::date, 'YYYY-MM')`)
       .orderBy(sql`to_char(${bookingsTable.checkIn}::date, 'YYYY-MM')`);
 
-    // Merge into a single month map
     const monthMap = new Map<string, { revenue: number; expenses: number }>();
     for (const r of revenueRows) {
       monthMap.set(r.month, { revenue: r.total ?? 0, expenses: 0 });

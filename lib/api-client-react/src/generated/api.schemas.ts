@@ -1163,11 +1163,77 @@ export interface PortalProperty {
   type: string;
   status: string;
   address: string;
-  totalRooms: number;
-  activeBookings: number;
-  occupancyRate: number;
-  /** @nullable */
-  linkedListingId?: number | null;
+  city: string;
+  country: string;
+  description?: string | null;
+  unitCount: number;
+  createdAt?: string;
+}
+
+export interface PortalPropertyDetail {
+  id: number;
+  name: string;
+  type: string;
+  status: string;
+  address: string;
+  city: string;
+  country: string;
+  description?: string | null;
+  unitCount: number;
+  createdAt?: string;
+}
+
+export interface PortalPropertyInput {
+  name: string;
+  type: string;
+  address: string;
+  city: string;
+  country?: string;
+  description?: string | null;
+  status?: string;
+}
+
+export interface PortalUnit {
+  id: number;
+  portalPropertyId: number;
+  tenantId?: number;
+  unitNumber: string;
+  floor?: number | null;
+  type: string;
+  area?: number | null;
+  bedroomCount?: number;
+  bathroomCount?: number;
+  status: string;
+  monthlyRent?: number | null;
+  notes?: string | null;
+  createdAt?: string;
+}
+
+export interface PortalUnitInput {
+  portalPropertyId: number;
+  unitNumber: string;
+  floor?: number | null;
+  type: string;
+  area?: number | null;
+  bedroomCount?: number;
+  bathroomCount?: number;
+  status?: string;
+  monthlyRent?: number | null;
+  notes?: string | null;
+}
+
+export type PortalUnitsPageMeta = {
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+};
+
+export interface PortalUnitsPage {
+  status: string;
+  data: PortalUnit[];
+  meta?: PortalUnitsPageMeta;
+  timestamp: string;
 }
 
 export type PortalPropertiesPageMeta = {
@@ -1469,6 +1535,11 @@ limit?: number;
 };
 
 export type GetPortalPropertiesParams = {
+page?: number;
+limit?: number;
+};
+
+export type GetPortalPropertyUnitsParams = {
 page?: number;
 limit?: number;
 };

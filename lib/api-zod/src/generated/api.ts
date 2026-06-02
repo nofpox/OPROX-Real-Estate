@@ -2712,10 +2712,10 @@ export const DeleteListingParams = zod.object({
 
 
 /**
- * @summary Managed properties with live operational stats (requires auth)
+ * @summary Client portfolio properties (platform-only, isolated from hotel app)
  */
 export const getPortalPropertiesQueryPageDefault = 1;
-export const getPortalPropertiesQueryLimitDefault = 10;
+export const getPortalPropertiesQueryLimitDefault = 50;
 
 export const GetPortalPropertiesQueryParams = zod.object({
   "page": zod.coerce.number().default(getPortalPropertiesQueryPageDefault),
@@ -2730,10 +2730,11 @@ export const GetPortalPropertiesResponse = zod.object({
   "type": zod.string(),
   "status": zod.string(),
   "address": zod.string(),
-  "totalRooms": zod.number(),
-  "activeBookings": zod.number(),
-  "occupancyRate": zod.number(),
-  "linkedListingId": zod.number().nullish()
+  "city": zod.string(),
+  "country": zod.string(),
+  "description": zod.string().nullish(),
+  "unitCount": zod.number(),
+  "createdAt": zod.string().optional()
 })),
   "meta": zod.object({
   "total": zod.number().optional(),
@@ -2742,6 +2743,163 @@ export const GetPortalPropertiesResponse = zod.object({
   "totalPages": zod.number().optional()
 }).optional(),
   "timestamp": zod.string()
+})
+
+
+/**
+ * @summary Create a new portfolio property (platform-only)
+ */
+export const CreatePortalPropertyBody = zod.object({
+  "name": zod.string(),
+  "type": zod.string(),
+  "address": zod.string(),
+  "city": zod.string(),
+  "country": zod.string().optional(),
+  "description": zod.string().nullish(),
+  "status": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a portfolio property
+ */
+export const UpdatePortalPropertyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePortalPropertyBody = zod.object({
+  "name": zod.string(),
+  "type": zod.string(),
+  "address": zod.string(),
+  "city": zod.string(),
+  "country": zod.string().optional(),
+  "description": zod.string().nullish(),
+  "status": zod.string().optional()
+})
+
+export const UpdatePortalPropertyResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.string(),
+  "status": zod.string(),
+  "address": zod.string(),
+  "city": zod.string(),
+  "country": zod.string(),
+  "description": zod.string().nullish(),
+  "unitCount": zod.number(),
+  "createdAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Delete a portfolio property (cascades to units)
+ */
+export const DeletePortalPropertyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List units for a portfolio property
+ */
+export const GetPortalPropertyUnitsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const getPortalPropertyUnitsQueryPageDefault = 1;
+export const getPortalPropertyUnitsQueryLimitDefault = 100;
+
+export const GetPortalPropertyUnitsQueryParams = zod.object({
+  "page": zod.coerce.number().default(getPortalPropertyUnitsQueryPageDefault),
+  "limit": zod.coerce.number().default(getPortalPropertyUnitsQueryLimitDefault)
+})
+
+export const GetPortalPropertyUnitsResponse = zod.object({
+  "status": zod.string(),
+  "data": zod.array(zod.object({
+  "id": zod.number(),
+  "portalPropertyId": zod.number(),
+  "tenantId": zod.number().optional(),
+  "unitNumber": zod.string(),
+  "floor": zod.number().nullish(),
+  "type": zod.string(),
+  "area": zod.number().nullish(),
+  "bedroomCount": zod.number().optional(),
+  "bathroomCount": zod.number().optional(),
+  "status": zod.string(),
+  "monthlyRent": zod.number().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string().optional()
+})),
+  "meta": zod.object({
+  "total": zod.number().optional(),
+  "page": zod.number().optional(),
+  "limit": zod.number().optional(),
+  "totalPages": zod.number().optional()
+}).optional(),
+  "timestamp": zod.string()
+})
+
+
+/**
+ * @summary Add a unit to a portfolio property
+ */
+export const CreatePortalUnitBody = zod.object({
+  "portalPropertyId": zod.number(),
+  "unitNumber": zod.string(),
+  "floor": zod.number().nullish(),
+  "type": zod.string(),
+  "area": zod.number().nullish(),
+  "bedroomCount": zod.number().optional(),
+  "bathroomCount": zod.number().optional(),
+  "status": zod.string().optional(),
+  "monthlyRent": zod.number().nullish(),
+  "notes": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update a portfolio unit
+ */
+export const UpdatePortalUnitParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePortalUnitBody = zod.object({
+  "portalPropertyId": zod.number(),
+  "unitNumber": zod.string(),
+  "floor": zod.number().nullish(),
+  "type": zod.string(),
+  "area": zod.number().nullish(),
+  "bedroomCount": zod.number().optional(),
+  "bathroomCount": zod.number().optional(),
+  "status": zod.string().optional(),
+  "monthlyRent": zod.number().nullish(),
+  "notes": zod.string().nullish()
+})
+
+export const UpdatePortalUnitResponse = zod.object({
+  "id": zod.number(),
+  "portalPropertyId": zod.number(),
+  "tenantId": zod.number().optional(),
+  "unitNumber": zod.string(),
+  "floor": zod.number().nullish(),
+  "type": zod.string(),
+  "area": zod.number().nullish(),
+  "bedroomCount": zod.number().optional(),
+  "bathroomCount": zod.number().optional(),
+  "status": zod.string(),
+  "monthlyRent": zod.number().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Delete a portfolio unit
+ */
+export const DeletePortalUnitParams = zod.object({
+  "id": zod.coerce.number()
 })
 
 

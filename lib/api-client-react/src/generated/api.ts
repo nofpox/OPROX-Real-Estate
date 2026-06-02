@@ -48,6 +48,7 @@ import type {
   GetPortalBookingsParams,
   GetPortalFinancialsParams,
   GetPortalPropertiesParams,
+  GetPortalPropertyUnitsParams,
   Guest,
   GuestFeedback,
   GuestFeedbackInput,
@@ -92,6 +93,11 @@ import type {
   PortalBookingsPage,
   PortalFinancialsPage,
   PortalPropertiesPage,
+  PortalPropertyDetail,
+  PortalPropertyInput,
+  PortalUnit,
+  PortalUnitInput,
+  PortalUnitsPage,
   Property,
   PropertyInput,
   PropertyStats,
@@ -8729,7 +8735,7 @@ export const getGetPortalPropertiesUrl = (params?: GetPortalPropertiesParams,) =
 }
 
 /**
- * @summary Managed properties with live operational stats (requires auth)
+ * @summary Client portfolio properties (platform-only, isolated from hotel app)
  */
 export const getPortalProperties = async (params?: GetPortalPropertiesParams, options?: RequestInit): Promise<PortalPropertiesPage> => {
 
@@ -8776,7 +8782,7 @@ export type GetPortalPropertiesQueryError = ErrorType<void>
 
 
 /**
- * @summary Managed properties with live operational stats (requires auth)
+ * @summary Client portfolio properties (platform-only, isolated from hotel app)
  */
 
 export function useGetPortalProperties<TData = Awaited<ReturnType<typeof getPortalProperties>>, TError = ErrorType<void>>(
@@ -8796,6 +8802,521 @@ export function useGetPortalProperties<TData = Awaited<ReturnType<typeof getPort
 
 
 
+
+export const getCreatePortalPropertyUrl = () => {
+
+
+
+
+  return `/api/portal/properties`
+}
+
+/**
+ * @summary Create a new portfolio property (platform-only)
+ */
+export const createPortalProperty = async (portalPropertyInput: PortalPropertyInput, options?: RequestInit): Promise<PortalPropertyDetail> => {
+
+  return customFetch<PortalPropertyDetail>(getCreatePortalPropertyUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      portalPropertyInput,)
+  }
+);}
+
+
+
+
+export const getCreatePortalPropertyMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPortalProperty>>, TError,{data: BodyType<PortalPropertyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPortalProperty>>, TError,{data: BodyType<PortalPropertyInput>}, TContext> => {
+
+const mutationKey = ['createPortalProperty'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPortalProperty>>, {data: BodyType<PortalPropertyInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPortalProperty(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePortalPropertyMutationResult = NonNullable<Awaited<ReturnType<typeof createPortalProperty>>>
+    export type CreatePortalPropertyMutationBody = BodyType<PortalPropertyInput>
+    export type CreatePortalPropertyMutationError = ErrorType<void>
+
+    /**
+ * @summary Create a new portfolio property (platform-only)
+ */
+export const useCreatePortalProperty = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPortalProperty>>, TError,{data: BodyType<PortalPropertyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPortalProperty>>,
+        TError,
+        {data: BodyType<PortalPropertyInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePortalPropertyMutationOptions(options));
+    }
+
+export const getUpdatePortalPropertyUrl = (id: number,) => {
+
+
+
+
+  return `/api/portal/properties/${id}`
+}
+
+/**
+ * @summary Update a portfolio property
+ */
+export const updatePortalProperty = async (id: number,
+    portalPropertyInput: PortalPropertyInput, options?: RequestInit): Promise<PortalPropertyDetail> => {
+
+  return customFetch<PortalPropertyDetail>(getUpdatePortalPropertyUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      portalPropertyInput,)
+  }
+);}
+
+
+
+
+export const getUpdatePortalPropertyMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePortalProperty>>, TError,{id: number;data: BodyType<PortalPropertyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePortalProperty>>, TError,{id: number;data: BodyType<PortalPropertyInput>}, TContext> => {
+
+const mutationKey = ['updatePortalProperty'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePortalProperty>>, {id: number;data: BodyType<PortalPropertyInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updatePortalProperty(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePortalPropertyMutationResult = NonNullable<Awaited<ReturnType<typeof updatePortalProperty>>>
+    export type UpdatePortalPropertyMutationBody = BodyType<PortalPropertyInput>
+    export type UpdatePortalPropertyMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a portfolio property
+ */
+export const useUpdatePortalProperty = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePortalProperty>>, TError,{id: number;data: BodyType<PortalPropertyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePortalProperty>>,
+        TError,
+        {id: number;data: BodyType<PortalPropertyInput>},
+        TContext
+      > => {
+      return useMutation(getUpdatePortalPropertyMutationOptions(options));
+    }
+
+export const getDeletePortalPropertyUrl = (id: number,) => {
+
+
+
+
+  return `/api/portal/properties/${id}`
+}
+
+/**
+ * @summary Delete a portfolio property (cascades to units)
+ */
+export const deletePortalProperty = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeletePortalPropertyUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeletePortalPropertyMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePortalProperty>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePortalProperty>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deletePortalProperty'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePortalProperty>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePortalProperty(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePortalPropertyMutationResult = NonNullable<Awaited<ReturnType<typeof deletePortalProperty>>>
+
+    export type DeletePortalPropertyMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a portfolio property (cascades to units)
+ */
+export const useDeletePortalProperty = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePortalProperty>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePortalProperty>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeletePortalPropertyMutationOptions(options));
+    }
+
+export const getGetPortalPropertyUnitsUrl = (id: number,
+    params?: GetPortalPropertyUnitsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/portal/properties/${id}/units?${stringifiedParams}` : `/api/portal/properties/${id}/units`
+}
+
+/**
+ * @summary List units for a portfolio property
+ */
+export const getPortalPropertyUnits = async (id: number,
+    params?: GetPortalPropertyUnitsParams, options?: RequestInit): Promise<PortalUnitsPage> => {
+
+  return customFetch<PortalUnitsPage>(getGetPortalPropertyUnitsUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPortalPropertyUnitsQueryKey = (id: number,
+    params?: GetPortalPropertyUnitsParams,) => {
+    return [
+    `/api/portal/properties/${id}/units`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPortalPropertyUnitsQueryOptions = <TData = Awaited<ReturnType<typeof getPortalPropertyUnits>>, TError = ErrorType<void>>(id: number,
+    params?: GetPortalPropertyUnitsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalPropertyUnits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPortalPropertyUnitsQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPortalPropertyUnits>>> = ({ signal }) => getPortalPropertyUnits(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPortalPropertyUnits>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPortalPropertyUnitsQueryResult = NonNullable<Awaited<ReturnType<typeof getPortalPropertyUnits>>>
+export type GetPortalPropertyUnitsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List units for a portfolio property
+ */
+
+export function useGetPortalPropertyUnits<TData = Awaited<ReturnType<typeof getPortalPropertyUnits>>, TError = ErrorType<void>>(
+ id: number,
+    params?: GetPortalPropertyUnitsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalPropertyUnits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPortalPropertyUnitsQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreatePortalUnitUrl = () => {
+
+
+
+
+  return `/api/portal/units`
+}
+
+/**
+ * @summary Add a unit to a portfolio property
+ */
+export const createPortalUnit = async (portalUnitInput: PortalUnitInput, options?: RequestInit): Promise<PortalUnit> => {
+
+  return customFetch<PortalUnit>(getCreatePortalUnitUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      portalUnitInput,)
+  }
+);}
+
+
+
+
+export const getCreatePortalUnitMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPortalUnit>>, TError,{data: BodyType<PortalUnitInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPortalUnit>>, TError,{data: BodyType<PortalUnitInput>}, TContext> => {
+
+const mutationKey = ['createPortalUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPortalUnit>>, {data: BodyType<PortalUnitInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPortalUnit(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePortalUnitMutationResult = NonNullable<Awaited<ReturnType<typeof createPortalUnit>>>
+    export type CreatePortalUnitMutationBody = BodyType<PortalUnitInput>
+    export type CreatePortalUnitMutationError = ErrorType<void>
+
+    /**
+ * @summary Add a unit to a portfolio property
+ */
+export const useCreatePortalUnit = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPortalUnit>>, TError,{data: BodyType<PortalUnitInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPortalUnit>>,
+        TError,
+        {data: BodyType<PortalUnitInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePortalUnitMutationOptions(options));
+    }
+
+export const getUpdatePortalUnitUrl = (id: number,) => {
+
+
+
+
+  return `/api/portal/units/${id}`
+}
+
+/**
+ * @summary Update a portfolio unit
+ */
+export const updatePortalUnit = async (id: number,
+    portalUnitInput: PortalUnitInput, options?: RequestInit): Promise<PortalUnit> => {
+
+  return customFetch<PortalUnit>(getUpdatePortalUnitUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      portalUnitInput,)
+  }
+);}
+
+
+
+
+export const getUpdatePortalUnitMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePortalUnit>>, TError,{id: number;data: BodyType<PortalUnitInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePortalUnit>>, TError,{id: number;data: BodyType<PortalUnitInput>}, TContext> => {
+
+const mutationKey = ['updatePortalUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePortalUnit>>, {id: number;data: BodyType<PortalUnitInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updatePortalUnit(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePortalUnitMutationResult = NonNullable<Awaited<ReturnType<typeof updatePortalUnit>>>
+    export type UpdatePortalUnitMutationBody = BodyType<PortalUnitInput>
+    export type UpdatePortalUnitMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a portfolio unit
+ */
+export const useUpdatePortalUnit = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePortalUnit>>, TError,{id: number;data: BodyType<PortalUnitInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePortalUnit>>,
+        TError,
+        {id: number;data: BodyType<PortalUnitInput>},
+        TContext
+      > => {
+      return useMutation(getUpdatePortalUnitMutationOptions(options));
+    }
+
+export const getDeletePortalUnitUrl = (id: number,) => {
+
+
+
+
+  return `/api/portal/units/${id}`
+}
+
+/**
+ * @summary Delete a portfolio unit
+ */
+export const deletePortalUnit = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeletePortalUnitUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeletePortalUnitMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePortalUnit>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePortalUnit>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deletePortalUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePortalUnit>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePortalUnit(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePortalUnitMutationResult = NonNullable<Awaited<ReturnType<typeof deletePortalUnit>>>
+
+    export type DeletePortalUnitMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a portfolio unit
+ */
+export const useDeletePortalUnit = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePortalUnit>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePortalUnit>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeletePortalUnitMutationOptions(options));
+    }
 
 export const getGetPortalBookingsUrl = (params?: GetPortalBookingsParams,) => {
   const normalizedParams = new URLSearchParams();

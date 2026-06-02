@@ -2330,20 +2330,155 @@ paths:
   /portal/properties:
     get:
       operationId: getPortalProperties
-      summary: Managed properties with live operational stats (requires auth)
+      summary: Client portfolio properties (platform-only, isolated from hotel app)
       tags: [portal]
       parameters:
         - { name: page,  in: query, schema: { type: integer, default: 1 } }
-        - { name: limit, in: query, schema: { type: integer, default: 10 } }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
       responses:
         "200":
-          description: Properties with occupancy stats
+          description: Portal properties with unit count
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/PortalPropertiesPage"
         "401":
           description: Unauthorized
+    post:
+      operationId: createPortalProperty
+      summary: Create a new portfolio property (platform-only)
+      tags: [portal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortalPropertyInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalPropertyDetail"
+        "401":
+          description: Unauthorized
+
+  /portal/properties/{id}:
+    patch:
+      operationId: updatePortalProperty
+      summary: Update a portfolio property
+      tags: [portal]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortalPropertyInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalPropertyDetail"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+    delete:
+      operationId: deletePortalProperty
+      summary: Delete a portfolio property (cascades to units)
+      tags: [portal]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Deleted
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+
+  /portal/properties/{id}/units:
+    get:
+      operationId: getPortalPropertyUnits
+      summary: List units for a portfolio property
+      tags: [portal]
+      parameters:
+        - { name: id,    in: path,  required: true, schema: { type: integer } }
+        - { name: page,  in: query, schema: { type: integer, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, default: 100 } }
+      responses:
+        "200":
+          description: Unit list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalUnitsPage"
+        "401":
+          description: Unauthorized
+
+  /portal/units:
+    post:
+      operationId: createPortalUnit
+      summary: Add a unit to a portfolio property
+      tags: [portal]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortalUnitInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalUnit"
+        "401":
+          description: Unauthorized
+
+  /portal/units/{id}:
+    patch:
+      operationId: updatePortalUnit
+      summary: Update a portfolio unit
+      tags: [portal]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortalUnitInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalUnit"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+    delete:
+      operationId: deletePortalUnit
+      summary: Delete a portfolio unit
+      tags: [portal]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Deleted
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
 
   /portal/bookings:
     get:
@@ -4470,17 +4605,93 @@ components:
 
     PortalProperty:
       type: object
-      required: [id, name, type, status, address, totalRooms, activeBookings, occupancyRate]
+      required: [id, name, type, status, address, city, country, unitCount]
       properties:
-        id:              { type: integer }
-        name:            { type: string }
-        type:            { type: string }
-        status:          { type: string }
-        address:         { type: string }
-        totalRooms:      { type: integer }
-        activeBookings:  { type: integer }
-        occupancyRate:   { type: number }
-        linkedListingId: { type: ["integer", "null"] }
+        id:          { type: integer }
+        name:        { type: string }
+        type:        { type: string }
+        status:      { type: string }
+        address:     { type: string }
+        city:        { type: string }
+        country:     { type: string }
+        description: { type: string, nullable: true }
+        unitCount:   { type: integer }
+        createdAt:   { type: string }
+
+    PortalPropertyDetail:
+      type: object
+      required: [id, name, type, status, address, city, country, unitCount]
+      properties:
+        id:          { type: integer }
+        name:        { type: string }
+        type:        { type: string }
+        status:      { type: string }
+        address:     { type: string }
+        city:        { type: string }
+        country:     { type: string }
+        description: { type: string, nullable: true }
+        unitCount:   { type: integer }
+        createdAt:   { type: string }
+
+    PortalPropertyInput:
+      type: object
+      required: [name, type, address, city]
+      properties:
+        name:        { type: string }
+        type:        { type: string }
+        address:     { type: string }
+        city:        { type: string }
+        country:     { type: string }
+        description: { type: string, nullable: true }
+        status:      { type: string }
+
+    PortalUnit:
+      type: object
+      required: [id, portalPropertyId, unitNumber, type, status]
+      properties:
+        id:               { type: integer }
+        portalPropertyId: { type: integer }
+        tenantId:         { type: integer }
+        unitNumber:       { type: string }
+        floor:            { type: integer, nullable: true }
+        type:             { type: string }
+        area:             { type: number, nullable: true }
+        bedroomCount:     { type: integer }
+        bathroomCount:    { type: integer }
+        status:           { type: string }
+        monthlyRent:      { type: number, nullable: true }
+        notes:            { type: string, nullable: true }
+        createdAt:        { type: string }
+
+    PortalUnitInput:
+      type: object
+      required: [portalPropertyId, unitNumber, type]
+      properties:
+        portalPropertyId: { type: integer }
+        unitNumber:       { type: string }
+        floor:            { type: integer, nullable: true }
+        type:             { type: string }
+        area:             { type: number, nullable: true }
+        bedroomCount:     { type: integer }
+        bathroomCount:    { type: integer }
+        status:           { type: string }
+        monthlyRent:      { type: number, nullable: true }
+        notes:            { type: string, nullable: true }
+
+    PortalUnitsPage:
+      type: object
+      required: [status, data, timestamp]
+      properties:
+        status:    { type: string }
+        data:      { type: array, items: { $ref: "#/components/schemas/PortalUnit" } }
+        meta:
+          type: object
+          properties:
+            total:      { type: integer }
+            page:       { type: integer }
+            limit:      { type: integer }
+            totalPages: { type: integer }
+        timestamp: { type: string }
 
     PortalPropertiesPage:
       type: object
