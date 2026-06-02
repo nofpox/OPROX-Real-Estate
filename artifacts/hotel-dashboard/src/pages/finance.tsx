@@ -99,7 +99,7 @@ export default function Finance() {
         body: JSON.stringify({
           ...data,
           propertyId: Number(data.propertyId),
-          amount: Number(data.amount),
+          amount: data.amount,
         }),
       }).then(r => r.json()),
     onSuccess: () => {
