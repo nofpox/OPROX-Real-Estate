@@ -240,7 +240,7 @@ export default function DataArchiving() {
             <ShieldCheck className="h-4 w-4" />
             Health Monitor
             {status?.isDue && (
-              <span className="ms-1 h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="ms-1 h-2 w-2 rounded-full bg-amber-500" />
             )}
           </TabsTrigger>
           <TabsTrigger value="browser" className="gap-1.5">
@@ -265,9 +265,9 @@ export default function DataArchiving() {
 
           {status && (
             <>
-              {/* Status overview */}
+              {/* Status overview — shadow-none prevents Android WebView GPU layer corruption */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card>
+                <Card className="shadow-none">
                   <CardContent className="pt-5 pb-4">
                     <div className="flex items-center gap-3">
                       <div className="rounded-full bg-muted p-2">
@@ -281,7 +281,7 @@ export default function DataArchiving() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="shadow-none">
                   <CardContent className="pt-5 pb-4">
                     <div className="flex items-center gap-3">
                       <div className={cn("rounded-full p-2", status.isDue ? "bg-amber-100 dark:bg-amber-900/30" : "bg-emerald-100 dark:bg-emerald-900/30")}>
@@ -297,7 +297,7 @@ export default function DataArchiving() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="shadow-none">
                   <CardContent className="pt-5 pb-4">
                     <div className="flex items-center gap-3">
                       <div className={cn("rounded-full p-2", status.isDue ? "bg-amber-100 dark:bg-amber-900/30" : "bg-emerald-100 dark:bg-emerald-900/30")}>
@@ -318,52 +318,50 @@ export default function DataArchiving() {
                 </Card>
               </div>
 
-              {/* Pending alert banner */}
+              {/* Pending alert banner — border-only, no background fill to avoid GPU layer */}
               {status.isDue && (
-                <Card className="border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/20">
-                  <CardContent className="py-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="rounded-full bg-amber-100 dark:bg-amber-900/50 p-2.5 shrink-0">
-                          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-amber-900 dark:text-amber-200">
-                            Scheduled Maintenance Due
-                          </p>
-                          <p className="text-sm text-amber-700 dark:text-amber-300 truncate">
-                            Monthly data archiving window is ready for your approval. Select datasets below and click Execute.
-                          </p>
-                        </div>
+                <div className="rounded-lg border border-amber-300 dark:border-amber-700 p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="rounded-full border border-amber-300 dark:border-amber-700 p-2.5 shrink-0">
+                        <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                       </div>
-                      <div className="flex gap-2 shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-amber-300 dark:border-amber-700 hover:bg-amber-100"
-                          onClick={() => setSnoozeOpen(true)}
-                          disabled={snoozeMutation.isPending}
-                        >
-                          <BellOff className="h-3.5 w-3.5 me-1.5" />
-                          Remind Later
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="bg-amber-600 hover:bg-amber-700 text-white"
-                          onClick={() => setConfirmRun(true)}
-                          disabled={runMutation.isPending}
-                        >
-                          <Play className="h-3.5 w-3.5 me-1.5" />
-                          Execute Maintenance
-                        </Button>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-amber-900 dark:text-amber-200">
+                          Scheduled Maintenance Due
+                        </p>
+                        <p className="text-sm text-amber-700 dark:text-amber-300 line-clamp-2">
+                          Monthly data archiving window is ready for your approval. Select datasets below and click Execute.
+                        </p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div className="flex gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-amber-300 dark:border-amber-700"
+                        onClick={() => setSnoozeOpen(true)}
+                        disabled={snoozeMutation.isPending}
+                      >
+                        <BellOff className="h-3.5 w-3.5 me-1.5" />
+                        Remind Later
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-amber-600 hover:bg-amber-700 text-white"
+                        onClick={() => setConfirmRun(true)}
+                        disabled={runMutation.isPending}
+                      >
+                        <Play className="h-3.5 w-3.5 me-1.5" />
+                        Execute Maintenance
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Dataset selector + manual run */}
-              <Card>
+              <Card className="shadow-none">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
@@ -429,7 +427,7 @@ export default function DataArchiving() {
 
               {/* Run history */}
               {status.logs.length > 0 && (
-                <Card>
+                <Card className="shadow-none">
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
                       <Clock className="h-4 w-4" />
@@ -508,7 +506,7 @@ export default function DataArchiving() {
           )}
 
           {!archivesQ.isLoading && filteredArchives.length === 0 && (
-            <Card>
+            <Card className="shadow-none">
               <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
                 <Archive className="h-10 w-10 opacity-30" />
                 <p className="font-medium">No archives found</p>
@@ -522,7 +520,7 @@ export default function DataArchiving() {
           )}
 
           {filteredArchives.length > 0 && (
-            <Card>
+            <Card className="shadow-none">
               <CardContent className="p-0">
                 <div className="divide-y">
                   {filteredArchives.map(archive => {

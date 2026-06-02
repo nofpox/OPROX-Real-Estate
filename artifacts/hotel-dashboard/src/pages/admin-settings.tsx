@@ -1417,30 +1417,28 @@ function PermissionsTab() {
       ══════════════════════════════════════════════════════════════════════ */}
       <div className="md:hidden space-y-4">
 
-        {/* Role selector — horizontally scrollable pill strip */}
-        <div className="overflow-x-auto pb-1 -mx-1 px-1">
-          <div className="flex gap-2 min-w-max">
-            {OWNER_CONFIGURABLE_ROLES.map((r) => {
-              const active = r.id === mobileRoleId;
-              return (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => setMobileRoleId(r.id)}
-                  className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all whitespace-nowrap ${
-                    active
-                      ? `${r.color} border-current shadow-sm scale-105`
-                      : "bg-muted/40 text-muted-foreground border-border/50 hover:bg-muted"
-                  }`}
-                >
-                  <span>{r.label}</span>
-                  <span className={`text-[10px] font-normal ${active ? "opacity-80" : "text-muted-foreground/60"}`}>
-                    {grantCount(r.id)}/{ALL_ROUTES.length}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        {/* Role selector — wrapping grid so all roles are always tappable */}
+        <div className="flex flex-wrap gap-2">
+          {OWNER_CONFIGURABLE_ROLES.map((r) => {
+            const active = r.id === mobileRoleId;
+            return (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => setMobileRoleId(r.id)}
+                className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all whitespace-nowrap ${
+                  active
+                    ? `${r.color} border-current scale-105`
+                    : "bg-muted/40 text-muted-foreground border-border/50 hover:bg-muted"
+                }`}
+              >
+                <span>{r.label}</span>
+                <span className={`text-[10px] font-normal ${active ? "opacity-80" : "text-muted-foreground/60"}`}>
+                  {grantCount(r.id)}/{ALL_ROUTES.length}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Selected role card */}
