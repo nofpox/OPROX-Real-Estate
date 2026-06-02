@@ -1326,6 +1326,34 @@ function PermissionsTab() {
   // Per-role counts for "X / Y" display
   function grantCount(roleId: string) { return (matrix[roleId] ?? []).length; }
 
+  const [mobileRoleId, setMobileRoleId] = React.useState(OWNER_CONFIGURABLE_ROLES[0].id);
+  const mobileRole = OWNER_CONFIGURABLE_ROLES.find(r => r.id === mobileRoleId)!;
+
+  // ── Shared: footer actions ─────────────────────────────────────────────────
+  const FooterActions = () => (
+    <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-1 pb-4">
+      <button
+        type="button"
+        onClick={() => { setMatrix(DEFAULT_PERM); setDirty(true); }}
+        className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors self-start sm:self-auto"
+      >
+        Reset to defaults
+      </button>
+      <div className="flex items-center gap-3 flex-wrap">
+        {dirty && (
+          <span className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+            Unsaved changes
+          </span>
+        )}
+        {!dirty && <span className="text-xs text-muted-foreground">All changes saved</span>}
+        <Button onClick={handleSave} disabled={saving || !dirty} className="min-w-36 w-full sm:w-auto">
+          {saving ? "Saving…" : "Save Permissions"}
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-5">
 
@@ -1336,144 +1364,201 @@ function PermissionsTab() {
           <div className="space-y-1 min-w-0">
             <p className="text-sm font-semibold">Owner Sovereignty — Full Control</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              As the Owner, you have unrestricted authority over every role. Every checkbox below is fully editable — enable or disable any page for any role with no hard-coded restrictions. Click a role header to grant/revoke all pages at once.
+              As the Owner, you have unrestricted authority over every role. Enable or disable any page for any role with no restrictions.
             </p>
           </div>
         </div>
       </div>
 
-      {/* ── Hierarchy legend ─────────────────────────────────────────────────── */}
+      {/* ── Hierarchy legend — horizontally scrollable on mobile ─────────────── */}
       <div className="rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2.5">Delegation Chain</p>
-        <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 text-xs">
-          {/* Owner node */}
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-semibold bg-primary text-primary-foreground shadow-sm">
-            <Shield className="h-3 w-3" /> Owner (You)
-          </span>
-          <span className="text-muted-foreground font-medium mx-0.5">→</span>
-          {OWNER_CONFIGURABLE_ROLES.slice(0, 2).map((r, i) => (
-            <React.Fragment key={r.id}>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold text-xs ${r.color}`}>{r.label}</span>
-              {i === 0 && <span className="text-muted-foreground mx-0.5">→</span>}
-            </React.Fragment>
-          ))}
-          <span className="text-muted-foreground font-medium mx-0.5">→</span>
-          {OWNER_CONFIGURABLE_ROLES.slice(2).map((r, i) => (
-            <React.Fragment key={r.id}>
-              {i > 0 && <span className="text-muted-foreground">/</span>}
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold text-xs ${r.color}`}>{r.label}</span>
-            </React.Fragment>
-          ))}
+        <div className="overflow-x-auto pb-1">
+          <div className="flex items-center gap-x-1 gap-y-1.5 text-xs min-w-max">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-semibold bg-primary text-primary-foreground shadow-sm whitespace-nowrap">
+              <Shield className="h-3 w-3" /> Owner (You)
+            </span>
+            <span className="text-muted-foreground font-medium mx-0.5">→</span>
+            {OWNER_CONFIGURABLE_ROLES.slice(0, 2).map((r, i) => (
+              <React.Fragment key={r.id}>
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold text-xs whitespace-nowrap ${r.color}`}>{r.label}</span>
+                {i === 0 && <span className="text-muted-foreground mx-0.5">→</span>}
+              </React.Fragment>
+            ))}
+            <span className="text-muted-foreground font-medium mx-0.5">→</span>
+            {OWNER_CONFIGURABLE_ROLES.slice(2).map((r, i) => (
+              <React.Fragment key={r.id}>
+                {i > 0 && <span className="text-muted-foreground">/</span>}
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold text-xs whitespace-nowrap ${r.color}`}>{r.label}</span>
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* ── Permission matrix table ───────────────────────────────────────────── */}
-      <div className="overflow-x-auto rounded-xl border border-border/60 shadow-sm">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-muted/40 border-b border-border/60">
-              {/* Page column */}
-              <th className="text-left font-semibold py-3.5 px-5 text-muted-foreground min-w-44 sticky left-0 bg-muted/40 z-10">
-                Page / Route
-              </th>
-              {/* Owner reference column — always full, read-only */}
-              <th className="text-center py-3.5 px-3 min-w-24 border-s border-primary/20 bg-primary/5">
-                <div className="flex flex-col items-center gap-1">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary text-primary-foreground">
-                    <Shield className="h-3 w-3" /> Owner
+      {/* ══════════════════════════════════════════════════════════════════════
+          MOBILE VIEW  (hidden on md+)
+          Role-picker pill strip → vertical page checklist for that role
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div className="md:hidden space-y-4">
+
+        {/* Role selector — horizontally scrollable pill strip */}
+        <div className="overflow-x-auto pb-1 -mx-1 px-1">
+          <div className="flex gap-2 min-w-max">
+            {OWNER_CONFIGURABLE_ROLES.map((r) => {
+              const active = r.id === mobileRoleId;
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setMobileRoleId(r.id)}
+                  className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all whitespace-nowrap ${
+                    active
+                      ? `${r.color} border-current shadow-sm scale-105`
+                      : "bg-muted/40 text-muted-foreground border-border/50 hover:bg-muted"
+                  }`}
+                >
+                  <span>{r.label}</span>
+                  <span className={`text-[10px] font-normal ${active ? "opacity-80" : "text-muted-foreground/60"}`}>
+                    {grantCount(r.id)}/{ALL_ROUTES.length}
                   </span>
-                  <span className="text-[10px] text-primary/70 font-medium">{ALL_ROUTES.length}/{ALL_ROUTES.length}</span>
-                </div>
-              </th>
-              {/* Configurable role columns */}
-              {OWNER_CONFIGURABLE_ROLES.map((r) => {
-                const count = grantCount(r.id);
-                const isAll = count === ALL_ROUTES.length;
-                return (
-                  <th key={r.id} className={`text-center py-3.5 px-3 min-w-28 border-s border-border/40`}>
-                    <div className="flex flex-col items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => toggleAll(r.id)}
-                        title={isAll ? `Revoke all pages from ${r.label}` : `Grant all pages to ${r.label}`}
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold transition-all hover:opacity-80 hover:scale-105 ${r.color}`}
-                      >
-                        {r.label}
-                      </button>
-                      <span className="text-[10px] text-muted-foreground font-medium">{count}/{ALL_ROUTES.length}</span>
-                      <span className="text-[9px] text-muted-foreground/60 hidden sm:block">{r.desc}</span>
-                    </div>
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {OWNER_PERMISSION_ROUTES.map((page, idx) => (
-              <tr
-                key={page.href}
-                className={`border-t border-border/40 transition-colors hover:bg-muted/30 ${idx % 2 === 0 ? "" : "bg-muted/10"}`}
-              >
-                {/* Page name */}
-                <td className="py-2.5 px-5 font-medium text-sm sticky left-0 bg-background hover:bg-muted/30 z-10">
-                  <div className="flex flex-col">
-                    <span>{page.label}</span>
-                    <span className="text-[10px] text-muted-foreground/60 font-normal">{page.href}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Selected role card */}
+        <div className="rounded-xl border border-border/60 shadow-sm overflow-hidden">
+          {/* Card header */}
+          <div className={`px-4 py-3 flex items-center justify-between ${mobileRole.color}`}>
+            <div>
+              <p className="font-semibold text-sm">{mobileRole.label}</p>
+              <p className="text-xs opacity-70">{mobileRole.desc} · {grantCount(mobileRoleId)}/{ALL_ROUTES.length} pages</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => toggleAll(mobileRoleId)}
+              className="text-xs font-medium underline underline-offset-2 opacity-80 hover:opacity-100 transition-opacity"
+            >
+              {grantCount(mobileRoleId) === ALL_ROUTES.length ? "Revoke all" : "Grant all"}
+            </button>
+          </div>
+
+          {/* Page checklist */}
+          <div className="divide-y divide-border/40">
+            {OWNER_PERMISSION_ROUTES.map((page) => {
+              const allowed = (matrix[mobileRoleId] ?? []).includes(page.href);
+              return (
+                <label
+                  key={page.href}
+                  className="flex items-center gap-4 px-4 py-3.5 cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors select-none"
+                >
+                  <input
+                    type="checkbox"
+                    checked={allowed}
+                    onChange={() => toggle(mobileRoleId, page.href)}
+                    className="h-5 w-5 accent-primary cursor-pointer rounded shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium leading-tight">{page.label}</p>
+                    <p className="text-[11px] text-muted-foreground/60 font-normal mt-0.5">{page.href}</p>
                   </div>
-                </td>
-                {/* Owner — always checked, read-only */}
-                <td className="text-center py-2.5 px-3 border-s border-primary/20 bg-primary/5">
-                  <div className="flex justify-center">
-                    <div className="h-4 w-4 rounded bg-primary/20 border-2 border-primary flex items-center justify-center" title="Owner always has full access">
-                      <div className="h-2 w-2 rounded-sm bg-primary" />
-                    </div>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        <FooterActions />
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          DESKTOP VIEW  (hidden on <md)
+          Full role × page matrix table
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div className="hidden md:block">
+        <div className="overflow-x-auto rounded-xl border border-border/60 shadow-sm">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-muted/40 border-b border-border/60">
+                <th className="text-left font-semibold py-3.5 px-5 text-muted-foreground min-w-44 sticky left-0 bg-muted/40 z-10">
+                  Page / Route
+                </th>
+                <th className="text-center py-3.5 px-3 min-w-24 border-s border-primary/20 bg-primary/5">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary text-primary-foreground">
+                      <Shield className="h-3 w-3" /> Owner
+                    </span>
+                    <span className="text-[10px] text-primary/70 font-medium">{ALL_ROUTES.length}/{ALL_ROUTES.length}</span>
                   </div>
-                </td>
-                {/* Configurable role checkboxes */}
+                </th>
                 {OWNER_CONFIGURABLE_ROLES.map((r) => {
-                  const allowed = (matrix[r.id] ?? []).includes(page.href);
+                  const count = grantCount(r.id);
+                  const isAll = count === ALL_ROUTES.length;
                   return (
-                    <td key={r.id} className="text-center py-2.5 px-3 border-s border-border/40">
-                      <div className="flex justify-center">
-                        <input
-                          type="checkbox"
-                          checked={allowed}
-                          onChange={() => toggle(r.id, page.href)}
-                          className="h-4 w-4 accent-primary cursor-pointer rounded"
-                          title={`${allowed ? "Revoke" : "Grant"} ${page.label} access for ${r.label}`}
-                        />
+                    <th key={r.id} className="text-center py-3.5 px-3 min-w-28 border-s border-border/40">
+                      <div className="flex flex-col items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => toggleAll(r.id)}
+                          title={isAll ? `Revoke all pages from ${r.label}` : `Grant all pages to ${r.label}`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold transition-all hover:opacity-80 hover:scale-105 ${r.color}`}
+                        >
+                          {r.label}
+                        </button>
+                        <span className="text-[10px] text-muted-foreground font-medium">{count}/{ALL_ROUTES.length}</span>
+                        <span className="text-[9px] text-muted-foreground/60">{r.desc}</span>
                       </div>
-                    </td>
+                    </th>
                   );
                 })}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {OWNER_PERMISSION_ROUTES.map((page, idx) => (
+                <tr
+                  key={page.href}
+                  className={`border-t border-border/40 transition-colors hover:bg-muted/30 ${idx % 2 === 0 ? "" : "bg-muted/10"}`}
+                >
+                  <td className="py-2.5 px-5 font-medium text-sm sticky left-0 bg-background hover:bg-muted/30 z-10">
+                    <div className="flex flex-col">
+                      <span>{page.label}</span>
+                      <span className="text-[10px] text-muted-foreground/60 font-normal">{page.href}</span>
+                    </div>
+                  </td>
+                  <td className="text-center py-2.5 px-3 border-s border-primary/20 bg-primary/5">
+                    <div className="flex justify-center">
+                      <div className="h-4 w-4 rounded bg-primary/20 border-2 border-primary flex items-center justify-center" title="Owner always has full access">
+                        <div className="h-2 w-2 rounded-sm bg-primary" />
+                      </div>
+                    </div>
+                  </td>
+                  {OWNER_CONFIGURABLE_ROLES.map((r) => {
+                    const allowed = (matrix[r.id] ?? []).includes(page.href);
+                    return (
+                      <td key={r.id} className="text-center py-2.5 px-3 border-s border-border/40">
+                        <div className="flex justify-center">
+                          <input
+                            type="checkbox"
+                            checked={allowed}
+                            onChange={() => toggle(r.id, page.href)}
+                            className="h-4 w-4 accent-primary cursor-pointer rounded"
+                            title={`${allowed ? "Revoke" : "Grant"} ${page.label} access for ${r.label}`}
+                          />
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <FooterActions />
       </div>
 
-      {/* ── Footer actions ───────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between pt-1 pb-4">
-        <button
-          type="button"
-          onClick={() => { setMatrix(DEFAULT_PERM); setDirty(true); }}
-          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-        >
-          Reset to defaults
-        </button>
-        <div className="flex items-center gap-3">
-          {dirty && (
-            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-              Unsaved changes
-            </span>
-          )}
-          {!dirty && <span className="text-xs text-muted-foreground">All changes saved</span>}
-          <Button onClick={handleSave} disabled={saving || !dirty} className="min-w-36">
-            {saving ? "Saving…" : "Save Permissions"}
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
