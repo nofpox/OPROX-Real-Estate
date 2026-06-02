@@ -48,13 +48,11 @@ const NAV_ITEMS = [
   { href: "/analytics",           labelKey: "nav.analytics",         icon: BarChart2,          section: "operations", featureKey: null },
   { href: "/support-tickets",    labelKey: "nav.supportTickets",    icon: Ticket,             section: "operations", featureKey: null },
   { href: "/data-archiving",     labelKey: "nav.dataArchiving",     icon: Archive,             section: "operations", featureKey: null },
-  { href: "/partner",           labelKey: "nav.partnerPortal",    icon: TrendingUp,           section: "main",       featureKey: null },
 ];
 
 /* Role pill colours — solid only, no opacity modifiers */
 const ROLE_ICON_COLORS: Record<string, string> = {
   super_admin:   "bg-red-100 text-red-700",
-  owner:         "bg-yellow-100 text-yellow-700",
   admin_manager: "bg-indigo-100 text-indigo-700",
   manager:       "bg-purple-100 text-purple-700",
   administrator: "bg-teal-100 text-teal-700",
@@ -62,7 +60,6 @@ const ROLE_ICON_COLORS: Record<string, string> = {
   maintenance:   "bg-orange-100 text-orange-700",
   cleaning:      "bg-green-100 text-green-700",
   security:      "bg-blue-100 text-blue-700",
-  partner:       "bg-emerald-100 text-emerald-700",
 };
 
 interface LayoutProps {

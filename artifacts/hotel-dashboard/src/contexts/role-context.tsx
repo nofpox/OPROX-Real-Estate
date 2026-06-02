@@ -2,15 +2,13 @@ import React, { createContext, useContext, useState } from "react";
 
 export type AppRole =
   | "super_admin"
-  | "owner"
   | "admin_manager"
   | "manager"
   | "administrator"
   | "supervisor"
   | "maintenance"
   | "cleaning"
-  | "security"
-  | "partner";
+  | "security";
 
 export interface RoleDefinition {
   id: AppRole;
@@ -22,7 +20,7 @@ export interface RoleDefinition {
 
 export function mapDbRoleToAppRole(dbRole: string): AppRole {
   if (dbRole === "super_admin") return "super_admin";
-  if (dbRole === "owner" || dbRole === "admin") return "owner";
+  if (dbRole === "owner" || dbRole === "admin") return "super_admin";
   if (dbRole === "admin-manager") return "admin_manager";
   if (dbRole === "manager" || dbRole === "property-manager" || dbRole === "site-supervisor") return "manager";
   if (dbRole === "administrator") return "administrator";
@@ -30,12 +28,12 @@ export function mapDbRoleToAppRole(dbRole: string): AppRole {
   if (dbRole === "housekeeping" || dbRole === "cleaning-staff" || dbRole === "cleaning") return "cleaning";
   if (dbRole === "maintenance" || dbRole === "maintenance-tech") return "maintenance";
   if (dbRole === "security" || dbRole === "security-officer") return "security";
-  if (dbRole === "partner" || dbRole === "investor") return "partner";
+  if (dbRole === "partner" || dbRole === "investor") return "supervisor";
   return "supervisor";
 }
 
 export function isOwnerTier(dbRole: string): boolean {
-  return dbRole === "owner" || dbRole === "admin" || dbRole === "super_admin";
+  return dbRole === "super_admin" || dbRole === "owner" || dbRole === "admin";
 }
 
 export function isSuperAdmin(dbRole: string): boolean {
@@ -48,14 +46,6 @@ export const ROLES: RoleDefinition[] = [
     id: "super_admin",
     label: "Super Admin",
     description: "Platform-level access: tenant management and all settings",
-    allowedNav: ["*"],
-    taskCategories: null,
-  },
-  // 1 — Top tier: Owner / System Administrator
-  {
-    id: "owner",
-    label: "Administrator (Owner/System)",
-    description: "Full system authority — sovereign, unrestricted control over all settings, roles, and data",
     allowedNav: ["*"],
     taskCategories: null,
   },
@@ -91,15 +81,7 @@ export const ROLES: RoleDefinition[] = [
     allowedNav: ["/", "/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log"],
     taskCategories: null,
   },
-  // 6 — Partner / Investor: equity portal access
-  {
-    id: "partner",
-    label: "Partner / Investor",
-    description: "Equity portal access — company shares, dividends, and performance reports",
-    allowedNav: ["/", "/partner"],
-    taskCategories: null,
-  },
-  // 7 — Execution staff
+  // 6 — Execution staff
   {
     id: "maintenance",
     label: "Maintenance",
@@ -135,7 +117,7 @@ const RoleContext = createContext<RoleContextValue | null>(null);
 
 export function RoleProvider({
   children,
-  initialRole = "owner",
+  initialRole = "super_admin",
 }: {
   children: React.ReactNode;
   initialRole?: string;

@@ -49,17 +49,15 @@ import WorkerUnitDetail from "@/pages/worker-unit-detail";
 import DataArchiving from "@/pages/data-archiving";
 import ContentManager from "@/pages/content-manager";
 import WebsiteSettings from "@/pages/website-settings";
-import PartnerPortal from "@/pages/partner-portal";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
 });
 
 /** Mirror of the server-side normTier — decides which portal a user belongs to. */
-function normTier(role: string): "admin" | "supervisor" | "worker" | "partner" {
+function normTier(role: string): "admin" | "supervisor" | "worker" {
   if (["owner", "admin", "super_admin"].includes(role)) return "admin";
-  if (["manager", "property-manager", "site-supervisor", "admin-manager", "front-desk", "supervisor"].includes(role)) return "supervisor";
-  if (role === "partner" || role === "investor") return "partner";
+  if (["manager", "property-manager", "site-supervisor", "admin-manager", "front-desk", "supervisor", "partner", "investor"].includes(role)) return "supervisor";
   return "worker";
 }
 
@@ -96,7 +94,6 @@ function Router() {
       <Route path="/data-archiving" component={DataArchiving} />
       <Route path="/content-manager" component={ContentManager} />
       <Route path="/website-settings" component={WebsiteSettings} />
-      <Route path="/partner" component={PartnerPortal} />
       <Route component={NotFound} />
     </Switch>
   );

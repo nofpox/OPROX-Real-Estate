@@ -1369,7 +1369,7 @@ function CreateTaskDialog({ open, onClose }: { open: boolean; onClose: () => voi
   const activeStaff   = staff?.filter((s) => s.status === "active") ?? [];
 
   // Managers/owners can assign a supervisor
-  const isManager = role.id === "owner" || role.id === "manager" || role.id === "super_admin";
+  const isManager = role.id === "manager" || role.id === "super_admin" || role.id === "admin_manager";
 
   function onSubmit(data: z.infer<typeof taskSchema>) {
     const payload = {
@@ -1560,11 +1560,11 @@ export default function Tasks() {
   const queryClient = useQueryClient();
   const { toast }   = useToast();
 
-  const canCreate      = role.id === "owner" || role.id === "manager" || role.id === "super_admin" || role.id === "supervisor";
-  const canVerify      = role.id === "owner" || role.id === "manager" || role.id === "super_admin";
-  const canReport      = role.id === "owner" || role.id === "manager" || role.id === "super_admin" || role.id === "supervisor";
-  const canReviewRpt   = role.id === "supervisor" || role.id === "manager" || role.id === "owner" || role.id === "super_admin";
-  const canApproveRpt  = role.id === "manager" || role.id === "owner" || role.id === "super_admin";
+  const canCreate      = role.id === "manager" || role.id === "super_admin" || role.id === "admin_manager" || role.id === "supervisor";
+  const canVerify      = role.id === "manager" || role.id === "super_admin" || role.id === "admin_manager";
+  const canReport      = role.id === "manager" || role.id === "super_admin" || role.id === "admin_manager" || role.id === "supervisor";
+  const canReviewRpt   = role.id === "supervisor" || role.id === "manager" || role.id === "super_admin" || role.id === "admin_manager";
+  const canApproveRpt  = role.id === "manager" || role.id === "super_admin" || role.id === "admin_manager";
 
   const params: any = {};
   if (statusFilter   !== "all") params.status     = statusFilter;
