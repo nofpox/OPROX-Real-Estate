@@ -6,7 +6,7 @@ import {
   type Room,
   type Property,
 } from "@workspace/api-client-react";
-import { Card, CardContent }   from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge }               from "@/components/ui/badge";
 import { Button }              from "@/components/ui/button";
 import { Input }               from "@/components/ui/input";
@@ -93,7 +93,7 @@ export default function UnitMap() {
 
   // ── KPI card config ─────────────────────────────────────────────────────────
   const KPI = [
-    { key: "total",       Icon: Building2, color: "text-foreground",  bg: "bg-muted/40",  value: counts.total       },
+    { key: "total",       Icon: Building2, color: "text-foreground",  bg: "bg-slate-100", value: counts.total       },
     { key: "available",   Icon: DoorOpen,  color: "text-green-600",   bg: "bg-green-50",  value: counts.available   },
     { key: "occupied",    Icon: BedDouble, color: "text-amber-600",   bg: "bg-amber-50",  value: counts.occupied    },
     { key: "maintenance", Icon: Wrench,    color: "text-red-600",     bg: "bg-red-50",    value: counts.maintenance },
@@ -114,17 +114,15 @@ export default function UnitMap() {
       {/* ── KPI cards ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {KPI.map(({ key, Icon, color, bg, value }) => (
-          <Card key={key} className={`${bg} border`}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <Icon className="h-4 w-4" />
-                <span className="text-xs font-medium">{t(`unitMap.${key}`)}</span>
-              </div>
-              {isLoading
-                ? <Skeleton className="h-8 w-12" />
-                : <p className={`text-3xl font-bold ${color}`}>{value}</p>}
-            </CardContent>
-          </Card>
+          <div key={key} className={`${bg} border border-border rounded-xl p-4`}>
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Icon className="h-4 w-4" />
+              <span className="text-xs font-medium">{t(`unitMap.${key}`)}</span>
+            </div>
+            {isLoading
+              ? <Skeleton className="h-8 w-12" />
+              : <p className={`text-3xl font-bold ${color}`}>{value}</p>}
+          </div>
         ))}
       </div>
 
@@ -229,7 +227,7 @@ export default function UnitMap() {
                       <button
                         key={room.id}
                         onClick={() => setActiveRoom(room)}
-                        className={`relative rounded-xl border-2 p-3 text-start transition-all duration-150 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${cfg.cardClass}`}
+                        className={`relative rounded-xl border-2 p-3 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${cfg.cardClass}`}
                       >
                         {/* Status dot */}
                         <span className={`absolute top-2.5 end-2.5 h-2.5 w-2.5 rounded-full ${cfg.dotClass}`} />
@@ -316,7 +314,7 @@ export default function UnitMap() {
 
                   {/* Description */}
                   {activeRoom.description && (
-                    <div className="rounded-lg bg-muted/40 p-3">
+                    <div className="rounded-lg bg-slate-100 p-3">
                       <p className="text-xs font-medium text-muted-foreground mb-1">{t("unitMap.details.description")}</p>
                       <p className="text-sm leading-relaxed">{activeRoom.description}</p>
                     </div>
@@ -324,7 +322,7 @@ export default function UnitMap() {
 
                   {/* Amenities */}
                   {activeRoom.amenities && (
-                    <div className="rounded-lg bg-muted/40 p-3">
+                    <div className="rounded-lg bg-slate-100 p-3">
                       <p className="text-xs font-medium text-muted-foreground mb-2">{t("unitMap.details.amenities")}</p>
                       <div className="flex flex-wrap gap-1.5">
                         {activeRoom.amenities.split(",").map(a => (
