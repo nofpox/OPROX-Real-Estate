@@ -178,14 +178,15 @@
 @layer base {
   * {
     @apply border-border;
-    filter: none;
-    backdrop-filter: none;
   }
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    /* Establish a single paint-containment root so fixed/sticky layers
+       inside this stacking context don't corrupt sibling GPU layers.     */
+    contain: paint;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-sans tracking-tight;
   }

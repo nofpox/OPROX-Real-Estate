@@ -399,8 +399,7 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
       {/* Main content */}
       <div className={`flex flex-1 flex-col ${mainPadding}`}>
         <header
-          className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6 sticky top-0 z-10"
-          style={{ transform: "translateZ(0)", willChange: "transform" }}
+          className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6 sticky top-0 z-20"
         >
           <div className="flex items-center gap-4 lg:hidden">
             <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
