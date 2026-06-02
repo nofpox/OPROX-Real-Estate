@@ -201,11 +201,14 @@ export default function UnitStatus() {
     occupied:    scopedRooms.filter((r) => r.status === "occupied").length,
   };
 
+  // IMPORTANT: No /opacity suffix on bg values — RGBA backgrounds create GPU
+  // compositor sub-layers that trigger Android Chrome horizontal-stripe artifacts
+  // during keyboard/viewport resize events. Use solid Tailwind classes only.
   const kpis = [
-    { key: "maintenance", count: counts.maintenance, icon: Wrench,       color: "text-amber-500",   bg: "bg-amber-500/10"   },
-    { key: "cleaning",    count: counts.cleaning,    icon: Sparkles,     color: "text-sky-500",     bg: "bg-sky-500/10"     },
-    { key: "occupied",    count: counts.occupied,    icon: DoorOpen,     color: "text-slate-500",   bg: "bg-slate-500/10"   },
-    { key: "available",   count: counts.available,   icon: CalendarCheck,color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { key: "maintenance", count: counts.maintenance, icon: Wrench,       color: "text-amber-500",   bg: "bg-amber-50 dark:bg-amber-950"   },
+    { key: "cleaning",    count: counts.cleaning,    icon: Sparkles,     color: "text-sky-500",     bg: "bg-sky-50 dark:bg-sky-950"       },
+    { key: "occupied",    count: counts.occupied,    icon: DoorOpen,     color: "text-slate-500",   bg: "bg-slate-100 dark:bg-slate-800"  },
+    { key: "available",   count: counts.available,   icon: CalendarCheck,color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950" },
   ];
 
   const UNIT_TYPES = ["Studio", "1BR", "2BR", "3BR", "Penthouse", "Standard", "Deluxe", "Suite"] as const;
@@ -235,8 +238,8 @@ export default function UnitStatus() {
           return (
             <Card
               key={kpi.key}
-              className={`shadow-sm border-border/50 cursor-pointer ${
-                statusFilter === kpi.key ? "ring-2 ring-primary/40" : ""
+              className={`shadow-sm border-border cursor-pointer ${
+                statusFilter === kpi.key ? "ring-2 ring-primary" : ""
               }`}
               onClick={() => setStatusFilter(statusFilter === kpi.key ? "all" : kpi.key)}
             >
@@ -260,7 +263,7 @@ export default function UnitStatus() {
       </div>
 
       {/* ── Unit table ───────────────────────────────────────────────────────── */}
-      <Card className="shadow-sm border-border/50">
+      <Card className="shadow-sm border-border">
         <CardHeader className="pb-0">
           <div className="flex flex-col gap-3">
             <CardTitle className="sr-only">{t("unitStatus.title")}</CardTitle>
@@ -304,7 +307,7 @@ export default function UnitStatus() {
             </div>
             {/* Active property banner */}
             {propertyFilter !== "all" && propertyMap[Number(propertyFilter)] && (
-              <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <Building2 className="h-4 w-4 text-primary" />
                   <span>{propertyMap[Number(propertyFilter)]}</span>
@@ -368,7 +371,7 @@ export default function UnitStatus() {
                   return (
                     <TableRow
                       key={room.id}
-                      className={room.status === "maintenance" ? "bg-amber-50/40 dark:bg-amber-950/10" : ""}
+                      className={room.status === "maintenance" ? "bg-amber-50 dark:bg-amber-950" : ""}
                     >
                       <TableCell className="ps-6 font-semibold">{room.name}</TableCell>
                       <TableCell>

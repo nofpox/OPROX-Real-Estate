@@ -331,8 +331,13 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
      * Opacity-suffixed background classes force the browser to create a new
      * stacking context + compositor layer on the root element, which is the
      * trigger for the horizontal-stripe GPU corruption on Android Chrome.
+     *
+     * min-h-screen: ensures full viewport height without capping it.
+     * Scroll is handled by the inner column wrapper (overflow-auto + min-h-0)
+     * which makes it the scroll container so position:sticky works within a
+     * single, height-constrained context rather than on document.
      */
-    <div className="flex min-h-screen w-full flex-col bg-muted lg:flex-row">
+    <div className="flex min-h-screen w-full flex-col bg-muted lg:flex-row overflow-hidden">
 
       {/*
        * Mobile sidebar — conditionally rendered, ZERO CSS animation, ZERO transition.
@@ -397,8 +402,13 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
         <SidebarContent authUser={authUser} onLogout={onLogout} onClose={() => {}} />
       </aside>
 
-      {/* Main content */}
-      <div className={`flex flex-1 flex-col ${mainPadding}`}>
+      {/* Main content
+          min-h-0: allows flex-1 to shrink below intrinsic size so overflow-auto
+          can constrain height. overflow-auto: makes this the scroll container so
+          the sticky header sticks here (not document), preventing the viewport-
+          resize GPU recomposite that produces horizontal-stripe artifacts.
+      */}
+      <div className={`flex flex-1 flex-col min-h-0 overflow-auto ${mainPadding}`}>
         <header
           className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-4 md:px-6 sticky top-0 z-20"
         >
@@ -429,7 +439,10 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
           </div>
         </header>
 
-        <main key={lang} className="flex-1 p-4 md:p-6 lg:p-8" style={{ isolation: "isolate" }}>
+        {/* isolation:isolate removed — overflow-auto on the parent already
+            establishes a stacking context; the nested isolation was creating
+            a conflicting compositor context that caused the stripe artifacts. */}
+        <main key={lang} className="flex-1 p-4 md:p-6 lg:p-8">
           <SmartHintBar />
           {children}
         </main>
