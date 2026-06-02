@@ -83,17 +83,17 @@ function getPortalTierLevel(role: string): number {
 }
 
 // ── Delegation chain definition ───────────────────────────────────────────────
+// 9-tier hierarchy (Company is an internal multi-tenancy concept, not shown in admin settings)
 const DELEGATION_CHAIN = [
-  { role: 'owner',         tierLevel: 1,  activeClass: 'bg-amber-50   border-amber-400   text-amber-800',   chipClass: 'border-amber-200   text-amber-700'   },
-  { role: 'company',       tierLevel: 2,  activeClass: 'bg-purple-50  border-purple-400  text-purple-800',  chipClass: 'border-purple-200  text-purple-700'  },
-  { role: 'manager',       tierLevel: 3,  activeClass: 'bg-blue-50    border-blue-400    text-blue-800',    chipClass: 'border-blue-200    text-blue-700'    },
-  { role: 'secretariat',   tierLevel: 4,  activeClass: 'bg-cyan-50    border-cyan-400    text-cyan-800',    chipClass: 'border-cyan-200    text-cyan-700'    },
-  { role: 'dept_manager',  tierLevel: 5,  activeClass: 'bg-teal-50    border-teal-400    text-teal-800',    chipClass: 'border-teal-200    text-teal-700'    },
-  { role: 'admin_general', tierLevel: 6,  activeClass: 'bg-emerald-50 border-emerald-400 text-emerald-800', chipClass: 'border-emerald-200 text-emerald-700' },
-  { role: 'supervisor',    tierLevel: 7,  activeClass: 'bg-orange-50  border-orange-400  text-orange-800',  chipClass: 'border-orange-200  text-orange-700'  },
-  { role: 'maintenance',   tierLevel: 8,  activeClass: 'bg-red-50     border-red-400     text-red-800',     chipClass: 'border-red-200     text-red-700'     },
-  { role: 'worker',        tierLevel: 9,  activeClass: 'bg-slate-100  border-slate-400   text-slate-800',   chipClass: 'border-slate-300   text-slate-600'   },
-  { role: 'security',      tierLevel: 10, activeClass: 'bg-gray-100   border-gray-400    text-gray-800',    chipClass: 'border-gray-300    text-gray-600'    },
+  { role: 'owner',         tierLevel: 1,  activeClass: 'bg-amber-50   border-amber-500   text-amber-900',   chipClass: 'border-amber-200   text-amber-700'   },
+  { role: 'manager',       tierLevel: 3,  activeClass: 'bg-blue-50    border-blue-500    text-blue-900',    chipClass: 'border-blue-200    text-blue-700'    },
+  { role: 'secretariat',   tierLevel: 4,  activeClass: 'bg-cyan-50    border-cyan-500    text-cyan-900',    chipClass: 'border-cyan-200    text-cyan-700'    },
+  { role: 'dept_manager',  tierLevel: 5,  activeClass: 'bg-teal-50    border-teal-500    text-teal-900',    chipClass: 'border-teal-200    text-teal-700'    },
+  { role: 'admin_general', tierLevel: 6,  activeClass: 'bg-emerald-50 border-emerald-500 text-emerald-900', chipClass: 'border-emerald-200 text-emerald-700' },
+  { role: 'supervisor',    tierLevel: 7,  activeClass: 'bg-orange-50  border-orange-500  text-orange-900',  chipClass: 'border-orange-200  text-orange-700'  },
+  { role: 'maintenance',   tierLevel: 8,  activeClass: 'bg-red-50     border-red-500     text-red-900',     chipClass: 'border-red-200     text-red-700'     },
+  { role: 'worker',        tierLevel: 9,  activeClass: 'bg-slate-100  border-slate-500   text-slate-900',   chipClass: 'border-slate-300   text-slate-700'   },
+  { role: 'security',      tierLevel: 10, activeClass: 'bg-gray-100   border-gray-500    text-gray-900',    chipClass: 'border-gray-300    text-gray-700'    },
 ] as const;
 
 const ALL_PERMS_LIST = [
@@ -253,13 +253,25 @@ const OpsControlPanel: React.FC<OpsControlPanelProps> = ({ user, t, isRtl }) => 
 
   return (
     <div className="space-y-5">
-      {/* Owner sovereignty banner */}
+      {/* Owner Administrator — Supreme Authority banner */}
       {callerTierLevel <= 1 && (
-        <Card className="p-4 border-amber-300 bg-amber-50 flex items-start gap-3">
+        <Card className="p-4 border-amber-400 bg-amber-50 flex items-start gap-3">
           <ShieldCheck className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-sm text-amber-800">{t('ops.sovereigntyTitle')}</p>
-            <p className="text-xs text-amber-700 mt-1 leading-relaxed">{t('ops.sovereigntyDesc')}</p>
+            <p className="font-bold text-sm text-amber-900">{t('ops.ownerSupremeTitle')}</p>
+            <p className="text-xs text-amber-800 mt-1 leading-relaxed">{t('ops.ownerSupremeDesc')}</p>
+            <p className="text-[11px] text-amber-600 mt-1.5 font-medium">{t('ops.directControl')}</p>
+          </div>
+        </Card>
+      )}
+
+      {/* Manager — Delegated Authority banner */}
+      {callerTierLevel === 3 && (
+        <Card className="p-4 border-blue-300 bg-blue-50 flex items-start gap-3">
+          <ShieldCheck className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold text-sm text-blue-900">{t('ops.managerDelegationTitle')}</p>
+            <p className="text-xs text-blue-800 mt-1 leading-relaxed">{t('ops.managerDelegationDesc')}</p>
           </div>
         </Card>
       )}
@@ -305,6 +317,17 @@ const OpsControlPanel: React.FC<OpsControlPanelProps> = ({ user, t, isRtl }) => 
           })}
         </div>
       </div>
+
+      {/* ── Role-Level Permissions section header ────────────────────── */}
+      {callerTierLevel <= 3 && (
+        <div className="flex items-center gap-2 pt-1">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-[10px] font-extrabold tracking-[0.15em] text-muted-foreground uppercase px-2">
+            {t('ops.sectionRolePerms')}
+          </span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+      )}
 
       {/* ── Selected Role Permissions Panel ──────────────────────────── */}
       <Card className="p-5">
@@ -395,10 +418,17 @@ const OpsControlPanel: React.FC<OpsControlPanelProps> = ({ user, t, isRtl }) => 
         </div>
       </Card>
 
-      {/* ── Team Members for this role ────────────────────────────────── */}
+      {/* ── My Team section ──────────────────────────────────────────── */}
       {!isOwnerSelected && (
         <div>
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-1 pt-2">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-[10px] font-extrabold tracking-[0.15em] text-muted-foreground uppercase px-2">
+              {t('ops.sectionMyTeam')}
+            </span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <div className="flex items-center gap-2 mt-3 mb-3">
             <Users className="h-4 w-4 text-muted-foreground" />
             <h4 className="text-sm font-semibold text-foreground">{t('ops.teamForRole')}</h4>
             <Badge variant="secondary" className="text-xs h-5 px-2">{membersForRole.length}</Badge>
@@ -843,6 +873,8 @@ export const PortalDashboard: React.FC = () => {
   const totalProperties = properties.length;
   const totalUnits      = properties.reduce((s: number, p: PortalProperty) => s + ((p as any).unitCount ?? 0), 0);
   const userTier        = roleTier(((user as unknown) as Record<string, string>)?.role ?? '');
+  // Numeric tier for fine-grained tab visibility (Admin Settings hidden from tiers 8-10)
+  const dashTierLevel   = getPortalTierLevel(((user as unknown) as Record<string, string>)?.role ?? '');
 
   const handleLogout = async () => { await logout(); setLocation('/portal'); };
 
@@ -989,7 +1021,9 @@ export const PortalDashboard: React.FC = () => {
             <TabsTrigger value="manage"      className="px-5">{t('portal.manage')}</TabsTrigger>
             <TabsTrigger value="overview"    className="px-5">{t('portal.overview')}</TabsTrigger>
             <TabsTrigger value="financials"  className="px-5">{t('portal.financials')}</TabsTrigger>
-            {userTier !== 'worker' && (
+            {/* Admin Settings: shown only to tiers 1-7 (Owner through Supervisor).
+                Maintenance (8), Workers (9), Security (10) and unauthenticated users are excluded. */}
+            {dashTierLevel <= 7 && (
               <TabsTrigger value="ops-control" className="px-5 flex items-center gap-1.5">
                 <Settings2 className="h-3.5 w-3.5" />
                 {t('ops.tab')}
@@ -1351,13 +1385,20 @@ export const PortalDashboard: React.FC = () => {
             )}
           </TabsContent>
 
-          {/* ── Operational Control tab (admin/supervisor only) ── */}
-          {userTier !== 'worker' && (
+          {/* ── Admin Settings tab (Owner through Supervisor only — tiers 1-7) ── */}
+          {dashTierLevel <= 7 && (
             <TabsContent value="ops-control" className="mt-0">
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-bold text-primary font-serif">{t('ops.title')}</h2>
-                  <p className="text-sm text-muted-foreground mt-1">{t('ops.subtitle')}</p>
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div>
+                    <h2 className="text-xl font-bold text-primary font-serif">{t('ops.title')}</h2>
+                    <p className="text-sm text-muted-foreground mt-1">{t('ops.subtitle')}</p>
+                  </div>
+                  {/* Security note — visible confirmation the section is auth-gated */}
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-full border border-border shrink-0">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Restricted — authorized users only</span>
+                  </div>
                 </div>
                 <OpsControlPanel user={user} t={t} isRtl={isRtl} />
               </div>
