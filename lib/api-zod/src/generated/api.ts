@@ -3007,6 +3007,7 @@ export const GetPortalTeamResponse = zod.object({
   "username": zod.string(),
   "role": zod.string(),
   "tier": zod.string(),
+  "tierLevel": zod.number(),
   "isActive": zod.boolean(),
   "permissions": zod.array(zod.string())
 })).optional()
@@ -3030,6 +3031,29 @@ export const UpdatePortalTeamPermissionsResponse = zod.object({
   "id": zod.number().optional(),
   "permissions": zod.array(zod.string()).optional()
 }).optional()
+})
+
+
+/**
+ * @summary Get the role-level permission map for the delegation chain
+ */
+export const GetPortalRolePermissionsResponse = zod.object({
+  "status": zod.string().optional(),
+  "data": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Map of role name to array of granted permission strings')
+})
+
+
+/**
+ * @summary Update permissions assigned to a specific role in the delegation chain
+ */
+export const UpdatePortalRolePermissionsBody = zod.object({
+  "role": zod.string(),
+  "permissions": zod.array(zod.string())
+})
+
+export const UpdatePortalRolePermissionsResponse = zod.object({
+  "status": zod.string().optional(),
+  "data": zod.record(zod.string(), zod.array(zod.string())).optional().describe('Map of role name to array of granted permission strings')
 })
 
 

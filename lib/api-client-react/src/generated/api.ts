@@ -49,6 +49,7 @@ import type {
   GetPortalFinancialsParams,
   GetPortalPropertiesParams,
   GetPortalPropertyUnitsParams,
+  GetPortalRolePermissions200,
   GetPortalTeam200,
   Guest,
   GuestFeedback,
@@ -142,6 +143,8 @@ import type {
   UnitRequestResult,
   UpdateCustomFieldInput,
   UpdateGuestRequestBody,
+  UpdatePortalRolePermissions200,
+  UpdatePortalRolePermissionsBody,
   UpdatePortalTeamPermissions200,
   UpdateTenantInput,
   UserInput,
@@ -9720,6 +9723,154 @@ export const useUpdatePortalTeamPermissions = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUpdatePortalTeamPermissionsMutationOptions(options));
+    }
+
+export const getGetPortalRolePermissionsUrl = () => {
+
+
+
+
+  return `/api/portal/role-permissions`
+}
+
+/**
+ * @summary Get the role-level permission map for the delegation chain
+ */
+export const getPortalRolePermissions = async ( options?: RequestInit): Promise<GetPortalRolePermissions200> => {
+
+  return customFetch<GetPortalRolePermissions200>(getGetPortalRolePermissionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPortalRolePermissionsQueryKey = () => {
+    return [
+    `/api/portal/role-permissions`
+    ] as const;
+    }
+
+
+export const getGetPortalRolePermissionsQueryOptions = <TData = Awaited<ReturnType<typeof getPortalRolePermissions>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalRolePermissions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPortalRolePermissionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPortalRolePermissions>>> = ({ signal }) => getPortalRolePermissions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPortalRolePermissions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPortalRolePermissionsQueryResult = NonNullable<Awaited<ReturnType<typeof getPortalRolePermissions>>>
+export type GetPortalRolePermissionsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the role-level permission map for the delegation chain
+ */
+
+export function useGetPortalRolePermissions<TData = Awaited<ReturnType<typeof getPortalRolePermissions>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalRolePermissions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPortalRolePermissionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdatePortalRolePermissionsUrl = () => {
+
+
+
+
+  return `/api/portal/role-permissions`
+}
+
+/**
+ * @summary Update permissions assigned to a specific role in the delegation chain
+ */
+export const updatePortalRolePermissions = async (updatePortalRolePermissionsBody: UpdatePortalRolePermissionsBody, options?: RequestInit): Promise<UpdatePortalRolePermissions200> => {
+
+  return customFetch<UpdatePortalRolePermissions200>(getUpdatePortalRolePermissionsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updatePortalRolePermissionsBody,)
+  }
+);}
+
+
+
+
+export const getUpdatePortalRolePermissionsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePortalRolePermissions>>, TError,{data: BodyType<UpdatePortalRolePermissionsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePortalRolePermissions>>, TError,{data: BodyType<UpdatePortalRolePermissionsBody>}, TContext> => {
+
+const mutationKey = ['updatePortalRolePermissions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePortalRolePermissions>>, {data: BodyType<UpdatePortalRolePermissionsBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updatePortalRolePermissions(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePortalRolePermissionsMutationResult = NonNullable<Awaited<ReturnType<typeof updatePortalRolePermissions>>>
+    export type UpdatePortalRolePermissionsMutationBody = BodyType<UpdatePortalRolePermissionsBody>
+    export type UpdatePortalRolePermissionsMutationError = ErrorType<void>
+
+    /**
+ * @summary Update permissions assigned to a specific role in the delegation chain
+ */
+export const useUpdatePortalRolePermissions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePortalRolePermissions>>, TError,{data: BodyType<UpdatePortalRolePermissionsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePortalRolePermissions>>,
+        TError,
+        {data: BodyType<UpdatePortalRolePermissionsBody>},
+        TContext
+      > => {
+      return useMutation(getUpdatePortalRolePermissionsMutationOptions(options));
     }
 
 export const getGetPartnerEquityUrl = () => {

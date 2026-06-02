@@ -8,12 +8,13 @@ import {
   portalPropertiesTable,
   portalUnitsTable,
   usersTable,
+  settingsTable,
   insertPortalPropertySchema,
   updatePortalPropertySchema,
   insertPortalUnitSchema,
   updatePortalUnitSchema,
 } from "@workspace/db";
-import { getRoleTier } from "./auth.js";
+import { getRoleTier, getPortalRoleTier } from "./auth.js";
 import { eq, and, sql, desc, inArray, ne } from "drizzle-orm";
 import { sendSuccess, sendError, parsePagination, buildMeta } from "../utils/response.js";
 import {
@@ -648,13 +649,34 @@ function parsePerms(raw: string): string[] {
   try { return JSON.parse(raw) as string[]; } catch { return []; }
 }
 
+// ── Helpers for role-permission settings ──────────────────────────────────────
+const ROLE_PERMS_KEY = "portalRolePermissions";
+
+async function readRolePermsMap(tenantId: number): Promise<Record<string, string[]>> {
+  const [row] = await db
+    .select({ value: settingsTable.value })
+    .from(settingsTable)
+    .where(and(eq(settingsTable.tenantId, tenantId), eq(settingsTable.key, ROLE_PERMS_KEY)))
+    .limit(1);
+  try { return row ? JSON.parse(row.value) : {}; } catch { return {}; }
+}
+
+async function writeRolePermsMap(tenantId: number, map: Record<string, string[]>): Promise<void> {
+  await db.insert(settingsTable)
+    .values({ tenantId, key: ROLE_PERMS_KEY, value: JSON.stringify(map) })
+    .onConflictDoUpdate({
+      target: [settingsTable.tenantId, settingsTable.key],
+      set:    { value: JSON.stringify(map) },
+    });
+}
+
 // ── GET /portal/team — list team members with their permissions ───────────────
 router.get("/portal/team", requireAuth, async (req, res) => {
   try {
-    const caller     = (req as any).sessionUser as { id: number; role: string; tenantId: number | null };
-    const callerTier = getRoleTier(caller.role);
+    const caller          = (req as any).sessionUser as { id: number; role: string; tenantId: number | null };
+    const callerTierLevel = getPortalRoleTier(caller.role);
 
-    if (callerTier === "worker") { sendError(res, 403, "Forbidden"); return; }
+    if (callerTierLevel > 7) { sendError(res, 403, "Forbidden"); return; }
 
     const tenantId = tid(req);
 
@@ -674,10 +696,11 @@ router.get("/portal/team", requireAuth, async (req, res) => {
           : ne(usersTable.role, "super_admin"),
       );
 
-    // Supervisors only see workers; admins see everyone except themselves
-    const filtered = callerTier === "supervisor"
-      ? users.filter((u) => getRoleTier(u.role) === "worker")
-      : users.filter((u) => u.id !== caller.id);
+    // Users see only members lower in the delegation chain (higher tier number)
+    const filtered = users.filter((u) => {
+      if (u.id === caller.id) return false;
+      return getPortalRoleTier(u.role) > callerTierLevel;
+    });
 
     const result = filtered.map((u) => ({
       id:          u.id,
@@ -685,6 +708,7 @@ router.get("/portal/team", requireAuth, async (req, res) => {
       username:    u.username,
       role:        u.role,
       tier:        getRoleTier(u.role),
+      tierLevel:   getPortalRoleTier(u.role),
       isActive:    u.isActive,
       permissions: parsePerms(u.permissions),
     }));
@@ -699,10 +723,10 @@ router.get("/portal/team", requireAuth, async (req, res) => {
 // ── PUT /portal/team/:userId/permissions ──────────────────────────────────────
 router.put("/portal/team/:userId/permissions", requireAuth, async (req, res) => {
   try {
-    const caller     = (req as any).sessionUser as { id: number; role: string; tenantId: number | null };
-    const callerTier = getRoleTier(caller.role);
+    const caller          = (req as any).sessionUser as { id: number; role: string; tenantId: number | null };
+    const callerTierLevel = getPortalRoleTier(caller.role);
 
-    if (callerTier === "worker") { sendError(res, 403, "Forbidden"); return; }
+    if (callerTierLevel > 7) { sendError(res, 403, "Forbidden"); return; }
 
     const targetId = parseInt(req.params.userId as string, 10);
     if (isNaN(targetId)) { sendError(res, 400, "Invalid user id"); return; }
@@ -726,25 +750,87 @@ router.put("/portal/team/:userId/permissions", requireAuth, async (req, res) => 
 
     if (!targetUser) { sendError(res, 404, "User not found"); return; }
 
-    const targetTier = getRoleTier(targetUser.role);
+    const targetTierLevel = getPortalRoleTier(targetUser.role);
 
-    if (targetTier === "admin") { sendError(res, 403, "Cannot modify admin permissions"); return; }
-
-    if (callerTier === "supervisor") {
-      if (targetTier !== "worker") { sendError(res, 403, "Supervisors can only modify worker permissions"); return; }
-      const [callerRow] = await db.select({ permissions: usersTable.permissions }).from(usersTable).where(eq(usersTable.id, caller.id)).limit(1);
-      const callerPerms = callerRow ? parsePerms(callerRow.permissions) : [];
-      const allowed = cleaned.filter((p) => callerPerms.includes(p));
-      await db.update(usersTable).set({ permissions: JSON.stringify(allowed) }).where(eq(usersTable.id, targetId));
-      sendSuccess(res, { id: targetId, permissions: allowed });
+    // Cannot modify anyone at equal or higher authority
+    if (targetTierLevel <= callerTierLevel) {
+      sendError(res, 403, "Cannot modify permissions for equal or higher tier roles");
       return;
     }
 
-    await db.update(usersTable).set({ permissions: JSON.stringify(cleaned) }).where(eq(usersTable.id, targetId));
-    sendSuccess(res, { id: targetId, permissions: cleaned });
+    // Owner/company/manager (tier 1-3) can grant any valid perms
+    if (callerTierLevel <= 3) {
+      await db.update(usersTable).set({ permissions: JSON.stringify(cleaned) }).where(eq(usersTable.id, targetId));
+      sendSuccess(res, { id: targetId, permissions: cleaned });
+      return;
+    }
+
+    // All other callers (tiers 4-7) can only grant perms they themselves hold
+    const [callerRow] = await db.select({ permissions: usersTable.permissions })
+      .from(usersTable).where(eq(usersTable.id, caller.id)).limit(1);
+    const callerPerms = callerRow ? parsePerms(callerRow.permissions) : [];
+    const allowed = cleaned.filter((p) => callerPerms.includes(p));
+    await db.update(usersTable).set({ permissions: JSON.stringify(allowed) }).where(eq(usersTable.id, targetId));
+    sendSuccess(res, { id: targetId, permissions: allowed });
   } catch (err) {
     req.log?.error({ err }, "PUT /portal/team/:userId/permissions failed");
     sendError(res, 500, "Failed to update permissions");
+  }
+});
+
+// ── GET /portal/role-permissions ──────────────────────────────────────────────
+router.get("/portal/role-permissions", requireAuth, async (req, res) => {
+  try {
+    const caller          = (req as any).sessionUser as { role: string; tenantId: number | null };
+    const callerTierLevel = getPortalRoleTier(caller.role);
+    if (callerTierLevel > 7) { sendError(res, 403, "Forbidden"); return; }
+
+    const tenantId        = tid(req);
+    const effectiveTenant = tenantId ?? 1;
+    const map             = await readRolePermsMap(effectiveTenant);
+    // Owner always has all perms (hardcoded, not stored)
+    map.owner = [...VALID_PERMS];
+    sendSuccess(res, map);
+  } catch (err) {
+    req.log?.error({ err }, "GET /portal/role-permissions failed");
+    sendError(res, 500, "Failed to load role permissions");
+  }
+});
+
+// ── PUT /portal/role-permissions ──────────────────────────────────────────────
+router.put("/portal/role-permissions", requireAuth, async (req, res) => {
+  try {
+    const caller          = (req as any).sessionUser as { id: number; role: string; tenantId: number | null };
+    const callerTierLevel = getPortalRoleTier(caller.role);
+
+    // Only owner/company/manager (tier <= 3) can set role-level permissions
+    if (callerTierLevel > 3) { sendError(res, 403, "Forbidden — only Manager level or above can configure role permissions"); return; }
+
+    const { role, permissions } = req.body as { role: unknown; permissions: unknown };
+    if (typeof role !== "string")      { sendError(res, 400, "role must be a string"); return; }
+    if (!Array.isArray(permissions))   { sendError(res, 400, "permissions must be an array"); return; }
+    if (role === "owner")              { sendError(res, 403, "Cannot modify owner permissions"); return; }
+
+    const targetTierLevel = getPortalRoleTier(role);
+    if (targetTierLevel <= callerTierLevel) {
+      sendError(res, 403, "Cannot assign permissions to a role equal or higher than yours");
+      return;
+    }
+
+    const cleaned         = (permissions as string[]).filter((p) => (VALID_PERMS as readonly string[]).includes(p));
+    const tenantId        = tid(req);
+    const effectiveTenant = tenantId ?? 1;
+
+    const map     = await readRolePermsMap(effectiveTenant);
+    map[role]     = cleaned;
+    delete map.owner; // never persist owner — always hardcoded
+    await writeRolePermsMap(effectiveTenant, map);
+
+    map.owner = [...VALID_PERMS];
+    sendSuccess(res, map);
+  } catch (err) {
+    req.log?.error({ err }, "PUT /portal/role-permissions failed");
+    sendError(res, 500, "Failed to update role permissions");
   }
 });
 

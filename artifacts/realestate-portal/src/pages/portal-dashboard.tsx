@@ -16,9 +16,12 @@ import {
   useDeletePortalUnit,
   useGetPortalTeam,
   useUpdatePortalTeamPermissions,
+  useGetPortalRolePermissions,
+  useUpdatePortalRolePermissions,
   getGetPortalPropertiesQueryKey,
   getGetPortalPropertyUnitsQueryKey,
   getGetPortalTeamQueryKey,
+  getGetPortalRolePermissionsQueryKey,
 } from '@workspace/api-client-react';
 import type {
   PortalProperty,
@@ -60,22 +63,49 @@ import {
 const fmtSAR = (n: number) =>
   new Intl.NumberFormat('en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(n);
 
-// ── Role tier helper (mirrors backend getRoleTier) ────────────────────────────
+// ── Role tier helpers ─────────────────────────────────────────────────────────
 function roleTier(role: string): 'admin' | 'supervisor' | 'worker' {
   if (['owner', 'admin', 'super_admin', 'admin_manager', 'admin-manager'].includes(role)) return 'admin';
   if (['manager', 'supervisor', 'property-manager', 'site-supervisor', 'front-desk'].includes(role)) return 'supervisor';
   return 'worker';
 }
 
-// ── Permission matrix definition ──────────────────────────────────────────────
-const PERM_GROUPS: Array<{
-  key: string;
-  icon: React.ElementType;
-  perms: string[];
-}> = [
-  { key: 'property',  icon: Building,      perms: ['property:add', 'property:edit', 'property:delete', 'property:publish'] },
-  { key: 'marketing', icon: TrendingUp,     perms: ['marketing:campaigns', 'marketing:listings'] },
-  { key: 'support',   icon: MessageSquare,  perms: ['support:inquiries', 'support:messages'] },
+function getPortalTierLevel(role: string): number {
+  const m: Record<string, number> = {
+    super_admin: 0, owner: 1, company: 2,
+    admin_manager: 3, 'admin-manager': 3, admin: 3, manager: 3,
+    secretariat: 4, dept_manager: 5, 'property-manager': 5,
+    admin_general: 6, administrator: 6,
+    supervisor: 7, 'site-supervisor': 7, 'front-desk': 7,
+    maintenance: 8, worker: 9, staff: 9, security: 10, partner: 10,
+  };
+  return m[role] ?? 9;
+}
+
+// ── Delegation chain definition ───────────────────────────────────────────────
+const DELEGATION_CHAIN = [
+  { role: 'owner',         tierLevel: 1,  activeClass: 'bg-amber-50   border-amber-400   text-amber-800',   chipClass: 'border-amber-200   text-amber-700'   },
+  { role: 'company',       tierLevel: 2,  activeClass: 'bg-purple-50  border-purple-400  text-purple-800',  chipClass: 'border-purple-200  text-purple-700'  },
+  { role: 'manager',       tierLevel: 3,  activeClass: 'bg-blue-50    border-blue-400    text-blue-800',    chipClass: 'border-blue-200    text-blue-700'    },
+  { role: 'secretariat',   tierLevel: 4,  activeClass: 'bg-cyan-50    border-cyan-400    text-cyan-800',    chipClass: 'border-cyan-200    text-cyan-700'    },
+  { role: 'dept_manager',  tierLevel: 5,  activeClass: 'bg-teal-50    border-teal-400    text-teal-800',    chipClass: 'border-teal-200    text-teal-700'    },
+  { role: 'admin_general', tierLevel: 6,  activeClass: 'bg-emerald-50 border-emerald-400 text-emerald-800', chipClass: 'border-emerald-200 text-emerald-700' },
+  { role: 'supervisor',    tierLevel: 7,  activeClass: 'bg-orange-50  border-orange-400  text-orange-800',  chipClass: 'border-orange-200  text-orange-700'  },
+  { role: 'maintenance',   tierLevel: 8,  activeClass: 'bg-red-50     border-red-400     text-red-800',     chipClass: 'border-red-200     text-red-700'     },
+  { role: 'worker',        tierLevel: 9,  activeClass: 'bg-slate-100  border-slate-400   text-slate-800',   chipClass: 'border-slate-300   text-slate-600'   },
+  { role: 'security',      tierLevel: 10, activeClass: 'bg-gray-100   border-gray-400    text-gray-800',    chipClass: 'border-gray-300    text-gray-600'    },
+] as const;
+
+const ALL_PERMS_LIST = [
+  'property:add', 'property:edit', 'property:delete', 'property:publish',
+  'marketing:campaigns', 'marketing:listings',
+  'support:inquiries', 'support:messages',
+] as const;
+
+const PERM_GROUPS: Array<{ key: string; icon: React.ElementType; perms: string[] }> = [
+  { key: 'property',  icon: Building,     perms: ['property:add', 'property:edit', 'property:delete', 'property:publish'] },
+  { key: 'marketing', icon: TrendingUp,   perms: ['marketing:campaigns', 'marketing:listings'] },
+  { key: 'support',   icon: MessageSquare,perms: ['support:inquiries', 'support:messages'] },
 ];
 
 const PERM_LABEL_KEY: Record<string, string> = {
@@ -93,173 +123,346 @@ function memberInitials(name: string): string {
   return name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 }
 
-// ── OpsControlPanel component ─────────────────────────────────────────────────
-interface OpsControlPanelProps {
-  user: unknown;
-  t: (k: string) => string;
-  isRtl: boolean;
-}
+// ── OpsControlPanel ───────────────────────────────────────────────────────────
+interface OpsControlPanelProps { user: unknown; t: (k: string) => string; isRtl: boolean; }
 
-const OpsControlPanel: React.FC<OpsControlPanelProps> = ({ user, t, isRtl: _isRtl }) => {
-  const queryClient = useQueryClient();
-  const callerTier = roleTier(((user as unknown) as Record<string, string>)?.role ?? '');
+const OpsControlPanel: React.FC<OpsControlPanelProps> = ({ user, t, isRtl }) => {
+  const queryClient     = useQueryClient();
+  const callerRole      = ((user as unknown) as Record<string, string>)?.role ?? '';
+  const callerTierLevel = getPortalTierLevel(callerRole);
 
+  // Role-level permissions
+  const { data: rolePermsRes, isLoading: isLoadingRolePerms } = useGetPortalRolePermissions(
+    { query: { enabled: true } } as any,
+  );
+  const updateRolePermsMut = useUpdatePortalRolePermissions();
+
+  // Team members
   const { data: teamRes, isLoading: isLoadingTeam } = useGetPortalTeam(
     { query: { enabled: true } } as any,
   );
-  const updatePermsMut = useUpdatePortalTeamPermissions();
+  const updateUserPermsMut = useUpdatePortalTeamPermissions();
 
-  const [localPerms, setLocalPerms]       = useState<Record<number, string[]>>({});
-  const [saving, setSaving]               = useState<Set<number>>(new Set());
-  const [savedRecently, setSavedRecently] = useState<Set<number>>(new Set());
+  const [localRolePerms, setLocalRolePerms] = useState<Record<string, string[]>>({});
+  const [selectedRole,   setSelectedRole]   = useState<string>('company');
+  const [isSavingRole,   setIsSavingRole]   = useState(false);
+  const [savedRoleName,  setSavedRoleName]  = useState<string | null>(null);
 
+  const [localUserPerms,  setLocalUserPerms]  = useState<Record<number, string[]>>({});
+  const [savingUsers,     setSavingUsers]     = useState<Set<number>>(new Set());
+  const [savedUsers,      setSavedUsers]      = useState<Set<number>>(new Set());
+
+  // Sync role perms from API
+  useEffect(() => {
+    const map = (rolePermsRes as any)?.data ?? {};
+    setLocalRolePerms({ ...map, owner: [...ALL_PERMS_LIST] });
+  }, [rolePermsRes]);
+
+  // Sync user perms from API
   const teamMembers: PortalTeamMember[] = (teamRes as any)?.data ?? [];
-
   useEffect(() => {
     if (!teamMembers.length) return;
     const map: Record<number, string[]> = {};
     for (const m of teamMembers) map[m.id] = [...m.permissions];
-    setLocalPerms(map);
+    setLocalUserPerms(map);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamRes]);
 
-  const togglePerm = (userId: number, perm: string) => {
-    const current = localPerms[userId] ?? [];
-    const hasPerm = current.includes(perm);
-    const updated = hasPerm ? current.filter((p) => p !== perm) : [...current, perm];
+  // Derived: which chain entries can this caller edit role-level permissions for?
+  const canEditRoleLevel = (tierLevel: number, role: string) =>
+    role !== 'owner' && callerTierLevel <= 3 && tierLevel > callerTierLevel;
 
-    setLocalPerms((prev) => ({ ...prev, [userId]: updated }));
-    setSaving((prev) => new Set([...prev, userId]));
+  const selectedChain     = DELEGATION_CHAIN.find((c) => c.role === selectedRole)!;
+  const isOwnerSelected   = selectedRole === 'owner';
+  const canEditSelected   = canEditRoleLevel(selectedChain?.tierLevel ?? 99, selectedRole);
+  const selectedRolePerms = localRolePerms[selectedRole] ?? (isOwnerSelected ? [...ALL_PERMS_LIST] : []);
 
-    updatePermsMut.mutate(
-      { userId, data: { permissions: updated } },
+  // Members whose role matches the selected chain role (by tier level)
+  const membersForRole = teamMembers.filter(
+    (m) => getPortalTierLevel(m.role) === (selectedChain?.tierLevel ?? -1),
+  );
+
+  // Toggle a perm in the role-level config (local only until Save is clicked)
+  const toggleRolePerm = (perm: string) => {
+    if (!canEditSelected) return;
+    const has     = selectedRolePerms.includes(perm);
+    const updated = has ? selectedRolePerms.filter((p) => p !== perm) : [...selectedRolePerms, perm];
+    setLocalRolePerms((prev) => ({ ...prev, [selectedRole]: updated }));
+  };
+
+  const saveRolePerms = () => {
+    if (!canEditSelected || isSavingRole) return;
+    setIsSavingRole(true);
+    updateRolePermsMut.mutate(
+      { data: { role: selectedRole, permissions: localRolePerms[selectedRole] ?? [] } } as any,
       {
         onSuccess: (res) => {
-          const serverPerms: string[] = (res as any)?.data?.permissions ?? updated;
-          setLocalPerms((prev) => ({ ...prev, [userId]: serverPerms }));
-          setSaving((prev) => { const n = new Set(prev); n.delete(userId); return n; });
-          setSavedRecently((prev) => {
-            const n = new Set([...prev, userId]);
-            setTimeout(() => setSavedRecently((p) => { const m = new Set(p); m.delete(userId); return m; }), 2000);
-            return n;
-          });
-          queryClient.invalidateQueries({ queryKey: getGetPortalTeamQueryKey() as any });
+          const newMap = (res as any)?.data ?? {};
+          setLocalRolePerms({ ...newMap, owner: [...ALL_PERMS_LIST] });
+          setIsSavingRole(false);
+          setSavedRoleName(selectedRole);
+          setTimeout(() => setSavedRoleName(null), 2500);
+          queryClient.invalidateQueries({ queryKey: getGetPortalRolePermissionsQueryKey() as any });
         },
         onError: () => {
-          setLocalPerms((prev) => ({ ...prev, [userId]: current }));
-          setSaving((prev) => { const n = new Set(prev); n.delete(userId); return n; });
+          setIsSavingRole(false);
+          const map = (rolePermsRes as any)?.data ?? {};
+          setLocalRolePerms({ ...map, owner: [...ALL_PERMS_LIST] });
         },
       },
     );
   };
 
-  const tierLabel = (tier: string) => {
-    if (tier === 'admin') return t('ops.tierAdmin');
-    if (tier === 'supervisor') return t('ops.tierSupervisor');
-    return t('ops.tierWorker');
+  // Toggle a perm on an individual user (immediate save)
+  const toggleUserPerm = (userId: number, perm: string) => {
+    const current = localUserPerms[userId] ?? [];
+    const has     = current.includes(perm);
+    const updated = has ? current.filter((p) => p !== perm) : [...current, perm];
+    setLocalUserPerms((prev) => ({ ...prev, [userId]: updated }));
+    setSavingUsers((prev) => new Set([...prev, userId]));
+    updateUserPermsMut.mutate(
+      { userId, data: { permissions: updated } },
+      {
+        onSuccess: (res) => {
+          const serverPerms: string[] = (res as any)?.data?.permissions ?? updated;
+          setLocalUserPerms((prev) => ({ ...prev, [userId]: serverPerms }));
+          setSavingUsers((prev) => { const n = new Set(prev); n.delete(userId); return n; });
+          setSavedUsers((prev) => {
+            const n = new Set([...prev, userId]);
+            setTimeout(() => setSavedUsers((p) => { const m = new Set(p); m.delete(userId); return m; }), 2000);
+            return n;
+          });
+          queryClient.invalidateQueries({ queryKey: getGetPortalTeamQueryKey() as any });
+        },
+        onError: () => {
+          setLocalUserPerms((prev) => ({ ...prev, [userId]: current }));
+          setSavingUsers((prev) => { const n = new Set(prev); n.delete(userId); return n; });
+        },
+      },
+    );
   };
 
-  const tierVariant = (tier: string): 'default' | 'secondary' | 'outline' =>
-    tier === 'admin' ? 'default' : tier === 'supervisor' ? 'secondary' : 'outline';
-
-  if (isLoadingTeam) {
+  if (isLoadingRolePerms || isLoadingTeam) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-64 rounded-xl" />)}
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-56 w-full rounded-xl" />
       </div>
     );
   }
 
-  if (!teamMembers.length) {
-    return (
-      <Card className="p-16 text-center text-muted-foreground border-dashed border-2">
-        <Users className="h-14 w-14 mx-auto mb-4 opacity-30" />
-        <p>{t('ops.noMembers')}</p>
-      </Card>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      {/* Mode banner */}
-      <Card className="p-4 border-primary/20 bg-primary/5 flex items-start gap-3">
-        <ShieldCheck className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-        <p className="text-sm text-primary/80 leading-relaxed">
-          {callerTier === 'admin' ? t('ops.adminMode') : t('ops.managerMode')}
+    <div className="space-y-5">
+      {/* Owner sovereignty banner */}
+      {callerTierLevel <= 1 && (
+        <Card className="p-4 border-amber-300 bg-amber-50 flex items-start gap-3">
+          <ShieldCheck className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-sm text-amber-800">{t('ops.sovereigntyTitle')}</p>
+            <p className="text-xs text-amber-700 mt-1 leading-relaxed">{t('ops.sovereigntyDesc')}</p>
+          </div>
+        </Card>
+      )}
+
+      {/* ── Delegation Chain ─────────────────────────────────────────── */}
+      <div>
+        <p className="text-[10px] font-extrabold tracking-[0.18em] text-muted-foreground uppercase mb-3">
+          {t('ops.chainTitle')}
         </p>
+        <div className={`flex items-center gap-0 overflow-x-auto pb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+          {DELEGATION_CHAIN.map((entry, idx) => {
+            const perms      = entry.role === 'owner' ? ALL_PERMS_LIST : (localRolePerms[entry.role] ?? []);
+            const count      = perms.length;
+            const isSelected = selectedRole === entry.role;
+            const isAbove    = entry.tierLevel <= callerTierLevel && entry.role !== 'owner' && callerTierLevel > 0;
+
+            return (
+              <React.Fragment key={entry.role}>
+                <button
+                  onClick={() => setSelectedRole(entry.role)}
+                  className={[
+                    'flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-lg border-2 transition-all min-w-[80px]',
+                    isSelected
+                      ? entry.activeClass
+                      : `bg-background border-border text-muted-foreground hover:border-primary/40 hover:text-foreground`,
+                    isAbove ? 'opacity-50 cursor-default' : '',
+                  ].join(' ')}
+                >
+                  <span className="text-[11px] font-bold whitespace-nowrap leading-tight">
+                    {t(`ops.role.${entry.role}`)}
+                  </span>
+                  <span className="text-[10px] mt-0.5 opacity-70 font-medium">
+                    {entry.role === 'owner'
+                      ? '∞'
+                      : `${count}/${ALL_PERMS_LIST.length}`}
+                  </span>
+                </button>
+                {idx < DELEGATION_CHAIN.length - 1 && (
+                  <ChevronRight className={`h-3 w-3 text-muted-foreground/30 flex-shrink-0 ${isRtl ? 'rotate-180' : ''}`} />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Selected Role Permissions Panel ──────────────────────────── */}
+      <Card className="p-5">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className={`text-sm font-bold px-2.5 py-0.5 rounded-full border-2 ${selectedChain?.activeClass ?? ''}`}>
+              {t(`ops.role.${selectedRole}`)}
+            </span>
+            {isOwnerSelected && (
+              <span className="text-xs text-muted-foreground italic">{t('ops.ownerAllPerms')}</span>
+            )}
+            {!isOwnerSelected && !canEditSelected && (
+              <span className="text-xs text-muted-foreground italic flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3" /> {t('ops.readonlyForTier')}
+              </span>
+            )}
+          </div>
+          {canEditSelected && (
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm" variant="outline" className="h-7 text-xs px-2.5"
+                onClick={() => setLocalRolePerms((prev) => ({ ...prev, [selectedRole]: [...ALL_PERMS_LIST] }))}
+                disabled={isSavingRole}
+              >
+                {t('ops.grantAll')}
+              </Button>
+              <Button
+                size="sm" variant="outline" className="h-7 text-xs px-2.5"
+                onClick={() => setLocalRolePerms((prev) => ({ ...prev, [selectedRole]: [] }))}
+                disabled={isSavingRole}
+              >
+                {t('ops.clearAll')}
+              </Button>
+              <Button
+                size="sm" className="h-7 text-xs px-3"
+                onClick={saveRolePerms}
+                disabled={isSavingRole}
+              >
+                {isSavingRole
+                  ? t('ops.rolePermsSaving')
+                  : savedRoleName === selectedRole
+                    ? <><CheckCircle className="h-3.5 w-3.5 me-1" />{t('ops.rolePermsSaved')}</>
+                    : t('ops.saveRolePerms')}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Permission checkboxes */}
+        <div className="space-y-4">
+          {PERM_GROUPS.map((group) => (
+            <div key={group.key}>
+              <div className="flex items-center gap-1.5 mb-2.5 pb-1.5 border-b border-border/50">
+                <group.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {t(`ops.group.${group.key}`)}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {group.perms.map((perm) => {
+                  const isOn = isOwnerSelected || selectedRolePerms.includes(perm);
+                  return (
+                    <label
+                      key={perm}
+                      className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors select-none ${
+                        isOn
+                          ? 'border-primary/40 bg-primary/5'
+                          : 'border-border bg-background'
+                      } ${(!canEditSelected || isOwnerSelected) ? 'cursor-default opacity-75' : 'hover:border-primary/60'}`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="accent-primary h-3.5 w-3.5 shrink-0"
+                        checked={isOn}
+                        onChange={() => toggleRolePerm(perm)}
+                        disabled={!canEditSelected || isOwnerSelected || isSavingRole}
+                      />
+                      <span className="text-xs leading-tight text-foreground/80">
+                        {t(PERM_LABEL_KEY[perm] ?? perm)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
 
-      {/* Member cards */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {teamMembers.map((member) => {
-          const perms     = localPerms[member.id] ?? member.permissions;
-          const isSaving  = saving.has(member.id);
-          const wasSaved  = savedRecently.has(member.id);
-
-          return (
-            <Card key={member.id} className={`p-5 border-border transition-opacity ${!member.isActive ? 'opacity-60' : ''}`}>
-              {/* Header row */}
-              <div className="flex items-center gap-3 mb-5">
-                <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm shrink-0 select-none">
-                  {memberInitials(member.displayName)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-sm leading-tight truncate">{member.displayName}</p>
-                    {wasSaved && (
-                      <span className="inline-flex items-center gap-0.5 text-xs text-emerald-600 font-medium">
-                        <CheckCircle className="h-3 w-3" /> {t('ops.saved')}
-                      </span>
-                    )}
-                    {isSaving && <span className="text-xs text-muted-foreground italic">{t('ops.saving')}</span>}
-                  </div>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <Badge variant={tierVariant(member.tier)} className="text-xs px-1.5 py-0 h-4">
-                      {tierLabel(member.tier)}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">{member.role}</span>
-                    {!member.isActive && (
-                      <span className="text-xs text-destructive font-medium">{t('ops.inactiveLabel')}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Permission groups */}
-              <div className="space-y-4">
-                {PERM_GROUPS.map((group) => (
-                  <div key={group.key}>
-                    <div className="flex items-center gap-1.5 mb-2.5 pb-1.5 border-b border-border/50">
-                      <group.icon className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        {t(`ops.group.${group.key}`)}
-                      </span>
+      {/* ── Team Members for this role ────────────────────────────────── */}
+      {!isOwnerSelected && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <h4 className="text-sm font-semibold text-foreground">{t('ops.teamForRole')}</h4>
+            <Badge variant="secondary" className="text-xs h-5 px-2">{membersForRole.length}</Badge>
+          </div>
+          {membersForRole.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic py-2">{t('ops.noTeamForRole')}</p>
+          ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+              {membersForRole.map((member) => {
+                const perms     = localUserPerms[member.id] ?? member.permissions;
+                const isSaving  = savingUsers.has(member.id);
+                const wasSaved  = savedUsers.has(member.id);
+                return (
+                  <Card
+                    key={member.id}
+                    className={`p-4 border-border ${!member.isActive ? 'opacity-60' : ''}`}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xs shrink-0 select-none">
+                        {memberInitials(member.displayName)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-sm leading-tight truncate">{member.displayName}</p>
+                          {wasSaved && (
+                            <span className="inline-flex items-center gap-0.5 text-xs text-emerald-600 font-medium">
+                              <CheckCircle className="h-3 w-3" />{t('ops.saved')}
+                            </span>
+                          )}
+                          {isSaving && <span className="text-xs text-muted-foreground italic">{t('ops.saving')}</span>}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className="text-xs text-muted-foreground">{member.role}</span>
+                          {!member.isActive && (
+                            <span className="text-xs text-destructive font-medium">{t('ops.inactiveLabel')}</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-                      {group.perms.map((perm) => {
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {ALL_PERMS_LIST.map((perm) => {
                         const isOn = perms.includes(perm);
                         return (
                           <div key={perm} className="flex items-center justify-between gap-2">
-                            <span className="text-xs text-foreground/80 leading-tight">
+                            <span className="text-xs text-foreground/75 leading-tight truncate">
                               {t(PERM_LABEL_KEY[perm] ?? perm)}
                             </span>
                             <Switch
                               checked={isOn}
-                              onCheckedChange={() => togglePerm(member.id, perm)}
+                              onCheckedChange={() => toggleUserPerm(member.id, perm)}
                               disabled={isSaving}
-                              className="shrink-0 scale-[0.85]"
+                              className="shrink-0 scale-[0.8]"
                             />
                           </div>
                         );
                       })}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

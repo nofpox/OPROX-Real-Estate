@@ -2591,6 +2591,54 @@ paths:
         "403": { description: Forbidden }
         "404": { description: User not found }
 
+  /portal/role-permissions:
+    get:
+      operationId: getPortalRolePermissions
+      summary: Get the role-level permission map for the delegation chain
+      tags: [portal]
+      security: [{ session: [] }]
+      responses:
+        "200":
+          description: Role permissions map
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  data:
+                    $ref: "#/components/schemas/PortalRolePermissionsMap"
+        "401": { description: Unauthorized }
+        "403": { description: Forbidden }
+    put:
+      operationId: updatePortalRolePermissions
+      summary: Update permissions assigned to a specific role in the delegation chain
+      tags: [portal]
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role, permissions]
+              properties:
+                role:        { type: string }
+                permissions: { type: array, items: { type: string } }
+      responses:
+        "200":
+          description: Updated full role permissions map
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  data:
+                    $ref: "#/components/schemas/PortalRolePermissionsMap"
+        "401": { description: Unauthorized }
+        "403": { description: Forbidden }
+
   /partner/equity:
     get:
       operationId: getPartnerEquity
@@ -4834,17 +4882,25 @@ components:
 
     PortalTeamMember:
       type: object
-      required: [id, displayName, username, role, tier, isActive, permissions]
+      required: [id, displayName, username, role, tier, tierLevel, isActive, permissions]
       properties:
         id:          { type: integer }
         displayName: { type: string }
         username:    { type: string }
         role:        { type: string }
         tier:        { type: string }
+        tierLevel:   { type: integer }
         isActive:    { type: boolean }
         permissions:
           type: array
           items: { type: string }
+
+    PortalRolePermissionsMap:
+      type: object
+      description: Map of role name to array of granted permission strings
+      additionalProperties:
+        type: array
+        items: { type: string }
 
     PortalPermissionsInput:
       type: object

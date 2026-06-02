@@ -77,6 +77,37 @@ export function getRoleTier(role: string): "admin" | "supervisor" | "worker" {
 }
 
 /**
+ * Numeric tier for the 10-level delegation chain (lower number = higher authority).
+ * Chain: Owner(1) → Company(2) → Manager(3) → Secretariat(4) → DeptManager(5)
+ *        → AdminGeneral(6) → Supervisor(7) → Maintenance(8) → Worker(9) → Security(10)
+ */
+export function getPortalRoleTier(role: string): number {
+  const tierMap: Record<string, number> = {
+    super_admin:         0,
+    owner:               1,
+    company:             2,
+    admin_manager:       3,
+    "admin-manager":     3,
+    admin:               3,
+    manager:             3,
+    secretariat:         4,
+    dept_manager:        5,
+    "property-manager":  5,
+    admin_general:       6,
+    administrator:       6,
+    supervisor:          7,
+    "site-supervisor":   7,
+    "front-desk":        7,
+    maintenance:         8,
+    worker:              9,
+    staff:               9,
+    security:            10,
+    partner:             10,
+  };
+  return tierMap[role] ?? 9;
+}
+
+/**
  * 6-level hierarchy: super_admin=6 → owner=5 → admin_manager=4 → manager=3 → administrator=2 → supervisor/workers=1
  * Used for RBAC checks: callers can only create/manage users at strictly lower levels.
  */

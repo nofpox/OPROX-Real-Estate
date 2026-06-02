@@ -1316,9 +1316,15 @@ export interface PortalTeamMember {
   username: string;
   role: string;
   tier: string;
+  tierLevel: number;
   isActive: boolean;
   permissions: string[];
 }
+
+/**
+ * Map of role name to array of granted permission strings
+ */
+export interface PortalRolePermissionsMap {[key: string]: string[]}
 
 export interface PortalPermissionsInput {
   permissions: string[];
@@ -1589,5 +1595,20 @@ export type UpdatePortalTeamPermissions200Data = {
 export type UpdatePortalTeamPermissions200 = {
   status?: string;
   data?: UpdatePortalTeamPermissions200Data;
+};
+
+export type GetPortalRolePermissions200 = {
+  status?: string;
+  data?: PortalRolePermissionsMap;
+};
+
+export type UpdatePortalRolePermissionsBody = {
+  role: string;
+  permissions: string[];
+};
+
+export type UpdatePortalRolePermissions200 = {
+  status?: string;
+  data?: PortalRolePermissionsMap;
 };
 
