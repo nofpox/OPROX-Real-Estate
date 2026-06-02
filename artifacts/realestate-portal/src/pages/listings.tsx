@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Search, Building, X, SlidersHorizontal } from 'lucide-react';
+import { Search, Building, X, SlidersHorizontal, Map } from 'lucide-react';
 import { ListingCard } from '@/components/listing-card';
+import { MapView } from '@/components/map-view';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const PROPERTY_TYPES = [
@@ -35,6 +36,7 @@ export const ListingsBrowser: React.FC = () => {
   const [inputValue,   setInputValue]   = useState('');
   const [propertyType, setPropertyType] = useState<string>('all');
   const [type,         setType]         = useState<string>('all');
+  const [showMap,      setShowMap]      = useState(false);
 
   const { data: response, isLoading } = useGetListings({
     page,
@@ -141,10 +143,20 @@ export const ListingsBrowser: React.FC = () => {
 
             <Button
               type="submit"
-              className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-10 px-6"
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-10 px-6 shrink-0"
             >
               <SlidersHorizontal className="h-4 w-4 me-2" />
               {isRtl ? 'بحث' : 'Search'}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 px-5 shrink-0 gap-2 border-primary/30 hover:bg-primary hover:text-primary-foreground transition-colors"
+              onClick={() => setShowMap(true)}
+            >
+              <Map className="h-4 w-4" />
+              {isRtl ? 'عرض الخريطة' : 'View on Map'}
             </Button>
           </form>
 
@@ -265,6 +277,14 @@ export const ListingsBrowser: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Interactive Map Overlay */}
+      <MapView
+        open={showMap}
+        onClose={() => setShowMap(false)}
+        filters={{ q, propertyType, type }}
+        isRtl={isRtl}
+      />
     </div>
   );
 };
