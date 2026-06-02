@@ -13,6 +13,7 @@ const ne: Translations = {
     analytics: "Analytics",
     supportTickets: "Support Tickets",
     serviceConfig: "Service Config",
+    dataArchiving: "डाटा संग्रह",
   },
   common: {
     save: "सुरक्षित गर्नुहोस्", cancel: "रद्द गर्नुहोस्", delete: "मेट्नुहोस्",

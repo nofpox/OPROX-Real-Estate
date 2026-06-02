@@ -13,6 +13,7 @@ const hi: Translations = {
     analytics: "Analytics",
     supportTickets: "Support Tickets",
     serviceConfig: "Service Config",
+    dataArchiving: "डेटा आर्काइव",
   },
   common: {
     save: "सहेजें", cancel: "रद्द करें", delete: "हटाएं", edit: "संपादित करें", add: "जोड़ें",

@@ -62,7 +62,7 @@ export const ROLES: RoleDefinition[] = [
     id: "admin_manager",
     label: "Company",
     description: "Corporate-level access — company-wide management, financial oversight, and reporting",
-    allowedNav: ["/", "/bookings", "/properties", "/rooms", "/guests", "/unit-map", "/guest-requests", "/analytics", "/finance", "/user-management", "/admin-settings"],
+    allowedNav: ["/", "/bookings", "/properties", "/rooms", "/guests", "/unit-map", "/guest-requests", "/analytics", "/finance", "/user-management", "/admin-settings", "/data-archiving"],
     taskCategories: null,
   },
   // 3 — Management tier: Property & operational management
@@ -78,7 +78,7 @@ export const ROLES: RoleDefinition[] = [
     id: "administrator",
     label: "Administrator (Departmental)",
     description: "Departmental administration — reporting, unit data, service request tracking, and billing",
-    allowedNav: ["/", "/bookings", "/properties", "/rooms", "/guests", "/guest-requests", "/analytics", "/finance", "/user-management", "/admin-settings", "/activity-log"],
+    allowedNav: ["/", "/bookings", "/properties", "/rooms", "/guests", "/guest-requests", "/analytics", "/finance", "/user-management", "/admin-settings", "/activity-log", "/data-archiving"],
     taskCategories: null,
   },
   // 5 — Supervisor: Field operations oversight

@@ -31,6 +31,7 @@ import serviceCategoriesRouter from "./serviceCategories";
 import listingsRouter from "./listings";
 import portalRouter from "./portal";
 import sitemapRouter from "./sitemap";
+import archivingRouter from "./archiving";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
@@ -41,7 +42,7 @@ const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/", "/unit-requests", "/uni
 
 const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
 
-const ADMIN_PREFIXES = ["/expenses", "/settings"];
+const ADMIN_PREFIXES = ["/expenses", "/settings", "/archiving"];
 
 const SUPERVISOR_PREFIXES = [
   "/users", "/activity-logs", "/staff", "/properties",
@@ -155,6 +156,7 @@ router.use(serviceCategoriesRouter);
 router.use(listingsRouter);
 router.use(portalRouter);
 router.use(sitemapRouter);
+router.use(archivingRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

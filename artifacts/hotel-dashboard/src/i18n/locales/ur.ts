@@ -13,6 +13,7 @@ const ur: Translations = {
     analytics: "Analytics",
     supportTickets: "Support Tickets",
     serviceConfig: "تہیئہ خدمات",
+    dataArchiving: "ڈیٹا آرکائیو",
   },
   common: {
     save: "محفوظ کریں", cancel: "منسوخ کریں", delete: "حذف کریں",

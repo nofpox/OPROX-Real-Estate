@@ -22,3 +22,4 @@ export * from "./supportTickets";
 export * from "./user-sessions";
 export * from "./serviceCategories";
 export * from "./listings";
+export * from "./archivingLogs";

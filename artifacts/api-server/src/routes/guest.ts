@@ -94,7 +94,7 @@ router.post("/guest/contact", async (req, res) => {
   const description = `Subject: ${String(subject).trim()}\n\n${String(message).trim()}\n\n---\nEmail: ${String(email).trim()}`;
   const [request] = await db.insert(guestRequestsTable).values({
     tenantId:      1,
-    roomId:        null,
+    roomId:        null as unknown as number,
     type:          "contact",
     description,
     visitorName:   String(name).trim(),

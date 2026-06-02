@@ -13,6 +13,7 @@ const zh: Translations = {
     analytics: "数据分析",
     supportTickets: "支持工单",
     serviceConfig: "服务配置",
+    dataArchiving: "数据归档",
   },
   common: {
     save: "保存", cancel: "取消", delete: "删除", edit: "编辑", add: "添加",

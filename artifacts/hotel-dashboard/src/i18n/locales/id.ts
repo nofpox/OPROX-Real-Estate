@@ -13,6 +13,7 @@ const id: Translations = {
     analytics: "Analytics",
     supportTickets: "Support Tickets",
     serviceConfig: "Konfigurasi Layanan",
+    dataArchiving: "Pengarsipan Data",
   },
   common: {
     save: "Simpan", cancel: "Batal", delete: "Hapus", edit: "Edit", add: "Tambah",

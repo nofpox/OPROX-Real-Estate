@@ -13,6 +13,7 @@ const th: Translations = {
     analytics: "Analytics",
     supportTickets: "Support Tickets",
     serviceConfig: "ตั้งค่าบริการ",
+    dataArchiving: "คลังข้อมูล",
   },
   common: {
     save: "บันทึก", cancel: "ยกเลิก", delete: "ลบ", edit: "แก้ไข", add: "เพิ่ม",

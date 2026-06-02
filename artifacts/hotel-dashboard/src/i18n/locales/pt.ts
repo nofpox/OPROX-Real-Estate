@@ -13,6 +13,7 @@ const pt: Translations = {
     analytics: "Análises",
     supportTickets: "Tickets de Suporte",
     serviceConfig: "Config. de Serviços",
+    dataArchiving: "Arquivo de Dados",
   },
   common: {
     save: "Salvar", cancel: "Cancelar", delete: "Excluir", edit: "Editar", add: "Adicionar",

@@ -5,7 +5,7 @@ import {
   Wrench, UserCog, ClipboardList, ChevronDown, Shield,
   MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert, BarChart2,
   Ticket, MessageCircleQuestion, Settings2, HelpCircle,
-  Calendar, Users, DollarSign,
+  Calendar, Users, DollarSign, Archive,
 } from "lucide-react";
 import { SupportDialog } from "@/components/support-dialog";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,7 @@ const NAV_ITEMS = [
   { href: "/analytics",           labelKey: "nav.analytics",         icon: BarChart2,          section: "operations", featureKey: null },
   { href: "/support-tickets",    labelKey: "nav.supportTickets",    icon: Ticket,             section: "operations", featureKey: null },
   { href: "/service-config",     labelKey: "nav.serviceConfig",     icon: Settings2,          section: "operations", featureKey: null },
+  { href: "/data-archiving",     labelKey: "nav.dataArchiving",     icon: Archive,             section: "operations", featureKey: null },
 ];
 
 /* Role pill colours — solid only, no opacity modifiers */

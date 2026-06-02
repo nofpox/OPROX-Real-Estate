@@ -44,6 +44,7 @@ import WorkerDashboard from "@/pages/worker-dashboard";
 import WorkerTasks from "@/pages/worker-tasks";
 import WorkerWorkOrders from "@/pages/worker-work-orders";
 import WorkerUnitDetail from "@/pages/worker-unit-detail";
+import DataArchiving from "@/pages/data-archiving";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
@@ -86,6 +87,7 @@ function Router() {
       <Route path="/service-config" component={ServiceConfig} />
       <Route path="/finance" component={Finance} />
       <Route path="/guests" component={Guests} />
+      <Route path="/data-archiving" component={DataArchiving} />
       <Route component={NotFound} />
     </Switch>
   );

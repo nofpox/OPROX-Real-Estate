@@ -20,6 +20,7 @@ const en = {
     analytics: "Analytics",
     supportTickets: "Support Tickets",
     serviceConfig: "Service Config",
+    dataArchiving: "Data Archiving",
   },
   common: {
     save: "Save",

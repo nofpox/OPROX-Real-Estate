@@ -36,6 +36,8 @@ tags:
     description: Client/property configuration settings
   - name: superAdmin
     description: Super-admin tenant management (super_admin role only)
+  - name: archiving
+    description: Data archiving, health checks, and archive browser (admin only)
 paths:
   /settings:
     get:
