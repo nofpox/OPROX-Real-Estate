@@ -22,6 +22,7 @@ const en = {
     serviceConfig: "Service Config",
     dataArchiving: "Data Archiving",
     contentManager: "Content Manager",
+    websiteSettings: "Website Settings",
     partnerPortal: "Partner Portal",
   },
   common: {

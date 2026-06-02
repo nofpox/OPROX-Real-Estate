@@ -15,6 +15,7 @@ const bn: Translations = {
     serviceConfig: "Service Config",
     dataArchiving: "ডেটা আর্কাইভ",
     contentManager: "বিষয়বস্তু ব্যবস্থাপনা",
+    websiteSettings: "ওয়েবসাইট সেটিংস",
     partnerPortal: "পার্টনার পোর্টাল",
   },
   common: {

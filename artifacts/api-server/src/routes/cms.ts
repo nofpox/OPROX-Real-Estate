@@ -48,7 +48,6 @@ router.get("/cms/property-types", async (req, res) => {
       .where(eq(propertyCategoriesTable.tenantId, tenantId))
       .orderBy(asc(propertyCategoriesTable.sortOrder));
 
-    // Auto-seed defaults on first access
     if (rows.length === 0) {
       const inserts = DEFAULT_CATEGORIES.map(d => ({ ...d, tenantId }));
       rows = await db.insert(propertyCategoriesTable).values(inserts).returning();
@@ -123,7 +122,10 @@ router.delete("/cms/property-types/:id", requireAdmin, async (req, res) => {
 
 // ── Site Content ──────────────────────────────────────────────────────────────
 
-const SITE_SECTIONS = ["hero", "contact", "announcements", "about"] as const;
+const SITE_SECTIONS = [
+  "hero", "contact", "announcements", "about",
+  "branding", "stats", "services", "nav", "footer", "cta",
+] as const;
 type SiteSection = (typeof SITE_SECTIONS)[number];
 
 async function getSectionValue(tenantId: number, section: SiteSection): Promise<unknown> {
@@ -147,10 +149,130 @@ async function upsertSectionValue(tenantId: number, section: SiteSection, value:
 }
 
 const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
-  hero: { titleEn: "Welcome", titleAr: "أهلاً وسهلاً", subtitleEn: "Find your perfect property", subtitleAr: "ابحث عن عقارك المثالي", imageUrl: "" },
-  contact: { email: "", phone: "", whatsapp: "", address: "" },
+  hero: {
+    titleEn: "Premium Property Management in Saudi Arabia",
+    titleAr: "إدارة عقارات متميزة في المملكة العربية السعودية",
+    subtitleEn: "Discover exclusive hotels, compounds, and corporate facilities managed with focus and precision.",
+    subtitleAr: "اكتشف فنادق ومجمعات سكنية ومرافق مؤسسية حصرية تُدار باحترافية ودقة.",
+    ctaButtonEn: "Explore Properties",
+    ctaButtonAr: "تصفح العقارات",
+    imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop",
+  },
+  contact: {
+    email: "info@rakez-solutions.com",
+    salesEmail: "sales@rakez-solutions.com",
+    supportEmail: "support@rakez-solutions.com",
+    phone: "+966 11 234 5678",
+    fax: "+966 11 234 5679",
+    supportPhone: "9200 12345",
+    whatsapp: "",
+    addressEn: "King Fahd Road, Olaya District\nP.O. Box 12345\nRiyadh 11471, Saudi Arabia",
+    addressAr: "طريق الملك فهد، حي العليا\nص.ب. 12345\nالرياض 11471، المملكة العربية السعودية",
+  },
   announcements: [],
-  about: { titleEn: "About Us", titleAr: "من نحن", body: "", imageUrl: "" },
+  about: {
+    titleEn: "About Rakez Smart Solutions",
+    titleAr: "عن ركز للحلول الذكية",
+    body: "Rakez Smart Solutions is a leading property management company in Saudi Arabia, specializing in hotels, residential compounds, and corporate facilities.",
+    imageUrl: "",
+  },
+  branding: {
+    companyNameEn: "Rakez Smart Solutions",
+    companyNameAr: "ركز للحلول الذكية",
+    taglineEn: "Premium Property Management",
+    taglineAr: "إدارة عقارات متميزة",
+    logoUrl: "",
+  },
+  stats: [
+    { value: "50+",    labelEn: "Properties Managed",      labelAr: "عقار مُدار" },
+    { value: "1,200+", labelEn: "Satisfied Tenants",        labelAr: "مستأجر راضٍ" },
+    { value: "₂B SAR", labelEn: "Assets Under Management",  labelAr: "أصول تحت الإدارة" },
+    { value: "10+",    labelEn: "Years of Excellence",       labelAr: "سنوات من التميز" },
+  ],
+  services: [
+    {
+      titleEn: "Hotel Operations",
+      titleAr: "إدارة الفنادق",
+      descEn: "Comprehensive hospitality management delivering premium guest experiences and maximised yields.",
+      descAr: "إدارة شاملة للأصول الفندقية مع التركيز على رضا الضيوف وتحسين الإيرادات والكفاءة التشغيلية.",
+      itemsEn: [
+        "Front desk & concierge management",
+        "Housekeeping & maintenance services",
+        "Revenue management & pricing strategy",
+        "Guest experience optimization",
+        "F&B operations management",
+      ],
+      itemsAr: [
+        "إدارة الاستقبال والكونسيرج",
+        "خدمات التدبير المنزلي والصيانة",
+        "إدارة الإيرادات وإستراتيجية التسعير",
+        "تحسين تجربة الضيوف",
+        "إدارة عمليات الأغذية والمشروبات",
+      ],
+      imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2070&auto=format&fit=crop",
+    },
+    {
+      titleEn: "Compound Management",
+      titleAr: "إدارة المجمعات السكنية",
+      descEn: "Creating thriving residential communities through comprehensive compound management ensuring secure, well-maintained environments.",
+      descAr: "بناء مجتمعات سكنية متكاملة من خلال إدارة شاملة للمجمع. نضمن بيئات معيشية آمنة ومصونة وحيوية.",
+      itemsEn: [
+        "24/7 Security & access control",
+        "Preventive maintenance programs",
+        "Community events & lifestyle services",
+        "Recreational facility management",
+        "Tenant relations & leasing",
+      ],
+      itemsAr: [
+        "الأمن على مدار الساعة وضبط الدخول",
+        "برامج الصيانة الوقائية",
+        "الفعاليات المجتمعية وخدمات أسلوب الحياة",
+        "إدارة المرافق الترفيهية",
+        "علاقات المستأجرين والتأجير",
+      ],
+      imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop",
+    },
+    {
+      titleEn: "Corporate Facilities",
+      titleAr: "المرافق المؤسسية",
+      descEn: "Professional facility management for corporate environments maintaining optimal working conditions that enhance productivity.",
+      descAr: "تقديم خدمات إدارة المرافق الاحترافية للبيئات المؤسسية. نحافظ على ظروف عمل مثلى تعزز الإنتاجية.",
+      itemsEn: [
+        "Integrated facilities management",
+        "Health, safety & environment compliance",
+        "Energy management & sustainability",
+        "Workspace planning & optimization",
+        "Vendor & contract management",
+      ],
+      itemsAr: [
+        "الإدارة المتكاملة للمرافق",
+        "الامتثال للصحة والسلامة والبيئة",
+        "إدارة الطاقة والاستدامة",
+        "تخطيط مساحة العمل وتحسينها",
+        "إدارة الموردين والعقود",
+      ],
+      imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop",
+    },
+  ],
+  nav: [
+    { href: "/",         labelEn: "Home",          labelAr: "الرئيسية"    },
+    { href: "/listings", labelEn: "Properties",    labelAr: "العقارات"    },
+    { href: "/services", labelEn: "Services",      labelAr: "الخدمات"     },
+    { href: "/contact",  labelEn: "Contact",       labelAr: "اتصل بنا"    },
+    { href: "/portal",   labelEn: "Client Portal", labelAr: "بوابة العميل" },
+  ],
+  footer: {
+    descriptionEn: "Your trusted partner for premium property management across Saudi Arabia — hotels, compounds, and corporate facilities.",
+    descriptionAr: "شريكك الموثوق لإدارة العقارات المتميزة في المملكة العربية السعودية — فنادق ومجمعات سكنية ومرافق مؤسسية.",
+  },
+  cta: {
+    headlineEn: "Ready to Maximise Your Property's Potential?",
+    headlineAr: "هل أنت مستعد لتعظيم قيمة عقارك؟",
+    subtitleEn: "Get in touch with our team today and discover how Rakez can transform your property assets into a performing investment.",
+    subtitleAr: "تواصل مع فريقنا اليوم واكتشف كيف يمكن لركز أن يحول أصولك العقارية إلى استثمار مثمر.",
+    buttonEn: "Contact Us",
+    buttonAr: "تواصل معنا",
+  },
 };
 
 router.get("/cms/site-content", async (req, res) => {

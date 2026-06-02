@@ -12,6 +12,7 @@ import { ListingDetail } from "@/pages/listing-detail";
 import { Services } from "@/pages/services";
 import { Contact } from "@/pages/contact";
 import { PortalAuthProvider } from "@/lib/portal-auth";
+import { CmsProvider } from "@/lib/cms-context";
 import { PortalLogin } from "@/pages/portal-login";
 import { PortalDashboard } from "@/pages/portal-dashboard";
 
@@ -43,6 +44,7 @@ function App() {
   return (
     <HelmetProvider>
     <QueryClientProvider client={queryClient}>
+      <CmsProvider>
       <PortalAuthProvider>
         <LanguageProvider>
           <TooltipProvider>
@@ -55,6 +57,7 @@ function App() {
           </TooltipProvider>
         </LanguageProvider>
       </PortalAuthProvider>
+      </CmsProvider>
     </QueryClientProvider>
     </HelmetProvider>
   );

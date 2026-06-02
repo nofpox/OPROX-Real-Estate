@@ -5,7 +5,7 @@ import {
   Wrench, UserCog, ClipboardList, ChevronDown, Shield,
   MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert, BarChart2,
   Ticket, MessageCircleQuestion, Settings2, HelpCircle,
-  Calendar, Users, DollarSign, Archive, LayoutTemplate, TrendingUp,
+  Calendar, Users, DollarSign, Archive, LayoutTemplate, TrendingUp, Monitor,
 } from "lucide-react";
 import { SupportDialog } from "@/components/support-dialog";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,7 @@ const NAV_ITEMS = [
   { href: "/service-config",     labelKey: "nav.serviceConfig",     icon: Settings2,          section: "operations", featureKey: null },
   { href: "/data-archiving",     labelKey: "nav.dataArchiving",     icon: Archive,             section: "operations", featureKey: null },
   { href: "/content-manager",   labelKey: "nav.contentManager",   icon: LayoutTemplate,      section: "operations", featureKey: null },
+  { href: "/website-settings",  labelKey: "nav.websiteSettings",  icon: Monitor,              section: "operations", featureKey: null },
   { href: "/partner",           labelKey: "nav.partnerPortal",    icon: TrendingUp,           section: "main",       featureKey: null },
 ];
 

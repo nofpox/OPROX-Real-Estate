@@ -15,6 +15,7 @@ const fr: Translations = {
     serviceConfig: "Config. Services",
     dataArchiving: "Archivage des données",
     contentManager: "Gestion du contenu",
+    websiteSettings: "Paramètres du site Web",
     partnerPortal: "Portail Partenaire",
   },
   common: {

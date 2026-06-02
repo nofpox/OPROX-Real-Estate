@@ -15,6 +15,7 @@ const ne: Translations = {
     serviceConfig: "Service Config",
     dataArchiving: "डाटा संग्रह",
     contentManager: "सामग्री व्यवस्थापन",
+    websiteSettings: "वेबसाइट सेटिङहरू",
     partnerPortal: "पार्टनर पोर्टल",
   },
   common: {

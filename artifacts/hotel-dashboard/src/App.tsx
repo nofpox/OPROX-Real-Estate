@@ -46,6 +46,7 @@ import WorkerWorkOrders from "@/pages/worker-work-orders";
 import WorkerUnitDetail from "@/pages/worker-unit-detail";
 import DataArchiving from "@/pages/data-archiving";
 import ContentManager from "@/pages/content-manager";
+import WebsiteSettings from "@/pages/website-settings";
 import PartnerPortal from "@/pages/partner-portal";
 
 const queryClient = new QueryClient({
@@ -92,6 +93,7 @@ function Router() {
       <Route path="/guests" component={Guests} />
       <Route path="/data-archiving" component={DataArchiving} />
       <Route path="/content-manager" component={ContentManager} />
+      <Route path="/website-settings" component={WebsiteSettings} />
       <Route path="/partner" component={PartnerPortal} />
       <Route component={NotFound} />
     </Switch>

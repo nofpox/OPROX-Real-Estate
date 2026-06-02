@@ -15,6 +15,7 @@ const hi: Translations = {
     serviceConfig: "Service Config",
     dataArchiving: "डेटा आर्काइव",
     contentManager: "सामग्री प्रबंधन",
+    websiteSettings: "वेबसाइट सेटिंग्स",
     partnerPortal: "पार्टनर पोर्टल",
   },
   common: {

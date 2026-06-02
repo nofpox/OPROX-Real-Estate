@@ -15,6 +15,7 @@ const tl: Translations = {
     serviceConfig: "Service Config",
     dataArchiving: "Archibo ng Data",
     contentManager: "Pamamahala ng Nilalaman",
+    websiteSettings: "Mga Setting ng Website",
     partnerPortal: "Partner Portal",
   },
   common: {

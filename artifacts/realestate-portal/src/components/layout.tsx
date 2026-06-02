@@ -1,27 +1,17 @@
 import React from 'react';
 import { Link, useLocation } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
+import { useCms } from '@/lib/cms-context';
 import { Building, Menu, X, Globe, Phone, Mail, MapPin } from 'lucide-react';
 import { Button } from './ui/button';
 
-interface NavItem {
-  href:    string;
-  labelEn: string;
-  labelAr: string;
-}
-
-const NAV_ITEMS: NavItem[] = [
-  { href: '/',         labelEn: 'Home',          labelAr: 'الرئيسية'    },
-  { href: '/listings', labelEn: 'Properties',    labelAr: 'العقارات'    },
-  { href: '/services', labelEn: 'Services',      labelAr: 'الخدمات'     },
-  { href: '/contact',  labelEn: 'Contact',       labelAr: 'اتصل بنا'    },
-  { href: '/portal',   labelEn: 'Client Portal', labelAr: 'بوابة العميل' },
-];
-
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { language, setLanguage, t, isRtl } = useLanguage();
+  const { language, setLanguage, isRtl } = useLanguage();
+  const { content } = useCms();
   const [location]      = useLocation();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  const { nav, branding, footer, contact } = content;
 
   const toggleLanguage = () => setLanguage(language === 'en' ? 'ar' : 'en');
 
@@ -37,15 +27,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <Building className="h-5 w-5 text-secondary" />
+            {branding.logoUrl
+              ? <img src={branding.logoUrl} alt={branding.companyNameEn} className="h-8 w-8 object-contain" />
+              : <Building className="h-5 w-5 text-secondary" />
+            }
             <span className="font-bold text-lg tracking-tight text-primary">
-              ركز <span className="text-muted-foreground/60 font-normal text-sm">|</span> Rakez
+              {isRtl
+                ? branding.companyNameAr || 'ركز | Rakez'
+                : branding.companyNameEn || 'Rakez'}
             </span>
           </Link>
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
-            {NAV_ITEMS.map(({ href, labelEn, labelAr }) => (
+            {nav.map(({ href, labelEn, labelAr }) => (
               <Link
                 key={href}
                 href={href}
@@ -76,7 +71,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-4 text-xs">
               <Link href="/contact">
                 <Phone className={`h-3.5 w-3.5 ${isRtl ? 'ms-1.5' : 'me-1.5'}`} />
-                {isRtl ? 'اتصل بنا' : 'Contact Us'}
+                {isRtl
+                  ? nav.find(n => n.href === '/contact')?.labelAr || 'اتصل بنا'
+                  : nav.find(n => n.href === '/contact')?.labelEn || 'Contact Us'}
               </Link>
             </Button>
           </div>
@@ -96,7 +93,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {isMenuOpen && (
           <div className="md:hidden border-t border-border bg-background shadow-lg">
             <nav className="p-3 flex flex-col gap-1">
-              {NAV_ITEMS.map(({ href, labelEn, labelAr }) => (
+              {nav.map(({ href, labelEn, labelAr }) => (
                 <Link
                   key={href}
                   href={href}
@@ -127,30 +124,41 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <Building className="h-5 w-5 text-secondary" />
-              <span className="font-bold text-lg text-white">ركز | Rakez</span>
+              {branding.logoUrl
+                ? <img src={branding.logoUrl} alt="" className="h-6 w-6 object-contain" />
+                : <Building className="h-5 w-5 text-secondary" />
+              }
+              <span className="font-bold text-lg text-white">
+                {isRtl ? branding.companyNameAr : branding.companyNameEn}
+              </span>
             </div>
             <p className="text-primary-foreground/60 text-sm leading-relaxed max-w-xs">
-              {t('footer.description')}
+              {isRtl ? footer.descriptionAr : footer.descriptionEn}
             </p>
             {/* Contact mini-list */}
             <ul className="mt-6 space-y-2 text-sm text-primary-foreground/60">
-              <li className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-secondary shrink-0" />
-                {isRtl ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia'}
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5 text-secondary shrink-0" />
-                <a href="mailto:info@rakez-solutions.com" className="hover:text-secondary transition-colors">
-                  info@rakez-solutions.com
-                </a>
-              </li>
-              <li className="flex items-center gap-2">
-                <Phone className="h-3.5 w-3.5 text-secondary shrink-0" />
-                <a href="tel:+966112345678" className="hover:text-secondary transition-colors">
-                  +966 11 234 5678
-                </a>
-              </li>
+              {(isRtl ? contact.addressAr : contact.addressEn) && (
+                <li className="flex items-center gap-2">
+                  <MapPin className="h-3.5 w-3.5 text-secondary shrink-0" />
+                  {isRtl ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia'}
+                </li>
+              )}
+              {contact.email && (
+                <li className="flex items-center gap-2">
+                  <Mail className="h-3.5 w-3.5 text-secondary shrink-0" />
+                  <a href={`mailto:${contact.email}`} className="hover:text-secondary transition-colors">
+                    {contact.email}
+                  </a>
+                </li>
+              )}
+              {contact.phone && (
+                <li className="flex items-center gap-2">
+                  <Phone className="h-3.5 w-3.5 text-secondary shrink-0" />
+                  <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="hover:text-secondary transition-colors" dir="ltr">
+                    {contact.phone}
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
 
@@ -160,7 +168,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               {isRtl ? 'روابط سريعة' : 'Quick Links'}
             </h3>
             <ul className="space-y-2.5 text-sm text-primary-foreground/60">
-              {NAV_ITEMS.slice(0, 4).map(({ href, labelEn, labelAr }) => (
+              {nav.slice(0, 4).map(({ href, labelEn, labelAr }) => (
                 <li key={href}>
                   <Link href={href} className="hover:text-secondary transition-colors">
                     {isRtl ? labelAr : labelEn}
@@ -173,7 +181,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           {/* Portal */}
           <div>
             <h3 className="font-semibold text-sm text-white/90 uppercase tracking-wider mb-4">
-              {isRtl ? 'بوابة العملاء' : 'Client Portal'}
+              {isRtl
+                ? nav.find(n => n.href === '/portal')?.labelAr || 'بوابة العملاء'
+                : nav.find(n => n.href === '/portal')?.labelEn || 'Client Portal'}
             </h3>
             <p className="text-sm text-primary-foreground/60 mb-4 leading-relaxed">
               {isRtl
@@ -190,19 +200,16 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         <div className="border-t border-primary-foreground/10">
           <div className="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-primary-foreground/40">
-            <span>© {new Date().getFullYear()} Rakez Smart Solutions. {isRtl ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}</span>
+            <span>© {new Date().getFullYear()} {isRtl ? branding.companyNameAr : branding.companyNameEn}. {isRtl ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}</span>
             <span className="flex items-center gap-3">
-              <Link href="/listings" className="hover:text-primary-foreground/70 transition-colors">
-                {isRtl ? 'العقارات' : 'Properties'}
-              </Link>
-              <span className="text-primary-foreground/20">·</span>
-              <Link href="/services" className="hover:text-primary-foreground/70 transition-colors">
-                {isRtl ? 'الخدمات' : 'Services'}
-              </Link>
-              <span className="text-primary-foreground/20">·</span>
-              <Link href="/contact" className="hover:text-primary-foreground/70 transition-colors">
-                {isRtl ? 'اتصل بنا' : 'Contact'}
-              </Link>
+              {nav.slice(1, 4).map(({ href, labelEn, labelAr }, i, arr) => (
+                <React.Fragment key={href}>
+                  <Link href={href} className="hover:text-primary-foreground/70 transition-colors">
+                    {isRtl ? labelAr : labelEn}
+                  </Link>
+                  {i < arr.length - 1 && <span className="text-primary-foreground/20">·</span>}
+                </React.Fragment>
+              ))}
             </span>
           </div>
         </div>

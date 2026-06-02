@@ -15,6 +15,7 @@ const th: Translations = {
     serviceConfig: "ตั้งค่าบริการ",
     dataArchiving: "คลังข้อมูล",
     contentManager: "การจัดการเนื้อหา",
+    websiteSettings: "การตั้งค่าเว็บไซต์",
     partnerPortal: "พอร์ทัลพาร์ทเนอร์",
   },
   common: {

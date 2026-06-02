@@ -15,6 +15,7 @@ const ml: Translations = {
     serviceConfig: "Service Config",
     dataArchiving: "ഡാറ്റ ആർക്കൈവ്",
     contentManager: "ഉള്ളടക്ക മാനേജ്മെന്റ്",
+    websiteSettings: "വെബ്സൈറ്റ് ക്രമീകരണങ്ങൾ",
     partnerPortal: "പാർട്ണർ പോർട്ടൽ",
   },
   common: {

@@ -15,6 +15,7 @@ const zh: Translations = {
     serviceConfig: "服务配置",
     dataArchiving: "数据归档",
     contentManager: "内容管理",
+    websiteSettings: "网站设置",
     partnerPortal: "合伙人门户",
   },
   common: {

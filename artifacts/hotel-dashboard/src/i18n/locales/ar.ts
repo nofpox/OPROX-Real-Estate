@@ -24,6 +24,7 @@ const ar: Translations = {
     serviceConfig: "تهيئة الخدمات",
     dataArchiving: "أرشفة البيانات",
     contentManager: "إدارة المحتوى",
+    websiteSettings: "إعدادات الموقع",
     partnerPortal: "بوابة الشريك",
   },
   common: {

@@ -15,6 +15,7 @@ const ur: Translations = {
     serviceConfig: "تہیئہ خدمات",
     dataArchiving: "ڈیٹا آرکائیو",
     contentManager: "مواد کا انتظام",
+    websiteSettings: "ویب سائٹ کی ترتیبات",
     partnerPortal: "پارٹنر پورٹل",
   },
   common: {

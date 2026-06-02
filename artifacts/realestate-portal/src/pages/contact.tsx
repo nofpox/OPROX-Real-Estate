@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '@/lib/i18n';
+import { useCms } from '@/lib/cms-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,8 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 import { PhoneInputWithCountry } from '@/components/phone-input';
 
 export const Contact: React.FC = () => {
-  const { t, isRtl } = useLanguage();
+  const { isRtl } = useLanguage();
+  const { content } = useCms();
   const { toast } = useToast();
+  const { contact, branding } = content;
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -54,26 +58,33 @@ export const Contact: React.FC = () => {
     }
   };
 
+  const addressLines = isRtl
+    ? (contact.addressAr || '').split('\n')
+    : (contact.addressEn || '').split('\n');
+
   return (
     <div className="bg-muted min-h-screen py-16">
       <Helmet>
         <title>
-          {isRtl ? 'اتصل بنا | ركز للحلول الذكية' : 'Contact Us | ركز للحلول الذكية'}
+          {isRtl
+            ? `اتصل بنا | ${branding.companyNameAr}`
+            : `Contact Us | ${branding.companyNameEn}`}
         </title>
         <meta
           name="description"
           content={
             isRtl
-              ? 'تواصل مع ركز للحلول الذكية لاستفسارات إدارة العقارات والشراكات والدعم.'
-              : 'Get in touch with Rakez Smart Solutions for property management inquiries, partnerships, and support.'
+              ? `تواصل مع ${branding.companyNameAr} لاستفسارات إدارة العقارات والشراكات والدعم.`
+              : `Get in touch with ${branding.companyNameEn} for property management inquiries, partnerships, and support.`
           }
         />
-        <link rel="canonical" href="https://rakez.sa/realestate/contact" />
       </Helmet>
 
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-primary mb-4">{t('contact.title')}</h1>
+          <h1 className="text-4xl font-bold text-primary mb-4">
+            {isRtl ? 'تواصل معنا' : 'Get in Touch'}
+          </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             {isRtl
               ? 'سواء كنت تبحث عن خدمات إدارة العقارات، أو تبحث عن منزل جديد، أو لديك استفسار عام، فريقنا مستعد لمساعدتك.'
@@ -84,57 +95,58 @@ export const Contact: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contact Info */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <MapPin className="h-6 w-6 text-primary" />
+            {/* Address */}
+            {(contact.addressEn || contact.addressAr) && (
+              <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <MapPin className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-bold text-primary mb-2">
+                  {isRtl ? 'المكتب الرئيسي' : 'Head Office'}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed" dir={isRtl ? 'rtl' : 'ltr'}>
+                  {addressLines.map((line, i) => (
+                    <React.Fragment key={i}>
+                      {line}{i < addressLines.length - 1 && <br />}
+                    </React.Fragment>
+                  ))}
+                </p>
               </div>
-              <h3 className="text-lg font-bold text-primary mb-2">
-                {isRtl ? 'المكتب الرئيسي' : 'Head Office'}
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {isRtl ? (
-                  <>
-                    طريق الملك فهد، حي العليا<br />
-                    ص.ب. 12345<br />
-                    الرياض 11471، المملكة العربية السعودية
-                  </>
-                ) : (
-                  <>
-                    King Fahd Road, Olaya District<br />
-                    P.O. Box 12345<br />
-                    Riyadh 11471, Saudi Arabia
-                  </>
-                )}
-              </p>
-            </div>
+            )}
 
-            <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <Phone className="h-6 w-6 text-primary" />
+            {/* Phone */}
+            {(contact.phone || contact.fax || contact.supportPhone) && (
+              <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <Phone className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-bold text-primary mb-2">
+                  {isRtl ? 'أرقام التواصل' : 'Contact Numbers'}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed" dir="ltr">
+                  {contact.phone    && <>{isRtl ? 'هاتف' : 'Tel'}: {contact.phone}<br /></>}
+                  {contact.fax      && <>{isRtl ? 'فاكس' : 'Fax'}: {contact.fax}<br /></>}
+                  {contact.supportPhone && <>{isRtl ? 'الدعم' : 'Support'}: {contact.supportPhone}</>}
+                </p>
               </div>
-              <h3 className="text-lg font-bold text-primary mb-2">
-                {isRtl ? 'أرقام التواصل' : 'Contact Numbers'}
-              </h3>
-              <p className="text-muted-foreground leading-relaxed" dir="ltr">
-                Tel: +966 11 234 5678<br />
-                Fax: +966 11 234 5679<br />
-                Support: 9200 12345
-              </p>
-            </div>
+            )}
 
-            <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <Mail className="h-6 w-6 text-primary" />
+            {/* Email */}
+            {(contact.email || contact.salesEmail || contact.supportEmail) && (
+              <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <Mail className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-bold text-primary mb-2">
+                  {isRtl ? 'عناوين البريد الإلكتروني' : 'Email Addresses'}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed" dir="ltr">
+                  {contact.email        && <>{isRtl ? 'عام' : 'General'}: {contact.email}<br /></>}
+                  {contact.salesEmail   && <>{isRtl ? 'المبيعات' : 'Sales'}: {contact.salesEmail}<br /></>}
+                  {contact.supportEmail && <>{isRtl ? 'الدعم' : 'Support'}: {contact.supportEmail}</>}
+                </p>
               </div>
-              <h3 className="text-lg font-bold text-primary mb-2">
-                {isRtl ? 'عناوين البريد الإلكتروني' : 'Email Addresses'}
-              </h3>
-              <p className="text-muted-foreground leading-relaxed" dir="ltr">
-                General: info@rakez-solutions.com<br />
-                Sales: sales@rakez-solutions.com<br />
-                Support: support@rakez-solutions.com
-              </p>
-            </div>
+            )}
           </div>
 
           {/* Contact Form */}

@@ -15,6 +15,7 @@ const id: Translations = {
     serviceConfig: "Konfigurasi Layanan",
     dataArchiving: "Pengarsipan Data",
     contentManager: "Manajemen Konten",
+    websiteSettings: "Pengaturan Situs Web",
     partnerPortal: "Portal Mitra",
   },
   common: {
