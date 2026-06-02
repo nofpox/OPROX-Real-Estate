@@ -17,7 +17,8 @@ import Dashboard from "@/pages/dashboard";
 import Bookings from "@/pages/bookings";
 import NewBooking from "@/pages/booking-new";
 import BookingDetail from "@/pages/booking-detail";
-import Rooms from "@/pages/rooms";
+// Rooms (حالة الوحدات) hidden — UI on hold; restore by un-commenting import + Route
+// import Rooms from "@/pages/rooms";
 import NotFound from "@/pages/not-found";
 import Properties from "@/pages/properties";
 import PropertyDetail from "@/pages/property-detail";
@@ -74,7 +75,7 @@ function Router() {
       <Route path="/bookings" component={Bookings} />
       <Route path="/bookings/new" component={NewBooking} />
       <Route path="/bookings/:id" component={BookingDetail} />
-      <Route path="/rooms" component={Rooms} />
+      {/* /rooms hidden — UI on hold; restore by un-commenting import + this Route */}
       <Route path="/properties" component={Properties} />
       <Route path="/properties/:id" component={PropertyDetail} />
       <Route path="/maintenance" component={Maintenance} />
