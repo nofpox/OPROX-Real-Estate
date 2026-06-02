@@ -337,7 +337,7 @@ const ur: Translations = {
     comingSoon: "اگلی ریلیز میں مکمل بکنگ انتظام دستیاب ہوگا۔",
     names: { gym: "فٹنس سینٹر", pool: "سوئمنگ پول", "meeting-a": "میٹنگ روم A", lounge: "اسکائی لاؤنج", parking: "وزیٹر پارکنگ", rooftop: "روف ٹاپ گارڈن" },
   },
-  unitMap: { title: "یونٹ نقشہ", subtitle: "تمام یونٹوں کی بصری ترتیب اور ان کی لائیو حیثیت۔" },
+  unitMap: { title: "یونٹ نقشہ", subtitle: "تمام یونٹوں کی بصری ترتیب اور ان کی لائیو حیثیت۔", total: "کل یونٹ", available: "دستیاب", occupied: "استعمال میں", maintenance: "دیکھ بھال", cleaning: "صفائی", allProperties: "تمام پراپرٹیز", allStatuses: "تمام حالات", searchPlaceholder: "یونٹ تلاش کریں...", noUnits: "موجودہ فلٹرز سے کوئی یونٹ نہیں ملا۔", unassigned: "غیر مقرر", legend: "حالت کی وضاحت", priceNight: "/ رات", details: { title: "یونٹ کی تفصیلات", property: "پراپرٹی", type: "قسم", status: "حالت", capacity: "گنجائش", price: "شرح", description: "تفصیل", amenities: "سہولیات", close: "بند کریں" } },
   adminSettings: {
     title: "ایڈمن سیٹنگز",
     subtitle: "سسٹم معلومات، کام کی اقسام، فیلڈ کی ضروریات اور کسٹم فیلڈز کا انتظام کریں۔",

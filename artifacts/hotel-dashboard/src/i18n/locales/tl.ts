@@ -339,7 +339,7 @@ const tl: Translations = {
     comingSoon: "Ang buong pamamahala ng booking ay darating sa susunod na release.",
     names: { gym: "Fitness Center", pool: "Swimming Pool", "meeting-a": "Meeting Room A", lounge: "Sky Lounge", parking: "Visitor Parking", rooftop: "Rooftop Garden" },
   },
-  unitMap: { title: "Mapa ng Unit", subtitle: "Visual na layout ng lahat ng unit at kanilang live na katayuan." },
+  unitMap: { title: "Mapa ng Unit", subtitle: "Visual na layout ng lahat ng unit at kanilang live na katayuan.", total: "Kabuuang Unit", available: "Available", occupied: "May Nakatira", maintenance: "Maintenance", cleaning: "Paglilinis", allProperties: "Lahat ng Property", allStatuses: "Lahat ng Katayuan", searchPlaceholder: "Maghanap ng unit...", noUnits: "Walang unit na tumutugma sa mga filter.", unassigned: "Hindi Naatasan", legend: "Alamat ng Katayuan", priceNight: "/ gabi", details: { title: "Detalye ng Unit", property: "Property", type: "Uri", status: "Katayuan", capacity: "Kapasidad", price: "Halaga", description: "Paglalarawan", amenities: "Mga Pasilidad", close: "Isara" } },
   adminSettings: {
     title: "Mga Setting ng Admin",
     subtitle: "Pamahalaan ang impormasyon ng sistema, mga kategorya ng gawain, mga kinakailangan, at custom na field.",

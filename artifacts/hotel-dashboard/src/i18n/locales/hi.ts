@@ -336,7 +336,7 @@ const hi: Translations = {
     comingSoon: "अगले रिलीज़ में पूर्ण बुकिंग प्रबंधन उपलब्ध होगा।",
     names: { gym: "फिटनेस सेंटर", pool: "स्विमिंग पूल", "meeting-a": "मीटिंग रूम A", lounge: "स्काई लाउंज", parking: "विज़िटर पार्किंग", rooftop: "रूफटॉप गार्डन" },
   },
-  unitMap: { title: "इकाई नक्शा", subtitle: "सभी इकाइयों का दृश्य लेआउट और उनकी लाइव स्थिति।" },
+  unitMap: { title: "इकाई नक्शा", subtitle: "सभी इकाइयों का दृश्य लेआउट और उनकी लाइव स्थिति।", total: "कुल इकाइयाँ", available: "उपलब्ध", occupied: "अधिकृत", maintenance: "रखरखाव", cleaning: "सफाई", allProperties: "सभी संपत्तियाँ", allStatuses: "सभी स्थितियाँ", searchPlaceholder: "इकाइयाँ खोजें...", noUnits: "कोई इकाई फ़िल्टर से मेल नहीं खाती।", unassigned: "अनिर्धारित", legend: "स्थिति संकेत", priceNight: "/ रात", details: { title: "इकाई विवरण", property: "संपत्ति", type: "प्रकार", status: "स्थिति", capacity: "क्षमता", price: "दर", description: "विवरण", amenities: "सुविधाएँ", close: "बंद करें" } },
   adminSettings: {
     title: "व्यवस्थापक सेटिंग्स",
     subtitle: "सिस्टम जानकारी, कार्य श्रेणियाँ, फ़ील्ड आवश्यकताएँ और कस्टम फ़ील्ड प्रबंधित करें।",

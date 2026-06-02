@@ -337,7 +337,7 @@ const id: Translations = {
     comingSoon: "Manajemen pemesanan lengkap akan hadir di rilis berikutnya.",
     names: { gym: "Pusat Kebugaran", pool: "Kolam Renang", "meeting-a": "Ruang Rapat A", lounge: "Sky Lounge", parking: "Parkir Pengunjung", rooftop: "Taman Rooftop" },
   },
-  unitMap: { title: "Peta Unit", subtitle: "Tata letak visual semua unit dan status langsung mereka." },
+  unitMap: { title: "Peta Unit", subtitle: "Tata letak visual semua unit dan status langsung mereka.", total: "Total Unit", available: "Tersedia", occupied: "Terisi", maintenance: "Perawatan", cleaning: "Pembersihan", allProperties: "Semua Properti", allStatuses: "Semua Status", searchPlaceholder: "Cari unit...", noUnits: "Tidak ada unit yang cocok dengan filter.", unassigned: "Tidak Ditugaskan", legend: "Keterangan Status", priceNight: "/ malam", details: { title: "Detail Unit", property: "Properti", type: "Tipe", status: "Status", capacity: "Kapasitas", price: "Tarif", description: "Deskripsi", amenities: "Fasilitas", close: "Tutup" } },
   adminSettings: {
     title: "Pengaturan Admin",
     subtitle: "Kelola informasi sistem, kategori tugas, persyaratan bidang, dan bidang khusus.",

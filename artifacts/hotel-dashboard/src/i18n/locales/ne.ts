@@ -337,7 +337,7 @@ const ne: Translations = {
     comingSoon: "अर्को रिलिजमा पूर्ण बुकिङ व्यवस्थापन उपलब्ध हुनेछ।",
     names: { gym: "फिटनेस सेन्टर", pool: "पौडी पोखरी", "meeting-a": "बैठक कोठा A", lounge: "स्काई लाउन्ज", parking: "आगन्तुक पार्किङ", rooftop: "रुफटप बगैँचा" },
   },
-  unitMap: { title: "एकाइ नक्सा", subtitle: "सबै एकाइहरूको दृश्य लेआउट र उनीहरूको लाइभ स्थिति।" },
+  unitMap: { title: "एकाइ नक्सा", subtitle: "सबै एकाइहरूको दृश्य लेआउट र उनीहरूको लाइभ स्थिति।", total: "कुल एकाइहरू", available: "उपलब्ध", occupied: "अधिकृत", maintenance: "मर्मत", cleaning: "सफाइ", allProperties: "सबै सम्पत्तिहरू", allStatuses: "सबै स्थितिहरू", searchPlaceholder: "एकाइहरू खोज्नुहोस्...", noUnits: "कुनै एकाइ फिल्टरसँग मेल खाँदैन।", unassigned: "अनिर्धारित", legend: "स्थिति किंवदन्ती", priceNight: "/ रात", details: { title: "एकाइ विवरण", property: "सम्पत्ति", type: "प्रकार", status: "स्थिति", capacity: "क्षमता", price: "दर", description: "विवरण", amenities: "सुविधाहरू", close: "बन्द गर्नुहोस्" } },
   adminSettings: {
     title: "प्रशासक सेटिङहरू",
     subtitle: "प्रणाली जानकारी, कार्य श्रेणीहरू, फिल्ड आवश्यकताहरू र कस्टम फिल्डहरू व्यवस्थापन गर्नुहोस्।",

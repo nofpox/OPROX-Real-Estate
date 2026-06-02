@@ -337,7 +337,7 @@ const th: Translations = {
     comingSoon: "การจัดการการจองแบบสมบูรณ์จะมีในการปล่อยครั้งถัดไป",
     names: { gym: "ฟิตเนสเซ็นเตอร์", pool: "สระว่ายน้ำ", "meeting-a": "ห้องประชุม A", lounge: "สกายเลาจน์", parking: "ที่จอดรถสำหรับผู้เยี่ยมชม", rooftop: "สวนดาดฟ้า" },
   },
-  unitMap: { title: "แผนที่ยูนิต", subtitle: "เลย์เอาต์ภาพของยูนิตทั้งหมดและสถานะสดของพวกเขา" },
+  unitMap: { title: "แผนที่ยูนิต", subtitle: "เลย์เอาต์ภาพของยูนิตทั้งหมดและสถานะสดของพวกเขา", total: "ยูนิตทั้งหมด", available: "ว่าง", occupied: "ถูกใช้", maintenance: "บำรุงรักษา", cleaning: "ทำความสะอาด", allProperties: "ทรัพย์สินทั้งหมด", allStatuses: "สถานะทั้งหมด", searchPlaceholder: "ค้นหายูนิต...", noUnits: "ไม่มียูนิตที่ตรงกับตัวกรอง", unassigned: "ไม่ได้กำหนด", legend: "คำอธิบายสถานะ", priceNight: "/ คืน", details: { title: "รายละเอียดยูนิต", property: "ทรัพย์สิน", type: "ประเภท", status: "สถานะ", capacity: "ความจุ", price: "ราคา", description: "คำอธิบาย", amenities: "สิ่งอำนวยความสะดวก", close: "ปิด" } },
   adminSettings: {
     title: "การตั้งค่าผู้ดูแล",
     subtitle: "จัดการข้อมูลระบบ ประเภทงาน ข้อกำหนดฟิลด์ และฟิลด์กำหนดเอง",

@@ -337,7 +337,7 @@ const bn: Translations = {
     comingSoon: "পরবর্তী রিলিজে সম্পূর্ণ বুকিং ব্যবস্থাপনা আসবে।",
     names: { gym: "ফিটনেস সেন্টার", pool: "সুইমিং পুল", "meeting-a": "মিটিং রুম A", lounge: "স্কাই লাউঞ্জ", parking: "ভিজিটর পার্কিং", rooftop: "রুফটপ গার্ডেন" },
   },
-  unitMap: { title: "ইউনিট মানচিত্র", subtitle: "সকল ইউনিটের ভিজ্যুয়াল বিন্যাস এবং তাদের লাইভ অবস্থা।" },
+  unitMap: { title: "ইউনিট মানচিত্র", subtitle: "সকল ইউনিটের ভিজ্যুয়াল বিন্যাস এবং তাদের লাইভ অবস্থা।", total: "মোট ইউনিট", available: "উপলব্ধ", occupied: "দখলকৃত", maintenance: "রক্ষণাবেক্ষণ", cleaning: "পরিষ্কার", allProperties: "সব সম্পত্তি", allStatuses: "সব অবস্থা", searchPlaceholder: "ইউনিট খুঁজুন...", noUnits: "কোনো ইউনিট ফিল্টারের সাথে মেলে না।", unassigned: "অনির্ধারিত", legend: "অবস্থার কিংবদন্তি", priceNight: "/ রাত", details: { title: "ইউনিট বিবরণ", property: "সম্পত্তি", type: "ধরন", status: "অবস্থা", capacity: "ধারণক্ষমতা", price: "মূল্য", description: "বিবরণ", amenities: "সুযোগ-সুবিধা", close: "বন্ধ করুন" } },
   adminSettings: {
     title: "অ্যাডমিন সেটিংস",
     subtitle: "সিস্টেম তথ্য, কাজের বিভাগ, ফিল্ডের প্রয়োজনীয়তা এবং কাস্টম ফিল্ড পরিচালনা করুন।",

@@ -337,7 +337,7 @@ const pt: Translations = {
     comingSoon: "Gerenciamento completo de reservas — pesquisa de moradores, e-mails de confirmação e detecção de conflitos — estará disponível na próxima versão.",
     names: { gym: "Academia", pool: "Piscina", "meeting-a": "Sala de Reunião A", lounge: "Sky Lounge", parking: "Estacionamento de Visitantes", rooftop: "Jardim na Cobertura" },
   },
-  unitMap: { title: "Mapa de Unidades", subtitle: "Layout visual de todas as unidades e seus status em tempo real." },
+  unitMap: { title: "Mapa de Unidades", subtitle: "Layout visual de todas as unidades e seus status em tempo real.", total: "Total de Unidades", available: "Disponível", occupied: "Ocupado", maintenance: "Manutenção", cleaning: "Limpeza", allProperties: "Todas as Propriedades", allStatuses: "Todos os Status", searchPlaceholder: "Pesquisar unidades...", noUnits: "Nenhuma unidade corresponde aos filtros.", unassigned: "Não atribuído", legend: "Legenda de Status", priceNight: "/ noite", details: { title: "Detalhes da Unidade", property: "Propriedade", type: "Tipo", status: "Status", capacity: "Capacidade", price: "Taxa", description: "Descrição", amenities: "Comodidades", close: "Fechar" } },
   adminSettings: {
     title: "Configurações Admin",
     subtitle: "Gerenciar informações do sistema, categorias de tarefas, requisitos e campos personalizados.",

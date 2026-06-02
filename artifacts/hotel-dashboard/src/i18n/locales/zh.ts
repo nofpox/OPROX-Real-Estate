@@ -337,7 +337,7 @@ const zh: Translations = {
     comingSoon: "完整预订管理功能（住户查询、确认邮件和冲突检测）将在下一版本中推出。",
     names: { gym: "健身中心", pool: "游泳池", "meeting-a": "会议室A", lounge: "空中休息厅", parking: "访客停车场", rooftop: "屋顶花园" },
   },
-  unitMap: { title: "单元地图", subtitle: "所有单元的视觉布局及其实时状态。" },
+  unitMap: { title: "单元地图", subtitle: "所有单元的视觉布局及其实时状态。", total: "总单元数", available: "可用", occupied: "已占用", maintenance: "维护中", cleaning: "清洁中", allProperties: "所有物业", allStatuses: "所有状态", searchPlaceholder: "搜索单元...", noUnits: "没有单元符合当前过滤条件。", unassigned: "未分配", legend: "状态说明", priceNight: "/ 晚", details: { title: "单元详情", property: "物业", type: "类型", status: "状态", capacity: "容量", price: "费率", description: "描述", amenities: "设施", close: "关闭" } },
   adminSettings: {
     title: "管理员设置",
     subtitle: "管理系统信息、任务类别、字段要求和自定义字段。",
