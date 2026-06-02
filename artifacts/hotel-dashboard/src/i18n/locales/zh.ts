@@ -337,6 +337,7 @@ const zh: Translations = {
     comingSoon: "完整预订管理功能（住户查询、确认邮件和冲突检测）将在下一版本中推出。",
     names: { gym: "健身中心", pool: "游泳池", "meeting-a": "会议室A", lounge: "空中休息厅", parking: "访客停车场", rooftop: "屋顶花园" },
   },
+  login: {signIn:"登录",signingIn:"登录中…",username:"用户名",usernamePlaceholder:"admin",password:"密码",passwordPlaceholder:"••••••••",forgotLink:"忘记密码?",invalidCreds:"凭据无效",loginFailed:"登录失败",forgotPwd:{step1Title:"忘记密码",step1Desc:"输入您注册的电子邮件地址，我们将发送一个6位验证码。",step2Title:"验证并重置",step2Desc:"输入发送至{{email}}的6位验证码并设置新密码。",emailLabel:"电子邮件地址",emailPlaceholder:"you@company.com",sendCode:"发送验证码",sending:"发送中…",sentBanner:"验证码已发送至{{email}}",codeLabel:"验证码",newPwdLabel:"新密码",newPwdPlaceholder:"最少8个字符",confirmLabel:"确认密码",confirmPlaceholder:"重复输入密码",resetBtn:"重置密码",resetting:"重置中…",resendCode:"重新发送验证码",timerRunning:"验证码将在以下时间后过期",timerExpired:"验证码已过期",demoTitle:"演示模式 — 您的验证码",demoNote:"在生产环境中，验证码通过电子邮件发送。",successMsg:"密码重置成功，请重新登录。",errMismatch:"两次输入的密码不一致",errShort:"密码至少需要8个字符",back:"返回",networkError:"网络错误",failed:"请求失败",resetFailed:"重置失败"}},
   unitMap: { title: "单元地图", subtitle: "所有单元的视觉布局及其实时状态。", total: "总单元数", available: "可用", occupied: "已占用", maintenance: "维护中", cleaning: "清洁中", allProperties: "所有物业", allStatuses: "所有状态", searchPlaceholder: "搜索单元...", noUnits: "没有单元符合当前过滤条件。", unassigned: "未分配", legend: "状态说明", priceNight: "/ 晚", details: { title: "单元详情", property: "物业", type: "类型", status: "状态", capacity: "容量", price: "费率", description: "描述", amenities: "设施", close: "关闭" } },
   adminSettings: {
     title: "管理员设置",

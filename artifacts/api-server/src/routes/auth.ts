@@ -25,26 +25,33 @@ const resetTokens = new Map<string, { userId: number; tenantId: number | null; e
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 /**
- * Send a password-reset OTP email via Resend.
+ * Send a 6-digit OTP password-reset email via Resend (bilingual EN + AR).
  * Falls back silently when RESEND_API_KEY is not set (demo mode).
  */
-async function sendResetEmail(to: string, token: string): Promise<void> {
+async function sendResetEmail(to: string, otp: string): Promise<void> {
   if (!resend) return;
   await resend.emails.send({
     from:    "ركز للحلول الذكية <onboarding@resend.dev>",
     to:      [to],
-    subject: "Your password reset code",
+    subject: "رمز التحقق لإعادة تعيين كلمة المرور | Password Reset Code",
     html: `
-      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
-        <h2 style="margin:0 0 8px;font-size:20px;color:#111">Password Reset</h2>
-        <p style="margin:0 0 24px;color:#555;font-size:15px">
-          Use the one-time code below to reset your password. It expires in <strong>3 minutes</strong>.
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#fff">
+        <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#111">Password Reset Code</h2>
+        <p style="margin:0 0 8px;color:#555;font-size:14px">
+          Use the 6-digit code below to reset your password.
+          It expires in <strong>3 minutes</strong>.
         </p>
-        <div style="background:#f4f4f5;border-radius:8px;padding:20px 24px;text-align:center;letter-spacing:8px;font-size:32px;font-weight:700;color:#111">
-          ${token}
+        <h2 style="margin:12px 0 6px;font-size:18px;font-weight:700;color:#111;direction:rtl;text-align:right">رمز إعادة تعيين كلمة المرور</h2>
+        <p style="margin:0 0 24px;color:#555;font-size:14px;direction:rtl;text-align:right">
+          استخدم الرمز المكوّن من 6 أرقام أدناه لإعادة تعيين كلمة المرور.
+          ينتهي صلاحيته خلال <strong>3 دقائق</strong>.
+        </p>
+        <div style="background:#f4f4f5;border-radius:12px;padding:24px;text-align:center;letter-spacing:12px;font-size:44px;font-weight:900;color:#111;font-family:monospace;margin:0 0 24px">
+          ${otp}
         </div>
-        <p style="margin:24px 0 0;color:#888;font-size:12px">
-          If you did not request this, you can safely ignore this email.
+        <p style="margin:0;color:#999;font-size:12px;text-align:center">
+          If you did not request this, you can safely ignore this email.<br/>
+          إذا لم تطلب ذلك، يمكنك تجاهل هذا البريد بأمان.
         </p>
       </div>
     `,
@@ -395,37 +402,18 @@ router.post("/auth/change-password", async (req, res) => {
   res.json({ ok: true });
 });
 
-// ── Forgot password ───────────────────────────────────────────────────────────
-// Two-mode endpoint controlled by the presence of `deliveryMethod`:
-//
-//  Mode A — verify only (no deliveryMethod):
-//    Checks email + phoneNumber + tenantSlug; if found returns masked contact
-//    info so the client can show the delivery-choice screen.  No token issued.
-//
-//  Mode B — send (deliveryMethod = "sms" | "email"):
-//    Same verification, then generates a 6-char reset token (3-min expiry).
-//    In production the token is delivered via the chosen channel; in demo mode
-//    it is returned in the response body for testing purposes.
-
-function maskEmail(email: string): string {
-  const [local, domain] = email.split("@");
-  return `${local.charAt(0)}${"*".repeat(Math.min(local.length - 1, 4))}@${domain}`;
-}
-
-function maskPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  const last4  = digits.slice(-4);
-  return `+${"*".repeat(Math.max(digits.length - 4, 3))}-${last4}`;
-}
+// ── Forgot password — email-only 6-digit OTP ──────────────────────────────────
+// Single-step: accepts email, always delivers via email.
+// Demo mode: when RESEND_API_KEY is absent the OTP is returned in the response.
 
 router.post("/auth/forgot-password", async (req, res) => {
-  const { email, phoneNumber, tenantSlug, deliveryMethod } = req.body ?? {};
-  if (!email || !phoneNumber) {
-    res.status(400).json({ error: "email and phoneNumber are required" });
+  const { email, tenantSlug } = req.body ?? {};
+  if (!email) {
+    res.status(400).json({ error: "email is required" });
     return;
   }
 
-  // Resolve tenant — optional; when omitted, search across all tenants
+  // Resolve tenant (optional — allows scoping to a specific tenant)
   let resolvedFpTenantId: number | null = null;
   if (tenantSlug) {
     const [tenant] = await db
@@ -433,16 +421,15 @@ router.post("/auth/forgot-password", async (req, res) => {
       .from(tenantsTable)
       .where(eq(tenantsTable.slug, String(tenantSlug)));
     if (!tenant) {
-      res.json({ ok: true, userFound: false });
-      return;
+      // Silent — avoid tenant enumeration
+      return res.json({ ok: true });
     }
     resolvedFpTenantId = tenant.id;
   }
 
-  // Find user with matching email AND phone (optionally scoped to tenant)
+  // Find user by email only (optionally scoped to tenant)
   const fpConditions: Parameters<typeof and>[0][] = [
     eq(usersTable.email, String(email)),
-    eq(usersTable.phoneNumber, String(phoneNumber)),
     eq(usersTable.isActive, true),
   ];
   if (resolvedFpTenantId !== null) fpConditions.push(eq(usersTable.tenantId, resolvedFpTenantId));
@@ -454,57 +441,39 @@ router.post("/auth/forgot-password", async (req, res) => {
 
   if (!user) {
     // Silent — avoid user enumeration
-    res.json({ ok: true, userFound: false });
-    return;
+    return res.json({ ok: true });
   }
 
-  // ── Mode A: verify-only ──────────────────────────────────────────────────
-  if (!deliveryMethod) {
-    res.json({
-      ok: true,
-      userFound: true,
-      maskedEmail:  maskEmail(user.email  ?? email),
-      maskedPhone:  maskPhone(user.phoneNumber ?? phoneNumber),
-    });
-    return;
-  }
-
-  // ── Mode B: generate + deliver token ────────────────────────────────────
-  if (deliveryMethod !== "sms" && deliveryMethod !== "email") {
-    res.status(400).json({ error: "deliveryMethod must be 'sms' or 'email'" });
-    return;
-  }
-
-  // Invalidate any previous pending tokens for this user
+  // Invalidate any previous pending OTPs for this user
   for (const [tok, data] of resetTokens.entries()) {
     if (data.userId === user.id) resetTokens.delete(tok);
   }
 
-  // 6-char uppercase hex token, 3-minute expiry
-  const resetToken = crypto.randomBytes(4).toString("hex").toUpperCase().slice(0, 6);
-  resetTokens.set(resetToken, {
+  // 6-digit numeric OTP, 3-minute expiry
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  resetTokens.set(otp, {
     userId:    user.id,
     tenantId:  user.tenantId ?? null,
     expiresAt: Date.now() + 3 * 60 * 1000,
   });
 
-  req.log.info({ userId: user.id, deliveryMethod }, "Password reset token issued");
+  req.log.info({ userId: user.id }, "Password reset OTP issued");
 
-  if (deliveryMethod === "email") {
-    try {
-      await sendResetEmail(user.email ?? String(email), resetToken);
-      req.log.info({ userId: user.id }, "Reset email dispatched via Resend");
-    } catch (err) {
-      req.log.error({ err }, "Failed to send reset email — returning token in body as fallback");
-      // Still return the token so the UI doesn't leave the user stuck
-      return res.json({ ok: true, resetToken, deliveryMethod, emailError: true });
-    }
-    // Email sent — do NOT expose the token in the response
-    return res.json({ ok: true, deliveryMethod });
+  try {
+    await sendResetEmail(user.email ?? String(email), otp);
+    req.log.info({ userId: user.id }, "Reset OTP email dispatched via Resend");
+  } catch (err) {
+    req.log.error({ err }, "Failed to send reset email — returning OTP in body as fallback");
+    return res.json({ ok: true, otp, emailError: true });
   }
 
-  // SMS path (not yet wired) + demo fallback: return token in body
-  return res.json({ ok: true, resetToken, deliveryMethod });
+  // No Resend key → demo mode: return OTP so UI can show it
+  if (!resend) {
+    return res.json({ ok: true, otp });
+  }
+
+  // Production: OTP sent via email, never expose in response
+  return res.json({ ok: true });
 });
 
 // ── Reset password ────────────────────────────────────────────────────────────
@@ -520,9 +489,9 @@ router.post("/auth/reset-password", async (req, res) => {
     return;
   }
 
-  const data = resetTokens.get(String(resetToken).toUpperCase());
+  const data = resetTokens.get(String(resetToken));
   if (!data || data.expiresAt < Date.now()) {
-    resetTokens.delete(String(resetToken).toUpperCase());
+    resetTokens.delete(String(resetToken));
     res.status(400).json({ error: "Invalid or expired reset token" });
     return;
   }
@@ -530,7 +499,7 @@ router.post("/auth/reset-password", async (req, res) => {
   await db.execute(
     sql`UPDATE users SET password_hash = ${hashPwd(String(newPassword))}, must_change_password = false WHERE id = ${data.userId}`
   );
-  resetTokens.delete(String(resetToken).toUpperCase());
+  resetTokens.delete(String(resetToken));
 
 
   req.log.info({ userId: data.userId }, "Password reset completed");

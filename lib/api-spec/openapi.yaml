@@ -1537,7 +1537,7 @@ paths:
   /auth/forgot-password:
     post:
       operationId: forgotPassword
-      summary: Request a password reset token (verifies email + phone)
+      summary: Send a 6-digit OTP to the user's registered email for password reset
       tags: [auth]
       requestBody:
         required: true
@@ -1545,17 +1545,16 @@ paths:
           application/json:
             schema:
               type: object
-              required: [email, phoneNumber, tenantSlug]
+              required: [email]
               properties:
                 email:
                   type: string
-                phoneNumber:
-                  type: string
                 tenantSlug:
                   type: string
+                  description: Optional — scopes the lookup to a specific tenant
       responses:
         "200":
-          description: Reset token issued (or no-op if user not found)
+          description: OTP dispatched via email (silent no-op if email not found)
           content:
             application/json:
               schema:
@@ -1563,11 +1562,11 @@ paths:
                 properties:
                   ok:
                     type: boolean
-                  resetToken:
+                  otp:
                     type: string
-                    description: Demo-mode only — in production this is sent via email/SMS
+                    description: Demo-mode only — 6-digit OTP returned when RESEND_API_KEY is absent
         "400":
-          description: Missing fields
+          description: Missing email field
 
   /auth/reset-password:
     post:

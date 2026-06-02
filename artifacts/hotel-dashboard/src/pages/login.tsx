@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button }   from "@/components/ui/button";
+import { Input }    from "@/components/ui/input";
+import { Label }    from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Eye, EyeOff, ArrowRight, KeyRound,
-  Smartphone, Mail, RefreshCw, Clock, CheckCircle2,
-  LayoutDashboard,
+  Mail, RefreshCw, Clock, CheckCircle2,
 } from "lucide-react";
 import { useSettings } from "@/hooks/use-settings";
 
@@ -17,7 +17,6 @@ interface LoginProps {
 }
 
 // ── Countdown hook ────────────────────────────────────────────────────────────
-// Returns remaining seconds and a restart function.  Counts from `initial` to 0.
 function useCountdown(initial: number) {
   const [seconds, setSeconds] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -26,12 +25,8 @@ function useCountdown(initial: number) {
     if (intervalRef.current) clearInterval(intervalRef.current);
     setSeconds(initial);
     intervalRef.current = setInterval(() => {
-      setSeconds((s) => {
-        if (s <= 1) {
-          clearInterval(intervalRef.current!);
-          intervalRef.current = null;
-          return 0;
-        }
+      setSeconds(s => {
+        if (s <= 1) { clearInterval(intervalRef.current!); intervalRef.current = null; return 0; }
         return s - 1;
       });
     }, 1000);
@@ -44,289 +39,275 @@ function useCountdown(initial: number) {
   return { seconds, start, fmt };
 }
 
+// ── 6-digit OTP input ─────────────────────────────────────────────────────────
+// Individual digit boxes with auto-advance, backspace retreat, and paste support.
+function OtpInput({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+}) {
+  const refs   = useRef<Array<HTMLInputElement | null>>(Array(6).fill(null));
+  const digits = value.padEnd(6, " ").split("").slice(0, 6);
+
+  function handleChange(idx: number, raw: string) {
+    const d = raw.replace(/\D/g, "");
+    if (!d && raw.length === 1) return;
+    const next = digits
+      .map((c, i) => (i === idx ? d.slice(-1) : c === " " ? "" : c))
+      .join("")
+      .replace(/ /g, "");
+    onChange(next.slice(0, 6));
+    if (d && idx < 5) refs.current[idx + 1]?.focus();
+  }
+
+  function handleKeyDown(idx: number, e: React.KeyboardEvent) {
+    if (e.key === "Backspace") {
+      const cur = digits[idx]?.trim();
+      if (cur) {
+        const next = digits.map((c, i) => (i === idx ? "" : c === " " ? "" : c)).join("");
+        onChange(next.slice(0, 6));
+      } else if (idx > 0) {
+        refs.current[idx - 1]?.focus();
+      }
+    } else if (e.key === "ArrowLeft"  && idx > 0) { refs.current[idx - 1]?.focus(); }
+      else if (e.key === "ArrowRight" && idx < 5) { refs.current[idx + 1]?.focus(); }
+  }
+
+  function handlePaste(e: React.ClipboardEvent) {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    onChange(pasted);
+    setTimeout(() => refs.current[Math.min(pasted.length, 5)]?.focus(), 10);
+  }
+
+  return (
+    <div className="flex gap-2 justify-center" dir="ltr">
+      {Array.from({ length: 6 }).map((_, idx) => {
+        const filled = !!digits[idx]?.trim();
+        return (
+          <input
+            key={idx}
+            ref={el => { refs.current[idx] = el; }}
+            type="text"
+            inputMode="numeric"
+            maxLength={2}
+            value={digits[idx]?.trim() || ""}
+            onChange={e => handleChange(idx, e.target.value)}
+            onKeyDown={e => handleKeyDown(idx, e)}
+            onPaste={handlePaste}
+            onFocus={e => e.target.select()}
+            disabled={disabled}
+            className={[
+              "w-11 h-14 text-center text-2xl font-bold border-2 rounded-xl",
+              "bg-background text-foreground transition-colors",
+              "focus:outline-none focus:ring-2 focus:ring-primary/30",
+              filled ? "border-primary" : "border-border",
+              disabled ? "opacity-50 cursor-not-allowed" : "",
+            ].join(" ")}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Forgot-password dialog ────────────────────────────────────────────────────
 // Steps:
-//   identify      → Company Code + Email + Phone (verify identity, no token yet)
-//   choose         → Pick SMS or Email delivery method
-//   verify         → Enter 6-char code + 180 s timer + new password
+//   request  → Enter email → 6-digit OTP sent via email
+//   verify   → Enter OTP + new password → reset
 
+type FpStep = "request" | "verify";
 const TIMER_SECONDS = 180;
 
-type FpStep = "identify" | "choose" | "verify";
-
 function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { toast }                     = useToast();
-  const [step, setStep]               = useState<FpStep>("identify");
-
-  // identity fields (step 1)
-  const [email,        setEmail]        = useState("");
-  const [phoneNumber,  setPhoneNumber]  = useState("");
-
-  // returned from server after identity check
-  const [maskedEmail,  setMaskedEmail]  = useState("");
-  const [maskedPhone,  setMaskedPhone]  = useState("");
-
-  // reset fields (step 3)
-  const [demoToken,    setDemoToken]    = useState<string | null>(null);
-  const [resetToken,   setResetToken]   = useState("");
-  const [newPassword,  setNewPassword]  = useState("");
-  const [confirmPwd,   setConfirmPwd]   = useState("");
-  const [showPwd,      setShowPwd]      = useState(false);
-  const [loading,      setLoading]      = useState(false);
-  const [deliveryMethod, setDeliveryMethod] = useState<"sms" | "email" | null>(null);
+  const { t }                             = useTranslation();
+  const { toast }                         = useToast();
+  const [step,        setStep]            = useState<FpStep>("request");
+  const [email,       setEmail]           = useState("");
+  const [otp,         setOtp]             = useState("");
+  const [newPassword, setNewPassword]     = useState("");
+  const [confirmPwd,  setConfirmPwd]      = useState("");
+  const [showPwd,     setShowPwd]         = useState(false);
+  const [loading,     setLoading]         = useState(false);
+  const [demoOtp,     setDemoOtp]         = useState<string | null>(null);
 
   const { seconds, start: startTimer, fmt } = useCountdown(TIMER_SECONDS);
   const timerRunning = seconds > 0;
 
-  // ── Reset all state ────────────────────────────────────────────────────────
   function resetAll() {
-    setStep("identify");
-    setEmail(""); setPhoneNumber("");
-    setMaskedEmail(""); setMaskedPhone("");
-    setDemoToken(null); setResetToken(""); setNewPassword(""); setConfirmPwd("");
-    setShowPwd(false); setDeliveryMethod(null);
+    setStep("request");
+    setEmail(""); setOtp(""); setNewPassword(""); setConfirmPwd("");
+    setShowPwd(false); setDemoOtp(null);
   }
 
   function handleClose() { resetAll(); onClose(); }
 
-  // ── Step 1: verify identity (Mode A — no deliveryMethod) ──────────────────
-  async function handleIdentify(e: React.FormEvent) {
+  // ── Step 1: Request OTP ──────────────────────────────────────────────────
+  async function handleRequestOtp(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !phoneNumber) return;
+    if (!email.trim()) return;
     setLoading(true);
     try {
       const res = await fetch("/api/auth/forgot-password", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, phoneNumber }),
+        body:    JSON.stringify({ email: email.trim() }),
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: data.error ?? "Request failed", variant: "destructive" });
+        toast({ title: data.error ?? t("login.forgotPwd.failed"), variant: "destructive" });
         return;
       }
-      // Always show the choose screen — even if userFound=false we silently proceed
-      // (prevents user enumeration on the UI side too)
-      setMaskedEmail(data.maskedEmail ?? email.replace(/(.{1}).+(@.+)/, "$1****$2"));
-      setMaskedPhone(data.maskedPhone ?? phoneNumber.replace(/.(?=.{4})/g, "*"));
-      setStep("choose");
-    } catch {
-      toast({ title: "Network error", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // ── Step 2 → 3: choose delivery + send code (Mode B) ─────────────────────
-  async function handleSendCode(method: "sms" | "email") {
-    setDeliveryMethod(method);
-    setLoading(true);
-    try {
-      const res = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, phoneNumber, deliveryMethod: method }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast({ title: data.error ?? "Failed to send code", variant: "destructive" });
-        return;
-      }
-      // demo mode: token returned in response
-      if (data.resetToken) {
-        setDemoToken(data.resetToken);
-        setResetToken(data.resetToken);
-      }
+      // Demo mode: OTP returned when RESEND_API_KEY is absent
+      if (data.otp) { setDemoOtp(String(data.otp)); setOtp(String(data.otp)); }
       startTimer();
       setStep("verify");
     } catch {
-      toast({ title: "Network error", variant: "destructive" });
+      toast({ title: t("login.forgotPwd.networkError"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
   }
 
-  // ── Resend: re-send with the same delivery method ──────────────────────────
+  // ── Resend OTP ───────────────────────────────────────────────────────────
   async function handleResend() {
-    if (!deliveryMethod || timerRunning) return;
-    setDemoToken(null);
-    setResetToken("");
-    await handleSendCode(deliveryMethod);
+    if (timerRunning || loading) return;
+    setDemoOtp(null); setOtp("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+      if (data.otp) { setDemoOtp(String(data.otp)); setOtp(String(data.otp)); }
+      startTimer();
+    } catch {
+      toast({ title: t("login.forgotPwd.networkError"), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   }
 
-  // ── Step 3: reset password ─────────────────────────────────────────────────
+  // ── Step 2: Reset password ───────────────────────────────────────────────
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
+    if (otp.length < 6) {
+      toast({ title: t("login.forgotPwd.failed"), variant: "destructive" }); return;
+    }
     if (newPassword !== confirmPwd) {
-      toast({ title: "Passwords do not match", variant: "destructive" }); return;
+      toast({ title: t("login.forgotPwd.errMismatch"), variant: "destructive" }); return;
     }
     if (newPassword.length < 8) {
-      toast({ title: "Password must be at least 8 characters", variant: "destructive" }); return;
+      toast({ title: t("login.forgotPwd.errShort"), variant: "destructive" }); return;
     }
     setLoading(true);
     try {
       const res = await fetch("/api/auth/reset-password", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resetToken, newPassword }),
+        body:    JSON.stringify({ resetToken: otp, newPassword }),
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: data.error ?? "Reset failed", variant: "destructive" }); return;
+        toast({ title: data.error ?? t("login.forgotPwd.resetFailed"), variant: "destructive" });
+        return;
       }
-      toast({ title: "Password reset successfully. Please sign in." });
+      toast({ title: t("login.forgotPwd.successMsg") });
       handleClose();
     } catch {
-      toast({ title: "Network error", variant: "destructive" });
+      toast({ title: t("login.forgotPwd.networkError"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
   }
 
-  // ── Dialog title / description ─────────────────────────────────────────────
-  const titles: Record<FpStep, string> = {
-    identify: "Forgot Password",
-    choose:   "How would you like to receive your code?",
-    verify:   "Enter Verification Code",
-  };
-  const descs: Record<FpStep, string> = {
-    identify: "Enter your email and phone number to verify your identity.",
-    choose:   "We'll send a 6-character verification code to your chosen contact method.",
-    verify:   "Enter the code we sent you, then choose a new password.",
-  };
+  const stepTitle = step === "request"
+    ? t("login.forgotPwd.step1Title")
+    : t("login.forgotPwd.step2Title");
+
+  const stepDesc = step === "request"
+    ? t("login.forgotPwd.step1Desc")
+    : t("login.forgotPwd.step2Desc", { email });
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+    <Dialog open={open} onOpenChange={v => { if (!v) handleClose(); }}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KeyRound className="h-4 w-4 text-primary" />
-            {titles[step]}
+            {stepTitle}
           </DialogTitle>
-          <DialogDescription>{descs[step]}</DialogDescription>
+          <DialogDescription>{stepDesc}</DialogDescription>
         </DialogHeader>
 
-        {/* ── Step 1: Identify ─────────────────────────────────────────── */}
-        {step === "identify" && (
-          <form onSubmit={handleIdentify} className="space-y-4">
+        {/* ── Step 1: Email ───────────────────────────────────────────── */}
+        {step === "request" && (
+          <form onSubmit={handleRequestOtp} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="fp-email">Email</Label>
-              <Input
-                id="fp-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="fp-phone">Phone Number</Label>
-              <Input
-                id="fp-phone"
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+1-555-000-0001"
-                required
-              />
+              <Label htmlFor="fp-email">{t("login.forgotPwd.emailLabel")}</Label>
+              <div className="relative">
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  id="fp-email"
+                  type="email"
+                  className="ps-9"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder={t("login.forgotPwd.emailPlaceholder")}
+                  autoComplete="email"
+                  required
+                  autoFocus
+                />
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Verifying…" : "Continue"}
+              {loading ? t("login.forgotPwd.sending") : t("login.forgotPwd.sendCode")}
               {!loading && <ArrowRight className="ms-2 h-4 w-4" />}
             </Button>
           </form>
         )}
 
-        {/* ── Step 2: Choose delivery ───────────────────────────────────── */}
-        {step === "choose" && (
-          <div className="space-y-4">
-            {/* SMS option */}
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => handleSendCode("sms")}
-              className="w-full flex items-start gap-4 rounded-xl border-2 border-border bg-card p-4 text-left transition-all hover:border-primary hover:bg-primary/5 disabled:opacity-60"
-            >
-              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Smartphone className="h-4 w-4" />
-              </span>
-              <div>
-                <p className="font-medium text-sm">SMS to my mobile number</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{maskedPhone}</p>
-              </div>
-              <ArrowRight className="ms-auto mt-2 h-4 w-4 text-muted-foreground shrink-0" />
-            </button>
-
-            {/* Email option */}
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => handleSendCode("email")}
-              className="w-full flex items-start gap-4 rounded-xl border-2 border-border bg-card p-4 text-left transition-all hover:border-primary hover:bg-primary/5 disabled:opacity-60"
-            >
-              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Mail className="h-4 w-4" />
-              </span>
-              <div>
-                <p className="font-medium text-sm">Email to my registered address</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{maskedEmail}</p>
-              </div>
-              <ArrowRight className="ms-auto mt-2 h-4 w-4 text-muted-foreground shrink-0" />
-            </button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="w-full text-muted-foreground"
-              onClick={() => setStep("identify")}
-              disabled={loading}
-            >
-              ← Back
-            </Button>
-          </div>
-        )}
-
-        {/* ── Step 3: Verify code + new password ───────────────────────── */}
+        {/* ── Step 2: OTP + new password ──────────────────────────────── */}
         {step === "verify" && (
           <form onSubmit={handleReset} className="space-y-4">
 
-            {/* Delivery banner */}
-            <div className="flex items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-              {deliveryMethod === "sms"
-                ? <><Smartphone className="h-3.5 w-3.5 shrink-0 text-primary" /> Code sent via SMS to {maskedPhone}</>
-                : <><Mail className="h-3.5 w-3.5 shrink-0 text-primary" /> Code sent via Email to {maskedEmail}</>
-              }
+            {/* Email-sent banner */}
+            <div className="flex items-center gap-2 rounded-lg border bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
+              <Mail className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{t("login.forgotPwd.sentBanner", { email })}</span>
             </div>
 
-            {/* Demo mode token banner */}
-            {demoToken && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-3 text-sm">
-                <p className="font-medium text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+            {/* Demo OTP banner */}
+            {demoOtp && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-3">
+                <p className="font-medium text-amber-800 dark:text-amber-300 flex items-center gap-1.5 text-sm">
                   <RefreshCw className="h-3.5 w-3.5" />
-                  Demo mode — your code
+                  {t("login.forgotPwd.demoTitle")}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  In production this is delivered via {deliveryMethod === "sms" ? "SMS" : "email"}.
-                </p>
-                <p className="mt-2 font-mono text-2xl font-bold tracking-[0.3em] text-center text-amber-900 dark:text-amber-200 select-all">
-                  {demoToken}
+                <p className="mt-1 text-xs text-muted-foreground">{t("login.forgotPwd.demoNote")}</p>
+                <p className="mt-2 font-mono text-3xl font-bold tracking-[0.4em] text-center text-amber-900 dark:text-amber-200 select-all" dir="ltr">
+                  {demoOtp}
                 </p>
               </div>
             )}
 
-            {/* 180 s countdown timer */}
+            {/* Countdown timer */}
             <div className={[
               "flex items-center justify-between rounded-lg border px-3 py-2 text-sm",
               timerRunning
-                ? "border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800 text-blue-700 dark:text-blue-300"
-                : "border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800 text-green-700 dark:text-green-300",
+                ? "border-blue-200 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300"
+                : "border-orange-200 bg-orange-50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-300",
             ].join(" ")}>
               <span className="flex items-center gap-1.5">
                 {timerRunning
-                  ? <><Clock className="h-3.5 w-3.5" /> Code expires in</>
-                  : <><CheckCircle2 className="h-3.5 w-3.5" /> Code expired</>
+                  ? <><Clock className="h-3.5 w-3.5" /> {t("login.forgotPwd.timerRunning")}</>
+                  : <><CheckCircle2 className="h-3.5 w-3.5" /> {t("login.forgotPwd.timerExpired")}</>
                 }
               </span>
               {timerRunning ? (
@@ -336,45 +317,36 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
                   type="button"
                   onClick={handleResend}
                   disabled={loading}
-                  className="flex items-center gap-1 text-xs font-semibold underline underline-offset-2 hover:no-underline disabled:opacity-50"
+                  className="text-xs font-semibold underline underline-offset-2 hover:no-underline disabled:opacity-50"
                 >
-                  <RefreshCw className="h-3 w-3" />
-                  Resend code
+                  {t("login.forgotPwd.resendCode")}
                 </button>
               )}
             </div>
 
-            {/* 6-char code input */}
-            <div className="space-y-1.5">
-              <Label htmlFor="fp-token">Verification Code</Label>
-              <Input
-                id="fp-token"
-                value={resetToken}
-                onChange={(e) => setResetToken(e.target.value.toUpperCase())}
-                placeholder="A1B2C3"
-                maxLength={6}
-                required
-                className="font-mono tracking-[0.3em] text-center text-lg"
-              />
+            {/* 6-digit OTP boxes */}
+            <div className="space-y-2">
+              <Label className="block text-center">{t("login.forgotPwd.codeLabel")}</Label>
+              <OtpInput value={otp} onChange={setOtp} disabled={loading} />
             </div>
 
             {/* New password */}
             <div className="space-y-1.5">
-              <Label htmlFor="fp-newpwd">New Password</Label>
+              <Label htmlFor="fp-newpwd">{t("login.forgotPwd.newPwdLabel")}</Label>
               <div className="relative">
                 <Input
                   id="fp-newpwd"
                   type={showPwd ? "text" : "password"}
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Min 8 characters"
-                  className="pr-10"
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder={t("login.forgotPwd.newPwdPlaceholder")}
+                  className="pe-10"
                   required
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPwd((v) => !v)}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPwd(v => !v)}
+                  className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
                 >
                   {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -384,13 +356,13 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
 
             {/* Confirm password */}
             <div className="space-y-1.5">
-              <Label htmlFor="fp-confirm">Confirm Password</Label>
+              <Label htmlFor="fp-confirm">{t("login.forgotPwd.confirmLabel")}</Label>
               <Input
                 id="fp-confirm"
                 type={showPwd ? "text" : "password"}
                 value={confirmPwd}
-                onChange={(e) => setConfirmPwd(e.target.value)}
-                placeholder="Repeat password"
+                onChange={e => setConfirmPwd(e.target.value)}
+                placeholder={t("login.forgotPwd.confirmPlaceholder")}
                 required
               />
             </div>
@@ -400,13 +372,17 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={() => { setStep("choose"); setDemoToken(null); setResetToken(""); }}
+                onClick={() => { setStep("request"); setDemoOtp(null); setOtp(""); }}
                 disabled={loading}
               >
-                ← Back
+                {t("login.forgotPwd.back")}
               </Button>
-              <Button type="submit" className="flex-1" disabled={loading}>
-                {loading ? "Resetting…" : "Reset Password"}
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={loading || otp.replace(/\D/g, "").length < 6}
+              >
+                {loading ? t("login.forgotPwd.resetting") : t("login.forgotPwd.resetBtn")}
               </Button>
             </div>
           </form>
@@ -419,23 +395,24 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
 // ── Login page ────────────────────────────────────────────────────────────────
 
 export default function Login({ onLogin }: LoginProps) {
+  const { t }                           = useTranslation();
   const [username,     setUsername]     = useState("");
   const [password,     setPassword]     = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading,      setLoading]      = useState(false);
   const [forgotOpen,   setForgotOpen]   = useState(false);
-  const { toast } = useToast();
-  const settings = useSettings();
+  const { toast }    = useToast();
+  const settings     = useSettings();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method:      "POST",
+        headers:     { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ username, password }),
+        body:        JSON.stringify({ username, password }),
       });
       if (res.ok) {
         const user = await res.json();
@@ -443,16 +420,15 @@ export default function Login({ onLogin }: LoginProps) {
       } else {
         const data = await res.json().catch(() => ({}));
         toast({
-          title: data.error ?? "Invalid credentials",
-          description:
-            data.attemptsLeft != null
-              ? `${data.attemptsLeft} attempt${data.attemptsLeft === 1 ? "" : "s"} remaining`
-              : undefined,
+          title: data.error ?? t("login.invalidCreds"),
+          description: data.attemptsLeft != null
+            ? `${data.attemptsLeft} attempt${data.attemptsLeft === 1 ? "" : "s"} remaining`
+            : undefined,
           variant: "destructive",
         });
       }
     } catch {
-      toast({ title: "Login failed", variant: "destructive" });
+      toast({ title: t("login.loginFailed"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -469,39 +445,39 @@ export default function Login({ onLogin }: LoginProps) {
                   src={settings.logoUrl}
                   alt={settings.propertyName}
                   className="h-12 w-auto object-contain max-w-36"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               </div>
             )}
             <CardTitle className="text-2xl font-serif">{settings.propertyName}</CardTitle>
             <CardDescription>ركز للحلول الذكية · Rakez Smart Solutions</CardDescription>
           </CardHeader>
+
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-
               {/* Username */}
               <div className="space-y-1.5">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">{t("login.username")}</Label>
                 <Input
                   id="username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="admin"
+                  onChange={e => setUsername(e.target.value)}
+                  placeholder={t("login.usernamePlaceholder")}
                   autoComplete="username"
                   required
                 />
               </div>
 
-              {/* Step 3: Password */}
+              {/* Password */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t("login.password")}</Label>
                   <button
                     type="button"
                     onClick={() => setForgotOpen(true)}
                     className="text-xs text-primary hover:underline"
                   >
-                    Forgot password?
+                    {t("login.forgotLink")}
                   </button>
                 </div>
                 <div className="relative">
@@ -509,16 +485,16 @@ export default function Login({ onLogin }: LoginProps) {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="pr-10"
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder={t("login.passwordPlaceholder")}
+                    className="pe-10"
                     autoComplete="current-password"
                     required
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowPassword(v => !v)}
+                    className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
                     tabIndex={-1}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
@@ -528,12 +504,11 @@ export default function Login({ onLogin }: LoginProps) {
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in…" : "Sign In"}
+                {loading ? t("login.signingIn") : t("login.signIn")}
               </Button>
             </form>
           </CardContent>
         </Card>
-
       </div>
 
       <ForgotPasswordDialog open={forgotOpen} onClose={() => setForgotOpen(false)} />
