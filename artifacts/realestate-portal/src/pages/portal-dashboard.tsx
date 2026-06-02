@@ -14,14 +14,18 @@ import {
   useCreatePortalUnit,
   useUpdatePortalUnit,
   useDeletePortalUnit,
+  useGetPortalTeam,
+  useUpdatePortalTeamPermissions,
   getGetPortalPropertiesQueryKey,
   getGetPortalPropertyUnitsQueryKey,
+  getGetPortalTeamQueryKey,
 } from '@workspace/api-client-react';
 import type {
   PortalProperty,
   PortalUnit,
   PortalPropertyInput,
   PortalUnitInput,
+  PortalTeamMember,
 } from '@workspace/api-client-react';
 import { useLanguage } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
@@ -34,10 +38,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 import {
   LogOut, Building, Calendar, Percent, ArrowRight, ArrowLeft,
   TrendingUp, TrendingDown, DollarSign, BarChart2,
   Plus, Pencil, Trash2, Home, ChevronRight, Layers,
+  Users, ShieldCheck, MessageSquare, CheckCircle, Settings2,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -53,6 +59,210 @@ import {
 
 const fmtSAR = (n: number) =>
   new Intl.NumberFormat('en-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(n);
+
+// ── Role tier helper (mirrors backend getRoleTier) ────────────────────────────
+function roleTier(role: string): 'admin' | 'supervisor' | 'worker' {
+  if (['owner', 'admin', 'super_admin', 'admin_manager', 'admin-manager'].includes(role)) return 'admin';
+  if (['manager', 'supervisor', 'property-manager', 'site-supervisor', 'front-desk'].includes(role)) return 'supervisor';
+  return 'worker';
+}
+
+// ── Permission matrix definition ──────────────────────────────────────────────
+const PERM_GROUPS: Array<{
+  key: string;
+  icon: React.ElementType;
+  perms: string[];
+}> = [
+  { key: 'property',  icon: Building,      perms: ['property:add', 'property:edit', 'property:delete', 'property:publish'] },
+  { key: 'marketing', icon: TrendingUp,     perms: ['marketing:campaigns', 'marketing:listings'] },
+  { key: 'support',   icon: MessageSquare,  perms: ['support:inquiries', 'support:messages'] },
+];
+
+const PERM_LABEL_KEY: Record<string, string> = {
+  'property:add':        'ops.perm.property_add',
+  'property:edit':       'ops.perm.property_edit',
+  'property:delete':     'ops.perm.property_delete',
+  'property:publish':    'ops.perm.property_publish',
+  'marketing:campaigns': 'ops.perm.marketing_campaigns',
+  'marketing:listings':  'ops.perm.marketing_listings',
+  'support:inquiries':   'ops.perm.support_inquiries',
+  'support:messages':    'ops.perm.support_messages',
+};
+
+function memberInitials(name: string): string {
+  return name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+}
+
+// ── OpsControlPanel component ─────────────────────────────────────────────────
+interface OpsControlPanelProps {
+  user: unknown;
+  t: (k: string) => string;
+  isRtl: boolean;
+}
+
+const OpsControlPanel: React.FC<OpsControlPanelProps> = ({ user, t, isRtl: _isRtl }) => {
+  const queryClient = useQueryClient();
+  const callerTier = roleTier(((user as unknown) as Record<string, string>)?.role ?? '');
+
+  const { data: teamRes, isLoading: isLoadingTeam } = useGetPortalTeam(
+    { query: { enabled: true } } as any,
+  );
+  const updatePermsMut = useUpdatePortalTeamPermissions();
+
+  const [localPerms, setLocalPerms]       = useState<Record<number, string[]>>({});
+  const [saving, setSaving]               = useState<Set<number>>(new Set());
+  const [savedRecently, setSavedRecently] = useState<Set<number>>(new Set());
+
+  const teamMembers: PortalTeamMember[] = (teamRes as any)?.data ?? [];
+
+  useEffect(() => {
+    if (!teamMembers.length) return;
+    const map: Record<number, string[]> = {};
+    for (const m of teamMembers) map[m.id] = [...m.permissions];
+    setLocalPerms(map);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamRes]);
+
+  const togglePerm = (userId: number, perm: string) => {
+    const current = localPerms[userId] ?? [];
+    const hasPerm = current.includes(perm);
+    const updated = hasPerm ? current.filter((p) => p !== perm) : [...current, perm];
+
+    setLocalPerms((prev) => ({ ...prev, [userId]: updated }));
+    setSaving((prev) => new Set([...prev, userId]));
+
+    updatePermsMut.mutate(
+      { userId, data: { permissions: updated } },
+      {
+        onSuccess: (res) => {
+          const serverPerms: string[] = (res as any)?.data?.permissions ?? updated;
+          setLocalPerms((prev) => ({ ...prev, [userId]: serverPerms }));
+          setSaving((prev) => { const n = new Set(prev); n.delete(userId); return n; });
+          setSavedRecently((prev) => {
+            const n = new Set([...prev, userId]);
+            setTimeout(() => setSavedRecently((p) => { const m = new Set(p); m.delete(userId); return m; }), 2000);
+            return n;
+          });
+          queryClient.invalidateQueries({ queryKey: getGetPortalTeamQueryKey() as any });
+        },
+        onError: () => {
+          setLocalPerms((prev) => ({ ...prev, [userId]: current }));
+          setSaving((prev) => { const n = new Set(prev); n.delete(userId); return n; });
+        },
+      },
+    );
+  };
+
+  const tierLabel = (tier: string) => {
+    if (tier === 'admin') return t('ops.tierAdmin');
+    if (tier === 'supervisor') return t('ops.tierSupervisor');
+    return t('ops.tierWorker');
+  };
+
+  const tierVariant = (tier: string): 'default' | 'secondary' | 'outline' =>
+    tier === 'admin' ? 'default' : tier === 'supervisor' ? 'secondary' : 'outline';
+
+  if (isLoadingTeam) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-64 rounded-xl" />)}
+      </div>
+    );
+  }
+
+  if (!teamMembers.length) {
+    return (
+      <Card className="p-16 text-center text-muted-foreground border-dashed border-2">
+        <Users className="h-14 w-14 mx-auto mb-4 opacity-30" />
+        <p>{t('ops.noMembers')}</p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Mode banner */}
+      <Card className="p-4 border-primary/20 bg-primary/5 flex items-start gap-3">
+        <ShieldCheck className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+        <p className="text-sm text-primary/80 leading-relaxed">
+          {callerTier === 'admin' ? t('ops.adminMode') : t('ops.managerMode')}
+        </p>
+      </Card>
+
+      {/* Member cards */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        {teamMembers.map((member) => {
+          const perms     = localPerms[member.id] ?? member.permissions;
+          const isSaving  = saving.has(member.id);
+          const wasSaved  = savedRecently.has(member.id);
+
+          return (
+            <Card key={member.id} className={`p-5 border-border transition-opacity ${!member.isActive ? 'opacity-60' : ''}`}>
+              {/* Header row */}
+              <div className="flex items-center gap-3 mb-5">
+                <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm shrink-0 select-none">
+                  {memberInitials(member.displayName)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-sm leading-tight truncate">{member.displayName}</p>
+                    {wasSaved && (
+                      <span className="inline-flex items-center gap-0.5 text-xs text-emerald-600 font-medium">
+                        <CheckCircle className="h-3 w-3" /> {t('ops.saved')}
+                      </span>
+                    )}
+                    {isSaving && <span className="text-xs text-muted-foreground italic">{t('ops.saving')}</span>}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <Badge variant={tierVariant(member.tier)} className="text-xs px-1.5 py-0 h-4">
+                      {tierLabel(member.tier)}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{member.role}</span>
+                    {!member.isActive && (
+                      <span className="text-xs text-destructive font-medium">{t('ops.inactiveLabel')}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Permission groups */}
+              <div className="space-y-4">
+                {PERM_GROUPS.map((group) => (
+                  <div key={group.key}>
+                    <div className="flex items-center gap-1.5 mb-2.5 pb-1.5 border-b border-border/50">
+                      <group.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        {t(`ops.group.${group.key}`)}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                      {group.perms.map((perm) => {
+                        const isOn = perms.includes(perm);
+                        return (
+                          <div key={perm} className="flex items-center justify-between gap-2">
+                            <span className="text-xs text-foreground/80 leading-tight">
+                              {t(PERM_LABEL_KEY[perm] ?? perm)}
+                            </span>
+                            <Switch
+                              checked={isOn}
+                              onCheckedChange={() => togglePerm(member.id, perm)}
+                              disabled={isSaving}
+                              className="shrink-0 scale-[0.85]"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 const PROPERTY_TYPES = ['hotel', 'compound', 'apartment', 'villa', 'office', 'commercial', 'warehouse'];
 const PROPERTY_STATUSES = ['active', 'inactive'];
@@ -429,6 +639,7 @@ export const PortalDashboard: React.FC = () => {
 
   const totalProperties = properties.length;
   const totalUnits      = properties.reduce((s: number, p: PortalProperty) => s + ((p as any).unitCount ?? 0), 0);
+  const userTier        = roleTier(((user as unknown) as Record<string, string>)?.role ?? '');
 
   const handleLogout = async () => { await logout(); setLocation('/portal'); };
 
@@ -571,10 +782,16 @@ export const PortalDashboard: React.FC = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="manage" className="w-full">
-          <TabsList className="h-10 mb-6">
-            <TabsTrigger value="manage"    className="px-6">{t('portal.manage')}</TabsTrigger>
-            <TabsTrigger value="overview"  className="px-6">{t('portal.overview')}</TabsTrigger>
-            <TabsTrigger value="financials" className="px-6">{t('portal.financials')}</TabsTrigger>
+          <TabsList className="h-10 mb-6 flex-wrap">
+            <TabsTrigger value="manage"      className="px-5">{t('portal.manage')}</TabsTrigger>
+            <TabsTrigger value="overview"    className="px-5">{t('portal.overview')}</TabsTrigger>
+            <TabsTrigger value="financials"  className="px-5">{t('portal.financials')}</TabsTrigger>
+            {userTier !== 'worker' && (
+              <TabsTrigger value="ops-control" className="px-5 flex items-center gap-1.5">
+                <Settings2 className="h-3.5 w-3.5" />
+                {t('ops.tab')}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* ── My Properties (CRUD) tab ── */}
@@ -930,6 +1147,19 @@ export const PortalDashboard: React.FC = () => {
               </Card>
             )}
           </TabsContent>
+
+          {/* ── Operational Control tab (admin/supervisor only) ── */}
+          {userTier !== 'worker' && (
+            <TabsContent value="ops-control" className="mt-0">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold text-primary font-serif">{t('ops.title')}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">{t('ops.subtitle')}</p>
+                </div>
+                <OpsControlPanel user={user} t={t} isRtl={isRtl} />
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

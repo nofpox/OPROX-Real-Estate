@@ -192,6 +192,39 @@ const translations = {
     'portal.status.available':   'Available',
     'portal.status.occupied':    'Occupied',
     'portal.status.maintenance': 'Maintenance',
+
+    // ── Operational Control ───────────────────────────────────────────────────
+    'ops.tab':             'Operational Control',
+    'ops.title':           'Operational Delegation',
+    'ops.subtitle':        'Grant specific operational permissions to managers and staff. Managers can only delegate permissions they themselves hold.',
+    'ops.addMember':       'Add Team Member',
+    'ops.noMembers':       'No team members found.',
+    'ops.loading':         'Loading team...',
+    'ops.tierAdmin':       'Administrator',
+    'ops.tierSupervisor':  'Manager',
+    'ops.tierWorker':      'Staff',
+    'ops.roleLabel':       'Role',
+    'ops.activeLabel':     'Active',
+    'ops.inactiveLabel':   'Inactive',
+    'ops.saved':           'Saved',
+    'ops.saving':          'Saving...',
+    'ops.permissionsSaved':'Permissions updated',
+    // Groups
+    'ops.group.property':  'Property Management',
+    'ops.group.marketing': 'Marketing & Listings',
+    'ops.group.support':   'Customer Support',
+    // Permissions
+    'ops.perm.property_add':          'Add',
+    'ops.perm.property_edit':         'Edit',
+    'ops.perm.property_delete':       'Delete',
+    'ops.perm.property_publish':      'Publish / Unpublish',
+    'ops.perm.marketing_campaigns':   'Campaigns',
+    'ops.perm.marketing_listings':    'Listing Updates',
+    'ops.perm.support_inquiries':     'Inquiries',
+    'ops.perm.support_messages':      'Messages & Calls',
+    // Mode banner
+    'ops.adminMode':    'You have full control — grant any permission to any team member.',
+    'ops.managerMode':  'You can delegate your own permissions to staff members.',
   },
 
   ar: {
@@ -364,6 +397,39 @@ const translations = {
     'portal.status.available':   'متاحة',
     'portal.status.occupied':    'مؤجرة',
     'portal.status.maintenance': 'صيانة',
+
+    // ── Operational Control ───────────────────────────────────────────────────
+    'ops.tab':             'التحكم التشغيلي',
+    'ops.title':           'التفويض التشغيلي',
+    'ops.subtitle':        'امنح صلاحيات تشغيلية محددة للمدراء والموظفين. يستطيع المدير تفويض الصلاحيات التي يمتلكها فقط.',
+    'ops.addMember':       'إضافة عضو',
+    'ops.noMembers':       'لا يوجد أعضاء في الفريق.',
+    'ops.loading':         'جاري تحميل الفريق...',
+    'ops.tierAdmin':       'مدير النظام',
+    'ops.tierSupervisor':  'مدير',
+    'ops.tierWorker':      'موظف',
+    'ops.roleLabel':       'الدور',
+    'ops.activeLabel':     'نشط',
+    'ops.inactiveLabel':   'غير نشط',
+    'ops.saved':           'تم الحفظ',
+    'ops.saving':          'جاري الحفظ...',
+    'ops.permissionsSaved':'تم تحديث الصلاحيات',
+    // Groups
+    'ops.group.property':  'إدارة العقارات',
+    'ops.group.marketing': 'التسويق والإعلانات',
+    'ops.group.support':   'خدمة العملاء',
+    // Permissions
+    'ops.perm.property_add':          'إضافة',
+    'ops.perm.property_edit':         'تعديل',
+    'ops.perm.property_delete':       'حذف',
+    'ops.perm.property_publish':      'نشر / إلغاء النشر',
+    'ops.perm.marketing_campaigns':   'الحملات',
+    'ops.perm.marketing_listings':    'تحديث الإعلانات',
+    'ops.perm.support_inquiries':     'الاستفسارات',
+    'ops.perm.support_messages':      'الرسائل والمكالمات',
+    // Mode banner
+    'ops.adminMode':    'لديك صلاحية كاملة — يمكنك منح أي صلاحية لأي عضو في الفريق.',
+    'ops.managerMode':  'يمكنك تفويض صلاحياتك الخاصة للموظفين.',
   },
 };
 

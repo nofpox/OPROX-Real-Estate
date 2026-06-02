@@ -2537,6 +2537,60 @@ paths:
         "401":
           description: Unauthorized
 
+  /portal/team:
+    get:
+      operationId: getPortalTeam
+      summary: List platform team members with operational permissions (admin/supervisor only)
+      tags: [portal]
+      security: [{ session: [] }]
+      responses:
+        "200":
+          description: Team members list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PortalTeamMember"
+        "401": { description: Unauthorized }
+        "403": { description: Forbidden }
+
+  /portal/team/{userId}/permissions:
+    put:
+      operationId: updatePortalTeamPermissions
+      summary: Set operational permissions for a team member
+      tags: [portal]
+      security: [{ session: [] }]
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortalPermissionsInput"
+      responses:
+        "200":
+          description: Updated permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  data:
+                    type: object
+                    properties:
+                      id:          { type: integer }
+                      permissions: { type: array, items: { type: string } }
+        "401": { description: Unauthorized }
+        "403": { description: Forbidden }
+        "404": { description: User not found }
+
   /partner/equity:
     get:
       operationId: getPartnerEquity
@@ -4777,6 +4831,28 @@ components:
         monthly:
           type: array
           items: { $ref: "#/components/schemas/PortalFinancialsMonthly" }
+
+    PortalTeamMember:
+      type: object
+      required: [id, displayName, username, role, tier, isActive, permissions]
+      properties:
+        id:          { type: integer }
+        displayName: { type: string }
+        username:    { type: string }
+        role:        { type: string }
+        tier:        { type: string }
+        isActive:    { type: boolean }
+        permissions:
+          type: array
+          items: { type: string }
+
+    PortalPermissionsInput:
+      type: object
+      required: [permissions]
+      properties:
+        permissions:
+          type: array
+          items: { type: string }
 
     PortalFinancialsPage:
       type: object

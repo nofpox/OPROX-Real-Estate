@@ -49,6 +49,7 @@ import type {
   GetPortalFinancialsParams,
   GetPortalPropertiesParams,
   GetPortalPropertyUnitsParams,
+  GetPortalTeam200,
   Guest,
   GuestFeedback,
   GuestFeedbackInput,
@@ -92,6 +93,7 @@ import type {
   PortalAvailabilityPage,
   PortalBookingsPage,
   PortalFinancialsPage,
+  PortalPermissionsInput,
   PortalPropertiesPage,
   PortalPropertyDetail,
   PortalPropertyInput,
@@ -140,6 +142,7 @@ import type {
   UnitRequestResult,
   UpdateCustomFieldInput,
   UpdateGuestRequestBody,
+  UpdatePortalTeamPermissions200,
   UpdateTenantInput,
   UserInput,
   WorkOrder,
@@ -9569,6 +9572,155 @@ export function useGetPortalFinancials<TData = Awaited<ReturnType<typeof getPort
 
 
 
+
+export const getGetPortalTeamUrl = () => {
+
+
+
+
+  return `/api/portal/team`
+}
+
+/**
+ * @summary List platform team members with operational permissions (admin/supervisor only)
+ */
+export const getPortalTeam = async ( options?: RequestInit): Promise<GetPortalTeam200> => {
+
+  return customFetch<GetPortalTeam200>(getGetPortalTeamUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPortalTeamQueryKey = () => {
+    return [
+    `/api/portal/team`
+    ] as const;
+    }
+
+
+export const getGetPortalTeamQueryOptions = <TData = Awaited<ReturnType<typeof getPortalTeam>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalTeam>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPortalTeamQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPortalTeam>>> = ({ signal }) => getPortalTeam({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPortalTeam>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPortalTeamQueryResult = NonNullable<Awaited<ReturnType<typeof getPortalTeam>>>
+export type GetPortalTeamQueryError = ErrorType<void>
+
+
+/**
+ * @summary List platform team members with operational permissions (admin/supervisor only)
+ */
+
+export function useGetPortalTeam<TData = Awaited<ReturnType<typeof getPortalTeam>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPortalTeam>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPortalTeamQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdatePortalTeamPermissionsUrl = (userId: number,) => {
+
+
+
+
+  return `/api/portal/team/${userId}/permissions`
+}
+
+/**
+ * @summary Set operational permissions for a team member
+ */
+export const updatePortalTeamPermissions = async (userId: number,
+    portalPermissionsInput: PortalPermissionsInput, options?: RequestInit): Promise<UpdatePortalTeamPermissions200> => {
+
+  return customFetch<UpdatePortalTeamPermissions200>(getUpdatePortalTeamPermissionsUrl(userId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      portalPermissionsInput,)
+  }
+);}
+
+
+
+
+export const getUpdatePortalTeamPermissionsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePortalTeamPermissions>>, TError,{userId: number;data: BodyType<PortalPermissionsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePortalTeamPermissions>>, TError,{userId: number;data: BodyType<PortalPermissionsInput>}, TContext> => {
+
+const mutationKey = ['updatePortalTeamPermissions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePortalTeamPermissions>>, {userId: number;data: BodyType<PortalPermissionsInput>}> = (props) => {
+          const {userId,data} = props ?? {};
+
+          return  updatePortalTeamPermissions(userId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePortalTeamPermissionsMutationResult = NonNullable<Awaited<ReturnType<typeof updatePortalTeamPermissions>>>
+    export type UpdatePortalTeamPermissionsMutationBody = BodyType<PortalPermissionsInput>
+    export type UpdatePortalTeamPermissionsMutationError = ErrorType<void>
+
+    /**
+ * @summary Set operational permissions for a team member
+ */
+export const useUpdatePortalTeamPermissions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePortalTeamPermissions>>, TError,{userId: number;data: BodyType<PortalPermissionsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePortalTeamPermissions>>,
+        TError,
+        {userId: number;data: BodyType<PortalPermissionsInput>},
+        TContext
+      > => {
+      return useMutation(getUpdatePortalTeamPermissionsMutationOptions(options));
+    }
 
 export const getGetPartnerEquityUrl = () => {
 

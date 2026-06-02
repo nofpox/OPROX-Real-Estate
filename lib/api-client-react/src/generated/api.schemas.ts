@@ -1310,6 +1310,20 @@ export interface PortalFinancialsSummary {
   monthly: PortalFinancialsMonthly[];
 }
 
+export interface PortalTeamMember {
+  id: number;
+  displayName: string;
+  username: string;
+  role: string;
+  tier: string;
+  isActive: boolean;
+  permissions: string[];
+}
+
+export interface PortalPermissionsInput {
+  permissions: string[];
+}
+
 export type PortalFinancialsPageMeta = { [key: string]: unknown } | null;
 
 export interface PortalFinancialsPage {
@@ -1560,5 +1574,20 @@ checkOut: string;
 export type GetPortalFinancialsParams = {
 propertyId?: number;
 months?: number;
+};
+
+export type GetPortalTeam200 = {
+  status?: string;
+  data?: PortalTeamMember[];
+};
+
+export type UpdatePortalTeamPermissions200Data = {
+  id?: number;
+  permissions?: string[];
+};
+
+export type UpdatePortalTeamPermissions200 = {
+  status?: string;
+  data?: UpdatePortalTeamPermissions200Data;
 };
 

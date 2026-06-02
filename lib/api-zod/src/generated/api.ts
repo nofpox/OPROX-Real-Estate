@@ -2997,6 +2997,43 @@ export const GetPortalFinancialsResponse = zod.object({
 
 
 /**
+ * @summary List platform team members with operational permissions (admin/supervisor only)
+ */
+export const GetPortalTeamResponse = zod.object({
+  "status": zod.string().optional(),
+  "data": zod.array(zod.object({
+  "id": zod.number(),
+  "displayName": zod.string(),
+  "username": zod.string(),
+  "role": zod.string(),
+  "tier": zod.string(),
+  "isActive": zod.boolean(),
+  "permissions": zod.array(zod.string())
+})).optional()
+})
+
+
+/**
+ * @summary Set operational permissions for a team member
+ */
+export const UpdatePortalTeamPermissionsParams = zod.object({
+  "userId": zod.coerce.number()
+})
+
+export const UpdatePortalTeamPermissionsBody = zod.object({
+  "permissions": zod.array(zod.string())
+})
+
+export const UpdatePortalTeamPermissionsResponse = zod.object({
+  "status": zod.string().optional(),
+  "data": zod.object({
+  "id": zod.number().optional(),
+  "permissions": zod.array(zod.string()).optional()
+}).optional()
+})
+
+
+/**
  * @summary Equity stake overview for the authenticated partner
  */
 export const GetPartnerEquityResponse = zod.object({

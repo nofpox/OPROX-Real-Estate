@@ -7,11 +7,13 @@ import {
   propertiesTable,
   portalPropertiesTable,
   portalUnitsTable,
+  usersTable,
   insertPortalPropertySchema,
   updatePortalPropertySchema,
   insertPortalUnitSchema,
   updatePortalUnitSchema,
 } from "@workspace/db";
+import { getRoleTier } from "./auth.js";
 import { eq, and, sql, desc, inArray, ne } from "drizzle-orm";
 import { sendSuccess, sendError, parsePagination, buildMeta } from "../utils/response.js";
 import {
@@ -632,6 +634,117 @@ router.get("/portal/financials", requireAuth, async (req, res) => {
   } catch (err) {
     req.log?.error({ err }, "GET /portal/financials failed");
     sendError(res, 500, "Failed to fetch financial summary");
+  }
+});
+
+// ── Operational permission keys ───────────────────────────────────────────────
+const VALID_PERMS = [
+  "property:add", "property:edit", "property:delete", "property:publish",
+  "marketing:campaigns", "marketing:listings",
+  "support:inquiries", "support:messages",
+] as const;
+
+function parsePerms(raw: string): string[] {
+  try { return JSON.parse(raw) as string[]; } catch { return []; }
+}
+
+// ── GET /portal/team — list team members with their permissions ───────────────
+router.get("/portal/team", requireAuth, async (req, res) => {
+  try {
+    const caller     = (req as any).sessionUser as { id: number; role: string; tenantId: number | null };
+    const callerTier = getRoleTier(caller.role);
+
+    if (callerTier === "worker") { sendError(res, 403, "Forbidden"); return; }
+
+    const tenantId = tid(req);
+
+    const users = await db
+      .select({
+        id:          usersTable.id,
+        displayName: usersTable.displayName,
+        username:    usersTable.username,
+        role:        usersTable.role,
+        isActive:    usersTable.isActive,
+        permissions: usersTable.permissions,
+      })
+      .from(usersTable)
+      .where(
+        tenantId !== null
+          ? and(eq(usersTable.tenantId, tenantId), ne(usersTable.role, "super_admin"))
+          : ne(usersTable.role, "super_admin"),
+      );
+
+    // Supervisors only see workers; admins see everyone except themselves
+    const filtered = callerTier === "supervisor"
+      ? users.filter((u) => getRoleTier(u.role) === "worker")
+      : users.filter((u) => u.id !== caller.id);
+
+    const result = filtered.map((u) => ({
+      id:          u.id,
+      displayName: u.displayName,
+      username:    u.username,
+      role:        u.role,
+      tier:        getRoleTier(u.role),
+      isActive:    u.isActive,
+      permissions: parsePerms(u.permissions),
+    }));
+
+    sendSuccess(res, result);
+  } catch (err) {
+    req.log?.error({ err }, "GET /portal/team failed");
+    sendError(res, 500, "Failed to load team");
+  }
+});
+
+// ── PUT /portal/team/:userId/permissions ──────────────────────────────────────
+router.put("/portal/team/:userId/permissions", requireAuth, async (req, res) => {
+  try {
+    const caller     = (req as any).sessionUser as { id: number; role: string; tenantId: number | null };
+    const callerTier = getRoleTier(caller.role);
+
+    if (callerTier === "worker") { sendError(res, 403, "Forbidden"); return; }
+
+    const targetId = parseInt(req.params.userId as string, 10);
+    if (isNaN(targetId)) { sendError(res, 400, "Invalid user id"); return; }
+
+    const tenantId = tid(req);
+    const { permissions } = req.body as { permissions: unknown };
+
+    if (!Array.isArray(permissions)) { sendError(res, 400, "permissions must be an array"); return; }
+
+    const cleaned = (permissions as string[]).filter((p) => (VALID_PERMS as readonly string[]).includes(p));
+
+    const [targetUser] = await db
+      .select()
+      .from(usersTable)
+      .where(
+        tenantId !== null
+          ? and(eq(usersTable.id, targetId), eq(usersTable.tenantId, tenantId))
+          : eq(usersTable.id, targetId),
+      )
+      .limit(1);
+
+    if (!targetUser) { sendError(res, 404, "User not found"); return; }
+
+    const targetTier = getRoleTier(targetUser.role);
+
+    if (targetTier === "admin") { sendError(res, 403, "Cannot modify admin permissions"); return; }
+
+    if (callerTier === "supervisor") {
+      if (targetTier !== "worker") { sendError(res, 403, "Supervisors can only modify worker permissions"); return; }
+      const [callerRow] = await db.select({ permissions: usersTable.permissions }).from(usersTable).where(eq(usersTable.id, caller.id)).limit(1);
+      const callerPerms = callerRow ? parsePerms(callerRow.permissions) : [];
+      const allowed = cleaned.filter((p) => callerPerms.includes(p));
+      await db.update(usersTable).set({ permissions: JSON.stringify(allowed) }).where(eq(usersTable.id, targetId));
+      sendSuccess(res, { id: targetId, permissions: allowed });
+      return;
+    }
+
+    await db.update(usersTable).set({ permissions: JSON.stringify(cleaned) }).where(eq(usersTable.id, targetId));
+    sendSuccess(res, { id: targetId, permissions: cleaned });
+  } catch (err) {
+    req.log?.error({ err }, "PUT /portal/team/:userId/permissions failed");
+    sendError(res, 500, "Failed to update permissions");
   }
 });
 
