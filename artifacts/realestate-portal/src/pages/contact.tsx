@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PhoneInputWithCountry } from '@/components/phone-input';
 
 export const Contact: React.FC = () => {
   const { t, isRtl } = useLanguage();
@@ -149,13 +150,11 @@ export const Contact: React.FC = () => {
                       {isRtl ? 'رقم الهاتف' : 'Phone Number'}
                       <span className="text-red-500 ms-1">*</span>
                     </label>
-                    <Input
-                      type="tel"
+                    <PhoneInputWithCountry
                       required
-                      pattern="[+\d\s\-()]{7,20}"
-                      title={isRtl ? 'أدخل رقم هاتف صحيح' : 'Enter a valid phone number'}
+                      isRtl={isRtl}
                       value={formData.phone}
-                      onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={phone => setFormData({ ...formData, phone })}
                     />
                   </div>
                   <div>
