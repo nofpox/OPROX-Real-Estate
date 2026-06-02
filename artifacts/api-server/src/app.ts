@@ -4,7 +4,8 @@ import compression from "compression";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
-import { helmetMiddleware, rateLimiter, sanitizeInputs } from "./middleware/security.js";
+import { helmetMiddleware, rateLimiter, sanitizeInputs, wafMiddleware } from "./middleware/security.js";
+import { startScheduler } from "./lib/scheduler.js";
 
 const app: Express = express();
 
@@ -46,6 +47,14 @@ app.use(express.urlencoded({ extended: true }));
 // Runs after body parsing so req.body is populated.
 app.use(sanitizeInputs);
 
+// ── WAF — SQL injection, path traversal, null byte, SSRF detection ────────────
+// Runs after sanitisation; blocks and logs before reaching route handlers.
+app.use(wafMiddleware);
+
 app.use("/api", router);
+
+// ── Scheduled maintenance tasks ───────────────────────────────────────────────
+// Daily compressed DB backup (./backups/) + weekly vulnerability scan.
+startScheduler();
 
 export default app;

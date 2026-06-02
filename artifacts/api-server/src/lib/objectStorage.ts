@@ -9,6 +9,9 @@ import {
   setObjectAclPolicy,
 } from "./objectAcl";
 
+// nosemgrep: typescript.react.security.react-insecure-request
+// This endpoint is the Replit-managed local sidecar at loopback 127.0.0.1 —
+// it never traverses the public internet and cannot use HTTPS.
 const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
 
 export const objectStorageClient = new Storage({

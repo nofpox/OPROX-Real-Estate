@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { db, listingsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
@@ -7,10 +7,46 @@ const router = Router();
 /**
  * GET /sitemap.xml — dynamic XML sitemap for the real estate portal.
  *
- * Lists all static portal pages plus one <url> per active listing.
- * Cached for 1 hour via Cache-Control; bots should not hammer this.
- * Referenced from /robots.txt served by the portal's Vite public dir.
+ * Host header injection defence:
+ *   The `x-forwarded-host` value is validated against REPLIT_DOMAINS (an
+ *   env-set allowlist) before being embedded in the sitemap. All URL values
+ *   are XML-encoded before output to prevent entity injection.
  */
+
+/** Escape XML special characters to prevent entity injection. */
+function xmlEncode(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+/**
+ * Derive a safe base URL from the request.
+ * Only accepts a host if it matches a domain from REPLIT_DOMAINS.
+ * Falls back to the first configured domain, then to req.headers.host
+ * with all characters except alphanumerics, hyphens, and dots stripped.
+ */
+function getSafeBase(req: Request): string {
+  const allowedDomains = (process.env.REPLIT_DOMAINS ?? "")
+    .split(",")
+    .map((d) => d.trim())
+    .filter(Boolean);
+
+  const forwarded = (req.headers["x-forwarded-host"] as string | undefined)?.split(",")[0]?.trim() ?? "";
+  const rawHost   = forwarded || req.headers.host || "";
+
+  // Accept only if the host exactly matches (or is a subdomain of) a known domain
+  const safeHost =
+    allowedDomains.find((d) => rawHost === d || rawHost.endsWith(`.${d}`)) ??
+    allowedDomains[0] ??
+    rawHost.replace(/[^a-zA-Z0-9.\-:]/g, ""); // last-resort sanitize
+
+  return `https://${safeHost}/realestate`;
+}
+
 router.get("/sitemap.xml", async (req, res) => {
   try {
     const listings = await db
@@ -18,10 +54,7 @@ router.get("/sitemap.xml", async (req, res) => {
       .from(listingsTable)
       .where(eq(listingsTable.status, "active"));
 
-    const proto = (req.headers["x-forwarded-proto"] as string | undefined) ?? "https";
-    const host  = (req.headers["x-forwarded-host"] as string | undefined) ?? req.headers.host ?? "";
-    const base  = `${proto}://${host}/realestate`;
-
+    const base  = getSafeBase(req);
     const today = new Date().toISOString().split("T")[0];
 
     const staticPages = [
@@ -32,7 +65,7 @@ router.get("/sitemap.xml", async (req, res) => {
     ];
 
     const listingPages = listings.map((l) => ({
-      url:        `${base}/listings/${l.id}`,
+      url:        `${base}/listings/${encodeURIComponent(String(l.id))}`,
       lastmod:    l.updatedAt.toISOString().split("T")[0],
       changefreq: "weekly",
       priority:   "0.8",
@@ -43,8 +76,8 @@ router.get("/sitemap.xml", async (req, res) => {
     const urlEls = pages
       .map(
         (p) =>
-          `  <url>\n    <loc>${p.url}</loc>\n    <lastmod>${p.lastmod}</lastmod>` +
-          `\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`,
+          `  <url>\n    <loc>${xmlEncode(p.url)}</loc>\n    <lastmod>${xmlEncode(p.lastmod)}</lastmod>` +
+          `\n    <changefreq>${xmlEncode(p.changefreq)}</changefreq>\n    <priority>${xmlEncode(p.priority)}</priority>\n  </url>`,
       )
       .join("\n");
 
