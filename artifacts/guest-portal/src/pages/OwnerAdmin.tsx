@@ -675,7 +675,11 @@ function PlatformAITab() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [convId, setConvId] = useState<number | null>(null);
   const [streaming, setStreaming] = useState(false);
+  const [greetingPending, setGreetingPending] = useState(false);
+  const [greetingTyping, setGreetingTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const greetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasGreetedRef = useRef(false);
 
   const { data: stats } = useQuery({
     queryKey: ["platform-ai-stats"],
@@ -698,7 +702,27 @@ function PlatformAITab() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streaming]);
+  }, [messages, streaming, greetingTyping]);
+
+  // 3-second greeting delay on first mount
+  useEffect(() => {
+    if (!hasGreetedRef.current) {
+      setGreetingPending(true);
+      greetTimerRef.current = setTimeout(() => {
+        setGreetingPending(false);
+        setGreetingTyping(true);
+        setTimeout(() => {
+          setGreetingTyping(false);
+          setMessages([{
+            role: "assistant",
+            content: "مرحباً، أنا ليلى 👋\nمستشارتك الذكية لمنصة Grand PMS.\n\nيمكنني مساعدتك في مراجعة أداء المنظومة، تحليل فرق العمل، والاطلاع على التقارير المالية والتشغيلية. كيف يمكنني مساعدتك اليوم؟\n\nHi, I'm Layla 👋 — your AI Platform Advisor for Grand PMS. I can help with system diagnostics, staff performance, financial insights, and operational health. What would you like to explore?",
+          }]);
+          hasGreetedRef.current = true;
+        }, 900);
+      }, 3000);
+    }
+    return () => { if (greetTimerRef.current) clearTimeout(greetTimerRef.current); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function ensureConversation(): Promise<number> {
     if (convId) return convId;
@@ -714,7 +738,7 @@ function PlatformAITab() {
 
   async function send() {
     const text = input.trim();
-    if (!text || streaming) return;
+    if (!text || streaming || greetingPending || greetingTyping) return;
     setInput("");
     setMessages(prev => [...prev, { role: "user", content: text }]);
     setStreaming(true);
@@ -730,34 +754,41 @@ function PlatformAITab() {
     let draft = "";
     setMessages(prev => [...prev, { role: "assistant", content: "" }]);
 
-    const res = await fetch(`/api/openai/conversations/${id}/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: text, context }),
-    });
+    try {
+      const res = await fetch(`/api/openai/conversations/${id}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text, context }),
+      });
 
-    if (!res.body) { setStreaming(false); return; }
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
+      if (!res.body) { setStreaming(false); return; }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const lines = decoder.decode(value).split("\n").filter(l => l.startsWith("data:"));
-      for (const line of lines) {
-        try {
-          const parsed = JSON.parse(line.slice(5)) as { content?: string; done?: boolean; error?: string };
-          if (parsed.content) {
-            draft += parsed.content;
-            setMessages(prev => {
-              const next = [...prev];
-              next[next.length - 1] = { role: "assistant", content: draft };
-              return next;
-            });
-          }
-        } catch { /* skip */ }
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6)) as { content?: string; done?: boolean };
+            if (parsed.content) {
+              draft += parsed.content;
+              setMessages(prev => {
+                const next = [...prev];
+                next[next.length - 1] = { role: "assistant", content: draft };
+                return next;
+              });
+            }
+          } catch { /* skip */ }
+        }
       }
-    }
+    } catch { /* network errors */ }
+
     setStreaming(false);
   }
 
@@ -768,17 +799,25 @@ function PlatformAITab() {
     "Give me a revenue snapshot for this month",
   ];
 
+  const inputDisabled = streaming || greetingPending || greetingTyping;
+
   return (
     <Card className="border-slate-200">
-      <CardHeader className="pb-3 border-b border-slate-100">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-slate-900">
-            <Bot size={16} className="text-white" />
+      {/* Layla header */}
+      <CardHeader className="pb-3 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-slate-100 rounded-t-xl">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shadow-sm">
+              <span className="text-white font-bold text-base">ل</span>
+            </div>
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full" />
           </div>
-          <div>
-            <CardTitle className="text-sm font-semibold text-slate-800">Platform AI Assistant</CardTitle>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Full-platform diagnostics · {stats ? `${stats.propertyCount} properties · ${stats.staffCount} staff · ${stats.openWorkOrders} open work orders` : "Loading snapshot…"}
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-sm font-semibold text-slate-800">ليلى — Platform AI Advisor</CardTitle>
+            <p className="text-xs text-slate-500 mt-0.5 truncate">
+              {stats
+                ? `${stats.propertyCount} properties · ${stats.staffCount} staff · ${stats.openWorkOrders} open WOs`
+                : "Loading system snapshot…"}
             </p>
           </div>
         </div>
@@ -786,20 +825,17 @@ function PlatformAITab() {
 
       <CardContent className="p-0">
         {/* Message area */}
-        <div className="h-80 overflow-y-auto px-4 py-3 space-y-3">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4">
+        <div className="h-[340px] overflow-y-auto px-4 py-3 space-y-3">
+          {messages.length === 0 && !greetingPending && !greetingTyping && (
+            <div className="flex flex-col items-center justify-center h-full gap-3">
               <div className="p-3 rounded-2xl bg-slate-100">
-                <Sparkles size={20} className="text-slate-500" />
+                <Sparkles size={18} className="text-slate-400" />
               </div>
-              <p className="text-xs text-slate-500 text-center max-w-48">
-                Ask anything about your platform — operations, staff, finances, or system health.
-              </p>
               <div className="grid grid-cols-1 gap-1.5 w-full">
                 {SUGGESTED.map(s => (
                   <button
                     key={s}
-                    onClick={() => { setInput(s); }}
+                    onClick={() => setInput(s)}
                     className="text-left text-xs px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
                   >
                     {s}
@@ -807,49 +843,72 @@ function PlatformAITab() {
                 ))}
               </div>
             </div>
-          ) : (
-            messages.map((m, i) => (
-              <div key={i} className={cn("flex gap-2", m.role === "user" ? "justify-end" : "justify-start")}>
-                {m.role === "assistant" && (
-                  <div className="w-6 h-6 rounded-full bg-slate-900 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Bot size={12} className="text-white" />
-                  </div>
-                )}
-                <div className={cn(
-                  "max-w-[80%] text-xs px-3 py-2 rounded-2xl whitespace-pre-wrap leading-relaxed",
-                  m.role === "user"
-                    ? "bg-slate-900 text-white rounded-br-sm"
-                    : "bg-slate-100 text-slate-800 rounded-bl-sm"
-                )}>
-                  {m.content || (streaming && i === messages.length - 1 ? (
-                    <span className="inline-flex gap-0.5">
-                      <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                    </span>
-                  ) : "")}
-                </div>
-              </div>
-            ))
           )}
+
+          {messages.map((m, i) => (
+            <div key={i} className={cn("flex gap-2 items-end", m.role === "user" ? "justify-end" : "justify-start")}>
+              {m.role === "assistant" && (
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center flex-shrink-0 mb-0.5">
+                  <span className="text-white font-bold text-[10px]">ل</span>
+                </div>
+              )}
+              <div className={cn(
+                "max-w-[80%] text-xs px-3 py-2 rounded-2xl whitespace-pre-wrap leading-relaxed",
+                m.role === "user"
+                  ? "bg-slate-800 text-white rounded-br-sm"
+                  : "bg-slate-100 text-slate-800 rounded-bl-sm"
+              )}>
+                {m.content || (streaming && i === messages.length - 1
+                  ? <span className="inline-flex gap-1">
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "160ms" }} />
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "320ms" }} />
+                    </span>
+                  : ""
+                )}
+              </div>
+            </div>
+          ))}
+
+          {/* Greeting typing indicator */}
+          {(greetingPending || greetingTyping) && (
+            <div className="flex gap-2 items-end justify-start">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center flex-shrink-0 mb-0.5">
+                <span className="text-white font-bold text-[10px]">ل</span>
+              </div>
+              <div className="text-xs px-3 py-2 rounded-2xl rounded-bl-sm bg-slate-100 text-slate-800">
+                <span className="inline-flex gap-1">
+                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "160ms" }} />
+                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "320ms" }} />
+                </span>
+              </div>
+            </div>
+          )}
+
           <div ref={bottomRef} />
         </div>
 
         {/* Input */}
-        <div className="border-t border-slate-100 px-3 py-2 flex gap-2 items-end">
+        <div className="border-t border-slate-100 px-3 py-2.5 flex gap-2 items-end">
           <textarea
-            className="flex-1 resize-none text-xs bg-transparent outline-none placeholder:text-slate-400 py-1.5 max-h-24 min-h-[32px]"
+            className={cn(
+              "flex-1 resize-none text-xs bg-slate-50 border border-slate-200 rounded-xl",
+              "outline-none focus:ring-2 focus:ring-slate-300 px-3 py-2",
+              "placeholder:text-slate-400 max-h-24 min-h-[34px]",
+              inputDisabled && "opacity-50"
+            )}
             rows={1}
-            placeholder="Ask the platform agent…"
+            placeholder="Ask Layla about your platform…"
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-            disabled={streaming}
+            disabled={inputDisabled}
           />
           <button
             onClick={send}
-            disabled={!input.trim() || streaming}
-            className="p-1.5 rounded-lg bg-slate-900 text-white disabled:opacity-40 hover:bg-slate-700 transition-colors flex-shrink-0"
+            disabled={!input.trim() || inputDisabled}
+            className="p-2 rounded-xl bg-slate-800 text-white disabled:opacity-40 hover:bg-slate-700 transition-colors flex-shrink-0"
           >
             <Send size={13} />
           </button>
