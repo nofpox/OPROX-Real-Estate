@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { RTL_LANGS } from "@/i18n/languages";
 import Landing from "@/pages/Landing";
 import UnitPortal from "@/pages/UnitPortal";
+import OwnerAdmin from "@/pages/OwnerAdmin";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -19,6 +20,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/unit/:id" component={UnitPortal} />
+      <Route path="/admin" component={OwnerAdmin} />
       <Route component={NotFound} />
     </Switch>
   );

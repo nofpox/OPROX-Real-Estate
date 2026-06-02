@@ -46,10 +46,7 @@ const NAV_ITEMS = [
   { href: "/security-dashboard",  labelKey: "nav.securityDashboard", icon: ShieldAlert,       section: "operations", featureKey: null },
   { href: "/analytics",           labelKey: "nav.analytics",         icon: BarChart2,          section: "operations", featureKey: null },
   { href: "/support-tickets",    labelKey: "nav.supportTickets",    icon: Ticket,             section: "operations", featureKey: null },
-  { href: "/service-config",     labelKey: "nav.serviceConfig",     icon: Settings2,          section: "operations", featureKey: null },
   { href: "/data-archiving",     labelKey: "nav.dataArchiving",     icon: Archive,             section: "operations", featureKey: null },
-  { href: "/content-manager",   labelKey: "nav.contentManager",   icon: LayoutTemplate,      section: "operations", featureKey: null },
-  { href: "/website-settings",  labelKey: "nav.websiteSettings",  icon: Monitor,              section: "operations", featureKey: null },
   { href: "/partner",           labelKey: "nav.partnerPortal",    icon: TrendingUp,           section: "main",       featureKey: null },
 ];
 

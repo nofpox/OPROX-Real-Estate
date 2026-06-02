@@ -4,8 +4,9 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Building2, Wifi, Wrench, Star } from "lucide-react";
+import { Building2, Wifi, Wrench, Star, Settings } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Link } from "wouter";
 
 export default function Landing() {
   const [, navigate] = useLocation();
@@ -83,8 +84,12 @@ export default function Landing() {
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-400" dir="rtl">
-        ركز للحلول الذكية · Rakez Smart Solutions
+      <footer className="text-center py-6 text-xs text-slate-400">
+        <span dir="rtl">ركز للحلول الذكية · Rakez Smart Solutions</span>
+        <Link href="/admin" className="block mt-2 inline-flex items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors">
+          <Settings size={10} />
+          <span>Admin</span>
+        </Link>
       </footer>
     </div>
   );
