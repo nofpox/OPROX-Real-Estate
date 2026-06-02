@@ -118,28 +118,29 @@ const OWNER_PERMISSION_ROUTES = [
   { href: "/support-tickets",    label: "Support Tickets" },
 ];
 
-// Tier = hierarchy level (0 = highest delegated authority below Owner)
-// Column order matches the user-specified sequence: Company → Manager → Administrator → Supervisor → Staff
+// All roles are fully editable by the Owner — no tier locking.
+// Column order: Company → Manager → Administrator → Supervisor → Maintenance → Cleaning → Security
 const OWNER_CONFIGURABLE_ROLES = [
-  { id: "admin_manager",  label: "Company",                    color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",  tier: 0, desc: "Corporate-level access" },
-  { id: "manager",        label: "Manager",                    color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",  tier: 1, desc: "Management oversight" },
-  { id: "administrator",  label: "Administrator (Dept.)",      color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",          tier: 2, desc: "Reporting & unit data" },
-  { id: "supervisor",     label: "Supervisor",                 color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",      tier: 3, desc: "Field operations" },
-  { id: "maintenance",    label: "Maintenance",                color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",  tier: 4, desc: "Field tasks" },
-  { id: "cleaning",       label: "Cleaning",                   color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",      tier: 4, desc: "Field tasks" },
-  { id: "security",       label: "Security",                   color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",          tier: 4, desc: "Field tasks" },
+  { id: "admin_manager",  label: "Company",                color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400", desc: "Corporate-level access" },
+  { id: "manager",        label: "Manager",                color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400", desc: "Management oversight" },
+  { id: "administrator",  label: "Administrator (Dept.)",  color: "bg-rose-100   text-rose-700   dark:bg-rose-900/30   dark:text-rose-400",   desc: "Reporting & unit data" },
+  { id: "supervisor",     label: "Supervisor",             color: "bg-amber-100  text-amber-700  dark:bg-amber-900/30  dark:text-amber-400",  desc: "Field operations" },
+  { id: "maintenance",    label: "Maintenance",            color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400", desc: "Field tasks" },
+  { id: "cleaning",       label: "Cleaning",               color: "bg-green-100  text-green-700  dark:bg-green-900/30  dark:text-green-400",  desc: "Field tasks" },
+  { id: "security",       label: "Security",               color: "bg-blue-100   text-blue-700   dark:bg-blue-900/30   dark:text-blue-400",   desc: "Field tasks" },
 ];
 
 const ALL_ROUTES = OWNER_PERMISSION_ROUTES.map((r) => r.href);
 
+// Blank slate — no pre-set permissions. Owner configures everything from scratch.
 const DEFAULT_PERM: PermissionMatrix = {
-  admin_manager: ALL_ROUTES,
-  manager:       ["/", "/properties", "/rooms", "/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log", "/analytics"],
-  administrator: ["/", "/properties", "/rooms", "/guest-requests", "/analytics", "/bookings", "/user-management", "/admin-settings", "/activity-log"],
-  supervisor:    ["/", "/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log"],
-  maintenance:   ["/", "/tasks"],
-  cleaning:      ["/", "/tasks"],
-  security:      ["/", "/tasks"],
+  admin_manager: [],
+  manager:       [],
+  administrator: [],
+  supervisor:    [],
+  maintenance:   [],
+  cleaning:      [],
+  security:      [],
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1329,16 +1330,30 @@ function PermissionsTab() {
   const [mobileRoleId, setMobileRoleId] = React.useState(OWNER_CONFIGURABLE_ROLES[0].id);
   const mobileRole = OWNER_CONFIGURABLE_ROLES.find(r => r.id === mobileRoleId)!;
 
+  async function handleClearAll() {
+    setMatrix(DEFAULT_PERM);
+    setDirty(false);
+    try {
+      await saveSettings({ data: { permissionMatrix: DEFAULT_PERM } });
+      toast({ title: "All permissions cleared", description: "Every role now has zero page access. Assign from scratch." });
+    } catch {
+      toast({ title: "Clear failed", variant: "destructive" });
+    }
+  }
+
   // ── Shared: footer actions ─────────────────────────────────────────────────
   const FooterActions = () => (
     <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-1 pb-4">
-      <button
+      <Button
         type="button"
-        onClick={() => { setMatrix(DEFAULT_PERM); setDirty(true); }}
-        className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors self-start sm:self-auto"
+        variant="outline"
+        size="sm"
+        onClick={handleClearAll}
+        disabled={saving}
+        className="border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive w-full sm:w-auto"
       >
-        Reset to defaults
-      </button>
+        Clear All Permissions
+      </Button>
       <div className="flex items-center gap-3 flex-wrap">
         {dirty && (
           <span className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
@@ -1362,9 +1377,9 @@ function PermissionsTab() {
         <div className="flex items-start gap-3">
           <ShieldCheck className="h-5 w-5 text-primary mt-0.5 shrink-0" />
           <div className="space-y-1 min-w-0">
-            <p className="text-sm font-semibold">Owner Sovereignty — Full Control</p>
+            <p className="text-sm font-semibold">Owner Sovereignty — Complete Control</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              As the Owner, you have unrestricted authority over every role. Enable or disable any page for any role with no restrictions.
+              Every role is fully editable — including Company. No page is pre-assigned. Check the boxes you want, then tap <strong>Save Permissions</strong>. To wipe everything and start over, tap <strong>Clear All Permissions</strong>.
             </p>
           </div>
         </div>
