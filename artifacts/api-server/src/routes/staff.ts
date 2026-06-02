@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db, staffTable, propertiesTable, usersTable } from "@workspace/db";
 import { eq, and, ne } from "drizzle-orm";
 import { insertStaffSchema, updateStaffSchema } from "@workspace/db";
-import { hashPwd, sendWelcomeEmail, getHierarchyLevel } from "./auth.js";
+import { hashPwd, sendWelcomeEmail, getHierarchyLevel, USING_TEST_SENDER } from "./auth.js";
 import type { SessionUser } from "./auth.js";
 import { logActivity, actorFromRequest } from "./activityLogs.js";
 
@@ -160,10 +160,13 @@ router.post("/staff", async (req, res) => {
 
         try {
           const sent = await sendWelcomeEmail(email, username, tempPassword);
-          if (sent) {
+          if (sent && !USING_TEST_SENDER) {
             welcomeEmailSent = true;
-            inviteCode = null; // Email delivered — no need to surface code in UI
+            inviteCode = null; // Email delivered to employee — no need to surface code in UI
             req.log.info({ staffId: staff.id, username }, "Welcome email dispatched");
+          } else if (sent) {
+            welcomeEmailSent = true;
+            req.log.info({ staffId: staff.id }, "Welcome email sent (test mode — invite code still surfaced for manual sharing)");
           } else {
             req.log.info({ staffId: staff.id }, "Resend not configured — invite code returned for manual sharing");
           }
@@ -283,12 +286,15 @@ router.post("/staff/:id/resend-invite", async (req, res) => {
       });
       let sent = false;
       try { sent = await sendWelcomeEmail(email, username, tempPassword); } catch { /* fall through */ }
-      req.log.info({ staffId: id, username, sent }, "Invite sent (new account created)");
+      req.log.info({ staffId: id, username, sent, testMode: USING_TEST_SENDER }, "Invite sent (new account created)");
+      const showCode = !sent || USING_TEST_SENDER;
       res.json({
         sent,
-        inviteCode: sent ? null : tempPassword,
-        inviteUsername: sent ? null : username,
-        message: sent ? "Account created and invitation email sent" : "Account created — share the access code manually",
+        inviteCode: showCode ? tempPassword : null,
+        inviteUsername: showCode ? username : null,
+        message: sent && !USING_TEST_SENDER
+          ? "Account created and invitation email sent"
+          : "Account created — share the access code manually",
       });
     } else {
       const tempPassword = generateTempPassword();
@@ -297,12 +303,15 @@ router.post("/staff/:id/resend-invite", async (req, res) => {
         .where(eq(usersTable.id, existing.id));
       let sent = false;
       try { sent = await sendWelcomeEmail(email, existing.username, tempPassword); } catch { /* fall through */ }
-      req.log.info({ staffId: id, userId: existing.id, sent }, "Invite resent with fresh temp password");
+      req.log.info({ staffId: id, userId: existing.id, sent, testMode: USING_TEST_SENDER }, "Invite resent with fresh temp password");
+      const showCode = !sent || USING_TEST_SENDER;
       res.json({
         sent,
-        inviteCode: sent ? null : tempPassword,
-        inviteUsername: sent ? null : existing.username,
-        message: sent ? "Invitation resent with a new temporary password" : "Password reset — share the access code manually",
+        inviteCode: showCode ? tempPassword : null,
+        inviteUsername: showCode ? existing.username : null,
+        message: sent && !USING_TEST_SENDER
+          ? "Invitation resent with a new temporary password"
+          : "Password reset — share the access code manually",
       });
     }
   } catch (err) {

@@ -8,6 +8,7 @@ import { Building2, Wifi, Wrench, Star, Settings } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Link } from "wouter";
 
+
 export default function Landing() {
   const [, navigate] = useLocation();
   const { t } = useTranslation();
@@ -28,8 +29,14 @@ export default function Landing() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-white flex flex-col">
       {/* Header */}
       <header className="px-6 pt-10 pb-6 text-center relative">
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 flex items-center gap-2">
           <LanguageSwitcher />
+        </div>
+        <div className="absolute top-4 left-4">
+          <Link href="/admin" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+            <Settings size={12} />
+            <span>Admin</span>
+          </Link>
         </div>
         <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-500 rounded-2xl shadow-lg mb-4">
           <Building2 className="text-white" size={28} />
@@ -84,12 +91,8 @@ export default function Landing() {
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-400">
-        <span dir="rtl">ركز للحلول الذكية · Rakez Smart Solutions</span>
-        <Link href="/admin" className="block mt-2 inline-flex items-center gap-1 text-slate-300 hover:text-slate-500 transition-colors">
-          <Settings size={10} />
-          <span>Admin</span>
-        </Link>
+      <footer className="text-center py-6 text-xs text-slate-400" dir="rtl">
+        ركز للحلول الذكية · Rakez Smart Solutions
       </footer>
     </div>
   );

@@ -24,6 +24,15 @@ const resetTokens = new Map<string, { userId: number; tenantId: number | null; e
 // Lazy-init Resend client (only if key is present)
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
+// Sender address: set SENDER_EMAIL env var to your verified Resend domain address
+// e.g. SENDER_EMAIL="Rakez PMS <noreply@yourdomain.com>"
+// Falls back to Resend test address (only delivers to the account owner's email in test mode)
+const SENDER_FROM = process.env.SENDER_EMAIL ?? "ركز للحلول الذكية <onboarding@resend.dev>";
+// When no custom domain is configured, Resend's test sender only delivers to the
+// account owner's verified email. Invite codes are always surfaced to the UI so
+// admins can share credentials manually in test/demo environments.
+export const USING_TEST_SENDER = !process.env.SENDER_EMAIL;
+
 /**
  * Send a 6-digit OTP password-reset email via Resend (bilingual EN + AR).
  * Falls back silently when RESEND_API_KEY is not set (demo mode).
@@ -31,7 +40,7 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 async function sendResetEmail(to: string, otp: string): Promise<void> {
   if (!resend) return;
   await resend.emails.send({
-    from:    "ركز للحلول الذكية <onboarding@resend.dev>",
+    from:    SENDER_FROM,
     to:      [to],
     subject: "رمز التحقق لإعادة تعيين كلمة المرور | Password Reset Code",
     html: `
@@ -121,7 +130,7 @@ export async function sendWelcomeEmail(to: string, username: string, tempPasswor
     : `<p style="margin:16px 0 0;color:#555;font-size:14px">Open the Rakz PMS app and sign in with the credentials below.</p>`;
 
   await resend.emails.send({
-    from:    "ركز للحلول الذكية <onboarding@resend.dev>",
+    from:    SENDER_FROM,
     to:      [to],
     subject: "You're invited — Your Rakz PMS account is ready",
     html: `
