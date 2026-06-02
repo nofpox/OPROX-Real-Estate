@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { TourOverlay } from "@/components/tour/tour-overlay";
 import { SmartHintBar } from "@/components/tour/smart-hint-bar";
 import { useTour } from "@/components/tour/tour-context";
+import { AppAIAgent } from "@/components/AppAIAgent";
 
 const NAV_ITEMS = [
   { href: "/",               labelKey: "nav.dashboard",      icon: LayoutDashboard, section: "main",       featureKey: null       },
@@ -436,6 +437,9 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
 
       {/* Onboarding tour overlay — rendered via portal at document.body */}
       <TourOverlay />
+
+      {/* Proactive AI Agent — floating assistant for all users */}
+      <AppAIAgent authUser={authUser} />
     </div>
   );
 }

@@ -38,6 +38,8 @@ tags:
     description: Super-admin tenant management (super_admin role only)
   - name: archiving
     description: Data archiving, health checks, and archive browser (admin only)
+  - name: openai
+    description: AI chat agents (App agent and Platform agent)
 paths:
   /settings:
     get:
@@ -2449,6 +2451,93 @@ paths:
         "403":
           description: Partner access only
 
+  /openai/conversations:
+    get:
+      operationId: listOpenaiConversations
+      tags: [openai]
+      summary: List AI conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiConversation"
+    post:
+      operationId: createOpenaiConversation
+      tags: [openai]
+      summary: Create a new AI conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenaiConversationInput"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversation"
+  /openai/conversations/{id}:
+    delete:
+      operationId: deleteOpenaiConversation
+      tags: [openai]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /openai/conversations/{id}/messages:
+    get:
+      operationId: listOpenaiMessages
+      tags: [openai]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiMessage"
+    post:
+      operationId: sendOpenaiMessage
+      tags: [openai]
+      summary: Send a message and receive a streaming SSE response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpenaiMessageInput"
+      responses:
+        "200":
+          description: SSE stream
+          content:
+            text/event-stream: {}
+
 components:
   schemas:
     Settings:
@@ -4524,3 +4613,37 @@ components:
         fileUrl:      { type: string, nullable: true }
         fileSizeKb:   { type: integer, nullable: true }
         publishedAt:  { type: string }
+
+    OpenaiConversation:
+      type: object
+      required: [id, title, agentType, createdAt]
+      properties:
+        id:          { type: integer }
+        title:       { type: string }
+        agentType:   { type: string }
+        userId:      { type: integer, nullable: true }
+        tenantId:    { type: integer, nullable: true }
+        createdAt:   { type: string, format: date-time }
+    OpenaiMessage:
+      type: object
+      required: [id, conversationId, role, content, createdAt]
+      properties:
+        id:             { type: integer }
+        conversationId: { type: integer }
+        role:           { type: string }
+        content:        { type: string }
+        createdAt:      { type: string, format: date-time }
+    OpenaiConversationInput:
+      type: object
+      required: [title]
+      properties:
+        title:     { type: string }
+        agentType: { type: string }
+    OpenaiMessageInput:
+      type: object
+      required: [content]
+      properties:
+        content:  { type: string }
+        context:
+          type: object
+          additionalProperties: true

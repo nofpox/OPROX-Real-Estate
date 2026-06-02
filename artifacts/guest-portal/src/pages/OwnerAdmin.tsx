@@ -6,6 +6,7 @@ import {
   Building, ChevronRight, Settings2, Zap, Droplets, Wind, Brush,
   Wrench, Volume2, DoorOpen, Key, Wifi, Car, Thermometer, Shield,
   Coffee, Package, Camera, Utensils, Trees, Bell, User, Lock,
+  Bot, Send, Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -665,6 +666,199 @@ function ServicesTab() {
   );
 }
 
+// ── Platform AI Tab ────────────────────────────────────────────────────────────
+
+interface ChatMessage { role: "user" | "assistant"; content: string; }
+
+function PlatformAITab() {
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [convId, setConvId] = useState<number | null>(null);
+  const [streaming, setStreaming] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const { data: stats } = useQuery({
+    queryKey: ["platform-ai-stats"],
+    queryFn: async () => {
+      const [props, staff, wos, bookings] = await Promise.all([
+        fetch("/api/properties").then(r => r.json()),
+        fetch("/api/staff").then(r => r.json()),
+        fetch("/api/work-orders?status=open").then(r => r.json()),
+        fetch("/api/bookings?status=checked-in").then(r => r.json()),
+      ]);
+      return {
+        propertyCount: Array.isArray(props) ? props.length : 0,
+        staffCount: Array.isArray(staff) ? staff.length : 0,
+        openWorkOrders: Array.isArray(wos) ? wos.length : 0,
+        bookingCount: Array.isArray(bookings) ? bookings.length : 0,
+      };
+    },
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, streaming]);
+
+  async function ensureConversation(): Promise<number> {
+    if (convId) return convId;
+    const res = await fetch("/api/openai/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Platform Admin Chat", agentType: "platform" }),
+    });
+    const conv = await res.json() as { id: number };
+    setConvId(conv.id);
+    return conv.id;
+  }
+
+  async function send() {
+    const text = input.trim();
+    if (!text || streaming) return;
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", content: text }]);
+    setStreaming(true);
+
+    const id = await ensureConversation();
+    const context = {
+      propertyCount: stats?.propertyCount,
+      staffCount: stats?.staffCount,
+      openWorkOrders: stats?.openWorkOrders,
+      bookingCount: stats?.bookingCount,
+    };
+
+    let draft = "";
+    setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+
+    const res = await fetch(`/api/openai/conversations/${id}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: text, context }),
+    });
+
+    if (!res.body) { setStreaming(false); return; }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const lines = decoder.decode(value).split("\n").filter(l => l.startsWith("data:"));
+      for (const line of lines) {
+        try {
+          const parsed = JSON.parse(line.slice(5)) as { content?: string; done?: boolean; error?: string };
+          if (parsed.content) {
+            draft += parsed.content;
+            setMessages(prev => {
+              const next = [...prev];
+              next[next.length - 1] = { role: "assistant", content: draft };
+              return next;
+            });
+          }
+        } catch { /* skip */ }
+      }
+    }
+    setStreaming(false);
+  }
+
+  const SUGGESTED = [
+    "Summarise today's occupancy across all properties",
+    "Which open work orders are overdue?",
+    "How is staff workload distributed this week?",
+    "Give me a revenue snapshot for this month",
+  ];
+
+  return (
+    <Card className="border-slate-200">
+      <CardHeader className="pb-3 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-slate-900">
+            <Bot size={16} className="text-white" />
+          </div>
+          <div>
+            <CardTitle className="text-sm font-semibold text-slate-800">Platform AI Assistant</CardTitle>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Full-platform diagnostics · {stats ? `${stats.propertyCount} properties · ${stats.staffCount} staff · ${stats.openWorkOrders} open work orders` : "Loading snapshot…"}
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-0">
+        {/* Message area */}
+        <div className="h-80 overflow-y-auto px-4 py-3 space-y-3">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full gap-4">
+              <div className="p-3 rounded-2xl bg-slate-100">
+                <Sparkles size={20} className="text-slate-500" />
+              </div>
+              <p className="text-xs text-slate-500 text-center max-w-48">
+                Ask anything about your platform — operations, staff, finances, or system health.
+              </p>
+              <div className="grid grid-cols-1 gap-1.5 w-full">
+                {SUGGESTED.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => { setInput(s); }}
+                    className="text-left text-xs px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            messages.map((m, i) => (
+              <div key={i} className={cn("flex gap-2", m.role === "user" ? "justify-end" : "justify-start")}>
+                {m.role === "assistant" && (
+                  <div className="w-6 h-6 rounded-full bg-slate-900 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Bot size={12} className="text-white" />
+                  </div>
+                )}
+                <div className={cn(
+                  "max-w-[80%] text-xs px-3 py-2 rounded-2xl whitespace-pre-wrap leading-relaxed",
+                  m.role === "user"
+                    ? "bg-slate-900 text-white rounded-br-sm"
+                    : "bg-slate-100 text-slate-800 rounded-bl-sm"
+                )}>
+                  {m.content || (streaming && i === messages.length - 1 ? (
+                    <span className="inline-flex gap-0.5">
+                      <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </span>
+                  ) : "")}
+                </div>
+              </div>
+            ))
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* Input */}
+        <div className="border-t border-slate-100 px-3 py-2 flex gap-2 items-end">
+          <textarea
+            className="flex-1 resize-none text-xs bg-transparent outline-none placeholder:text-slate-400 py-1.5 max-h-24 min-h-[32px]"
+            rows={1}
+            placeholder="Ask the platform agent…"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+            disabled={streaming}
+          />
+          <button
+            onClick={send}
+            disabled={!input.trim() || streaming}
+            className="p-1.5 rounded-lg bg-slate-900 text-white disabled:opacity-40 hover:bg-slate-700 transition-colors flex-shrink-0"
+          >
+            <Send size={13} />
+          </button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Main OwnerAdmin Component ──────────────────────────────────────────────────
 
 export default function OwnerAdmin() {
@@ -746,12 +940,15 @@ export default function OwnerAdmin() {
           </div>
         ) : (
           <Tabs defaultValue="brand">
-            <TabsList className="w-full grid grid-cols-5 mb-6 h-10">
+            <TabsList className="w-full grid grid-cols-6 mb-6 h-10">
               <TabsTrigger value="brand" className="text-xs">Brand</TabsTrigger>
               <TabsTrigger value="hero" className="text-xs">Hero</TabsTrigger>
-              <TabsTrigger value="announce" className="text-xs">Announcements</TabsTrigger>
+              <TabsTrigger value="announce" className="text-xs">Announce</TabsTrigger>
               <TabsTrigger value="contact" className="text-xs">Contact</TabsTrigger>
               <TabsTrigger value="services" className="text-xs">Services</TabsTrigger>
+              <TabsTrigger value="ai" className="text-xs flex items-center gap-1">
+                <Sparkles size={11} />AI
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="brand">
@@ -782,6 +979,10 @@ export default function OwnerAdmin() {
               <Card><CardContent className="pt-5">
                 <ServicesTab />
               </CardContent></Card>
+            </TabsContent>
+
+            <TabsContent value="ai">
+              <PlatformAITab />
             </TabsContent>
           </Tabs>
         )}

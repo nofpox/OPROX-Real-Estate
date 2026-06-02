@@ -2884,3 +2884,64 @@ export const GetPartnerReportsResponseItem = zod.object({
 export const GetPartnerReportsResponse = zod.array(GetPartnerReportsResponseItem)
 
 
+/**
+ * @summary List AI conversations
+ */
+export const ListOpenaiConversationsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "agentType": zod.string(),
+  "userId": zod.number().nullish(),
+  "tenantId": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListOpenaiConversationsResponse = zod.array(ListOpenaiConversationsResponseItem)
+
+
+/**
+ * @summary Create a new AI conversation
+ */
+export const CreateOpenaiConversationBody = zod.object({
+  "title": zod.string(),
+  "agentType": zod.string().optional()
+})
+
+
+/**
+ * @summary Delete a conversation
+ */
+export const DeleteOpenaiConversationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List messages in a conversation
+ */
+export const ListOpenaiMessagesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListOpenaiMessagesResponseItem = zod.object({
+  "id": zod.number(),
+  "conversationId": zod.number(),
+  "role": zod.string(),
+  "content": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListOpenaiMessagesResponse = zod.array(ListOpenaiMessagesResponseItem)
+
+
+/**
+ * @summary Send a message and receive a streaming SSE response
+ */
+export const SendOpenaiMessageParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const SendOpenaiMessageBody = zod.object({
+  "content": zod.string(),
+  "context": zod.record(zod.string(), zod.unknown()).optional()
+})
+
+

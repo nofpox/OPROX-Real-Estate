@@ -1285,6 +1285,35 @@ export interface PartnerReport {
   publishedAt: string;
 }
 
+export interface OpenaiConversation {
+  id: number;
+  title: string;
+  agentType: string;
+  userId?: number | null;
+  tenantId?: number | null;
+  createdAt: string;
+}
+
+export interface OpenaiMessage {
+  id: number;
+  conversationId: number;
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface OpenaiConversationInput {
+  title: string;
+  agentType?: string;
+}
+
+export type OpenaiMessageInputContext = { [key: string]: unknown };
+
+export interface OpenaiMessageInput {
+  content: string;
+  context?: OpenaiMessageInputContext;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
