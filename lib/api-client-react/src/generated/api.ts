@@ -80,6 +80,9 @@ import type {
   MonthlyIncome,
   OccupancyHeatmapEntry,
   OccupancyStat,
+  PartnerDividend,
+  PartnerEquity,
+  PartnerReport,
   PmsUser,
   PortalAvailabilityPage,
   PortalBookingsPage,
@@ -5817,7 +5820,7 @@ export const getForgotPasswordUrl = () => {
 }
 
 /**
- * @summary Request a password reset token (verifies email + phone)
+ * @summary Send a 6-digit OTP to the user's registered email for password reset
  */
 export const forgotPassword = async (forgotPasswordBody: ForgotPasswordBody, options?: RequestInit): Promise<ForgotPassword200> => {
 
@@ -5866,7 +5869,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ForgotPasswordMutationError = ErrorType<void>
 
     /**
- * @summary Request a password reset token (verifies email + phone)
+ * @summary Send a 6-digit OTP to the user's registered email for password reset
  */
 export const useForgotPassword = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,{data: BodyType<ForgotPasswordBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -9030,6 +9033,237 @@ export function useGetPortalFinancials<TData = Awaited<ReturnType<typeof getPort
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetPortalFinancialsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPartnerEquityUrl = () => {
+
+
+
+
+  return `/api/partner/equity`
+}
+
+/**
+ * @summary Equity stake overview for the authenticated partner
+ */
+export const getPartnerEquity = async ( options?: RequestInit): Promise<PartnerEquity> => {
+
+  return customFetch<PartnerEquity>(getGetPartnerEquityUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPartnerEquityQueryKey = () => {
+    return [
+    `/api/partner/equity`
+    ] as const;
+    }
+
+
+export const getGetPartnerEquityQueryOptions = <TData = Awaited<ReturnType<typeof getPartnerEquity>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPartnerEquity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPartnerEquityQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPartnerEquity>>> = ({ signal }) => getPartnerEquity({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPartnerEquity>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPartnerEquityQueryResult = NonNullable<Awaited<ReturnType<typeof getPartnerEquity>>>
+export type GetPartnerEquityQueryError = ErrorType<void>
+
+
+/**
+ * @summary Equity stake overview for the authenticated partner
+ */
+
+export function useGetPartnerEquity<TData = Awaited<ReturnType<typeof getPartnerEquity>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPartnerEquity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPartnerEquityQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPartnerDividendsUrl = () => {
+
+
+
+
+  return `/api/partner/dividends`
+}
+
+/**
+ * @summary Dividend distribution history for the authenticated partner
+ */
+export const getPartnerDividends = async ( options?: RequestInit): Promise<PartnerDividend[]> => {
+
+  return customFetch<PartnerDividend[]>(getGetPartnerDividendsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPartnerDividendsQueryKey = () => {
+    return [
+    `/api/partner/dividends`
+    ] as const;
+    }
+
+
+export const getGetPartnerDividendsQueryOptions = <TData = Awaited<ReturnType<typeof getPartnerDividends>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPartnerDividends>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPartnerDividendsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPartnerDividends>>> = ({ signal }) => getPartnerDividends({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPartnerDividends>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPartnerDividendsQueryResult = NonNullable<Awaited<ReturnType<typeof getPartnerDividends>>>
+export type GetPartnerDividendsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Dividend distribution history for the authenticated partner
+ */
+
+export function useGetPartnerDividends<TData = Awaited<ReturnType<typeof getPartnerDividends>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPartnerDividends>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPartnerDividendsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPartnerReportsUrl = () => {
+
+
+
+
+  return `/api/partner/reports`
+}
+
+/**
+ * @summary Company reports available to partners
+ */
+export const getPartnerReports = async ( options?: RequestInit): Promise<PartnerReport[]> => {
+
+  return customFetch<PartnerReport[]>(getGetPartnerReportsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPartnerReportsQueryKey = () => {
+    return [
+    `/api/partner/reports`
+    ] as const;
+    }
+
+
+export const getGetPartnerReportsQueryOptions = <TData = Awaited<ReturnType<typeof getPartnerReports>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPartnerReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPartnerReportsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPartnerReports>>> = ({ signal }) => getPartnerReports({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPartnerReports>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPartnerReportsQueryResult = NonNullable<Awaited<ReturnType<typeof getPartnerReports>>>
+export type GetPartnerReportsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Company reports available to partners
+ */
+
+export function useGetPartnerReports<TData = Awaited<ReturnType<typeof getPartnerReports>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPartnerReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPartnerReportsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

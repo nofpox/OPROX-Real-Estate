@@ -15,6 +15,7 @@ const bn: Translations = {
     serviceConfig: "Service Config",
     dataArchiving: "ডেটা আর্কাইভ",
     contentManager: "বিষয়বস্তু ব্যবস্থাপনা",
+    partnerPortal: "পার্টনার পোর্টাল",
   },
   common: {
     save: "সংরক্ষণ করুন", cancel: "বাতিল করুন", delete: "মুছুন",
@@ -43,7 +44,7 @@ const bn: Translations = {
     super_admin: "সুপার অ্যাডমিন",
     owner: "মালিক", admin_manager: "কোম্পানি", administrator: "প্রশাসক (বিভাগীয়)",
     manager: "ব্যবস্থাপক", supervisor: "সুপারভাইজার", maintenance: "রক্ষণাবেক্ষণ",
-    cleaning: "পরিষ্কার", security: "নিরাপত্তা", viewingAs: "হিসেবে দেখছেন",
+    cleaning: "পরিষ্কার", security: "নিরাপত্তা", partner: "পার্টনার / বিনিয়োগকারী", viewingAs: "হিসেবে দেখছেন",
     switchRole: "ভূমিকা পরিবর্তন করুন", active: "সক্রিয়",
     desc: {
       super_admin: "প্ল্যাটফর্ম-স্তরের অ্যাক্সেস: ভাড়াটে ব্যবস্থাপনা এবং সকল সেটিংস",
@@ -53,6 +54,7 @@ const bn: Translations = {
       maintenance: "নির্ধারিত কাজ এবং নিজের প্রোফাইল",
       cleaning: "নির্ধারিত কাজ এবং নিজের প্রোফাইল",
       security: "নির্ধারিত কাজ এবং নিজের প্রোফাইল",
+      partner: "ইক্যুইটি পোর্টাল — শেয়ার, লভ্যাংশ এবং কোম্পানির প্রতিবেদন",
     },
   },
   header: { myAccount: "আমার অ্যাকাউন্ট", settings: "সেটিংস", logout: "লগ আউট" },
@@ -441,6 +443,7 @@ const bn: Translations = {
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
   analytics: { title: "বিশ্লেষণ", subtitle: "কর্মক্ষমতা ও পরিচালনা", overview: "সংক্ষিপ্ত বিবরণ", operational: "অপারেশনাল", print: "প্রিন্ট", exportPdf: "PDF রপ্তানি", kpi: { totalTasks: "মোট কাজ", completed: "সম্পন্ন", inProgress: "চলমান", lateOverdue: "দেরি / মেয়াদোত্তীর্ণ", pending: "অপেক্ষামান", verified: "যাচাইকৃত", compRate: "সম্পন্নের হার", allOnTime: "সময়মতো সব", pastDueDate: "মেয়াদ পেরিয়েছে" }, completionRate: "সামগ্রিক সম্পন্নের হার" },
+  partner: { title: "পার্টনার পোর্টাল", subtitle: "আপনার ইক্যুইটি অবস্থান এবং কোম্পানির আর্থিক কার্যক্ষমতা", equityTab: "ইক্যুইটি সংক্ষিপ্ত বিবরণ", dividendTab: "লভ্যাংশ ট্র্যাকার", reportsTab: "কোম্পানির রিপোর্ট", equity: { title: "আপনার ইক্যুইটি অংশ", totalShares: "মোট কোম্পানির শেয়ার", yourShares: "আপনার শেয়ার", ownershipPct: "মালিকানা", valuation: "আপনার মূল্যায়ন", sharePrice: "শেয়ারের মূল্য", asOf: "তারিখ অনুযায়ী", noData: "কোনো ইক্যুইটি ডেটা পাওয়া যায়নি।" }, dividends: { title: "মুনাফা বিতরণ", upcoming: "আসন্ন", history: "ইতিহাস", period: "সময়কাল", amount: "পরিমাণ", status: "অবস্থা", date: "তারিখ", paid: "প্রদত্ত", pending: "অপেক্ষামান", scheduled: "নির্ধারিত", noData: "কোনো লভ্যাংশ রেকর্ড পাওয়া যায়নি।" }, reports: { title: "কোম্পানির রিপোর্ট", download: "ডাউনলোড", type: "রিপোর্টের ধরন", period: "সময়কাল", size: "ফাইলের আকার", annual: "বার্ষিক রিপোর্ট", quarterly: "ত্রৈমাসিক রিপোর্ট", audit: "নিরীক্ষা রিপোর্ট", financial: "আর্থিক বিবৃতি", noData: "এখনও কোনো রিপোর্ট প্রকাশিত হয়নি।" } },
 };
 
 export default bn;

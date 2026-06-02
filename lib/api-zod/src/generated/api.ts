@@ -1801,17 +1801,16 @@ export const GetMeResponse = zod.object({
 
 
 /**
- * @summary Request a password reset token (verifies email + phone)
+ * @summary Send a 6-digit OTP to the user's registered email for password reset
  */
 export const ForgotPasswordBody = zod.object({
   "email": zod.string(),
-  "phoneNumber": zod.string(),
-  "tenantSlug": zod.string()
+  "tenantSlug": zod.string().optional().describe('Optional — scopes the lookup to a specific tenant')
 })
 
 export const ForgotPasswordResponse = zod.object({
   "ok": zod.boolean().optional(),
-  "resetToken": zod.string().optional().describe('Demo-mode only — in production this is sent via email\/SMS')
+  "otp": zod.string().optional().describe('Demo-mode only — 6-digit OTP returned when RESEND_API_KEY is absent')
 })
 
 
@@ -2837,5 +2836,51 @@ export const GetPortalFinancialsResponse = zod.object({
 }).passthrough().nullish(),
   "timestamp": zod.string()
 })
+
+
+/**
+ * @summary Equity stake overview for the authenticated partner
+ */
+export const GetPartnerEquityResponse = zod.object({
+  "userId": zod.number(),
+  "totalCompanyShares": zod.number(),
+  "partnerShareCount": zod.number(),
+  "valuationPerShare": zod.number(),
+  "currency": zod.string(),
+  "ownershipPct": zod.number(),
+  "totalValuation": zod.number(),
+  "effectiveDate": zod.string()
+})
+
+
+/**
+ * @summary Dividend distribution history for the authenticated partner
+ */
+export const GetPartnerDividendsResponseItem = zod.object({
+  "id": zod.number(),
+  "amount": zod.number(),
+  "currency": zod.string(),
+  "distributionDate": zod.string(),
+  "status": zod.string(),
+  "fiscalPeriod": zod.string(),
+  "notes": zod.string().nullish()
+})
+export const GetPartnerDividendsResponse = zod.array(GetPartnerDividendsResponseItem)
+
+
+/**
+ * @summary Company reports available to partners
+ */
+export const GetPartnerReportsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "reportType": zod.string(),
+  "fiscalYear": zod.number(),
+  "fiscalPeriod": zod.string(),
+  "fileUrl": zod.string().nullish(),
+  "fileSizeKb": zod.number().nullish(),
+  "publishedAt": zod.string()
+})
+export const GetPartnerReportsResponse = zod.array(GetPartnerReportsResponseItem)
 
 

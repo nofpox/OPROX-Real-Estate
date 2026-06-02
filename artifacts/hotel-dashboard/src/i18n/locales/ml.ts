@@ -15,6 +15,7 @@ const ml: Translations = {
     serviceConfig: "Service Config",
     dataArchiving: "ഡാറ്റ ആർക്കൈവ്",
     contentManager: "ഉള്ളടക്ക മാനേജ്മെന്റ്",
+    partnerPortal: "പാർട്ണർ പോർട്ടൽ",
   },
   common: {
     save: "സംരക്ഷിക്കുക", cancel: "റദ്ദാക്കുക", delete: "ഇല്ലാതാക്കുക",
@@ -43,7 +44,7 @@ const ml: Translations = {
     owner: "ഉടമ", admin_manager: "കമ്പനി", administrator: "അഡ്മിനിസ്ട്രേറ്റർ (വകുപ്പ്)",
     super_admin: "സൂപ്പർ അഡ്മിൻ",
     manager: "മാനേജർ", supervisor: "സൂപ്പർവൈസർ", maintenance: "അറ്റകുറ്റം",
-    cleaning: "ക്ലീനിംഗ്", security: "സുരക്ഷ", viewingAs: "ആയി കാണുന്നത്",
+    cleaning: "ക്ലീനിംഗ്", security: "സുരക്ഷ", partner: "പാർട്ണർ / നിക്ഷേപകൻ", viewingAs: "ആയി കാണുന്നത്",
     switchRole: "റോൾ മാറ്റുക", active: "സജീവം",
     desc: {
       super_admin: "പ്ലാറ്റ്ഫോം-തല ആക്സസ്: ടെനൻ്റ് മാനേജ്മെന്റ് & എല്ലാ ക്രമീകരണങ്ങളും",
@@ -53,6 +54,7 @@ const ml: Translations = {
       maintenance: "നിയോഗിച്ച ടാസ്ക്കുകളും സ്വന്തം പ്രൊഫൈലും",
       cleaning: "നിയോഗിച്ച ടാസ്ക്കുകളും സ്വന്തം പ്രൊഫൈലും",
       security: "നിയോഗിച്ച ടാസ്ക്കുകളും സ്വന്തം പ്രൊഫൈലും",
+      partner: "ഇക്വിറ്റി പോർട്ടൽ — ഓഹരി, ലാഭവിഹിതം, കമ്പനി റിപ്പോർട്ടുകൾ",
     },
   },
   header: { myAccount: "എന്റെ അക്കൗണ്ട്", settings: "ക്രമീകരണങ്ങൾ", logout: "ലോഗ് ഔട്ട്" },
@@ -441,6 +443,7 @@ const ml: Translations = {
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
   analytics: { title: "വിശകലനം", subtitle: "പ്രകടനവും പ്രവർത്തനവും", overview: "അവലോകനം", operational: "പ്രവർത്തനപരം", print: "പ്രിന്റ്", exportPdf: "PDF കയറ്റുമതി", kpi: { totalTasks: "ആകെ ജോലികൾ", completed: "പൂർത്തിയായത്", inProgress: "പ്രക്രിയയിൽ", lateOverdue: "വൈകിയത്", pending: "കാത്തിരിക്കുന്നത്", verified: "പരിശോധിച്ചത്", compRate: "പൂർത്തീകരണ നിരക്ക്", allOnTime: "സമയത്ത് എല്ലാം", pastDueDate: "കാലഹരണം" }, completionRate: "മൊത്തം പൂർത്തീകരണ നിരക്ക്" },
+  partner: { title: "പാർട്ണർ പോർട്ടൽ", subtitle: "നിങ്ങളുടെ ഇക്വിറ്റി സ്ഥാനവും കമ്പനി സാമ്പത്തിക പ്രകടനവും", equityTab: "ഇക്വിറ്റി അവലോകനം", dividendTab: "ലാഭവിഹിത ട്രാക്കർ", reportsTab: "കമ്പനി റിപ്പോർട്ടുകൾ", equity: { title: "നിങ്ങളുടെ ഇക്വിറ്റി ഓഹരി", totalShares: "മൊത്തം കമ്പനി ഓഹരി", yourShares: "നിങ്ങളുടെ ഓഹരി", ownershipPct: "ഉടമസ്ഥത", valuation: "നിങ്ങളുടെ മൂല്യനിർണ്ണയം", sharePrice: "ഓഹരി വില", asOf: "പ്രകാരം", noData: "ഇക്വിറ്റി ഡാറ്റ കണ്ടെത്തിയില്ല." }, dividends: { title: "ലാഭ വിതരണം", upcoming: "വരാനിരിക്കുന്നത്", history: "ചരിത്രം", period: "കാലയളവ്", amount: "തുക", status: "നില", date: "തീയതി", paid: "നൽകി", pending: "കാത്തിരിക്കുന്നു", scheduled: "ഷെഡ്യൂൾ ചെയ്തത്", noData: "ലാഭവിഹിത രേഖകൾ കണ്ടെത്തിയില്ല." }, reports: { title: "കമ്പനി റിപ്പോർട്ടുകൾ", download: "ഡൗൺലോഡ്", type: "റിപ്പോർട്ട് തരം", period: "കാലയളവ്", size: "ഫയൽ വലുപ്പം", annual: "വാർഷിക റിപ്പോർട്ട്", quarterly: "ത്രൈമാസ റിപ്പോർട്ട്", audit: "ഓഡിറ്റ് റിപ്പോർട്ട്", financial: "സാമ്പത്തിക പ്രസ്താവന", noData: "ഇതുവരെ റിപ്പോർട്ടുകൾ പ്രസിദ്ധീകരിച്ചിട്ടില്ല." } },
 };
 
 export default ml;

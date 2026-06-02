@@ -15,6 +15,7 @@ const th: Translations = {
     serviceConfig: "ตั้งค่าบริการ",
     dataArchiving: "คลังข้อมูล",
     contentManager: "การจัดการเนื้อหา",
+    partnerPortal: "พอร์ทัลพาร์ทเนอร์",
   },
   common: {
     save: "บันทึก", cancel: "ยกเลิก", delete: "ลบ", edit: "แก้ไข", add: "เพิ่ม",
@@ -42,7 +43,7 @@ const th: Translations = {
     super_admin: "ผู้ดูแลระบบสูงสุด",
     owner: "เจ้าของ", admin_manager: "บริษัท", administrator: "ผู้ดูแลระบบ (ฝ่าย)",
     manager: "ผู้จัดการ", supervisor: "หัวหน้างาน", maintenance: "ซ่อมบำรุง",
-    cleaning: "ทำความสะอาด", security: "รักษาความปลอดภัย", viewingAs: "กำลังดูในฐานะ",
+    cleaning: "ทำความสะอาด", security: "รักษาความปลอดภัย", partner: "พาร์ทเนอร์/นักลงทุน", viewingAs: "กำลังดูในฐานะ",
     switchRole: "เปลี่ยนบทบาท", active: "ใช้งานอยู่",
     desc: {
       super_admin: "การเข้าถึงระดับแพลตฟอร์ม: การจัดการผู้เช่าและการตั้งค่าทั้งหมด",
@@ -52,6 +53,7 @@ const th: Translations = {
       maintenance: "งานที่ได้รับมอบหมายและโปรไฟล์ของตนเอง",
       cleaning: "งานที่ได้รับมอบหมายและโปรไฟล์ของตนเอง",
       security: "งานที่ได้รับมอบหมายและโปรไฟล์ของตนเอง",
+      partner: "พอร์ทัลส่วนได้เสีย — หุ้น เงินปันผล และรายงานบริษัท",
     },
   },
   header: { myAccount: "บัญชีของฉัน", settings: "การตั้งค่า", logout: "ออกจากระบบ" },
@@ -441,6 +443,7 @@ const th: Translations = {
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
   analytics: { title: "การวิเคราะห์", subtitle: "ผลงานและการดำเนินงาน", overview: "ภาพรวม", operational: "ปฏิบัติการ", print: "พิมพ์", exportPdf: "ส่งออก PDF", kpi: { totalTasks: "งานทั้งหมด", completed: "เสร็จสิ้น", inProgress: "กำลังดำเนินการ", lateOverdue: "ล่าช้า / เกินกำหนด", pending: "รอดำเนินการ", verified: "ตรวจสอบแล้ว", compRate: "อัตราความสำเร็จ", allOnTime: "ตรงเวลาทั้งหมด", pastDueDate: "เกินกำหนดแล้ว" }, completionRate: "อัตราความสำเร็จโดยรวม" },
+  partner: { title: "พอร์ทัลพาร์ทเนอร์", subtitle: "ตำแหน่งส่วนได้เสียและผลการดำเนินงานทางการเงิน", equityTab: "ภาพรวมส่วนได้เสีย", dividendTab: "ติดตามเงินปันผล", reportsTab: "รายงานบริษัท", equity: { title: "ส่วนได้เสียของคุณ", totalShares: "หุ้นทั้งหมดของบริษัท", yourShares: "หุ้นของคุณ", ownershipPct: "ความเป็นเจ้าของ", valuation: "มูลค่าของคุณ", sharePrice: "ราคาหุ้น", asOf: "ณ วันที่", noData: "ไม่พบข้อมูลส่วนได้เสีย" }, dividends: { title: "การแจกจ่ายกำไร", upcoming: "กำลังจะมาถึง", history: "ประวัติ", period: "ช่วงเวลา", amount: "จำนวนเงิน", status: "สถานะ", date: "วันที่", paid: "ชำระแล้ว", pending: "รอดำเนินการ", scheduled: "นัดหมายแล้ว", noData: "ไม่พบบันทึกเงินปันผล" }, reports: { title: "รายงานบริษัท", download: "ดาวน์โหลด", type: "ประเภทรายงาน", period: "ช่วงเวลา", size: "ขนาดไฟล์", annual: "รายงานประจำปี", quarterly: "รายงานรายไตรมาส", audit: "รายงานการตรวจสอบ", financial: "งบการเงิน", noData: "ยังไม่มีรายงานที่เผยแพร่" } },
 };
 
 export default th;

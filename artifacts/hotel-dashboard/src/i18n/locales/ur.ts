@@ -15,6 +15,7 @@ const ur: Translations = {
     serviceConfig: "تہیئہ خدمات",
     dataArchiving: "ڈیٹا آرکائیو",
     contentManager: "مواد کا انتظام",
+    partnerPortal: "پارٹنر پورٹل",
   },
   common: {
     save: "محفوظ کریں", cancel: "منسوخ کریں", delete: "حذف کریں",
@@ -43,7 +44,7 @@ const ur: Translations = {
     super_admin: "سپر ایڈمن",
     owner: "مالک", admin_manager: "کمپنی", administrator: "ایڈمنسٹریٹر (شعبہ جاتی)",
     manager: "مینیجر", supervisor: "سپروائزر", maintenance: "مینٹیننس",
-    cleaning: "صفائی", security: "سیکیورٹی", viewingAs: "بطور دیکھ رہے ہیں",
+    cleaning: "صفائی", security: "سیکیورٹی", partner: "پارٹنر / سرمایہ کار", viewingAs: "بطور دیکھ رہے ہیں",
     switchRole: "کردار تبدیل کریں", active: "فعال",
     desc: {
       super_admin: "پلیٹ فارم سطح کی رسائی: ٹیننٹ مینجمنٹ اور تمام سیٹنگز",
@@ -53,6 +54,7 @@ const ur: Translations = {
       maintenance: "مقررہ کام اور اپنا پروفائل",
       cleaning: "مقررہ کام اور اپنا پروفائل",
       security: "مقررہ کام اور اپنا پروفائل",
+      partner: "ایکویٹی پورٹل — حصص، منافع اور کمپنی رپورٹس",
     },
   },
   header: { myAccount: "میرا اکاؤنٹ", settings: "ترتیبات", logout: "لاگ آؤٹ" },
@@ -441,6 +443,7 @@ const ur: Translations = {
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
   analytics: { title: "تجزیات", subtitle: "کارکردگی اور آپریشن", overview: "جائزہ", operational: "آپریشنل", print: "پرنٹ", exportPdf: "PDF برآمد", kpi: { totalTasks: "کل کام", completed: "مکمل", inProgress: "جاری", lateOverdue: "تاخیر / میعاد گزشتہ", pending: "زیر التواء", verified: "تصدیق شدہ", compRate: "تکمیل کی شرح", allOnTime: "سب وقت پر", pastDueDate: "میعاد گزر گئی" }, completionRate: "مجموعی تکمیل کی شرح" },
+  partner: { title: "پارٹنر پورٹل", subtitle: "آپ کی ایکویٹی پوزیشن اور کمپنی کی مالی کارکردگی", equityTab: "ایکویٹی جائزہ", dividendTab: "منافع ٹریکر", reportsTab: "کمپنی رپورٹس", equity: { title: "آپ کی ایکویٹی حصہ داری", totalShares: "کمپنی کے کل حصص", yourShares: "آپ کے حصص", ownershipPct: "ملکیت", valuation: "آپ کی قدر", sharePrice: "حصص کی قیمت", asOf: "بمطابق", noData: "کوئی ایکویٹی ڈیٹا نہیں ملا۔" }, dividends: { title: "منافع کی تقسیم", upcoming: "آنے والا", history: "تاریخ", period: "مدت", amount: "رقم", status: "حیثیت", date: "تاریخ", paid: "ادا شدہ", pending: "زیر التواء", scheduled: "طے شدہ", noData: "کوئی منافع ریکارڈ نہیں ملا۔" }, reports: { title: "کمپنی رپورٹس", download: "ڈاؤن لوڈ", type: "رپورٹ کی قسم", period: "مدت", size: "فائل کا سائز", annual: "سالانہ رپورٹ", quarterly: "سہ ماہی رپورٹ", audit: "آڈٹ رپورٹ", financial: "مالی بیان", noData: "ابھی تک کوئی رپورٹ شائع نہیں ہوئی۔" } },
 };
 
 export default ur;

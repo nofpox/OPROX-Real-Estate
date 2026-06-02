@@ -33,6 +33,7 @@ import portalRouter from "./portal";
 import sitemapRouter from "./sitemap";
 import archivingRouter from "./archiving";
 import cmsRouter from "./cms";
+import partnerRouter from "./partner";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
@@ -159,6 +160,7 @@ router.use(portalRouter);
 router.use(sitemapRouter);
 router.use(archivingRouter);
 router.use(cmsRouter);
+router.use(partnerRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

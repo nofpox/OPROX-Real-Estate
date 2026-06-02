@@ -15,6 +15,7 @@ const zh: Translations = {
     serviceConfig: "服务配置",
     dataArchiving: "数据归档",
     contentManager: "内容管理",
+    partnerPortal: "合伙人门户",
   },
   common: {
     save: "保存", cancel: "取消", delete: "删除", edit: "编辑", add: "添加",
@@ -42,7 +43,7 @@ const zh: Translations = {
     super_admin: "超级管理员",
     owner: "所有者", admin_manager: "公司", administrator: "管理员（部门级）",
     manager: "经理", supervisor: "主管", maintenance: "维护",
-    cleaning: "清洁", security: "安保", viewingAs: "当前视角",
+    cleaning: "清洁", security: "安保", partner: "合伙人/投资者", viewingAs: "当前视角",
     switchRole: "切换角色", active: "活跃",
     desc: {
       super_admin: "平台级访问：租户管理和所有设置",
@@ -52,6 +53,7 @@ const zh: Translations = {
       maintenance: "已分配任务和个人资料",
       cleaning: "已分配任务和个人资料",
       security: "已分配任务和个人资料",
+      partner: "股权门户 — 股份、股息和公司报告",
     },
   },
   header: { myAccount: "我的账户", settings: "设置", logout: "退出登录" },
@@ -449,6 +451,7 @@ const zh: Translations = {
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
   analytics: { title: "数据分析", subtitle: "绩效与运营", overview: "概览", operational: "运营", print: "打印", exportPdf: "导出PDF", kpi: { totalTasks: "总任务数", completed: "已完成", inProgress: "进行中", lateOverdue: "逾期/延迟", pending: "待处理", verified: "已核实", compRate: "完成率", allOnTime: "全部准时", pastDueDate: "已超期" }, completionRate: "总体完成率" },
+  partner: { title: "合伙人门户", subtitle: "您的股权位置和公司财务业绩", equityTab: "股权概览", dividendTab: "股息追踪", reportsTab: "公司报告", equity: { title: "您的股权份额", totalShares: "公司总股份", yourShares: "您的股份", ownershipPct: "持股比例", valuation: "您的估值", sharePrice: "股价", asOf: "截至", noData: "未找到股权数据。" }, dividends: { title: "利润分配", upcoming: "即将到来", history: "历史记录", period: "期间", amount: "金额", status: "状态", date: "日期", paid: "已支付", pending: "待处理", scheduled: "已排期", noData: "未找到股息记录。" }, reports: { title: "公司报告", download: "下载", type: "报告类型", period: "期间", size: "文件大小", annual: "年度报告", quarterly: "季度报告", audit: "审计报告", financial: "财务报表", noData: "暂无已发布的报告。" } },
 };
 
 export default zh;

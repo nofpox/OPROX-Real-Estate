@@ -46,15 +46,17 @@ import WorkerWorkOrders from "@/pages/worker-work-orders";
 import WorkerUnitDetail from "@/pages/worker-unit-detail";
 import DataArchiving from "@/pages/data-archiving";
 import ContentManager from "@/pages/content-manager";
+import PartnerPortal from "@/pages/partner-portal";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
 });
 
 /** Mirror of the server-side normTier — decides which portal a user belongs to. */
-function normTier(role: string): "admin" | "supervisor" | "worker" {
+function normTier(role: string): "admin" | "supervisor" | "worker" | "partner" {
   if (["owner", "admin", "super_admin"].includes(role)) return "admin";
   if (["manager", "property-manager", "site-supervisor", "admin-manager", "front-desk", "supervisor"].includes(role)) return "supervisor";
+  if (role === "partner" || role === "investor") return "partner";
   return "worker";
 }
 
@@ -90,6 +92,7 @@ function Router() {
       <Route path="/guests" component={Guests} />
       <Route path="/data-archiving" component={DataArchiving} />
       <Route path="/content-manager" component={ContentManager} />
+      <Route path="/partner" component={PartnerPortal} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -232,7 +235,8 @@ function App() {
     );
   }
 
-  const isWorker = normTier(authUser.role) === "worker";
+  const tier = normTier(authUser.role);
+  const isWorker = tier === "worker";
 
   if (isWorker) {
     return (

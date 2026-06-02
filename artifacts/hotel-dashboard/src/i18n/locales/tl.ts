@@ -15,6 +15,7 @@ const tl: Translations = {
     serviceConfig: "Service Config",
     dataArchiving: "Archibo ng Data",
     contentManager: "Pamamahala ng Nilalaman",
+    partnerPortal: "Partner Portal",
   },
   common: {
     save: "I-save", cancel: "Kanselahin", delete: "Burahin", edit: "I-edit", add: "Idagdag",
@@ -42,7 +43,7 @@ const tl: Translations = {
     owner: "May-ari", admin_manager: "Kumpanya", administrator: "Administrador (Departamental)",
     super_admin: "Super Admin",
     manager: "Manager", supervisor: "Superbisor", maintenance: "Pagpapanatili",
-    cleaning: "Paglilinis", security: "Seguridad", viewingAs: "Tinitingnan bilang",
+    cleaning: "Paglilinis", security: "Seguridad", partner: "Partner / Investor", viewingAs: "Tinitingnan bilang",
     switchRole: "Palitan ang Papel", active: "aktibo",
     desc: {
       super_admin: "Pag-access sa antas ng platform: pamamahala ng tenant at lahat ng setting",
@@ -52,6 +53,7 @@ const tl: Translations = {
       maintenance: "Mga itinalagang gawain sa larangan lamang",
       cleaning: "Mga itinalagang gawain sa larangan lamang",
       security: "Mga itinalagang gawain sa larangan lamang",
+      partner: "Portal ng equity — mga bahagi, dibidendo, at mga ulat ng kumpanya",
     },
   },
   header: { myAccount: "Aking Account", settings: "Mga Setting", logout: "Mag-logout" },
@@ -443,6 +445,7 @@ const tl: Translations = {
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
   analytics: { title: "Analytics", subtitle: "Pagganap at operasyon", overview: "Pangkalahatang-tanaw", operational: "Operasyonal", print: "I-print", exportPdf: "I-export PDF", kpi: { totalTasks: "Kabuuang gawain", completed: "Nakumpleto", inProgress: "Isinasagawa", lateOverdue: "Huli / Lampas sa oras", pending: "Nakabinbin", verified: "Napatunayan", compRate: "Rate ng pagkumpleto", allOnTime: "Lahat sa oras", pastDueDate: "Lampas na ang takdang araw" }, completionRate: "Pangkalahatang rate ng pagkumpleto" },
+  partner: { title: "Partner Portal", subtitle: "Ang iyong posisyon sa equity at pagganap ng kumpanya", equityTab: "Pangkalahatang Equity", dividendTab: "Tracker ng Dibidendo", reportsTab: "Mga Ulat ng Kumpanya", equity: { title: "Ang Iyong Bahagi sa Equity", totalShares: "Kabuuang Shares ng Kumpanya", yourShares: "Ang Iyong Shares", ownershipPct: "Pagmamay-ari", valuation: "Ang Iyong Valuasyon", sharePrice: "Presyo ng Share", asOf: "Noong", noData: "Walang nahanap na datos ng equity." }, dividends: { title: "Mga Distribusyon ng Kita", upcoming: "Paparating", history: "Kasaysayan", period: "Panahon", amount: "Halaga", status: "Katayuan", date: "Petsa", paid: "Nabayaran", pending: "Nakabinbin", scheduled: "Nakatakda", noData: "Walang nahanap na rekord ng dibidendo." }, reports: { title: "Mga Ulat ng Kumpanya", download: "I-download", type: "Uri ng Ulat", period: "Panahon", size: "Laki ng File", annual: "Taunang Ulat", quarterly: "Quarterly na Ulat", audit: "Ulat ng Audit", financial: "Pahayag ng Pananalapi", noData: "Wala pang nai-publish na mga ulat." } },
 };
 
 export default tl;

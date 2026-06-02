@@ -15,6 +15,7 @@ const hi: Translations = {
     serviceConfig: "Service Config",
     dataArchiving: "डेटा आर्काइव",
     contentManager: "सामग्री प्रबंधन",
+    partnerPortal: "पार्टनर पोर्टल",
   },
   common: {
     save: "सहेजें", cancel: "रद्द करें", delete: "हटाएं", edit: "संपादित करें", add: "जोड़ें",
@@ -42,7 +43,7 @@ const hi: Translations = {
     super_admin: "सुपर प्रशासक",
     owner: "स्वामी", admin_manager: "कंपनी", administrator: "प्रशासक (विभागीय)",
     manager: "प्रबंधक", supervisor: "पर्यवेक्षक", maintenance: "रखरखाव",
-    cleaning: "सफाई", security: "सुरक्षा", viewingAs: "इस रूप में देख रहे हैं",
+    cleaning: "सफाई", security: "सुरक्षा", partner: "पार्टनर / निवेशक", viewingAs: "इस रूप में देख रहे हैं",
     switchRole: "भूमिका बदलें", active: "सक्रिय",
     desc: {
       super_admin: "प्लेटफ़ॉर्म-स्तर की पहुँच: टेनेंट प्रबंधन और सभी सेटिंग्स",
@@ -52,6 +53,7 @@ const hi: Translations = {
       maintenance: "निर्धारित कार्य और अपना प्रोफ़ाइल",
       cleaning: "निर्धारित कार्य और अपना प्रोफ़ाइल",
       security: "निर्धारित कार्य और अपना प्रोफ़ाइल",
+      partner: "इक्विटी पोर्टल — शेयर, लाभांश और कंपनी रिपोर्ट",
     },
   },
   header: { myAccount: "मेरा खाता", settings: "सेटिंग्स", logout: "लॉग आउट" },
@@ -440,6 +442,7 @@ const hi: Translations = {
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
   analytics: { title: "विश्लेषण", subtitle: "प्रदर्शन और संचालन", overview: "अवलोकन", operational: "परिचालन", print: "प्रिंट", exportPdf: "PDF निर्यात", kpi: { totalTasks: "कुल कार्य", completed: "पूर्ण", inProgress: "चल रहा है", lateOverdue: "देर से / अतिदेय", pending: "लंबित", verified: "सत्यापित", compRate: "पूर्णता दर", allOnTime: "समय पर सभी", pastDueDate: "समय सीमा पार" }, completionRate: "समग्र पूर्णता दर" },
+  partner: { title: "पार्टनर पोर्टल", subtitle: "आपकी इक्विटी स्थिति और कंपनी का प्रदर्शन", equityTab: "इक्विटी अवलोकन", dividendTab: "लाभांश ट्रैकर", reportsTab: "कंपनी रिपोर्ट", equity: { title: "आपकी इक्विटी हिस्सेदारी", totalShares: "कुल कंपनी शेयर", yourShares: "आपके शेयर", ownershipPct: "स्वामित्व", valuation: "आपका मूल्यांकन", sharePrice: "शेयर मूल्य", asOf: "की स्थिति पर", noData: "कोई इक्विटी डेटा नहीं मिला।" }, dividends: { title: "लाभ वितरण", upcoming: "आगामी", history: "इतिहास", period: "अवधि", amount: "राशि", status: "स्थिति", date: "दिनांक", paid: "भुगतान हुआ", pending: "लंबित", scheduled: "निर्धारित", noData: "कोई लाभांश रिकॉर्ड नहीं मिला।" }, reports: { title: "कंपनी रिपोर्ट", download: "डाउनलोड", type: "रिपोर्ट प्रकार", period: "अवधि", size: "फ़ाइल आकार", annual: "वार्षिक रिपोर्ट", quarterly: "त्रैमासिक रिपोर्ट", audit: "ऑडिट रिपोर्ट", financial: "वित्तीय विवरण", noData: "अभी तक कोई रिपोर्ट प्रकाशित नहीं।" } },
 };
 
 export default hi;

@@ -9,7 +9,8 @@ export type AppRole =
   | "supervisor"
   | "maintenance"
   | "cleaning"
-  | "security";
+  | "security"
+  | "partner";
 
 export interface RoleDefinition {
   id: AppRole;
@@ -29,6 +30,7 @@ export function mapDbRoleToAppRole(dbRole: string): AppRole {
   if (dbRole === "housekeeping" || dbRole === "cleaning-staff" || dbRole === "cleaning") return "cleaning";
   if (dbRole === "maintenance" || dbRole === "maintenance-tech") return "maintenance";
   if (dbRole === "security" || dbRole === "security-officer") return "security";
+  if (dbRole === "partner" || dbRole === "investor") return "partner";
   return "supervisor";
 }
 
@@ -89,7 +91,15 @@ export const ROLES: RoleDefinition[] = [
     allowedNav: ["/", "/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log"],
     taskCategories: null,
   },
-  // 6 — Execution staff
+  // 6 — Partner / Investor: equity portal access
+  {
+    id: "partner",
+    label: "Partner / Investor",
+    description: "Equity portal access — company shares, dividends, and performance reports",
+    allowedNav: ["/", "/partner"],
+    taskCategories: null,
+  },
+  // 7 — Execution staff
   {
     id: "maintenance",
     label: "Maintenance",

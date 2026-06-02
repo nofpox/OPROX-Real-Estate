@@ -15,6 +15,7 @@ const ne: Translations = {
     serviceConfig: "Service Config",
     dataArchiving: "डाटा संग्रह",
     contentManager: "सामग्री व्यवस्थापन",
+    partnerPortal: "पार्टनर पोर्टल",
   },
   common: {
     save: "सुरक्षित गर्नुहोस्", cancel: "रद्द गर्नुहोस्", delete: "मेट्नुहोस्",
@@ -43,7 +44,7 @@ const ne: Translations = {
     owner: "मालिक", admin_manager: "कम्पनी", administrator: "प्रशासक (विभागीय)",
     super_admin: "सुपर प्रशासक",
     manager: "प्रबन्धक", supervisor: "सुपरभाइजर", maintenance: "मर्मत",
-    cleaning: "सरसफाइ", security: "सुरक्षा", viewingAs: "को रूपमा हेर्दै",
+    cleaning: "सरसफाइ", security: "सुरक्षा", partner: "पार्टनर / लगानीकर्ता", viewingAs: "को रूपमा हेर्दै",
     switchRole: "भूमिका परिवर्तन गर्नुहोस्", active: "सक्रिय",
     desc: {
       super_admin: "प्लेटफर्म-स्तरको पहुँच: भाडाकर्ता व्यवस्थापन र सबै सेटिङहरू",
@@ -53,6 +54,7 @@ const ne: Translations = {
       maintenance: "तोकिएका कार्यहरू र आफ्नो प्रोफाइल",
       cleaning: "तोकिएका कार्यहरू र आफ्नो प्रोफाइल",
       security: "तोकिएका कार्यहरू र आफ्नो प्रोफाइल",
+      partner: "इक्विटी पोर्टल — शेयर, लाभांश र कम्पनी रिपोर्ट",
     },
   },
   header: { myAccount: "मेरो खाता", settings: "सेटिङहरू", logout: "लग आउट" },
@@ -441,6 +443,7 @@ const ne: Translations = {
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
   analytics: { title: "विश्लेषण", subtitle: "प्रदर्शन र सञ्चालन", overview: "अवलोकन", operational: "सञ्चालनात्मक", print: "प्रिन्ट", exportPdf: "PDF निर्यात", kpi: { totalTasks: "कुल कार्यहरू", completed: "पूरा भयो", inProgress: "प्रगतिमा", lateOverdue: "ढिलो / बाँकी", pending: "विचाराधीन", verified: "प्रमाणित", compRate: "समापन दर", allOnTime: "समयमै सबै", pastDueDate: "म्याद गुज्रियो" }, completionRate: "समग्र समापन दर" },
+  partner: { title: "पार्टनर पोर्टल", subtitle: "तपाईंको इक्विटी स्थिति र कम्पनीको वित्तीय प्रदर्शन", equityTab: "इक्विटी अवलोकन", dividendTab: "लाभांश ट्र्याकर", reportsTab: "कम्पनी प्रतिवेदनहरू", equity: { title: "तपाईंको इक्विटी हिस्सा", totalShares: "कुल कम्पनी शेयरहरू", yourShares: "तपाईंका शेयरहरू", ownershipPct: "स्वामित्व", valuation: "तपाईंको मूल्याङ्कन", sharePrice: "शेयर मूल्य", asOf: "मिति अनुसार", noData: "इक्विटी डाटा फेला परेन।" }, dividends: { title: "नाफा वितरण", upcoming: "आउँदो", history: "इतिहास", period: "अवधि", amount: "रकम", status: "स्थिति", date: "मिति", paid: "भुक्तान भयो", pending: "विचाराधीन", scheduled: "तालिका गरिएको", noData: "लाभांश रेकर्ड फेला परेन।" }, reports: { title: "कम्पनी प्रतिवेदनहरू", download: "डाउनलोड", type: "प्रतिवेदन प्रकार", period: "अवधि", size: "फाइल आकार", annual: "वार्षिक प्रतिवेदन", quarterly: "त्रैमासिक प्रतिवेदन", audit: "लेखापरीक्षण प्रतिवेदन", financial: "वित्तीय विवरण", noData: "अहिलेसम्म कुनै प्रतिवेदन प्रकाशित भएको छैन।" } },
 };
 
 export default ne;

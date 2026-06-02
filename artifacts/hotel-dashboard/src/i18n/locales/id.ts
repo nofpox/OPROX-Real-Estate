@@ -15,6 +15,7 @@ const id: Translations = {
     serviceConfig: "Konfigurasi Layanan",
     dataArchiving: "Pengarsipan Data",
     contentManager: "Manajemen Konten",
+    partnerPortal: "Portal Mitra",
   },
   common: {
     save: "Simpan", cancel: "Batal", delete: "Hapus", edit: "Edit", add: "Tambah",
@@ -42,7 +43,7 @@ const id: Translations = {
     super_admin: "Super Admin",
     owner: "Pemilik", admin_manager: "Perusahaan", administrator: "Administrator (Departmental)",
     manager: "Manajer", supervisor: "Supervisor", maintenance: "Pemeliharaan",
-    cleaning: "Kebersihan", security: "Keamanan", viewingAs: "Dilihat sebagai",
+    cleaning: "Kebersihan", security: "Keamanan", partner: "Mitra / Investor", viewingAs: "Dilihat sebagai",
     switchRole: "Ganti Peran", active: "aktif",
     desc: {
       super_admin: "Akses tingkat platform: manajemen tenant dan semua pengaturan",
@@ -52,6 +53,7 @@ const id: Translations = {
       maintenance: "Tugas yang ditetapkan dan profil sendiri",
       cleaning: "Tugas yang ditetapkan dan profil sendiri",
       security: "Tugas yang ditetapkan dan profil sendiri",
+      partner: "Portal ekuitas — saham, dividen, dan laporan perusahaan",
     },
   },
   header: { myAccount: "Akun Saya", settings: "Pengaturan", logout: "Keluar" },
@@ -441,6 +443,7 @@ const id: Translations = {
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
   analytics: { title: "Analitik", subtitle: "Performa & operasi", overview: "Ikhtisar", operational: "Operasional", print: "Cetak", exportPdf: "Ekspor PDF", kpi: { totalTasks: "Total Tugas", completed: "Selesai", inProgress: "Sedang Berjalan", lateOverdue: "Terlambat", pending: "tertunda", verified: "terverifikasi", compRate: "tingkat penyelesaian", allOnTime: "Semua tepat waktu", pastDueDate: "Melewati tenggat" }, completionRate: "Tingkat Penyelesaian Keseluruhan" },
+  partner: { title: "Portal Mitra", subtitle: "Posisi ekuitas dan kinerja keuangan perusahaan Anda", equityTab: "Ikhtisar Ekuitas", dividendTab: "Pelacak Dividen", reportsTab: "Laporan Perusahaan", equity: { title: "Kepemilikan Ekuitas Anda", totalShares: "Total Saham Perusahaan", yourShares: "Saham Anda", ownershipPct: "Kepemilikan", valuation: "Valuasi Anda", sharePrice: "Harga Saham", asOf: "Per", noData: "Tidak ada data ekuitas ditemukan." }, dividends: { title: "Distribusi Keuntungan", upcoming: "Akan Datang", history: "Riwayat", period: "Periode", amount: "Jumlah", status: "Status", date: "Tanggal", paid: "Dibayar", pending: "Tertunda", scheduled: "Terjadwal", noData: "Tidak ada catatan dividen ditemukan." }, reports: { title: "Laporan Perusahaan", download: "Unduh", type: "Jenis Laporan", period: "Periode", size: "Ukuran File", annual: "Laporan Tahunan", quarterly: "Laporan Kuartalan", audit: "Laporan Audit", financial: "Laporan Keuangan", noData: "Belum ada laporan yang diterbitkan." } },
 };
 
 export default id;

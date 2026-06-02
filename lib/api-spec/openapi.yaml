@@ -2400,6 +2400,55 @@ paths:
         "401":
           description: Unauthorized
 
+  /partner/equity:
+    get:
+      operationId: getPartnerEquity
+      summary: Equity stake overview for the authenticated partner
+      tags: [partner]
+      responses:
+        "200":
+          description: Partner equity stake
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartnerEquity"
+        "403":
+          description: Partner access only
+
+  /partner/dividends:
+    get:
+      operationId: getPartnerDividends
+      summary: Dividend distribution history for the authenticated partner
+      tags: [partner]
+      responses:
+        "200":
+          description: Dividend records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PartnerDividend"
+        "403":
+          description: Partner access only
+
+  /partner/reports:
+    get:
+      operationId: getPartnerReports
+      summary: Company reports available to partners
+      tags: [partner]
+      responses:
+        "200":
+          description: Company report list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PartnerReport"
+        "403":
+          description: Partner access only
+
 components:
   schemas:
     Settings:
@@ -4437,3 +4486,41 @@ components:
         data:      { $ref: "#/components/schemas/PortalFinancialsSummary" }
         meta:      { type: object, nullable: true }
         timestamp: { type: string }
+
+    PartnerEquity:
+      type: object
+      required: [userId, totalCompanyShares, partnerShareCount, valuationPerShare, currency, ownershipPct, totalValuation, effectiveDate]
+      properties:
+        userId:             { type: integer }
+        totalCompanyShares: { type: integer }
+        partnerShareCount:  { type: integer }
+        valuationPerShare:  { type: number }
+        currency:           { type: string }
+        ownershipPct:       { type: number }
+        totalValuation:     { type: number }
+        effectiveDate:      { type: string }
+
+    PartnerDividend:
+      type: object
+      required: [id, amount, currency, distributionDate, status, fiscalPeriod]
+      properties:
+        id:               { type: integer }
+        amount:           { type: number }
+        currency:         { type: string }
+        distributionDate: { type: string }
+        status:           { type: string }
+        fiscalPeriod:     { type: string }
+        notes:            { type: string, nullable: true }
+
+    PartnerReport:
+      type: object
+      required: [id, title, reportType, fiscalYear, fiscalPeriod, publishedAt]
+      properties:
+        id:           { type: integer }
+        title:        { type: string }
+        reportType:   { type: string }
+        fiscalYear:   { type: integer }
+        fiscalPeriod: { type: string }
+        fileUrl:      { type: string, nullable: true }
+        fileSizeKb:   { type: integer, nullable: true }
+        publishedAt:  { type: string }

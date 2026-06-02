@@ -15,6 +15,7 @@ const pt: Translations = {
     serviceConfig: "Config. de Serviços",
     dataArchiving: "Arquivo de Dados",
     contentManager: "Gestão de Conteúdo",
+    partnerPortal: "Portal do Parceiro",
   },
   common: {
     save: "Salvar", cancel: "Cancelar", delete: "Excluir", edit: "Editar", add: "Adicionar",
@@ -42,7 +43,7 @@ const pt: Translations = {
     super_admin: "Super Admin",
     owner: "Proprietário", admin_manager: "Empresa", administrator: "Administrador (Departamental)",
     manager: "Gerente", supervisor: "Supervisor", maintenance: "Manutenção",
-    cleaning: "Limpeza", security: "Segurança", viewingAs: "Visualizando como",
+    cleaning: "Limpeza", security: "Segurança", partner: "Parceiro / Investidor", viewingAs: "Visualizando como",
     switchRole: "Trocar Perfil", active: "ativo",
     desc: {
       super_admin: "Acesso à plataforma: gestão de inquilinos e todas as configurações",
@@ -52,6 +53,7 @@ const pt: Translations = {
       maintenance: "Tarefas atribuídas e perfil próprio",
       cleaning: "Tarefas atribuídas e perfil próprio",
       security: "Tarefas atribuídas e perfil próprio",
+      partner: "Portal de participação — ações, dividendos e relatórios da empresa",
     },
   },
   header: { myAccount: "Minha Conta", settings: "Configurações", logout: "Sair" },
@@ -449,6 +451,7 @@ const pt: Translations = {
       nav: { units: "Units", workOrders: "Work Orders", tasks: "My Tasks" },
     },
   analytics: { title: "Análises", subtitle: "Desempenho e operações", overview: "Visão geral", operational: "Operacional", print: "Imprimir", exportPdf: "Exportar PDF", kpi: { totalTasks: "Total de tarefas", completed: "Concluídas", inProgress: "Em andamento", lateOverdue: "Atrasadas", pending: "pendentes", verified: "verificadas", compRate: "taxa de conclusão", allOnTime: "Em dia", pastDueDate: "Prazo vencido" }, completionRate: "Taxa de conclusão geral" },
+  partner: { title: "Portal do Parceiro", subtitle: "Sua posição acionária e desempenho financeiro da empresa", equityTab: "Visão Geral de Participação", dividendTab: "Rastreador de Dividendos", reportsTab: "Relatórios da Empresa", equity: { title: "Sua Participação Acionária", totalShares: "Total de Ações da Empresa", yourShares: "Suas Ações", ownershipPct: "Participação", valuation: "Sua Avaliação", sharePrice: "Preço da Ação", asOf: "Em", noData: "Nenhum dado de participação encontrado." }, dividends: { title: "Distribuições de Lucro", upcoming: "Próximas", history: "Histórico", period: "Período", amount: "Valor", status: "Status", date: "Data", paid: "Pago", pending: "Pendente", scheduled: "Agendado", noData: "Nenhum registro de dividendo encontrado." }, reports: { title: "Relatórios da Empresa", download: "Baixar", type: "Tipo de Relatório", period: "Período", size: "Tamanho do Arquivo", annual: "Relatório Anual", quarterly: "Relatório Trimestral", audit: "Relatório de Auditoria", financial: "Demonstrativo Financeiro", noData: "Nenhum relatório publicado ainda." } },
 };
 
 export default pt;

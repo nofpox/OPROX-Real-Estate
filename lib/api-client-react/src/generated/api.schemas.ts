@@ -1253,6 +1253,38 @@ export interface PortalFinancialsPage {
   timestamp: string;
 }
 
+export interface PartnerEquity {
+  userId: number;
+  totalCompanyShares: number;
+  partnerShareCount: number;
+  valuationPerShare: number;
+  currency: string;
+  ownershipPct: number;
+  totalValuation: number;
+  effectiveDate: string;
+}
+
+export interface PartnerDividend {
+  id: number;
+  amount: number;
+  currency: string;
+  distributionDate: string;
+  status: string;
+  fiscalPeriod: string;
+  notes?: string | null;
+}
+
+export interface PartnerReport {
+  id: number;
+  title: string;
+  reportType: string;
+  fiscalYear: number;
+  fiscalPeriod: string;
+  fileUrl?: string | null;
+  fileSizeKb?: number | null;
+  publishedAt: string;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
@@ -1341,14 +1373,14 @@ search?: string;
 
 export type ForgotPasswordBody = {
   email: string;
-  phoneNumber: string;
-  tenantSlug: string;
+  /** Optional — scopes the lookup to a specific tenant */
+  tenantSlug?: string;
 };
 
 export type ForgotPassword200 = {
   ok?: boolean;
-  /** Demo-mode only — in production this is sent via email/SMS */
-  resetToken?: string;
+  /** Demo-mode only — 6-digit OTP returned when RESEND_API_KEY is absent */
+  otp?: string;
 };
 
 export type ResetPasswordBody = {

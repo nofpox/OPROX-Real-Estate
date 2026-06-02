@@ -24,3 +24,4 @@ export * from "./serviceCategories";
 export * from "./listings";
 export * from "./archivingLogs";
 export * from "./propertyCategories";
+export * from "./partner";
