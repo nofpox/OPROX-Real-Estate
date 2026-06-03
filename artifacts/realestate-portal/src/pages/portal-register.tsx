@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Building, AlertCircle, CheckCircle2,
-  ArrowLeft, ArrowRight, UserPlus,
+  ArrowLeft, ArrowRight, UserPlus, ShieldCheck,
 } from 'lucide-react';
 
 export const PortalRegister: React.FC = () => {
@@ -37,6 +37,10 @@ export const PortalRegister: React.FC = () => {
     e.preventDefault();
     setError('');
 
+    if (!form.phone.trim()) {
+      setError(t('portal.phoneRequired'));
+      return;
+    }
     if (form.password.length < 8) {
       setError(t('portal.passwordTooShort'));
       return;
@@ -51,7 +55,7 @@ export const PortalRegister: React.FC = () => {
         data: {
           displayName: form.displayName.trim(),
           email:       form.email.trim().toLowerCase(),
-          phone:       form.phone.trim() || undefined,
+          phone:       form.phone.trim(),
           username:    form.username.trim().toLowerCase(),
           password:    form.password,
         },
@@ -85,7 +89,7 @@ export const PortalRegister: React.FC = () => {
 
       <div className="min-h-screen flex">
 
-        {/* ── Left branding panel ──────────────────────────────────────────── */}
+        {/* ── Left branding panel — desktop only ──────────────────────────── */}
         <div className="hidden lg:flex lg:w-1/2 relative bg-primary flex-col justify-between p-12 overflow-hidden">
           <div className="absolute inset-0">
             <img
@@ -130,11 +134,12 @@ export const PortalRegister: React.FC = () => {
           </p>
         </div>
 
-        {/* ── Right panel — registration form ──────────────────────────────── */}
+        {/* ── Right panel — registration form ─────────────────────────────── */}
         <div
-          className="flex-1 flex flex-col justify-center items-center bg-muted px-6 py-12"
+          className="flex-1 flex flex-col justify-center items-center bg-muted px-4 sm:px-6 py-10 sm:py-12"
           dir={isRtl ? 'rtl' : 'ltr'}
         >
+          {/* Mobile brand header */}
           <div className="lg:hidden mb-8 text-center">
             <Link href="/" className="inline-flex items-center gap-2 mb-2">
               <Building className="h-8 w-8 text-secondary" />
@@ -160,7 +165,7 @@ export const PortalRegister: React.FC = () => {
               <p className="mt-1 text-sm text-muted-foreground">{t('portal.registerSubtitle')}</p>
             </div>
 
-            <div className="bg-card border border-border rounded-xl shadow-sm p-6 md:p-8">
+            <div className="bg-card border border-border rounded-xl shadow-sm p-5 sm:p-8">
               {success && (
                 <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -175,6 +180,7 @@ export const PortalRegister: React.FC = () => {
               )}
 
               <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+
                 {/* Row 1: Full name + Email */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -210,42 +216,50 @@ export const PortalRegister: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Row 2: Username + Phone */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="reg-username" className="block text-sm font-medium text-primary mb-1.5">
-                      {t('portal.username')} *
-                    </label>
-                    <Input
-                      id="reg-username"
-                      autoComplete="username"
-                      required
-                      value={form.username}
-                      onChange={update('username')}
-                      placeholder="ahmad_al_amri"
-                      className="h-10"
-                      disabled={busy}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">{t('portal.usernameHint')}</p>
-                  </div>
-                  <div>
-                    <label htmlFor="reg-phone" className="block text-sm font-medium text-primary mb-1.5">
-                      {t('portal.phone')}
-                    </label>
-                    <Input
-                      id="reg-phone"
-                      type="tel"
-                      autoComplete="tel"
-                      value={form.phone}
-                      onChange={update('phone')}
-                      placeholder="+966 5x xxx xxxx"
-                      className="h-10"
-                      disabled={busy}
-                    />
+                {/* Row 2: Username (full-width) */}
+                <div>
+                  <label htmlFor="reg-username" className="block text-sm font-medium text-primary mb-1.5">
+                    {t('portal.username')} *
+                  </label>
+                  <Input
+                    id="reg-username"
+                    autoComplete="username"
+                    required
+                    value={form.username}
+                    onChange={update('username')}
+                    placeholder="ahmad_al_amri"
+                    className="h-10"
+                    disabled={busy}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">{t('portal.usernameHint')}</p>
+                </div>
+
+                {/* Row 3: Phone (full-width, required) + privacy disclaimer */}
+                <div>
+                  <label htmlFor="reg-phone" className="block text-sm font-medium text-primary mb-1.5">
+                    {t('portal.phone')} *
+                  </label>
+                  <Input
+                    id="reg-phone"
+                    type="tel"
+                    autoComplete="tel"
+                    required
+                    value={form.phone}
+                    onChange={update('phone')}
+                    placeholder={isRtl ? '+966 5x xxx xxxx' : '+966 5x xxx xxxx'}
+                    className="h-10"
+                    disabled={busy}
+                  />
+                  {/* Privacy disclaimer — shown immediately below phone field */}
+                  <div className="mt-2.5 flex items-start gap-2 p-3 rounded-lg bg-secondary/5 border border-secondary/20">
+                    <ShieldCheck className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {t('portal.phoneDisclaimer')}
+                    </p>
                   </div>
                 </div>
 
-                {/* Row 3: Password + Confirm */}
+                {/* Row 4: Password + Confirm */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="reg-pwd" className="block text-sm font-medium text-primary mb-1.5">
