@@ -92,7 +92,7 @@ export const Home: React.FC = () => {
 
         <div className="container relative z-20 px-4 text-center text-white max-w-4xl mx-auto">
           {/* Eyebrow badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/90 text-xs font-medium px-4 py-1.5 rounded-full mb-8 tracking-wide">
+          <div className="inline-flex items-center gap-2 bg-white/20 border border-white/30 text-white text-xs font-medium px-4 py-1.5 rounded-full mb-8 tracking-wide">
             <Award className="h-3.5 w-3.5 text-secondary" />
             {isRtl ? branding.companyNameAr : branding.companyNameEn}
           </div>
@@ -198,7 +198,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* ── Services Overview ──────────────────────────────────────────────────── */}
-      <section className="py-28 bg-muted/50">
+      <section className="py-28 bg-muted">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-3">
@@ -214,7 +214,7 @@ export const Home: React.FC = () => {
             {services.map((svc, i) => (
               <div
                 key={i}
-                className="bg-card p-8 rounded-2xl border border-border/60 hover:border-secondary/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+                className="bg-card p-8 rounded-2xl border border-border hover:border-secondary hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
               >
                 <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-6 group-hover:bg-secondary/20 transition-colors">
                   {svc.imageUrl
@@ -258,7 +258,7 @@ export const Home: React.FC = () => {
               </p>
 
               {/* Distinguishing note from Investor Portal */}
-              <div className="flex items-start gap-3 p-4 rounded-xl bg-secondary/5 border border-secondary/15">
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-muted border border-border">
                 <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5">
                   <Award className="h-4 w-4 text-secondary" />
                 </div>
@@ -279,7 +279,7 @@ export const Home: React.FC = () => {
             </div>
 
             {/* Right — form */}
-            <div className="bg-card rounded-2xl border border-border/60 p-8 shadow-sm">
+            <div className="bg-card rounded-2xl border border-border p-8 shadow-sm">
               {leadStatus === 'success' ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
                   <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center">

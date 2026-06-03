@@ -77,7 +77,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
             <span className={`px-2.5 py-1 text-xs font-bold rounded tracking-wider shadow-sm ${
               isOperational
                 ? 'bg-secondary text-secondary-foreground'
-                : 'bg-background/90 backdrop-blur text-primary'
+                : 'bg-white text-primary'
             }`}>
               {(isRtl ? TYPE_LABELS_AR : TYPE_LABELS_EN)[listing.listingType] ?? listing.listingType.toUpperCase()}
             </span>
@@ -86,7 +86,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
           {/* Managed badge — top end */}
           {isOperational && (
             <div className={`absolute top-3 ${isRtl ? 'left-3' : 'right-3'}`}>
-              <span className="flex items-center gap-1 px-2 py-1 bg-primary/80 backdrop-blur text-primary-foreground text-xs font-medium rounded shadow-sm">
+              <span className="flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground text-xs font-medium rounded shadow-sm">
                 <ShieldCheck className="w-3 h-3" />
                 Rakez
               </span>
@@ -105,7 +105,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
 
           {/* Property type pill — bottom end */}
           <div className={`absolute bottom-3 ${isRtl ? 'left-3' : 'right-3'}`}>
-            <span className="px-2 py-0.5 bg-background/80 backdrop-blur text-primary text-xs font-medium rounded-full uppercase tracking-wide">
+            <span className="px-2 py-0.5 bg-white text-primary text-xs font-medium rounded-full uppercase tracking-wide">
               {listing.propertyType}
             </span>
           </div>
