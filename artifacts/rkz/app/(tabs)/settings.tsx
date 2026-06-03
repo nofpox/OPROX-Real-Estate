@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as WebBrowser from "expo-web-browser";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -367,6 +368,39 @@ export default function SettingsScreen() {
                 size={18}
                 color={colors.mutedForeground}
               />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Company / About Rkz */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t.settings.companySection}</Text>
+          <View style={styles.settingCard}>
+            <Pressable
+              style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.8 }]}
+              onPress={async () => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                const domain = process.env.EXPO_PUBLIC_DOMAIN ?? "localhost";
+                const url = Platform.OS === "web"
+                  ? "/realestate-portal"
+                  : `https://${domain}/realestate-portal`;
+                await WebBrowser.openBrowserAsync(url, {
+                  presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+                  toolbarColor: "#0A1628",
+                  controlsColor: "#D4A843",
+                });
+              }}
+            >
+              <View style={[styles.settingIconBox, { backgroundColor: "#FEF9EC" }]}>
+                <MaterialIcons name="language" size={20} color="#D4A843" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.settingLabel}>{t.settings.visitWebsite}</Text>
+                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                  {t.settings.visitWebsiteDesc}
+                </Text>
+              </View>
+              <MaterialIcons name="open-in-new" size={18} color={colors.mutedForeground} />
             </Pressable>
           </View>
         </View>

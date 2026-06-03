@@ -4,6 +4,7 @@ import { useLanguage } from '@/lib/i18n';
 import { useCms } from '@/lib/cms-context';
 import { Building, Menu, X, Globe, MapPin, Mail, Phone, KeyRound } from 'lucide-react';
 import { SmartAssistant } from './assistant';
+import { SmartAppBanner } from './SmartAppBanner';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { language, setLanguage, isRtl } = useLanguage();
@@ -28,6 +29,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div className="h-dvh overflow-auto flex flex-col font-sans">
+
+      {/* ── Smart App Banner (mobile only, dismissible) ─────────────────────── */}
+      <SmartAppBanner />
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background">

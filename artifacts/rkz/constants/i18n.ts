@@ -112,6 +112,9 @@ export const ar = {
     logoutMsg: "هل تريد تسجيل الخروج؟",
     cancel: "إلغاء",
     logoutConfirm: "خروج",
+    companySection: "الشركة",
+    visitWebsite: "زيارة موقع ركز",
+    visitWebsiteDesc: "اكتشف خدماتنا الكاملة للإدارة العقارية",
     version: "RKZ v1.0 — محرك النشر العقاري الفوري",
   },
   add: {
@@ -354,6 +357,9 @@ export const en: Translations = {
     logoutMsg: "Are you sure you want to log out?",
     cancel: "Cancel",
     logoutConfirm: "Log Out",
+    companySection: "Company",
+    visitWebsite: "Visit Rkz Website",
+    visitWebsiteDesc: "Explore our full property management services",
     version: "RKZ v1.0 — Instant Real Estate Publishing Engine",
   },
   add: {
