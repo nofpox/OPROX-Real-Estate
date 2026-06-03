@@ -38,6 +38,19 @@ function detectContact(msg: string): { blocked: boolean; pattern: string } {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Live Chat Log — circular buffer of last 200 exchanges for admin monitoring
+// ─────────────────────────────────────────────────────────────────────────────
+interface ChatExchange {
+  id: string;
+  ts: string;
+  userMsg: string;     // last user message (truncated to 300 chars)
+  reply: string;       // assistant reply (truncated to 300 chars)
+  blocked: boolean;    // true if the contact shield triggered
+  lang: "ar" | "en";
+}
+const chatLog: ChatExchange[] = [];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Buyer Intent store — registered buyer search criteria
 // ─────────────────────────────────────────────────────────────────────────────
 interface BuyerIntent {
@@ -130,13 +143,13 @@ router.post("/rkz/assistant/chat", async (req, res) => {
     const lastUserMsg = messages[messages.length - 1]?.content ?? "";
     const shield = detectContact(lastUserMsg);
     if (shield.blocked) {
-      violations.push({
-        id: crypto.randomUUID(),
-        ts: new Date().toISOString(),
-        message: lastUserMsg.slice(0, 300),
-        pattern: shield.pattern,
-      });
+      const vId = crypto.randomUUID();
+      const vTs = new Date().toISOString();
+      violations.push({ id: vId, ts: vTs, message: lastUserMsg.slice(0, 300), pattern: shield.pattern });
       if (violations.length > 500) violations.shift();
+      // Also log into chat feed so admin can see it
+      chatLog.push({ id: vId, ts: vTs, userMsg: lastUserMsg.slice(0, 300), reply: "🛡️ BLOCKED", blocked: true, lang });
+      if (chatLog.length > 200) chatLog.shift();
       const isArShield = lang === "ar";
       const warning = isArShield
         ? "عذراً، لأسباب تتعلق بالخصوصية وضمان جودة الخدمة، لا يمكن مشاركة بيانات التواصل الشخصية خارج المنصة. يُرجى الاستمرار في التواصل عبر ركز لضمان حقوقك وحماية بيانات جميع الأطراف. 🛡️"
@@ -232,6 +245,17 @@ Strict rules:
             { label: "🔄 Other Arrangements", value: "other" },
           ]
       : undefined;
+
+    // Log exchange to the live chat feed
+    chatLog.push({
+      id: crypto.randomUUID(),
+      ts: new Date().toISOString(),
+      userMsg: lastUserMsg.slice(0, 300),
+      reply: reply.slice(0, 300),
+      blocked: false,
+      lang,
+    });
+    if (chatLog.length > 200) chatLog.shift();
 
     res.json({ reply, quickReplies });
   } catch (err) {
@@ -612,6 +636,50 @@ router.get("/rkz/admin/buyer-intents", (req, res) => {
     return;
   }
   res.json({ buyerIntents, count: buyerIntents.length });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /rkz/admin/chat-log  — PIN-protected; returns recent chat exchanges
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/rkz/admin/chat-log", (req, res) => {
+  const { pin } = req.query as { pin?: string };
+  if (!pin || pin !== rkzCurrentConfig.admin.pin) {
+    res.status(401).json({ error: "Invalid PIN" });
+    return;
+  }
+  res.json({ chatLog: [...chatLog].reverse(), count: chatLog.length });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /rkz/match-buyers  — Smart Matching Engine
+// Matches a new listing against the buyer intent database
+// Body: { type, city, price?, area?, bedrooms? }
+// Returns: { matches: BuyerIntent[], count: number }
+// ─────────────────────────────────────────────────────────────────────────────
+router.post("/rkz/match-buyers", (req, res) => {
+  const { type, city, price, area, bedrooms } = req.body as {
+    type?: string;
+    city?: string;
+    price?: number;
+    area?: number;
+    bedrooms?: number;
+  };
+  if (!type || !city) {
+    res.status(400).json({ error: "type and city are required" });
+    return;
+  }
+  const propCity = city.toLowerCase().trim();
+  const matches = buyerIntents.filter((intent) => {
+    if (intent.type !== type) return false;
+    const ic = intent.city.toLowerCase().trim();
+    if (!ic.includes(propCity) && !propCity.includes(ic)) return false;
+    if (intent.budget && price && price > intent.budget * 1.15) return false;
+    if (intent.area && area && area < intent.area * 0.8) return false;
+    if (intent.bedrooms && bedrooms && bedrooms < intent.bedrooms) return false;
+    return true;
+  });
+  req.log.info({ type, city, matchCount: matches.length }, "rkz: match-buyers");
+  res.json({ matches, count: matches.length });
 });
 
 export default router;

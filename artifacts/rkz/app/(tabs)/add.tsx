@@ -50,6 +50,7 @@ export default function AddPropertyScreen() {
   const { config } = useConfig();
 
   const [propType, setPropType] = useState<string>(config.propertyTypes[0]?.id ?? "villa");
+  const [matchedBuyers, setMatchedBuyers] = useState(0);
   const [price, setPrice] = useState("");
   const [city, setCity] = useState(isAr ? "الرياض" : "Riyadh");
   const [district, setDistrict] = useState("");
@@ -209,6 +210,20 @@ export default function AddPropertyScreen() {
       bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
       photos,
     });
+
+    // Smart Matching: check buyer demand database for this listing
+    let matchCount = 0;
+    try {
+      const matchRes = await apiPost<{ count: number }>("/rkz/match-buyers", {
+        type: propType,
+        city,
+        price: parseFloat(price.replace(/,/g, "")) || 0,
+        area: area ? parseFloat(area) : undefined,
+        bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
+      });
+      matchCount = matchRes.count;
+    } catch {}
+    setMatchedBuyers(matchCount);
 
     await new Promise((r) => setTimeout(r, 600));
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -530,6 +545,19 @@ export default function AddPropertyScreen() {
       justifyContent: "center",
     },
     doneBtnText: { fontSize: 16, fontFamily: "Inter_700Bold", color: colors.navy },
+    matchBadge: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: "rgba(212,168,67,0.15)",
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.gold,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      marginBottom: 24,
+    },
+    matchBadgeText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.gold, flex: 1, textAlign: isAr ? "right" : "left" },
     // Digital Authorization Modal
     modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
     modalSheet: {
@@ -662,6 +690,18 @@ export default function AddPropertyScreen() {
         </View>
         <Text style={S.doneTitle}>{t.add.doneTitle}</Text>
         <Text style={S.doneSubtitle}>{t.add.doneSubtitle(selectedPlatforms.size)}</Text>
+
+        {matchedBuyers > 0 && (
+          <View style={S.matchBadge}>
+            <MaterialIcons name="people" size={20} color={colors.gold} />
+            <Text style={S.matchBadgeText}>
+              {isAr
+                ? `🎯 ${matchedBuyers} مشترٍ مطابق في قاعدة الطلبات!`
+                : `🎯 ${matchedBuyers} matched buyer${matchedBuyers > 1 ? "s" : ""} in the demand database!`}
+            </Text>
+          </View>
+        )}
+
         <Pressable
           style={({ pressed }) => [S.doneBtn, pressed && { opacity: 0.85 }]}
           onPress={() => {

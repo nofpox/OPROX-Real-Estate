@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { API_BASE } from "@/constants/api";
 import { type AppConfig, DEFAULT_CONFIG, useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
@@ -297,6 +298,54 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
     setDraft((d) => ({ ...d, propertyTypes: d.propertyTypes.filter((_, i) => i !== idx) }));
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }
+
+  // ── Operations Center state ────────────────────────────────────────────────
+  interface ChatExchange { id: string; ts: string; userMsg: string; reply: string; blocked: boolean; lang: string; }
+  interface BuyerIntentRow { id: string; ts: string; type: string; city: string; budget?: number; area?: number; bedrooms?: number; }
+  interface ViolationRow { id: string; ts: string; message: string; pattern: string; }
+
+  const [opsChat, setOpsChat] = useState<ChatExchange[]>([]);
+  const [opsBuyers, setOpsBuyers] = useState<BuyerIntentRow[]>([]);
+  const [opsViolations, setOpsViolations] = useState<ViolationRow[]>([]);
+  const [opsRefreshed, setOpsRefreshed] = useState<Date | null>(null);
+  const [opsLoading, setOpsLoading] = useState(false);
+  const [clearingViol, setClearingViol] = useState(false);
+
+  const refreshOps = useCallback(async () => {
+    setOpsLoading(true);
+    try {
+      const [chatRes, violRes, buyerRes] = await Promise.all([
+        fetch(`${API_BASE}/rkz/admin/chat-log?pin=${authorizedPin}`),
+        fetch(`${API_BASE}/rkz/admin/violations?pin=${authorizedPin}`),
+        fetch(`${API_BASE}/rkz/admin/buyer-intents?pin=${authorizedPin}`),
+      ]);
+      if (chatRes.ok) { const d = await chatRes.json(); setOpsChat(d.chatLog ?? []); }
+      if (violRes.ok) { const d = await violRes.json(); setOpsViolations(d.violations ?? []); }
+      if (buyerRes.ok) { const d = await buyerRes.json(); setOpsBuyers(d.buyerIntents ?? []); }
+      setOpsRefreshed(new Date());
+    } catch {}
+    setOpsLoading(false);
+  }, [authorizedPin]);
+
+  async function clearViolations() {
+    setClearingViol(true);
+    try {
+      await fetch(`${API_BASE}/rkz/admin/violations`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: authorizedPin }),
+      });
+      setOpsViolations([]);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {}
+    setClearingViol(false);
+  }
+
+  useEffect(() => {
+    refreshOps();
+    const id = setInterval(refreshOps, 30_000);
+    return () => clearInterval(id);
+  }, [refreshOps]);
 
   // Rollback live preview on unmount if not saved
   useEffect(() => {
@@ -636,6 +685,134 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
           />
         </SectionCard>
 
+        {/* ── 5. OPERATIONS CENTER ───────────────────────────────────────── */}
+        <SectionCard icon="monitor-heart" title={isAr ? "مركز العمليات المباشر" : "Live Operations Center"} iconBg="#EEF2FF" iconColor="#4F46E5" isAr={isAr}>
+          {/* Header row: stats + refresh */}
+          <View style={[styles.opsHeaderRow, isAr && { flexDirection: "row-reverse" }]}>
+            <View style={[styles.opsStatChip, { backgroundColor: "#EEF2FF" }]}>
+              <MaterialIcons name="chat" size={13} color="#4F46E5" />
+              <Text style={[styles.opsStatText, { color: "#4F46E5" }]}>{opsChat.length}</Text>
+            </View>
+            <View style={[styles.opsStatChip, { backgroundColor: "#FEF2F2" }]}>
+              <MaterialIcons name="gpp-bad" size={13} color="#DC2626" />
+              <Text style={[styles.opsStatText, { color: "#DC2626" }]}>{opsViolations.length}</Text>
+            </View>
+            <View style={[styles.opsStatChip, { backgroundColor: "#F0FDF4" }]}>
+              <MaterialIcons name="people" size={13} color="#16A34A" />
+              <Text style={[styles.opsStatText, { color: "#16A34A" }]}>{opsBuyers.length}</Text>
+            </View>
+            <Pressable
+              onPress={refreshOps}
+              disabled={opsLoading}
+              style={({ pressed }) => [styles.opsRefreshBtn, pressed && { opacity: 0.7 }, opsLoading && { opacity: 0.5 }]}
+            >
+              {opsLoading
+                ? <ActivityIndicator size="small" color="#4F46E5" />
+                : <MaterialIcons name="refresh" size={18} color="#4F46E5" />}
+            </Pressable>
+          </View>
+          {opsRefreshed && (
+            <Text style={[styles.opsLastRefresh, isAr && { textAlign: "right" }]}>
+              {isAr ? `آخر تحديث: ${opsRefreshed.toLocaleTimeString("ar-SA")}` : `Last refresh: ${opsRefreshed.toLocaleTimeString()}`}
+            </Text>
+          )}
+
+          {/* ── Chat Feed ── */}
+          <View style={styles.opsSubHead}>
+            <MaterialIcons name="chat-bubble-outline" size={14} color="#4F46E5" />
+            <Text style={[styles.opsSubTitle, { color: "#4F46E5" }]}>{isAr ? "تغذية الدردشة" : "Chat Feed"}</Text>
+          </View>
+          {opsChat.length === 0 ? (
+            <Text style={styles.opsEmpty}>{isAr ? "لا توجد محادثات بعد" : "No conversations yet"}</Text>
+          ) : (
+            opsChat.slice(0, 8).map((ex, i) => (
+              <View key={ex.id} style={[styles.opsChatRow, ex.blocked && { backgroundColor: "#FEF2F2" }, isAr && { flexDirection: "row-reverse" }]}>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={[styles.opsChatUser, isAr && { textAlign: "right" }]} numberOfLines={1}>
+                    {ex.blocked ? "🛡️ " : "💬 "}{ex.userMsg}
+                  </Text>
+                  {!ex.blocked && (
+                    <Text style={[styles.opsChatReply, isAr && { textAlign: "right" }]} numberOfLines={1}>
+                      🤖 {ex.reply}
+                    </Text>
+                  )}
+                  <Text style={[styles.opsChatTs, isAr && { textAlign: "right" }]}>
+                    {new Date(ex.ts).toLocaleTimeString(isAr ? "ar-SA" : "en-GB", { hour: "2-digit", minute: "2-digit" })}
+                    {" · "}{ex.lang.toUpperCase()}
+                    {ex.blocked ? (isAr ? " · محظور" : " · BLOCKED") : ""}
+                  </Text>
+                </View>
+              </View>
+            ))
+          )}
+
+          <View style={[styles.divider, { marginVertical: 14 }]} />
+
+          {/* ── Buyer Demand ── */}
+          <View style={styles.opsSubHead}>
+            <MaterialIcons name="people-outline" size={14} color="#16A34A" />
+            <Text style={[styles.opsSubTitle, { color: "#16A34A" }]}>{isAr ? "طلبات المشترين" : "Buyer Demand"}</Text>
+            <View style={[styles.opsStatChip, { backgroundColor: "#F0FDF4", marginStart: "auto" }]}>
+              <Text style={[styles.opsStatText, { color: "#16A34A" }]}>{opsBuyers.length} {isAr ? "طلب" : "total"}</Text>
+            </View>
+          </View>
+          {opsBuyers.length === 0 ? (
+            <Text style={styles.opsEmpty}>{isAr ? "لا توجد طلبات مسجّلة بعد" : "No registered demands yet"}</Text>
+          ) : (
+            opsBuyers.slice(0, 5).map((b) => (
+              <View key={b.id} style={[styles.opsBuyerRow, isAr && { flexDirection: "row-reverse" }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.opsBuyerMain, isAr && { textAlign: "right" }]}>
+                    {b.type} · {b.city}
+                    {b.budget ? ` · ${b.budget.toLocaleString()} ريال` : ""}
+                  </Text>
+                  {(b.area || b.bedrooms) ? (
+                    <Text style={[styles.opsChatTs, isAr && { textAlign: "right" }]}>
+                      {b.area ? `${b.area}م²` : ""}{b.area && b.bedrooms ? " · " : ""}{b.bedrooms ? `${b.bedrooms} غرف` : ""}
+                    </Text>
+                  ) : null}
+                </View>
+                <Text style={styles.opsChatTs}>{new Date(b.ts).toLocaleDateString(isAr ? "ar-SA" : "en-GB")}</Text>
+              </View>
+            ))
+          )}
+
+          <View style={[styles.divider, { marginVertical: 14 }]} />
+
+          {/* ── Violations ── */}
+          <View style={[styles.opsSubHead, isAr && { flexDirection: "row-reverse" }]}>
+            <MaterialIcons name="gpp-bad" size={14} color="#DC2626" />
+            <Text style={[styles.opsSubTitle, { color: "#DC2626" }]}>{isAr ? "مخالفات الاتصال" : "Contact Violations"}</Text>
+            {opsViolations.length > 0 && (
+              <Pressable
+                onPress={clearViolations}
+                disabled={clearingViol}
+                style={({ pressed }) => [styles.opsClearBtn, pressed && { opacity: 0.7 }]}
+              >
+                {clearingViol
+                  ? <ActivityIndicator size="small" color="#DC2626" />
+                  : <Text style={styles.opsClearBtnText}>{isAr ? "مسح الكل" : "Clear All"}</Text>}
+              </Pressable>
+            )}
+          </View>
+          {opsViolations.length === 0 ? (
+            <Text style={styles.opsEmpty}>{isAr ? "لا توجد مخالفات مسجّلة ✅" : "No violations recorded ✅"}</Text>
+          ) : (
+            opsViolations.slice(0, 6).map((v) => (
+              <View key={v.id} style={[styles.opsViolRow, isAr && { flexDirection: "row-reverse" }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.opsBuyerMain, { color: "#DC2626" }, isAr && { textAlign: "right" }]} numberOfLines={1}>
+                    🚨 {v.message}
+                  </Text>
+                  <Text style={[styles.opsChatTs, isAr && { textAlign: "right" }]}>
+                    {v.pattern} · {new Date(v.ts).toLocaleTimeString(isAr ? "ar-SA" : "en-GB", { hour: "2-digit", minute: "2-digit" })}
+                  </Text>
+                </View>
+              </View>
+            ))
+          )}
+        </SectionCard>
+
         {/* ── SAVE / DISCARD ─────────────────────────────────────────────── */}
         <View style={{ marginTop: 8 }}>
           {!!savedMsg && (
@@ -888,6 +1065,82 @@ const styles = StyleSheet.create({
   saveBtnText: { fontSize: 16, fontFamily: "Inter_700Bold", color: "#0A1628" },
   discardBtn: { alignItems: "center", paddingVertical: 12 },
   discardText: { fontSize: 14, fontFamily: "Inter_500Medium", color: "#6B7280" },
+
+  // ── Operations Center ──────────────────────────────────────────────────────
+  opsHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 6,
+  },
+  opsStatChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  opsStatText: { fontSize: 12, fontFamily: "Inter_700Bold" },
+  opsRefreshBtn: {
+    marginLeft: "auto" as unknown as number,
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: "#EEF2FF",
+  },
+  opsLastRefresh: {
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    color: "#9CA3AF",
+    marginBottom: 12,
+  },
+  opsSubHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 8,
+  },
+  opsSubTitle: { fontSize: 13, fontFamily: "Inter_700Bold" },
+  opsEmpty: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: "#9CA3AF",
+    marginBottom: 10,
+  },
+  opsChatRow: {
+    flexDirection: "row",
+    borderRadius: 8,
+    backgroundColor: "#F9FAFB",
+    padding: 8,
+    marginBottom: 6,
+  },
+  opsChatUser: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#111827" },
+  opsChatReply: { fontSize: 11, fontFamily: "Inter_400Regular", color: "#6B7280" },
+  opsChatTs: { fontSize: 10, fontFamily: "Inter_400Regular", color: "#9CA3AF", marginTop: 2 },
+  opsBuyerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  opsBuyerMain: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#111827" },
+  opsViolRow: {
+    flexDirection: "row",
+    borderRadius: 8,
+    backgroundColor: "#FEF2F2",
+    padding: 8,
+    marginBottom: 6,
+  },
+  opsClearBtn: {
+    marginLeft: "auto" as unknown as number,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#DC2626",
+  },
+  opsClearBtnText: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: "#DC2626" },
 });
 
 const pinStyles = StyleSheet.create({
