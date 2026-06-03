@@ -37,27 +37,48 @@ export const USING_TEST_SENDER = !process.env.SENDER_EMAIL;
  * Send a 6-digit OTP password-reset email via Resend (bilingual EN + AR).
  * Falls back silently when RESEND_API_KEY is not set (demo mode).
  */
-async function sendResetEmail(to: string, otp: string): Promise<void> {
+async function sendResetEmail(to: string, username: string, otp: string): Promise<void> {
   if (!resend) return;
   await resend.emails.send({
     from:    SENDER_FROM,
     to:      [to],
-    subject: "رمز التحقق لإعادة تعيين كلمة المرور | Password Reset Code",
+    subject: "تفاصيل تسجيل الدخول | Your Login Details",
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#fff">
-        <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#111">Password Reset Code</h2>
-        <p style="margin:0 0 8px;color:#555;font-size:14px">
-          Use the 6-digit code below to reset your password.
-          It expires in <strong>3 minutes</strong>.
+        <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#111">Your Login Details</h2>
+        <p style="margin:0 0 20px;color:#555;font-size:14px">
+          Here are your login details for the Rakez Client Portal.
         </p>
-        <h2 style="margin:12px 0 6px;font-size:18px;font-weight:700;color:#111;direction:rtl;text-align:right">رمز إعادة تعيين كلمة المرور</h2>
-        <p style="margin:0 0 24px;color:#555;font-size:14px;direction:rtl;text-align:right">
-          استخدم الرمز المكوّن من 6 أرقام أدناه لإعادة تعيين كلمة المرور.
-          ينتهي صلاحيته خلال <strong>3 دقائق</strong>.
+
+        <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px">Username</p>
+        <div style="background:#f4f4f5;border-radius:10px;padding:14px 20px;font-size:20px;font-weight:700;color:#111;font-family:monospace;margin:0 0 24px">
+          ${username}
+        </div>
+
+        <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px">Password Reset Code</p>
+        <p style="margin:0 0 10px;color:#555;font-size:13px">
+          Use this 6-digit code to reset your password. It expires in <strong>3 minutes</strong>.
         </p>
         <div style="background:#f4f4f5;border-radius:12px;padding:24px;text-align:center;letter-spacing:12px;font-size:44px;font-weight:900;color:#111;font-family:monospace;margin:0 0 24px">
           ${otp}
         </div>
+
+        <hr style="border:none;border-top:1px solid #eee;margin:0 0 20px"/>
+
+        <h2 style="margin:0 0 6px;font-size:16px;font-weight:700;color:#111;direction:rtl;text-align:right">تفاصيل تسجيل الدخول الخاصة بك</h2>
+        <p style="margin:0 0 12px;color:#555;font-size:13px;direction:rtl;text-align:right">
+          اسم المستخدم الخاص بك:
+        </p>
+        <div style="background:#f4f4f5;border-radius:10px;padding:14px 20px;font-size:20px;font-weight:700;color:#111;font-family:monospace;margin:0 0 16px;direction:ltr;text-align:center">
+          ${username}
+        </div>
+        <p style="margin:0 0 10px;color:#555;font-size:13px;direction:rtl;text-align:right">
+          رمز إعادة تعيين كلمة المرور (صالح لمدة 3 دقائق):
+        </p>
+        <div style="background:#f4f4f5;border-radius:12px;padding:20px;text-align:center;letter-spacing:12px;font-size:40px;font-weight:900;color:#111;font-family:monospace;margin:0 0 24px">
+          ${otp}
+        </div>
+
         <p style="margin:0;color:#999;font-size:12px;text-align:center">
           If you did not request this, you can safely ignore this email.<br/>
           إذا لم تطلب ذلك، يمكنك تجاهل هذا البريد بأمان.
@@ -500,7 +521,7 @@ router.post("/auth/forgot-password", async (req, res) => {
   req.log.info({ userId: user.id }, "Password reset OTP issued");
 
   try {
-    await sendResetEmail(user.email ?? String(email), otp);
+    await sendResetEmail(user.email ?? String(email), user.username, otp);
     req.log.info({ userId: user.id }, "Reset OTP email dispatched via Resend");
   } catch (err) {
     req.log.error({ err }, "Failed to send reset email — returning OTP in body as fallback");

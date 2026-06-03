@@ -274,7 +274,7 @@ export const PortalLogin: React.FC = () => {
   // ── View: Forgot — enter email ─────────────────────────────────────────────
   if (view === 'forgot-email') return (
     <>
-      <Helmet><title>Reset Password | Rakez</title></Helmet>
+      <Helmet><title>Forgot Login Details | Rakez</title></Helmet>
       <div className="min-h-screen flex">
         <BrandingPanel />
         <RightPanel>
