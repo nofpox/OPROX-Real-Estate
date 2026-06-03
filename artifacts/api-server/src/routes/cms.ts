@@ -4,8 +4,12 @@ import {
   propertyCategoriesTable,
   settingsTable,
   listingsTable,
+  propertiesTable,
+  guestsTable,
+  bookingsTable,
+  roomsTable,
 } from "@workspace/db";
-import { eq, and, asc, desc } from "drizzle-orm";
+import { eq, and, asc, desc, count } from "drizzle-orm";
 
 const router = Router();
 
@@ -124,7 +128,7 @@ router.delete("/cms/property-types/:id", requireAdmin, async (req, res) => {
 
 const SITE_SECTIONS = [
   "hero", "contact", "announcements", "about",
-  "branding", "stats", "services", "nav", "footer", "cta",
+  "branding", "stats", "services", "nav", "footer", "cta", "listingsPage",
 ] as const;
 type SiteSection = (typeof SITE_SECTIONS)[number];
 
@@ -184,10 +188,10 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     logoUrl: "",
   },
   stats: [
-    { value: "50+",    labelEn: "Properties Managed",      labelAr: "عقار مُدار" },
-    { value: "1,200+", labelEn: "Satisfied Tenants",        labelAr: "مستأجر راضٍ" },
-    { value: "₂B SAR", labelEn: "Assets Under Management",  labelAr: "أصول تحت الإدارة" },
-    { value: "10+",    labelEn: "Years of Excellence",       labelAr: "سنوات من التميز" },
+    { value: "0",      labelEn: "Properties Managed",      labelAr: "عقار مُدار",           liveKey: "properties_count" },
+    { value: "0",      labelEn: "Satisfied Tenants",        labelAr: "مستأجر راضٍ",          liveKey: "guests_count"     },
+    { value: "₂B SAR", labelEn: "Assets Under Management",  labelAr: "أصول تحت الإدارة",     liveKey: null               },
+    { value: "10+",    labelEn: "Years of Excellence",       labelAr: "سنوات من التميز",      liveKey: null               },
   ],
   services: [
     {
@@ -254,6 +258,13 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
       imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop",
     },
   ],
+  listingsPage: {
+    pageTitleEn: "Property Listings",
+    pageTitleAr: "العقارات",
+    subtitleEn: "Discover our curated selection of properties across Saudi Arabia.",
+    subtitleAr: "اكتشف مجموعة عقاراتنا المختارة في المملكة العربية السعودية.",
+    metaDescription: "Browse properties for sale, rent, and under professional management by Rakez Smart Solutions.",
+  },
   nav: [
     { href: "/",         labelEn: "Home",          labelAr: "الرئيسية"    },
     { href: "/listings", labelEn: "Properties",    labelAr: "العقارات"    },
@@ -300,6 +311,29 @@ router.put("/cms/site-content/:section", requireAdmin, async (req, res) => {
   } catch (err) {
     req.log.error(err, "PUT /cms/site-content/:section");
     res.status(500).json({ error: "Failed to update site content" });
+  }
+});
+
+// ── Live Stats (auto-calculated from DB) ──────────────────────────────────────
+
+router.get("/cms/live-stats", async (req, res) => {
+  const tenantId = tid(req) ?? 1;
+  try {
+    const [props, guests, bookings, rooms] = await Promise.all([
+      db.select({ count: count() }).from(propertiesTable).where(eq(propertiesTable.tenantId, tenantId)),
+      db.select({ count: count() }).from(guestsTable).where(eq(guestsTable.tenantId, tenantId)),
+      db.select({ count: count() }).from(bookingsTable).where(eq(bookingsTable.tenantId, tenantId)),
+      db.select({ count: count() }).from(roomsTable).where(eq(roomsTable.tenantId, tenantId)),
+    ]);
+    res.json({
+      properties_count: props[0]?.count   ?? 0,
+      guests_count:     guests[0]?.count   ?? 0,
+      bookings_count:   bookings[0]?.count ?? 0,
+      rooms_count:      rooms[0]?.count    ?? 0,
+    });
+  } catch (err) {
+    req.log.error(err, "GET /cms/live-stats");
+    res.status(500).json({ error: "Failed to fetch live stats" });
   }
 });
 

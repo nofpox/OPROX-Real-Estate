@@ -1,10 +1,10 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Monitor, Upload, Loader2, Save, Pencil, X, Plus, Trash2,
   Check, RefreshCw, Globe, Phone, Mail, MapPin, Image as ImageIcon,
   Building, BarChart3, Layers, Navigation, AlignLeft, Megaphone,
-  MessageCircle, ExternalLink, ChevronDown, ChevronUp,
+  MessageCircle, ExternalLink, ChevronDown, ChevronUp, Database, List,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,8 @@ interface HeroContent {
   ctaButtonEn: string; ctaButtonAr: string;
   imageUrl: string;
 }
-interface Stat { value: string; labelEn: string; labelAr: string; }
+type StatLiveKey = "properties_count" | "guests_count" | "bookings_count" | "rooms_count" | null;
+interface Stat { value: string; labelEn: string; labelAr: string; liveKey?: StatLiveKey; }
 interface ServiceItem {
   titleEn: string; titleAr: string;
   descEn: string; descAr: string;
@@ -52,6 +53,11 @@ interface CtaContent {
 }
 interface AboutContent { titleEn: string; titleAr: string; body: string; imageUrl: string; }
 interface Announcement { id: string; text: string; isActive: boolean; }
+interface ListingsPageContent {
+  pageTitleEn: string; pageTitleAr: string;
+  subtitleEn: string; subtitleAr: string;
+  metaDescription: string;
+}
 
 interface SiteContent {
   branding: BrandingContent;
@@ -64,6 +70,7 @@ interface SiteContent {
   cta: CtaContent;
   about: AboutContent;
   announcements: Announcement[];
+  listingsPage: ListingsPageContent;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -268,6 +275,13 @@ function HomeTab({ content, onSave }: { content: SiteContent; onSave: (s: string
   const [ctaSaving, setCtaSaving]   = useState(false);
   const [ctaLocal, setCtaLocal]     = useState<CtaContent>(content.cta);
 
+  const { data: _liveStats } = useQuery<Record<string, number>>({
+    queryKey: ["cms-live-stats"],
+    queryFn: () => apiFetch<Record<string, number>>("/api/cms/live-stats"),
+    staleTime: 30_000,
+  });
+  const liveStats = _liveStats ?? {};
+
   const saveSection = async (section: string, data: unknown, setSaving: (v: boolean) => void, setEditing: (v: boolean) => void) => {
     setSaving(true);
     try { await onSave(section, data); setEditing(false); }
@@ -332,25 +346,71 @@ function HomeTab({ content, onSave }: { content: SiteContent; onSave: (s: string
         onCancel={() => setStatsEditing(false)}
         preview={
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {content.stats.map((s, i) => (
-              <div key={i} className="text-center p-3 bg-muted/40 rounded-lg">
-                <p className="text-xl font-bold text-primary">{s.value}</p>
-                <p className="text-xs text-muted-foreground">{s.labelEn}</p>
-                <p className="text-xs text-muted-foreground/60" dir="rtl">{s.labelAr}</p>
-              </div>
-            ))}
+            {content.stats.map((s, i) => {
+              const live = s.liveKey ? liveStats[s.liveKey] : undefined;
+              const display = live !== undefined ? live.toLocaleString() : s.value;
+              return (
+                <div key={i} className="text-center p-3 bg-muted/40 rounded-lg relative">
+                  {s.liveKey && <Database className="h-3 w-3 text-primary/40 absolute top-1.5 end-1.5" />}
+                  <p className="text-xl font-bold text-primary">{display}</p>
+                  <p className="text-xs text-muted-foreground">{s.labelEn}</p>
+                  <p className="text-xs text-muted-foreground/60" dir="rtl">{s.labelAr}</p>
+                </div>
+              );
+            })}
           </div>
         }
       >
         <div className="space-y-3">
           {statsLocal.map((stat, i) => (
-            <div key={i} className="grid grid-cols-3 gap-2 p-3 border rounded-lg bg-muted/20">
-              <div><Label className="text-xs mb-1 block">Value</Label>
-                <Input value={stat.value} onChange={e => setStatsLocal(s => s.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} className="h-8 text-sm" /></div>
-              <div><Label className="text-xs mb-1 block">Label (EN)</Label>
-                <Input value={stat.labelEn} onChange={e => setStatsLocal(s => s.map((x, j) => j === i ? { ...x, labelEn: e.target.value } : x))} className="h-8 text-sm" /></div>
-              <div><Label className="text-xs mb-1 block">التسمية (AR)</Label>
-                <Input dir="rtl" value={stat.labelAr} onChange={e => setStatsLocal(s => s.map((x, j) => j === i ? { ...x, labelAr: e.target.value } : x))} className="h-8 text-sm" /></div>
+            <div key={i} className="p-3 border rounded-lg bg-muted/20 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">Stat {i + 1}</span>
+                <div className="flex items-center gap-2">
+                  <Database className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="text-xs text-muted-foreground">Auto from database</Label>
+                  <Switch
+                    checked={!!stat.liveKey}
+                    onCheckedChange={checked =>
+                      setStatsLocal(s => s.map((x, j) => j === i
+                        ? { ...x, liveKey: checked ? "properties_count" : null }
+                        : x))
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {stat.liveKey ? (
+                  <div>
+                    <Label className="text-xs mb-1 block">Database Field</Label>
+                    <select
+                      value={stat.liveKey}
+                      onChange={e => setStatsLocal(s => s.map((x, j) => j === i ? { ...x, liveKey: e.target.value as StatLiveKey } : x))}
+                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm"
+                    >
+                      <option value="properties_count">Properties count</option>
+                      <option value="guests_count">Guests / Tenants</option>
+                      <option value="bookings_count">Bookings count</option>
+                      <option value="rooms_count">Rooms count</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <Label className="text-xs mb-1 block">Value</Label>
+                    <Input value={stat.value} onChange={e => setStatsLocal(s => s.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} className="h-8 text-sm" />
+                  </div>
+                )}
+                <div><Label className="text-xs mb-1 block">Label (EN)</Label>
+                  <Input value={stat.labelEn} onChange={e => setStatsLocal(s => s.map((x, j) => j === i ? { ...x, labelEn: e.target.value } : x))} className="h-8 text-sm" /></div>
+                <div><Label className="text-xs mb-1 block">التسمية (AR)</Label>
+                  <Input dir="rtl" value={stat.labelAr} onChange={e => setStatsLocal(s => s.map((x, j) => j === i ? { ...x, labelAr: e.target.value } : x))} className="h-8 text-sm" /></div>
+              </div>
+              {stat.liveKey && liveStats[stat.liveKey] !== undefined && (
+                <p className="text-xs text-primary/70 flex items-center gap-1">
+                  <Database className="h-3 w-3" />
+                  Current live value: <strong>{liveStats[stat.liveKey].toLocaleString()}</strong>
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -699,6 +759,69 @@ function ContactTab({ content, onSave }: { content: SiteContent; onSave: (s: str
   );
 }
 
+// ── Tab: Listings Page ────────────────────────────────────────────────────────
+
+function ListingsPageTab({ content, onSave }: { content: SiteContent; onSave: (s: string, d: unknown) => Promise<void> }) {
+  const defaultListings: ListingsPageContent = {
+    pageTitleEn: "Property Listings", pageTitleAr: "العقارات",
+    subtitleEn: "Discover our curated selection of properties.", subtitleAr: "اكتشف مجموعة عقاراتنا المختارة.",
+    metaDescription: "Browse properties for sale, rent, and under professional management.",
+  };
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving]   = useState(false);
+  const [local, setLocal]     = useState<ListingsPageContent>(content.listingsPage ?? defaultListings);
+
+  const startEdit = () => { setLocal({ ...(content.listingsPage ?? defaultListings) }); setEditing(true); };
+  const cancel    = () => setEditing(false);
+  const save      = async () => {
+    setSaving(true);
+    try { await onSave("listingsPage", local); setEditing(false); }
+    finally { setSaving(false); }
+  };
+
+  const lp = content.listingsPage ?? defaultListings;
+
+  return (
+    <div className="space-y-4 mt-4">
+      <SectionCard
+        icon={<List className="h-4 w-4" />}
+        title="Listings Page Header"
+        description="Title, subtitle and SEO meta description shown on the /listings page"
+        isEditing={editing} isSaving={saving}
+        onEdit={startEdit} onSave={save} onCancel={cancel}
+        preview={
+          <div className="space-y-1.5">
+            <p className="font-semibold">{lp.pageTitleEn}</p>
+            <p className="text-sm text-muted-foreground" dir="rtl">{lp.pageTitleAr}</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">{lp.subtitleEn}</p>
+            <p className="text-xs text-muted-foreground/50 mt-0.5" dir="rtl">{lp.subtitleAr}</p>
+            <Badge variant="outline" className="text-xs mt-1">SEO: {lp.metaDescription.slice(0, 50)}…</Badge>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label className="text-xs mb-1 block">Page Title (English)</Label>
+              <Input value={local.pageTitleEn} onChange={e => setLocal(l => ({ ...l, pageTitleEn: e.target.value }))} /></div>
+            <div><Label className="text-xs mb-1 block">عنوان الصفحة (Arabic)</Label>
+              <Input dir="rtl" value={local.pageTitleAr} onChange={e => setLocal(l => ({ ...l, pageTitleAr: e.target.value }))} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label className="text-xs mb-1 block">Subtitle (English)</Label>
+              <Textarea rows={2} value={local.subtitleEn} onChange={e => setLocal(l => ({ ...l, subtitleEn: e.target.value }))} /></div>
+            <div><Label className="text-xs mb-1 block">العنوان الفرعي (Arabic)</Label>
+              <Textarea dir="rtl" rows={2} value={local.subtitleAr} onChange={e => setLocal(l => ({ ...l, subtitleAr: e.target.value }))} /></div>
+          </div>
+          <div><Label className="text-xs mb-1 block">SEO Meta Description (English)</Label>
+            <Textarea rows={2} value={local.metaDescription} onChange={e => setLocal(l => ({ ...l, metaDescription: e.target.value }))} placeholder="Short description for search engines (150–160 chars recommended)" />
+            <p className="text-xs text-muted-foreground mt-1">{local.metaDescription.length} / 160 chars</p>
+          </div>
+        </div>
+      </SectionCard>
+    </div>
+  );
+}
+
 // ── Tab: More (About + Announcements) ────────────────────────────────────────
 
 function MiscTab({ content, onSave }: { content: SiteContent; onSave: (s: string, d: unknown) => Promise<void> }) {
@@ -921,6 +1044,9 @@ export default function WebsiteSettings() {
           <TabsTrigger value="contact" className="gap-1.5">
             <Phone className="h-3.5 w-3.5" />Contact
           </TabsTrigger>
+          <TabsTrigger value="listings" className="gap-1.5">
+            <List className="h-3.5 w-3.5" />Listings
+          </TabsTrigger>
           <TabsTrigger value="misc" className="gap-1.5">
             <AlignLeft className="h-3.5 w-3.5" />More
           </TabsTrigger>
@@ -940,6 +1066,9 @@ export default function WebsiteSettings() {
         </TabsContent>
         <TabsContent value="contact">
           <ContactTab content={content} onSave={handleSave} />
+        </TabsContent>
+        <TabsContent value="listings">
+          <ListingsPageTab content={content} onSave={handleSave} />
         </TabsContent>
         <TabsContent value="misc">
           <MiscTab content={content} onSave={handleSave} />

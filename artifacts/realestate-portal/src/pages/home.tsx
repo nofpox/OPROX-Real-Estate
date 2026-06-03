@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'wouter';
 import { useGetListings } from '@workspace/api-client-react';
@@ -11,9 +11,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const STAT_ICONS = [Building2, Users, TrendingUp, Award];
 
+type LiveStats = Record<string, number>;
+
 export const Home: React.FC = () => {
   const { isRtl } = useLanguage();
   const { content } = useCms();
+  const [liveStats, setLiveStats] = useState<LiveStats>({});
+
+  useEffect(() => {
+    fetch('/api/cms/live-stats')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((data: LiveStats) => setLiveStats(data))
+      .catch(() => {});
+  }, []);
 
   const { data: featuredResponse, isLoading } = useGetListings({
     featured: 'true',
@@ -94,10 +104,13 @@ export const Home: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-primary-foreground/10 rtl:divide-x-reverse">
             {stats.map((stat, i) => {
               const Icon = STAT_ICONS[i % STAT_ICONS.length];
+              const displayValue = stat.liveKey && liveStats[stat.liveKey] !== undefined
+                ? liveStats[stat.liveKey].toLocaleString()
+                : stat.value;
               return (
                 <div key={i} className="flex flex-col items-center gap-1 py-6 px-4 text-center">
                   <Icon className="h-5 w-5 text-secondary mb-1 opacity-80" />
-                  <span className="text-2xl md:text-3xl font-bold text-white">{stat.value}</span>
+                  <span className="text-2xl md:text-3xl font-bold text-white">{displayValue}</span>
                   <span className="text-xs text-primary-foreground/60 leading-tight">
                     {isRtl ? stat.labelAr : stat.labelEn}
                   </span>

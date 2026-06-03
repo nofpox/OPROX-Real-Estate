@@ -20,10 +20,13 @@ export interface CmsHero {
   imageUrl: string;
 }
 
+export type CmsStatLiveKey = "properties_count" | "guests_count" | "bookings_count" | "rooms_count" | null;
+
 export interface CmsStat {
   value: string;
   labelEn: string;
   labelAr: string;
+  liveKey?: CmsStatLiveKey;
 }
 
 export interface CmsService {
@@ -81,6 +84,14 @@ export interface CmsAnnouncement {
   isActive: boolean;
 }
 
+export interface CmsListingsPage {
+  pageTitleEn: string;
+  pageTitleAr: string;
+  subtitleEn: string;
+  subtitleAr: string;
+  metaDescription: string;
+}
+
 export interface SiteContent {
   branding: CmsBranding;
   hero: CmsHero;
@@ -92,6 +103,7 @@ export interface SiteContent {
   cta: CmsCta;
   about: CmsAbout;
   announcements: CmsAnnouncement[];
+  listingsPage: CmsListingsPage;
 }
 
 // ── Defaults (mirrors server defaults, used as fallback while loading) ─────────
@@ -114,10 +126,10 @@ const DEFAULTS: SiteContent = {
     imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop",
   },
   stats: [
-    { value: "50+",    labelEn: "Properties Managed",      labelAr: "عقار مُدار" },
-    { value: "1,200+", labelEn: "Satisfied Tenants",        labelAr: "مستأجر راضٍ" },
-    { value: "₂B SAR", labelEn: "Assets Under Management",  labelAr: "أصول تحت الإدارة" },
-    { value: "10+",    labelEn: "Years of Excellence",       labelAr: "سنوات من التميز" },
+    { value: "0",      labelEn: "Properties Managed",      labelAr: "عقار مُدار",          liveKey: "properties_count" as const },
+    { value: "0",      labelEn: "Satisfied Tenants",        labelAr: "مستأجر راضٍ",         liveKey: "guests_count"     as const },
+    { value: "₂B SAR", labelEn: "Assets Under Management",  labelAr: "أصول تحت الإدارة",    liveKey: null },
+    { value: "10+",    labelEn: "Years of Excellence",       labelAr: "سنوات من التميز",     liveKey: null },
   ],
   services: [
     {
@@ -182,6 +194,13 @@ const DEFAULTS: SiteContent = {
     imageUrl: "",
   },
   announcements: [],
+  listingsPage: {
+    pageTitleEn: "Property Listings",
+    pageTitleAr: "العقارات",
+    subtitleEn: "Discover our curated selection of properties across Saudi Arabia.",
+    subtitleAr: "اكتشف مجموعة عقاراتنا المختارة في المملكة العربية السعودية.",
+    metaDescription: "Browse properties for sale, rent, and under professional management by Rakez Smart Solutions.",
+  },
 };
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -217,6 +236,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           cta:           { ...prev.cta,           ...(data.content.cta           ?? {}) },
           about:         { ...prev.about,         ...(data.content.about         ?? {}) },
           announcements: data.content.announcements ?? prev.announcements,
+          listingsPage:  { ...prev.listingsPage,  ...(data.content.listingsPage  ?? {}) },
         }));
       })
       .catch(() => {})

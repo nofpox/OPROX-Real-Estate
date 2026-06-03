@@ -4,6 +4,7 @@ import { useRoute, Link } from 'wouter';
 import { useGetListingById, useSubmitListingInquiry } from '@workspace/api-client-react';
 import type { Listing } from '@workspace/api-client-react';
 import { useLanguage } from '@/lib/i18n';
+import { useCms } from '@/lib/cms-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,10 +24,14 @@ export const ListingDetail: React.FC = () => {
 
   const submitInquiry = useSubmitListingInquiry();
 
+  const { content: cmsContent } = useCms();
+  const { companyNameEn, companyNameAr } = cmsContent.branding;
+
   const listing = response?.data as Listing | undefined;
 
-  const pageTitle = listing ? `${listing.title} | ركز للحلول الذكية` : 'Property | ركز للحلول الذكية';
-  const pageDesc  = listing?.description ? String(listing.description).slice(0, 155) : 'View property details on Rakez Smart Solutions portal.';
+  const companyName = isRtl ? companyNameAr : companyNameEn;
+  const pageTitle = listing ? `${listing.title} | ${companyName}` : `Property | ${companyName}`;
+  const pageDesc  = listing?.description ? String(listing.description).slice(0, 155) : `View property details on ${companyNameEn} portal.`;
   const ogImage   = (listing?.media as Array<{ url: string }> | undefined)?.[0]?.url ?? '';
   const ldJson    = listing ? JSON.stringify({
     "@context":   "https://schema.org",
@@ -46,7 +51,7 @@ export const ListingDetail: React.FC = () => {
       "price":         listing.price,
       "priceCurrency": (listing.currency as string | undefined) ?? "SAR",
     },
-    "brand": { "@type": "Organization", "name": "Rakez Smart Solutions" },
+    "brand": { "@type": "Organization", "name": companyNameEn },
   }) : null;
 
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });

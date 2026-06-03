@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useGetListings } from '@workspace/api-client-react';
 import { useLanguage } from '@/lib/i18n';
+import { useCms } from '@/lib/cms-context';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +31,7 @@ const LISTING_TYPES = [
 
 export const ListingsBrowser: React.FC = () => {
   const { t, isRtl } = useLanguage();
+  const { content } = useCms();
 
   const [page,         setPage]         = useState(1);
   const [q,            setQ]            = useState('');
@@ -80,18 +82,22 @@ export const ListingsBrowser: React.FC = () => {
           <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-2">
             {isRtl ? 'استكشف' : 'Browse'}
           </p>
-          <h1 className="text-4xl font-bold mb-2">{t('nav.listings')}</h1>
+          <h1 className="text-4xl font-bold mb-2">
+            {isRtl ? content.listingsPage.pageTitleAr : content.listingsPage.pageTitleEn}
+          </h1>
           <p className="text-primary-foreground/70 text-sm">
-            {isRtl
-              ? 'اكتشف مجموعة عقاراتنا المختارة في المملكة العربية السعودية'
-              : 'Discover our curated selection of properties across Saudi Arabia'}
+            {isRtl ? content.listingsPage.subtitleAr : content.listingsPage.subtitleEn}
           </p>
         </div>
       </div>
 
       <Helmet>
-        <title>{isRtl ? 'العقارات' : 'Property Listings'} | ركز للحلول الذكية</title>
-        <meta name="description" content="Browse properties for sale, rent, and under professional management by Rakez Smart Solutions." />
+        <title>
+          {isRtl ? content.listingsPage.pageTitleAr : content.listingsPage.pageTitleEn}
+          {' | '}
+          {isRtl ? content.branding.companyNameAr : content.branding.companyNameEn}
+        </title>
+        <meta name="description" content={content.listingsPage.metaDescription} />
         <link rel="canonical" href="https://rakez.sa/realestate/listings" />
       </Helmet>
 
