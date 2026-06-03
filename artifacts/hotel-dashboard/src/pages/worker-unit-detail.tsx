@@ -105,7 +105,7 @@ export default function WorkerUnitDetail({ id }: { id: number }) {
     onSuccess: () => { toast({ title: t("worker.unitDetail.resolve") }); refetchRequests(); },
   });
 
-  const serviceRequestUrl = `${window.location.origin}/guest-portal/unit/${id}`;
+  const serviceRequestUrl = `${window.location.origin}/rooms/${id}`;
 
   return (
     <div className="min-h-screen bg-background">

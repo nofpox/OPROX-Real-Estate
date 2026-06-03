@@ -23,7 +23,7 @@ export const Home: React.FC = () => {
   const [leadStatus, setLeadStatus] = useState<LeadStatus>('idle');
 
   useEffect(() => {
-    fetch('/api/cms/live-stats')
+    fetch('/realestate-api/cms/live-stats')
       .then(r => r.ok ? r.json() : Promise.reject())
       .then((data: LiveStats) => setLiveStats(data))
       .catch(() => {});
@@ -36,7 +36,7 @@ export const Home: React.FC = () => {
     if (!lead.name || !lead.email) return;
     setLeadStatus('submitting');
     try {
-      const res = await fetch('/api/guest/contact', {
+      const res = await fetch('/realestate-api/guest/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

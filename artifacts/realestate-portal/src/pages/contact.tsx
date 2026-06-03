@@ -28,7 +28,7 @@ export const Contact: React.FC = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch('/api/guest/contact', {
+      const res = await fetch('/realestate-api/guest/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

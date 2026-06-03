@@ -221,7 +221,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/cms/site-content')
+    fetch('/realestate-api/cms/site-content')
       .then(r => r.ok ? r.json() : Promise.reject())
       .then((data: { content: Partial<SiteContent> }) => {
         if (cancelled) return;

@@ -1,0 +1,31 @@
+kind = "api"
+previewPath = "/realestate-api"
+title = "Real Estate API"
+version = "1.0.0"
+id = "artifacts/realestate-api"
+
+[[services]]
+localPort = 8099
+name = "Real Estate API"
+paths = ["/realestate-api"]
+
+[services.development]
+run = "pnpm --filter @workspace/realestate-api run dev"
+
+[services.production]
+
+[services.production.build]
+args = ["pnpm", "--filter", "@workspace/realestate-api", "run", "build"]
+
+[services.production.build.env]
+NODE_ENV = "production"
+
+[services.production.run]
+args = ["node", "--enable-source-maps", "artifacts/realestate-api/dist/index.mjs"]
+
+[services.production.run.env]
+PORT = "8099"
+NODE_ENV = "production"
+
+[services.production.health.startup]
+path = "/realestate-api/health"

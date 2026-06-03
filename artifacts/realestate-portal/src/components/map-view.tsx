@@ -197,7 +197,7 @@ export function MapView({ open, onClose, filters, isRtl }: MapViewProps) {
       if (filters.q)                      params.set('q', filters.q);
       if (filters.propertyType !== 'all') params.set('propertyType', filters.propertyType);
       if (filters.type !== 'all')         params.set('type', filters.type);
-      const res = await fetch(`/api/listings?${params.toString()}`);
+      const res = await fetch(`/realestate-api/listings?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch');
       return res.json() as Promise<{ data: Listing[]; meta: { total: number } }>;
     },

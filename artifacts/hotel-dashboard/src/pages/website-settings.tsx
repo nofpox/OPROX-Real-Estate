@@ -277,7 +277,7 @@ function HomeTab({ content, onSave }: { content: SiteContent; onSave: (s: string
 
   const { data: _liveStats } = useQuery<Record<string, number>>({
     queryKey: ["cms-live-stats"],
-    queryFn: () => apiFetch<Record<string, number>>("/api/cms/live-stats"),
+    queryFn: () => apiFetch<Record<string, number>>("/realestate-api/cms/live-stats"),
     staleTime: 30_000,
   });
   const liveStats = _liveStats ?? {};
@@ -981,12 +981,12 @@ export default function WebsiteSettings() {
 
   const q = useQuery<{ content: SiteContent }>({
     queryKey: ["cms-site-content-ws"],
-    queryFn: () => apiFetch("/api/cms/site-content"),
+    queryFn: () => apiFetch("/realestate-api/cms/site-content"),
   });
 
   const saveMutation = useMutation({
     mutationFn: ({ section, data }: { section: string; data: unknown }) =>
-      apiFetch(`/api/cms/site-content/${section}`, { method: "PUT", body: JSON.stringify(data) }),
+      apiFetch(`/realestate-api/cms/site-content/${section}`, { method: "PUT", body: JSON.stringify(data) }),
     onSuccess: (_, { section }) => {
       toast({ title: "Saved!", description: `${section} updated and live on the website.` });
       qc.invalidateQueries({ queryKey: ["cms-site-content-ws"] });
@@ -1038,13 +1038,6 @@ export default function WebsiteSettings() {
             onClick={() => qc.invalidateQueries({ queryKey: ["cms-site-content-ws"] })}
           >
             <RefreshCw className="h-3.5 w-3.5 me-1.5" />Refresh
-          </Button>
-          <Button
-            variant="outline" size="sm" asChild
-          >
-            <a href={`${portalDomain}${basePath.replace("/hotel-dashboard", "/realestate")}/`} target="_blank" rel="noreferrer">
-              <ExternalLink className="h-3.5 w-3.5 me-1.5" />View Website
-            </a>
           </Button>
         </div>
       </div>

@@ -112,7 +112,7 @@ export default function PropertyDetail() {
 
   function copyQRLink() {
     if (!qrRoom) return;
-    const url = `${window.location.origin}/guest-portal/unit/${qrRoom.id}`;
+    const url = `${window.location.origin}/rooms/${qrRoom.id}`;
     navigator.clipboard.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
   }
 
@@ -137,7 +137,7 @@ export default function PropertyDetail() {
     );
   }
 
-  const qrUrl = qrRoom ? `${window.location.origin}/guest-portal/unit/${qrRoom.id}` : "";
+  const qrUrl = qrRoom ? `${window.location.origin}/rooms/${qrRoom.id}` : "";
 
   return (
     <div className="space-y-6">

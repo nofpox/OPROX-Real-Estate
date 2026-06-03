@@ -1136,7 +1136,7 @@ export const PortalDashboard: React.FC = () => {
     setContactSending(true);
     setContactError('');
     try {
-      const res = await fetch('/api/portal/contact', {
+      const res = await fetch('/realestate-api/portal/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

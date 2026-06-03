@@ -133,20 +133,20 @@ function PropertyTypesTab() {
 
   const q = useQuery<{ categories: PropertyCategory[] }>({
     queryKey: ["cms-property-types"],
-    queryFn: () => apiFetch("/api/cms/property-types"),
+    queryFn: () => apiFetch("/realestate-api/cms/property-types"),
   });
 
   const saveMutation = useMutation({
     mutationFn: (data: typeof form & { id?: number }) =>
       data.id
-        ? apiFetch(`/api/cms/property-types/${data.id}`, { method: "PUT", body: JSON.stringify(data) })
-        : apiFetch("/api/cms/property-types", { method: "POST", body: JSON.stringify(data) }),
+        ? apiFetch(`/realestate-api/cms/property-types/${data.id}`, { method: "PUT", body: JSON.stringify(data) })
+        : apiFetch("/realestate-api/cms/property-types", { method: "POST", body: JSON.stringify(data) }),
     onSuccess: () => { toast({ title: "Saved" }); qc.invalidateQueries({ queryKey: ["cms-property-types"] }); setDialog(null); },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiFetch(`/api/cms/property-types/${id}`, { method: "DELETE" }),
+    mutationFn: (id: number) => apiFetch(`/realestate-api/cms/property-types/${id}`, { method: "DELETE" }),
     onSuccess: () => { toast({ title: "Deleted" }); qc.invalidateQueries({ queryKey: ["cms-property-types"] }); setDialog(null); },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -285,7 +285,7 @@ function ListingsEditorTab() {
 
   const q = useQuery<{ listings: AdminListing[] }>({
     queryKey: ["cms-listings-admin"],
-    queryFn: () => apiFetch("/api/cms/listings-admin"),
+    queryFn: () => apiFetch("/realestate-api/cms/listings-admin"),
   });
 
   const patchMutation = useMutation({
@@ -295,7 +295,7 @@ function ListingsEditorTab() {
         amenities: JSON.stringify(data.amenities ?? []),
         media: JSON.stringify(data.media ?? []),
       };
-      return apiFetch(`/api/listings/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+      return apiFetch(`/realestate-api/listings/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
     },
     onSuccess: () => {
       toast({ title: "Listing updated" });
@@ -571,14 +571,14 @@ function SiteContentTab() {
 
   const q = useQuery<{ content: SiteContent }>({
     queryKey: ["cms-site-content"],
-    queryFn: () => apiFetch("/api/cms/site-content"),
+    queryFn: () => apiFetch("/realestate-api/cms/site-content"),
   });
 
   const content = q.data?.content;
 
   const saveMutation = useMutation({
     mutationFn: ({ section, data }: { section: string; data: unknown }) =>
-      apiFetch(`/api/cms/site-content/${section}`, { method: "PUT", body: JSON.stringify(data) }),
+      apiFetch(`/realestate-api/cms/site-content/${section}`, { method: "PUT", body: JSON.stringify(data) }),
     onSuccess: (_, { section }) => {
       toast({ title: "Section saved", description: `${section} content updated.` });
       qc.invalidateQueries({ queryKey: ["cms-site-content"] });

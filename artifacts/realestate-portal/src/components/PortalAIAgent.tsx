@@ -92,7 +92,7 @@ export function PortalAIAgent() {
 
   async function ensureConversation(): Promise<number> {
     if (conversationId) return conversationId;
-    const res = await fetch('/api/openai/conversations', {
+    const res = await fetch('/realestate-api/openai/conversations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -130,7 +130,7 @@ export function PortalAIAgent() {
 
   async function clearChat() {
     if (conversationId) {
-      await fetch(`/api/openai/conversations/${conversationId}`, {
+      await fetch(`/realestate-api/openai/conversations/${conversationId}`, {
         method: 'DELETE', credentials: 'include',
       });
     }
@@ -175,7 +175,7 @@ export function PortalAIAgent() {
           setStreamingContent('');
         }
 
-        const res = await fetch(`/api/openai/conversations/${id}/messages`, {
+        const res = await fetch(`/realestate-api/openai/conversations/${id}/messages`, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

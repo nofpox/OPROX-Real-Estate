@@ -20,6 +20,7 @@ import guestRouter from "./guest";
 import unitFinancialsRouter from "./unitFinancials";
 import activityLogsRouter from "./activityLogs";
 import maintenanceRequestsRouter from "./maintenanceRequests";
+import openaiRouter from "./openai/index.js";
 import settingsRouter from "./settings";
 import fieldUsersRouter from "./fieldUsers";
 import customFieldsRouter from "./customFields";
@@ -28,21 +29,16 @@ import unitRequestsRouter from "./unitRequests";
 import superAdminRouter from "./super-admin";
 import supportTicketsRouter from "./support-tickets";
 import serviceCategoriesRouter from "./serviceCategories";
-import listingsRouter from "./listings";
-import portalRouter from "./portal";
-import sitemapRouter from "./sitemap";
 import archivingRouter from "./archiving";
-import cmsRouter from "./cms";
 import customRolesRouter from "./custom-roles";
 import partnerRouter from "./partner";
-import openaiRouter from "./openai/index.js";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
   worker: 0, supervisor: 1, admin: 2,
 };
 
-const PUBLIC_PREFIXES = ["/auth/", "/health", "/guest/", "/unit-requests", "/unit-info/", "/service-categories", "/listings", "/sitemap.xml", "/cms", "/portal/register"];
+const PUBLIC_PREFIXES = ["/auth/", "/health", "/unit-requests", "/unit-info/", "/service-categories"];
 
 const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
 
@@ -157,11 +153,7 @@ router.use(guestRouter);
 router.use(unitRequestsRouter);
 router.use(supportTicketsRouter);
 router.use(serviceCategoriesRouter);
-router.use(listingsRouter);
-router.use(portalRouter);
-router.use(sitemapRouter);
 router.use(archivingRouter);
-router.use(cmsRouter);
 router.use(customRolesRouter);
 router.use(partnerRouter);
 router.use(openaiRouter);
