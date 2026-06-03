@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Platform,
@@ -13,6 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { apiPost } from "@/constants/api";
 import {
   PLATFORM_COLORS,
   PLATFORM_LABELS,
@@ -25,12 +27,29 @@ import { useLocale } from "@/hooks/useLocale";
 
 type Filter = "all" | "published" | "publishing" | "failed";
 
+interface QualifyResult {
+  leadId: string;
+  score: "serious" | "maybe" | "not_serious";
+  summary: string;
+}
+
+interface QualifyState {
+  loading: boolean;
+  results: QualifyResult[];
+}
+
 const STATUS_COLORS = {
   published: "#4ADE80",
   publishing: "#FCD34D",
   failed: "#F87171",
   draft: "#94A3B8",
   expired: "#94A3B8",
+};
+
+const SCORE_CONFIG = {
+  serious: { color: "#4ADE80", bg: "#DCFCE7" },
+  maybe: { color: "#D97706", bg: "#FEF3C7" },
+  not_serious: { color: "#E53E3E", bg: "#FEE2E2" },
 };
 
 export default function ListingsScreen() {
@@ -40,6 +59,7 @@ export default function ListingsScreen() {
   const { t, isAr } = useLocale();
   const [filter, setFilter] = useState<Filter>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [qualifyMap, setQualifyMap] = useState<Record<string, QualifyState>>({});
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84) + 16;
@@ -66,9 +86,40 @@ export default function ListingsScreen() {
     ]);
   }
 
+  async function handleQualify(p: Property) {
+    if (p.leads.length === 0) return;
+    setQualifyMap((prev) => ({ ...prev, [p.id]: { loading: true, results: [] } }));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const { results } = await apiPost<{ results: QualifyResult[] }>(
+        "/rkz/assistant/qualify",
+        {
+          leads: p.leads.map((l) => ({
+            id: l.id,
+            name: l.name,
+            phone: l.phone,
+            platform: l.platform,
+          })),
+          property: {
+            type: p.type,
+            city: p.location.city,
+            price: p.price,
+            area: p.area,
+            bedrooms: p.bedrooms,
+          },
+        }
+      );
+      setQualifyMap((prev) => ({ ...prev, [p.id]: { loading: false, results } }));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {
+      setQualifyMap((prev) => ({ ...prev, [p.id]: { loading: false, results: [] } }));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+  }
+
   const priceLocale = isAr ? "ar-SA" : "en-US";
 
-  const styles = StyleSheet.create({
+  const S = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     header: {
       backgroundColor: colors.navy,
@@ -146,7 +197,6 @@ export default function ListingsScreen() {
       color: colors.mutedForeground,
       textAlign: isAr ? "left" : "right",
     },
-    moreBtn: { padding: 4 },
     platformSection: { paddingHorizontal: 16, paddingBottom: 14, gap: 8 },
     platformRow: { flexDirection: isAr ? "row-reverse" : "row", alignItems: "center", gap: 10 },
     platDot: { width: 8, height: 8, borderRadius: 4 },
@@ -162,6 +212,39 @@ export default function ListingsScreen() {
       borderRadius: 5,
     },
     divider: { height: 1, backgroundColor: colors.border, marginHorizontal: 16, marginBottom: 12 },
+    // ── AI Qualify section ──────────────────────────────────────────────────
+    qualifySection: { paddingHorizontal: 16, paddingBottom: 0 },
+    qualifyBtn: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+      borderRadius: 10,
+      backgroundColor: colors.navy + "0D",
+      borderWidth: 1,
+      borderColor: colors.navy + "20",
+      alignSelf: "stretch",
+      justifyContent: "center",
+      marginBottom: 12,
+    },
+    qualifyBtnText: {
+      fontSize: 13,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.navy,
+    },
+    qualifyTitleRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 6,
+      marginBottom: 8,
+    },
+    qualifyTitle: {
+      fontSize: 13,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.mutedForeground,
+    },
+    // ── Leads section ──────────────────────────────────────────────────────
     leadsSection: { paddingHorizontal: 16, paddingBottom: 16 },
     leadsSectionTitle: {
       fontSize: 13,
@@ -172,7 +255,7 @@ export default function ListingsScreen() {
     },
     leadCard: {
       flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "center",
+      alignItems: "flex-start",
       gap: 12,
       paddingVertical: 10,
       borderBottomWidth: 1,
@@ -185,13 +268,14 @@ export default function ListingsScreen() {
       backgroundColor: colors.navy,
       alignItems: "center",
       justifyContent: "center",
+      flexShrink: 0,
     },
     leadAvatarText: { color: "#FFFFFF", fontFamily: "Inter_700Bold", fontSize: 14 },
+    leadInfo: { flex: 1 },
     leadName: {
       fontSize: 14,
       fontFamily: "Inter_600SemiBold",
       color: colors.foreground,
-      flex: 1,
       textAlign: isAr ? "right" : "left",
     },
     leadPlatform: {
@@ -200,7 +284,26 @@ export default function ListingsScreen() {
       color: colors.mutedForeground,
       textAlign: isAr ? "right" : "left",
     },
-    unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.destructive },
+    leadAISummary: {
+      fontSize: 12,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      marginTop: 3,
+      lineHeight: 17,
+      textAlign: isAr ? "right" : "left",
+    },
+    scoreBadge: {
+      borderRadius: 6,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      alignSelf: "flex-start",
+      marginTop: 2,
+    },
+    scoreBadgeText: {
+      fontSize: 11,
+      fontFamily: "Inter_700Bold",
+    },
+    unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.destructive, marginTop: 4 },
     deleteBtn: {
       margin: 16,
       marginTop: 0,
@@ -250,49 +353,57 @@ export default function ListingsScreen() {
     return t.listings.statusFailed;
   }
 
+  function getScoreLabel(score: "serious" | "maybe" | "not_serious") {
+    if (score === "serious") return t.assistant.serious;
+    if (score === "maybe") return t.assistant.maybe;
+    return t.assistant.notSerious;
+  }
+
   function renderItem({ item: p }: { item: Property }) {
     const expanded = expandedId === p.id;
     const unreadLeadCount = p.leads.filter((l) => !l.read).length;
+    const qs = qualifyMap[p.id];
 
     return (
-      <View style={styles.card}>
-        <Pressable style={styles.cardHeader} onPress={() => setExpandedId(expanded ? null : p.id)}>
-          <View style={styles.cardLeft}>
-            <View style={styles.propType}>
-              <Text style={styles.propTypeText}>{t.propertyTypes[p.type]}</Text>
+      <View style={S.card}>
+        <Pressable style={S.cardHeader} onPress={() => setExpandedId(expanded ? null : p.id)}>
+          <View style={S.cardLeft}>
+            <View style={S.propType}>
+              <Text style={S.propTypeText}>{t.propertyTypes[p.type]}</Text>
             </View>
-            {p.title && <Text style={styles.propTitle} numberOfLines={1}>{p.title}</Text>}
-            <Text style={styles.propLocation} numberOfLines={1}>
+            {p.title && <Text style={S.propTitle} numberOfLines={1}>{p.title}</Text>}
+            <Text style={S.propLocation} numberOfLines={1}>
               {p.location.district ? `${p.location.district}، ` : ""}{p.location.city}
             </Text>
           </View>
           <View style={{ alignItems: isAr ? "flex-start" : "flex-end" }}>
-            <Text style={styles.propPrice}>{p.price.toLocaleString(priceLocale)}</Text>
-            <Text style={styles.propPriceSub}>{t.listings.sar}</Text>
+            <Text style={S.propPrice}>{p.price.toLocaleString(priceLocale)}</Text>
+            <Text style={S.propPriceSub}>{t.listings.sar}</Text>
           </View>
         </Pressable>
 
-        <View style={styles.platformSection}>
+        {/* Platform rows */}
+        <View style={S.platformSection}>
           {p.platforms.slice(0, expanded ? p.platforms.length : 2).map((pl) => (
-            <View key={pl.platform} style={styles.platformRow}>
-              <View style={[styles.platDot, { backgroundColor: PLATFORM_COLORS[pl.platform as PlatformType] }]} />
-              <Text style={styles.platLabel}>{PLATFORM_LABELS[pl.platform as PlatformType]}</Text>
-              <View style={styles.platStat}>
+            <View key={pl.platform} style={S.platformRow}>
+              <View style={[S.platDot, { backgroundColor: PLATFORM_COLORS[pl.platform as PlatformType] }]} />
+              <Text style={S.platLabel}>{PLATFORM_LABELS[pl.platform as PlatformType]}</Text>
+              <View style={S.platStat}>
                 {pl.status === "published" && (
                   <>
-                    <View style={styles.platStatItem}>
+                    <View style={S.platStatItem}>
                       <MaterialIcons name="visibility" size={12} color={colors.mutedForeground} />
-                      <Text style={styles.platStatText}>{pl.views}</Text>
+                      <Text style={S.platStatText}>{pl.views}</Text>
                     </View>
-                    <View style={styles.platStatItem}>
+                    <View style={S.platStatItem}>
                       <MaterialIcons name="phone" size={12} color={colors.mutedForeground} />
-                      <Text style={styles.platStatText}>{pl.leads}</Text>
+                      <Text style={S.platStatText}>{pl.leads}</Text>
                     </View>
                   </>
                 )}
                 <Text
                   style={[
-                    styles.platStatusText,
+                    S.platStatusText,
                     {
                       color: STATUS_COLORS[pl.status] ?? "#94A3B8",
                       backgroundColor: (STATUS_COLORS[pl.status] ?? "#94A3B8") + "20",
@@ -306,44 +417,97 @@ export default function ListingsScreen() {
           ))}
 
           {!expanded && p.platforms.length > 2 && (
-            <Pressable style={styles.expandBtn} onPress={() => setExpandedId(p.id)}>
-              <Text style={styles.expandText}>{t.listings.showAllPlatforms(p.platforms.length)}</Text>
+            <Pressable style={S.expandBtn} onPress={() => setExpandedId(p.id)}>
+              <Text style={S.expandText}>{t.listings.showAllPlatforms(p.platforms.length)}</Text>
               <MaterialIcons name="expand-more" size={16} color={colors.gold} />
             </Pressable>
           )}
         </View>
 
+        {/* Expanded: leads + AI qualification */}
         {expanded && p.leads.length > 0 && (
           <>
-            <View style={styles.divider} />
-            <View style={styles.leadsSection}>
-              <Text style={styles.leadsSectionTitle}>
+            <View style={S.divider} />
+            <View style={S.qualifySection}>
+              {/* AI Qualify button */}
+              {!qs || (!qs.loading && qs.results.length === 0) ? (
+                <Pressable
+                  style={({ pressed }) => [S.qualifyBtn, pressed && { opacity: 0.75 }]}
+                  onPress={() => handleQualify(p)}
+                  disabled={qs?.loading}
+                >
+                  {qs?.loading ? (
+                    <ActivityIndicator size="small" color={colors.navy} />
+                  ) : (
+                    <Text style={{ fontSize: 14 }}>✨</Text>
+                  )}
+                  <Text style={S.qualifyBtnText}>
+                    {qs?.loading ? t.assistant.qualifying : t.assistant.qualifyBtn}
+                  </Text>
+                </Pressable>
+              ) : qs.results.length > 0 ? (
+                <View style={S.qualifyTitleRow}>
+                  <Text style={{ fontSize: 13 }}>✨</Text>
+                  <Text style={S.qualifyTitle}>{t.assistant.qualifyTitle}</Text>
+                  <Pressable
+                    onPress={() => handleQualify(p)}
+                    style={{ marginLeft: "auto" }}
+                  >
+                    <MaterialIcons name="refresh" size={16} color={colors.mutedForeground} />
+                  </Pressable>
+                </View>
+              ) : null}
+            </View>
+
+            {/* Leads list */}
+            <View style={S.leadsSection}>
+              <Text style={S.leadsSectionTitle}>
                 {t.listings.interestedLeads(p.leads.length, unreadLeadCount)}
               </Text>
-              {p.leads.map((lead) => (
-                <Pressable key={lead.id} style={styles.leadCard} onPress={() => markLeadRead(p.id, lead.id)}>
-                  <View style={styles.leadAvatar}>
-                    <Text style={styles.leadAvatarText}>{lead.name.charAt(0)}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.leadName}>{lead.name}</Text>
-                    <Text style={styles.leadPlatform}>
-                      {PLATFORM_LABELS[lead.platform as PlatformType]} • {lead.phone}
-                    </Text>
-                  </View>
-                  {!lead.read && <View style={styles.unreadDot} />}
-                </Pressable>
-              ))}
+              {p.leads.map((lead) => {
+                const qr = qs?.results?.find((r) => r.leadId === lead.id);
+                const cfg = qr ? SCORE_CONFIG[qr.score] : null;
+                return (
+                  <Pressable
+                    key={lead.id}
+                    style={S.leadCard}
+                    onPress={() => markLeadRead(p.id, lead.id)}
+                  >
+                    <View style={S.leadAvatar}>
+                      <Text style={S.leadAvatarText}>{lead.name.charAt(0)}</Text>
+                    </View>
+                    <View style={S.leadInfo}>
+                      <Text style={S.leadName}>{lead.name}</Text>
+                      <Text style={S.leadPlatform}>
+                        {PLATFORM_LABELS[lead.platform as PlatformType]} • {lead.phone}
+                      </Text>
+                      {qr && cfg && (
+                        <>
+                          <View style={[S.scoreBadge, { backgroundColor: cfg.bg, marginTop: 4 }]}>
+                            <Text style={[S.scoreBadgeText, { color: cfg.color }]}>
+                              {getScoreLabel(qr.score)}
+                            </Text>
+                          </View>
+                          {!!qr.summary && (
+                            <Text style={S.leadAISummary}>{qr.summary}</Text>
+                          )}
+                        </>
+                      )}
+                    </View>
+                    {!lead.read && <View style={S.unreadDot} />}
+                  </Pressable>
+                );
+              })}
             </View>
           </>
         )}
 
         {expanded && (
           <>
-            <View style={styles.divider} />
-            <Pressable style={styles.deleteBtn} onPress={() => handleDelete(p.id)}>
+            <View style={S.divider} />
+            <Pressable style={S.deleteBtn} onPress={() => handleDelete(p.id)}>
               <MaterialIcons name="delete-outline" size={18} color={colors.destructive} />
-              <Text style={styles.deleteBtnText}>{t.listings.deleteProperty}</Text>
+              <Text style={S.deleteBtnText}>{t.listings.deleteProperty}</Text>
             </Pressable>
           </>
         )}
@@ -352,18 +516,22 @@ export default function ListingsScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t.listings.title(properties.length)}</Text>
-        <View style={styles.filterRow}>
+    <View style={S.container}>
+      <View style={S.header}>
+        <Text style={S.headerTitle}>{t.listings.title(properties.length)}</Text>
+        <View style={S.filterRow}>
           {(["all", "published", "publishing"] as Filter[]).map((f) => (
             <Pressable
               key={f}
-              style={[styles.filterPill, filter === f && styles.filterPillActive]}
+              style={[S.filterPill, filter === f && S.filterPillActive]}
               onPress={() => setFilter(f)}
             >
-              <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-                {f === "all" ? t.listings.filterAll : f === "published" ? t.listings.filterActive : t.listings.filterPublishing}
+              <Text style={[S.filterText, filter === f && S.filterTextActive]}>
+                {f === "all"
+                  ? t.listings.filterAll
+                  : f === "published"
+                  ? t.listings.filterActive
+                  : t.listings.filterPublishing}
               </Text>
             </Pressable>
           ))}
@@ -371,12 +539,12 @@ export default function ListingsScreen() {
       </View>
 
       {filtered.length === 0 ? (
-        <View style={styles.emptyContainer}>
+        <View style={S.emptyContainer}>
           <MaterialIcons name="home-work" size={52} color={colors.mutedForeground} />
-          <Text style={styles.emptyTitle}>{t.listings.emptyTitle}</Text>
-          <Text style={styles.emptySubtitle}>{t.listings.emptySubtitle}</Text>
-          <Pressable style={styles.addBtn} onPress={() => router.push("/(tabs)/add")}>
-            <Text style={styles.addBtnText}>{t.listings.addProperty}</Text>
+          <Text style={S.emptyTitle}>{t.listings.emptyTitle}</Text>
+          <Text style={S.emptySubtitle}>{t.listings.emptySubtitle}</Text>
+          <Pressable style={S.addBtn} onPress={() => router.push("/(tabs)/add")}>
+            <Text style={S.addBtnText}>{t.listings.addProperty}</Text>
           </Pressable>
         </View>
       ) : (
@@ -384,10 +552,9 @@ export default function ListingsScreen() {
           data={filtered}
           renderItem={renderItem}
           keyExtractor={(p) => p.id}
-          style={styles.list}
+          style={S.list}
           contentContainerStyle={{ paddingBottom: bottomPad }}
           showsVerticalScrollIndicator={false}
-          scrollEnabled={filtered.length > 0}
         />
       )}
     </View>

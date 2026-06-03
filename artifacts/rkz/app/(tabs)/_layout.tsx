@@ -27,6 +27,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "list.bullet", selected: "list.bullet.circle.fill" }} />
         <Label>{t.tabs.listings}</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="ai-concierge">
+        <Icon sf={{ default: "sparkles", selected: "sparkles" }} />
+        <Label>{t.tabs.assistant}</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
         <Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
         <Label>{t.tabs.settings}</Label>
@@ -98,6 +102,18 @@ function ClassicTabLayout() {
               <SymbolView name="list.bullet" tintColor={color} size={24} />
             ) : (
               <MaterialIcons name="list" size={24} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="ai-concierge"
+        options={{
+          title: t.tabs.assistant,
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="sparkles" tintColor={color} size={24} />
+            ) : (
+              <MaterialIcons name="forum" size={24} color={color} />
             ),
         }}
       />

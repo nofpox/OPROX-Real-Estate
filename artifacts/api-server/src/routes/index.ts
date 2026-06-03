@@ -33,6 +33,7 @@ import archivingRouter from "./archiving";
 import customRolesRouter from "./custom-roles";
 import partnerRouter from "./partner";
 import rkzAiRouter from "./rkz-ai";
+import rkzAssistantRouter from "./rkz-assistant";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
@@ -159,6 +160,7 @@ router.use(customRolesRouter);
 router.use(partnerRouter);
 router.use(openaiRouter);
 router.use(rkzAiRouter);
+router.use(rkzAssistantRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

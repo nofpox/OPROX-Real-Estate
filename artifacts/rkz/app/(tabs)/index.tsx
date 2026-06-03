@@ -1,7 +1,9 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Animated,
   Dimensions,
   Platform,
   Pressable,
@@ -13,6 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { apiPost } from "@/constants/api";
 import {
   PLATFORM_COLORS,
   PLATFORM_LABELS,
@@ -33,8 +36,18 @@ function totalLeads(p: Property) {
   return p.platforms.reduce((a, x) => a + (x.leads ?? 0), 0);
 }
 
-function unreadLeads(p: Property) {
-  return p.leads.filter((l) => !l.read).length;
+interface AIReport {
+  summary: string;
+  insights: string[];
+  actions: string[];
+  score: number;
+}
+
+// ── Score color ──────────────────────────────────────────────────────────────
+function scoreColor(score: number): string {
+  if (score >= 75) return "#4ADE80";
+  if (score >= 50) return "#FCD34D";
+  return "#F87171";
 }
 
 export default function DashboardScreen() {
@@ -42,7 +55,11 @@ export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const { properties, unreadLeadsCount } = useApp();
   const { t, isAr } = useLocale();
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [report, setReport] = useState<AIReport | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+
+  const scoreAnim = useRef(new Animated.Value(0)).current;
 
   const publishedCount = properties.filter((p) =>
     p.platforms.some((x) => x.status === "published")
@@ -53,6 +70,41 @@ export default function DashboardScreen() {
     p.platforms.some((x) => x.status === "publishing")
   ).length;
 
+  async function fetchReport() {
+    if (properties.length === 0) return;
+    setReportLoading(true);
+    try {
+      const portfolioData = properties.map((p) => ({
+        type: p.type,
+        city: p.location.city,
+        district: p.location.district,
+        price: p.price,
+        area: p.area,
+        bedrooms: p.bedrooms,
+        status: p.platforms.some((x) => x.status === "published") ? "published" : "publishing",
+        views: totalViews(p),
+        leads: p.leads.length,
+        publishedAt: p.publishedAt,
+      }));
+      const result = await apiPost<AIReport>("/rkz/assistant/report", { properties: portfolioData });
+      setReport(result);
+      // Animate score
+      Animated.timing(scoreAnim, {
+        toValue: result.score,
+        duration: 1000,
+        useNativeDriver: false,
+      }).start();
+    } catch {
+      // Silently fail — report is optional
+    }
+    setReportLoading(false);
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => { void fetchReport(); }, 800);
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function onRefresh() {
     setRefreshing(true);
     await new Promise((r) => setTimeout(r, 800));
@@ -62,7 +114,7 @@ export default function DashboardScreen() {
   const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
   const bottomPadding = insets.bottom + (Platform.OS === "web" ? 34 : 100);
 
-  const styles = StyleSheet.create({
+  const S = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     header: {
       backgroundColor: colors.navy,
@@ -125,6 +177,135 @@ export default function DashboardScreen() {
     },
     kpiDot: { width: 6, height: 6, borderRadius: 3, marginBottom: 8 },
     scroll: { flex: 1 },
+    // ── AI Report Card ────────────────────────────────────────────────────────
+    reportSection: { paddingHorizontal: 20, marginTop: 20 },
+    reportCard: {
+      backgroundColor: colors.goldLight,
+      borderRadius: 16,
+      padding: 16,
+      overflow: "hidden",
+    },
+    reportHeaderRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 12,
+    },
+    reportTitleRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    reportTitle: {
+      fontSize: 14,
+      fontFamily: "Inter_700Bold",
+      color: colors.navyLight,
+    },
+    scoreCircle: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      borderWidth: 3,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    scoreText: {
+      fontSize: 15,
+      fontFamily: "Inter_700Bold",
+    },
+    refreshBtn: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 8,
+      backgroundColor: colors.gold + "30",
+    },
+    refreshBtnText: {
+      fontSize: 12,
+      fontFamily: "Inter_500Medium",
+      color: colors.navyLight,
+    },
+    reportSummary: {
+      fontSize: 13,
+      fontFamily: "Inter_400Regular",
+      color: colors.navyLight,
+      lineHeight: 20,
+      marginBottom: 12,
+      textAlign: isAr ? "right" : "left",
+    },
+    insightRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "flex-start",
+      gap: 8,
+      marginBottom: 6,
+    },
+    insightDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.gold,
+      marginTop: 7,
+      flexShrink: 0,
+    },
+    insightText: {
+      flex: 1,
+      fontSize: 13,
+      fontFamily: "Inter_500Medium",
+      color: colors.navyLight,
+      lineHeight: 20,
+      textAlign: isAr ? "right" : "left",
+    },
+    actionsLabel: {
+      fontSize: 12,
+      fontFamily: "Inter_700Bold",
+      color: colors.navy,
+      marginTop: 10,
+      marginBottom: 6,
+      textAlign: isAr ? "right" : "left",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    actionPill: {
+      backgroundColor: colors.navy + "15",
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      marginBottom: 4,
+    },
+    actionText: {
+      fontSize: 12,
+      fontFamily: "Inter_400Regular",
+      color: colors.navy,
+      textAlign: isAr ? "right" : "left",
+    },
+    reportLoadingBox: {
+      alignItems: "center",
+      paddingVertical: 20,
+      gap: 8,
+    },
+    reportLoadingText: {
+      fontSize: 13,
+      fontFamily: "Inter_400Regular",
+      color: colors.navyLight,
+    },
+    openAssistantRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: colors.gold + "40",
+    },
+    openAssistantText: {
+      fontSize: 13,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.navy,
+    },
+    // ── Properties section ────────────────────────────────────────────────────
     section: { paddingHorizontal: 20, marginTop: 24 },
     sectionHeader: {
       flexDirection: isAr ? "row-reverse" : "row",
@@ -258,77 +439,70 @@ export default function DashboardScreen() {
   });
 
   function renderCard(p: Property) {
-    const unread = unreadLeads(p);
+    const unread = p.leads.filter((l) => !l.read).length;
     const priceLocale = isAr ? "ar-SA" : "en-US";
     return (
       <Pressable
         key={p.id}
-        style={({ pressed }) => [styles.card, pressed && { opacity: 0.92 }]}
+        style={({ pressed }) => [S.card, pressed && { opacity: 0.92 }]}
         onPress={() => router.push({ pathname: "/(tabs)/listings", params: { id: p.id } })}
       >
-        <View style={styles.cardTop}>
-          <View>
-            <View style={styles.propTypeBadge}>
-              <Text style={styles.propTypeText}>{t.propertyTypes[p.type]}</Text>
-            </View>
+        <View style={S.cardTop}>
+          <View style={S.propTypeBadge}>
+            <Text style={S.propTypeText}>{t.propertyTypes[p.type]}</Text>
           </View>
           <View style={{ alignItems: isAr ? "flex-start" : "flex-end" }}>
-            <Text style={styles.propPrice}>{p.price.toLocaleString(priceLocale)}</Text>
-            <Text style={styles.propCurrency}>{t.dashboard.sar}</Text>
+            <Text style={S.propPrice}>{p.price.toLocaleString(priceLocale)}</Text>
+            <Text style={S.propCurrency}>{t.dashboard.sar}</Text>
           </View>
         </View>
-
-        <Text style={styles.propAddress} numberOfLines={1}>
+        <Text style={S.propAddress} numberOfLines={1}>
           {p.location.district ? `${p.location.district}، ` : ""}{p.location.city}
         </Text>
-
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
+        <View style={S.statsRow}>
+          <View style={S.statItem}>
             <MaterialIcons name="visibility" size={14} color={colors.mutedForeground} />
-            <Text style={styles.statText}>{totalViews(p).toLocaleString()}</Text>
+            <Text style={S.statText}>{totalViews(p).toLocaleString()}</Text>
           </View>
-          <View style={styles.statItem}>
+          <View style={S.statItem}>
             <MaterialIcons name="phone" size={14} color={colors.mutedForeground} />
-            <Text style={styles.statText}>{t.dashboard.leadsCount(totalLeads(p))}</Text>
+            <Text style={S.statText}>{t.dashboard.leadsCount(totalLeads(p))}</Text>
             {unread > 0 && (
-              <View style={styles.unreadBubble}>
-                <Text style={styles.unreadText}>{unread}</Text>
+              <View style={S.unreadBubble}>
+                <Text style={S.unreadText}>{unread}</Text>
               </View>
             )}
           </View>
           {p.area && (
-            <View style={styles.statItem}>
+            <View style={S.statItem}>
               <MaterialIcons name="square-foot" size={14} color={colors.mutedForeground} />
-              <Text style={styles.statText}>{p.area} {isAr ? "م²" : "m²"}</Text>
+              <Text style={S.statText}>{p.area} {isAr ? "م²" : "m²"}</Text>
             </View>
           )}
         </View>
-
-        <View style={styles.platformRow}>
+        <View style={S.platformRow}>
           {p.platforms.map((pl) => (
             <View
               key={pl.platform}
               style={[
-                styles.platformPill,
+                S.platformPill,
                 { backgroundColor: pl.status === "published" ? PLATFORM_COLORS[pl.platform] : colors.muted },
               ]}
             >
               <View
                 style={[
-                  styles.statusDot,
+                  S.statusDot,
                   {
                     backgroundColor:
-                      pl.status === "published"
-                        ? "#4ADE80"
-                        : pl.status === "publishing"
-                        ? "#FCD34D"
-                        : "#F87171",
+                      pl.status === "published" ? "#4ADE80"
+                      : pl.status === "publishing" ? "#FCD34D"
+                      : "#F87171",
                   },
                 ]}
               />
               <Text
                 style={[
-                  styles.platformText,
+                  S.platformText,
                   { color: pl.status === "published" ? "#FFFFFF" : colors.mutedForeground },
                 ]}
               >
@@ -342,70 +516,148 @@ export default function DashboardScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
+    <View style={S.container}>
+      {/* ── Navy header + KPIs ── */}
+      <View style={S.header}>
+        <View style={S.headerTop}>
           <View>
-            <Text style={styles.greeting}>{t.dashboard.greeting}</Text>
-            <Text style={styles.appName}>RKZ</Text>
+            <Text style={S.greeting}>{t.dashboard.greeting}</Text>
+            <Text style={S.appName}>RKZ</Text>
           </View>
-          <Pressable style={styles.notifBtn}>
+          <Pressable style={S.notifBtn}>
             <MaterialIcons name="notifications-none" size={22} color="#FFFFFF" />
             {unreadLeadsCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unreadLeadsCount}</Text>
+              <View style={S.badge}>
+                <Text style={S.badgeText}>{unreadLeadsCount}</Text>
               </View>
             )}
           </Pressable>
         </View>
-
-        <View style={styles.kpiRow}>
-          <View style={styles.kpi}>
-            <View style={[styles.kpiDot, { backgroundColor: "#4ADE80" }]} />
-            <Text style={styles.kpiValue}>{publishedCount}</Text>
-            <Text style={styles.kpiLabel}>{t.dashboard.published}</Text>
+        <View style={S.kpiRow}>
+          <View style={S.kpi}>
+            <View style={[S.kpiDot, { backgroundColor: "#4ADE80" }]} />
+            <Text style={S.kpiValue}>{publishedCount}</Text>
+            <Text style={S.kpiLabel}>{t.dashboard.published}</Text>
           </View>
-          <View style={styles.kpi}>
-            <View style={[styles.kpiDot, { backgroundColor: colors.gold }]} />
-            <Text style={styles.kpiValue}>{allViews.toLocaleString()}</Text>
-            <Text style={styles.kpiLabel}>{t.dashboard.views}</Text>
+          <View style={S.kpi}>
+            <View style={[S.kpiDot, { backgroundColor: colors.gold }]} />
+            <Text style={S.kpiValue}>{allViews.toLocaleString()}</Text>
+            <Text style={S.kpiLabel}>{t.dashboard.views}</Text>
           </View>
-          <View style={styles.kpi}>
-            <View style={[styles.kpiDot, { backgroundColor: "#60A5FA" }]} />
-            <Text style={styles.kpiValue}>{allLeads}</Text>
-            <Text style={styles.kpiLabel}>{t.dashboard.leads}</Text>
+          <View style={S.kpi}>
+            <View style={[S.kpiDot, { backgroundColor: "#60A5FA" }]} />
+            <Text style={S.kpiValue}>{allLeads}</Text>
+            <Text style={S.kpiLabel}>{t.dashboard.leads}</Text>
           </View>
           {publishingCount > 0 && (
-            <View style={styles.kpi}>
-              <View style={[styles.kpiDot, { backgroundColor: "#FCD34D" }]} />
-              <Text style={styles.kpiValue}>{publishingCount}</Text>
-              <Text style={styles.kpiLabel}>{t.dashboard.publishing}</Text>
+            <View style={S.kpi}>
+              <View style={[S.kpiDot, { backgroundColor: "#FCD34D" }]} />
+              <Text style={S.kpiValue}>{publishingCount}</Text>
+              <Text style={S.kpiLabel}>{t.dashboard.publishing}</Text>
             </View>
           )}
         </View>
       </View>
 
       <ScrollView
-        style={styles.scroll}
+        style={S.scroll}
         contentContainerStyle={{ paddingBottom: bottomPadding }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
       >
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t.dashboard.myProperties}</Text>
+        {/* ── AI Intelligence Report Card ── */}
+        {properties.length > 0 && (
+          <View style={S.reportSection}>
+            <View style={S.reportCard}>
+              {reportLoading ? (
+                <View style={S.reportLoadingBox}>
+                  <ActivityIndicator color={colors.navyLight} />
+                  <Text style={S.reportLoadingText}>{t.assistant.reportLoading}</Text>
+                </View>
+              ) : report ? (
+                <>
+                  <View style={S.reportHeaderRow}>
+                    <View style={S.reportTitleRow}>
+                      <Text style={{ fontSize: 18 }}>✨</Text>
+                      <Text style={S.reportTitle}>{t.assistant.reportTitle}</Text>
+                    </View>
+                    <View style={{ flexDirection: isAr ? "row-reverse" : "row", alignItems: "center", gap: 10 }}>
+                      <View
+                        style={[
+                          S.scoreCircle,
+                          {
+                            borderColor: scoreColor(report.score),
+                          },
+                        ]}
+                      >
+                        <Text style={[S.scoreText, { color: scoreColor(report.score) }]}>
+                          {report.score}
+                        </Text>
+                      </View>
+                      <Pressable
+                        style={({ pressed }) => [S.refreshBtn, pressed && { opacity: 0.7 }]}
+                        onPress={() => { void fetchReport(); }}
+                        disabled={reportLoading}
+                      >
+                        <MaterialIcons name="refresh" size={14} color={colors.navyLight} />
+                        <Text style={S.refreshBtnText}>{t.assistant.refreshReport}</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+
+                  <Text style={S.reportSummary}>{report.summary}</Text>
+
+                  {report.insights.slice(0, 3).map((insight, i) => (
+                    <View key={i} style={S.insightRow}>
+                      <View style={S.insightDot} />
+                      <Text style={S.insightText}>{insight}</Text>
+                    </View>
+                  ))}
+
+                  {report.actions.length > 0 && (
+                    <>
+                      <Text style={S.actionsLabel}>{t.assistant.actions}</Text>
+                      {report.actions.slice(0, 2).map((action, i) => (
+                        <View key={i} style={S.actionPill}>
+                          <Text style={S.actionText}>→ {action}</Text>
+                        </View>
+                      ))}
+                    </>
+                  )}
+
+                  <Pressable
+                    style={({ pressed }) => [S.openAssistantRow, pressed && { opacity: 0.75 }]}
+                    onPress={() => router.push("/(tabs)/ai-concierge")}
+                  >
+                    <Text style={{ fontSize: 14 }}>✨</Text>
+                    <Text style={S.openAssistantText}>{t.assistant.viewAssistant}</Text>
+                    <MaterialIcons
+                      name={isAr ? "chevron-left" : "chevron-right"}
+                      size={16}
+                      color={colors.navy}
+                    />
+                  </Pressable>
+                </>
+              ) : null}
+            </View>
+          </View>
+        )}
+
+        {/* ── Properties section ── */}
+        <View style={S.section}>
+          <View style={S.sectionHeader}>
+            <Text style={S.sectionTitle}>{t.dashboard.myProperties}</Text>
             <Pressable onPress={() => router.push("/(tabs)/listings")}>
-              <Text style={styles.seeAll}>{t.dashboard.seeAll}</Text>
+              <Text style={S.seeAll}>{t.dashboard.seeAll}</Text>
             </Pressable>
           </View>
-
           {properties.length === 0 ? (
-            <View style={styles.emptyState}>
+            <View style={S.emptyState}>
               <MaterialIcons name="home-work" size={48} color={colors.mutedForeground} />
-              <Text style={styles.emptyTitle}>{t.dashboard.emptyTitle}</Text>
-              <Text style={styles.emptySubtitle}>{t.dashboard.emptySubtitle}</Text>
-              <Pressable style={styles.emptyBtn} onPress={() => router.push("/(tabs)/add")}>
-                <Text style={styles.emptyBtnText}>{t.dashboard.addProperty}</Text>
+              <Text style={S.emptyTitle}>{t.dashboard.emptyTitle}</Text>
+              <Text style={S.emptySubtitle}>{t.dashboard.emptySubtitle}</Text>
+              <Pressable style={S.emptyBtn} onPress={() => router.push("/(tabs)/add")}>
+                <Text style={S.emptyBtnText}>{t.dashboard.addProperty}</Text>
               </Pressable>
             </View>
           ) : (
@@ -415,7 +667,7 @@ export default function DashboardScreen() {
       </ScrollView>
 
       <Pressable
-        style={({ pressed }) => [styles.fab, pressed && { transform: [{ scale: 0.94 }] }]}
+        style={({ pressed }) => [S.fab, pressed && { transform: [{ scale: 0.94 }] }]}
         onPress={() => router.push("/(tabs)/add")}
       >
         <MaterialIcons name="add" size={30} color={colors.navy} />
