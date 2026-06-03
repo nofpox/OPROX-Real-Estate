@@ -42,47 +42,67 @@ async function sendResetEmail(to: string, username: string, otp: string): Promis
   await resend.emails.send({
     from:    SENDER_FROM,
     to:      [to],
-    subject: "تفاصيل تسجيل الدخول | Your Login Details",
+    subject: "مساعدة في الوصول | Access Help – ركز Rakez",
     html: `
-      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#fff">
-        <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#111">Your Login Details</h2>
-        <p style="margin:0 0 20px;color:#555;font-size:14px">
-          Here are your login details for the Rakez Client Portal.
-        </p>
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:0;background:#f8f8f8">
 
-        <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px">Username</p>
-        <div style="background:#f4f4f5;border-radius:10px;padding:14px 20px;font-size:20px;font-weight:700;color:#111;font-family:monospace;margin:0 0 24px">
-          ${username}
+        <!-- Header bar -->
+        <div style="background:#1a2744;padding:24px 32px;border-radius:12px 12px 0 0">
+          <p style="margin:0;font-size:18px;font-weight:700;color:#fff;letter-spacing:0.3px">ركز | Rakez</p>
+          <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.55)">Client Portal — Access Help</p>
         </div>
 
-        <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px">Password Reset Code</p>
-        <p style="margin:0 0 10px;color:#555;font-size:13px">
-          Use this 6-digit code to reset your password. It expires in <strong>3 minutes</strong>.
-        </p>
-        <div style="background:#f4f4f5;border-radius:12px;padding:24px;text-align:center;letter-spacing:12px;font-size:44px;font-weight:900;color:#111;font-family:monospace;margin:0 0 24px">
-          ${otp}
+        <!-- Body -->
+        <div style="background:#fff;padding:32px;border-radius:0 0 12px 12px;border:1px solid #e5e7eb;border-top:none">
+
+          <!-- EN section -->
+          <h2 style="margin:0 0 8px;font-size:17px;font-weight:700;color:#111">We're here to help you get back in</h2>
+          <p style="margin:0 0 24px;color:#555;font-size:14px;line-height:1.6">
+            We received a request to help you access your Rakez Client Portal account.
+            Here is everything you need — your username and a one-time access code — in one place.
+          </p>
+
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.8px">Your Username</p>
+          <div style="background:#f4f4f5;border-radius:10px;padding:14px 20px;font-size:20px;font-weight:700;color:#111;font-family:monospace;margin:0 0 24px;word-break:break-all">
+            ${username}
+          </div>
+
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.8px">One-Time Access Code</p>
+          <p style="margin:0 0 12px;color:#555;font-size:13px;line-height:1.5">
+            Enter this code on the portal to set a new password. It expires in <strong>3 minutes</strong>.
+          </p>
+          <div style="background:#1a2744;border-radius:12px;padding:22px;text-align:center;letter-spacing:14px;font-size:42px;font-weight:900;color:#fff;font-family:monospace;margin:0 0 28px">
+            ${otp}
+          </div>
+
+          <hr style="border:none;border-top:1px solid #eee;margin:0 0 24px"/>
+
+          <!-- AR section -->
+          <h2 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#111;direction:rtl;text-align:right">نحن هنا لمساعدتك في استعادة الوصول</h2>
+          <p style="margin:0 0 20px;color:#555;font-size:13px;line-height:1.7;direction:rtl;text-align:right">
+            تلقّينا طلباً لمساعدتك في الوصول إلى حساب بوابة ركز للعملاء.
+            إليك كل ما تحتاجه — اسم المستخدم ورمز وصول آمن — في رسالة واحدة.
+          </p>
+
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.8px;direction:rtl;text-align:right">اسم المستخدم</p>
+          <div style="background:#f4f4f5;border-radius:10px;padding:14px 20px;font-size:20px;font-weight:700;color:#111;font-family:monospace;margin:0 0 20px;direction:ltr;text-align:center;word-break:break-all">
+            ${username}
+          </div>
+
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.8px;direction:rtl;text-align:right">رمز الوصول الآني</p>
+          <p style="margin:0 0 12px;color:#555;font-size:13px;line-height:1.6;direction:rtl;text-align:right">
+            أدخل هذا الرمز في البوابة لتعيين كلمة مرور جديدة. صالح لمدة <strong>3 دقائق</strong>.
+          </p>
+          <div style="background:#1a2744;border-radius:12px;padding:20px;text-align:center;letter-spacing:14px;font-size:40px;font-weight:900;color:#fff;font-family:monospace;margin:0 0 28px">
+            ${otp}
+          </div>
+
+          <p style="margin:0;color:#aaa;font-size:11px;text-align:center;line-height:1.6">
+            If you did not request this, no action is needed — your account remains secure.<br/>
+            إذا لم تطلب ذلك، لا داعي لأي إجراء — حسابك لا يزال آمناً.
+          </p>
         </div>
 
-        <hr style="border:none;border-top:1px solid #eee;margin:0 0 20px"/>
-
-        <h2 style="margin:0 0 6px;font-size:16px;font-weight:700;color:#111;direction:rtl;text-align:right">تفاصيل تسجيل الدخول الخاصة بك</h2>
-        <p style="margin:0 0 12px;color:#555;font-size:13px;direction:rtl;text-align:right">
-          اسم المستخدم الخاص بك:
-        </p>
-        <div style="background:#f4f4f5;border-radius:10px;padding:14px 20px;font-size:20px;font-weight:700;color:#111;font-family:monospace;margin:0 0 16px;direction:ltr;text-align:center">
-          ${username}
-        </div>
-        <p style="margin:0 0 10px;color:#555;font-size:13px;direction:rtl;text-align:right">
-          رمز إعادة تعيين كلمة المرور (صالح لمدة 3 دقائق):
-        </p>
-        <div style="background:#f4f4f5;border-radius:12px;padding:20px;text-align:center;letter-spacing:12px;font-size:40px;font-weight:900;color:#111;font-family:monospace;margin:0 0 24px">
-          ${otp}
-        </div>
-
-        <p style="margin:0;color:#999;font-size:12px;text-align:center">
-          If you did not request this, you can safely ignore this email.<br/>
-          إذا لم تطلب ذلك، يمكنك تجاهل هذا البريد بأمان.
-        </p>
       </div>
     `,
   });
