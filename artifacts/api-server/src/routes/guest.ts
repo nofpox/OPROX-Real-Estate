@@ -1,6 +1,48 @@
 import { Router } from "express";
 import { db, guestRequestsTable, guestFeedbackTable, roomsTable, propertiesTable, unitFinancialsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { Resend } from "resend";
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const SENDER_FROM = process.env.SENDER_EMAIL ?? "ركز للحلول الذكية <onboarding@resend.dev>";
+
+async function sendLeadWelcomeEmail(to: string, name: string): Promise<void> {
+  if (!resend) return;
+  await resend.emails.send({
+    from: SENDER_FROM,
+    to:   [to],
+    subject: "شكراً على تواصلك | Thank You for Reaching Out – ركز Rakez",
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:0;background:#f8f8f8">
+        <div style="background:#1a2744;padding:24px 32px;border-radius:12px 12px 0 0">
+          <p style="margin:0;font-size:18px;font-weight:700;color:#fff;letter-spacing:0.3px">ركز | Rakez Smart Solutions</p>
+          <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.55)">Premium Property Management</p>
+        </div>
+        <div style="background:#fff;padding:32px;border-radius:0 0 12px 12px;border:1px solid #e5e7eb;border-top:none">
+          <h2 style="margin:0 0 8px;font-size:17px;font-weight:700;color:#111">Dear ${name},</h2>
+          <p style="margin:0 0 20px;color:#444;font-size:14px;line-height:1.7">
+            Thank you for your interest in partnering with <strong>Rakez Smart Solutions</strong>. We have received your inquiry and our team will be in touch with you within <strong>24 hours</strong>.
+          </p>
+          <div style="background:#f0f4ff;border-left:4px solid #c8a84b;border-radius:6px;padding:16px 20px;margin-bottom:24px">
+            <p style="margin:0;font-size:13px;font-weight:600;color:#1a2744">Our offices</p>
+            <p style="margin:6px 0 0;font-size:13px;color:#555;line-height:1.6">
+              King Fahd Road, Olaya District · Riyadh, Saudi Arabia<br/>
+              📞 +966 11 234 5678 &nbsp;|&nbsp; ✉️ info@rakez-solutions.com
+            </p>
+          </div>
+          <hr style="border:none;border-top:1px solid #f0f0f0;margin:0 0 20px"/>
+          <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#111;direction:rtl;text-align:right">عزيزي ${name}،</p>
+          <p style="margin:0;color:#444;font-size:14px;line-height:1.7;direction:rtl;text-align:right">
+            شكراً لاهتمامك بالتعاون مع <strong>ركز للحلول الذكية</strong>. لقد استلمنا استفساركم وسيتواصل معكم فريقنا خلال <strong>24 ساعة</strong>.
+          </p>
+          <div style="margin-top:24px;text-align:center">
+            <p style="font-size:11px;color:#aaa;margin:0">© ${new Date().getFullYear()} Rakez Smart Solutions — جميع الحقوق محفوظة</p>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+}
 
 const router = Router();
 
@@ -103,6 +145,10 @@ router.post("/guest/contact", async (req, res) => {
     status:        "new",
     refCode,
   }).returning();
+
+  // Fire-and-forget: send welcome email to the lead
+  sendLeadWelcomeEmail(String(email).trim(), String(name).trim()).catch(() => {});
+
   res.status(201).json({ refCode, id: request.id, createdAt: request.createdAt.toISOString() });
 });
 

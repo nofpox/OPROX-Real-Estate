@@ -4,6 +4,7 @@ import {
   LayoutTemplate, Plus, Pencil, Trash2, Save, X, Upload, ImageOff,
   Building2, Home, Warehouse, Store, Briefcase, Landmark, Loader2,
   Globe, Phone, Mail, MessageCircle, MapPin, Megaphone, RefreshCw, Check,
+  BarChart2, Layers, Palette,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,14 +52,20 @@ interface AdminListing {
   updatedAt: string;
 }
 
-interface HeroContent   { titleEn: string; titleAr: string; subtitleEn: string; subtitleAr: string; imageUrl: string; }
-interface ContactContent { email: string; phone: string; whatsapp: string; address: string; }
-interface Announcement  { id: string; text: string; isActive: boolean; }
+interface HeroContent     { titleEn: string; titleAr: string; subtitleEn: string; subtitleAr: string; imageUrl: string; }
+interface ContactContent  { email: string; phone: string; whatsapp: string; address: string; }
+interface Announcement   { id: string; text: string; isActive: boolean; }
+interface BrandingContent { companyNameEn: string; companyNameAr: string; taglineEn: string; taglineAr: string; logoUrl: string; }
+interface StatItem        { value: string; labelEn: string; labelAr: string; liveKey: string | null; }
+interface ServiceItem     { titleEn: string; titleAr: string; descEn: string; descAr: string; imageUrl: string; }
 interface SiteContent {
   hero: HeroContent;
   contact: ContactContent;
   announcements: Announcement[];
   about: { titleEn: string; titleAr: string; body: string; imageUrl: string };
+  branding: BrandingContent;
+  stats: StatItem[];
+  services: ServiceItem[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -553,7 +560,11 @@ function SiteContentTab() {
   const [announcementsLocal, setAnnouncementsLocal] = useState<Announcement[] | null>(null);
   const [newAnnouncement, setNewAnnouncement] = useState("");
   const [aboutLocal, setAboutLocal] = useState<SiteContent["about"] | null>(null);
+  const [brandingLocal, setBrandingLocal] = useState<BrandingContent | null>(null);
+  const [statsLocal, setStatsLocal] = useState<StatItem[] | null>(null);
+  const [servicesLocal, setServicesLocal] = useState<ServiceItem[] | null>(null);
   const [uploading, setUploading] = useState(false);
+  const svcImgRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const q = useQuery<{ content: SiteContent }>({
     queryKey: ["cms-site-content"],
@@ -573,13 +584,28 @@ function SiteContentTab() {
     onError: (e: Error) => toast({ title: "Save failed", description: e.message, variant: "destructive" }),
   });
 
-  const handleImageUploadFor = async (section: "hero" | "about", files: FileList | null) => {
+  const handleImageUploadFor = async (section: "hero" | "about" | "branding", files: FileList | null) => {
     if (!files?.length) return;
     setUploading(true);
     try {
       const url = await uploadImageFile(files[0]);
-      if (section === "hero") setHeroLocal(h => h ? { ...h, imageUrl: url } : null);
-      if (section === "about") setAboutLocal(a => a ? { ...a, imageUrl: url } : null);
+      if (section === "hero")     setHeroLocal(h => h ? { ...h, imageUrl: url } : null);
+      if (section === "about")    setAboutLocal(a => a ? { ...a, imageUrl: url } : null);
+      if (section === "branding") setBrandingLocal(b => b ? { ...b, logoUrl: url } : null);
+      toast({ title: "Image uploaded" });
+    } catch (err) {
+      toast({ title: "Upload failed", description: (err as Error).message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleServiceImageUpload = async (idx: number, files: FileList | null) => {
+    if (!files?.length) return;
+    setUploading(true);
+    try {
+      const url = await uploadImageFile(files[0]);
+      setServicesLocal(s => s ? s.map((svc, i) => i === idx ? { ...svc, imageUrl: url } : svc) : null);
       toast({ title: "Image uploaded" });
     } catch (err) {
       toast({ title: "Upload failed", description: (err as Error).message, variant: "destructive" });
@@ -594,6 +620,9 @@ function SiteContentTab() {
     if (section === "contact"       && content?.contact)       setContactLocal({ ...content.contact });
     if (section === "announcements" && content?.announcements) setAnnouncementsLocal([...content.announcements]);
     if (section === "about"         && content?.about)         setAboutLocal({ ...content.about });
+    if (section === "branding"      && content?.branding)      setBrandingLocal({ ...content.branding });
+    if (section === "stats"         && content?.stats)         setStatsLocal(content.stats.map(s => ({ ...s })));
+    if (section === "services"      && content?.services)      setServicesLocal(content.services.map(s => ({ ...s })));
   };
 
   if (q.isLoading) return (
@@ -810,6 +839,194 @@ function SiteContentTab() {
               </div>
               <div><Label className="text-xs mb-1 block">Body Text</Label>
                 <Textarea rows={5} value={aboutLocal.body} onChange={e => setAboutLocal(a => a ? { ...a, body: e.target.value } : a)} placeholder="Tell visitors about your company…" /></div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Branding ──────────────────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2"><Palette className="h-4 w-4" /> Branding</CardTitle>
+              <CardDescription className="text-xs">Company name, tagline, and logo — appears everywhere on the portal</CardDescription>
+            </div>
+            {editingSection === "branding"
+              ? <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setEditingSection(null)}>Cancel</Button>
+                  <Button size="sm" onClick={() => saveMutation.mutate({ section: "branding", data: brandingLocal })} disabled={saveMutation.isPending}>
+                    {saveMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 me-1" />}Save
+                  </Button>
+                </div>
+              : <Button size="sm" variant="outline" onClick={() => startEdit("branding")}><Pencil className="h-3.5 w-3.5 me-1.5" />Edit</Button>}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {editingSection !== "branding" ? (
+            <div className="flex items-center gap-3">
+              {content?.branding?.logoUrl
+                ? <img src={content.branding.logoUrl} alt="Logo" className="h-10 w-10 object-contain rounded-md border" />
+                : <div className="h-10 w-10 rounded-md border bg-muted flex items-center justify-center"><ImageOff className="h-4 w-4 text-muted-foreground" /></div>}
+              <div>
+                <p className="font-semibold text-sm">{content?.branding?.companyNameEn || "—"} · <span dir="rtl">{content?.branding?.companyNameAr}</span></p>
+                <p className="text-xs text-muted-foreground">{content?.branding?.taglineEn}</p>
+              </div>
+            </div>
+          ) : brandingLocal && (
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Logo</p>
+                <div className="flex gap-2 items-center">
+                  {brandingLocal.logoUrl && <img src={brandingLocal.logoUrl} alt="" className="h-12 w-12 object-contain rounded-md border" />}
+                  <Button size="sm" variant="outline" onClick={() => heroImgRef.current?.click()} disabled={uploading}>
+                    {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin me-1.5" /> : <Upload className="h-3.5 w-3.5 me-1.5" />}
+                    {brandingLocal.logoUrl ? "Replace Logo" : "Upload Logo"}
+                  </Button>
+                  <input ref={heroImgRef} type="file" accept="image/*" className="hidden" onChange={e => handleImageUploadFor("branding", e.target.files)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label className="text-xs mb-1 block">Company Name (EN)</Label>
+                  <Input value={brandingLocal.companyNameEn} onChange={e => setBrandingLocal(b => b ? { ...b, companyNameEn: e.target.value } : b)} /></div>
+                <div><Label className="text-xs mb-1 block">اسم الشركة (AR)</Label>
+                  <Input dir="rtl" value={brandingLocal.companyNameAr} onChange={e => setBrandingLocal(b => b ? { ...b, companyNameAr: e.target.value } : b)} /></div>
+                <div><Label className="text-xs mb-1 block">Tagline (EN)</Label>
+                  <Input value={brandingLocal.taglineEn} onChange={e => setBrandingLocal(b => b ? { ...b, taglineEn: e.target.value } : b)} /></div>
+                <div><Label className="text-xs mb-1 block">الشعار (AR)</Label>
+                  <Input dir="rtl" value={brandingLocal.taglineAr} onChange={e => setBrandingLocal(b => b ? { ...b, taglineAr: e.target.value } : b)} /></div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Stats Strip ───────────────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2"><BarChart2 className="h-4 w-4" /> Homepage Statistics</CardTitle>
+              <CardDescription className="text-xs">
+                Edit the static stat values (e.g. "₂B SAR", "10+"). Live counts (properties, tenants) are auto-calculated from the database.
+              </CardDescription>
+            </div>
+            {editingSection === "stats"
+              ? <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setEditingSection(null)}>Cancel</Button>
+                  <Button size="sm" onClick={() => saveMutation.mutate({ section: "stats", data: statsLocal })} disabled={saveMutation.isPending}>
+                    {saveMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 me-1" />}Save
+                  </Button>
+                </div>
+              : <Button size="sm" variant="outline" onClick={() => startEdit("stats")}><Pencil className="h-3.5 w-3.5 me-1.5" />Edit</Button>}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {editingSection !== "stats" ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {(content?.stats ?? []).map((s, i) => (
+                <div key={i} className="rounded-lg border bg-muted/40 p-3 text-center">
+                  <p className="text-lg font-bold tabular-nums">{s.liveKey ? <span className="text-xs text-muted-foreground italic">auto</span> : s.value}</p>
+                  <p className="text-xs text-muted-foreground">{s.labelEn}</p>
+                </div>
+              ))}
+            </div>
+          ) : statsLocal && (
+            <div className="space-y-3">
+              {statsLocal.map((s, i) => (
+                <div key={i} className="grid grid-cols-12 gap-2 items-center rounded-lg border p-3">
+                  <div className="col-span-2">
+                    <Label className="text-xs mb-1 block">Value</Label>
+                    {s.liveKey
+                      ? <p className="text-xs text-muted-foreground italic pt-2">Auto-calculated</p>
+                      : <Input value={s.value} onChange={e => setStatsLocal(st => st ? st.map((x, j) => j === i ? { ...x, value: e.target.value } : x) : st)} className="h-8 text-sm" />}
+                  </div>
+                  <div className="col-span-5">
+                    <Label className="text-xs mb-1 block">Label (EN)</Label>
+                    <Input value={s.labelEn} onChange={e => setStatsLocal(st => st ? st.map((x, j) => j === i ? { ...x, labelEn: e.target.value } : x) : st)} className="h-8 text-sm" />
+                  </div>
+                  <div className="col-span-5">
+                    <Label className="text-xs mb-1 block">التسمية (AR)</Label>
+                    <Input dir="rtl" value={s.labelAr} onChange={e => setStatsLocal(st => st ? st.map((x, j) => j === i ? { ...x, labelAr: e.target.value } : x) : st)} className="h-8 text-sm" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Services ──────────────────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2"><Layers className="h-4 w-4" /> Services Cards</CardTitle>
+              <CardDescription className="text-xs">The service cards shown on the homepage and Services page</CardDescription>
+            </div>
+            {editingSection === "services"
+              ? <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setEditingSection(null)}>Cancel</Button>
+                  <Button size="sm" onClick={() => saveMutation.mutate({ section: "services", data: servicesLocal })} disabled={saveMutation.isPending}>
+                    {saveMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 me-1" />}Save
+                  </Button>
+                </div>
+              : <Button size="sm" variant="outline" onClick={() => startEdit("services")}><Pencil className="h-3.5 w-3.5 me-1.5" />Edit</Button>}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {editingSection !== "services" ? (
+            <div className="space-y-2">
+              {(content?.services ?? []).map((svc, i) => (
+                <div key={i} className="flex items-center gap-3 rounded-lg border p-3">
+                  {svc.imageUrl
+                    ? <img src={svc.imageUrl} alt="" className="h-10 w-14 object-cover rounded-md shrink-0" />
+                    : <div className="h-10 w-14 rounded-md bg-muted flex items-center justify-center shrink-0"><ImageOff className="h-4 w-4 text-muted-foreground" /></div>}
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{svc.titleEn} · <span dir="rtl" className="text-muted-foreground">{svc.titleAr}</span></p>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{svc.descEn}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : servicesLocal && (
+            <div className="space-y-4">
+              {servicesLocal.map((svc, i) => (
+                <div key={i} className="rounded-xl border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Service {i + 1}</p>
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:text-destructive"
+                      onClick={() => setServicesLocal(s => s ? s.filter((_, j) => j !== i) : s)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Image</p>
+                    <div className="flex gap-2 items-center">
+                      {svc.imageUrl && <img src={svc.imageUrl} alt="" className="h-12 w-20 object-cover rounded-md" />}
+                      <Button size="sm" variant="outline" onClick={() => svcImgRefs.current[i]?.click()} disabled={uploading}>
+                        {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin me-1.5" /> : <Upload className="h-3.5 w-3.5 me-1.5" />}
+                        {svc.imageUrl ? "Replace" : "Upload"}
+                      </Button>
+                      <input ref={el => { svcImgRefs.current[i] = el; }} type="file" accept="image/*" className="hidden"
+                        onChange={e => handleServiceImageUpload(i, e.target.files)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><Label className="text-xs mb-1 block">Title (EN)</Label>
+                      <Input value={svc.titleEn} onChange={e => setServicesLocal(s => s ? s.map((x, j) => j === i ? { ...x, titleEn: e.target.value } : x) : s)} className="h-8 text-sm" /></div>
+                    <div><Label className="text-xs mb-1 block">العنوان (AR)</Label>
+                      <Input dir="rtl" value={svc.titleAr} onChange={e => setServicesLocal(s => s ? s.map((x, j) => j === i ? { ...x, titleAr: e.target.value } : x) : s)} className="h-8 text-sm" /></div>
+                    <div className="col-span-2"><Label className="text-xs mb-1 block">Description (EN)</Label>
+                      <Textarea rows={2} value={svc.descEn} onChange={e => setServicesLocal(s => s ? s.map((x, j) => j === i ? { ...x, descEn: e.target.value } : x) : s)} className="text-sm resize-none" /></div>
+                    <div className="col-span-2"><Label className="text-xs mb-1 block">الوصف (AR)</Label>
+                      <Textarea rows={2} dir="rtl" value={svc.descAr} onChange={e => setServicesLocal(s => s ? s.map((x, j) => j === i ? { ...x, descAr: e.target.value } : x) : s)} className="text-sm resize-none" /></div>
+                  </div>
+                </div>
+              ))}
+              <Button size="sm" variant="outline" className="w-full" onClick={() => setServicesLocal(s => [...(s ?? []), { titleEn: "", titleAr: "", descEn: "", descAr: "", imageUrl: "" }])}>
+                <Plus className="h-3.5 w-3.5 me-1.5" /> Add Service
+              </Button>
             </div>
           )}
         </CardContent>
