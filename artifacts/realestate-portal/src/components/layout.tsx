@@ -3,6 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
 import { useCms } from '@/lib/cms-context';
 import { Building, Menu, X, Globe, MapPin, Mail, Phone, KeyRound } from 'lucide-react';
+import { SmartAssistant } from './assistant';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { language, setLanguage, isRtl } = useLanguage();
@@ -146,6 +147,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <main className="flex-1">
         {children}
       </main>
+
+      {/* ── Smart Assistant (floating) ───────────────────────────────────────── */}
+      <SmartAssistant />
 
       {/* ── Footer ──────────────────────────────────────────────────────────── */}
       <footer className="bg-primary text-primary-foreground">

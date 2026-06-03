@@ -239,7 +239,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* ── Interested in Partnering? ──────────────────────────────────────────── */}
-      <section className="py-28 bg-background">
+      <section id="partner-inquiry" className="py-28 bg-background">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
