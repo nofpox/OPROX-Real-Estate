@@ -102,6 +102,7 @@ export function useAIAssistant() {
         const { reply } = await apiPost<{ reply: string }>("/rkz/assistant/chat", {
           messages: historyForAPI,
           context,
+          lang: isAr ? "ar" : "en",
         });
         setMessages((prev) => [
           ...prev,

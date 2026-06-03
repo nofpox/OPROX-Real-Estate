@@ -8,6 +8,7 @@ import {
   FlatList,
   Platform,
   Pressable,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -31,11 +32,15 @@ interface QualifyResult {
   leadId: string;
   score: "serious" | "maybe" | "not_serious";
   summary: string;
+  paymentMethod: "bank_financing" | "cash" | "other" | "unknown";
+  paymentSummary: string;
 }
 
 interface QualifyState {
   loading: boolean;
   results: QualifyResult[];
+  qualificationScript?: { ar: string; en: string };
+  teamNotification?: { ar: string; en: string };
 }
 
 const STATUS_COLORS = {
@@ -50,6 +55,13 @@ const SCORE_CONFIG = {
   serious: { color: "#4ADE80", bg: "#DCFCE7" },
   maybe: { color: "#D97706", bg: "#FEF3C7" },
   not_serious: { color: "#E53E3E", bg: "#FEE2E2" },
+};
+
+const PAYMENT_CONFIG = {
+  bank_financing: { color: "#2563EB", bg: "#EFF6FF" },
+  cash: { color: "#059669", bg: "#ECFDF5" },
+  other: { color: "#D97706", bg: "#FEF3C7" },
+  unknown: { color: "#6B7280", bg: "#F3F4F6" },
 };
 
 export default function ListingsScreen() {
@@ -91,25 +103,37 @@ export default function ListingsScreen() {
     setQualifyMap((prev) => ({ ...prev, [p.id]: { loading: true, results: [] } }));
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const { results } = await apiPost<{ results: QualifyResult[] }>(
-        "/rkz/assistant/qualify",
-        {
-          leads: p.leads.map((l) => ({
-            id: l.id,
-            name: l.name,
-            phone: l.phone,
-            platform: l.platform,
-          })),
-          property: {
-            type: p.type,
-            city: p.location.city,
-            price: p.price,
-            area: p.area,
-            bedrooms: p.bedrooms,
-          },
-        }
-      );
-      setQualifyMap((prev) => ({ ...prev, [p.id]: { loading: false, results } }));
+      const data = await apiPost<{
+        results: QualifyResult[];
+        qualificationScript?: { ar: string; en: string };
+        teamNotification?: { ar: string; en: string };
+      }>("/rkz/assistant/qualify", {
+        leads: p.leads.map((l) => ({
+          id: l.id,
+          name: l.name,
+          phone: l.phone,
+          platform: l.platform,
+          message: l.message,
+        })),
+        property: {
+          type: p.type,
+          city: p.location.city,
+          district: p.location.district,
+          price: p.price,
+          area: p.area,
+          bedrooms: p.bedrooms,
+        },
+        lang: isAr ? "ar" : "en",
+      });
+      setQualifyMap((prev) => ({
+        ...prev,
+        [p.id]: {
+          loading: false,
+          results: data.results,
+          qualificationScript: data.qualificationScript,
+          teamNotification: data.teamNotification,
+        },
+      }));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {
       setQualifyMap((prev) => ({ ...prev, [p.id]: { loading: false, results: [] } }));
@@ -303,6 +327,116 @@ export default function ListingsScreen() {
       fontSize: 11,
       fontFamily: "Inter_700Bold",
     },
+    badgeRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      flexWrap: "wrap",
+      gap: 4,
+      marginTop: 4,
+    },
+    // ── Qualification Script Card ───────────────────────────────────────────
+    scriptCard: {
+      backgroundColor: colors.navy + "08",
+      borderWidth: 1,
+      borderColor: colors.navy + "18",
+      borderRadius: 10,
+      padding: 12,
+      marginBottom: 12,
+    },
+    scriptHeader: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 6,
+      marginBottom: 4,
+    },
+    scriptTitle: {
+      fontSize: 12,
+      fontFamily: "Inter_700Bold",
+      color: colors.navy,
+    },
+    scriptHint: {
+      fontSize: 11,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      marginBottom: 8,
+      textAlign: isAr ? "right" : "left",
+    },
+    scriptText: {
+      fontSize: 12,
+      fontFamily: "Inter_400Regular",
+      color: colors.foreground,
+      lineHeight: 20,
+      textAlign: isAr ? "right" : "left",
+      marginBottom: 10,
+    },
+    scriptShareBtn: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 5,
+      alignSelf: isAr ? "flex-end" : "flex-start",
+      backgroundColor: colors.gold + "20",
+      borderRadius: 7,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+    },
+    scriptShareText: {
+      fontSize: 12,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.gold,
+    },
+    // ── Team Notification Card ──────────────────────────────────────────────
+    notifyCard: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      padding: 12,
+      marginTop: 12,
+    },
+    notifyHeader: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 6,
+      marginBottom: 10,
+    },
+    notifyTitle: {
+      fontSize: 12,
+      fontFamily: "Inter_700Bold",
+      color: colors.foreground,
+    },
+    notifyStats: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      justifyContent: "space-around",
+      marginBottom: 10,
+      paddingHorizontal: 4,
+    },
+    notifyStatItem: {
+      alignItems: "center",
+      gap: 3,
+    },
+    notifyStatNum: {
+      fontSize: 20,
+      fontFamily: "Inter_700Bold",
+    },
+    notifyStatLabel: {
+      fontSize: 10,
+      fontFamily: "Inter_500Medium",
+      color: colors.mutedForeground,
+      textAlign: "center",
+    },
+    notifyShareRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 5,
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    notifyShareText: {
+      fontSize: 12,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.gold,
+    },
     unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.destructive, marginTop: 4 },
     deleteBtn: {
       margin: 16,
@@ -357,6 +491,13 @@ export default function ListingsScreen() {
     if (score === "serious") return t.assistant.serious;
     if (score === "maybe") return t.assistant.maybe;
     return t.assistant.notSerious;
+  }
+
+  function getPaymentLabel(method: string) {
+    if (method === "bank_financing") return t.assistant.paymentBankFinancing;
+    if (method === "cash") return t.assistant.paymentCash;
+    if (method === "other") return t.assistant.paymentOther;
+    return t.assistant.paymentUnknown;
   }
 
   function renderItem({ item: p }: { item: Property }) {
@@ -446,16 +587,43 @@ export default function ListingsScreen() {
                   </Text>
                 </Pressable>
               ) : qs.results.length > 0 ? (
-                <View style={S.qualifyTitleRow}>
-                  <Text style={{ fontSize: 13 }}>✨</Text>
-                  <Text style={S.qualifyTitle}>{t.assistant.qualifyTitle}</Text>
-                  <Pressable
-                    onPress={() => handleQualify(p)}
-                    style={{ marginLeft: "auto" }}
-                  >
-                    <MaterialIcons name="refresh" size={16} color={colors.mutedForeground} />
-                  </Pressable>
-                </View>
+                <>
+                  <View style={S.qualifyTitleRow}>
+                    <Text style={{ fontSize: 13 }}>✨</Text>
+                    <Text style={S.qualifyTitle}>{t.assistant.qualifyTitle}</Text>
+                    <Pressable
+                      onPress={() => handleQualify(p)}
+                      style={{ marginLeft: "auto" }}
+                    >
+                      <MaterialIcons name="refresh" size={16} color={colors.mutedForeground} />
+                    </Pressable>
+                  </View>
+                  {qs.qualificationScript && (
+                    <View style={S.scriptCard}>
+                      <View style={S.scriptHeader}>
+                        <MaterialIcons name="chat" size={13} color={colors.navy} />
+                        <Text style={S.scriptTitle}>{t.assistant.qualScriptTitle}</Text>
+                      </View>
+                      <Text style={S.scriptHint}>{t.assistant.qualScriptHint}</Text>
+                      <Text style={S.scriptText}>
+                        {isAr ? qs.qualificationScript.ar : qs.qualificationScript.en}
+                      </Text>
+                      <Pressable
+                        style={({ pressed }) => [S.scriptShareBtn, pressed && { opacity: 0.7 }]}
+                        onPress={() =>
+                          Share.share({
+                            message: isAr
+                              ? qs.qualificationScript!.ar
+                              : qs.qualificationScript!.en,
+                          })
+                        }
+                      >
+                        <MaterialIcons name="share" size={13} color={colors.gold} />
+                        <Text style={S.scriptShareText}>{t.assistant.qualScriptShare}</Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </>
               ) : null}
             </View>
 
@@ -481,15 +649,31 @@ export default function ListingsScreen() {
                       <Text style={S.leadPlatform}>
                         {PLATFORM_LABELS[lead.platform as PlatformType]} • {lead.phone}
                       </Text>
-                      {qr && cfg && (
+                      {qr && (
                         <>
-                          <View style={[S.scoreBadge, { backgroundColor: cfg.bg, marginTop: 4 }]}>
-                            <Text style={[S.scoreBadgeText, { color: cfg.color }]}>
-                              {getScoreLabel(qr.score)}
-                            </Text>
+                          <View style={S.badgeRow}>
+                            {cfg && (
+                              <View style={[S.scoreBadge, { backgroundColor: cfg.bg }]}>
+                                <Text style={[S.scoreBadgeText, { color: cfg.color }]}>
+                                  {getScoreLabel(qr.score)}
+                                </Text>
+                              </View>
+                            )}
+                            {qr.paymentMethod !== "unknown" && (
+                              <View style={[S.scoreBadge, { backgroundColor: PAYMENT_CONFIG[qr.paymentMethod].bg }]}>
+                                <Text style={[S.scoreBadgeText, { color: PAYMENT_CONFIG[qr.paymentMethod].color }]}>
+                                  {getPaymentLabel(qr.paymentMethod)}
+                                </Text>
+                              </View>
+                            )}
                           </View>
                           {!!qr.summary && (
                             <Text style={S.leadAISummary}>{qr.summary}</Text>
+                          )}
+                          {!!qr.paymentSummary && qr.paymentMethod !== "unknown" && (
+                            <Text style={[S.leadAISummary, { color: PAYMENT_CONFIG[qr.paymentMethod].color, marginTop: 1 }]}>
+                              {qr.paymentSummary}
+                            </Text>
                           )}
                         </>
                       )}
@@ -498,6 +682,43 @@ export default function ListingsScreen() {
                   </Pressable>
                 );
               })}
+
+              {/* Team Notification Card — shown after qualify */}
+              {qs?.teamNotification && qs.results.length > 0 && (() => {
+                const bankCount = qs.results.filter((r) => r.paymentMethod === "bank_financing").length;
+                const cashCount = qs.results.filter((r) => r.paymentMethod === "cash").length;
+                const otherCount = qs.results.filter((r) => r.paymentMethod === "other").length;
+                const notificationText = isAr ? qs.teamNotification.ar : qs.teamNotification.en;
+                return (
+                  <Pressable
+                    style={({ pressed }) => [S.notifyCard, pressed && { opacity: 0.85 }]}
+                    onPress={() => Share.share({ message: notificationText, title: t.assistant.notifyTitle })}
+                  >
+                    <View style={S.notifyHeader}>
+                      <MaterialIcons name="analytics" size={13} color={colors.gold} />
+                      <Text style={S.notifyTitle}>{t.assistant.notifyTitle}</Text>
+                    </View>
+                    <View style={S.notifyStats}>
+                      <View style={S.notifyStatItem}>
+                        <Text style={[S.notifyStatNum, { color: "#2563EB" }]}>{bankCount}</Text>
+                        <Text style={S.notifyStatLabel}>{t.assistant.paymentBankFinancing}</Text>
+                      </View>
+                      <View style={S.notifyStatItem}>
+                        <Text style={[S.notifyStatNum, { color: "#059669" }]}>{cashCount}</Text>
+                        <Text style={S.notifyStatLabel}>{t.assistant.paymentCash}</Text>
+                      </View>
+                      <View style={S.notifyStatItem}>
+                        <Text style={[S.notifyStatNum, { color: "#D97706" }]}>{otherCount}</Text>
+                        <Text style={S.notifyStatLabel}>{t.assistant.paymentOther}</Text>
+                      </View>
+                    </View>
+                    <View style={S.notifyShareRow}>
+                      <MaterialIcons name="share" size={12} color={colors.gold} />
+                      <Text style={S.notifyShareText}>{t.assistant.notifyBtn}</Text>
+                    </View>
+                  </Pressable>
+                );
+              })()}
             </View>
           </>
         )}
