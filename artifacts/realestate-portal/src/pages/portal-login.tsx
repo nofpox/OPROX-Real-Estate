@@ -39,6 +39,68 @@ const PORTAL_FEATURES = [
   },
 ];
 
+// ── Stable module-level sub-components ────────────────────────────────────────
+// IMPORTANT: defined OUTSIDE PortalLogin so their identity is stable across
+// re-renders. Inner component definitions get a new reference on every render,
+// which causes React to unmount/remount the subtree and steal input focus.
+
+const BrandingPanel: React.FC<{ isRtl: boolean }> = ({ isRtl }) => (
+  <div className="hidden lg:flex lg:w-1/2 relative bg-primary flex-col justify-between p-12 overflow-hidden">
+    <div className="absolute inset-0">
+      <img
+        src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1400&auto=format&fit=crop"
+        alt=""
+        className="w-full h-full object-cover opacity-20"
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary/80" />
+    </div>
+    <div className="relative z-10">
+      <Link href="/" className="flex items-center gap-2.5 mb-14">
+        <Building className="h-7 w-7 text-secondary" />
+        <span className="font-bold text-xl text-white">ركز | Rakez</span>
+      </Link>
+      <h2 className="text-3xl font-bold text-white mb-3">
+        {isRtl ? 'بوابة المستثمرين' : 'Investor Portal'}
+      </h2>
+      <p className="text-primary-foreground/70 text-base leading-relaxed mb-10">
+        {isRtl
+          ? 'وصول آمن لإدارة عقاراتك والاطلاع على تقاريرك المالية.'
+          : 'Secure access to manage your properties and view financial performance.'}
+      </p>
+      <div className="space-y-6">
+        {PORTAL_FEATURES.map(({ icon: Icon, titleEn, titleAr, descEn, descAr }) => (
+          <div key={titleEn} className="flex gap-4">
+            <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center shrink-0 mt-0.5">
+              <Icon className="h-5 w-5 text-secondary" />
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm">{isRtl ? titleAr : titleEn}</p>
+              <p className="text-primary-foreground/60 text-xs leading-relaxed mt-0.5">{isRtl ? descAr : descEn}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <p className="relative z-10 text-xs text-primary-foreground/30">
+      © {new Date().getFullYear()} Rakez Smart Solutions
+    </p>
+  </div>
+);
+
+const RightPanel: React.FC<{ isRtl: boolean; children: React.ReactNode }> = ({ isRtl, children }) => (
+  <div className="flex-1 flex flex-col justify-center items-center bg-muted px-6 py-12" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="lg:hidden mb-8 text-center">
+      <Link href="/" className="inline-flex items-center gap-2 mb-2">
+        <Building className="h-8 w-8 text-secondary" />
+        <span className="font-bold text-2xl text-primary">ركز | Rakez</span>
+      </Link>
+    </div>
+    <div className="w-full max-w-md">{children}</div>
+  </div>
+);
+
+// ── Main component ─────────────────────────────────────────────────────────────
+
 export const PortalLogin: React.FC = () => {
   const { login, isAuthenticated, isLoading: authLoading } = usePortalAuth();
   const [, setLocation] = useLocation();
@@ -115,63 +177,6 @@ export const PortalLogin: React.FC = () => {
     setError('');
   };
 
-  // ── Left branding panel (shared) ───────────────────────────────────────────
-  const BrandingPanel = () => (
-    <div className="hidden lg:flex lg:w-1/2 relative bg-primary flex-col justify-between p-12 overflow-hidden">
-      <div className="absolute inset-0">
-        <img
-          src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1400&auto=format&fit=crop"
-          alt=""
-          className="w-full h-full object-cover opacity-20"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary/80" />
-      </div>
-      <div className="relative z-10">
-        <Link href="/" className="flex items-center gap-2.5 mb-14">
-          <Building className="h-7 w-7 text-secondary" />
-          <span className="font-bold text-xl text-white">ركز | Rakez</span>
-        </Link>
-        <h2 className="text-3xl font-bold text-white mb-3">
-          {isRtl ? 'بوابة المستثمرين' : 'Investor Portal'}
-        </h2>
-        <p className="text-primary-foreground/70 text-base leading-relaxed mb-10">
-          {isRtl
-            ? 'وصول آمن لإدارة عقاراتك والاطلاع على تقاريرك المالية.'
-            : 'Secure access to manage your properties and view financial performance.'}
-        </p>
-        <div className="space-y-6">
-          {PORTAL_FEATURES.map(({ icon: Icon, titleEn, titleAr, descEn, descAr }) => (
-            <div key={titleEn} className="flex gap-4">
-              <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center shrink-0 mt-0.5">
-                <Icon className="h-5 w-5 text-secondary" />
-              </div>
-              <div>
-                <p className="text-white font-semibold text-sm">{isRtl ? titleAr : titleEn}</p>
-                <p className="text-primary-foreground/60 text-xs leading-relaxed mt-0.5">{isRtl ? descAr : descEn}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <p className="relative z-10 text-xs text-primary-foreground/30">
-        © {new Date().getFullYear()} Rakez Smart Solutions
-      </p>
-    </div>
-  );
-
-  // ── Right panel wrapper ────────────────────────────────────────────────────
-  const RightPanel = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex-1 flex flex-col justify-center items-center bg-muted px-6 py-12" dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="lg:hidden mb-8 text-center">
-        <Link href="/" className="inline-flex items-center gap-2 mb-2">
-          <Building className="h-8 w-8 text-secondary" />
-          <span className="font-bold text-2xl text-primary">ركز | Rakez</span>
-        </Link>
-      </div>
-      <div className="w-full max-w-md">{children}</div>
-    </div>
-  );
-
   // ── View: Login ────────────────────────────────────────────────────────────
   if (view === 'login') return (
     <>
@@ -180,8 +185,8 @@ export const PortalLogin: React.FC = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="min-h-screen flex">
-        <BrandingPanel />
-        <RightPanel>
+        <BrandingPanel isRtl={isRtl} />
+        <RightPanel isRtl={isRtl}>
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-primary">{t('portal.loginTitle')}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t('portal.loginSubtitle')}</p>
@@ -275,8 +280,8 @@ export const PortalLogin: React.FC = () => {
     <>
       <Helmet><title>Need Help Logging In? | Rakez</title></Helmet>
       <div className="min-h-screen flex">
-        <BrandingPanel />
-        <RightPanel>
+        <BrandingPanel isRtl={isRtl} />
+        <RightPanel isRtl={isRtl}>
           <button
             onClick={goBack('login')}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-secondary transition-colors mb-6"
@@ -338,8 +343,8 @@ export const PortalLogin: React.FC = () => {
     <>
       <Helmet><title>Reset Password | Rakez</title></Helmet>
       <div className="min-h-screen flex">
-        <BrandingPanel />
-        <RightPanel>
+        <BrandingPanel isRtl={isRtl} />
+        <RightPanel isRtl={isRtl}>
           <button
             onClick={goBack('forgot-email')}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-secondary transition-colors mb-6"
@@ -423,8 +428,8 @@ export const PortalLogin: React.FC = () => {
     <>
       <Helmet><title>Reset Password | Rakez</title></Helmet>
       <div className="min-h-screen flex">
-        <BrandingPanel />
-        <RightPanel>
+        <BrandingPanel isRtl={isRtl} />
+        <RightPanel isRtl={isRtl}>
           <div className="bg-card border border-border rounded-xl shadow-sm p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
               <CheckCircle2 className="h-8 w-8 text-green-600" />
