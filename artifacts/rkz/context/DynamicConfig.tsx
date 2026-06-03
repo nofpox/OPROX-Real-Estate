@@ -13,6 +13,12 @@ import { API_BASE } from "@/constants/api";
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
+export interface PropertyTypeConfig {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+}
+
 export interface AppConfig {
   branding: {
     appName: string;
@@ -35,6 +41,7 @@ export interface AppConfig {
     wasalt: boolean;
     property_finder: boolean;
   };
+  propertyTypes: PropertyTypeConfig[];
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -59,6 +66,18 @@ export const DEFAULT_CONFIG: AppConfig = {
     wasalt: true,
     property_finder: true,
   },
+  propertyTypes: [
+    { id: "villa",      labelAr: "فيلا",          labelEn: "Villa" },
+    { id: "apartment",  labelAr: "شقة",            labelEn: "Apartment" },
+    { id: "land",       labelAr: "أرض",            labelEn: "Land" },
+    { id: "commercial", labelAr: "عقار تجاري",     labelEn: "Commercial" },
+    { id: "compound",   labelAr: "مجمع سكني",      labelEn: "Compound" },
+    { id: "floor",      labelAr: "دور",            labelEn: "Floor" },
+    { id: "warehouse",  labelAr: "مستودع",         labelEn: "Warehouse" },
+    { id: "farm",       labelAr: "مزرعة",          labelEn: "Farm" },
+    { id: "rest_house", labelAr: "استراحة",        labelEn: "Rest House" },
+    { id: "palace",     labelAr: "قصر",            labelEn: "Palace" },
+  ],
 };
 
 interface ConfigContextValue {
@@ -99,6 +118,7 @@ function deepMerge(base: AppConfig, patch: Partial<AppConfig>): AppConfig {
     branding: { ...base.branding, ...(patch.branding ?? {}) },
     content: { ...base.content, ...(patch.content ?? {}) },
     platforms: { ...base.platforms, ...(patch.platforms ?? {}) },
+    propertyTypes: patch.propertyTypes ?? base.propertyTypes,
   };
 }
 

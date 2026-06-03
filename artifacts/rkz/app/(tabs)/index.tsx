@@ -449,7 +449,7 @@ export default function DashboardScreen() {
       >
         <View style={S.cardTop}>
           <View style={S.propTypeBadge}>
-            <Text style={S.propTypeText}>{t.propertyTypes[p.type]}</Text>
+            <Text style={S.propTypeText}>{(t.propertyTypes as Record<string, string>)[p.type] ?? p.type}</Text>
           </View>
           <View style={{ alignItems: isAr ? "flex-start" : "flex-end" }}>
             <Text style={S.propPrice}>{p.price.toLocaleString(priceLocale)}</Text>

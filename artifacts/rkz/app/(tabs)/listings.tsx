@@ -556,7 +556,7 @@ export default function ListingsScreen() {
         <Pressable style={S.cardHeader} onPress={() => setExpandedId(expanded ? null : p.id)}>
           <View style={S.cardLeft}>
             <View style={S.propType}>
-              <Text style={S.propTypeText}>{t.propertyTypes[p.type]}</Text>
+              <Text style={S.propTypeText}>{(t.propertyTypes as Record<string, string>)[p.type] ?? p.type}</Text>
             </View>
             {p.title && <Text style={S.propTitle} numberOfLines={1}>{p.title}</Text>}
             <Text style={S.propLocation} numberOfLines={1}>

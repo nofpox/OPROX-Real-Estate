@@ -7,13 +7,7 @@ import React, {
   useState,
 } from "react";
 
-export type PropertyType =
-  | "villa"
-  | "apartment"
-  | "land"
-  | "commercial"
-  | "compound"
-  | "floor";
+export type PropertyType = string;
 
 export type Platform = "aqar" | "bayut" | "wasalt" | "property_finder";
 
@@ -319,20 +313,28 @@ export const PLATFORM_COLORS: Record<Platform, string> = {
   property_finder: "#D97706",
 };
 
-export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
+export const PROPERTY_TYPE_LABELS: Record<string, string> = {
   villa: "فيلا",
   apartment: "شقة",
   land: "أرض",
   commercial: "تجاري",
   compound: "مجمع",
   floor: "دور",
+  warehouse: "مستودع",
+  farm: "مزرعة",
+  rest_house: "استراحة",
+  palace: "قصر",
 };
 
-export const PROPERTY_TYPE_ICONS: Record<PropertyType, string> = {
+export const PROPERTY_TYPE_ICONS: Record<string, string> = {
   villa: "home",
   apartment: "business",
   land: "map",
   commercial: "storefront",
   compound: "location-city",
   floor: "layers",
+  warehouse: "warehouse",
+  farm: "grass",
+  rest_house: "weekend",
+  palace: "castle",
 };

@@ -25,24 +25,13 @@ import {
   PLATFORM_COLORS,
   PLATFORM_LABELS,
   Platform as PlatformType,
-  PropertyType,
   useApp,
 } from "@/context/AppContext";
+import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
 const ALL_PLATFORMS: PlatformType[] = ["aqar", "bayut", "wasalt", "property_finder"];
-const PROP_TYPES: PropertyType[] = ["villa", "apartment", "land", "commercial", "compound", "floor"];
-
-// Arabic type keys used for API calls (always Arabic regardless of UI lang)
-const TYPE_KEYS: Record<PropertyType, string> = {
-  villa: "villa",
-  apartment: "apartment",
-  land: "land",
-  commercial: "commercial",
-  compound: "compound",
-  floor: "floor",
-};
 
 type Step = "form" | "publishing" | "done";
 
@@ -58,8 +47,9 @@ export default function AddPropertyScreen() {
   const insets = useSafeAreaInsets();
   const { addProperty } = useApp();
   const { t, isAr } = useLocale();
+  const { config } = useConfig();
 
-  const [propType, setPropType] = useState<PropertyType>("villa");
+  const [propType, setPropType] = useState<string>(config.propertyTypes[0]?.id ?? "villa");
   const [price, setPrice] = useState("");
   const [city, setCity] = useState(isAr ? "الرياض" : "Riyadh");
   const [district, setDistrict] = useState("");
@@ -136,7 +126,7 @@ export default function AddPropertyScreen() {
     setPriceSuggestion(null);
     try {
       const result = await apiPost<PriceSuggestion>("/rkz/suggest-price", {
-        type: TYPE_KEYS[propType],
+        type: propType,
         city,
         district: district || undefined,
         area: area ? parseFloat(area) : undefined,
@@ -163,7 +153,7 @@ export default function AddPropertyScreen() {
     setDescGenerating(true);
     try {
       const result = await apiPost<{ description: string }>("/rkz/generate-description", {
-        type: TYPE_KEYS[propType],
+        type: propType,
         city,
         district: district || undefined,
         area: area ? parseFloat(area) : undefined,
@@ -682,7 +672,7 @@ export default function AddPropertyScreen() {
             setBedrooms("");
             setPhotos([]);
             setDescription("");
-            setPropType("villa");
+            setPropType(config.propertyTypes[0]?.id ?? "villa");
             setPriceSuggestion(null);
             setSelectedPlatforms(new Set(ALL_PLATFORMS));
             progressAnim.setValue(0);
@@ -697,7 +687,7 @@ export default function AddPropertyScreen() {
   }
 
   // ── Main Form ─────────────────────────────────────────────────────────
-  const showBedrooms = ["villa", "apartment", "floor", "compound"].includes(propType);
+  const showBedrooms = ["villa", "apartment", "floor", "compound", "palace"].includes(propType);
 
   return (
     <View style={S.container}>
@@ -714,22 +704,22 @@ export default function AddPropertyScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Property type */}
+        {/* Property type — dynamic from Admin config */}
         <View style={S.section}>
           <Text style={S.label}>{t.add.typeLabel}</Text>
           <View style={S.typeRow}>
-            {PROP_TYPES.map((type) => (
+            {config.propertyTypes.map((pt) => (
               <Pressable
-                key={type}
+                key={pt.id}
                 style={({ pressed }) => [
                   S.typePill,
-                  propType === type && S.typePillActive,
+                  propType === pt.id && S.typePillActive,
                   pressed && { opacity: 0.8 },
                 ]}
-                onPress={() => { setPropType(type); setPriceSuggestion(null); Haptics.selectionAsync(); }}
+                onPress={() => { setPropType(pt.id); setPriceSuggestion(null); Haptics.selectionAsync(); }}
               >
-                <Text style={[S.typePillText, propType === type && S.typePillTextActive]}>
-                  {t.propertyTypes[type]}
+                <Text style={[S.typePillText, propType === pt.id && S.typePillTextActive]}>
+                  {isAr ? pt.labelAr : pt.labelEn}
                 </Text>
               </Pressable>
             ))}

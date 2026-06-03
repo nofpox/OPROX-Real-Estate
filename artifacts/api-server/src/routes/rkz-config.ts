@@ -4,6 +4,12 @@ import { Router } from "express";
 
 const CONFIG_FILE = join(process.cwd(), "rkz-app-config.json");
 
+export interface PropertyTypeConfig {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+}
+
 export interface RkzConfig {
   branding: {
     appName: string;
@@ -26,6 +32,7 @@ export interface RkzConfig {
     wasalt: boolean;
     property_finder: boolean;
   };
+  propertyTypes: PropertyTypeConfig[];
   admin: {
     pin: string;
   };
@@ -53,6 +60,18 @@ const DEFAULT_CONFIG: RkzConfig = {
     wasalt: true,
     property_finder: true,
   },
+  propertyTypes: [
+    { id: "villa",      labelAr: "فيلا",          labelEn: "Villa" },
+    { id: "apartment",  labelAr: "شقة",            labelEn: "Apartment" },
+    { id: "land",       labelAr: "أرض",            labelEn: "Land" },
+    { id: "commercial", labelAr: "عقار تجاري",     labelEn: "Commercial" },
+    { id: "compound",   labelAr: "مجمع سكني",      labelEn: "Compound" },
+    { id: "floor",      labelAr: "دور",            labelEn: "Floor" },
+    { id: "warehouse",  labelAr: "مستودع",         labelEn: "Warehouse" },
+    { id: "farm",       labelAr: "مزرعة",          labelEn: "Farm" },
+    { id: "rest_house", labelAr: "استراحة",        labelEn: "Rest House" },
+    { id: "palace",     labelAr: "قصر",            labelEn: "Palace" },
+  ],
   admin: {
     pin: "1234",
   },
@@ -63,6 +82,7 @@ function deepMerge(base: RkzConfig, patch: Partial<RkzConfig>): RkzConfig {
     branding: { ...base.branding, ...(patch.branding ?? {}) },
     content: { ...base.content, ...(patch.content ?? {}) },
     platforms: { ...base.platforms, ...(patch.platforms ?? {}) },
+    propertyTypes: patch.propertyTypes ?? base.propertyTypes,
     admin: { ...base.admin, ...(patch.admin ?? {}) },
   };
 }

@@ -1,7 +1,55 @@
 import { Router } from "express";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { rkzCurrentConfig } from "./rkz-config";
 
 const router = Router();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI Contact Info Shield — detects and suppresses off-platform contact attempts
+// ─────────────────────────────────────────────────────────────────────────────
+const CONTACT_PATTERNS: { re: RegExp; name: string }[] = [
+  { re: /\b05\d{8}\b/,                                    name: "saudi_mobile" },
+  { re: /\b5\d{8}\b/,                                     name: "saudi_mobile_short" },
+  { re: /\+966\s*\d{7,9}/,                                name: "intl_phone" },
+  { re: /00966\s*\d{7,9}/,                                name: "intl_phone_alt" },
+  { re: /@[a-zA-Z0-9_.]{3,}/,                             name: "social_handle" },
+  { re: /واتس\s*اب|whatsapp/i,                            name: "whatsapp" },
+  { re: /انستغرام|انستقرام|instagram/i,                   name: "instagram" },
+  { re: /تيلغرام|تيليغرام|telegram/i,                     name: "telegram" },
+  { re: /سناب\s*شات|snapchat/i,                           name: "snapchat" },
+  { re: /تويتر|twitter/i,                                 name: "twitter" },
+  { re: /خارج (?:التطبيق|المنصة)|outside the (?:app|platform)/i, name: "off_platform" },
+  { re: /ايميل|إيميل|email me|my email/i,                 name: "email" },
+];
+
+interface Violation {
+  id: string;
+  ts: string;
+  message: string;
+  pattern: string;
+}
+const violations: Violation[] = [];
+
+function detectContact(msg: string): { blocked: boolean; pattern: string } {
+  for (const { re, name } of CONTACT_PATTERNS) {
+    if (re.test(msg)) return { blocked: true, pattern: name };
+  }
+  return { blocked: false, pattern: "" };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Buyer Intent store — registered buyer search criteria
+// ─────────────────────────────────────────────────────────────────────────────
+interface BuyerIntent {
+  id: string;
+  ts: string;
+  type: string;
+  city: string;
+  budget?: number;
+  area?: number;
+  bedrooms?: number;
+}
+const buyerIntents: BuyerIntent[] = [];
 
 const TYPE_LABELS: Record<string, string> = {
   villa: "فيلا",
@@ -77,6 +125,26 @@ router.post("/rkz/assistant/chat", async (req, res) => {
       res.status(400).json({ error: "messages array is required" });
       return;
     }
+
+    // ── AI Contact Info Shield ──────────────────────────────────────────────
+    const lastUserMsg = messages[messages.length - 1]?.content ?? "";
+    const shield = detectContact(lastUserMsg);
+    if (shield.blocked) {
+      violations.push({
+        id: crypto.randomUUID(),
+        ts: new Date().toISOString(),
+        message: lastUserMsg.slice(0, 300),
+        pattern: shield.pattern,
+      });
+      if (violations.length > 500) violations.shift();
+      const isArShield = lang === "ar";
+      const warning = isArShield
+        ? "عذراً، لأسباب تتعلق بالخصوصية وضمان جودة الخدمة، لا يمكن مشاركة بيانات التواصل الشخصية خارج المنصة. يُرجى الاستمرار في التواصل عبر ركز لضمان حقوقك وحماية بيانات جميع الأطراف. 🛡️"
+        : "I'm sorry — for privacy and service quality reasons, personal contact information cannot be shared outside the platform. Please continue communicating through Rkz to protect your rights and everyone's data. 🛡️";
+      res.json({ reply: warning, blocked: true });
+      return;
+    }
+    // ───────────────────────────────────────────────────────────────────────
 
     const isAr = lang === "ar";
 
@@ -475,6 +543,75 @@ Score is a portfolio health indicator from 0-100 based on: publish rate, view co
     req.log.error({ err }, "rkz assistant/report error");
     res.status(500).json({ error: "AI request failed" });
   }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /rkz/admin/violations  — PIN-protected; returns flagged contact attempts
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/rkz/admin/violations", (req, res) => {
+  const { pin } = req.query as { pin?: string };
+  if (!pin || pin !== rkzCurrentConfig.admin.pin) {
+    res.status(401).json({ error: "Invalid PIN" });
+    return;
+  }
+  res.json({ violations, count: violations.length });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE /rkz/admin/violations  — PIN-protected; clears all logged violations
+// ─────────────────────────────────────────────────────────────────────────────
+router.delete("/rkz/admin/violations", (req, res) => {
+  const { pin } = req.body as { pin?: string };
+  if (!pin || pin !== rkzCurrentConfig.admin.pin) {
+    res.status(401).json({ error: "Invalid PIN" });
+    return;
+  }
+  violations.length = 0;
+  res.json({ cleared: true });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /rkz/assistant/buyer-intent
+// Register buyer search criteria in the demand database
+// Body: { type, city, budget?, area?, bedrooms? }
+// ─────────────────────────────────────────────────────────────────────────────
+router.post("/rkz/assistant/buyer-intent", (req, res) => {
+  const { type, city, budget, area, bedrooms } = req.body as {
+    type?: string;
+    city?: string;
+    budget?: number;
+    area?: number;
+    bedrooms?: number;
+  };
+  if (!type || !city) {
+    res.status(400).json({ error: "type and city are required" });
+    return;
+  }
+  const intent: BuyerIntent = {
+    id: crypto.randomUUID(),
+    ts: new Date().toISOString(),
+    type,
+    city,
+    budget,
+    area,
+    bedrooms,
+  };
+  buyerIntents.push(intent);
+  if (buyerIntents.length > 1000) buyerIntents.shift();
+  req.log.info({ intentId: intent.id, type, city }, "rkz: buyer intent registered");
+  res.json({ id: intent.id, registered: true, totalDemand: buyerIntents.length });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /rkz/admin/buyer-intents  — PIN-protected; returns the demand database
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/rkz/admin/buyer-intents", (req, res) => {
+  const { pin } = req.query as { pin?: string };
+  if (!pin || pin !== rkzCurrentConfig.admin.pin) {
+    res.status(401).json({ error: "Invalid PIN" });
+    return;
+  }
+  res.json({ buyerIntents, count: buyerIntents.length });
 });
 
 export default router;

@@ -259,11 +259,44 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
     branding: { ...config.branding },
     content: { ...config.content },
     platforms: { ...config.platforms },
+    propertyTypes: [...(config.propertyTypes ?? [])],
   });
   const [newPin, setNewPin] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState("");
   const hasSavedRef = useRef(false);
+
+  // ── Property Types CRUD state ──────────────────────────────────────────────
+  const [newTypeId, setNewTypeId] = useState("");
+  const [newTypeAr, setNewTypeAr] = useState("");
+  const [newTypeEn, setNewTypeEn] = useState("");
+  const [typeError, setTypeError] = useState("");
+
+  function addPropertyType() {
+    const id = newTypeId.trim().replace(/\s+/g, "_").toLowerCase();
+    if (!id || !newTypeAr.trim() || !newTypeEn.trim()) {
+      setTypeError(t.admin.propertyTypeIdRequired);
+      return;
+    }
+    if (draft.propertyTypes.some((pt) => pt.id === id)) {
+      setTypeError(t.admin.propertyTypeDuplicate);
+      return;
+    }
+    setDraft((d) => ({
+      ...d,
+      propertyTypes: [...d.propertyTypes, { id, labelAr: newTypeAr.trim(), labelEn: newTypeEn.trim() }],
+    }));
+    setNewTypeId("");
+    setNewTypeAr("");
+    setNewTypeEn("");
+    setTypeError("");
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }
+
+  function deletePropertyType(idx: number) {
+    setDraft((d) => ({ ...d, propertyTypes: d.propertyTypes.filter((_, i) => i !== idx) }));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }
 
   // Rollback live preview on unmount if not saved
   useEffect(() => {
@@ -307,6 +340,7 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
         branding: draft.branding,
         content: draft.content,
         platforms: draft.platforms,
+        propertyTypes: draft.propertyTypes,
       };
       if (newPin.length === 4) {
         (updates as Record<string, unknown>).admin = { pin: newPin };
@@ -518,6 +552,71 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
               {i < arr.length - 1 && <View style={styles.divider} />}
             </React.Fragment>
           ))}
+        </SectionCard>
+
+        {/* ── 3.5 PROPERTY TYPES ─────────────────────────────────────────── */}
+        <SectionCard icon="category" title={t.admin.propertyTypesSection} iconBg="#FFF7ED" iconColor="#EA580C" isAr={isAr}>
+          <Text style={[styles.fieldLabel, styles.pinHint, isAr && { textAlign: "right" }]}>
+            {t.admin.propertyTypesHint}
+          </Text>
+
+          {/* Existing type list */}
+          {draft.propertyTypes.map((pt, idx) => (
+            <React.Fragment key={pt.id}>
+              <View style={[styles.platformRow, isAr && { flexDirection: "row-reverse" }]}>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={[styles.platName, isAr && { textAlign: "right" }]}>
+                    {pt.labelAr} / {pt.labelEn}
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: "#9CA3AF" }}>
+                    id: {pt.id}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => deletePropertyType(idx)}
+                  style={({ pressed }) => [styles.deleteTypeBtn, pressed && { opacity: 0.7 }]}
+                >
+                  <MaterialIcons name="delete-outline" size={18} color="#EF4444" />
+                </Pressable>
+              </View>
+              {idx < draft.propertyTypes.length - 1 && <View style={styles.divider} />}
+            </React.Fragment>
+          ))}
+
+          {/* Add new type form */}
+          <View style={[styles.divider, { marginVertical: 14 }]} />
+          <FieldRow
+            label={t.admin.propertyTypeIdHint}
+            value={newTypeId}
+            onChange={(v) => { setNewTypeId(v); setTypeError(""); }}
+            placeholder="rest_house"
+            isAr={isAr}
+          />
+          <FieldRow
+            label={t.admin.propertyTypeArLabel}
+            value={newTypeAr}
+            onChange={(v) => { setNewTypeAr(v); setTypeError(""); }}
+            placeholder="استراحة"
+            isAr
+          />
+          <FieldRow
+            label={t.admin.propertyTypeEnLabel}
+            value={newTypeEn}
+            onChange={(v) => { setNewTypeEn(v); setTypeError(""); }}
+            placeholder="Rest House"
+          />
+          {!!typeError && (
+            <Text style={{ fontSize: 12, color: "#EF4444", marginBottom: 10, textAlign: isAr ? "right" : "left", fontFamily: "Inter_500Medium" }}>
+              {typeError}
+            </Text>
+          )}
+          <Pressable
+            onPress={addPropertyType}
+            style={({ pressed }) => [styles.addTypeBtn, pressed && { opacity: 0.85 }]}
+          >
+            <MaterialIcons name="add-circle-outline" size={18} color="#EA580C" />
+            <Text style={styles.addTypeBtnText}>{t.admin.addPropertyType}</Text>
+          </Pressable>
         </SectionCard>
 
         {/* ── 4. SECURITY ────────────────────────────────────────────────── */}
@@ -754,6 +853,29 @@ const styles = StyleSheet.create({
   },
   savedText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#059669" },
 
+  deleteTypeBtn: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#FEF2F2",
+  },
+  addTypeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#EA580C",
+    borderStyle: "dashed",
+    alignSelf: "flex-start",
+    marginTop: 4,
+  },
+  addTypeBtnText: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
+    color: "#EA580C",
+  },
   saveBtn: {
     height: 52,
     borderRadius: 14,
