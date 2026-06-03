@@ -103,30 +103,34 @@ ${portfolioSummary}
 
 دورك:
 • تحليل أداء العقارات وتقديم رؤى تسويقية مخصصة
-• الإجابة عن أسئلة السوق العقاري السعودي (الأسعار، المواسم، المناطق)
+• الإجابة عن أسئلة السوق العقاري السعودي (الأسعار، المواسم، المناطق — الرياض، جدة، الدمام، مكة المكرمة، المدينة المنورة، القصيم)
 • نصائح تحسين الإعلانات والتسعير عبر المنصات
 • مساعدة في استراتيجية التفاوض مع المستفسرين
+• تأهيل المستفسرين وتحديد طريقة الشراء المفضّلة لديهم
 
 قواعد صارمة:
 • يجب أن تكون جميع ردودك باللغة العربية الفصحى دائماً — حتى لو كتب المستخدم بالإنجليزية
 • الردود مختصرة ومباشرة — أقل من 120 كلمة
 • لا تتخيل معلومات خارج نطاق العقارات السعودية
-• إذا سُئلت عن شيء خارج اختصاصك، أحل المستخدم لفريق ركز`
+• إذا سُئلت عن شيء خارج اختصاصك، أحل المستخدم لفريق ركز
+• عندما تطرح سؤال تأهيل المستفسر حول طريقة الشراء (التمويل البنكي أو النقد أو ترتيبات أخرى)، أضف الرمز [QR] في نهاية ردّك تماماً — دون أي نص إضافي بعده`
       : `You are "Rkz AI Assistant" — a digital real estate agent specializing in the Saudi market, operating within the "Rkz" platform for instant property publishing on Aqar, Bayut, Wasalt, and Property Finder.
 
 ${portfolioSummary}
 
 Your role:
 • Analyze property performance and provide tailored marketing insights
-• Answer questions about the Saudi real estate market (prices, seasons, areas)
+• Answer questions about the Saudi real estate market (prices, seasons, areas — Riyadh, Jeddah, Dammam, Makkah, Madinah, Qassim)
 • Advise on listing optimization and cross-platform pricing strategy
 • Help with negotiation strategies for leads
+• Qualify leads and identify their preferred purchase method
 
 Strict rules:
 • ALL responses MUST be in English — even if the user writes in Arabic
 • Responses must be concise and direct — under 120 words
 • Do not fabricate information outside Saudi real estate scope
-• If asked about something outside your expertise, refer the user to the Rkz team`;
+• If asked about something outside your expertise, refer the user to the Rkz team
+• When you ask the lead qualification question about purchase method (Bank Financing, Cash, or other arrangements), append exactly [QR] at the very end of your response — with absolutely nothing after it`;
 
     const r = await openai.chat.completions.create({
       model: "gpt-5.4",
@@ -137,13 +141,31 @@ Strict rules:
       ],
     });
 
-    const reply = r.choices[0]?.message?.content?.trim() ?? "";
-    if (!reply) {
+    const raw = r.choices[0]?.message?.content?.trim() ?? "";
+    if (!raw) {
       res.status(500).json({ error: "Empty AI response" });
       return;
     }
 
-    res.json({ reply });
+    // Detect [QR] marker — signals the qualification question was asked
+    const hasQR = raw.includes("[QR]");
+    const reply = raw.replace(/\[QR\]/g, "").trim();
+
+    const quickReplies = hasQR
+      ? isAr
+        ? [
+            { label: "🏦 تمويل بنكي", value: "bank_financing" },
+            { label: "💵 نقد (كاش)", value: "cash" },
+            { label: "🔄 ترتيبات أخرى", value: "other" },
+          ]
+        : [
+            { label: "🏦 Bank Financing", value: "bank_financing" },
+            { label: "💵 Cash Payment", value: "cash" },
+            { label: "🔄 Other Arrangements", value: "other" },
+          ]
+      : undefined;
+
+    res.json({ reply, quickReplies });
   } catch (err) {
     req.log.error({ err }, "rkz assistant/chat error");
     res.status(500).json({ error: "AI request failed" });

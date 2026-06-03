@@ -383,6 +383,52 @@ export default function ListingsScreen() {
       fontFamily: "Inter_600SemiBold",
       color: colors.gold,
     },
+    // ── Proactive Alert Banner ──────────────────────────────────────────────
+    alertBanner: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: colors.navy,
+      borderRadius: 10,
+      padding: 12,
+      marginBottom: 10,
+      borderWidth: 1,
+      borderColor: colors.gold + "60",
+    },
+    alertIconWrapper: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.gold + "25",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+    },
+    alertBody: { flex: 1 },
+    alertTitle: {
+      fontSize: 12,
+      fontFamily: "Inter_700Bold",
+      color: colors.gold,
+      textAlign: isAr ? "right" : "left",
+    },
+    alertSub: {
+      fontSize: 11,
+      fontFamily: "Inter_400Regular",
+      color: "rgba(255,255,255,0.65)",
+      marginTop: 1,
+      textAlign: isAr ? "right" : "left",
+    },
+    alertShareBtn: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 8,
+      backgroundColor: colors.gold,
+    },
+    alertShareText: {
+      fontSize: 11,
+      fontFamily: "Inter_700Bold",
+      color: colors.navy,
+    },
     // ── Team Notification Card ──────────────────────────────────────────────
     notifyCard: {
       backgroundColor: colors.card,
@@ -629,6 +675,30 @@ export default function ListingsScreen() {
 
             {/* Leads list */}
             <View style={S.leadsSection}>
+              {/* Proactive Alert — fires when serious leads with known payment method are found */}
+              {qs?.teamNotification && qs.results.some((r) => r.score === "serious" && r.paymentMethod !== "unknown") && (() => {
+                const seriousWithPayment = qs.results.filter(r => r.score === "serious" && r.paymentMethod !== "unknown");
+                const notificationText = isAr ? qs.teamNotification!.ar : qs.teamNotification!.en;
+                return (
+                  <Pressable
+                    style={({ pressed }) => [S.alertBanner, pressed && { opacity: 0.9 }]}
+                    onPress={() => Share.share({ message: notificationText, title: t.assistant.proactiveAlertTitle })}
+                  >
+                    <View style={S.alertIconWrapper}>
+                      <MaterialIcons name="notifications-active" size={16} color={colors.gold} />
+                    </View>
+                    <View style={S.alertBody}>
+                      <Text style={S.alertTitle}>{t.assistant.proactiveAlertTitle}</Text>
+                      <Text style={S.alertSub}>
+                        {seriousWithPayment.length} {isAr ? "مستفسر جاد — اضغط لمشاركة التقرير" : `serious lead${seriousWithPayment.length > 1 ? "s" : ""} — tap to share report`}
+                      </Text>
+                    </View>
+                    <View style={S.alertShareBtn}>
+                      <Text style={S.alertShareText}>{t.assistant.proactiveAlertShare}</Text>
+                    </View>
+                  </Pressable>
+                );
+              })()}
               <Text style={S.leadsSectionTitle}>
                 {t.listings.interestedLeads(p.leads.length, unreadLeadCount)}
               </Text>

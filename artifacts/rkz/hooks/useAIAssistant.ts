@@ -4,11 +4,17 @@ import { apiPost } from "@/constants/api";
 import { useApp } from "@/context/AppContext";
 import { useLocale } from "@/hooks/useLocale";
 
+export interface QuickReply {
+  label: string;
+  value: string;
+}
+
 export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   ts: number;
+  quickReplies?: QuickReply[];
 }
 
 interface PortfolioContext {
@@ -99,7 +105,10 @@ export function useAIAssistant() {
       setIsThinking(true);
 
       try {
-        const { reply } = await apiPost<{ reply: string }>("/rkz/assistant/chat", {
+        const { reply, quickReplies } = await apiPost<{
+          reply: string;
+          quickReplies?: QuickReply[];
+        }>("/rkz/assistant/chat", {
           messages: historyForAPI,
           context,
           lang: isAr ? "ar" : "en",
@@ -111,6 +120,7 @@ export function useAIAssistant() {
             role: "assistant",
             content: reply,
             ts: Date.now(),
+            quickReplies,
           },
         ]);
       } catch {
@@ -135,5 +145,12 @@ export function useAIAssistant() {
     setMessages((prev) => prev.slice(0, 1)); // Keep only greeting
   }, []);
 
-  return { messages, isThinking, sendMessage, clearMessages, context };
+  // Remove quick reply chips from a specific message once one is tapped
+  const dismissQuickReplies = useCallback((messageId: string) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, quickReplies: undefined } : m))
+    );
+  }, []);
+
+  return { messages, isThinking, sendMessage, clearMessages, dismissQuickReplies, context };
 }

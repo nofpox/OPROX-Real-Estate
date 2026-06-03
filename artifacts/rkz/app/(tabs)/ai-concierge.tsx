@@ -93,7 +93,7 @@ export default function AIConciergeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { t, isAr } = useLocale();
-  const { messages, isThinking, sendMessage, clearMessages } = useAIAssistant();
+  const { messages, isThinking, sendMessage, clearMessages, dismissQuickReplies } = useAIAssistant();
 
   const [input, setInput] = useState("");
   const scrollRef = useRef<ScrollView>(null);
@@ -118,6 +118,12 @@ export default function AIConciergeScreen() {
   function handleSuggestion(q: string) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     void sendMessage(q);
+  }
+
+  function handleQuickReply(messageId: string, label: string) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    dismissQuickReplies(messageId);
+    void sendMessage(label);
   }
 
   const S = StyleSheet.create({
@@ -246,6 +252,40 @@ export default function AIConciergeScreen() {
       fontFamily: "Inter_500Medium",
       color: colors.navyLight,
     },
+    // Quick Reply chips — shown below AI messages when purchase method question is asked
+    quickReplyRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      flexWrap: "wrap",
+      gap: 8,
+      marginTop: 10,
+      paddingHorizontal: 2,
+    },
+    quickReplyChip: {
+      borderRadius: 22,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      backgroundColor: colors.navy,
+      borderWidth: 1.5,
+      borderColor: colors.gold,
+      shadowColor: colors.gold,
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 3,
+    },
+    quickReplyChipText: {
+      fontSize: 13,
+      fontFamily: "Inter_700Bold",
+      color: "#FFFFFF",
+      textAlign: "center",
+    },
+    quickReplyHint: {
+      fontSize: 11,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      marginTop: 6,
+      textAlign: isAr ? "right" : "left",
+    },
     // Input bar
     inputBar: {
       flexDirection: isAr ? "row-reverse" : "row",
@@ -301,10 +341,11 @@ export default function AIConciergeScreen() {
 
   function renderMessage(msg: Message) {
     const isUser = msg.role === "user";
+    const hasQR = !isUser && !!msg.quickReplies && msg.quickReplies.length > 0;
     return (
       <View
         key={msg.id}
-        style={[S.msgRow, isUser ? S.msgRowUser : S.msgRowAI]}
+        style={[S.msgRow, isUser ? S.msgRowUser : S.msgRowAI, hasQR && { maxWidth: "95%" }]}
       >
         <View style={[S.bubble, isUser ? S.bubbleUser : S.bubbleAI]}>
           {isUser ? (
@@ -316,6 +357,25 @@ export default function AIConciergeScreen() {
         <Text style={[S.timestamp, isUser && { textAlign: isAr ? "left" : "right" }]}>
           {formatTime(msg.ts)}
         </Text>
+        {/* Quick Reply buttons — rendered below the message bubble */}
+        {hasQR && (
+          <>
+            <Text style={S.quickReplyHint}>
+              {isAr ? "اختر طريقة الشراء:" : "Select your purchase method:"}
+            </Text>
+            <View style={S.quickReplyRow}>
+              {msg.quickReplies!.map((qr) => (
+                <Pressable
+                  key={qr.value}
+                  style={({ pressed }) => [S.quickReplyChip, pressed && { opacity: 0.75, transform: [{ scale: 0.96 }] }]}
+                  onPress={() => handleQuickReply(msg.id, qr.label)}
+                >
+                  <Text style={S.quickReplyChipText}>{qr.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </>
+        )}
       </View>
     );
   }

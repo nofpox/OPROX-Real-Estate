@@ -177,6 +177,9 @@ export const ar = {
     qualScriptShare: "مشاركة الرسالة",
     notifyTitle: "تقرير الفريق",
     notifyBtn: "مشاركة التقرير مع الفريق ↗",
+    proactiveAlertTitle: "تنبيه — مستفسرون بأولوية عالية",
+    proactiveAlertSub: "مستفسر جاد مع تفضيل واضح لطريقة الشراء — تواصل فوراً",
+    proactiveAlertShare: "مشاركة التقرير",
   },
   admin: {
     title: "لوحة التحكم",
@@ -397,6 +400,9 @@ export const en: Translations = {
     qualScriptShare: "Share Script",
     notifyTitle: "Team Report",
     notifyBtn: "Share Report with Team ↗",
+    proactiveAlertTitle: "Alert — High-Priority Leads",
+    proactiveAlertSub: "Serious lead with clear purchase method preference — act immediately",
+    proactiveAlertShare: "Share Report",
   },
   admin: {
     title: "Admin Control Panel",
