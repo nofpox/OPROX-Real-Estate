@@ -44,6 +44,8 @@ const NAV_ITEMS = [
   { href: "/security-dashboard",  labelKey: "nav.securityDashboard", icon: ShieldAlert,       section: "operations", featureKey: null },
   { href: "/analytics",           labelKey: "nav.analytics",         icon: BarChart2,          section: "operations", featureKey: null },
   { href: "/support-tickets",    labelKey: "nav.supportTickets",    icon: Ticket,             section: "operations", featureKey: null },
+  { href: "/content-manager",   labelKey: "nav.contentManager",   icon: LayoutTemplate,     section: "operations", featureKey: null },
+  { href: "/website-settings",  labelKey: "nav.websiteSettings",  icon: Monitor,            section: "operations", featureKey: null },
 ];
 
 /* Role pill colours — solid only, no opacity modifiers */
@@ -55,7 +57,9 @@ const ROLE_ICON_COLORS: Record<string, string> = {
   supervisor:    "bg-amber-100 text-amber-700",
   maintenance:   "bg-orange-100 text-orange-700",
   cleaning:      "bg-green-100 text-green-700",
-  security:      "bg-blue-100 text-blue-700",
+  security:        "bg-blue-100 text-blue-700",
+  content_manager: "bg-indigo-100 text-indigo-700",
+  secretary:       "bg-pink-100 text-pink-700",
 };
 
 interface LayoutProps {

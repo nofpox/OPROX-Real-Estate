@@ -104,8 +104,32 @@ const translations = {
     'portal.registrationSuccess':     'Account created successfully! Signing you in...',
     'portal.usernameHint':            'Letters, numbers, underscores only. 3–30 characters.',
 
+    // ── Portal dashboard – role-based titles ────────────────────────────────
+    'portal.myPortfolio':       'My Portfolio',
+    'portal.managementPortal':  'Management Portal',
+    'portal.investorPortfolio': 'My Portfolio',
+
+    // ── Investor Portfolio tab ──────────────────────────────────────────────
+    'portal.portfolio.title':        'Investment Portfolio',
+    'portal.portfolio.subtitle':     'Your property portfolio performance overview',
+    'portal.portfolio.monthlyIncome': 'Monthly Income',
+    'portal.portfolio.totalInvestment': 'Total Properties',
+    'portal.portfolio.netReturn':    'Net Return',
+    'portal.portfolio.noData':       'No portfolio data available yet. Properties will appear here once assigned.',
+
+    // ── Contact & Support form ───────────────────────────────────────────────
+    'portal.contact.title':              'Send a Message',
+    'portal.contact.subtitle':           'Have a question or need support? Our team will respond within 24 hours.',
+    'portal.contact.subject':            'Subject',
+    'portal.contact.subjectPlaceholder': 'e.g. Financial report question',
+    'portal.contact.message':            'Message',
+    'portal.contact.messagePlaceholder': 'Describe your question or request…',
+    'portal.contact.send':               'Send Message',
+    'portal.contact.sending':            'Sending…',
+    'portal.contact.success':            'Message sent successfully. Our team will respond within 24 hours.',
+    'portal.contact.error':              'Failed to send message. Please try again.',
+
     // ── Portal dashboard – header / KPIs ─────────────────────────────────────
-    'portal.myPortfolio':     'My Portfolio',
     'portal.welcome':         'Welcome back,',
     'portal.logout':          'Logout',
     'portal.totalProperties': 'Total Properties',
@@ -403,8 +427,32 @@ const translations = {
     'portal.registrationSuccess':     'تم إنشاء الحساب بنجاح! جاري تسجيل الدخول...',
     'portal.usernameHint':            'حروف وأرقام وشرطات سفلية فقط. من 3 إلى 30 حرفاً.',
 
+    // ── Portal dashboard – role-based titles ────────────────────────────────
+    'portal.myPortfolio':       'محفظتي',
+    'portal.managementPortal':  'بوابة الإدارة',
+    'portal.investorPortfolio': 'محفظتي',
+
+    // ── Investor Portfolio tab ──────────────────────────────────────────────
+    'portal.portfolio.title':           'محفظة الاستثمار',
+    'portal.portfolio.subtitle':        'نظرة عامة على أداء محفظتك العقارية',
+    'portal.portfolio.monthlyIncome':   'الدخل الشهري',
+    'portal.portfolio.totalInvestment': 'إجمالي العقارات',
+    'portal.portfolio.netReturn':       'صافي العائد',
+    'portal.portfolio.noData':          'لا توجد بيانات محفظة متاحة بعد. ستظهر العقارات هنا بعد تعيينها.',
+
+    // ── Contact & Support form ───────────────────────────────────────────────
+    'portal.contact.title':              'إرسال رسالة',
+    'portal.contact.subtitle':           'هل لديك سؤال أو تحتاج دعماً؟ سيرد فريقنا خلال 24 ساعة.',
+    'portal.contact.subject':            'الموضوع',
+    'portal.contact.subjectPlaceholder': 'مثال: سؤال عن التقرير المالي',
+    'portal.contact.message':            'الرسالة',
+    'portal.contact.messagePlaceholder': 'اشرح سؤالك أو طلبك…',
+    'portal.contact.send':               'إرسال الرسالة',
+    'portal.contact.sending':            'جارٍ الإرسال…',
+    'portal.contact.success':            'تم إرسال الرسالة بنجاح. سيرد فريقنا خلال 24 ساعة.',
+    'portal.contact.error':              'فشل إرسال الرسالة. يرجى المحاولة مجدداً.',
+
     // ── Portal dashboard – header / KPIs ─────────────────────────────────────
-    'portal.myPortfolio':     'محفظتي',
     'portal.welcome':         'مرحباً بعودتك،',
     'portal.logout':          'تسجيل الخروج',
     'portal.totalProperties': 'إجمالي العقارات',

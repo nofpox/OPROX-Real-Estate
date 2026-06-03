@@ -9,6 +9,7 @@ import {
   portalUnitsTable,
   usersTable,
   settingsTable,
+  supportTicketsTable,
   insertPortalPropertySchema,
   updatePortalPropertySchema,
   insertPortalUnitSchema,
@@ -882,6 +883,36 @@ router.put("/portal/role-permissions", requireAuth, async (req, res) => {
   } catch (err) {
     req.log?.error({ err }, "PUT /portal/role-permissions failed");
     sendError(res, 500, "Failed to update role permissions");
+  }
+});
+
+// ── POST /portal/contact — investor/client sends a support message ────────────
+router.post("/portal/contact", requireAuth, async (req, res) => {
+  try {
+    const user    = (req as any).sessionUser as { id: number; displayName?: string; username?: string; role?: string };
+    const tenantId = tid(req) ?? 1;
+    const { subject, message } = req.body ?? {};
+
+    if (!String(subject ?? "").trim() || !String(message ?? "").trim()) {
+      sendError(res, 400, "subject and message are required");
+      return;
+    }
+
+    await db.insert(supportTicketsTable).values({
+      tenantId,
+      category:           "portal_inquiry",
+      title:              String(subject).trim().substring(0, 255),
+      description:        String(message).trim(),
+      status:             "open",
+      submittedByUserId:  user.id,
+      submittedByName:    user.displayName ?? user.username ?? "Portal User",
+      submittedByRole:    user.role ?? "portal_client",
+    });
+
+    sendSuccess(res, { ok: true });
+  } catch (err) {
+    req.log?.error({ err }, "POST /portal/contact failed");
+    sendError(res, 500, "Failed to send message");
   }
 });
 

@@ -975,15 +975,24 @@ export const PortalDashboard: React.FC = () => {
   const [deletePropId, setDeletePropId]   = useState<number | null>(null);
   const [propForm, setPropForm]           = useState<PropFormState>(emptyPropForm());
 
+  // Contact/Support form state (Investor Portfolio tab)
+  const [contactSubject, setContactSubject] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactSending, setContactSending] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState(false);
+  const [contactError,   setContactError]   = useState('');
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) setLocation('/portal');
   }, [isLoading, isAuthenticated, setLocation]);
 
-  // Smart default tab: Owner → command-center
+  // Smart default tab: Owner → command-center, Investor/Client → portfolio, others → manage
   useEffect(() => {
     if (user) {
       const role = ((user as unknown) as Record<string, string>)?.role ?? '';
-      if (getPortalTierLevel(role) <= 1) setCurrentTab('command-center');
+      const tier = getPortalTierLevel(role);
+      if (tier <= 1) setCurrentTab('command-center');
+      else if (tier > 7) setCurrentTab('portfolio');
     }
   }, [user]);
 
@@ -1121,10 +1130,36 @@ export const PortalDashboard: React.FC = () => {
 
   const isPropBusy = createPropMut.isPending || updatePropMut.isPending;
 
+  async function sendContactMessage() {
+    if (!contactSubject.trim() || !contactMessage.trim()) return;
+    setContactSending(true);
+    setContactError('');
+    try {
+      const res = await fetch('/api/portal/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ subject: contactSubject.trim(), message: contactMessage.trim() }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      setContactSuccess(true);
+      setContactSubject('');
+      setContactMessage('');
+    } catch {
+      setContactError(t('portal.contact.error'));
+    } finally {
+      setContactSending(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-muted pb-12">
       <Helmet>
-        <title>{isRtl ? 'محفظتي' : 'My Portfolio'} | ركز للحلول الذكية</title>
+        <title>
+          {(userTier === 'admin' || userTier === 'supervisor')
+            ? (isRtl ? 'بوابة الإدارة' : 'Management Portal')
+            : (isRtl ? 'محفظتي' : 'My Portfolio')} | ركز للحلول الذكية
+        </title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
@@ -1132,7 +1167,9 @@ export const PortalDashboard: React.FC = () => {
       <header className="bg-primary text-primary-foreground py-6 shadow-md">
         <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">{t('portal.myPortfolio')}</h1>
+            <h1 className="text-2xl font-bold">
+              {t((userTier === 'admin' || userTier === 'supervisor') ? 'portal.managementPortal' : 'portal.myPortfolio')}
+            </h1>
             <p className="text-primary-foreground/70">
               {t('portal.welcome')} {((user as unknown as Record<string,unknown>)?.displayName as string) || ((user as unknown as Record<string,unknown>)?.username as string)}
             </p>
@@ -1193,6 +1230,13 @@ export const PortalDashboard: React.FC = () => {
               <TabsTrigger value="ops-control" className="px-5 flex items-center gap-1.5">
                 <Settings2 className="h-3.5 w-3.5" />
                 {t('ops.tab')}
+              </TabsTrigger>
+            )}
+            {/* Investor Portfolio: shown only to client/investor tier (tier > 7) */}
+            {dashTierLevel > 7 && (
+              <TabsTrigger value="portfolio" className="px-5 flex items-center gap-1.5">
+                <TrendingUp className="h-3.5 w-3.5" />
+                {t('portal.investorPortfolio')}
               </TabsTrigger>
             )}
           </TabsList>
@@ -1582,6 +1626,141 @@ export const PortalDashboard: React.FC = () => {
                 </div>
                 <OpsControlPanel user={user} t={t} isRtl={isRtl} />
               </div>
+            </TabsContent>
+          )}
+
+          {/* ── Investor Portfolio tab (client/partner tier > 7 only) ─────────── */}
+          {dashTierLevel > 7 && (
+            <TabsContent value="portfolio" className="mt-0 space-y-8">
+              {/* Section header */}
+              <div>
+                <h2 className="text-xl font-bold text-primary font-serif">{t('portal.portfolio.title')}</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">{t('portal.portfolio.subtitle')}</p>
+              </div>
+
+              {/* Financial KPI row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="p-5 border-border">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-green-100 p-2.5 rounded-full">
+                      <DollarSign className="h-5 w-5 text-green-600" />
+                    </div>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {t('portal.portfolio.monthlyIncome')}
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold text-primary">{fmtSAR(financials?.totalRevenue ?? 0)}</p>
+                </Card>
+                <Card className="p-5 border-border">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-primary/10 p-2.5 rounded-full">
+                      <Building className="h-5 w-5 text-primary" />
+                    </div>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {t('portal.portfolio.totalInvestment')}
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold text-primary">{totalProperties}</p>
+                </Card>
+                <Card className="p-5 border-border">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-secondary/20 p-2.5 rounded-full">
+                      <TrendingUp className="h-5 w-5 text-secondary" />
+                    </div>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {t('portal.portfolio.netReturn')}
+                    </span>
+                  </div>
+                  <p className={`text-2xl font-bold ${(financials?.netProfit ?? 0) >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                    {fmtSAR(financials?.netProfit ?? 0)}
+                  </p>
+                </Card>
+              </div>
+
+              {/* Properties in portfolio */}
+              {properties.length > 0 && (
+                <section>
+                  <h3 className="text-base font-semibold text-primary mb-3">{t('portal.managedProperties')}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {properties.map((prop: PortalProperty) => (
+                      <Card key={prop.id} className="p-4 border-border">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-semibold text-sm text-primary leading-tight">{prop.name}</h4>
+                          <Badge variant={prop.status === 'active' ? 'default' : 'secondary'} className="text-xs shrink-0 ms-2">
+                            {statusLabel(prop.status ?? '')}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{propTypeLabel(prop.type)}</p>
+                        <p className="text-xs text-muted-foreground truncate">{prop.city}</p>
+                        <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">{t('portal.roomsUnit')}</span>
+                          <span className="font-semibold text-primary">{(prop as any).unitCount ?? 0}</span>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {properties.length === 0 && !isLoadingProps && (
+                <p className="text-sm text-muted-foreground py-4">{t('portal.portfolio.noData')}</p>
+              )}
+
+              {/* Contact / Support form */}
+              <section>
+                <Card className="p-6 border-border">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="bg-primary/10 p-2.5 rounded-full">
+                      <MessageSquare className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-primary">{t('portal.contact.title')}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('portal.contact.subtitle')}</p>
+                    </div>
+                  </div>
+                  {contactSuccess ? (
+                    <div className="flex items-center gap-3 p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400">
+                      <CheckCircle className="h-5 w-5 shrink-0" />
+                      <p className="text-sm">{t('portal.contact.success')}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm">{t('portal.contact.subject')}</Label>
+                        <Input
+                          className="mt-1.5"
+                          placeholder={t('portal.contact.subjectPlaceholder')}
+                          value={contactSubject}
+                          onChange={e => setContactSubject(e.target.value)}
+                          disabled={contactSending}
+                          dir={isRtl ? 'rtl' : 'ltr'}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm">{t('portal.contact.message')}</Label>
+                        <Textarea
+                          className="mt-1.5 min-h-[100px]"
+                          placeholder={t('portal.contact.messagePlaceholder')}
+                          value={contactMessage}
+                          onChange={e => setContactMessage(e.target.value)}
+                          disabled={contactSending}
+                          dir={isRtl ? 'rtl' : 'ltr'}
+                        />
+                      </div>
+                      {contactError && (
+                        <p className="text-sm text-destructive">{contactError}</p>
+                      )}
+                      <Button
+                        onClick={sendContactMessage}
+                        disabled={!contactSubject.trim() || !contactMessage.trim() || contactSending}
+                        className="w-full sm:w-auto"
+                      >
+                        {contactSending ? t('portal.contact.sending') : t('portal.contact.send')}
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              </section>
             </TabsContent>
           )}
         </Tabs>

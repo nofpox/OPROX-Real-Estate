@@ -116,6 +116,8 @@ const OWNER_PERMISSION_ROUTES = [
   { href: "/security-dashboard", label: "Security Dashboard" },
   { href: "/analytics",          label: "Analytics" },
   { href: "/support-tickets",    label: "Support Tickets" },
+  { href: "/content-manager",   label: "Content Manager / CMS" },
+  { href: "/website-settings",  label: "Website Settings" },
 ];
 
 // All roles are fully editable by the Owner — no tier locking.
@@ -127,20 +129,24 @@ const OWNER_CONFIGURABLE_ROLES = [
   { id: "supervisor",     label: "Supervisor",             color: "bg-amber-100  text-amber-700  dark:bg-amber-900/30  dark:text-amber-400",  desc: "Field operations" },
   { id: "maintenance",    label: "Maintenance",            color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400", desc: "Field tasks" },
   { id: "cleaning",       label: "Cleaning",               color: "bg-green-100  text-green-700  dark:bg-green-900/30  dark:text-green-400",  desc: "Field tasks" },
-  { id: "security",       label: "Security",               color: "bg-blue-100   text-blue-700   dark:bg-blue-900/30   dark:text-blue-400",   desc: "Field tasks" },
+  { id: "security",       label: "Security",       color: "bg-blue-100   text-blue-700   dark:bg-blue-900/30   dark:text-blue-400",   desc: "Field tasks" },
+  { id: "content_manager", label: "Content Manager", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400", desc: "CMS & design access" },
+  { id: "secretary",      label: "Secretary",      color: "bg-pink-100   text-pink-700   dark:bg-pink-900/30   dark:text-pink-400",   desc: "Admin support" },
 ];
 
 const ALL_ROUTES = OWNER_PERMISSION_ROUTES.map((r) => r.href);
 
 // Blank slate — no pre-set permissions. Owner configures everything from scratch.
 const DEFAULT_PERM: PermissionMatrix = {
-  admin_manager: [],
-  manager:       [],
-  administrator: [],
-  supervisor:    [],
-  maintenance:   [],
-  cleaning:      [],
-  security:      [],
+  admin_manager:   [],
+  manager:         [],
+  administrator:   [],
+  supervisor:      [],
+  maintenance:     [],
+  cleaning:        [],
+  security:        [],
+  content_manager: [],
+  secretary:       [],
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
