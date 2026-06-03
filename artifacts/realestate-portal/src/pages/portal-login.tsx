@@ -132,7 +132,7 @@ export const PortalLogin: React.FC = () => {
           <span className="font-bold text-xl text-white">ركز | Rakez</span>
         </Link>
         <h2 className="text-3xl font-bold text-white mb-3">
-          {isRtl ? 'بوابة العملاء' : 'Client Portal'}
+          {isRtl ? 'بوابة المستثمرين' : 'Investor Portal'}
         </h2>
         <p className="text-primary-foreground/70 text-base leading-relaxed mb-10">
           {isRtl
@@ -176,7 +176,7 @@ export const PortalLogin: React.FC = () => {
   if (view === 'login') return (
     <>
       <Helmet>
-        <title>Client Portal | ركز للحلول الذكية</title>
+        <title>{isRtl ? 'بوابة المستثمرين | ركز للحلول الذكية' : 'Investor Portal | Rakez Smart Solutions'}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="min-h-screen flex">
@@ -253,12 +253,11 @@ export const PortalLogin: React.FC = () => {
               {isRtl ? 'اتصال آمن ومشفر' : 'Secured with encrypted connection'}
             </div>
           </div>
-          {/* Register link */}
-          <p className="text-center mt-5 text-sm text-muted-foreground">
-            {t('portal.noAccount')}{' '}
-            <Link href="/portal/register" className="text-secondary font-medium hover:text-secondary/80 transition-colors">
-              {t('portal.registerLink')}
-            </Link>
+          {/* Restricted notice */}
+          <p className="text-center mt-5 text-xs text-muted-foreground leading-relaxed">
+            {isRtl
+              ? 'هذه البوابة مخصصة حصرياً للمستثمرين المسجلين. للحصول على وصول، يرجى التواصل مع فريق إدارة العلاقات.'
+              : 'This portal is for registered investors only. Contact our relationship management team to request access.'}
           </p>
           <div className="text-center mt-4">
             <Link href="/" className="text-sm text-muted-foreground hover:text-secondary transition-colors inline-flex items-center gap-1.5">

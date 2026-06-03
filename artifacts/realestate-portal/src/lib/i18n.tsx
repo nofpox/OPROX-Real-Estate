@@ -105,9 +105,9 @@ const translations = {
     'portal.usernameHint':            'Letters, numbers, underscores only. 3–30 characters.',
 
     // ── Portal dashboard – role-based titles ────────────────────────────────
-    'portal.myPortfolio':       'My Portfolio',
-    'portal.managementPortal':  'Management Portal',
-    'portal.investorPortfolio': 'My Portfolio',
+    'portal.myPortfolio':       'Investor Portal',
+    'portal.managementPortal':  'Admin Dashboard',
+    'portal.investorPortfolio': 'Investor Portal',
 
     // ── Investor Portfolio tab ──────────────────────────────────────────────
     'portal.portfolio.title':        'Investment Portfolio',
@@ -428,9 +428,9 @@ const translations = {
     'portal.usernameHint':            'حروف وأرقام وشرطات سفلية فقط. من 3 إلى 30 حرفاً.',
 
     // ── Portal dashboard – role-based titles ────────────────────────────────
-    'portal.myPortfolio':       'محفظتي',
-    'portal.managementPortal':  'بوابة الإدارة',
-    'portal.investorPortfolio': 'محفظتي',
+    'portal.myPortfolio':       'بوابة المستثمر',
+    'portal.managementPortal':  'لوحة التحكم الإدارية',
+    'portal.investorPortfolio': 'بوابة المستثمر',
 
     // ── Investor Portfolio tab ──────────────────────────────────────────────
     'portal.portfolio.title':           'محفظة الاستثمار',

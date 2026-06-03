@@ -1,0 +1,28 @@
+Subject: Finalizing the Platform – Urgent Requirements for Official Launch
+​"Hi, we are finalizing our testing phase and preparing for the official launch. Please address the following requirements to finalize the platform:
+​1. Unified AI Assistant System (Centralized Intelligence):
+​Consistency & Visibility: The AI Assistant is working in the Mobile App; please port the exact same implementation to the Web Portal, ensuring it is consistently available across all pages.
+​Intuitive UX (Crucial): The assistant must be non-intrusive. Relying on a small 'X' button is not acceptable. Users must be able to dismiss the assistant instantly by tapping anywhere outside the window or by swiping (on mobile screens).
+​Centralized Control: Both assistants (App & Portal) must be managed by the same unified backend system.
+​Context Awareness: The AI must recognize the user's platform (App-related vs. Investor/Portal-related) and provide relevant support.
+​Stability: Fix the 'connection lost' errors on the Web Portal.
+​2. Database Reset:
+​Perform a full database reset to remove all test data. The system must be completely empty and ready for our live data entry.
+​3. Portal UI/UX & Role-Based Access (RBAC):
+​Rename & Reposition: The 'My Wallet' label should be renamed to 'Admin Dashboard'. This should be the landing page for admins.
+​Investor Portfolio: Create a separate, dedicated 'Investor Portal' (بوابة المستثمر) interface for clients/investors where they can view their properties, financial performance, and operational status. Include a 'Contact' feature for them to send inquiries directly to us.
+​Role Differentiation: The system must recognize the user's role and direct an 'Admin' to the Command Center, while an 'Investor' is directed to their personalized 'Investor Portal'.
+​4. Granular Permissions & Content Management (CMS):
+​Role Management: Define specific permissions for roles (e.g., 'Content Manager', 'Secretary', 'Supervisor').
+​Content Control: The 'Content Manager' must have the ability to upload property images, change banners, and update text without developer intervention.
+​Centralized Access: I need a dashboard where I can assign or revoke specific 'Design' or 'Management' permissions to any employee with a single click.
+​5. Investor Portal Access Policy:
+​Restricted Access: The 'Investor Portal' must be strictly restricted to verified clients only.
+​No Public Registration: Disable any 'Sign Up' or 'Register' buttons for the public in the 'Investor Portal'.
+​Public Landing Page Warning: If a visitor clicks on the 'Investor Portal' link, they should land on a page with this message:
+"Access Restricted. This portal is exclusively for our registered investment partners. To access your dashboard, please log in with your credentials, or contact our relationship management team for assistance."
+(بالعربية: عذراً، هذه البوابة مخصصة حصرياً لشركائنا المستثمرين المسجلين لدى 'ركز للحلول الذكية'. للوصول إلى لوحة التحكم الخاصة بك، يرجى تسجيل الدخول باستخدام بياناتك المعتمدة، أو التواصل مع إدارة العلاقات لطلب الوصول.)
+​6. Terminology Update & Marketing Strategy:
+​Rename 'Client Portal' to 'Investor Portal' (بوابة المستثمر).
+​Rename general entry areas or public sections to 'Visitor Portal' (بوابة الزائرين).
+​Move the 'Investor Portal' link from the footer to a prominent position in the main header or hero section to encourage potential investors."

@@ -228,7 +228,7 @@ export const Home: React.FC = () => {
               className="border-primary/30 text-primary hover:bg-primary/5 h-12 px-8"
             >
               <Link href="/portal">
-                {isRtl ? 'بوابة العملاء' : 'Client Portal'}
+                {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
               </Link>
             </Button>
           </div>

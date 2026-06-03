@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { PortalAIAgent } from '@/components/PortalAIAgent';
 import { useLocation, Link } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePortalAuth } from '@/lib/portal-auth';
@@ -1157,8 +1158,8 @@ export const PortalDashboard: React.FC = () => {
       <Helmet>
         <title>
           {(userTier === 'admin' || userTier === 'supervisor')
-            ? (isRtl ? 'بوابة الإدارة' : 'Management Portal')
-            : (isRtl ? 'محفظتي' : 'My Portfolio')} | ركز للحلول الذكية
+            ? (isRtl ? 'لوحة التحكم الإدارية' : 'Admin Dashboard')
+            : (isRtl ? 'بوابة المستثمر' : 'Investor Portal')} | ركز للحلول الذكية
         </title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
@@ -1865,6 +1866,9 @@ export const PortalDashboard: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI Assistant */}
+      <PortalAIAgent />
     </div>
   );
 };

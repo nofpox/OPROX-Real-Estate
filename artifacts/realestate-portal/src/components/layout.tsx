@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
 import { useCms } from '@/lib/cms-context';
-import { Building, Menu, X, Globe, Phone, Mail, MapPin } from 'lucide-react';
+import { Building, Menu, X, Globe, Phone, Mail, MapPin, KeyRound } from 'lucide-react';
 import { Button } from './ui/button';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -68,6 +68,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <Globe className="h-3.5 w-3.5" />
               {language === 'en' ? 'عربي' : 'EN'}
             </Button>
+            <Button asChild size="sm" variant="outline" className="h-8 px-4 text-xs border-secondary/40 text-secondary hover:bg-secondary/10 hover:text-secondary">
+              <Link href="/portal">
+                <KeyRound className={`h-3.5 w-3.5 ${isRtl ? 'ms-1.5' : 'me-1.5'}`} />
+                {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
+              </Link>
+            </Button>
             <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-4 text-xs">
               <Link href="/contact">
                 <Phone className={`h-3.5 w-3.5 ${isRtl ? 'ms-1.5' : 'me-1.5'}`} />
@@ -107,6 +113,16 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   {isRtl ? labelAr : labelEn}
                 </Link>
               ))}
+              <div className="mt-1 pt-2 border-t border-border">
+                <Link
+                  href="/portal"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors text-secondary hover:bg-secondary/10"
+                >
+                  <KeyRound className="h-4 w-4" />
+                  {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
+                </Link>
+              </div>
             </nav>
           </div>
         )}
@@ -182,8 +198,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div>
             <h3 className="font-semibold text-sm text-white/90 uppercase tracking-wider mb-4">
               {isRtl
-                ? nav.find(n => n.href === '/portal')?.labelAr || 'بوابة العملاء'
-                : nav.find(n => n.href === '/portal')?.labelEn || 'Client Portal'}
+                ? nav.find(n => n.href === '/portal')?.labelAr || 'بوابة المستثمر'
+                : nav.find(n => n.href === '/portal')?.labelEn || 'Investor Portal'}
             </h3>
             <p className="text-sm text-primary-foreground/60 mb-4 leading-relaxed">
               {isRtl

@@ -349,7 +349,7 @@ function ForgotPasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
                   className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
                 >
-                  {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPwd ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </button>
               </div>
             </div>
@@ -498,7 +498,7 @@ export default function Login({ onLogin }: LoginProps) {
                     tabIndex={-1}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </button>
                 </div>
               </div>

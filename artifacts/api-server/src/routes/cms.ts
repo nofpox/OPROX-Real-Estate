@@ -259,7 +259,7 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     { href: "/listings", labelEn: "Properties",    labelAr: "العقارات"    },
     { href: "/services", labelEn: "Services",      labelAr: "الخدمات"     },
     { href: "/contact",  labelEn: "Contact",       labelAr: "اتصل بنا"    },
-    { href: "/portal",   labelEn: "Client Portal", labelAr: "بوابة العميل" },
+    { href: "/portal",   labelEn: "Investor Portal", labelAr: "بوابة المستثمر" },
   ],
   footer: {
     descriptionEn: "Your trusted partner for premium property management across Saudi Arabia — hotels, compounds, and corporate facilities.",

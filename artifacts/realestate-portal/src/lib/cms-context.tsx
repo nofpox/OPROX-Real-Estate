@@ -150,7 +150,7 @@ const DEFAULTS: SiteContent = {
     { href: "/listings", labelEn: "Properties",    labelAr: "العقارات"    },
     { href: "/services", labelEn: "Services",      labelAr: "الخدمات"     },
     { href: "/contact",  labelEn: "Contact",       labelAr: "اتصل بنا"    },
-    { href: "/portal",   labelEn: "Client Portal", labelAr: "بوابة العميل" },
+    { href: "/portal",   labelEn: "Investor Portal", labelAr: "بوابة المستثمر" },
   ],
   contact: {
     email: "info@rakez-solutions.com",

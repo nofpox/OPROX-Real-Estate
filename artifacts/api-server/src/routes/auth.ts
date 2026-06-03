@@ -49,7 +49,7 @@ async function sendResetEmail(to: string, username: string, otp: string): Promis
         <!-- Header bar -->
         <div style="background:#1a2744;padding:24px 32px;border-radius:12px 12px 0 0">
           <p style="margin:0;font-size:18px;font-weight:700;color:#fff;letter-spacing:0.3px">ركز | Rakez</p>
-          <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.55)">Client Portal — Access Help</p>
+          <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.55)">Investor Portal — Access Help</p>
         </div>
 
         <!-- Body -->
@@ -58,7 +58,7 @@ async function sendResetEmail(to: string, username: string, otp: string): Promis
           <!-- EN section -->
           <h2 style="margin:0 0 8px;font-size:17px;font-weight:700;color:#111">We're here to help you get back in</h2>
           <p style="margin:0 0 24px;color:#555;font-size:14px;line-height:1.6">
-            We received a request to help you access your Rakez Client Portal account.
+            We received a request to help you access your Rakez Investor Portal account.
             Here is everything you need — your username and a one-time access code — in one place.
           </p>
 
