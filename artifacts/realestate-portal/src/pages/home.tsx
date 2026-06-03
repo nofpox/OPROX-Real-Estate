@@ -94,13 +94,13 @@ export const Home: React.FC = () => {
             {isRtl ? hero.subtitleAr : hero.subtitleEn}
           </p>
 
-          {/* Single primary CTA */}
+          {/* Single primary CTA → Services */}
           <Button
             asChild size="lg"
             className="bg-secondary text-secondary-foreground hover:bg-secondary/90 text-sm font-semibold px-10 h-12 shadow-xl shadow-black/20 rounded-full"
           >
-            <Link href="/listings">
-              {isRtl ? hero.ctaButtonAr : hero.ctaButtonEn}
+            <Link href="/services">
+              {isRtl ? 'اعرف المزيد' : 'Explore Services'}
               {isRtl
                 ? <ArrowLeft  className="ms-2.5 h-4 w-4" />
                 : <ArrowRight className="ms-2.5 h-4 w-4" />}
@@ -163,10 +163,6 @@ export const Home: React.FC = () => {
                 <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                   {isRtl ? svc.descAr : svc.descEn}
                 </p>
-                <Link href="/services" className="text-secondary text-xs font-semibold hover:underline inline-flex items-center gap-1 uppercase tracking-wide">
-                  {isRtl ? 'اعرف أكثر' : 'Learn more'}
-                  {isRtl ? <ArrowLeft className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
-                </Link>
               </div>
             ))}
           </div>
@@ -181,10 +177,10 @@ export const Home: React.FC = () => {
             {/* Left — copy */}
             <div>
               <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-4">
-                {isRtl ? 'انضم إلينا' : 'New Partners'}
+                {isRtl ? 'انضم إلينا' : 'New Inquiries'}
               </p>
               <h2 className="text-3xl md:text-4xl font-bold text-primary mb-5 leading-tight">
-                {isRtl ? 'مهتم بالتعاون معنا؟' : 'Interested in Partnering?'}
+                {isRtl ? 'مهتم بالتعاون معنا؟' : 'Interested in Collaborating?'}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-8">
                 {isRtl
