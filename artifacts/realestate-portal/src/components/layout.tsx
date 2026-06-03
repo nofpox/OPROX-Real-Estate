@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
 import { useCms } from '@/lib/cms-context';
-import { Building, Menu, X, Globe, Phone, Mail, MapPin, KeyRound } from 'lucide-react';
+import { Building, Menu, X, Globe, MapPin, Mail, Phone, KeyRound } from 'lucide-react';
 import { Button } from './ui/button';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -22,7 +22,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     <div className="h-dvh overflow-auto flex flex-col font-sans">
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
+      <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
 
           {/* Logo */}
@@ -47,7 +47,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 className={`relative px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                   isActive(href)
                     ? 'text-secondary bg-secondary/10'
-                    : 'text-foreground/70 hover:text-primary hover:bg-muted'
+                    : 'text-foreground/60 hover:text-primary hover:bg-muted'
                 }`}
               >
                 {isRtl ? labelAr : labelEn}
@@ -58,46 +58,38 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             ))}
           </nav>
 
-          {/* Actions */}
+          {/* Right actions — language toggle + investor portal only */}
           <div className="hidden md:flex items-center gap-2">
-            <Button
-              variant="ghost" size="sm"
+            <button
               onClick={toggleLanguage}
-              className="rounded-full text-muted-foreground hover:text-primary gap-1.5 text-xs font-medium"
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-2 py-1.5 rounded-md hover:bg-muted"
             >
               <Globe className="h-3.5 w-3.5" />
               {language === 'en' ? 'عربي' : 'EN'}
-            </Button>
-            <Button asChild size="sm" variant="outline" className="h-8 px-4 text-xs border-secondary/40 text-secondary hover:bg-secondary/10 hover:text-secondary">
-              <Link href="/portal">
-                <KeyRound className={`h-3.5 w-3.5 ${isRtl ? 'ms-1.5' : 'me-1.5'}`} />
-                {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
-              </Link>
-            </Button>
-            <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-4 text-xs">
-              <Link href="/contact">
-                <Phone className={`h-3.5 w-3.5 ${isRtl ? 'ms-1.5' : 'me-1.5'}`} />
-                {isRtl
-                  ? nav.find(n => n.href === '/contact')?.labelAr || 'اتصل بنا'
-                  : nav.find(n => n.href === '/contact')?.labelEn || 'Contact Us'}
-              </Link>
-            </Button>
+            </button>
+            <Link
+              href="/portal"
+              className="flex items-center gap-1.5 text-xs font-medium text-secondary border border-secondary/30 rounded-md px-3 py-1.5 hover:bg-secondary/8 transition-colors"
+            >
+              <KeyRound className="h-3.5 w-3.5" />
+              {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
+            </Link>
           </div>
 
           {/* Mobile toggle */}
           <div className="flex items-center gap-1 md:hidden">
-            <Button variant="ghost" size="icon" onClick={toggleLanguage} className="h-8 w-8">
+            <button onClick={toggleLanguage} className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors">
               <Globe className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} className="h-8 w-8">
+            </button>
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors">
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+            </button>
           </div>
         </div>
 
         {/* Mobile nav drawer */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-border bg-background shadow-lg">
+          <div className="md:hidden border-t border-border/60 bg-background shadow-lg">
             <nav className="p-3 flex flex-col gap-1">
               {nav.map(({ href, labelEn, labelAr }) => (
                 <Link
@@ -113,11 +105,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   {isRtl ? labelAr : labelEn}
                 </Link>
               ))}
-              <div className="mt-1 pt-2 border-t border-border">
+              <div className="mt-1 pt-2 border-t border-border/60">
                 <Link
                   href="/portal"
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors text-secondary hover:bg-secondary/10"
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-secondary hover:bg-secondary/10"
                 >
                   <KeyRound className="h-4 w-4" />
                   {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
@@ -151,12 +143,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <p className="text-primary-foreground/60 text-sm leading-relaxed max-w-xs">
               {isRtl ? footer.descriptionAr : footer.descriptionEn}
             </p>
-            {/* Contact mini-list */}
             <ul className="mt-6 space-y-2 text-sm text-primary-foreground/60">
               {(isRtl ? contact.addressAr : contact.addressEn) && (
                 <li className="flex items-center gap-2">
                   <MapPin className="h-3.5 w-3.5 text-secondary shrink-0" />
-                  {isRtl ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia'}
+                  {isRtl ? contact.addressAr : contact.addressEn}
                 </li>
               )}
               {contact.email && (
@@ -180,7 +171,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
           {/* Quick links */}
           <div>
-            <h3 className="font-semibold text-sm text-white/90 uppercase tracking-wider mb-4">
+            <h3 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-4">
               {isRtl ? 'روابط سريعة' : 'Quick Links'}
             </h3>
             <ul className="space-y-2.5 text-sm text-primary-foreground/60">
@@ -194,12 +185,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </ul>
           </div>
 
-          {/* Portal */}
+          {/* Investor portal */}
           <div>
-            <h3 className="font-semibold text-sm text-white/90 uppercase tracking-wider mb-4">
-              {isRtl
-                ? nav.find(n => n.href === '/portal')?.labelAr || 'بوابة المستثمر'
-                : nav.find(n => n.href === '/portal')?.labelEn || 'Investor Portal'}
+            <h3 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-4">
+              {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
             </h3>
             <p className="text-sm text-primary-foreground/60 mb-4 leading-relaxed">
               {isRtl
