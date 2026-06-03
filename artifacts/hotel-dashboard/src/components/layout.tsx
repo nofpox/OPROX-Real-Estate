@@ -5,7 +5,7 @@ import {
   Wrench, UserCog, ClipboardList, ChevronDown, Shield,
   MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert, BarChart2,
   Ticket, MessageCircleQuestion, Settings2, HelpCircle,
-  Calendar, Users, DollarSign, Archive, LayoutTemplate, TrendingUp, Monitor,
+  Calendar, Users, DollarSign, Archive, TrendingUp, Monitor,
 } from "lucide-react";
 import { SupportDialog } from "@/components/support-dialog";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,6 @@ const NAV_ITEMS = [
   { href: "/security-dashboard",  labelKey: "nav.securityDashboard", icon: ShieldAlert,       section: "operations", featureKey: null },
   { href: "/analytics",           labelKey: "nav.analytics",         icon: BarChart2,          section: "operations", featureKey: null },
   { href: "/support-tickets",    labelKey: "nav.supportTickets",    icon: Ticket,             section: "operations", featureKey: null },
-  { href: "/content-manager",   labelKey: "nav.contentManager",   icon: LayoutTemplate,     section: "operations", featureKey: null },
   { href: "/website-settings",  labelKey: "nav.websiteSettings",  icon: Monitor,            section: "operations", featureKey: null },
 ];
 
@@ -345,9 +344,12 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
        */}
       {mobileOpen && (
         <>
-          {/* Click-outside backdrop — absolute within h-dvh container, no fixed layer */}
+          {/* Click-outside backdrop — absolute (NOT fixed) within h-dvh container.
+              Uses solid bg-black + opacity class, NOT rgba(), which is safe because
+              absolute (not fixed) overlays don't trigger the Android Chrome GPU compositor
+              stripe artifact that fixed+rgba does. */}
           <div
-            className="absolute inset-0 z-40"
+            className="absolute inset-0 z-40 bg-black/50"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />

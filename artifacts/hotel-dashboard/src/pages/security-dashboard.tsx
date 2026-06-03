@@ -35,9 +35,9 @@ function roleTier(role: string): "admin" | "supervisor" | "worker" {
 }
 
 const TIER_STYLES = {
-  admin:      { label: "Admin",      cls: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"       },
-  supervisor: { label: "Supervisor", cls: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-  worker:     { label: "Worker",     cls: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"   },
+  admin:      { label: "Admin",      cls: "bg-red-100 text-red-800"   },
+  supervisor: { label: "Supervisor", cls: "bg-amber-100 text-amber-800" },
+  worker:     { label: "Worker",     cls: "bg-blue-100 text-blue-800" },
 };
 
 function TierBadge({ role }: { role: string }) {
@@ -164,13 +164,13 @@ function SessionsPanel({
               const isMe = s.userId === currentUserId;
               const tier = roleTier(s.role);
               const avatarCls =
-                tier === "admin"      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
-                tier === "supervisor" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
-                "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+                tier === "admin"      ? "bg-red-100 text-red-700" :
+                tier === "supervisor" ? "bg-amber-100 text-amber-700" :
+                "bg-blue-100 text-blue-700";
               return (
                 <div
                   key={s.sessionKey}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/30 border border-border/30"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted border border-border"
                 >
                   <div className="relative">
                     <InitialAvatar name={s.displayName} cls={avatarCls} />
@@ -329,10 +329,10 @@ export default function SecurityDashboard() {
   };
 
   const kpiCards = [
-    { label: t("securityDashboard.totalUsers"),     value: users.length,          icon: Users,     color: "text-primary",    bg: "bg-primary/10"     },
-    { label: t("securityDashboard.onlineNow"),      value: activeSessions.length,  icon: Wifi,      color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: t("securityDashboard.activeAccounts"), value: activeUsers.length,     icon: UserCheck, color: "text-blue-500",   bg: "bg-blue-500/10"    },
-    { label: t("securityDashboard.deactivated"),    value: inactiveUsers.length,   icon: UserX,     color: "text-destructive", bg: "bg-destructive/10" },
+    { label: t("securityDashboard.totalUsers"),     value: users.length,          icon: Users,     color: "text-primary",    bg: "bg-primary/20"     },
+    { label: t("securityDashboard.onlineNow"),      value: activeSessions.length,  icon: Wifi,      color: "text-emerald-600", bg: "bg-emerald-100"    },
+    { label: t("securityDashboard.activeAccounts"), value: activeUsers.length,     icon: UserCheck, color: "text-blue-600",   bg: "bg-blue-100"       },
+    { label: t("securityDashboard.deactivated"),    value: inactiveUsers.length,   icon: UserX,     color: "text-red-600",    bg: "bg-red-100"        },
   ];
 
   return (
@@ -408,9 +408,9 @@ export default function SecurityDashboard() {
                 const isOnline = activeSessions.some((s) => s.userId === u.id);
                 const isMe = u.id === currentUserId;
                 const avatarCls =
-                  tier === "admin"      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
-                  tier === "supervisor" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
-                  "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+                  tier === "admin"      ? "bg-red-100 text-red-700" :
+                  tier === "supervisor" ? "bg-amber-100 text-amber-700" :
+                  "bg-blue-100 text-blue-700";
                 return (
                   <div key={u.id} className="flex items-center gap-3 px-6 py-3.5">
                     <div className="relative shrink-0">
@@ -432,12 +432,12 @@ export default function SecurityDashboard() {
                       <TierBadge role={u.role} />
 
                       {isOnline
-                        ? <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 gap-1">
+                        ? <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 gap-1">
                             <Eye className="h-2.5 w-2.5" />{t("securityDashboard.online")}
                           </Badge>
                         : u.isActive
                         ? <Badge variant="secondary" className="text-[10px]">{t("securityDashboard.offline")}</Badge>
-                        : <Badge variant="secondary" className="text-[10px] bg-destructive/10 text-destructive gap-1">
+                        : <Badge variant="secondary" className="text-[10px] bg-red-100 text-red-700 gap-1">
                             <ShieldOff className="h-2.5 w-2.5" />{t("securityDashboard.blocked")}
                           </Badge>
                       }
