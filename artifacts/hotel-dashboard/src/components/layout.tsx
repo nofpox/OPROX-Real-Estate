@@ -5,7 +5,7 @@ import {
   Wrench, UserCog, ClipboardList, ChevronDown, Shield,
   MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert, BarChart2,
   Ticket, MessageCircleQuestion, Settings2, HelpCircle,
-  Calendar, Users, DollarSign, Archive, TrendingUp, Monitor,
+  Calendar, Users, DollarSign, Archive, TrendingUp, Monitor, LayoutTemplate,
 } from "lucide-react";
 import { SupportDialog } from "@/components/support-dialog";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,7 @@ const NAV_ITEMS = [
   { href: "/security-dashboard",  labelKey: "nav.securityDashboard", icon: ShieldAlert,       section: "operations", featureKey: null },
   { href: "/analytics",           labelKey: "nav.analytics",         icon: BarChart2,          section: "operations", featureKey: null },
   { href: "/support-tickets",    labelKey: "nav.supportTickets",    icon: Ticket,             section: "operations", featureKey: null },
+  { href: "/content-manager",   labelKey: "nav.contentManager",   icon: LayoutTemplate,     section: "operations", featureKey: null },
   { href: "/website-settings",  labelKey: "nav.websiteSettings",  icon: Monitor,            section: "operations", featureKey: null },
 ];
 

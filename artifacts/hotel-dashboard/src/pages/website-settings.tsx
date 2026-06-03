@@ -489,6 +489,12 @@ function ServicesTab({ content, onSave }: { content: SiteContent; onSave: (s: st
       itemsAr: x.itemsAr.filter((_, j) => j !== itemIdx),
     } : x));
 
+  const addService = () =>
+    setLocal(s => [...s, { titleEn: "New Service", titleAr: "خدمة جديدة", descEn: "", descAr: "", itemsEn: [], itemsAr: [], imageUrl: "" }]);
+
+  const removeService = (idx: number) =>
+    setLocal(s => s.filter((_, i) => i !== idx));
+
   const save = async () => {
     setSaving(true);
     try { await onSave("services", local); setEditing(false); }
@@ -497,12 +503,15 @@ function ServicesTab({ content, onSave }: { content: SiteContent; onSave: (s: st
 
   return (
     <div className="space-y-4 mt-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-sm text-muted-foreground">
-          3 service sections shown on the Services page and on the homepage.
+          {editing ? local.length : content.services.length} service{content.services.length !== 1 ? "s" : ""} — shown on the Services page and homepage.
         </p>
         {editing ? (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" variant="outline" onClick={addService}>
+              <Plus className="h-3.5 w-3.5 me-1.5" />Add Service
+            </Button>
             <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
             <Button size="sm" onClick={save} disabled={saving}>
               {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 me-1" />}
@@ -518,16 +527,30 @@ function ServicesTab({ content, onSave }: { content: SiteContent; onSave: (s: st
 
       {(editing ? local : content.services).map((svc, i) => (
         <Card key={i}>
-          <CardHeader className="pb-2 cursor-pointer" onClick={() => setOpen(open === i ? null : i)}>
+          <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {svc.imageUrl && <img src={svc.imageUrl} alt="" className="h-10 w-14 object-cover rounded-md" />}
-                <div>
-                  <p className="font-medium text-sm">{svc.titleEn}</p>
-                  <p className="text-xs text-muted-foreground" dir="rtl">{svc.titleAr}</p>
+              <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer" onClick={() => setOpen(open === i ? null : i)}>
+                {svc.imageUrl && <img src={svc.imageUrl} alt="" className="h-10 w-14 object-cover rounded-md shrink-0" />}
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{svc.titleEn}</p>
+                  <p className="text-xs text-muted-foreground truncate" dir="rtl">{svc.titleAr}</p>
                 </div>
               </div>
-              {open === i ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              <div className="flex items-center gap-2 shrink-0">
+                {editing && (
+                  <button
+                    type="button"
+                    onClick={() => removeService(i)}
+                    className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+                    title="Remove this service"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                <button type="button" onClick={() => setOpen(open === i ? null : i)} className="text-muted-foreground hover:text-foreground transition-colors">
+                  {open === i ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </CardHeader>
 
