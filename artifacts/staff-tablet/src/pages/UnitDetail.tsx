@@ -106,7 +106,7 @@ export default function UnitDetail({ id }: { id: number }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-card border-b border-border/50 px-6 py-4 flex items-center gap-4">
+      <header className="sticky top-0 z-10 bg-card border-b border-border/50 px-4 sm:px-6 py-4 flex items-center gap-4">
         <button onClick={() => navigate("/")} className="text-muted-foreground hover:text-foreground">
           <ArrowLeft size={20} />
         </button>
@@ -117,179 +117,188 @@ export default function UnitDetail({ id }: { id: number }) {
           </span>
         </div>
         {room && (
-          <Badge className={`ml-auto border ${STATUS_BADGE[room.status] || "bg-muted text-muted-foreground border-border"} text-xs`}>
+          <Badge className={`ms-auto border ${STATUS_BADGE[room.status] || "bg-muted text-muted-foreground border-border"} text-xs`}>
             {t(`status.${room.status}`, room.status)}
           </Badge>
         )}
       </header>
 
-      <div className="px-6 py-6 max-w-2xl mx-auto space-y-5">
-        {/* Status update */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Building2 size={15} className="text-amber-500" /> {t("unitDetail.unitStatus")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {roomLoading ? <Skeleton className="h-10 w-full" /> : (
-              <div className="flex gap-2">
-                <Select value={room?.status} onValueChange={(v) => {
-                  if (!isOnline) {
-                    enqueue({ type: "updateStatus", roomId: id, status: v });
-                    toast({ title: t("unitDetail.offline") });
-                    return;
-                  }
-                  updateStatus.mutate(v);
-                }}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder={t("unitDetail.setStatus")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map(s => (
-                      <SelectItem key={s} value={s}>{t(`status.${s}`, s)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="icon" onClick={() => setQrOpen(true)} title={t("unitDetail.qrTitle")}>
-                  <QrCode size={16} />
-                </Button>
-              </div>
-            )}
-            {room && (
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                <span>{t("unitDetail.type")}: <strong className="text-foreground">{room.type}</strong></span>
-                <span>{t("unitDetail.capacity")}: <strong className="text-foreground">{room.capacity} {t("unitDetail.guests")}</strong></span>
-                <span>{t("unitDetail.rate")}: <strong className="text-foreground">${room.pricePerNight}{t("unitDetail.perNight")}</strong></span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Content — single column on mobile/tablet, two columns on lg+ */}
+      <div className="px-4 sm:px-6 py-5 sm:py-6 max-w-5xl mx-auto">
+        <div className="lg:grid lg:grid-cols-5 lg:gap-6 lg:items-start space-y-5 lg:space-y-0">
 
-        {/* Financial data */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <DollarSign size={15} className="text-amber-500" /> {t("unitDetail.financialData")}
-              </CardTitle>
-              <Button size="sm" variant="ghost" onClick={() => setEditFinancial(!editFinancial)} className="h-7 text-xs text-muted-foreground">
-                {editFinancial ? t("unitDetail.cancel") : t("unitDetail.edit")}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {finLoading ? (
-              <div className="space-y-2"><Skeleton className="h-8 w-full" /><Skeleton className="h-8 w-full" /></div>
-            ) : editFinancial ? (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs">{t("unitDetail.status")}</Label>
-                    <Select value={financialForm.status || ""} onValueChange={v => setFinancialForm(f => ({ ...f, status: v }))}>
-                      <SelectTrigger className="mt-1 h-9 text-xs"><SelectValue placeholder={t("unitDetail.status")} /></SelectTrigger>
+          {/* Left column: Status + Financial */}
+          <div className="lg:col-span-3 space-y-5">
+            {/* Status update */}
+            <Card className="border-border/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Building2 size={15} className="text-amber-500" /> {t("unitDetail.unitStatus")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {roomLoading ? <Skeleton className="h-10 w-full" /> : (
+                  <div className="flex gap-2">
+                    <Select value={room?.status} onValueChange={(v) => {
+                      if (!isOnline) {
+                        enqueue({ type: "updateStatus", roomId: id, status: v });
+                        toast({ title: t("unitDetail.offline") });
+                        return;
+                      }
+                      updateStatus.mutate(v);
+                    }}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder={t("unitDetail.setStatus")} />
+                      </SelectTrigger>
                       <SelectContent>
-                        {["available", "occupied", "overdue", "pending"].map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
+                        {STATUS_OPTIONS.map(s => (
+                          <SelectItem key={s} value={s}>{t(`status.${s}`, s)}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
+                    <Button variant="outline" size="icon" onClick={() => setQrOpen(true)} title={t("unitDetail.qrTitle")}>
+                      <QrCode size={16} />
+                    </Button>
                   </div>
-                  <div>
-                    <Label className="text-xs">{t("unitDetail.amountDue")}</Label>
-                    <Input type="number" value={financialForm.amountDue ?? ""} onChange={e => setFinancialForm(f => ({ ...f, amountDue: Number(e.target.value) }))} className="mt-1 h-9 text-xs" placeholder="0.00" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">{t("unitDetail.dueDate")}</Label>
-                    <Input type="date" value={financialForm.dueDate || ""} onChange={e => setFinancialForm(f => ({ ...f, dueDate: e.target.value }))} className="mt-1 h-9 text-xs" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">{t("unitDetail.checkIn")}</Label>
-                    <Input type="date" value={financialForm.checkIn || ""} onChange={e => setFinancialForm(f => ({ ...f, checkIn: e.target.value }))} className="mt-1 h-9 text-xs" />
-                  </div>
-                  <div>
-                    <Label className="text-xs">{t("unitDetail.checkOut")}</Label>
-                    <Input type="date" value={financialForm.checkOut || ""} onChange={e => setFinancialForm(f => ({ ...f, checkOut: e.target.value }))} className="mt-1 h-9 text-xs" />
-                  </div>
-                </div>
-                <Button onClick={() => updateFinancial.mutate()} disabled={updateFinancial.isPending} className="w-full h-9 bg-amber-500 hover:bg-amber-600 text-black font-semibold">
-                  {updateFinancial.isPending ? <Loader2 className="animate-spin" size={15} /> : t("unitDetail.saveChanges")}
-                </Button>
-              </div>
-            ) : financial ? (
-              <div className="grid grid-cols-2 gap-y-3 text-xs">
-                {[
-                  [t("unitDetail.status"), <span className="capitalize">{financial.status}</span>],
-                  [t("unitDetail.amountDue"), financial.amountDue != null ? `$${financial.amountDue}` : "—"],
-                  [t("unitDetail.dueDate"), financial.dueDate || "—"],
-                  [t("unitDetail.checkIn"), financial.checkIn || "—"],
-                  [t("unitDetail.checkOut"), financial.checkOut || "—"],
-                ].map(([label, val]) => (
-                  <div key={String(label)}>
-                    <p className="text-muted-foreground">{label}</p>
-                    <p className="font-semibold text-foreground mt-0.5">{val}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">{t("unitDetail.noFinancial")}</p>
-                <Button size="sm" variant="outline" className="mt-2 text-xs" onClick={() => setEditFinancial(true)}>{t("unitDetail.addFinancial")}</Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Pending requests */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <AlertCircle size={15} className="text-amber-500" /> {t("unitDetail.serviceRequests")}
-                {requests && requests.filter(r => r.status === "new").length > 0 && (
-                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px] ml-1">
-                    {requests.filter(r => r.status === "new").length} {t("unitDetail.new")}
-                  </Badge>
                 )}
-              </CardTitle>
-              <button onClick={() => refetchRequests()} className="text-muted-foreground hover:text-foreground">
-                <RefreshCw size={13} />
-              </button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {!requests || requests.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground py-4">{t("unitDetail.noRequests")}</p>
-            ) : (
-              <div className="space-y-2">
-                {requests.map(req => (
-                  <div key={req.id} className="flex items-start gap-3 p-3 rounded-lg bg-background border border-border/30">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-xs font-semibold text-foreground capitalize">{req.type}</span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${REQ_STATUS_BADGE[req.status] || "bg-muted text-muted-foreground"}`}>
-                          {req.status === "in_progress" ? t("status.inProgress") : req.status.charAt(0).toUpperCase() + req.status.slice(1)}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">{req.description}</p>
-                      <p className="text-[10px] text-muted-foreground/70 mt-0.5">Ref: {req.refCode}</p>
-                    </div>
-                    {req.status !== "resolved" && (
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        if (!isOnline) {
-                          enqueue({ type: "resolveRequest", requestId: req.id });
-                          toast({ title: t("unitDetail.offline") });
-                          return;
-                        }
-                        resolveRequest.mutate(req.id);
-                      }} className="h-7 text-xs text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 shrink-0">
-                        <CheckCircle2 size={13} className="mr-1" /> {t("unitDetail.resolve")}
-                      </Button>
-                    )}
+                {room && (
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                    <span>{t("unitDetail.type")}: <strong className="text-foreground">{room.type}</strong></span>
+                    <span>{t("unitDetail.capacity")}: <strong className="text-foreground">{room.capacity} {t("unitDetail.guests")}</strong></span>
+                    <span>{t("unitDetail.rate")}: <strong className="text-foreground">${room.pricePerNight}{t("unitDetail.perNight")}</strong></span>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Financial data */}
+            <Card className="border-border/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <DollarSign size={15} className="text-amber-500" /> {t("unitDetail.financialData")}
+                  </CardTitle>
+                  <Button size="sm" variant="ghost" onClick={() => setEditFinancial(!editFinancial)} className="h-7 text-xs text-muted-foreground">
+                    {editFinancial ? t("unitDetail.cancel") : t("unitDetail.edit")}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {finLoading ? (
+                  <div className="space-y-2"><Skeleton className="h-8 w-full" /><Skeleton className="h-8 w-full" /></div>
+                ) : editFinancial ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs">{t("unitDetail.status")}</Label>
+                        <Select value={financialForm.status || ""} onValueChange={v => setFinancialForm(f => ({ ...f, status: v }))}>
+                          <SelectTrigger className="mt-1 h-9 text-xs"><SelectValue placeholder={t("unitDetail.status")} /></SelectTrigger>
+                          <SelectContent>
+                            {["available", "occupied", "overdue", "pending"].map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">{t("unitDetail.amountDue")}</Label>
+                        <Input type="number" value={financialForm.amountDue ?? ""} onChange={e => setFinancialForm(f => ({ ...f, amountDue: Number(e.target.value) }))} className="mt-1 h-9 text-xs" placeholder="0.00" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">{t("unitDetail.dueDate")}</Label>
+                        <Input type="date" value={financialForm.dueDate || ""} onChange={e => setFinancialForm(f => ({ ...f, dueDate: e.target.value }))} className="mt-1 h-9 text-xs" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">{t("unitDetail.checkIn")}</Label>
+                        <Input type="date" value={financialForm.checkIn || ""} onChange={e => setFinancialForm(f => ({ ...f, checkIn: e.target.value }))} className="mt-1 h-9 text-xs" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">{t("unitDetail.checkOut")}</Label>
+                        <Input type="date" value={financialForm.checkOut || ""} onChange={e => setFinancialForm(f => ({ ...f, checkOut: e.target.value }))} className="mt-1 h-9 text-xs" />
+                      </div>
+                    </div>
+                    <Button onClick={() => updateFinancial.mutate()} disabled={updateFinancial.isPending} className="w-full h-9 bg-amber-500 hover:bg-amber-600 text-black font-semibold">
+                      {updateFinancial.isPending ? <Loader2 className="animate-spin" size={15} /> : t("unitDetail.saveChanges")}
+                    </Button>
+                  </div>
+                ) : financial ? (
+                  <div className="grid grid-cols-2 gap-y-3 text-xs">
+                    {[
+                      [t("unitDetail.status"), <span className="capitalize">{financial.status}</span>],
+                      [t("unitDetail.amountDue"), financial.amountDue != null ? `$${financial.amountDue}` : "—"],
+                      [t("unitDetail.dueDate"), financial.dueDate || "—"],
+                      [t("unitDetail.checkIn"), financial.checkIn || "—"],
+                      [t("unitDetail.checkOut"), financial.checkOut || "—"],
+                    ].map(([label, val]) => (
+                      <div key={String(label)}>
+                        <p className="text-muted-foreground">{label}</p>
+                        <p className="font-semibold text-foreground mt-0.5">{val}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">{t("unitDetail.noFinancial")}</p>
+                    <Button size="sm" variant="outline" className="mt-2 text-xs" onClick={() => setEditFinancial(true)}>{t("unitDetail.addFinancial")}</Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right column: Service requests */}
+          <div className="lg:col-span-2">
+            <Card className="border-border/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <AlertCircle size={15} className="text-amber-500" /> {t("unitDetail.serviceRequests")}
+                    {requests && requests.filter(r => r.status === "new").length > 0 && (
+                      <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px] ms-1">
+                        {requests.filter(r => r.status === "new").length} {t("unitDetail.new")}
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <button onClick={() => refetchRequests()} className="text-muted-foreground hover:text-foreground">
+                    <RefreshCw size={13} />
+                  </button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {!requests || requests.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-4">{t("unitDetail.noRequests")}</p>
+                ) : (
+                  <div className="space-y-2">
+                    {requests.map(req => (
+                      <div key={req.id} className="flex items-start gap-3 p-3 rounded-lg bg-background border border-border/30">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-xs font-semibold text-foreground capitalize">{req.type}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${REQ_STATUS_BADGE[req.status] || "bg-muted text-muted-foreground"}`}>
+                              {req.status === "in_progress" ? t("status.inProgress") : req.status.charAt(0).toUpperCase() + req.status.slice(1)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">{req.description}</p>
+                          <p className="text-[10px] text-muted-foreground/70 mt-0.5">Ref: {req.refCode}</p>
+                        </div>
+                        {req.status !== "resolved" && (
+                          <Button size="sm" variant="ghost" onClick={() => {
+                            if (!isOnline) {
+                              enqueue({ type: "resolveRequest", requestId: req.id });
+                              toast({ title: t("unitDetail.offline") });
+                              return;
+                            }
+                            resolveRequest.mutate(req.id);
+                          }} className="h-7 text-xs text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 shrink-0">
+                            <CheckCircle2 size={13} className="me-1" /> {t("unitDetail.resolve")}
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
 
       {/* QR Dialog */}

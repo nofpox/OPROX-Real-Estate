@@ -67,38 +67,39 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    /* Offset content by sidebar width on lg+; remove bottom padding (nav moves to side) */
+    <div className="min-h-screen bg-background pb-20 lg:pb-0 lg:ps-[60px] xl:ps-[220px]">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-card border-b border-border/50 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-card border-b border-border/50 px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center">
             <Building2 size={18} className="text-black" />
           </div>
           <div>
-            <h1 className="font-serif font-bold text-foreground leading-tight">Rakz</h1>
-            <p className="text-xs text-muted-foreground">{t("dashboard.appSubtitle")}</p>
+            <h1 className="font-serif font-bold text-foreground leading-tight">Rakez</h1>
+            <p className="text-xs text-muted-foreground hidden sm:block">{t("dashboard.appSubtitle")}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground hidden sm:block">{authUser?.displayName || authUser?.username}</span>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <span className="text-sm text-muted-foreground hidden md:block">{authUser?.displayName || authUser?.username}</span>
           <LanguageSwitcher />
           <Button size="sm" variant="ghost" onClick={() => refetch()} className="h-8 w-8 p-0">
             <RefreshCw size={15} />
           </Button>
-          <Button size="sm" variant="ghost" onClick={handleLogout} className="h-8 text-muted-foreground hover:text-destructive gap-1.5">
+          <Button size="sm" variant="ghost" onClick={handleLogout} className="h-8 text-muted-foreground hover:text-destructive gap-1.5 px-2">
             <LogOut size={15} /> <span className="hidden sm:inline">{t("dashboard.logout")}</span>
           </Button>
         </div>
       </header>
 
-      <div className="px-6 py-6 max-w-5xl mx-auto space-y-6">
-        {/* Stats row */}
-        <div className="grid grid-cols-4 gap-3">
+      <div className="px-4 py-5 sm:px-6 sm:py-6 max-w-5xl mx-auto space-y-5">
+        {/* Stats row — 2 cols on phones, 4 on sm+ */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: t("dashboard.totalUnits"), value: rooms?.length || 0, icon: Layers, color: "text-slate-400" },
-            { label: t("status.available"), value: statusCounts.available, icon: CheckCircle2, color: "text-emerald-400" },
-            { label: t("status.occupied"), value: statusCounts.occupied, icon: Users, color: "text-blue-400" },
-            { label: t("status.maintenance"), value: statusCounts.maintenance, icon: Wrench, color: "text-amber-400" },
+            { label: t("dashboard.totalUnits"), value: rooms?.length || 0,        icon: Layers,       color: "text-slate-400"   },
+            { label: t("status.available"),     value: statusCounts.available,     icon: CheckCircle2, color: "text-emerald-400" },
+            { label: t("status.occupied"),      value: statusCounts.occupied,      icon: Users,        color: "text-blue-400"    },
+            { label: t("status.maintenance"),   value: statusCounts.maintenance,   icon: Wrench,       color: "text-amber-400"   },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="bg-card rounded-xl p-3 border border-border/50 text-center">
               <Icon size={18} className={`${color} mx-auto mb-1`} />
@@ -110,7 +111,7 @@ export default function Dashboard() {
 
         {/* Property filter */}
         {properties && properties.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
             <button
               onClick={() => setPropertyFilter(null)}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${propertyFilter === null ? "bg-amber-500 text-black" : "bg-card border border-border text-muted-foreground hover:text-foreground"}`}
@@ -139,8 +140,8 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Unit grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {/* Unit grid — 2 → 3 → 4 → 5 columns as screen grows */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
           {roomsLoading
             ? Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)
             : filtered?.map(room => {
