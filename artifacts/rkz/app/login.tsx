@@ -22,6 +22,7 @@ import { useApp } from "@/context/AppContext";
 import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
+import { apiPost, setAuthToken } from "@/constants/api";
 
 const { width } = Dimensions.get("window");
 
@@ -34,10 +35,15 @@ const FEATURE_ICONS: React.ComponentProps<typeof MaterialIcons>["name"][] = [
   "bar-chart",
 ];
 
+interface LoginResponse {
+  token: string;
+  user: { id: number; phone: string; name?: string; email?: string; authorized: boolean };
+}
+
 export default function LoginScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { setUser } = useApp();
+  const { setUser, refreshFromApi } = useApp();
   const { t, isAr } = useLocale();
   const { config } = useConfig();
   const dynTagline = isAr ? config.content.welcomeTaglineAr : config.content.welcomeTaglineEn;
@@ -50,6 +56,9 @@ export default function LoginScreen() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Holds the auth result after phone submission so OTP step can finalise it
+  const pendingAuth = useRef<LoginResponse | null>(null);
 
   const otpRefs = useRef<(TextInput | null)[]>([]);
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -74,7 +83,14 @@ export default function LoginScreen() {
     }
     setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
+    try {
+      const fullPhone = cleaned.startsWith("+") ? cleaned : `+966${cleaned}`;
+      const result = await apiPost<LoginResponse>("/rkz/auth/login", { phone: fullPhone });
+      pendingAuth.current = result;
+    } catch {
+      // API unavailable — fall through to local-only mode
+      pendingAuth.current = null;
+    }
     setLoading(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setStep("otp");
@@ -108,10 +124,27 @@ export default function LoginScreen() {
     setError("");
     setLoading(true);
     Keyboard.dismiss();
-    await new Promise((r) => setTimeout(r, 1500));
+
+    const auth = pendingAuth.current;
+    if (auth) {
+      // Real auth — store token and boot API sync
+      await setAuthToken(auth.token);
+      setUser({
+        phone: auth.user.phone,
+        name: auth.user.name,
+        email: auth.user.email,
+        authorized: auth.user.authorized,
+      });
+      // Fetch listings from API now that token is stored
+      await refreshFromApi().catch(() => {});
+    } else {
+      // Offline/demo mode — set user without token
+      const fullPhone = phone.startsWith("+") ? phone : `+966${phone}`;
+      setUser({ phone: fullPhone, authorized: true });
+    }
+
     setLoading(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setUser({ phone, authorized: true });
     router.replace("/(tabs)");
   }
 

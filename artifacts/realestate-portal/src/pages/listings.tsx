@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useGetListings } from '@workspace/api-client-react';
 import { useLanguage } from '@/lib/i18n';
@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Search, Building, X, SlidersHorizontal, Map } from 'lucide-react';
+import { Search, Building, X, SlidersHorizontal, Map, Smartphone } from 'lucide-react';
 import { ListingCard } from '@/components/listing-card';
 import { MapView } from '@/components/map-view';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RkzListingCard, type RkzListing } from '@/components/rkz-listing-card';
 
 const PROPERTY_TYPES = [
   { value: 'hotel',       labelEn: 'Hotel',       labelAr: 'فندق'           },
@@ -39,6 +40,18 @@ export const ListingsBrowser: React.FC = () => {
   const [propertyType, setPropertyType] = useState<string>('all');
   const [type,         setType]         = useState<string>('all');
   const [showMap,      setShowMap]      = useState(false);
+
+  const [rkzListings, setRkzListings]       = useState<RkzListing[]>([]);
+  const [rkzLoading,  setRkzLoading]        = useState(true);
+
+  useEffect(() => {
+    setRkzLoading(true);
+    fetch('/api/rkz/public/listings?limit=8')
+      .then((r) => r.ok ? r.json() : { data: [] })
+      .then((res: { data?: RkzListing[] }) => setRkzListings(res.data ?? []))
+      .catch(() => setRkzListings([]))
+      .finally(() => setRkzLoading(false));
+  }, []);
 
   const { data: response, isLoading } = useGetListings({
     page,
@@ -283,6 +296,47 @@ export const ListingsBrowser: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* ── Rkz App Listings ─────────────────────────────────────────────── */}
+      {(rkzLoading || rkzListings.length > 0) && (
+        <div className="mt-14">
+          <div className={`flex items-center gap-3 mb-6 ${isRtl ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center gap-2 bg-secondary/10 border border-secondary/20 text-secondary px-3 py-1.5 rounded-full">
+              <Smartphone className="h-4 w-4" />
+              <span className="text-sm font-semibold">
+                {isRtl ? 'عقارات من تطبيق ركز' : 'Listings from Rkz App'}
+              </span>
+            </div>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          {rkzLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-card rounded-xl overflow-hidden border border-border shadow-sm">
+                  <Skeleton className="h-48 w-full" />
+                  <div className="p-4 space-y-3">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {rkzListings.map((listing) => (
+                <RkzListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground text-center mt-6">
+            {isRtl
+              ? 'هذه العقارات مدرجة مباشرةً من تطبيق ركز للجوال'
+              : 'These listings are posted directly from the Rkz mobile app'}
+          </p>
+        </div>
+      )}
 
       {/* Interactive Map Overlay */}
       <MapView
