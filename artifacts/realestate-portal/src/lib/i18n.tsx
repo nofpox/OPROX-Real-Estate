@@ -4,13 +4,27 @@ type Language = 'en' | 'ar';
 
 const STORAGE_KEY = 'rakez-re-lang';
 
-function getSavedLang(): Language {
+function detectLang(): Language {
   try {
+    // 1. Respect an explicit user choice saved in localStorage
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'en' || saved === 'ar') return saved;
+
+    // 2. No saved preference — detect from browser / system language
+    const langs: readonly string[] =
+      typeof navigator !== 'undefined'
+        ? (navigator.languages?.length ? navigator.languages : [navigator.language])
+        : [];
+
+    for (const l of langs) {
+      if (l.startsWith('ar')) return 'ar';
+      if (l.startsWith('en')) return 'en';
+    }
   } catch {
-    // ignore
+    // ignore (SSR / sandboxed environments)
   }
+
+  // 3. Default to Arabic (Saudi-focused portal)
   return 'ar';
 }
 
@@ -677,7 +691,7 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>(getSavedLang);
+  const [language, setLanguageState] = useState<Language>(detectLang);
 
   const setLanguage = useCallback((lang: Language) => {
     try { localStorage.setItem(STORAGE_KEY, lang); } catch { /* ignore */ }

@@ -74,7 +74,7 @@ export const Home: React.FC = () => {
           {/* Single primary CTA */}
           <Button
             asChild size="lg"
-            className="bg-secondary text-secondary-foreground hover:bg-secondary/90 text-sm font-semibold px-10 h-13 shadow-xl shadow-black/20 rounded-full"
+            className="bg-secondary text-secondary-foreground hover:bg-secondary/90 text-sm font-semibold px-10 h-12 shadow-xl shadow-black/20 rounded-full"
           >
             <Link href="/listings">
               {isRtl ? hero.ctaButtonAr : hero.ctaButtonEn}
@@ -87,7 +87,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* ── Stats strip ───────────────────────────────────────────────────────── */}
-      <section className="bg-primary border-t border-white/8">
+      <section className="bg-primary border-t border-white/10">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 rtl:divide-x-reverse">
             {stats.map((stat, i) => {
@@ -167,7 +167,7 @@ export const Home: React.FC = () => {
       {/* ── Services Overview ──────────────────────────────────────────────────── */}
       <section className="py-28 bg-muted/50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-18">
+          <div className="text-center mb-16">
             <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-3">
               {isRtl ? 'ما نقدمه' : 'What We Offer'}
             </p>
@@ -177,13 +177,13 @@ export const Home: React.FC = () => {
             <div className="w-10 h-0.5 bg-secondary/60 rounded-full mx-auto" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-14">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {services.map((svc, i) => (
               <div
                 key={i}
                 className="bg-card p-8 rounded-2xl border border-border/60 hover:border-secondary/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className="w-12 h-12 rounded-xl bg-secondary/8 flex items-center justify-center mb-6 group-hover:bg-secondary/15 transition-colors">
+                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-6 group-hover:bg-secondary/20 transition-colors">
                   {svc.imageUrl
                     ? <img src={svc.imageUrl} alt="" className="w-full h-full object-cover rounded-xl" />
                     : <Building2 className="h-6 w-6 text-secondary" />
