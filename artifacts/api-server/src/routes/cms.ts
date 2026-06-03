@@ -129,6 +129,7 @@ router.delete("/cms/property-types/:id", requireAdmin, async (req, res) => {
 const SITE_SECTIONS = [
   "hero", "contact", "announcements", "about",
   "branding", "stats", "services", "nav", "footer", "cta", "listingsPage",
+  "leadEmail",
 ] as const;
 type SiteSection = (typeof SITE_SECTIONS)[number];
 
@@ -283,6 +284,12 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     subtitleAr: "تواصل مع فريقنا اليوم واكتشف كيف يمكن لركز أن يحول أصولك العقارية إلى استثمار مثمر.",
     buttonEn: "Contact Us",
     buttonAr: "تواصل معنا",
+  },
+  leadEmail: {
+    subject: "Welcome to Rkaz – Your Visit Confirmation",
+    intro: "Thank you for your interest in Rkaz. We are pleased to confirm that we have received your request.\n\nOur team is currently reviewing your inquiry and will contact you shortly to finalize the details of your visit.",
+    mapsUrl: "https://www.google.com/maps/search/Rkaz+Riyadh+Saudi+Arabia",
+    bccEmail: "",
   },
 };
 

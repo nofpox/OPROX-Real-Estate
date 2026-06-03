@@ -55,9 +55,10 @@ interface AdminListing {
 interface HeroContent     { titleEn: string; titleAr: string; subtitleEn: string; subtitleAr: string; imageUrl: string; }
 interface ContactContent  { email: string; phone: string; whatsapp: string; address: string; }
 interface Announcement   { id: string; text: string; isActive: boolean; }
-interface BrandingContent { companyNameEn: string; companyNameAr: string; taglineEn: string; taglineAr: string; logoUrl: string; }
-interface StatItem        { value: string; labelEn: string; labelAr: string; liveKey: string | null; }
-interface ServiceItem     { titleEn: string; titleAr: string; descEn: string; descAr: string; imageUrl: string; }
+interface BrandingContent    { companyNameEn: string; companyNameAr: string; taglineEn: string; taglineAr: string; logoUrl: string; }
+interface StatItem           { value: string; labelEn: string; labelAr: string; liveKey: string | null; }
+interface ServiceItem        { titleEn: string; titleAr: string; descEn: string; descAr: string; imageUrl: string; }
+interface LeadEmailTemplate  { subject: string; intro: string; mapsUrl: string; bccEmail: string; }
 interface SiteContent {
   hero: HeroContent;
   contact: ContactContent;
@@ -66,6 +67,7 @@ interface SiteContent {
   branding: BrandingContent;
   stats: StatItem[];
   services: ServiceItem[];
+  leadEmail: LeadEmailTemplate;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -563,6 +565,7 @@ function SiteContentTab() {
   const [brandingLocal, setBrandingLocal] = useState<BrandingContent | null>(null);
   const [statsLocal, setStatsLocal] = useState<StatItem[] | null>(null);
   const [servicesLocal, setServicesLocal] = useState<ServiceItem[] | null>(null);
+  const [leadEmailLocal, setLeadEmailLocal] = useState<LeadEmailTemplate | null>(null);
   const [uploading, setUploading] = useState(false);
   const svcImgRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -623,6 +626,7 @@ function SiteContentTab() {
     if (section === "branding"      && content?.branding)      setBrandingLocal({ ...content.branding });
     if (section === "stats"         && content?.stats)         setStatsLocal(content.stats.map(s => ({ ...s })));
     if (section === "services"      && content?.services)      setServicesLocal(content.services.map(s => ({ ...s })));
+    if (section === "leadEmail"     && content?.leadEmail)     setLeadEmailLocal({ ...content.leadEmail });
   };
 
   if (q.isLoading) return (
@@ -1027,6 +1031,92 @@ function SiteContentTab() {
               <Button size="sm" variant="outline" className="w-full" onClick={() => setServicesLocal(s => [...(s ?? []), { titleEn: "", titleAr: "", descEn: "", descAr: "", imageUrl: "" }])}>
                 <Plus className="h-3.5 w-3.5 me-1.5" /> Add Service
               </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Lead Email Template ───────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2"><Mail className="h-4 w-4" /> Lead Welcome Email</CardTitle>
+              <CardDescription className="text-xs">
+                Sent automatically when someone submits the "Join Us" / "Visit Request" form. Use <code className="bg-muted px-1 rounded text-[11px]">{"{{name}}"}</code> to insert the client's name.
+              </CardDescription>
+            </div>
+            {editingSection === "leadEmail"
+              ? <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setEditingSection(null)}>Cancel</Button>
+                  <Button size="sm" onClick={() => saveMutation.mutate({ section: "leadEmail", data: leadEmailLocal })} disabled={saveMutation.isPending}>
+                    {saveMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 me-1" />}Save
+                  </Button>
+                </div>
+              : <Button size="sm" variant="outline" onClick={() => startEdit("leadEmail")}><Pencil className="h-3.5 w-3.5 me-1.5" />Edit</Button>}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {editingSection !== "leadEmail" ? (
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                <span className="text-xs text-muted-foreground w-20 shrink-0 pt-0.5">Subject</span>
+                <span className="text-sm font-medium">{content?.leadEmail?.subject || "—"}</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-xs text-muted-foreground w-20 shrink-0 pt-0.5">Body</span>
+                <span className="text-sm text-muted-foreground line-clamp-2">{content?.leadEmail?.intro || "—"}</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-xs text-muted-foreground w-20 shrink-0 pt-0.5">Maps URL</span>
+                <span className="text-xs text-muted-foreground truncate max-w-xs">{content?.leadEmail?.mapsUrl || "—"}</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-xs text-muted-foreground w-20 shrink-0 pt-0.5">Admin BCC</span>
+                <span className="text-sm">{content?.leadEmail?.bccEmail || <span className="text-muted-foreground italic text-xs">Not set — admin will not receive copies</span>}</span>
+              </div>
+            </div>
+          ) : leadEmailLocal && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-xs mb-1 block">Subject Line</Label>
+                <Input
+                  value={leadEmailLocal.subject}
+                  onChange={e => setLeadEmailLocal(t => t ? { ...t, subject: e.target.value } : t)}
+                  placeholder="Welcome to Rkaz – Your Visit Confirmation"
+                />
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block">Email Body</Label>
+                <Textarea
+                  rows={6}
+                  value={leadEmailLocal.intro}
+                  onChange={e => setLeadEmailLocal(t => t ? { ...t, intro: e.target.value } : t)}
+                  placeholder="Thank you for your interest in Rkaz…"
+                  className="resize-none text-sm"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Separate paragraphs with a blank line. <code className="bg-muted px-1 rounded">{"{{name}}"}</code> will be replaced with the client's name.</p>
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block">Google Maps URL (Location Link)</Label>
+                <Input
+                  value={leadEmailLocal.mapsUrl}
+                  onChange={e => setLeadEmailLocal(t => t ? { ...t, mapsUrl: e.target.value } : t)}
+                  placeholder="https://www.google.com/maps/…"
+                />
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block flex items-center gap-1.5">
+                  Admin BCC Email
+                  <span className="font-normal text-muted-foreground">(receives a silent copy of every lead confirmation)</span>
+                </Label>
+                <Input
+                  type="email"
+                  value={leadEmailLocal.bccEmail}
+                  onChange={e => setLeadEmailLocal(t => t ? { ...t, bccEmail: e.target.value } : t)}
+                  placeholder="management@company.com"
+                />
+              </div>
             </div>
           )}
         </CardContent>
