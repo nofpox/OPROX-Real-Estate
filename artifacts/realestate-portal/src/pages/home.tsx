@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'wouter';
-import { useGetListings } from '@workspace/api-client-react';
 import { useLanguage } from '@/lib/i18n';
 import { useCms } from '@/lib/cms-context';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ArrowLeft, Building2, Users, TrendingUp, Award, CheckCircle2 } from 'lucide-react';
-import { ListingCard } from '@/components/listing-card';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const STAT_ICONS = [Building2, Users, TrendingUp, Award];
 
@@ -32,14 +29,7 @@ export const Home: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  const { data: featuredResponse, isLoading } = useGetListings({
-    featured: 'true',
-    status:   'active',
-    limit:    3,
-  });
-
-  const featuredListings = featuredResponse?.data || [];
-  const { hero, stats, services, cta, branding } = content;
+  const { hero, stats, services, branding } = content;
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,61 +132,6 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* ── Featured Properties ────────────────────────────────────────────────── */}
-      <section className="py-28 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-end mb-14">
-            <div>
-              <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-3">
-                {isRtl ? 'اختيارات مميزة' : 'Curated Selection'}
-              </p>
-              <h2 className="text-3xl font-bold text-primary">
-                {isRtl ? 'العقارات المميزة' : 'Featured Properties'}
-              </h2>
-            </div>
-            <Link
-              href="/listings"
-              className="text-secondary text-sm font-medium hover:underline inline-flex items-center gap-1.5 hidden md:flex opacity-80 hover:opacity-100 transition-opacity"
-            >
-              {isRtl ? 'عرض الكل' : 'View all'}
-              {isRtl ? <ArrowLeft className="h-3.5 w-3.5" /> : <ArrowRight className="h-3.5 w-3.5" />}
-            </Link>
-          </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="bg-card rounded-xl overflow-hidden border border-border">
-                  <Skeleton className="h-52 w-full" />
-                  <div className="p-4 space-y-3">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <Skeleton className="h-8 w-full mt-4" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : featuredListings.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {featuredListings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 text-muted-foreground text-sm">
-              {isRtl ? 'لا توجد عقارات مميزة حالياً.' : 'No featured properties at the moment.'}
-            </div>
-          )}
-
-          <div className="mt-10 text-center md:hidden">
-            <Link href="/listings" className="text-secondary text-sm font-medium hover:underline inline-flex items-center gap-1">
-              {isRtl ? 'عرض الكل' : 'View all properties'}
-              {isRtl ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* ── Services Overview ──────────────────────────────────────────────────── */}
       <section className="py-28 bg-muted">
         <div className="container mx-auto px-4">
@@ -257,25 +192,6 @@ export const Home: React.FC = () => {
                   : "Whether you own properties looking for professional management, or want to explore investment opportunities within our portfolio — share your interest and our team will be in touch within 24 hours."}
               </p>
 
-              {/* Distinguishing note from Investor Portal */}
-              <div className="flex items-start gap-3 p-4 rounded-xl bg-muted border border-border">
-                <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <Award className="h-4 w-4 text-secondary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-primary mb-1">
-                    {isRtl ? 'هل أنت عميل ركز حالي؟' : 'Already a Rakez client?'}
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {isRtl
-                      ? 'هذا النموذج مخصص للشركاء الجدد فقط. للوصول إلى عقاراتك وتقاريرك المالية، '
-                      : 'This form is for new inquiries only. To access your properties and financial reports, '}
-                    <Link href="/portal" className="text-secondary hover:underline font-medium">
-                      {isRtl ? 'سجّل الدخول إلى بوابتك ←' : 'sign in to your portal →'}
-                    </Link>
-                  </p>
-                </div>
-              </div>
             </div>
 
             {/* Right — form */}
@@ -370,25 +286,6 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* ── Bottom CTA ────────────────────────────────────────────────────────── */}
-      <section className="py-24 bg-primary">
-        <div className="container mx-auto px-4 text-center max-w-2xl">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-5 leading-tight">
-            {isRtl ? cta.headlineAr : cta.headlineEn}
-          </h2>
-          <p className="text-white/60 mb-10 text-base leading-relaxed">
-            {isRtl ? cta.subtitleAr : cta.subtitleEn}
-          </p>
-          <Button
-            asChild size="lg"
-            className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-12 px-10 rounded-full shadow-lg text-sm font-semibold"
-          >
-            <Link href="/contact">
-              {isRtl ? cta.buttonAr : cta.buttonEn}
-            </Link>
-          </Button>
-        </div>
-      </section>
     </div>
   );
 };

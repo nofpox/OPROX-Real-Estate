@@ -153,7 +153,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {/* ── Footer ──────────────────────────────────────────────────────────── */}
       <footer className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
+        <div className="container mx-auto px-4 py-14 grid grid-cols-1 md:grid-cols-3 gap-10">
 
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
@@ -211,24 +211,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </ul>
           </div>
 
-          {/* Investor portal — minimal, no sign-in button */}
-          <div>
-            <h3 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-4">
-              {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
-            </h3>
-            <p className="text-sm text-primary-foreground/60 mb-4 leading-relaxed">
-              {isRtl
-                ? 'وصول مباشر لعقاراتك المدارة والتقارير المالية.'
-                : 'Direct access to your managed properties and financial reports.'}
-            </p>
-            <Link
-              href="/portal"
-              className="text-secondary text-sm font-medium hover:underline inline-flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity"
-            >
-              <KeyRound className="h-3.5 w-3.5" />
-              {isRtl ? 'تسجيل الدخول ←' : 'Sign in →'}
-            </Link>
-          </div>
         </div>
 
         <div className="border-t border-primary-foreground/10">
