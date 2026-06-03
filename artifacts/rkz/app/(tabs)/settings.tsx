@@ -371,6 +371,28 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Admin Control Panel */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t.admin.adminEntry}</Text>
+          <View style={styles.settingCard}>
+            <Pressable
+              style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.8 }]}
+              onPress={() => router.push("/admin")}
+            >
+              <View style={[styles.settingIconBox, { backgroundColor: "#FEF3C7" }]}>
+                <MaterialIcons name="security" size={20} color="#D97706" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.settingLabel}>{t.admin.title}</Text>
+                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                  {t.admin.adminEntryDesc}
+                </Text>
+              </View>
+              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
+            </Pressable>
+          </View>
+        </View>
+
         {/* Logout */}
         <Pressable
           style={({ pressed }) => [styles.logoutBtn, pressed && { opacity: 0.8 }]}

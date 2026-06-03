@@ -1,0 +1,209 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
+import { API_BASE } from "@/constants/api";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
+export interface AppConfig {
+  branding: {
+    appName: string;
+    logoUrl: string | null;
+    primaryColor: string;
+    navyColor: string;
+    backgroundColor: string;
+  };
+  content: {
+    welcomeTaglineAr: string;
+    welcomeTaglineEn: string;
+    welcomeHeadlineAr: string;
+    welcomeHeadlineEn: string;
+    welcomeCtaAr: string;
+    welcomeCtaEn: string;
+  };
+  platforms: {
+    aqar: boolean;
+    bayut: boolean;
+    wasalt: boolean;
+    property_finder: boolean;
+  };
+}
+
+export const DEFAULT_CONFIG: AppConfig = {
+  branding: {
+    appName: "RKZ",
+    logoUrl: null,
+    primaryColor: "#D4A843",
+    navyColor: "#0A1628",
+    backgroundColor: "#F5F7FA",
+  },
+  content: {
+    welcomeTaglineAr: "محرك النشر العقاري الفوري",
+    welcomeTaglineEn: "Instant Real Estate Publishing Engine",
+    welcomeHeadlineAr: 'أهلاً بك في "ركز".. نحن وكيلك الحصري!',
+    welcomeHeadlineEn: 'Welcome to "Rkz" — Your Exclusive Digital Agent!',
+    welcomeCtaAr: "لنبدأ الآن",
+    welcomeCtaEn: "Let's Get Started",
+  },
+  platforms: {
+    aqar: true,
+    bayut: true,
+    wasalt: true,
+    property_finder: true,
+  },
+};
+
+interface ConfigContextValue {
+  config: AppConfig;
+  isLoaded: boolean;
+  /** Apply changes locally for live preview (not persisted) */
+  applyLocally: (updates: Partial<AppConfig>) => void;
+  /** Save snapshot so rollbackAdmin() can restore it */
+  beginAdminSession: () => void;
+  /** Restore the snapshot taken by beginAdminSession() */
+  rollbackAdmin: () => void;
+  /** Check PIN against server */
+  verifyPin: (pin: string) => Promise<boolean>;
+  /** Persist changes to server (requires PIN) */
+  updateConfig: (pin: string, updates: Partial<AppConfig>) => Promise<void>;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Context — default value used before provider mounts
+// ─────────────────────────────────────────────────────────────────────────────
+const ConfigContext = createContext<ConfigContextValue>({
+  config: DEFAULT_CONFIG,
+  isLoaded: false,
+  applyLocally: () => {},
+  beginAdminSession: () => {},
+  rollbackAdmin: () => {},
+  verifyPin: async () => false,
+  updateConfig: async () => {},
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const CACHE_KEY = "rkz_app_config_v2";
+
+function deepMerge(base: AppConfig, patch: Partial<AppConfig>): AppConfig {
+  return {
+    branding: { ...base.branding, ...(patch.branding ?? {}) },
+    content: { ...base.content, ...(patch.content ?? {}) },
+    platforms: { ...base.platforms, ...(patch.platforms ?? {}) },
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Provider
+// ─────────────────────────────────────────────────────────────────────────────
+export function ConfigProvider({ children }: { children: React.ReactNode }) {
+  const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const snapshotRef = useRef<AppConfig>(DEFAULT_CONFIG);
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  async function load() {
+    // 1. Try cache first — instantaneous, works offline
+    try {
+      const cached = await AsyncStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached) as Partial<AppConfig>;
+        setConfig((prev) => deepMerge(prev, parsed));
+      }
+    } catch {}
+
+    // 2. Authoritative fetch from server
+    try {
+      const res = await fetch(`${API_BASE}/rkz/config`);
+      if (res.ok) {
+        const remote = await res.json() as Partial<AppConfig>;
+        setConfig((prev) => deepMerge(prev, remote));
+        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(remote));
+      }
+    } catch {}
+
+    setIsLoaded(true);
+  }
+
+  const applyLocally = useCallback((updates: Partial<AppConfig>) => {
+    setConfig((prev) => deepMerge(prev, updates));
+  }, []);
+
+  const beginAdminSession = useCallback(() => {
+    setConfig((current) => {
+      snapshotRef.current = deepMerge(DEFAULT_CONFIG, current);
+      return current;
+    });
+  }, []);
+
+  const rollbackAdmin = useCallback(() => {
+    setConfig(snapshotRef.current);
+  }, []);
+
+  const verifyPin = useCallback(async (pin: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`${API_BASE}/rkz/admin/verify-pin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
+      });
+      const data = await res.json() as { valid: boolean };
+      return data.valid === true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const updateConfig = useCallback(
+    async (pin: string, updates: Partial<AppConfig>): Promise<void> => {
+      const res = await fetch(`${API_BASE}/rkz/admin/config`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin, updates }),
+      });
+      if (!res.ok) {
+        const err = await res.json() as { error: string };
+        throw new Error(err.error ?? "Save failed");
+      }
+      const updated = await res.json() as Partial<AppConfig>;
+      setConfig((prev) => deepMerge(prev, updated));
+      // Update AsyncStorage cache
+      try {
+        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(updated));
+      } catch {}
+    },
+    []
+  );
+
+  return (
+    <ConfigContext.Provider
+      value={{
+        config,
+        isLoaded,
+        applyLocally,
+        beginAdminSession,
+        rollbackAdmin,
+        verifyPin,
+        updateConfig,
+      }}
+    >
+      {children}
+    </ConfigContext.Provider>
+  );
+}
+
+export function useConfig() {
+  return useContext(ConfigContext);
+}

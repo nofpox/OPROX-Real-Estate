@@ -19,6 +19,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useApp } from "@/context/AppContext";
+import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -38,6 +39,11 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { setUser } = useApp();
   const { t, isAr } = useLocale();
+  const { config } = useConfig();
+  const dynTagline = isAr ? config.content.welcomeTaglineAr : config.content.welcomeTaglineEn;
+  const dynHeadline = isAr ? config.content.welcomeHeadlineAr : config.content.welcomeHeadlineEn;
+  const dynCta = isAr ? config.content.welcomeCtaAr : config.content.welcomeCtaEn;
+  const appName = config.branding.appName;
 
   const [step, setStep] = useState<Step>("welcome");
   const [phone, setPhone] = useState("");
@@ -308,10 +314,10 @@ export default function LoginScreen() {
           <View style={S.logoBox}>
             <MaterialIcons name="home-work" size={32} color={colors.navy} />
           </View>
-          <Text style={S.brandName}>RKZ</Text>
-          <Text style={S.tagline}>{t.welcome.tagline}</Text>
+          <Text style={S.brandName}>{appName}</Text>
+          <Text style={S.tagline}>{dynTagline}</Text>
 
-          <Text style={S.headline}>{t.welcome.headline}</Text>
+          <Text style={S.headline}>{dynHeadline}</Text>
 
           {t.welcome.features.map((f, i) => (
             <View key={i} style={S.featureRow}>
@@ -332,7 +338,7 @@ export default function LoginScreen() {
               setStep("phone");
             }}
           >
-            <Text style={S.ctaBtnText}>{t.welcome.cta}</Text>
+            <Text style={S.ctaBtnText}>{dynCta}</Text>
           </Pressable>
 
           <View style={S.platforms}>
@@ -355,8 +361,8 @@ export default function LoginScreen() {
           <View style={S.logoBox}>
             <MaterialIcons name="home-work" size={32} color={colors.navy} />
           </View>
-          <Text style={S.brandName}>RKZ</Text>
-          <Text style={S.tagline}>{t.welcome.tagline}</Text>
+          <Text style={S.brandName}>{appName}</Text>
+          <Text style={S.tagline}>{dynTagline}</Text>
         </View>
 
         <View style={S.form}>

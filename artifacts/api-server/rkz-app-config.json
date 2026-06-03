@@ -1,0 +1,26 @@
+{
+  "branding": {
+    "appName": "RKZ",
+    "logoUrl": null,
+    "primaryColor": "#D4A843",
+    "navyColor": "#0A1628",
+    "backgroundColor": "#F5F7FA"
+  },
+  "content": {
+    "welcomeTaglineAr": "محرك النشر العقاري الفوري",
+    "welcomeTaglineEn": "Instant Real Estate Publishing Engine",
+    "welcomeHeadlineAr": "أهلاً بك في \"ركز\".. نحن وكيلك الحصري!",
+    "welcomeHeadlineEn": "Welcome to \"Rkz\" — Your Exclusive Digital Agent!",
+    "welcomeCtaAr": "لنبدأ الآن",
+    "welcomeCtaEn": "Let's Get Started"
+  },
+  "platforms": {
+    "aqar": true,
+    "bayut": true,
+    "wasalt": true,
+    "property_finder": true
+  },
+  "admin": {
+    "pin": "1234"
+  }
+}
