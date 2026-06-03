@@ -10,13 +10,13 @@ import {
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
+import { useLocale } from "@/hooks/useLocale";
 
 const PLATFORM_ITEMS = [
   { id: "aqar", name: "عقار", icon: "home" as const, color: "#2563EB", connected: true },
@@ -29,6 +29,7 @@ export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { user, setUser, properties } = useApp();
+  const { t, isAr } = useLocale();
 
   const [authorized, setAuthorized] = useState(user?.authorized ?? false);
   const [autoRenew, setAutoRenew] = useState(true);
@@ -38,10 +39,10 @@ export default function SettingsScreen() {
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84) + 16;
 
   function handleLogout() {
-    Alert.alert("تسجيل الخروج", "هل تريد تسجيل الخروج؟", [
-      { text: "إلغاء", style: "cancel" },
+    Alert.alert(t.settings.logoutTitle, t.settings.logoutMsg, [
+      { text: t.settings.cancel, style: "cancel" },
       {
-        text: "خروج",
+        text: t.settings.logoutConfirm,
         style: "destructive",
         onPress: () => {
           setUser(null);
@@ -59,8 +60,19 @@ export default function SettingsScreen() {
       paddingBottom: 24,
       paddingHorizontal: 20,
     },
-    headerTitle: { color: "#FFFFFF", fontSize: 20, fontFamily: "Inter_700Bold", marginBottom: 4 },
-    headerSub: { color: "rgba(255,255,255,0.55)", fontSize: 14, fontFamily: "Inter_400Regular" },
+    headerTitle: {
+      color: "#FFFFFF",
+      fontSize: 20,
+      fontFamily: "Inter_700Bold",
+      marginBottom: 4,
+      textAlign: isAr ? "right" : "left",
+    },
+    headerSub: {
+      color: "rgba(255,255,255,0.55)",
+      fontSize: 14,
+      fontFamily: "Inter_400Regular",
+      textAlign: isAr ? "right" : "left",
+    },
     scroll: { flex: 1 },
     profileCard: {
       backgroundColor: colors.card,
@@ -68,7 +80,7 @@ export default function SettingsScreen() {
       marginTop: 16,
       borderRadius: 16,
       padding: 20,
-      flexDirection: "row",
+      flexDirection: isAr ? "row-reverse" : "row",
       alignItems: "center",
       gap: 16,
       shadowColor: "#000",
@@ -85,12 +97,35 @@ export default function SettingsScreen() {
       justifyContent: "center",
     },
     avatarText: { color: "#FFFFFF", fontSize: 22, fontFamily: "Inter_700Bold" },
-    profileName: { fontSize: 17, fontFamily: "Inter_700Bold", color: colors.foreground },
-    profilePhone: { fontSize: 14, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
-    profileStats: { marginTop: 6, flexDirection: "row", gap: 16 },
+    profileName: {
+      fontSize: 17,
+      fontFamily: "Inter_700Bold",
+      color: colors.foreground,
+      textAlign: isAr ? "right" : "left",
+    },
+    profilePhone: {
+      fontSize: 14,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      marginTop: 2,
+    },
+    profileStats: {
+      marginTop: 6,
+      flexDirection: isAr ? "row-reverse" : "row",
+      gap: 16,
+    },
     profileStat: { fontSize: 12, fontFamily: "Inter_500Medium", color: colors.gold },
     section: { marginTop: 20, paddingHorizontal: 16 },
-    sectionTitle: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, marginBottom: 10, paddingHorizontal: 4, textTransform: "uppercase", letterSpacing: 0.5 },
+    sectionTitle: {
+      fontSize: 13,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.mutedForeground,
+      marginBottom: 10,
+      paddingHorizontal: 4,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      textAlign: isAr ? "right" : "left",
+    },
     settingCard: {
       backgroundColor: colors.card,
       borderRadius: 16,
@@ -101,7 +136,7 @@ export default function SettingsScreen() {
       elevation: 1,
     },
     settingRow: {
-      flexDirection: "row",
+      flexDirection: isAr ? "row-reverse" : "row",
       alignItems: "center",
       paddingHorizontal: 16,
       paddingVertical: 14,
@@ -115,8 +150,13 @@ export default function SettingsScreen() {
       alignItems: "center",
       justifyContent: "center",
     },
-    settingLabel: { flex: 1, fontSize: 15, fontFamily: "Inter_500Medium", color: colors.foreground },
-    settingValue: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
+    settingLabel: {
+      flex: 1,
+      fontSize: 15,
+      fontFamily: "Inter_500Medium",
+      color: colors.foreground,
+      textAlign: isAr ? "right" : "left",
+    },
     authCard: {
       backgroundColor: colors.card,
       borderRadius: 16,
@@ -126,9 +166,26 @@ export default function SettingsScreen() {
       shadowRadius: 6,
       elevation: 1,
     },
-    authTitle: { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 6 },
-    authDesc: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 20, marginBottom: 14 },
-    authRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    authTitle: {
+      fontSize: 15,
+      fontFamily: "Inter_700Bold",
+      color: colors.foreground,
+      marginBottom: 6,
+      textAlign: isAr ? "right" : "left",
+    },
+    authDesc: {
+      fontSize: 13,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      lineHeight: 20,
+      marginBottom: 14,
+      textAlign: isAr ? "right" : "left",
+    },
+    authRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
     authStatus: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
     platCard: {
       backgroundColor: colors.card,
@@ -140,7 +197,7 @@ export default function SettingsScreen() {
       elevation: 1,
     },
     platRow: {
-      flexDirection: "row",
+      flexDirection: isAr ? "row-reverse" : "row",
       alignItems: "center",
       paddingHorizontal: 16,
       paddingVertical: 12,
@@ -153,12 +210,14 @@ export default function SettingsScreen() {
       alignItems: "center",
       justifyContent: "center",
     },
-    platName: { flex: 1, fontSize: 15, fontFamily: "Inter_500Medium", color: colors.foreground },
-    connectedBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 8,
+    platName: {
+      flex: 1,
+      fontSize: 15,
+      fontFamily: "Inter_500Medium",
+      color: colors.foreground,
+      textAlign: isAr ? "right" : "left",
     },
+    connectedBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
     connectedText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
     logoutBtn: {
       marginHorizontal: 16,
@@ -181,13 +240,15 @@ export default function SettingsScreen() {
     },
   });
 
-  const publishedCount = properties.filter((p) => p.platforms.some((x) => x.status === "published")).length;
+  const publishedCount = properties.filter((p) =>
+    p.platforms.some((x) => x.status === "published")
+  ).length;
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>الإعدادات</Text>
-        <Text style={styles.headerSub}>إدارة حسابك ومنصات النشر</Text>
+        <Text style={styles.headerTitle}>{t.settings.title}</Text>
+        <Text style={styles.headerSub}>{t.settings.subtitle}</Text>
       </View>
 
       <ScrollView
@@ -195,32 +256,29 @@ export default function SettingsScreen() {
         contentContainerStyle={{ paddingBottom: bottomPad }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{user?.phone?.charAt(3) ?? "م"}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.profileName}>{user?.name ?? "المالك"}</Text>
+            <Text style={styles.profileName}>{user?.name ?? t.settings.ownerFallback}</Text>
             <Text style={styles.profilePhone}>{user ? `+966 ${user.phone}` : "—"}</Text>
             <View style={styles.profileStats}>
-              <Text style={styles.profileStat}>{properties.length} عقار</Text>
-              <Text style={styles.profileStat}>{publishedCount} منشور</Text>
+              <Text style={styles.profileStat}>{t.settings.propertyCount(properties.length)}</Text>
+              <Text style={styles.profileStat}>{t.settings.publishedCount(publishedCount)}</Text>
             </View>
           </View>
         </View>
 
         {/* Authorization */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>التفويض القانوني</Text>
+          <Text style={styles.sectionTitle}>{t.settings.authSection}</Text>
           <View style={styles.authCard}>
-            <Text style={styles.authTitle}>تفويض الوساطة العقارية</Text>
-            <Text style={styles.authDesc}>
-              بتفعيل هذا الخيار، تمنح RKZ صلاحية التصرف بوصفها وسيطاً معتمداً للنشر على المنصات نيابةً عنك وفق اتفاقية الخدمة.
-            </Text>
+            <Text style={styles.authTitle}>{t.settings.authTitle}</Text>
+            <Text style={styles.authDesc}>{t.settings.authDesc}</Text>
             <View style={styles.authRow}>
               <Text style={[styles.authStatus, { color: authorized ? colors.success : colors.mutedForeground }]}>
-                {authorized ? "مفعّل" : "غير مفعّل"}
+                {authorized ? t.settings.authEnabled : t.settings.authDisabled}
               </Text>
               <Switch
                 value={authorized}
@@ -238,7 +296,7 @@ export default function SettingsScreen() {
 
         {/* Platform connections */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>منصات النشر</Text>
+          <Text style={styles.sectionTitle}>{t.settings.platformsSection}</Text>
           <View style={styles.platCard}>
             {PLATFORM_ITEMS.map((item, i) => (
               <React.Fragment key={item.id}>
@@ -248,9 +306,19 @@ export default function SettingsScreen() {
                     <MaterialIcons name={item.icon} size={20} color={item.color} />
                   </View>
                   <Text style={styles.platName}>{item.name}</Text>
-                  <View style={[styles.connectedBadge, { backgroundColor: item.connected ? "#DCFCE7" : colors.muted }]}>
-                    <Text style={[styles.connectedText, { color: item.connected ? "#16A34A" : colors.mutedForeground }]}>
-                      {item.connected ? "متصل" : "غير متصل"}
+                  <View
+                    style={[
+                      styles.connectedBadge,
+                      { backgroundColor: item.connected ? "#DCFCE7" : colors.muted },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.connectedText,
+                        { color: item.connected ? "#16A34A" : colors.mutedForeground },
+                      ]}
+                    >
+                      {item.connected ? t.settings.connected : t.settings.notConnected}
                     </Text>
                   </View>
                 </View>
@@ -261,13 +329,13 @@ export default function SettingsScreen() {
 
         {/* Preferences */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>التفضيلات</Text>
+          <Text style={styles.sectionTitle}>{t.settings.prefsSection}</Text>
           <View style={styles.settingCard}>
             <View style={styles.settingRow}>
               <View style={[styles.settingIconBox, { backgroundColor: "#EFF6FF" }]}>
                 <MaterialIcons name="autorenew" size={20} color="#2563EB" />
               </View>
-              <Text style={styles.settingLabel}>تجديد تلقائي</Text>
+              <Text style={styles.settingLabel}>{t.settings.autoRenew}</Text>
               <Switch
                 value={autoRenew}
                 onValueChange={(v) => { setAutoRenew(v); Haptics.selectionAsync(); }}
@@ -280,7 +348,7 @@ export default function SettingsScreen() {
               <View style={[styles.settingIconBox, { backgroundColor: "#FFF7ED" }]}>
                 <MaterialIcons name="notifications-active" size={20} color="#D97706" />
               </View>
-              <Text style={styles.settingLabel}>إشعارات العملاء</Text>
+              <Text style={styles.settingLabel}>{t.settings.notifications}</Text>
               <Switch
                 value={notifs}
                 onValueChange={(v) => { setNotifs(v); Haptics.selectionAsync(); }}
@@ -293,8 +361,12 @@ export default function SettingsScreen() {
               <View style={[styles.settingIconBox, { backgroundColor: "#F0FDF4" }]}>
                 <MaterialIcons name="support-agent" size={20} color="#16A34A" />
               </View>
-              <Text style={styles.settingLabel}>الدعم والمساعدة</Text>
-              <MaterialIcons name="chevron-right" size={18} color={colors.mutedForeground} />
+              <Text style={styles.settingLabel}>{t.settings.support}</Text>
+              <MaterialIcons
+                name={isAr ? "chevron-left" : "chevron-right"}
+                size={18}
+                color={colors.mutedForeground}
+              />
             </Pressable>
           </View>
         </View>
@@ -305,10 +377,10 @@ export default function SettingsScreen() {
           onPress={handleLogout}
         >
           <MaterialIcons name="logout" size={18} color={colors.destructive} />
-          <Text style={styles.logoutText}>تسجيل الخروج</Text>
+          <Text style={styles.logoutText}>{t.settings.logout}</Text>
         </Pressable>
 
-        <Text style={styles.version}>RKZ v1.0 — محرك النشر العقاري الفوري</Text>
+        <Text style={styles.version}>{t.settings.version}</Text>
       </ScrollView>
     </View>
   );

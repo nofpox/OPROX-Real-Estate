@@ -16,14 +16,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   PLATFORM_COLORS,
   PLATFORM_LABELS,
-  PROPERTY_TYPE_LABELS,
   Platform as PlatformType,
   Property,
   useApp,
 } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
+import { useLocale } from "@/hooks/useLocale";
 
-const { width } = Dimensions.get("window");
+const { width: _width } = Dimensions.get("window");
 
 function totalViews(p: Property) {
   return p.platforms.reduce((a, x) => a + (x.views ?? 0), 0);
@@ -41,6 +41,7 @@ export default function DashboardScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { properties, unreadLeadsCount } = useApp();
+  const { t, isAr } = useLocale();
   const [refreshing, setRefreshing] = React.useState(false);
 
   const publishedCount = properties.filter((p) =>
@@ -70,13 +71,24 @@ export default function DashboardScreen() {
       paddingHorizontal: 20,
     },
     headerTop: {
-      flexDirection: "row",
+      flexDirection: isAr ? "row-reverse" : "row",
       justifyContent: "space-between",
       alignItems: "center",
       marginBottom: 20,
     },
-    greeting: { color: "rgba(255,255,255,0.6)", fontSize: 13, fontFamily: "Inter_400Regular" },
-    appName: { color: "#FFFFFF", fontSize: 22, fontFamily: "Inter_700Bold", letterSpacing: 1 },
+    greeting: {
+      color: "rgba(255,255,255,0.6)",
+      fontSize: 13,
+      fontFamily: "Inter_400Regular",
+      textAlign: isAr ? "right" : "left",
+    },
+    appName: {
+      color: "#FFFFFF",
+      fontSize: 22,
+      fontFamily: "Inter_700Bold",
+      letterSpacing: 1,
+      textAlign: isAr ? "right" : "left",
+    },
     notifBtn: {
       width: 40,
       height: 40,
@@ -105,22 +117,26 @@ export default function DashboardScreen() {
       padding: 14,
     },
     kpiValue: { color: "#FFFFFF", fontSize: 22, fontFamily: "Inter_700Bold" },
-    kpiLabel: { color: "rgba(255,255,255,0.55)", fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 2 },
-    kpiDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      marginBottom: 8,
+    kpiLabel: {
+      color: "rgba(255,255,255,0.55)",
+      fontSize: 11,
+      fontFamily: "Inter_400Regular",
+      marginTop: 2,
     },
+    kpiDot: { width: 6, height: 6, borderRadius: 3, marginBottom: 8 },
     scroll: { flex: 1 },
     section: { paddingHorizontal: 20, marginTop: 24 },
     sectionHeader: {
-      flexDirection: "row",
+      flexDirection: isAr ? "row-reverse" : "row",
       justifyContent: "space-between",
       alignItems: "center",
       marginBottom: 14,
     },
-    sectionTitle: { fontSize: 16, fontFamily: "Inter_700Bold", color: colors.foreground },
+    sectionTitle: {
+      fontSize: 16,
+      fontFamily: "Inter_700Bold",
+      color: colors.foreground,
+    },
     seeAll: { fontSize: 13, fontFamily: "Inter_500Medium", color: colors.gold },
     card: {
       backgroundColor: colors.card,
@@ -133,11 +149,11 @@ export default function DashboardScreen() {
       shadowOffset: { width: 0, height: 2 },
       elevation: 2,
     },
-    cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 },
-    propType: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
+    cardTop: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: 12,
     },
     propTypeBadge: {
       backgroundColor: colors.muted,
@@ -145,14 +161,41 @@ export default function DashboardScreen() {
       paddingHorizontal: 8,
       paddingVertical: 3,
     },
-    propTypeText: { fontSize: 12, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
-    propPrice: { fontSize: 17, fontFamily: "Inter_700Bold", color: colors.foreground },
-    propCurrency: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
-    propTitle: { fontSize: 14, fontFamily: "Inter_500Medium", color: colors.foreground, marginBottom: 4 },
-    propAddress: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 12 },
-    statsRow: { flexDirection: "row", gap: 16, marginBottom: 12 },
+    propTypeText: {
+      fontSize: 12,
+      fontFamily: "Inter_500Medium",
+      color: colors.mutedForeground,
+    },
+    propPrice: {
+      fontSize: 17,
+      fontFamily: "Inter_700Bold",
+      color: colors.foreground,
+      textAlign: isAr ? "right" : "left",
+    },
+    propCurrency: {
+      fontSize: 12,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      textAlign: isAr ? "right" : "left",
+    },
+    propAddress: {
+      fontSize: 13,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      marginBottom: 12,
+      textAlign: isAr ? "right" : "left",
+    },
+    statsRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      gap: 16,
+      marginBottom: 12,
+    },
     statItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-    statText: { fontSize: 13, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
+    statText: {
+      fontSize: 13,
+      fontFamily: "Inter_500Medium",
+      color: colors.mutedForeground,
+    },
     platformRow: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
     platformPill: {
       borderRadius: 6,
@@ -188,13 +231,18 @@ export default function DashboardScreen() {
       shadowOffset: { width: 0, height: 4 },
       elevation: 8,
     },
-    emptyState: {
-      alignItems: "center",
-      paddingVertical: 48,
-      gap: 12,
+    emptyState: { alignItems: "center", paddingVertical: 48, gap: 12 },
+    emptyTitle: {
+      fontSize: 16,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.foreground,
     },
-    emptyTitle: { fontSize: 16, fontFamily: "Inter_600SemiBold", color: colors.foreground },
-    emptySubtitle: { fontSize: 14, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: "center" },
+    emptySubtitle: {
+      fontSize: 14,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      textAlign: "center",
+    },
     emptyBtn: {
       backgroundColor: colors.navy,
       borderRadius: 12,
@@ -202,11 +250,16 @@ export default function DashboardScreen() {
       paddingVertical: 12,
       marginTop: 8,
     },
-    emptyBtnText: { color: "#FFFFFF", fontFamily: "Inter_600SemiBold", fontSize: 15 },
+    emptyBtnText: {
+      color: "#FFFFFF",
+      fontFamily: "Inter_600SemiBold",
+      fontSize: 15,
+    },
   });
 
   function renderCard(p: Property) {
     const unread = unreadLeads(p);
+    const priceLocale = isAr ? "ar-SA" : "en-US";
     return (
       <Pressable
         key={p.id}
@@ -216,18 +269,15 @@ export default function DashboardScreen() {
         <View style={styles.cardTop}>
           <View>
             <View style={styles.propTypeBadge}>
-              <Text style={styles.propTypeText}>{PROPERTY_TYPE_LABELS[p.type]}</Text>
+              <Text style={styles.propTypeText}>{t.propertyTypes[p.type]}</Text>
             </View>
           </View>
-          <View style={{ alignItems: "flex-end" }}>
-            <Text style={styles.propPrice}>
-              {p.price.toLocaleString("ar-SA")}
-            </Text>
-            <Text style={styles.propCurrency}>ريال سعودي</Text>
+          <View style={{ alignItems: isAr ? "flex-start" : "flex-end" }}>
+            <Text style={styles.propPrice}>{p.price.toLocaleString(priceLocale)}</Text>
+            <Text style={styles.propCurrency}>{t.dashboard.sar}</Text>
           </View>
         </View>
 
-        {p.title && <Text style={styles.propTitle}>{p.title}</Text>}
         <Text style={styles.propAddress} numberOfLines={1}>
           {p.location.district ? `${p.location.district}، ` : ""}{p.location.city}
         </Text>
@@ -239,7 +289,7 @@ export default function DashboardScreen() {
           </View>
           <View style={styles.statItem}>
             <MaterialIcons name="phone" size={14} color={colors.mutedForeground} />
-            <Text style={styles.statText}>{totalLeads(p)} عميل</Text>
+            <Text style={styles.statText}>{t.dashboard.leadsCount(totalLeads(p))}</Text>
             {unread > 0 && (
               <View style={styles.unreadBubble}>
                 <Text style={styles.unreadText}>{unread}</Text>
@@ -249,7 +299,7 @@ export default function DashboardScreen() {
           {p.area && (
             <View style={styles.statItem}>
               <MaterialIcons name="square-foot" size={14} color={colors.mutedForeground} />
-              <Text style={styles.statText}>{p.area} م²</Text>
+              <Text style={styles.statText}>{p.area} {isAr ? "م²" : "m²"}</Text>
             </View>
           )}
         </View>
@@ -296,7 +346,7 @@ export default function DashboardScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.greeting}>مرحباً</Text>
+            <Text style={styles.greeting}>{t.dashboard.greeting}</Text>
             <Text style={styles.appName}>RKZ</Text>
           </View>
           <Pressable style={styles.notifBtn}>
@@ -313,23 +363,23 @@ export default function DashboardScreen() {
           <View style={styles.kpi}>
             <View style={[styles.kpiDot, { backgroundColor: "#4ADE80" }]} />
             <Text style={styles.kpiValue}>{publishedCount}</Text>
-            <Text style={styles.kpiLabel}>منشور</Text>
+            <Text style={styles.kpiLabel}>{t.dashboard.published}</Text>
           </View>
           <View style={styles.kpi}>
             <View style={[styles.kpiDot, { backgroundColor: colors.gold }]} />
             <Text style={styles.kpiValue}>{allViews.toLocaleString()}</Text>
-            <Text style={styles.kpiLabel}>مشاهدة</Text>
+            <Text style={styles.kpiLabel}>{t.dashboard.views}</Text>
           </View>
           <View style={styles.kpi}>
             <View style={[styles.kpiDot, { backgroundColor: "#60A5FA" }]} />
             <Text style={styles.kpiValue}>{allLeads}</Text>
-            <Text style={styles.kpiLabel}>عميل</Text>
+            <Text style={styles.kpiLabel}>{t.dashboard.leads}</Text>
           </View>
           {publishingCount > 0 && (
             <View style={styles.kpi}>
               <View style={[styles.kpiDot, { backgroundColor: "#FCD34D" }]} />
               <Text style={styles.kpiValue}>{publishingCount}</Text>
-              <Text style={styles.kpiLabel}>جارٍ النشر</Text>
+              <Text style={styles.kpiLabel}>{t.dashboard.publishing}</Text>
             </View>
           )}
         </View>
@@ -343,19 +393,19 @@ export default function DashboardScreen() {
       >
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>عقاراتي</Text>
+            <Text style={styles.sectionTitle}>{t.dashboard.myProperties}</Text>
             <Pressable onPress={() => router.push("/(tabs)/listings")}>
-              <Text style={styles.seeAll}>عرض الكل</Text>
+              <Text style={styles.seeAll}>{t.dashboard.seeAll}</Text>
             </Pressable>
           </View>
 
           {properties.length === 0 ? (
             <View style={styles.emptyState}>
               <MaterialIcons name="home-work" size={48} color={colors.mutedForeground} />
-              <Text style={styles.emptyTitle}>لا توجد عقارات بعد</Text>
-              <Text style={styles.emptySubtitle}>أضف عقارك الأول وانشره على جميع المنصات في ثوانٍ</Text>
+              <Text style={styles.emptyTitle}>{t.dashboard.emptyTitle}</Text>
+              <Text style={styles.emptySubtitle}>{t.dashboard.emptySubtitle}</Text>
               <Pressable style={styles.emptyBtn} onPress={() => router.push("/(tabs)/add")}>
-                <Text style={styles.emptyBtnText}>إضافة عقار</Text>
+                <Text style={styles.emptyBtnText}>{t.dashboard.addProperty}</Text>
               </Pressable>
             </View>
           ) : (

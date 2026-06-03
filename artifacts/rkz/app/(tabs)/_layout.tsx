@@ -9,25 +9,27 @@ import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
+import { useLocale } from "@/hooks/useLocale";
 
 function NativeTabLayout() {
+  const { t } = useLocale();
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>الرئيسية</Label>
+        <Label>{t.tabs.home}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="add">
         <Icon sf={{ default: "plus.circle", selected: "plus.circle.fill" }} />
-        <Label>إضافة</Label>
+        <Label>{t.tabs.add}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="listings">
         <Icon sf={{ default: "list.bullet", selected: "list.bullet.circle.fill" }} />
-        <Label>عقاراتي</Label>
+        <Label>{t.tabs.listings}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
         <Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
-        <Label>الإعدادات</Label>
+        <Label>{t.tabs.settings}</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -36,6 +38,7 @@ function NativeTabLayout() {
 function ClassicTabLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
+  const { t } = useLocale();
   const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
@@ -56,25 +59,16 @@ function ClassicTabLayout() {
         },
         tabBarBackground: () =>
           isIOS ? (
-            <BlurView
-              intensity={100}
-              tint={isDark ? "dark" : "light"}
-              style={StyleSheet.absoluteFill}
-            />
+            <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
           ) : isWeb ? (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: colors.background },
-              ]}
-            />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
           ) : null,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "الرئيسية",
+          title: t.tabs.home,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="house" tintColor={color} size={24} />
@@ -86,7 +80,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="add"
         options={{
-          title: "إضافة",
+          title: t.tabs.add,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="plus.circle" tintColor={color} size={24} />
@@ -98,7 +92,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="listings"
         options={{
-          title: "عقاراتي",
+          title: t.tabs.listings,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="list.bullet" tintColor={color} size={24} />
@@ -110,7 +104,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "الإعدادات",
+          title: t.tabs.settings,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="gearshape" tintColor={color} size={24} />
