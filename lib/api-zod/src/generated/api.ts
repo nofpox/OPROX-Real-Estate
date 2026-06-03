@@ -1842,6 +1842,63 @@ export const ListActiveSessionsResponse = zod.object({
 
 
 /**
+ * @summary List all custom roles for the current tenant
+ */
+export const ListCustomRolesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "color": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "createdAt": zod.string()
+})
+export const ListCustomRolesResponse = zod.array(ListCustomRolesResponseItem)
+
+
+/**
+ * @summary Create a custom role
+ */
+export const CreateCustomRoleBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().optional(),
+  "color": zod.string().optional(),
+  "permissions": zod.array(zod.string()).optional()
+})
+
+
+/**
+ * @summary Update a custom role
+ */
+export const UpdateCustomRoleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateCustomRoleBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().optional(),
+  "color": zod.string().optional(),
+  "permissions": zod.array(zod.string()).optional()
+})
+
+export const UpdateCustomRoleResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "color": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a custom role
+ */
+export const DeleteCustomRoleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary List all users
  */
 export const ListUsersResponseItem = zod.object({
@@ -1851,9 +1908,11 @@ export const ListUsersResponseItem = zod.object({
   "email": zod.string().nullish(),
   "phoneNumber": zod.string().nullish(),
   "role": zod.string(),
+  "customRoleId": zod.number().nullish(),
   "permissions": zod.array(zod.string()),
   "isActive": zod.boolean(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "invitePending": zod.boolean().optional()
 })
 export const ListUsersResponse = zod.array(ListUsersResponseItem)
 
@@ -1866,8 +1925,9 @@ export const CreateUserBody = zod.object({
   "displayName": zod.string(),
   "email": zod.string().optional(),
   "phoneNumber": zod.string().optional(),
-  "password": zod.string(),
+  "password": zod.string().optional(),
   "role": zod.string(),
+  "customRoleId": zod.number().nullish(),
   "permissions": zod.array(zod.string()).optional(),
   "isActive": zod.boolean().optional()
 })
@@ -1885,8 +1945,9 @@ export const UpdateUserBody = zod.object({
   "displayName": zod.string(),
   "email": zod.string().optional(),
   "phoneNumber": zod.string().optional(),
-  "password": zod.string(),
+  "password": zod.string().optional(),
   "role": zod.string(),
+  "customRoleId": zod.number().nullish(),
   "permissions": zod.array(zod.string()).optional(),
   "isActive": zod.boolean().optional()
 })
@@ -1898,9 +1959,11 @@ export const UpdateUserResponse = zod.object({
   "email": zod.string().nullish(),
   "phoneNumber": zod.string().nullish(),
   "role": zod.string(),
+  "customRoleId": zod.number().nullish(),
   "permissions": zod.array(zod.string()),
   "isActive": zod.boolean(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "invitePending": zod.boolean().optional()
 })
 
 
@@ -1926,9 +1989,11 @@ export const KillSwitchUserResponse = zod.object({
   "email": zod.string().nullish(),
   "phoneNumber": zod.string().nullish(),
   "role": zod.string(),
+  "customRoleId": zod.number().nullish(),
   "permissions": zod.array(zod.string()),
   "isActive": zod.boolean(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "invitePending": zod.boolean().optional()
 })
 
 

@@ -109,6 +109,15 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
   const permMatrix = settings.permissionMatrix ?? {};
   const roleMatrix: string[] | null = !isOwnerTierRole ? (permMatrix[role.id] ?? null) : null;
 
+  // User-level custom role permissions (stored in session, override static RBAC)
+  const userPerms: string[] = authUser?.permissions ?? [];
+  const userMatrix: string[] | null =
+    !isOwnerTierRole && roleMatrix === null && userPerms.length > 0 && !userPerms.includes("all")
+      ? userPerms
+      : null;
+
+  const effectiveMatrix = roleMatrix ?? userMatrix;
+
   const visibleNavItems = sortedNavItems.filter((item) => {
     // NavConfig visibility gate (owners bypass)
     if (!isOwnerTierRole) {
@@ -116,8 +125,8 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
       if (cfg && !cfg.visible) return false;
     }
     // Permission matrix overrides static RBAC for configurable roles
-    if (roleMatrix !== null) {
-      if (!roleMatrix.includes(item.href)) return false;
+    if (effectiveMatrix !== null) {
+      if (!effectiveMatrix.includes(item.href)) return false;
       // Still check module enablement
       if (item.featureKey !== null && !enabledNavKeys.has(item.featureKey)) return false;
       return true;

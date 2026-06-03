@@ -12,6 +12,7 @@ export const usersTable = pgTable("users", {
   phoneNumber:        text("phone_number"),
   passwordHash:       text("password_hash").notNull(),
   role:               text("role").notNull().default("staff"),
+  customRoleId:       integer("custom_role_id"),
   permissions:        text("permissions").notNull().default("[]"),
   isActive:           boolean("is_active").notNull().default(true),
   mustChangePassword: boolean("must_change_password").notNull().default(false),

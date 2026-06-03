@@ -1617,6 +1617,76 @@ paths:
         "403":
           description: Forbidden
 
+  /custom-roles:
+    get:
+      operationId: listCustomRoles
+      summary: List all custom roles for the current tenant
+      tags: [customRoles]
+      responses:
+        "200":
+          description: Custom roles list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomRole"
+    post:
+      operationId: createCustomRole
+      summary: Create a custom role
+      tags: [customRoles]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomRoleInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomRole"
+
+  /custom-roles/{id}:
+    put:
+      operationId: updateCustomRole
+      summary: Update a custom role
+      tags: [customRoles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomRoleInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomRole"
+    delete:
+      operationId: deleteCustomRole
+      summary: Delete a custom role
+      tags: [customRoles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /users:
     get:
       operationId: listUsers
@@ -4060,6 +4130,40 @@ components:
           items:
             $ref: "#/components/schemas/ActiveSession"
 
+    CustomRole:
+      type: object
+      required: [id, name, description, color, permissions, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+
+    CustomRoleInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+
     PmsUser:
       type: object
       required: [id, username, displayName, role, permissions, isActive, createdAt]
@@ -4078,6 +4182,9 @@ components:
           nullable: true
         role:
           type: string
+        customRoleId:
+          type: integer
+          nullable: true
         permissions:
           type: array
           items:
@@ -4086,10 +4193,12 @@ components:
           type: boolean
         createdAt:
           type: string
+        invitePending:
+          type: boolean
 
     UserInput:
       type: object
-      required: [username, displayName, password, role]
+      required: [username, displayName, role]
       properties:
         username:
           type: string
@@ -4103,6 +4212,9 @@ components:
           type: string
         role:
           type: string
+        customRoleId:
+          type: integer
+          nullable: true
         permissions:
           type: array
           items:

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, usersTable, tenantsTable } from "@workspace/db";
+import { db, usersTable, tenantsTable, customRolesTable } from "@workspace/db";
 import { eq, sql, and } from "drizzle-orm";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
@@ -411,6 +411,16 @@ router.post("/auth/login", async (req, res) => {
     }
   }
 
+  // If user has a custom role, load its current permissions into the session
+  // (admins/owners with permissions=["all"] bypass this)
+  let effectivePermissions: string[] = (() => { try { return JSON.parse(user.permissions); } catch { return []; } })();
+  if (user.customRoleId) {
+    const [cRole] = await db.select().from(customRolesTable).where(eq(customRolesTable.id, user.customRoleId));
+    if (cRole) {
+      try { effectivePermissions = JSON.parse(cRole.permissions); } catch { /* keep existing */ }
+    }
+  }
+
   const sessionUser: SessionUser = {
     id: user.id,
     username: user.username,
@@ -418,7 +428,7 @@ router.post("/auth/login", async (req, res) => {
     email: user.email ?? null,
     phoneNumber: user.phoneNumber ?? null,
     role: user.role,
-    permissions: (() => { try { return JSON.parse(user.permissions); } catch { return []; } })(),
+    permissions: effectivePermissions,
     isActive: user.isActive,
     createdAt: user.createdAt.toISOString(),
     mustChangePassword: user.mustChangePassword ?? false,

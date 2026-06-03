@@ -28,3 +28,4 @@ export * from "./partner";
 export * from "./conversations";
 export * from "./messages";
 export * from "./portalProperties";
+export * from "./customRoles";

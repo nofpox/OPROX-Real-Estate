@@ -763,6 +763,22 @@ export interface ActiveSessionList {
   sessions: ActiveSession[];
 }
 
+export interface CustomRole {
+  id: number;
+  name: string;
+  description: string;
+  color: string;
+  permissions: string[];
+  createdAt: string;
+}
+
+export interface CustomRoleInput {
+  name: string;
+  description?: string;
+  color?: string;
+  permissions?: string[];
+}
+
 export interface PmsUser {
   id: number;
   username: string;
@@ -770,9 +786,11 @@ export interface PmsUser {
   email?: string | null;
   phoneNumber?: string | null;
   role: string;
+  customRoleId?: number | null;
   permissions: string[];
   isActive: boolean;
   createdAt: string;
+  invitePending?: boolean;
 }
 
 export interface UserInput {
@@ -780,8 +798,9 @@ export interface UserInput {
   displayName: string;
   email?: string;
   phoneNumber?: string;
-  password: string;
+  password?: string;
   role: string;
+  customRoleId?: number | null;
   permissions?: string[];
   isActive?: boolean;
 }

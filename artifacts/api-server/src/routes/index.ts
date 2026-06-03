@@ -33,6 +33,7 @@ import portalRouter from "./portal";
 import sitemapRouter from "./sitemap";
 import archivingRouter from "./archiving";
 import cmsRouter from "./cms";
+import customRolesRouter from "./custom-roles";
 import partnerRouter from "./partner";
 import openaiRouter from "./openai/index.js";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
@@ -161,6 +162,7 @@ router.use(portalRouter);
 router.use(sitemapRouter);
 router.use(archivingRouter);
 router.use(cmsRouter);
+router.use(customRolesRouter);
 router.use(partnerRouter);
 router.use(openaiRouter);
 

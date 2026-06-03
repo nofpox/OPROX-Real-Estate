@@ -4,6 +4,8 @@ import { useRole } from "@/contexts/role-context";
 import {
   useListUsers, useCreateUser, useUpdateUser, useDeleteUser, useKillSwitchUser,
   getListUsersQueryKey, type PmsUser,
+  useListCustomRoles, useCreateCustomRole, useUpdateCustomRole, useDeleteCustomRole,
+  getListCustomRolesQueryKey, type CustomRole,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +23,7 @@ import {
   Users, Plus, Search, MoreHorizontal, Pencil, Trash2,
   ShieldCheck, Wrench, Sparkles, Building, HardHat,
   Eye, EyeOff, CheckCircle2, XCircle, ChevronDown, UserCog,
-  ShieldOff, ShieldAlert,
+  ShieldOff, ShieldAlert, Key, Mail, Loader2, Check,
 } from "lucide-react";
 
 // ─── Role definitions ─────────────────────────────────────────────────────────
@@ -149,7 +151,7 @@ function SystemRoleBadge({ role }: { role: string }) {
 
 const EMPTY_USER_FORM = {
   username: "", displayName: "", email: "", password: "", confirmPassword: "",
-  role: "staff", isActive: true,
+  role: "staff", customRoleId: null as number | null, isActive: true,
 };
 
 function SystemAccounts() {
@@ -161,6 +163,7 @@ function SystemAccounts() {
   const creatableRoles = SYSTEM_ROLES.filter(r => r.level < callerLevel);
 
   const { data: users, isLoading } = useListUsers();
+  const { data: customRoles = [] } = useListCustomRoles();
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
@@ -198,7 +201,7 @@ function SystemAccounts() {
 
   function openEdit(user: PmsUser) {
     setEditing(user);
-    setForm({ username: user.username, displayName: user.displayName, email: user.email ?? "", password: "", confirmPassword: "", role: user.role, isActive: user.isActive });
+    setForm({ username: user.username, displayName: user.displayName, email: user.email ?? "", password: "", confirmPassword: "", role: user.role, customRoleId: (user as any).customRoleId ?? null, isActive: user.isActive });
     setShowPwd(false);
     setDialogOpen(true);
   }
@@ -206,13 +209,14 @@ function SystemAccounts() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.username.trim() || !form.displayName.trim()) return;
-    if (!editing && !form.password) return;
     if (form.password && form.password !== form.confirmPassword) {
       toast({ title: "كلمات المرور غير متطابقة", variant: "destructive" }); return;
     }
     const payload: Record<string, unknown> = {
       username: form.username.trim(), displayName: form.displayName.trim(),
-      email: form.email.trim() || undefined, role: form.role, isActive: form.isActive,
+      email: form.email.trim() || undefined, role: form.role,
+      customRoleId: form.customRoleId ?? undefined,
+      isActive: form.isActive,
     };
     if (form.password) payload.password = form.password;
 
@@ -223,8 +227,15 @@ function SystemAccounts() {
       });
     } else {
       createUser.mutate({ data: payload as never }, {
-        onSuccess: () => { toast({ title: "تم إضافة الحساب بنجاح" }); invalidate(); setDialogOpen(false); },
-        onError:   () => { toast({ title: "فشل في إضافة الحساب", variant: "destructive" }); },
+        onSuccess: (res) => {
+          const msg = (res as any)?.invitePending
+            ? "تم إنشاء الحساب وإرسال دعوة الإعداد بالبريد الإلكتروني"
+            : "تم إضافة الحساب بنجاح";
+          toast({ title: msg });
+          invalidate();
+          setDialogOpen(false);
+        },
+        onError: () => { toast({ title: "فشل في إضافة الحساب", variant: "destructive" }); },
       });
     }
   }
@@ -458,9 +469,40 @@ function SystemAccounts() {
               </Select>
             </div>
 
+            {customRoles.length > 0 && (
+              <div className="space-y-1.5">
+                <Label htmlFor="su-customRole">الصلاحيات المخصصة (اختياري)</Label>
+                <Select
+                  value={form.customRoleId ? String(form.customRoleId) : "__none__"}
+                  onValueChange={v => setForm({ ...form, customRoleId: v === "__none__" ? null : Number(v) })}
+                >
+                  <SelectTrigger id="su-customRole">
+                    <SelectValue placeholder="بدون صلاحيات مخصصة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">
+                      <span className="text-muted-foreground">بدون صلاحيات مخصصة</span>
+                    </SelectItem>
+                    {customRoles.map(r => (
+                      <SelectItem key={r.id} value={String(r.id)}>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: r.color }} />
+                          <span>{r.name}</span>
+                          <span className="text-muted-foreground text-xs">· {r.permissions.length} صلاحية</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  تحدد الصلاحيات المخصصة الصفحات التي يمكن للمستخدم الوصول إليها
+                </p>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label htmlFor="su-password">
-                {editing ? "كلمة مرور جديدة (اتركها فارغة للإبقاء)" : "كلمة المرور *"}
+                {editing ? "كلمة مرور جديدة (اتركها فارغة للإبقاء)" : "كلمة المرور (اتركها فارغة لإرسال دعوة بالبريد)"}
               </Label>
               <div className="relative">
                 <Input
@@ -468,8 +510,7 @@ function SystemAccounts() {
                   type={showPwd ? "text" : "password"}
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
-                  required={!editing}
-                  placeholder={editing ? "••••••••" : "كلمة مرور قوية"}
+                  placeholder={editing ? "••••••••" : "اتركها فارغة لدعوة تلقائية"}
                   dir="ltr"
                   className="pe-10"
                 />
@@ -477,6 +518,17 @@ function SystemAccounts() {
                   {showPwd ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </button>
               </div>
+              {!editing && !form.password && form.email && (
+                <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                  <Mail className="h-3.5 w-3.5" />
+                  سيتم إرسال دعوة تفعيل تلقائية إلى البريد الإلكتروني
+                </p>
+              )}
+              {!editing && !form.password && !form.email && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  أدخل البريد الإلكتروني أو كلمة مرور للمتابعة
+                </p>
+              )}
             </div>
 
             {form.password && (
@@ -509,8 +561,288 @@ function SystemAccounts() {
             </div>
 
             <DialogFooter>
-              <Button type="submit" disabled={createUser.isPending || updateUser.isPending}>
-                {editing ? "حفظ التغييرات" : "إضافة الحساب"}
+              <Button
+                type="submit"
+                disabled={
+                  createUser.isPending || updateUser.isPending ||
+                  (!editing && !form.password && !form.email)
+                }
+              >
+                {(createUser.isPending || updateUser.isPending) && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                {editing ? "حفظ التغييرات" : (!form.password && form.email ? "إنشاء الحساب وإرسال الدعوة" : "إضافة الحساب")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ─── Permissions route list (maps href → friendly label) ──────────────────────
+
+const PERMISSION_ROUTES = [
+  { href: "/",                  label: "لوحة التحكم",           labelEn: "Dashboard" },
+  { href: "/properties",        label: "العقارات",               labelEn: "Properties" },
+  { href: "/maintenance",       label: "الصيانة",               labelEn: "Maintenance" },
+  { href: "/facilities",        label: "المرافق",               labelEn: "Facilities" },
+  { href: "/staff",             label: "الموظفون",              labelEn: "Staff" },
+  { href: "/tasks",             label: "المهام",                labelEn: "Tasks" },
+  { href: "/guest-requests",    label: "طلبات الضيوف",          labelEn: "Guest Requests" },
+  { href: "/activity-log",      label: "سجل النشاط",            labelEn: "Activity Log" },
+  { href: "/user-management",   label: "إدارة الحسابات",        labelEn: "User Management" },
+  { href: "/admin-settings",    label: "إعدادات النظام",        labelEn: "Admin Settings" },
+  { href: "/security-dashboard",label: "لوحة الأمن",           labelEn: "Security Dashboard" },
+  { href: "/analytics",         label: "التحليلات",             labelEn: "Analytics" },
+  { href: "/support-tickets",   label: "تذاكر الدعم",          labelEn: "Support Tickets" },
+  { href: "/content-manager",   label: "إدارة المحتوى",        labelEn: "Content Manager" },
+  { href: "/website-settings",  label: "إعدادات الموقع",       labelEn: "Website Settings" },
+];
+
+const ROLE_COLORS = [
+  "#6366f1", "#f59e0b", "#10b981", "#3b82f6", "#ef4444",
+  "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#64748b",
+];
+
+const EMPTY_ROLE_FORM = { name: "", description: "", color: "#6366f1", permissions: [] as string[] };
+
+function RolesLibrary() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { data: roles = [], isLoading } = useListCustomRoles();
+  const createRole = useCreateCustomRole();
+  const updateRole = useUpdateCustomRole();
+  const deleteRole = useDeleteCustomRole();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing]       = useState<CustomRole | null>(null);
+  const [form, setForm]             = useState({ ...EMPTY_ROLE_FORM });
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: getListCustomRolesQueryKey() });
+
+  function openAdd() {
+    setEditing(null);
+    setForm({ ...EMPTY_ROLE_FORM });
+    setDialogOpen(true);
+  }
+
+  function openEdit(role: CustomRole) {
+    setEditing(role);
+    setForm({ name: role.name, description: role.description, color: role.color, permissions: [...role.permissions] });
+    setDialogOpen(true);
+  }
+
+  function togglePermission(href: string) {
+    setForm(f => ({
+      ...f,
+      permissions: f.permissions.includes(href)
+        ? f.permissions.filter(p => p !== href)
+        : [...f.permissions, href],
+    }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    const payload = { name: form.name.trim(), description: form.description, color: form.color, permissions: form.permissions };
+    if (editing) {
+      updateRole.mutate({ id: editing.id, data: payload }, {
+        onSuccess: () => { toast({ title: "تم تحديث الصلاحية" }); invalidate(); setDialogOpen(false); },
+        onError:   () => { toast({ title: "فشل في التحديث", variant: "destructive" }); },
+      });
+    } else {
+      createRole.mutate({ data: payload }, {
+        onSuccess: () => { toast({ title: "تم إنشاء الصلاحية" }); invalidate(); setDialogOpen(false); },
+        onError:   () => { toast({ title: "فشل في الإنشاء", variant: "destructive" }); },
+      });
+    }
+  }
+
+  function handleDelete(role: CustomRole) {
+    if (!confirm(`هل أنت متأكد من حذف صلاحية "${role.name}"؟`)) return;
+    deleteRole.mutate({ id: role.id }, {
+      onSuccess: () => { toast({ title: "تم الحذف" }); invalidate(); },
+      onError:   () => { toast({ title: "فشل في الحذف", variant: "destructive" }); },
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          أنشئ أدواراً مخصصة وخصص لها الصفحات التي يُسمح بالوصول إليها
+        </p>
+        <Button onClick={openAdd} size="sm" className="shrink-0 font-semibold shadow-sm">
+          <Plus className="me-2 h-4 w-4" />إضافة دور جديد
+        </Button>
+      </div>
+
+      {/* Roles grid */}
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
+        </div>
+      ) : roles.length === 0 ? (
+        <Card className="shadow-sm border-border/50">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-4">
+            <div className="p-4 rounded-full bg-primary/10">
+              <Key className="h-8 w-8 text-primary" />
+            </div>
+            <div className="max-w-sm">
+              <p className="font-semibold text-lg">لا توجد أدوار مخصصة</p>
+              <p className="text-muted-foreground text-sm mt-1">
+                أنشئ دوراً مخصصاً وحدد الصفحات التي يُسمح لأعضاء هذا الدور بالوصول إليها.
+              </p>
+            </div>
+            <Button onClick={openAdd} variant="outline">
+              <Plus className="me-2 h-4 w-4" />إنشاء أول دور
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {roles.map(role => (
+            <Card key={role.id} className="shadow-sm border-border/50 hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg shrink-0" style={{ background: role.color + "22" }}>
+                      <Key className="h-4 w-4" style={{ color: role.color }} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate">{role.name}</p>
+                      {role.description && <p className="text-xs text-muted-foreground truncate">{role.description}</p>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => openEdit(role)} className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button onClick={() => handleDelete(role)} className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-2">
+                <div className="flex flex-wrap gap-1">
+                  {role.permissions.length === 0 ? (
+                    <span className="text-xs text-muted-foreground italic">لا توجد صلاحيات</span>
+                  ) : role.permissions.map(p => {
+                    const route = PERMISSION_ROUTES.find(r => r.href === p);
+                    return (
+                      <span key={p} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium" style={{ background: role.color + "18", color: role.color }}>
+                        {route?.label ?? p}
+                      </span>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2.5">
+                  {role.permissions.length} صلاحية من {PERMISSION_ROUTES.length}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Add/Edit dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-serif">
+              {editing ? `تعديل: ${editing.name}` : "إنشاء دور جديد"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-5 pt-1">
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cr-name">اسم الدور *</Label>
+              <Input
+                id="cr-name" value={form.name} required
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                placeholder="مثال: مدير المبيعات، سكرتير، رئيس قسم…"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cr-desc">الوصف (اختياري)</Label>
+              <Input
+                id="cr-desc" value={form.description}
+                onChange={e => setForm({ ...form, description: e.target.value })}
+                placeholder="وصف مختصر لمهام هذا الدور"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>اللون</Label>
+              <div className="flex flex-wrap gap-2">
+                {ROLE_COLORS.map(c => (
+                  <button
+                    key={c} type="button"
+                    onClick={() => setForm({ ...form, color: c })}
+                    className="w-8 h-8 rounded-full border-2 transition-all"
+                    style={{
+                      background: c,
+                      borderColor: form.color === c ? c : "transparent",
+                      boxShadow: form.color === c ? `0 0 0 2px white, 0 0 0 4px ${c}` : undefined,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>الصفحات المسموح بالوصول إليها</Label>
+                <div className="flex gap-2">
+                  <button type="button" className="text-xs text-primary hover:underline" onClick={() => setForm({ ...form, permissions: PERMISSION_ROUTES.map(r => r.href) })}>
+                    تحديد الكل
+                  </button>
+                  <span className="text-muted-foreground">·</span>
+                  <button type="button" className="text-xs text-muted-foreground hover:underline" onClick={() => setForm({ ...form, permissions: [] })}>
+                    إلغاء الكل
+                  </button>
+                </div>
+              </div>
+              <div className="border rounded-lg divide-y max-h-64 overflow-y-auto">
+                {PERMISSION_ROUTES.map(route => {
+                  const checked = form.permissions.includes(route.href);
+                  return (
+                    <label
+                      key={route.href}
+                      className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
+                    >
+                      <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={checked}
+                        onClick={() => togglePermission(route.href)}
+                        className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                          checked
+                            ? "border-transparent text-white"
+                            : "border-muted-foreground/40 text-transparent"
+                        }`}
+                        style={checked ? { background: form.color, borderColor: form.color } : undefined}
+                      >
+                        <Check className="h-2.5 w-2.5" />
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium">{route.label}</span>
+                        <span className="text-xs text-muted-foreground ms-1.5">{route.labelEn}</span>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">{form.permissions.length} من {PERMISSION_ROUTES.length} صفحة محددة</p>
+            </div>
+
+            <DialogFooter>
+              <Button type="submit" disabled={createRole.isPending || updateRole.isPending}>
+                {(createRole.isPending || updateRole.isPending) && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                {editing ? "حفظ التغييرات" : "إنشاء الدور"}
               </Button>
             </DialogFooter>
           </form>
@@ -524,7 +856,7 @@ function SystemAccounts() {
 
 export default function UserManagement() {
   const { t } = useTranslation();
-  const [pageTab, setPageTab] = useState<"field" | "system">("system");
+  const [pageTab, setPageTab] = useState<"field" | "system" | "roles">("system");
 
   return (
     <div className="space-y-6">
@@ -540,22 +872,30 @@ export default function UserManagement() {
       </div>
 
       {/* Page-level tab switcher */}
-      <div className="flex gap-1 p-1 bg-muted rounded-xl w-full max-w-xs">
-        <button
-          onClick={() => setPageTab("field")}
-          className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all ${pageTab === "field" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-        >
-          موظفو الميدان
-        </button>
+      <div className="flex gap-1 p-1 bg-muted rounded-xl w-full max-w-sm">
         <button
           onClick={() => setPageTab("system")}
-          className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all ${pageTab === "system" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${pageTab === "system" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           حسابات النظام
+        </button>
+        <button
+          onClick={() => setPageTab("roles")}
+          className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${pageTab === "roles" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          مكتبة الأدوار
+        </button>
+        <button
+          onClick={() => setPageTab("field")}
+          className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${pageTab === "field" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          الميدان
         </button>
       </div>
 
       {pageTab === "system" && <SystemAccounts />}
+
+      {pageTab === "roles" && <RolesLibrary />}
 
       {pageTab === "field" && (
         <Card className="shadow-sm border-border/50">
