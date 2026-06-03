@@ -9,6 +9,7 @@ import {
   Animated,
   Image,
   Keyboard,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -65,6 +66,8 @@ export default function AddPropertyScreen() {
 
   const progressAnim = useRef(new Animated.Value(0)).current;
   const [publishedPlatforms, setPublishedPlatforms] = useState<PlatformType[]>([]);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authAgreed, setAuthAgreed] = useState(false);
 
   async function pickImage() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -318,6 +321,23 @@ export default function AddPropertyScreen() {
     doneSubtitle: { color: "rgba(255,255,255,0.55)", fontSize: 15, fontFamily: "Inter_400Regular", textAlign: "center", marginBottom: 40 },
     doneBtn: { backgroundColor: colors.gold, borderRadius: 14, height: 54, paddingHorizontal: 40, alignItems: "center", justifyContent: "center" },
     doneBtnText: { fontSize: 16, fontFamily: "Inter_700Bold", color: colors.navy },
+    // Digital Authorization Modal
+    modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
+    modalSheet: { backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 36 },
+    modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: "center", marginBottom: 20 },
+    modalTitle: { fontSize: 18, fontFamily: "Inter_700Bold", color: colors.foreground, textAlign: "center", marginBottom: 16 },
+    modalDivider: { height: 1, backgroundColor: colors.border, marginBottom: 16 },
+    modalBody: { backgroundColor: colors.muted, borderRadius: 14, padding: 16, marginBottom: 20 },
+    modalBodyText: { fontSize: 14, fontFamily: "Inter_400Regular", color: colors.foreground, lineHeight: 22, textAlign: "right" },
+    modalCheckRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 24, paddingHorizontal: 4 },
+    modalCheckBox: { width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: colors.navy, alignItems: "center", justifyContent: "center" },
+    modalCheckBoxChecked: { backgroundColor: colors.navy },
+    modalCheckLabel: { flex: 1, fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground, textAlign: "right" },
+    modalConfirmBtn: { backgroundColor: colors.gold, borderRadius: 14, height: 54, alignItems: "center", justifyContent: "center", shadowColor: colors.gold, shadowOpacity: 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 5 },
+    modalConfirmBtnDisabled: { opacity: 0.35 },
+    modalConfirmBtnText: { fontSize: 16, fontFamily: "Inter_700Bold", color: colors.navy },
+    modalCancelBtn: { marginTop: 12, height: 44, alignItems: "center", justifyContent: "center" },
+    modalCancelBtnText: { fontSize: 14, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
   });
 
   // ── Publishing overlay ─────────────────────────────────────────────────────
@@ -521,13 +541,57 @@ export default function AddPropertyScreen() {
           </View>
         </View>
 
-        {/* Publish */}
-        <Pressable style={({ pressed }) => [S.publishBtn, !canPublish && S.publishBtnDisabled, pressed && canPublish && { opacity: 0.88 }]}
-          onPress={handlePublish} disabled={!canPublish}>
+        {/* Publish — opens authorization modal */}
+        <Pressable
+          style={({ pressed }) => [S.publishBtn, !canPublish && S.publishBtnDisabled, pressed && canPublish && { opacity: 0.88 }]}
+          onPress={() => { if (canPublish) { setAuthAgreed(false); setShowAuthModal(true); } }}
+          disabled={!canPublish}
+        >
           <Text style={S.publishBtnText}>نشر على {selectedPlatforms.size} منصات</Text>
         </Pressable>
 
       </ScrollView>
+
+      {/* ── Digital Authorization Modal ─────────────────────────────────────── */}
+      <Modal visible={showAuthModal} transparent animationType="slide" onRequestClose={() => setShowAuthModal(false)}>
+        <Pressable style={S.modalOverlay} onPress={() => setShowAuthModal(false)}>
+          <Pressable onPress={(e) => e.stopPropagation()} style={S.modalSheet}>
+            <View style={S.modalHandle} />
+
+            <Text style={S.modalTitle}>اتفاقية التفويض الرقمي</Text>
+            <View style={S.modalDivider} />
+
+            <View style={S.modalBody}>
+              <Text style={S.modalBodyText}>
+                بتأكيدك، تفوّض منصة <Text style={{ fontFamily: "Inter_700Bold" }}>Rkz</Text> للتصرف بوصفها وكيلك الرقمي لنشر عقارك وإدارته وتحديث بياناته على المنصات العقارية الكبرى (عقار، بيوت، وصلة، Property Finder وغيرها) لتحقيق أقصى قدر من الوصول.{"\n\n"}نلتزم بدقة المعلومات المقدمة والتعامل مع الاستفسارات الأولية نيابةً عنك. بموافقتك، تُقرّ بصحة جميع البيانات التي أدخلتها.
+              </Text>
+            </View>
+
+            <Pressable
+              style={S.modalCheckRow}
+              onPress={() => { setAuthAgreed((v) => !v); Haptics.selectionAsync(); }}
+            >
+              <View style={[S.modalCheckBox, authAgreed && S.modalCheckBoxChecked]}>
+                {authAgreed && <MaterialIcons name="check" size={16} color="#FFFFFF" />}
+              </View>
+              <Text style={S.modalCheckLabel}>أوافق على شروط التفويض الرقمي</Text>
+            </Pressable>
+
+            <Pressable
+              style={[S.modalConfirmBtn, !authAgreed && S.modalConfirmBtnDisabled]}
+              disabled={!authAgreed}
+              onPress={() => { setShowAuthModal(false); handlePublish(); }}
+            >
+              <Text style={S.modalConfirmBtnText}>تأكيد ونشر العقار</Text>
+            </Pressable>
+
+            <Pressable style={S.modalCancelBtn} onPress={() => setShowAuthModal(false)}>
+              <Text style={S.modalCancelBtnText}>إلغاء</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
     </View>
   );
 }
