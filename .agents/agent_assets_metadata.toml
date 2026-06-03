@@ -1,8 +1,13 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "9_R3BTp1CuVr-MDvdaJtk"
 uri = "file://artifacts/rkz/assets/images/icon.png"
 type = "image"
 title = "generated_image"
+
+[[outputs]]
+id = "jCktAW9goz3sn4e0SeBUs"
+uri = "file://artifacts/rkz/qr.png"
+type = "image"
+title = "RKZ — Scan with Expo Go"
