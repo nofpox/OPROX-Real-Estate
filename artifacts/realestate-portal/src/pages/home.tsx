@@ -5,7 +5,7 @@ import { useGetListings } from '@workspace/api-client-react';
 import { useLanguage } from '@/lib/i18n';
 import { useCms } from '@/lib/cms-context';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Building2, Users, TrendingUp, Award } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Building2, Users, TrendingUp, Award, CheckCircle2 } from 'lucide-react';
 import { ListingCard } from '@/components/listing-card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -13,10 +13,17 @@ const STAT_ICONS = [Building2, Users, TrendingUp, Award];
 
 type LiveStats = Record<string, number>;
 
+type LeadForm = { name: string; email: string; phone: string };
+type LeadStatus = 'idle' | 'submitting' | 'success' | 'error';
+
 export const Home: React.FC = () => {
   const { isRtl } = useLanguage();
   const { content } = useCms();
   const [liveStats, setLiveStats] = useState<LiveStats>({});
+
+  // Lead capture form state
+  const [lead, setLead] = useState<LeadForm>({ name: '', email: '', phone: '' });
+  const [leadStatus, setLeadStatus] = useState<LeadStatus>('idle');
 
   useEffect(() => {
     fetch('/api/cms/live-stats')
@@ -33,6 +40,32 @@ export const Home: React.FC = () => {
 
   const featuredListings = featuredResponse?.data || [];
   const { hero, stats, services, cta, branding } = content;
+
+  const handleLeadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!lead.name || !lead.email) return;
+    setLeadStatus('submitting');
+    try {
+      const res = await fetch('/api/guest/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name:    lead.name,
+          email:   lead.email,
+          phone:   lead.phone,
+          subject: isRtl ? 'استفسار شراكة' : 'Partnership Inquiry',
+          message: isRtl
+            ? 'طلب شراكة جديد مُقدَّم عبر الصفحة الرئيسية.'
+            : 'New partnership inquiry submitted via homepage.',
+        }),
+      });
+      if (!res.ok) throw new Error('failed');
+      setLeadStatus('success');
+      setLead({ name: '', email: '', phone: '' });
+    } catch {
+      setLeadStatus('error');
+    }
+  };
 
   return (
     <div className="flex flex-col w-full">
@@ -201,6 +234,138 @@ export const Home: React.FC = () => {
                 </Link>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Interested in Partnering? ──────────────────────────────────────────── */}
+      <section className="py-28 bg-background">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+            {/* Left — copy */}
+            <div>
+              <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-4">
+                {isRtl ? 'انضم إلينا' : 'New Partners'}
+              </p>
+              <h2 className="text-3xl md:text-4xl font-bold text-primary mb-5 leading-tight">
+                {isRtl ? 'مهتم بالتعاون معنا؟' : 'Interested in Partnering?'}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                {isRtl
+                  ? 'إذا كنت تمتلك عقارات وتبحث عن شركة إدارة محترفة، أو ترغب في الاستثمار ضمن محفظتنا — أخبرنا بذلك وسيتواصل معك فريقنا خلال 24 ساعة.'
+                  : "Whether you own properties looking for professional management, or want to explore investment opportunities within our portfolio — share your interest and our team will be in touch within 24 hours."}
+              </p>
+
+              {/* Distinguishing note from Investor Portal */}
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-secondary/5 border border-secondary/15">
+                <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <Award className="h-4 w-4 text-secondary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-primary mb-1">
+                    {isRtl ? 'هل أنت عميل ركز حالي؟' : 'Already a Rakez client?'}
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {isRtl
+                      ? 'هذا النموذج مخصص للشركاء الجدد فقط. للوصول إلى عقاراتك وتقاريرك المالية، '
+                      : 'This form is for new inquiries only. To access your properties and financial reports, '}
+                    <Link href="/portal" className="text-secondary hover:underline font-medium">
+                      {isRtl ? 'سجّل الدخول إلى بوابتك ←' : 'sign in to your portal →'}
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right — form */}
+            <div className="bg-card rounded-2xl border border-border/60 p-8 shadow-sm">
+              {leadStatus === 'success' ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center">
+                    <CheckCircle2 className="h-8 w-8 text-secondary" />
+                  </div>
+                  <h3 className="text-lg font-bold text-primary">
+                    {isRtl ? 'شكراً لاهتمامك!' : 'Thank you!'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+                    {isRtl
+                      ? 'تم استلام رسالتك. سيتواصل معك فريقنا خلال 24 ساعة.'
+                      : "We've received your message and will be in touch within 24 hours."}
+                  </p>
+                  <button
+                    onClick={() => setLeadStatus('idle')}
+                    className="mt-2 text-xs text-secondary hover:underline"
+                  >
+                    {isRtl ? 'إرسال استفسار آخر' : 'Send another inquiry'}
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleLeadSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-foreground/70 mb-1.5 uppercase tracking-wide">
+                      {isRtl ? 'الاسم الكامل' : 'Full Name'} <span className="text-destructive">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={lead.name}
+                      onChange={e => setLead(p => ({ ...p, name: e.target.value }))}
+                      placeholder={isRtl ? 'أدخل اسمك الكامل' : 'Enter your full name'}
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary/60 transition-colors placeholder:text-muted-foreground/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-foreground/70 mb-1.5 uppercase tracking-wide">
+                      {isRtl ? 'البريد الإلكتروني' : 'Email Address'} <span className="text-destructive">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={lead.email}
+                      onChange={e => setLead(p => ({ ...p, email: e.target.value }))}
+                      placeholder={isRtl ? 'أدخل بريدك الإلكتروني' : 'Enter your email'}
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary/60 transition-colors placeholder:text-muted-foreground/50"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-foreground/70 mb-1.5 uppercase tracking-wide">
+                      {isRtl ? 'رقم الهاتف' : 'Phone Number'}
+                    </label>
+                    <input
+                      type="tel"
+                      value={lead.phone}
+                      onChange={e => setLead(p => ({ ...p, phone: e.target.value }))}
+                      placeholder={isRtl ? 'أدخل رقم هاتفك' : 'Enter your phone number'}
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary/60 transition-colors placeholder:text-muted-foreground/50"
+                      dir="ltr"
+                    />
+                  </div>
+
+                  {leadStatus === 'error' && (
+                    <p className="text-xs text-destructive">
+                      {isRtl ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'Something went wrong. Please try again.'}
+                    </p>
+                  )}
+
+                  <Button
+                    type="submit"
+                    disabled={leadStatus === 'submitting'}
+                    className="w-full h-11 bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-xl font-semibold text-sm mt-2"
+                  >
+                    {leadStatus === 'submitting'
+                      ? (isRtl ? 'جاري الإرسال...' : 'Sending...')
+                      : (isRtl ? 'تواصل معنا' : 'Get in Touch')}
+                    {leadStatus !== 'submitting' && (
+                      isRtl
+                        ? <ArrowLeft  className="ms-2 h-4 w-4" />
+                        : <ArrowRight className="ms-2 h-4 w-4" />
+                    )}
+                  </Button>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       </section>

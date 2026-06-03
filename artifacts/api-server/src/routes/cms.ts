@@ -158,8 +158,8 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     titleAr: "إدارة عقارات متميزة في المملكة العربية السعودية",
     subtitleEn: "Discover exclusive hotels, compounds, and corporate facilities managed with focus and precision.",
     subtitleAr: "اكتشف فنادق ومجمعات سكنية ومرافق مؤسسية حصرية تُدار باحترافية ودقة.",
-    ctaButtonEn: "Explore Properties",
-    ctaButtonAr: "تصفح العقارات",
+    ctaButtonEn: "Explore Opportunities",
+    ctaButtonAr: "استكشف الفرص",
     imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop",
   },
   contact: {

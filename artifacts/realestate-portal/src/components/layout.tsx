@@ -3,7 +3,6 @@ import { Link, useLocation } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
 import { useCms } from '@/lib/cms-context';
 import { Building, Menu, X, Globe, MapPin, Mail, Phone, KeyRound } from 'lucide-react';
-import { Button } from './ui/button';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { language, setLanguage, isRtl } = useLanguage();
@@ -18,6 +17,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const isActive = (href: string) =>
     href === '/' ? location === '/' || location === '' : location.startsWith(href);
 
+  // Desktop nav excludes the home link (logo serves that role)
+  const desktopNav = nav.filter(n => n.href !== '/');
+
   return (
     <div className="h-dvh overflow-auto flex flex-col font-sans">
 
@@ -25,63 +27,83 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
 
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
+          {/* ── DESKTOP: Nav links on the left ─────────────────────────── */}
+          <div className="hidden md:flex items-center gap-1">
+            <nav className="flex items-center gap-1" aria-label="Main navigation">
+              {desktopNav.map(({ href, labelEn, labelAr }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`relative px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    isActive(href)
+                      ? 'text-secondary bg-secondary/10'
+                      : 'text-foreground/60 hover:text-primary hover:bg-muted'
+                  }`}
+                >
+                  {isRtl ? labelAr : labelEn}
+                  {isActive(href) && (
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-secondary rounded-full" />
+                  )}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Divider */}
+            <span className="mx-2 w-px h-4 bg-border/60" />
+
+            {/* Investor Portal — subtle link */}
+            <Link
+              href="/portal"
+              className="flex items-center gap-1.5 text-xs font-medium text-secondary/80 hover:text-secondary border border-secondary/20 hover:border-secondary/40 rounded-md px-3 py-1.5 transition-colors"
+            >
+              <KeyRound className="h-3.5 w-3.5" />
+              {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
+            </Link>
+
+            {/* Language toggle */}
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-2 py-1.5 rounded-md hover:bg-muted ms-1"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              {language === 'en' ? 'عربي' : 'EN'}
+            </button>
+          </div>
+
+          {/* ── MOBILE: Logo on left ──────────────────────────────────── */}
+          <Link href="/" className="flex md:hidden items-center gap-2 shrink-0">
             {branding.logoUrl
               ? <img src={branding.logoUrl} alt={branding.companyNameEn} className="h-8 w-8 object-contain" />
               : <Building className="h-5 w-5 text-secondary" />
             }
             <span className="font-bold text-lg tracking-tight text-primary">
-              {isRtl
-                ? branding.companyNameAr || 'ركز | Rakez'
-                : branding.companyNameEn || 'Rakez'}
+              {isRtl ? branding.companyNameAr || 'ركز' : branding.companyNameEn || 'Rakez'}
             </span>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
-            {nav.map(({ href, labelEn, labelAr }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`relative px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive(href)
-                    ? 'text-secondary bg-secondary/10'
-                    : 'text-foreground/60 hover:text-primary hover:bg-muted'
-                }`}
-              >
-                {isRtl ? labelAr : labelEn}
-                {isActive(href) && (
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-secondary rounded-full" />
-                )}
-              </Link>
-            ))}
-          </nav>
+          {/* ── DESKTOP: Logo on the right ───────────────────────────── */}
+          <Link href="/" className="hidden md:flex items-center gap-2 shrink-0">
+            {branding.logoUrl
+              ? <img src={branding.logoUrl} alt={branding.companyNameEn} className="h-8 w-8 object-contain" />
+              : <Building className="h-5 w-5 text-secondary" />
+            }
+            <span className="font-bold text-lg tracking-tight text-primary">
+              {isRtl ? branding.companyNameAr || 'ركز' : branding.companyNameEn || 'Rakez'}
+            </span>
+          </Link>
 
-          {/* Right actions — language toggle + investor portal only */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* ── MOBILE: Globe + Hamburger on right ───────────────────── */}
+          <div className="flex items-center gap-1 md:hidden">
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-2 py-1.5 rounded-md hover:bg-muted"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
             >
-              <Globe className="h-3.5 w-3.5" />
-              {language === 'en' ? 'عربي' : 'EN'}
-            </button>
-            <Link
-              href="/portal"
-              className="flex items-center gap-1.5 text-xs font-medium text-secondary border border-secondary/30 rounded-md px-3 py-1.5 hover:bg-secondary/8 transition-colors"
-            >
-              <KeyRound className="h-3.5 w-3.5" />
-              {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
-            </Link>
-          </div>
-
-          {/* Mobile toggle */}
-          <div className="flex items-center gap-1 md:hidden">
-            <button onClick={toggleLanguage} className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors">
               <Globe className="h-4 w-4" />
             </button>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
+            >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
@@ -185,7 +207,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </ul>
           </div>
 
-          {/* Investor portal */}
+          {/* Investor portal — minimal, no sign-in button */}
           <div>
             <h3 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-4">
               {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
@@ -195,11 +217,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 ? 'وصول مباشر لعقاراتك المدارة والتقارير المالية.'
                 : 'Direct access to your managed properties and financial reports.'}
             </p>
-            <Button asChild size="sm" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 text-xs h-8 px-4">
-              <Link href="/portal">
-                {isRtl ? 'تسجيل الدخول' : 'Sign In'}
-              </Link>
-            </Button>
+            <Link
+              href="/portal"
+              className="text-secondary text-sm font-medium hover:underline inline-flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity"
+            >
+              <KeyRound className="h-3.5 w-3.5" />
+              {isRtl ? 'تسجيل الدخول ←' : 'Sign in →'}
+            </Link>
           </div>
         </div>
 
