@@ -19,6 +19,9 @@ export const notificationsTable = pgTable("notifications", {
   messageParams: text("message_params"),
   createdAt:    timestamp("created_at").defaultNow().notNull(),
 }, (t) => [
+  // Tenant-wide unread fetch (broadcast rows where user_id IS NULL):
+  // WHERE tenant_id = ? AND is_read = false ORDER BY created_at
+  index("notifications_tenant_unread_idx").on(t.tenantId, t.isRead, t.createdAt),
   // Per-user bell query: WHERE tenant_id = ? AND (user_id IS NULL OR user_id = ?) AND is_read = false
   index("notifications_tenant_user_unread_idx").on(t.tenantId, t.userId, t.isRead, t.createdAt),
   // Tenant-wide broadcast fetch
