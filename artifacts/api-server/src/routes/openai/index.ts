@@ -175,9 +175,11 @@ router.post("/conversations/:id/messages", async (req, res) => {
 
   await db.insert(messages).values({ conversationId: id, role: "user", content });
 
+  // Prevent nginx / proxy from buffering SSE frames
   res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders();
 
   const chatMessages: { role: "system" | "user" | "assistant"; content: string }[] = [
@@ -189,6 +191,15 @@ router.post("/conversations/:id/messages", async (req, res) => {
     { role: "user", content },
   ];
 
+  // Keep-alive heartbeat — prevents proxy / load-balancer from closing idle SSE connections
+  const heartbeat = setInterval(() => {
+    try { res.write(": heartbeat\n\n"); } catch { /* client already gone */ }
+  }, 15_000);
+
+  // Detect client disconnect so we can stop the OpenAI stream early
+  let clientGone = false;
+  req.on("close", () => { clientGone = true; });
+
   try {
     let fullResponse = "";
     const stream = await openai.chat.completions.create({
@@ -199,6 +210,7 @@ router.post("/conversations/:id/messages", async (req, res) => {
     });
 
     for await (const chunk of stream) {
+      if (clientGone) { stream.controller.abort(); break; }
       const delta = chunk.choices[0]?.delta?.content;
       if (delta) {
         fullResponse += delta;
@@ -206,16 +218,21 @@ router.post("/conversations/:id/messages", async (req, res) => {
       }
     }
 
-    await db.insert(messages).values({
-      conversationId: id,
-      role: "assistant",
-      content: fullResponse || "(no response)",
-    });
-
-    res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    if (!clientGone) {
+      await db.insert(messages).values({
+        conversationId: id,
+        role: "assistant",
+        content: fullResponse || "(no response)",
+      });
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+    }
   } catch (err) {
     req.log.error({ err }, "AI chat stream error");
-    res.write(`data: ${JSON.stringify({ error: "AI service unavailable" })}\n\n`);
+    if (!clientGone) {
+      res.write(`data: ${JSON.stringify({ error: "AI service unavailable" })}\n\n`);
+    }
+  } finally {
+    clearInterval(heartbeat);
   }
 
   res.end();

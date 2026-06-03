@@ -43,6 +43,7 @@ import WorkerWorkOrders from "@/pages/worker-work-orders";
 import WorkerUnitDetail from "@/pages/worker-unit-detail";
 import ContentManager from "@/pages/content-manager";
 import WebsiteSettings from "@/pages/website-settings";
+import { AppAIAgent } from "@/components/AppAIAgent";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
@@ -246,6 +247,7 @@ function App() {
                 </Route>
               </Switch>
             </WouterRouter>
+            <AppAIAgent authUser={authUser} />
           </QueryClientProvider>
         </LanguageProvider>
       </I18nextProvider>

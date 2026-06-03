@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { X, Send, Loader2, Trash2, Sparkles } from "lucide-react";
+import { X, Send, Loader2, Trash2, Sparkles, WifiOff, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
@@ -9,8 +9,8 @@ import { useQuery } from "@tanstack/react-query";
 interface Message {
   role: "user" | "assistant";
   content: string;
-  /** local-only greeting flag — not persisted */
   isGreeting?: boolean;
+  isError?: boolean;
 }
 
 interface Conversation {
@@ -35,7 +35,6 @@ async function apiFetch(path: string, options?: RequestInit) {
   return res;
 }
 
-/** Build Layla's personalised greeting based on language + user context */
 function buildGreeting(name: string | undefined, role: string | undefined, isRtl: boolean): string {
   const firstName = name?.split(" ")[0] || "";
   if (isRtl) {
@@ -56,24 +55,36 @@ function buildGreeting(name: string | undefined, role: string | undefined, isRtl
   return `Hi${firstName ? " " + firstName : ""}! I'm Layla 👋\nYour AI assistant for Grand PMS.\n\nI'm here to help you as ${roleEn} — tasks, bookings, rooms, and anything else you need. What can I help you with today?`;
 }
 
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1500;
+
+function sleep(ms: number) {
+  return new Promise<void>(r => setTimeout(r, ms));
+}
+
 export function AppAIAgent({ authUser }: AppAIAgentProps) {
   const { i18n } = useTranslation();
   const isRtl = i18n.dir() === "rtl";
 
-  const [open, setOpen] = useState(false);
-  const [conversationId, setConversationId] = useState<number | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [streaming, setStreaming] = useState(false);
+  const [open,             setOpen]             = useState(false);
+  const [conversationId,   setConversationId]   = useState<number | null>(null);
+  const [messages,         setMessages]         = useState<Message[]>([]);
+  const [input,            setInput]            = useState("");
+  const [streaming,        setStreaming]        = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
-  const [greetingPending, setGreetingPending] = useState(false);
-  const [greetingTyping, setGreetingTyping] = useState(false);
+  const [greetingPending,  setGreetingPending]  = useState(false);
+  const [greetingTyping,   setGreetingTyping]   = useState(false);
+  const [retrying,         setRetrying]         = useState(false);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const bottomRef        = useRef<HTMLDivElement>(null);
+  const abortRef         = useRef<AbortController | null>(null);
+  const textareaRef      = useRef<HTMLTextAreaElement>(null);
   const greetingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasGreetedRef = useRef(false);
+  const hasGreetedRef    = useRef(false);
+
+  // Swipe-down-to-dismiss state
+  const swipeTouchStartY = useRef<number | null>(null);
+  const swipeTouchStartX = useRef<number | null>(null);
 
   // Fetch open task count for context
   const { data: stats } = useQuery<{ openTasks?: number; inProgressTasks?: number }>({
@@ -85,10 +96,10 @@ export function AppAIAgent({ authUser }: AppAIAgentProps) {
   const taskCount = (stats?.openTasks ?? 0) + (stats?.inProgressTasks ?? 0);
 
   const buildContext = useCallback(() => ({
-    name: authUser?.displayName || authUser?.username || "User",
-    role: authUser?.role || "staff",
+    name:      authUser?.displayName || authUser?.username || "User",
+    role:      authUser?.role || "staff",
     taskCount,
-    page: window.location.pathname,
+    page:      window.location.pathname,
   }), [authUser, taskCount]);
 
   // Scroll to bottom on new messages
@@ -103,7 +114,6 @@ export function AppAIAgent({ authUser }: AppAIAgentProps) {
       greetingTimerRef.current = setTimeout(() => {
         setGreetingPending(false);
         setGreetingTyping(true);
-        // brief "typing" indicator then reveal full greeting
         setTimeout(() => {
           const text = buildGreeting(
             authUser?.displayName || authUser?.username,
@@ -144,6 +154,24 @@ export function AppAIAgent({ authUser }: AppAIAgentProps) {
     setGreetingTyping(false);
   }
 
+  // ── Swipe-down-to-dismiss ──────────────────────────────────────────────────
+  function handlePanelTouchStart(e: React.TouchEvent) {
+    swipeTouchStartY.current = e.touches[0].clientY;
+    swipeTouchStartX.current = e.touches[0].clientX;
+  }
+
+  function handlePanelTouchEnd(e: React.TouchEvent) {
+    if (swipeTouchStartY.current === null || swipeTouchStartX.current === null) return;
+    const deltaY = e.changedTouches[0].clientY - swipeTouchStartY.current;
+    const deltaX = Math.abs(e.changedTouches[0].clientX - swipeTouchStartX.current);
+    swipeTouchStartY.current = null;
+    swipeTouchStartX.current = null;
+    // Only trigger if mostly vertical and downward (>80px)
+    if (deltaY > 80 && deltaX < deltaY * 0.7) {
+      handleClose();
+    }
+  }
+
   async function clearChat() {
     if (conversationId) {
       await apiFetch(`/api/openai/conversations/${conversationId}`, { method: "DELETE" });
@@ -171,66 +199,94 @@ export function AppAIAgent({ authUser }: AppAIAgentProps) {
     }, 3000);
   }
 
+  // ── Send message with retry logic ──────────────────────────────────────────
   async function sendMessage() {
     const text = input.trim();
     if (!text || streaming) return;
 
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    setMessages(prev => [...prev, { role: "user", content: text }]);
     setStreaming(true);
     setStreamingContent("");
+    setRetrying(false);
 
-    try {
-      const id = await ensureConversation();
-      const ctrl = new AbortController();
-      abortRef.current = ctrl;
+    let attempt = 0;
 
-      const res = await fetch(`${BASE}/api/openai/conversations/${id}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        signal: ctrl.signal,
-        body: JSON.stringify({ content: text, context: buildContext() }),
-      });
+    while (attempt <= MAX_RETRIES) {
+      try {
+        const id = await ensureConversation();
+        const ctrl = new AbortController();
+        abortRef.current = ctrl;
 
-      if (!res.ok || !res.body) throw new Error("Stream error");
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let assembled = "";
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          try {
-            const payload = JSON.parse(line.slice(6));
-            if (payload.done) break;
-            if (payload.content) {
-              assembled += payload.content;
-              setStreamingContent(assembled);
-            }
-          } catch { /* ignore parse errors */ }
+        if (attempt > 0) {
+          setRetrying(true);
+          await sleep(RETRY_DELAY_MS * attempt);
+          setRetrying(false);
+          setStreamingContent("");
         }
-      }
 
-      setMessages((prev) => [...prev, { role: "assistant", content: assembled || "…" }]);
-    } catch (err: unknown) {
-      if ((err as Error).name !== "AbortError") {
+        const res = await fetch(`${BASE}/api/openai/conversations/${id}/messages`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          signal:  ctrl.signal,
+          body:    JSON.stringify({ content: text, context: buildContext() }),
+        });
+
+        if (!res.ok || !res.body) throw new Error("Stream error");
+
+        const reader  = res.body.getReader();
+        const decoder = new TextDecoder();
+        let assembled = "";
+        let buf       = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop() ?? "";
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            try {
+              const payload = JSON.parse(line.slice(6));
+              if (payload.done) break;
+              if (payload.error) throw new Error(payload.error);
+              if (payload.content) {
+                assembled += payload.content;
+                setStreamingContent(assembled);
+              }
+            } catch (parseErr) {
+              if ((parseErr as Error).message !== "Unexpected end of JSON input") {
+                throw parseErr;
+              }
+            }
+          }
+        }
+
+        setMessages(prev => [...prev, { role: "assistant", content: assembled || "…" }]);
+        break; // success — exit retry loop
+
+      } catch (err: unknown) {
+        if ((err as Error).name === "AbortError") break; // user dismissed — don't retry
+
+        if (attempt < MAX_RETRIES) {
+          attempt++;
+          continue; // retry
+        }
+
+        // All retries exhausted
         const errMsg = isRtl
           ? "⚠️ تعذّر الاتصال بخدمة الذكاء الاصطناعي. يرجى المحاولة مجدداً."
           : "⚠️ Could not reach the AI service. Please try again.";
-        setMessages((prev) => [...prev, { role: "assistant", content: errMsg }]);
+        setMessages(prev => [...prev, { role: "assistant", content: errMsg, isError: true }]);
+        break;
       }
-    } finally {
-      setStreaming(false);
-      setStreamingContent("");
     }
+
+    setStreaming(false);
+    setStreamingContent("");
+    setRetrying(false);
   }
 
   function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -240,7 +296,7 @@ export function AppAIAgent({ authUser }: AppAIAgentProps) {
     }
   }
 
-  const showTypingIndicator = greetingPending || greetingTyping || (streaming && !streamingContent);
+  const showTypingIndicator = greetingPending || greetingTyping || (streaming && !streamingContent && !retrying);
 
   return (
     <>
@@ -260,6 +316,15 @@ export function AppAIAgent({ authUser }: AppAIAgentProps) {
         <Sparkles size={24} />
       </button>
 
+      {/* ── Click-outside backdrop ─────────────────────────────────────────── */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={handleClose}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Chat panel */}
       {open && (
         <div
@@ -270,11 +335,14 @@ export function AppAIAgent({ authUser }: AppAIAgentProps) {
             isRtl ? "left-6" : "right-6"
           )}
           dir={isRtl ? "rtl" : "ltr"}
+          onTouchStart={handlePanelTouchStart}
+          onTouchEnd={handlePanelTouchEnd}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-amber-100 bg-gradient-to-r from-amber-50 to-orange-50 rounded-t-2xl">
-            <div className="flex items-center gap-2.5">
-              {/* Layla avatar */}
+          {/* Header — drag handle area for swipe hint */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-amber-100 bg-gradient-to-r from-amber-50 to-orange-50 rounded-t-2xl select-none">
+            {/* Drag handle pill */}
+            <div className="absolute left-1/2 -translate-x-1/2 top-1.5 w-8 h-1 bg-slate-200 rounded-full" />
+            <div className="flex items-center gap-2.5 mt-1">
               <div className="relative flex-shrink-0">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
                   <span className="text-white font-bold text-sm">ل</span>
@@ -285,10 +353,12 @@ export function AppAIAgent({ authUser }: AppAIAgentProps) {
                 <p className="text-sm font-semibold text-slate-800 leading-tight">
                   {isRtl ? "ليلى — المساعدة الذكية" : "Layla — AI Assistant"}
                 </p>
-                <p className="text-xs text-amber-600 leading-tight">Grand PMS · {isRtl ? "متصلة" : "Online"}</p>
+                <p className="text-xs text-amber-600 leading-tight">
+                  Grand PMS · {isRtl ? "متصلة" : "Online"}
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 mt-1">
               <Button
                 variant="ghost" size="icon"
                 className="h-7 w-7 text-slate-400 hover:text-red-500"
@@ -301,6 +371,7 @@ export function AppAIAgent({ authUser }: AppAIAgentProps) {
                 variant="ghost" size="icon"
                 className="h-7 w-7 text-slate-400 hover:text-slate-700"
                 onClick={handleClose}
+                aria-label={isRtl ? "إغلاق" : "Close"}
               >
                 <X size={15} />
               </Button>
@@ -329,13 +400,32 @@ export function AppAIAgent({ authUser }: AppAIAgentProps) {
                     "max-w-[78%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap",
                     msg.role === "user"
                       ? "bg-amber-500 text-white rounded-br-sm"
-                      : "bg-slate-100 text-slate-800 rounded-bl-sm"
+                      : msg.isError
+                        ? "bg-red-50 text-red-700 border border-red-200 rounded-bl-sm"
+                        : "bg-slate-100 text-slate-800 rounded-bl-sm"
                   )}
                 >
                   {msg.content}
+                  {msg.isError && (
+                    <button
+                      onClick={sendMessage}
+                      className="flex items-center gap-1 mt-1.5 text-xs text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <RefreshCw size={10} />
+                      {isRtl ? "إعادة المحاولة" : "Retry"}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
+
+            {/* Retry indicator */}
+            {retrying && (
+              <div className={cn("flex gap-2 items-center text-xs text-amber-600", isRtl ? "justify-end" : "justify-start")}>
+                <WifiOff size={12} className="animate-pulse" />
+                {isRtl ? "جارٍ إعادة الاتصال…" : "Reconnecting…"}
+              </div>
+            )}
 
             {/* Typing / streaming bubble */}
             {(showTypingIndicator || (streaming && streamingContent)) && (
@@ -366,7 +456,7 @@ export function AppAIAgent({ authUser }: AppAIAgentProps) {
               ref={textareaRef}
               rows={1}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
               placeholder={isRtl ? "اكتب رسالتك لليلى…" : "Message Layla…"}
               disabled={streaming || greetingPending || greetingTyping}
