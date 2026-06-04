@@ -886,6 +886,111 @@ router.put("/portal/role-permissions", requireAuth, async (req, res) => {
   }
 });
 
+// ── POST /portal/team — create a staff member (Owner/Manager only, tier ≤ 3) ──
+router.post("/portal/team", requireAuth, async (req, res) => {
+  try {
+    const caller          = (req as any).sessionUser as { id: number; role: string; tenantId: number | null };
+    const callerTierLevel = getPortalRoleTier(caller.role);
+    if (callerTierLevel > 3) { sendError(res, 403, "Forbidden"); return; }
+
+    const { username, displayName, email, password, role } = req.body ?? {};
+    if (!username || !displayName || !email || !password || !role) {
+      sendError(res, 400, "username, displayName, email, password and role are required"); return;
+    }
+    if (String(password).length < 8) { sendError(res, 400, "Password must be at least 8 characters"); return; }
+
+    const uname = String(username).trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,30}$/.test(uname)) {
+      sendError(res, 400, "Username must be 3-30 chars: letters, numbers, underscores"); return;
+    }
+
+    const targetTierLevel = getPortalRoleTier(String(role));
+    if (targetTierLevel <= callerTierLevel) {
+      sendError(res, 403, "Cannot create a member at equal or higher authority"); return;
+    }
+
+    const [existing] = await db.select({ id: usersTable.id }).from(usersTable)
+      .where(eq(usersTable.username, uname)).limit(1);
+    if (existing) { sendError(res, 409, "Username already taken"); return; }
+
+    const tenantId = caller.tenantId ?? 1;
+    const [newUser] = await db.insert(usersTable).values({
+      username:     uname,
+      displayName:  String(displayName).trim(),
+      email:        String(email).trim().toLowerCase(),
+      passwordHash: hashPwd(String(password)),
+      role:         String(role),
+      tenantId,
+      isActive:     true,
+    }).returning({
+      id:          usersTable.id,
+      username:    usersTable.username,
+      displayName: usersTable.displayName,
+      role:        usersTable.role,
+      isActive:    usersTable.isActive,
+    });
+    sendSuccess(res, newUser);
+  } catch (err) {
+    req.log?.error({ err }, "POST /portal/team failed");
+    sendError(res, 500, "Failed to create team member");
+  }
+});
+
+// ── PATCH /portal/team/:id/status — toggle isActive ──────────────────────────
+router.patch("/portal/team/:id/status", requireAuth, async (req, res) => {
+  try {
+    const caller          = (req as any).sessionUser as { id: number; role: string; tenantId: number | null };
+    const callerTierLevel = getPortalRoleTier(caller.role);
+    if (callerTierLevel > 3) { sendError(res, 403, "Forbidden"); return; }
+
+    const targetId = parseInt(req.params.id as string, 10);
+    if (isNaN(targetId)) { sendError(res, 400, "Invalid id"); return; }
+
+    const tenantId = caller.tenantId ?? 1;
+    const [target] = await db.select().from(usersTable)
+      .where(and(eq(usersTable.id, targetId), eq(usersTable.tenantId, tenantId))).limit(1);
+    if (!target) { sendError(res, 404, "User not found"); return; }
+
+    if (getPortalRoleTier(target.role) <= callerTierLevel) {
+      sendError(res, 403, "Cannot modify a member at equal or higher authority"); return;
+    }
+
+    const newActive = !target.isActive;
+    await db.update(usersTable).set({ isActive: newActive }).where(eq(usersTable.id, targetId));
+    sendSuccess(res, { id: targetId, isActive: newActive });
+  } catch (err) {
+    req.log?.error({ err }, "PATCH /portal/team/:id/status failed");
+    sendError(res, 500, "Failed to update status");
+  }
+});
+
+// ── DELETE /portal/team/:id — remove a staff member ──────────────────────────
+router.delete("/portal/team/:id", requireAuth, async (req, res) => {
+  try {
+    const caller          = (req as any).sessionUser as { id: number; role: string; tenantId: number | null };
+    const callerTierLevel = getPortalRoleTier(caller.role);
+    if (callerTierLevel > 3) { sendError(res, 403, "Forbidden"); return; }
+
+    const targetId = parseInt(req.params.id as string, 10);
+    if (isNaN(targetId)) { sendError(res, 400, "Invalid id"); return; }
+
+    const tenantId = caller.tenantId ?? 1;
+    const [target] = await db.select().from(usersTable)
+      .where(and(eq(usersTable.id, targetId), eq(usersTable.tenantId, tenantId))).limit(1);
+    if (!target) { sendError(res, 404, "User not found"); return; }
+
+    if (getPortalRoleTier(target.role) <= callerTierLevel) {
+      sendError(res, 403, "Cannot delete a member at equal or higher authority"); return;
+    }
+
+    await db.delete(usersTable).where(eq(usersTable.id, targetId));
+    sendSuccess(res, { id: targetId, deleted: true });
+  } catch (err) {
+    req.log?.error({ err }, "DELETE /portal/team/:id failed");
+    sendError(res, 500, "Failed to delete team member");
+  }
+});
+
 // ── POST /portal/contact — investor/client sends a support message ────────────
 router.post("/portal/contact", requireAuth, async (req, res) => {
   try {
