@@ -3,17 +3,45 @@ import { randomUUID } from "crypto";
 import { db, rkzUsersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { Resend } from "resend";
+import { logger } from "../lib/logger.js";
 
 const router = Router();
 
 const rkzResend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const SENDER    = process.env.SENDER_EMAIL ?? "RKZ <onboarding@resend.dev>";
 
+logger.info(
+  { sender: SENDER, usingTestSender: !process.env.SENDER_EMAIL },
+  !process.env.SENDER_EMAIL
+    ? "RKZ Resend: SENDER_EMAIL not set — using onboarding@resend.dev (test mode: delivers only to Resend account owner)"
+    : "RKZ Resend: using custom SENDER_EMAIL domain"
+);
+
+/**
+ * Thin wrapper around rkzResend.emails.send() that inspects the SDK return value.
+ * The Resend SDK NEVER throws — it returns { data, error }; unchecked calls silently swallow errors.
+ */
+async function rkzResendSend(
+  payload: { from: string; to: string[]; subject: string; html: string },
+  label: string
+): Promise<void> {
+  if (!rkzResend) return;
+  const { data, error } = await rkzResend.emails.send(payload);
+  if (error) {
+    logger.error(
+      { label, to: payload.to, from: payload.from, resendStatus: (error as any).statusCode, resendError: error.message },
+      `RKZ RESEND ERROR [${label}]: ${error.message}`
+    );
+    throw new Error(`Resend delivery failed (${label}): ${error.message}`);
+  }
+  logger.info({ label, to: payload.to, emailId: (data as any)?.id }, `rkz email dispatched: ${label}`);
+}
+
 /** Send a bilingual welcome email to a brand-new RKZ user on first registration. */
 async function sendRkzWelcomeEmail(to: string, name: string | null): Promise<void> {
   if (!rkzResend) return;
   const greeting = name ? name : to.split("@")[0];
-  await rkzResend.emails.send({
+  await rkzResendSend({
     from:    SENDER,
     to:      [to],
     subject: "Welcome to RKZ — رمز التحقق | مرحباً بك في RKZ",
@@ -57,7 +85,7 @@ async function sendRkzWelcomeEmail(to: string, name: string | null): Promise<voi
         </div>
       </div>
     `,
-  });
+  }, "sendRkzWelcomeEmail");
 }
 
 // In-memory OTP store: pendingKey → { phone, email, otp, expiresAt }
@@ -106,7 +134,7 @@ router.post("/rkz/auth/login", async (req, res) => {
 
   if (rkzResend) {
     try {
-      await rkzResend.emails.send({
+      await rkzResendSend({
         from: SENDER,
         to:   [emailNorm],
         subject: "رمز التحقق | Verification Code – RKZ",
@@ -127,9 +155,9 @@ router.post("/rkz/auth/login", async (req, res) => {
             </div>
           </div>
         `,
-      });
+      }, "sendOtpEmail");
     } catch (emailErr) {
-      req.log.error({ emailErr }, "rkz: Failed to send OTP email");
+      req.log.error({ emailErr }, "rkz: Failed to send OTP email — check SENDER_EMAIL and Resend domain verification");
     }
   }
 

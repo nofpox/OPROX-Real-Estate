@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import { logActivity } from "./activityLogs.js";
+import { logger } from "../lib/logger.js";
 import {
   checkLoginAllowed,
   recordFailedAttempt,
@@ -33,13 +34,43 @@ const SENDER_FROM = process.env.SENDER_EMAIL ?? "ركز للحلول الذكي�
 // admins can share credentials manually in test/demo environments.
 export const USING_TEST_SENDER = !process.env.SENDER_EMAIL;
 
+/** Log the active sender on startup so FROM address mismatches are immediately visible. */
+logger.info(
+  { sender: SENDER_FROM, usingTestSender: USING_TEST_SENDER },
+  USING_TEST_SENDER
+    ? "Resend: SENDER_EMAIL not set — using onboarding@resend.dev (test mode: delivers only to Resend account owner)"
+    : "Resend: using custom SENDER_EMAIL domain"
+);
+
+/**
+ * Thin wrapper around resend.emails.send() that inspects the SDK return value.
+ * The Resend SDK NEVER throws — it returns { data, error }. Calling code that does
+ * `await resend.emails.send()` without checking the return silently swallows all errors.
+ * This wrapper checks, logs with full detail, and re-throws so callers can react.
+ */
+async function resendSend(
+  payload: { from: string; to: string[]; subject: string; html: string; bcc?: string[] },
+  label: string
+): Promise<void> {
+  if (!resend) return;
+  const { data, error } = await resend.emails.send(payload);
+  if (error) {
+    logger.error(
+      { label, to: payload.to, from: payload.from, resendStatus: (error as any).statusCode, resendError: error.message },
+      `RESEND ERROR [${label}]: ${error.message}`
+    );
+    throw new Error(`Resend delivery failed (${label}): ${error.message}`);
+  }
+  logger.info({ label, to: payload.to, emailId: (data as any)?.id }, `email dispatched: ${label}`);
+}
+
 /**
  * Send a 6-digit OTP password-reset email via Resend (bilingual EN + AR).
  * Falls back silently when RESEND_API_KEY is not set (demo mode).
  */
 async function sendResetEmail(to: string, username: string, otp: string): Promise<void> {
   if (!resend) return;
-  await resend.emails.send({
+  await resendSend({
     from:    SENDER_FROM,
     to:      [to],
     subject: "مساعدة في الوصول | Access Help – ركز Rakez",
@@ -105,7 +136,7 @@ async function sendResetEmail(to: string, username: string, otp: string): Promis
 
       </div>
     `,
-  });
+  }, "sendResetEmail");
 }
 
 export function getRoleTier(role: string): "admin" | "supervisor" | "worker" {
@@ -201,7 +232,7 @@ export async function sendWelcomeEmail(to: string, username: string, tempPasswor
     ? `<a href="${appUrl}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#f59e0b;color:#fff;font-weight:700;font-size:15px;border-radius:8px;text-decoration:none;">Open Rakz PMS →</a>`
     : `<p style="margin:16px 0 0;color:#555;font-size:14px">Open the Rakz PMS app and sign in with the credentials below.</p>`;
 
-  await resend.emails.send({
+  await resendSend({
     from:    SENDER_FROM,
     to:      [to],
     subject: "You're invited — Your Rakz PMS account is ready",
@@ -259,7 +290,7 @@ export async function sendWelcomeEmail(to: string, username: string, tempPasswor
         </div>
       </div>
     `,
-  });
+  }, "sendWelcomeEmail");
   return true;
 }
 
@@ -276,7 +307,7 @@ export async function sendPortalWelcomeEmail(to: string, displayName: string, us
     ? `<a href="${portalUrl}" style="display:inline-block;margin:20px 0;padding:13px 32px;background:#1a2744;color:#fff;font-weight:700;font-size:14px;border-radius:8px;text-decoration:none;letter-spacing:0.3px">Sign in to Investor Portal →</a>`
     : `<p style="margin:14px 0;color:#555;font-size:14px">Open the platform and sign in to your account.</p>`;
 
-  await resend.emails.send({
+  await resendSend({
     from:    SENDER_FROM,
     to:      [to],
     subject: "Welcome to Rakez — Your account is ready | مرحباً بك في ركز",
@@ -318,7 +349,7 @@ export async function sendPortalWelcomeEmail(to: string, displayName: string, us
         </div>
       </div>
     `,
-  });
+  }, "sendPortalWelcomeEmail");
 }
 
 /**
@@ -334,7 +365,7 @@ export async function sendPortalTeamWelcomeEmail(to: string, displayName: string
     ? `<a href="${portalUrl}" style="display:inline-block;margin:20px 0;padding:13px 32px;background:#1a2744;color:#fff;font-weight:700;font-size:14px;border-radius:8px;text-decoration:none;letter-spacing:0.3px">Sign in to Portal →</a>`
     : `<p style="margin:14px 0;color:#555;font-size:14px">Open the Investor Portal and sign in with the credentials below.</p>`;
 
-  await resend.emails.send({
+  await resendSend({
     from:    SENDER_FROM,
     to:      [to],
     subject: "You've been added to Rakez Portal — Your credentials inside | تمت إضافتك إلى بوابة ركز",
@@ -374,7 +405,7 @@ export async function sendPortalTeamWelcomeEmail(to: string, displayName: string
         </div>
       </div>
     `,
-  });
+  }, "sendPortalTeamWelcomeEmail");
 }
 
 export async function ensureAdmin() {
