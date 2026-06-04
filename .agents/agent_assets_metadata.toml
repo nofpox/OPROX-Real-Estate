@@ -23,3 +23,27 @@ id = "HUdzlscbl-K9D955XYgnL"
 uri = "file://qr-rkz.png"
 type = "image"
 title = "RKZ — Expo Go QR Code"
+
+[[outputs]]
+id = "eMe7zbJHFXSHahgv2A71e"
+uri = "file://archive/grand-pms-db-backup-20260604-031009.sql.gz"
+type = "unspecified"
+title = "Database Backup — grand-pms-db-backup-20260604-031009.sql.gz"
+
+[[outputs]]
+id = "e7AqqKYng_9-FIgxJnez7"
+uri = "file://archive/guest-portal-archive.tar.gz"
+type = "unspecified"
+title = "Guest Portal Archive"
+
+[[outputs]]
+id = "5rP-yBpLhxwU7ftM4JcYI"
+uri = "file://archive/hotel-dashboard-archive.tar.gz"
+type = "unspecified"
+title = "Hotel Booking Dashboard Archive"
+
+[[outputs]]
+id = "tRfu9uqJSrB7_JxVFHNgP"
+uri = "file://archive/staff-tablet-archive.tar.gz"
+type = "unspecified"
+title = "Staff Tablet Archive"
