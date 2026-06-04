@@ -26,6 +26,18 @@ async function rkzResendSend(
   label: string
 ): Promise<void> {
   if (!rkzResend) return;
+  // ── PAYLOAD LOG (temporary debug) ────────────────────────────────────────
+  logger.info(
+    {
+      label,
+      from: payload.from,
+      to: payload.to,
+      subject: payload.subject,
+      htmlPreview: payload.html.slice(0, 300).replace(/\s+/g, " ").trim(),
+    },
+    `RKZ RESEND PRE-SEND [${label}]`
+  );
+  // ─────────────────────────────────────────────────────────────────────────
   const { data, error } = await rkzResend.emails.send(payload);
   if (error) {
     logger.error(
