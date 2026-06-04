@@ -5,6 +5,7 @@ import { useCms } from '@/lib/cms-context';
 import {
   MessageCircle, X, Send, Bot,
   ArrowRight, ArrowLeft, RotateCcw,
+  CheckCircle2, Loader2,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -19,6 +20,38 @@ interface Message {
   from: 'bot' | 'user';
   text: string;
   quickReplies?: QuickReply[];
+}
+
+// Inquiry wizard state — maps 1-to-1 with DB / API fields
+type InquiryType = 'property_management' | 'investment' | 'other' | null;
+type InquiryStep =
+  | 'idle'
+  | 'pick_type'
+  | 'collect_name'
+  | 'collect_email'
+  | 'collect_phone'
+  | 'confirm'
+  | 'submitting'
+  | 'done'
+  | 'error';
+
+interface InquiryData {
+  type:    InquiryType;
+  name:    string;
+  email:   string;
+  phone:   string;
+}
+
+const EMPTY_INQUIRY: InquiryData = { type: null, name: '', email: '', phone: '' };
+
+// ── Validators ────────────────────────────────────────────────────────────────
+
+function isValidEmail(v: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+}
+
+function sanitize(v: string): string {
+  return v.trim().replace(/<[^>]*>/g, '').slice(0, 300);
 }
 
 // ── Keyword matcher ───────────────────────────────────────────────────────────
@@ -46,65 +79,52 @@ export const SmartAssistant: React.FC = () => {
   const [isTyping, setIsTyping]       = useState(false);
   const [inputVal, setInputVal]       = useState('');
 
+  // Inquiry wizard
+  const [inquiryStep, setInquiryStep] = useState<InquiryStep>('idle');
+  const [inquiry, setInquiry]         = useState<InquiryData>(EMPTY_INQUIRY);
+  const [inputError, setInputError]   = useState('');
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef       = useRef<HTMLInputElement>(null);
 
-  // ── Text helpers ────────────────────────────────────────────────────────────
+  // ── Text helpers ─────────────────────────────────────────────────────────────
 
   const T = useCallback((en: string, ar: string) => isRtl ? ar : en, [isRtl]);
 
-  // ── Scroll to bottom on new messages ────────────────────────────────────────
+  // ── Scroll to bottom ─────────────────────────────────────────────────────────
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // ── Proactive badge after 12 s if user hasn't opened ────────────────────────
+  // ── Proactive badge after 12 s ───────────────────────────────────────────────
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      if (!hasOpened) setShowBadge(true);
-    }, 12_000);
+    const t = setTimeout(() => { if (!hasOpened) setShowBadge(true); }, 12_000);
     return () => clearTimeout(t);
   }, [hasOpened]);
 
-  // ── Re-init messages when language changes while open ───────────────────────
+  // ── Re-init on language switch ───────────────────────────────────────────────
 
   useEffect(() => {
     if (open && messages.length > 0) {
       setMessages([]);
       setIsTyping(false);
+      setInquiryStep('idle');
+      setInquiry(EMPTY_INQUIRY);
+      setInputError('');
       sendGreeting(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language]);
 
-  // ── Navigation helpers ──────────────────────────────────────────────────────
+  // ── Navigation helpers ────────────────────────────────────────────────────────
 
-  const goToPartnerForm = useCallback(() => {
-    setOpen(false);
-    navigate('/');
-    setTimeout(() => {
-      document.getElementById('partner-inquiry')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 150);
-  }, [navigate]);
+  const goToPortal  = useCallback(() => { setOpen(false); navigate('/portal'); },   [navigate]);
+  const goToListings = useCallback(() => { setOpen(false); navigate('/listings'); }, [navigate]);
+  const goToContact  = useCallback(() => { setOpen(false); navigate('/contact'); },  [navigate]);
 
-  const goToPortal = useCallback(() => {
-    setOpen(false);
-    navigate('/portal');
-  }, [navigate]);
-
-  const goToListings = useCallback(() => {
-    setOpen(false);
-    navigate('/listings');
-  }, [navigate]);
-
-  const goToContact = useCallback(() => {
-    setOpen(false);
-    navigate('/contact');
-  }, [navigate]);
-
-  // ── Message factory ─────────────────────────────────────────────────────────
+  // ── Message factory ──────────────────────────────────────────────────────────
 
   const pushMsg = useCallback((msg: Omit<Message, 'id'>, delay = 0) => {
     setTimeout(() => {
@@ -113,12 +133,227 @@ export const SmartAssistant: React.FC = () => {
     }, delay);
   }, []);
 
-  const botTyping = useCallback((ms = 700) => {
-    setIsTyping(true);
-    return ms;
-  }, []);
+  const botTyping = useCallback((ms = 700) => { setIsTyping(true); return ms; }, []);
 
-  // ── Conversation flows ──────────────────────────────────────────────────────
+  // ── Inquiry wizard ────────────────────────────────────────────────────────────
+
+  const startInquiryWizard = useCallback(() => {
+    setInquiry(EMPTY_INQUIRY);
+    setInputError('');
+    setInquiryStep('pick_type');
+    setMessages(prev => [
+      ...prev,
+      { id: `u-${Date.now()}`, from: 'user', text: T('Looking to partner with Rakez', 'مهتم بالتعاون مع ركز') },
+    ]);
+    botTyping(700);
+    pushMsg({
+      from: 'bot',
+      text: T(
+        '🌟 Great! Let\'s get your inquiry to the right team.\n\nWhat best describes your interest?',
+        '🌟 رائع! دعنا نوجّه استفسارك للفريق المناسب.\n\nما الذي يصف اهتمامك بشكل أفضل؟'
+      ),
+      quickReplies: [
+        {
+          label: T('🏢 Property Management', '🏢 إدارة عقارات'),
+          action: () => selectInquiryType('property_management'),
+        },
+        {
+          label: T('📈 Investment Opportunity', '📈 فرصة استثمارية'),
+          action: () => selectInquiryType('investment'),
+        },
+        {
+          label: T('💬 Other / General', '💬 أخرى / عامة'),
+          action: () => selectInquiryType('other'),
+        },
+      ],
+    }, 700);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, botTyping]);
+
+  const selectInquiryType = useCallback((type: InquiryType) => {
+    const label = type === 'property_management'
+      ? T('🏢 Property Management', '🏢 إدارة عقارات')
+      : type === 'investment'
+        ? T('📈 Investment Opportunity', '📈 فرصة استثمارية')
+        : T('💬 Other / General', '💬 أخرى / عامة');
+
+    setInquiry(prev => ({ ...prev, type }));
+    setInquiryStep('collect_name');
+    setMessages(prev => [
+      ...prev,
+      { id: `u-${Date.now()}`, from: 'user', text: label },
+    ]);
+    botTyping(650);
+    pushMsg({
+      from: 'bot',
+      text: T(
+        'Perfect! Now, what\'s your full name? *',
+        'ممتاز! ما هو اسمك الكامل؟ *'
+      ),
+    }, 650);
+    setTimeout(() => inputRef.current?.focus(), 700);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, botTyping]);
+
+  const submitCollectedName = useCallback((raw: string) => {
+    const name = sanitize(raw);
+    if (!name || name.length < 2) {
+      setInputError(T('Please enter your full name (at least 2 characters).', 'أدخل اسمك الكامل (حرفين على الأقل).'));
+      return;
+    }
+    setInputError('');
+    setInquiry(prev => ({ ...prev, name }));
+    setInquiryStep('collect_email');
+    setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text: name }]);
+    botTyping(650);
+    pushMsg({
+      from: 'bot',
+      text: T(
+        `Nice to meet you, ${name}! 👋\n\nWhat's your email address? We'll use this to send you a confirmation. *`,
+        `يسعدني التعرف عليك، ${name}! 👋\n\nما هو بريدك الإلكتروني؟ سنستخدمه لإرسال التأكيد. *`
+      ),
+    }, 650);
+    setTimeout(() => inputRef.current?.focus(), 700);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, botTyping]);
+
+  const submitCollectedEmail = useCallback((raw: string) => {
+    const email = sanitize(raw).toLowerCase();
+    if (!isValidEmail(email)) {
+      setInputError(T('Please enter a valid email address (e.g. name@domain.com).', 'أدخل بريدًا إلكترونيًا صحيحًا (مثال: name@domain.com).'));
+      return;
+    }
+    setInputError('');
+    setInquiry(prev => ({ ...prev, email }));
+    setInquiryStep('collect_phone');
+    setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text: email }]);
+    botTyping(650);
+    pushMsg({
+      from: 'bot',
+      text: T(
+        'Got it! 📧\n\nFinally, what\'s the best phone number to reach you? (optional)',
+        'تمام! 📧\n\nأخيرًا، ما هو رقم هاتفك؟ (اختياري)'
+      ),
+      quickReplies: [
+        {
+          label: T('⏭ Skip this step', '⏭ تخطى هذه الخطوة'),
+          action: () => skipPhone(),
+        },
+      ],
+    }, 650);
+    setTimeout(() => inputRef.current?.focus(), 700);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, botTyping]);
+
+  const skipPhone = useCallback(() => {
+    setMessages(prev => [
+      ...prev,
+      { id: `u-${Date.now()}`, from: 'user', text: T('Skip', 'تخطى') },
+    ]);
+    setInquiry(prev => ({ ...prev, phone: '' }));
+    showConfirmStep('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl]);
+
+  const submitCollectedPhone = useCallback((raw: string) => {
+    const phone = sanitize(raw);
+    setInputError('');
+    setInquiry(prev => ({ ...prev, phone }));
+    setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text: phone }]);
+    showConfirmStep(phone);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl]);
+
+  const showConfirmStep = useCallback((phone: string) => {
+    setInquiryStep('confirm');
+    setInquiry(prev => {
+      const updated = { ...prev, phone };
+      const typeLabelEn = updated.type === 'property_management' ? 'Property Management'
+        : updated.type === 'investment' ? 'Investment Opportunity' : 'Other / General';
+      const typeLabelAr = updated.type === 'property_management' ? 'إدارة عقارات'
+        : updated.type === 'investment' ? 'فرصة استثمارية' : 'أخرى / عامة';
+
+      const summary = isRtl
+        ? `يُرجى مراجعة بياناتك:\n\n📋 النوع: ${typeLabelAr}\n👤 الاسم: ${updated.name}\n📧 البريد: ${updated.email}${updated.phone ? `\n📞 الهاتف: ${updated.phone}` : ''}\n\nهل تريد إرسال الاستفسار؟`
+        : `Please review your details:\n\n📋 Type: ${typeLabelEn}\n👤 Name: ${updated.name}\n📧 Email: ${updated.email}${updated.phone ? `\n📞 Phone: ${updated.phone}` : ''}\n\nReady to submit?`;
+
+      botTyping(700);
+      pushMsg({
+        from: 'bot',
+        text: summary,
+        quickReplies: [
+          { label: T('✅ Submit Inquiry', '✅ إرسال الاستفسار'), action: () => submitInquiry(updated) },
+          { label: T('✏️ Start Over', '✏️ إعادة البدء'), action: () => startInquiryWizard() },
+        ],
+      }, 700);
+
+      return updated;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, botTyping]);
+
+  const submitInquiry = useCallback(async (data: InquiryData) => {
+    setInquiryStep('submitting');
+    setMessages(prev => [
+      ...prev,
+      { id: `u-${Date.now()}`, from: 'user', text: T('✅ Submit Inquiry', '✅ إرسال الاستفسار') },
+    ]);
+    setIsTyping(true);
+
+    const typeLabelEn = data.type === 'property_management' ? 'Property Management'
+      : data.type === 'investment' ? 'Investment Opportunity' : 'Other / General';
+
+    try {
+      const res = await fetch('/realestate-api/guest/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name:    data.name,
+          email:   data.email,
+          phone:   data.phone || undefined,
+          subject: isRtl ? `استفسار شراكة — ${typeLabelEn}` : `Partnership Inquiry — ${typeLabelEn}`,
+          message: isRtl
+            ? `استفسار شراكة مُقدَّم عبر المساعد الذكي. النوع: ${typeLabelEn}.`
+            : `Partnership inquiry submitted via Smart Assistant. Type: ${typeLabelEn}.`,
+        }),
+      });
+
+      setIsTyping(false);
+
+      if (!res.ok) throw new Error('server_error');
+
+      setInquiryStep('done');
+      pushMsg({
+        from: 'bot',
+        text: T(
+          `🎉 Your inquiry has been submitted, ${data.name}!\n\nOur team will contact you at ${data.email} within 24 hours.\n\nIs there anything else I can help you with?`,
+          `🎉 تم إرسال استفسارك، ${data.name}!\n\nسيتواصل معك فريقنا على ${data.email} خلال 24 ساعة.\n\nهل هناك شيء آخر يمكنني مساعدتك به؟`
+        ),
+        quickReplies: [
+          { label: T('Browse properties', 'تصفح العقارات'), action: goToListings },
+          { label: T('Investor Portal', 'بوابة المستثمر'), action: goToPortal },
+          { label: T('🔄 New conversation', '🔄 محادثة جديدة'), action: handleReset },
+        ],
+      }, 0);
+    } catch {
+      setIsTyping(false);
+      setInquiryStep('error');
+      pushMsg({
+        from: 'bot',
+        text: T(
+          '⚠️ Something went wrong submitting your inquiry. Please try again or use the contact form directly.',
+          '⚠️ حدث خطأ أثناء إرسال الاستفسار. يُرجى المحاولة مجددًا أو استخدام نموذج التواصل مباشرة.'
+        ),
+        quickReplies: [
+          { label: T('Try again', 'حاول مجددًا'), action: () => submitInquiry(data) },
+          { label: T('Contact page', 'صفحة التواصل'), action: goToContact },
+        ],
+      }, 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, goToListings, goToPortal, goToContact]);
+
+  // ── Main menu flows ───────────────────────────────────────────────────────────
 
   const showMainMenu = useCallback((delay = 0) => {
     const d = botTyping(650) + delay;
@@ -129,34 +364,13 @@ export const SmartAssistant: React.FC = () => {
         'مرحباً! 👋 أنا هنا للمساعدة. ماذا تبحث عن اليوم؟'
       ),
       quickReplies: [
-        { label: T('Looking to partner with Rakez', 'مهتم بالتعاون مع ركز'), action: showPartnerFlow },
+        { label: T('Looking to partner with Rakez', 'مهتم بالتعاون مع ركز'), action: startInquiryWizard },
         { label: T("I'm an existing client", 'أنا عميل حالي'), action: showInvestorFlow },
         { label: T('Browse properties', 'تصفح العقارات'), action: showPropertiesFlow },
       ],
     }, d + delay);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRtl, pushMsg, botTyping]);
-
-  const showPartnerFlow = useCallback(() => {
-    setMessages(prev => [
-      ...prev,
-      { id: `u-${Date.now()}`, from: 'user', text: T('Looking to partner with Rakez', 'مهتم بالتعاون مع ركز') },
-    ]);
-    botTyping(750);
-    pushMsg({
-      from: 'bot',
-      text: T(
-        "Great choice! 🌟 Fill out our short partnership form — it only takes 30 seconds. Our team reviews every submission within 24 hours.",
-        'اختيار رائع! 🌟 أكمل نموذج الشراكة القصير — لا يستغرق سوى 30 ثانية. يراجع فريقنا كل طلب خلال 24 ساعة.'
-      ),
-      quickReplies: [
-        { label: T('Take me to the form ↓', 'اصطحبني إلى النموذج ↓'), action: goToPartnerForm },
-        { label: T('Learn about our services', 'تعرف على خدماتنا'), action: showPropertiesFlow },
-        { label: T('Contact our team', 'تواصل مع فريقنا'), action: showContactFlow },
-      ],
-    }, 750);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRtl, pushMsg, botTyping, goToPartnerForm]);
 
   const showInvestorFlow = useCallback(() => {
     setMessages(prev => [
@@ -176,7 +390,7 @@ export const SmartAssistant: React.FC = () => {
         { label: T('Contact support', 'تواصل مع الدعم'), action: showContactFlow },
       ],
     }, 700);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRtl, pushMsg, botTyping, goToPortal]);
 
   const showForgotFlow = useCallback(() => {
@@ -196,7 +410,7 @@ export const SmartAssistant: React.FC = () => {
         { label: T('← Back', '← رجوع'), action: () => showMainMenu() },
       ],
     }, 700);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRtl, pushMsg, botTyping, goToPortal]);
 
   const showPropertiesFlow = useCallback(() => {
@@ -213,11 +427,11 @@ export const SmartAssistant: React.FC = () => {
       ),
       quickReplies: [
         { label: T('View all properties', 'عرض كل العقارات'), action: goToListings },
-        { label: T('Partner with us', 'التعاون معنا'), action: showPartnerFlow },
+        { label: T('Partner with us', 'التعاون معنا'), action: startInquiryWizard },
         { label: T('← Back', '← رجوع'), action: () => showMainMenu() },
       ],
     }, 700);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRtl, pushMsg, botTyping, goToListings]);
 
   const showContactFlow = useCallback(() => {
@@ -240,15 +454,15 @@ export const SmartAssistant: React.FC = () => {
         { label: T('← Back', '← رجوع'), action: () => showMainMenu() },
       ],
     }, 700);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRtl, pushMsg, botTyping, goToContact, content]);
 
   const showUnknownFallback = useCallback((userText: string) => {
     const intent = detectIntent(userText);
-    if (intent === 'partner')     { showPartnerFlow();    return; }
-    if (intent === 'investor')    { showInvestorFlow();   return; }
-    if (intent === 'properties')  { showPropertiesFlow(); return; }
-    if (intent === 'contact')     { showContactFlow();    return; }
+    if (intent === 'partner')    { startInquiryWizard(); return; }
+    if (intent === 'investor')   { showInvestorFlow();   return; }
+    if (intent === 'properties') { showPropertiesFlow(); return; }
+    if (intent === 'contact')    { showContactFlow();    return; }
 
     botTyping(700);
     pushMsg({
@@ -258,25 +472,25 @@ export const SmartAssistant: React.FC = () => {
         'لم أفهم ذلك تماماً. يمكنني مساعدتك في:'
       ),
       quickReplies: [
-        { label: T('Partnership inquiry', 'استفسار شراكة'), action: showPartnerFlow },
+        { label: T('Partnership inquiry', 'استفسار شراكة'), action: startInquiryWizard },
         { label: T('Investor Portal', 'بوابة المستثمر'), action: showInvestorFlow },
         { label: T('Browse properties', 'تصفح العقارات'), action: showPropertiesFlow },
         { label: T('Contact team', 'تواصل مع الفريق'), action: showContactFlow },
       ],
     }, 700);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRtl, pushMsg, botTyping]);
 
-  // ── Greeting ────────────────────────────────────────────────────────────────
+  // ── Greeting ─────────────────────────────────────────────────────────────────
 
   const sendGreeting = useCallback((immediate = false) => {
     const delay = immediate ? 0 : 400;
     botTyping(600 + delay);
     showMainMenu(delay + 100);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showMainMenu, botTyping]);
 
-  // ── Open / close ────────────────────────────────────────────────────────────
+  // ── Open / close ─────────────────────────────────────────────────────────────
 
   const handleOpen = useCallback(() => {
     setOpen(true);
@@ -290,29 +504,55 @@ export const SmartAssistant: React.FC = () => {
 
   const handleClose = useCallback(() => setOpen(false), []);
 
-  // ── Send free-text ──────────────────────────────────────────────────────────
+  // ── Reset ─────────────────────────────────────────────────────────────────────
+
+  const handleReset = useCallback(() => {
+    setMessages([]);
+    setIsTyping(false);
+    setInquiryStep('idle');
+    setInquiry(EMPTY_INQUIRY);
+    setInputError('');
+    sendGreeting(false);
+  }, [sendGreeting]);
+
+  // ── Free-text send — routes to wizard step or fallback ────────────────────────
 
   const handleSend = useCallback(() => {
     const text = inputVal.trim();
     if (!text) return;
     setInputVal('');
+    setInputError('');
+
+    if (inquiryStep === 'collect_name')  { submitCollectedName(text);  return; }
+    if (inquiryStep === 'collect_email') { submitCollectedEmail(text); return; }
+    if (inquiryStep === 'collect_phone') { submitCollectedPhone(text); return; }
+
+    // Not in wizard — free-text fallback
     setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text }]);
     showUnknownFallback(text);
-  }, [inputVal, showUnknownFallback]);
+  }, [inputVal, inquiryStep, submitCollectedName, submitCollectedEmail, submitCollectedPhone, showUnknownFallback]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
-  // ── Reset chat ──────────────────────────────────────────────────────────────
+  // ── Input placeholder by wizard step ─────────────────────────────────────────
 
-  const handleReset = useCallback(() => {
-    setMessages([]);
-    setIsTyping(false);
-    sendGreeting(false);
-  }, [sendGreeting]);
+  const inputPlaceholder = (() => {
+    if (inquiryStep === 'collect_name')  return T('Type your full name…', 'اكتب اسمك الكامل…');
+    if (inquiryStep === 'collect_email') return T('Type your email address…', 'اكتب بريدك الإلكتروني…');
+    if (inquiryStep === 'collect_phone') return T('Type your phone number…', 'اكتب رقم هاتفك…');
+    return T('Type your question…', 'اكتب سؤالك هنا…');
+  })();
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  const isInputActive: boolean = inquiryStep === 'collect_name'
+    || inquiryStep === 'collect_email'
+    || inquiryStep === 'collect_phone'
+    || inquiryStep === 'idle'
+    || inquiryStep === 'done'
+    || inquiryStep === 'error';
+
+  // ── Render ────────────────────────────────────────────────────────────────────
 
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
@@ -331,7 +571,7 @@ export const SmartAssistant: React.FC = () => {
             : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
           }
         `}
-        style={{ maxHeight: 'min(500px, calc(100dvh - 8rem))' }}
+        style={{ maxHeight: 'min(540px, calc(100dvh - 8rem))' }}
         aria-hidden={!open}
       >
         {/* Header */}
@@ -363,11 +603,36 @@ export const SmartAssistant: React.FC = () => {
           </button>
         </div>
 
+        {/* Progress indicator when in wizard */}
+        {(inquiryStep !== 'idle' && inquiryStep !== 'done') && (
+          <div className="shrink-0 bg-secondary/5 border-b border-border/40 px-4 py-2 flex items-center gap-2">
+            <div className="flex gap-1">
+              {(['pick_type', 'collect_name', 'collect_email', 'collect_phone', 'confirm'] as InquiryStep[]).map((step, i) => {
+                const stepIndex = ['pick_type', 'collect_name', 'collect_email', 'collect_phone', 'confirm', 'submitting'].indexOf(inquiryStep);
+                return (
+                  <div
+                    key={i}
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      i <= stepIndex ? 'bg-secondary w-6' : 'bg-border w-3'
+                    }`}
+                  />
+                );
+              })}
+            </div>
+            <span className="text-xs text-muted-foreground ms-1">
+              {inquiryStep === 'submitting'
+                ? T('Submitting…', 'جارٍ الإرسال…')
+                : T('Partnership Inquiry', 'استفسار شراكة')}
+            </span>
+            {inquiryStep === 'submitting' && <Loader2 className="h-3 w-3 animate-spin text-secondary ms-auto" />}
+            {inquiryStep === 'confirm' && <CheckCircle2 className="h-3.5 w-3.5 text-secondary ms-auto" />}
+          </div>
+        )}
+
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
           {messages.map((msg) => (
             <div key={msg.id} className={`flex flex-col gap-2 ${msg.from === 'user' ? 'items-end' : 'items-start'}`}>
-              {/* Bubble */}
               <div
                 className={`
                   max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-line
@@ -379,17 +644,18 @@ export const SmartAssistant: React.FC = () => {
                 {msg.text}
               </div>
 
-              {/* Quick replies */}
               {msg.quickReplies && msg.quickReplies.length > 0 && (
                 <div className="flex flex-col gap-1.5 w-full max-w-[85%]">
                   {msg.quickReplies.map((qr, i) => (
                     <button
                       key={i}
                       onClick={qr.action}
+                      disabled={inquiryStep === 'submitting'}
                       className="
                         flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium
                         bg-background border border-border/80
                         hover:border-secondary/50 hover:bg-secondary/5 hover:text-secondary
+                        disabled:opacity-40 disabled:cursor-not-allowed
                         transition-all duration-150 text-start
                       "
                     >
@@ -416,25 +682,34 @@ export const SmartAssistant: React.FC = () => {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Validation error */}
+        {inputError && (
+          <div className="shrink-0 px-4 py-2 bg-destructive/5 border-t border-destructive/20">
+            <p className="text-xs text-destructive leading-snug">{inputError}</p>
+          </div>
+        )}
+
         {/* Input */}
         <div className="shrink-0 border-t border-border/60 p-3 flex items-center gap-2">
           <input
             ref={inputRef}
-            type="text"
+            type={inquiryStep === 'collect_email' ? 'email' : inquiryStep === 'collect_phone' ? 'tel' : 'text'}
             value={inputVal}
-            onChange={e => setInputVal(e.target.value)}
+            onChange={e => { setInputVal(e.target.value); setInputError(''); }}
             onKeyDown={handleKeyDown}
-            placeholder={isRtl ? 'اكتب سؤالك هنا...' : 'Type your question…'}
+            placeholder={inputPlaceholder}
+            disabled={!isInputActive || inquiryStep === 'submitting'}
             className="
               flex-1 h-9 px-3 rounded-xl text-sm
               bg-muted border-0
               focus:outline-none focus:ring-2 focus:ring-secondary/40
               placeholder:text-muted-foreground/50
+              disabled:opacity-40 disabled:cursor-not-allowed
             "
           />
           <button
             onClick={handleSend}
-            disabled={!inputVal.trim()}
+            disabled={!inputVal.trim() || !isInputActive || inquiryStep === 'submitting'}
             className="
               w-9 h-9 rounded-xl flex items-center justify-center shrink-0
               bg-secondary text-secondary-foreground
@@ -465,16 +740,12 @@ export const SmartAssistant: React.FC = () => {
           : (isRtl ? 'افتح المساعد الذكي' : 'Open smart assistant')
         }
       >
-        {/* Proactive pulse ring */}
         {showBadge && !open && (
           <span className="absolute inset-0 rounded-full bg-secondary/40 animate-ping" />
         )}
-
-        {/* Notification dot */}
         {showBadge && !open && (
           <span className="absolute top-1 end-1 w-3 h-3 rounded-full bg-red-500 border-2 border-background" />
         )}
-
         {open
           ? <X className="h-5 w-5" />
           : <MessageCircle className="h-6 w-6" />
