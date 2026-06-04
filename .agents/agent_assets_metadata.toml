@@ -17,3 +17,9 @@ id = "2V10LyuMLvUEvexKZQOiI"
 uri = "file://qr-expo.png"
 type = "image"
 title = "Scan with Expo Go to test RKZ on your phone"
+
+[[outputs]]
+id = "HUdzlscbl-K9D955XYgnL"
+uri = "file://qr-rkz.png"
+type = "image"
+title = "RKZ — Expo Go QR Code"
