@@ -23,10 +23,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const ALLOWED_HREFS = ['/listings', '/services', '/contact'];
   const centerNav = nav.filter(n => ALLOWED_HREFS.includes(n.href));
 
-  // Footer site map: Home + Properties + Services only
-  const FOOTER_HREFS = ['/', '/listings', '/services'];
-  const footerNav = nav.filter(n => FOOTER_HREFS.includes(n.href));
-
   return (
     <div className="h-dvh overflow-auto flex flex-col font-sans">
 
@@ -146,79 +142,54 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {/* ── Footer ──────────────────────────────────────────────────────────── */}
       <footer className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 py-14 grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="container mx-auto px-4 py-14 max-w-3xl">
 
-          {/* Brand + contact info */}
-          <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              {branding.logoUrl
-                ? <img src={branding.logoUrl} alt="" className="h-6 w-6 object-contain" />
-                : <Building className="h-5 w-5 text-secondary" />
-              }
-              <span className="font-bold text-lg text-white">
-                {isRtl ? branding.companyNameAr : branding.companyNameEn}
-              </span>
-            </div>
-            <p className="text-primary-foreground/60 text-sm leading-relaxed max-w-xs">
-              {isRtl ? footer.descriptionAr : footer.descriptionEn}
-            </p>
-            <ul className="mt-6 space-y-2 text-sm text-primary-foreground/60">
-              {(isRtl ? contact.addressAr : contact.addressEn) && (
-                <li className="flex items-center gap-2">
-                  <MapPin className="h-3.5 w-3.5 text-secondary shrink-0" />
-                  {isRtl ? contact.addressAr : contact.addressEn}
-                </li>
-              )}
-              {contact.email && (
-                <li className="flex items-center gap-2">
-                  <Mail className="h-3.5 w-3.5 text-secondary shrink-0" />
-                  <a href={`mailto:${contact.email}`} className="hover:text-secondary transition-colors">
-                    {contact.email}
-                  </a>
-                </li>
-              )}
-              {contact.phone && (
-                <li className="flex items-center gap-2">
-                  <Phone className="h-3.5 w-3.5 text-secondary shrink-0" />
-                  <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="hover:text-secondary transition-colors" dir="ltr">
-                    {contact.phone}
-                  </a>
-                </li>
-              )}
-            </ul>
+          {/* Brand + description */}
+          <div className="flex items-center gap-2 mb-4">
+            {branding.logoUrl
+              ? <img src={branding.logoUrl} alt="" className="h-6 w-6 object-contain" />
+              : <Building className="h-5 w-5 text-secondary" />
+            }
+            <span className="font-bold text-lg text-white">
+              {isRtl ? branding.companyNameAr : branding.companyNameEn}
+            </span>
           </div>
+          <p className="text-primary-foreground/60 text-sm leading-relaxed max-w-sm">
+            {isRtl ? footer.descriptionAr : footer.descriptionEn}
+          </p>
 
-          {/* Site map — Home, Properties, Services only */}
-          <div>
-            <h3 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-4">
-              {isRtl ? 'خريطة الموقع' : 'Site Map'}
-            </h3>
-            <ul className="space-y-2.5 text-sm text-primary-foreground/60">
-              {footerNav.map(({ href, labelEn, labelAr }) => (
-                <li key={href}>
-                  <Link href={href} className="hover:text-secondary transition-colors">
-                    {isRtl ? labelAr : labelEn}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
+          {/* Contact info only */}
+          <ul className="mt-6 space-y-2 text-sm text-primary-foreground/60">
+            {(isRtl ? contact.addressAr : contact.addressEn) && (
+              <li className="flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-secondary shrink-0" />
+                {isRtl ? contact.addressAr : contact.addressEn}
+              </li>
+            )}
+            {contact.email && (
+              <li className="flex items-center gap-2">
+                <Mail className="h-3.5 w-3.5 text-secondary shrink-0" />
+                <a href={`mailto:${contact.email}`} className="hover:text-secondary transition-colors">
+                  {contact.email}
+                </a>
+              </li>
+            )}
+            {contact.phone && (
+              <li className="flex items-center gap-2">
+                <Phone className="h-3.5 w-3.5 text-secondary shrink-0" />
+                <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="hover:text-secondary transition-colors" dir="ltr">
+                  {contact.phone}
+                </a>
+              </li>
+            )}
+          </ul>
         </div>
 
+        {/* Legal bar — copyright only, no nav links */}
         <div className="border-t border-primary-foreground/10">
-          <div className="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-primary-foreground/40">
-            <span>© {new Date().getFullYear()} {isRtl ? branding.companyNameAr : branding.companyNameEn}. {isRtl ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}</span>
-            <span className="flex items-center gap-3">
-              {footerNav.slice(1).map(({ href, labelEn, labelAr }, i, arr) => (
-                <React.Fragment key={href}>
-                  <Link href={href} className="hover:text-primary-foreground/70 transition-colors">
-                    {isRtl ? labelAr : labelEn}
-                  </Link>
-                  {i < arr.length - 1 && <span className="text-primary-foreground/20">·</span>}
-                </React.Fragment>
-              ))}
-            </span>
+          <div className="container mx-auto px-4 py-4 text-center text-xs text-primary-foreground/40">
+            © {new Date().getFullYear()} {isRtl ? branding.companyNameAr : branding.companyNameEn}.{' '}
+            {isRtl ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
           </div>
         </div>
       </footer>
