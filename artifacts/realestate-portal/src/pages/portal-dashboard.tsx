@@ -49,6 +49,7 @@ import {
   Users, ShieldCheck, MessageSquare, CheckCircle,
   Globe, Bell, FileText, UserPlus, BrainCircuit, PowerOff, Power,
   ClipboardList, ScrollText, RefreshCw, X, Check, Ban,
+  LayoutGrid, UserCheck, Mail, HardHat,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -1126,6 +1127,334 @@ const RbacPanel: React.FC<RbacPanelProps> = ({ user, t, isRtl }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // Staff Panel — team member CRUD
 // ═══════════════════════════════════════════════════════════════════════════════
+// ── Unit Map Panel ─────────────────────────────────────────────────────────────
+interface PropertyUnitGridProps { property: PortalProperty; isRtl: boolean; }
+const PropertyUnitGrid: React.FC<PropertyUnitGridProps> = ({ property, isRtl }) => {
+  const { data: unitsRes, isLoading } = useGetPortalPropertyUnits(property.id, { page: 1, limit: 100 }, { query: { enabled: true } } as any);
+  const units: PortalUnit[] = (unitsRes as any)?.data ?? [];
+
+  const statusConfig: Record<string, { label: string; bg: string; text: string; dot: string; border: string }> = {
+    available:   { label: isRtl ? 'متاح'  : 'Available',   bg: 'bg-green-50',  text: 'text-green-800', dot: 'bg-green-500',  border: 'border-green-300' },
+    occupied:    { label: isRtl ? 'مؤجر'  : 'Occupied',    bg: 'bg-amber-50',  text: 'text-amber-800', dot: 'bg-amber-500',  border: 'border-amber-300' },
+    maintenance: { label: isRtl ? 'صيانة' : 'Maintenance', bg: 'bg-red-50',    text: 'text-red-800',   dot: 'bg-red-500',    border: 'border-red-300'   },
+    reserved:    { label: isRtl ? 'محجوز' : 'Reserved',    bg: 'bg-blue-50',   text: 'text-blue-800',  dot: 'bg-blue-500',   border: 'border-blue-300'  },
+  };
+
+  const available   = units.filter(u => u.status === 'available').length;
+  const occupied    = units.filter(u => u.status === 'occupied').length;
+  const maintenance = units.filter(u => u.status === 'maintenance').length;
+
+  if (isLoading) return (
+    <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+      {[1,2,3,4,5,6,7,8].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}
+    </div>
+  );
+
+  if (units.length === 0) return (
+    <div className="text-center py-6 text-muted-foreground text-xs border border-dashed rounded-xl">
+      {isRtl ? 'لا توجد وحدات مسجلة' : 'No units registered'}
+    </div>
+  );
+
+  return (
+    <div className="space-y-3">
+      {/* Mini summary bar */}
+      <div className="flex items-center gap-4 text-xs flex-wrap">
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <span className="w-2 h-2 rounded-full bg-green-500" />{isRtl ? 'متاح' : 'Available'}: <strong className="text-foreground">{available}</strong>
+        </span>
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <span className="w-2 h-2 rounded-full bg-amber-500" />{isRtl ? 'مؤجر' : 'Occupied'}: <strong className="text-foreground">{occupied}</strong>
+        </span>
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <span className="w-2 h-2 rounded-full bg-red-500" />{isRtl ? 'صيانة' : 'Maintenance'}: <strong className="text-foreground">{maintenance}</strong>
+        </span>
+      </div>
+      {/* Unit card grid */}
+      <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
+        {units.map(unit => {
+          const cfg = statusConfig[unit.status ?? 'available'] ?? statusConfig['available'];
+          const tooltip = [
+            `Unit ${unit.unitNumber}`,
+            unit.type,
+            unit.floor != null ? (isRtl ? `الطابق ${unit.floor}` : `Floor ${unit.floor}`) : null,
+            unit.monthlyRent ? `SAR ${Number(unit.monthlyRent).toLocaleString()}/mo` : null,
+            cfg.label,
+          ].filter(Boolean).join(' · ');
+          return (
+            <div
+              key={unit.id}
+              title={tooltip}
+              className={`${cfg.bg} ${cfg.border} border rounded-lg p-2 text-center cursor-default hover:shadow-md hover:scale-105 transition-all`}
+            >
+              <div className="flex justify-center mb-1">
+                <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+              </div>
+              <p className={`text-[11px] font-bold ${cfg.text} leading-tight truncate`}>{unit.unitNumber}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5 leading-tight truncate capitalize">{unit.type}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+interface UnitMapPanelProps { t: (k: string) => string; isRtl: boolean; }
+const UnitMapPanel: React.FC<UnitMapPanelProps> = ({ isRtl }) => {
+  const { data: propsRes, isLoading: loadingProps } = useGetPortalProperties({ query: { enabled: true } } as any);
+  const properties: PortalProperty[] = (propsRes as any)?.data ?? [];
+
+  const statusLegend = [
+    { dot: 'bg-green-500',  bg: 'bg-green-50 border-green-300',  label: isRtl ? 'متاح للإيجار'  : 'Available for rent'    },
+    { dot: 'bg-amber-500',  bg: 'bg-amber-50 border-amber-300',  label: isRtl ? 'مؤجر حالياً'   : 'Currently occupied'    },
+    { dot: 'bg-red-500',    bg: 'bg-red-50 border-red-300',      label: isRtl ? 'تحت الصيانة'   : 'Under maintenance'     },
+    { dot: 'bg-blue-500',   bg: 'bg-blue-50 border-blue-300',    label: isRtl ? 'محجوز'         : 'Reserved / held'       },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-bold text-primary font-serif">{isRtl ? 'خريطة الوحدات' : 'Unit Map'}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {isRtl ? 'عرض بصري لحالة جميع الوحدات عبر العقارات — مرر الماوس على الوحدة لعرض التفاصيل' : 'Visual status board across all properties — hover over a unit to see details'}
+        </p>
+      </div>
+
+      {/* Legend */}
+      <Card className="p-4 border-border">
+        <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">{isRtl ? 'مفتاح الألوان' : 'Status Legend'}</p>
+        <div className="flex flex-wrap gap-4">
+          {statusLegend.map(s => (
+            <div key={s.label} className="flex items-center gap-2">
+              <div className={`w-5 h-5 rounded ${s.bg} border flex items-center justify-center`}>
+                <span className={`w-2 h-2 rounded-full ${s.dot}`} />
+              </div>
+              <span className="text-xs text-muted-foreground">{s.label}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Property grids */}
+      {loadingProps ? (
+        <div className="space-y-4">{[1,2].map(i => <Skeleton key={i} className="h-40 rounded-xl" />)}</div>
+      ) : properties.length === 0 ? (
+        <Card className="p-16 text-center border-dashed border-2">
+          <LayoutGrid className="h-12 w-12 mx-auto mb-3 opacity-30" />
+          <p className="text-sm text-muted-foreground">{isRtl ? 'لا توجد عقارات مسجلة بعد' : 'No properties registered yet'}</p>
+        </Card>
+      ) : (
+        <div className="space-y-5">
+          {properties.map((prop: PortalProperty) => (
+            <Card key={prop.id} className="p-5 border-border">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="font-bold text-base text-primary leading-tight">{prop.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{prop.address}{prop.city ? `, ${prop.city}` : ''}</p>
+                </div>
+                <Badge variant={prop.status === 'active' ? 'default' : 'secondary'} className="text-xs shrink-0 capitalize">
+                  {prop.status}
+                </Badge>
+              </div>
+              <PropertyUnitGrid property={prop} isRtl={isRtl} />
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Personnel Affairs Panel ────────────────────────────────────────────────────
+interface PersonnelPanelProps { t: (k: string) => string; isRtl: boolean; callerTierLevel: number; }
+const PersonnelPanel: React.FC<PersonnelPanelProps> = ({ isRtl, callerTierLevel }) => {
+  const queryClient = useQueryClient();
+  const { data: teamRes, isLoading } = useGetPortalTeam({ query: { enabled: true } } as any);
+  const team: PortalTeamMember[] = (teamRes as any)?.data ?? [];
+
+  const [resendingId,  setResendingId]  = useState<number | null>(null);
+  const [resendResult, setResendResult] = useState<Record<number, string>>({});
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: getGetPortalTeamQueryKey() as any });
+
+  const toggleStatus = async (id: number) => {
+    try {
+      await fetch(`/api/portal/team/${id}/status`, { method: 'PATCH', credentials: 'include' });
+      invalidate();
+    } catch {}
+  };
+
+  const handleResendInvite = async (id: number) => {
+    setResendingId(id);
+    try {
+      const res  = await fetch(`/api/staff/${id}/resend-invite`, { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      const msg  = data.inviteCode
+        ? `${isRtl ? 'الكود' : 'Code'}: ${data.inviteCode}`
+        : (isRtl ? 'تم الإرسال بنجاح' : 'Invite sent');
+      setResendResult(prev => ({ ...prev, [id]: msg }));
+    } catch {
+      setResendResult(prev => ({ ...prev, [id]: isRtl ? 'فشل الإرسال' : 'Failed to send' }));
+    } finally { setResendingId(null); }
+  };
+
+  const active   = team.filter(m => (m as any).isActive !== false).length;
+  const inactive = team.filter(m => (m as any).isActive === false).length;
+  const pending  = team.filter(m => (m as any).invitePending).length;
+
+  const roleBadgeColor = (tl: number) => {
+    if (tl <= 3)  return 'bg-blue-100 text-blue-800';
+    if (tl <= 5)  return 'bg-teal-100 text-teal-800';
+    if (tl <= 7)  return 'bg-orange-100 text-orange-800';
+    return               'bg-slate-100 text-slate-700';
+  };
+
+  const kpis = [
+    { label: isRtl ? 'إجمالي الأعضاء' : 'Total Members',    value: team.length, bg: 'bg-primary/10',  fg: 'text-primary',    Icon: Users      },
+    { label: isRtl ? 'نشط'            : 'Active',            value: active,      bg: 'bg-green-100',   fg: 'text-green-600',  Icon: UserCheck  },
+    { label: isRtl ? 'غير نشط'        : 'Inactive',          value: inactive,    bg: 'bg-slate-100',   fg: 'text-slate-600',  Icon: HardHat    },
+    { label: isRtl ? 'دعوة معلقة'     : 'Pending Invite',    value: pending,     bg: 'bg-amber-100',   fg: 'text-amber-600',  Icon: Mail       },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-bold text-primary font-serif">{isRtl ? 'شؤون الموظفين' : 'Personnel Affairs'}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {isRtl ? 'إدارة بيانات الفريق وحالة الوصول والدعوات' : 'Manage team records, access status, and onboarding invitations'}
+        </p>
+      </div>
+
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {kpis.map(k => (
+          <Card key={k.label} className="p-4 border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`${k.bg} p-1.5 rounded-full`}><k.Icon className={`h-3.5 w-3.5 ${k.fg}`} /></div>
+              <span className="text-xs text-muted-foreground leading-tight">{k.label}</span>
+            </div>
+            <p className="text-2xl font-bold text-primary">{isLoading ? '—' : k.value}</p>
+          </Card>
+        ))}
+      </div>
+
+      {/* Personnel table */}
+      {isLoading ? (
+        <div className="space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}</div>
+      ) : team.length === 0 ? (
+        <Card className="p-12 text-center border-dashed border-2">
+          <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
+          <p className="text-sm text-muted-foreground">{isRtl ? 'لا يوجد أعضاء في الفريق بعد' : 'No team members yet'}</p>
+        </Card>
+      ) : (
+        <Card className="border-border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted border-b border-border">
+                <tr>
+                  <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{isRtl ? 'الموظف'        : 'Member'  }</th>
+                  <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">{isRtl ? 'الدور'          : 'Role'    }</th>
+                  <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{isRtl ? 'البريد الإلكتروني' : 'Email'   }</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide">{isRtl ? 'الحالة'        : 'Status'  }</th>
+                  <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{isRtl ? 'الإجراءات'    : 'Actions' }</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {team.map((member: PortalTeamMember) => {
+                  const m        = member as any;
+                  const tierLvl  = getPortalTierLevel(m.role ?? 'viewer');
+                  const isActive = m.isActive !== false;
+                  const hasPend  = !!m.invitePending;
+                  const initials = (m.displayName ?? m.username ?? 'U')
+                    .split(' ').slice(0, 2).map((w: string) => w[0] ?? '').join('').toUpperCase();
+                  const canManage = tierLvl > callerTierLevel;
+                  return (
+                    <tr key={m.id} className="hover:bg-muted/30 transition-colors">
+                      {/* Member */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                            {initials}
+                          </div>
+                          <div>
+                            <p className="font-medium text-primary text-sm leading-tight">{m.displayName ?? m.username}</p>
+                            <p className="text-xs text-muted-foreground">@{m.username}</p>
+                          </div>
+                        </div>
+                      </td>
+                      {/* Role */}
+                      <td className="px-4 py-3 hidden sm:table-cell">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${roleBadgeColor(tierLvl)}`}>
+                          {m.role ?? 'viewer'}
+                        </span>
+                      </td>
+                      {/* Email */}
+                      <td className="px-4 py-3 hidden md:table-cell">
+                        <span className="text-xs text-muted-foreground">{m.email ?? '—'}</span>
+                      </td>
+                      {/* Status badge */}
+                      <td className="px-4 py-3 text-center">
+                        {hasPend ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            {isRtl ? 'دعوة معلقة' : 'Pending'}
+                          </span>
+                        ) : isActive ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            {isRtl ? 'نشط' : 'Active'}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-600">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                            {isRtl ? 'غير نشط' : 'Inactive'}
+                          </span>
+                        )}
+                      </td>
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {canManage && (
+                            <Switch
+                              checked={isActive}
+                              onCheckedChange={() => toggleStatus(m.id)}
+                              className="h-5 data-[state=checked]:bg-green-500"
+                              aria-label={isRtl ? 'تبديل الحالة' : 'Toggle status'}
+                            />
+                          )}
+                          {canManage && hasPend && (
+                            <Button
+                              size="sm" variant="outline"
+                              className="h-7 text-xs px-2"
+                              disabled={resendingId === m.id}
+                              onClick={() => handleResendInvite(m.id)}
+                            >
+                              {resendingId === m.id
+                                ? <RefreshCw className="h-3 w-3 animate-spin" />
+                                : (isRtl ? 'إعادة الدعوة' : 'Resend Invite')}
+                            </Button>
+                          )}
+                          {resendResult[m.id] && (
+                            <span className="text-xs text-green-600 font-medium">{resendResult[m.id]}</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+// ── Staff Panel ────────────────────────────────────────────────────────────────
 interface StaffPanelProps { t: (k: string) => string; isRtl: boolean; callerTierLevel: number; }
 const emptyStaffForm = () => ({ username: '', displayName: '', email: '', phone: '', password: '', role: 'manager' });
 
@@ -1606,10 +1935,12 @@ export const PortalDashboard: React.FC = () => {
 
   // Navigation items by role
   const navItems = [
-    ...(tierLevel <= 1 ? [{ key: 'cms',        icon: Globe,      label: t('admin.nav.cms')        }] : []),
-    ...(tierLevel <= 3 ? [{ key: 'rbac',        icon: ShieldCheck,label: t('admin.nav.rbac')       }] : []),
+    ...(tierLevel <= 1 ? [{ key: 'cms',        icon: Globe,        label: t('admin.nav.cms')        }] : []),
+    ...(tierLevel <= 3 ? [{ key: 'rbac',        icon: ShieldCheck,  label: t('admin.nav.rbac')       }] : []),
     ...(tierLevel <= 3 ? [{ key: 'staff',       icon: Users,        label: t('admin.nav.staff')      }] : []),
+    ...(tierLevel <= 3 ? [{ key: 'personnel',   icon: UserCheck,    label: isRtl ? 'شؤون الموظفين' : 'Personnel'    }] : []),
     ...(tierLevel <= 7 ? [{ key: 'properties',  icon: Building,     label: t('admin.nav.properties') }] : []),
+    ...(tierLevel <= 7 ? [{ key: 'unit-map',    icon: LayoutGrid,   label: isRtl ? 'خريطة الوحدات' : 'Unit Map'     }] : []),
     ...(tierLevel <= 7 ? [{ key: 'financials',  icon: BarChart2,    label: t('admin.nav.financials') }] : []),
     ...(tierLevel <= 3 ? [{ key: 'ai',          icon: BrainCircuit, label: t('admin.nav.ai')         }] : []),
     ...(tierLevel > 7  ? [{ key: 'portfolio',   icon: TrendingUp,   label: t('admin.nav.portfolio')  }] : []),
@@ -1704,6 +2035,12 @@ export const PortalDashboard: React.FC = () => {
 
           {/* Staff Management */}
           {activePanel === 'staff' && tierLevel <= 3 && <StaffPanel t={t} isRtl={isRtl} callerTierLevel={tierLevel} />}
+
+          {/* Personnel Affairs */}
+          {activePanel === 'personnel' && tierLevel <= 3 && <PersonnelPanel t={t} isRtl={isRtl} callerTierLevel={tierLevel} />}
+
+          {/* Unit Map */}
+          {activePanel === 'unit-map' && tierLevel <= 7 && <UnitMapPanel t={t} isRtl={isRtl} />}
 
           {/* Properties */}
           {activePanel === 'properties' && tierLevel <= 7 && (

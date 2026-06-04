@@ -12,6 +12,7 @@ import {
   ArrowLeft, ArrowRight, Mail, KeyRound,
   BarChart3, CalendarCheck, ShieldCheck, Lock,
   Fingerprint, Smartphone, RefreshCw,
+  Eye, EyeOff, AlertTriangle,
 } from 'lucide-react';
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 
@@ -118,10 +119,13 @@ export const PortalLogin: React.FC = () => {
   const [waAvailable,    setWaAvailable]    = useState(false);
   const [waUser,         setWaUser]         = useState('');
 
+  const [showPassword,   setShowPassword]   = useState(false);
+
   const [fpEmail,        setFpEmail]        = useState('');
   const [fpDemoOtp,      setFpDemoOtp]      = useState('');
   const [fpOtp,          setFpOtp]          = useState('');
   const [newPwd,         setNewPwd]         = useState('');
+  const [showNewPwd,     setShowNewPwd]     = useState(false);
 
   const forgotMutation = useForgotPassword();
   const resetMutation  = useResetPassword();
@@ -337,6 +341,16 @@ export const PortalLogin: React.FC = () => {
             </div>
           )}
 
+          {/* ── Restricted Access Warning ───────────────────────────── */}
+          <div className="mb-5 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 shadow-sm">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+            <p className="text-xs leading-snug">
+              {isRtl
+                ? 'تحذير: هذه المنطقة مخصصة حصراً للشركاء المعتمدين. يُحظر الدخول غير المرخّص ويخضع للمراقبة والمساءلة القانونية.'
+                : 'RESTRICTED ACCESS — Authorised Partners Only. Unauthorised access is strictly prohibited and subject to monitoring and legal action.'}
+            </p>
+          </div>
+
           <div className="bg-card border border-border rounded-xl shadow-sm p-6 md:p-8">
             {error && (
               <Alert variant="destructive" className="mb-4">
@@ -363,15 +377,26 @@ export const PortalLogin: React.FC = () => {
                 <label htmlFor="password" className="block text-sm font-medium text-primary mb-1.5">
                   {t('portal.password')}
                 </label>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="h-10"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="h-10 pr-10"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-label={showPassword ? (isRtl ? 'إخفاء كلمة المرور' : 'Hide password') : (isRtl ? 'إظهار كلمة المرور' : 'Show password')}
+                    onClick={() => setShowPassword(v => !v)}
+                    className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 <div className="text-end mt-1.5">
                   <button
                     type="button"
@@ -688,15 +713,26 @@ export const PortalLogin: React.FC = () => {
                 <label htmlFor="new-pwd" className="block text-sm font-medium text-primary mb-1.5">
                   {t('portal.newPassword')}
                 </label>
-                <Input
-                  id="new-pwd"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={newPwd}
-                  onChange={e => setNewPwd(e.target.value)}
-                  className="h-10"
-                />
+                <div className="relative">
+                  <Input
+                    id="new-pwd"
+                    type={showNewPwd ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    required
+                    value={newPwd}
+                    onChange={e => setNewPwd(e.target.value)}
+                    className="h-10 pr-10"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-label={showNewPwd ? (isRtl ? 'إخفاء كلمة المرور' : 'Hide password') : (isRtl ? 'إظهار كلمة المرور' : 'Show password')}
+                    onClick={() => setShowNewPwd(v => !v)}
+                    className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {showNewPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <Button type="submit" className="w-full h-11" disabled={resetMutation.isPending || fpOtp.length < 6}>
                 {resetMutation.isPending ? (
