@@ -37,6 +37,7 @@ import rkzAssistantRouter from "./rkz-assistant";
 import rkzConfigRouter from "./rkz-config";
 import rkzAuthRouter from "./rkz-auth";
 import rkzListingsRouter from "./rkz-listings";
+import rkzPortalAuthRouter from "./rkz-portal-auth";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
@@ -167,6 +168,7 @@ router.use(rkzAssistantRouter);
 router.use(rkzConfigRouter);
 router.use(rkzAuthRouter);
 router.use(rkzListingsRouter);
+router.use(rkzPortalAuthRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

@@ -405,6 +405,31 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Investor Portal */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t.portal.menuTitle}</Text>
+          <View style={styles.settingCard}>
+            <Pressable
+              style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.8 }]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                router.push("/investor-portal");
+              }}
+            >
+              <View style={[styles.settingIconBox, { backgroundColor: "#FEF3C7" }]}>
+                <MaterialIcons name="lock" size={20} color="#B45309" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.settingLabel}>{t.portal.menuTitle}</Text>
+                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                  {t.portal.menuDesc}
+                </Text>
+              </View>
+              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
+            </Pressable>
+          </View>
+        </View>
+
         {/* Admin Control Panel */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t.admin.adminEntry}</Text>
