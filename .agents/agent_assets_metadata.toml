@@ -11,3 +11,9 @@ id = "jCktAW9goz3sn4e0SeBUs"
 uri = "file://artifacts/rkz/qr.png"
 type = "image"
 title = "RKZ — Scan with Expo Go"
+
+[[outputs]]
+id = "2V10LyuMLvUEvexKZQOiI"
+uri = "file://qr-expo.png"
+type = "image"
+title = "Scan with Expo Go to test RKZ on your phone"
