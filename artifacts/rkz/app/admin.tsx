@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -19,7 +20,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { API_BASE } from "@/constants/api";
-import { type AppConfig, DEFAULT_CONFIG, useConfig } from "@/context/DynamicConfig";
+import { type AppConfig, type FeatureItem, DEFAULT_CONFIG, useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -156,6 +157,60 @@ function FieldRow({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FeatureItemEditor — collapsible editor for one welcome-screen feature card
+// ─────────────────────────────────────────────────────────────────────────────
+function FeatureItemEditor({
+  index,
+  feature,
+  onChange,
+  isAr,
+  labelFn,
+  labelTitleAr,
+  labelTitleEn,
+  labelBodyAr,
+  labelBodyEn,
+}: {
+  index: number;
+  feature: FeatureItem;
+  onChange: (updated: FeatureItem) => void;
+  isAr: boolean;
+  labelFn: (i: number) => string;
+  labelTitleAr: string;
+  labelTitleEn: string;
+  labelBodyAr: string;
+  labelBodyEn: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const label = isAr ? feature.titleAr : feature.titleEn;
+
+  return (
+    <View>
+      <Pressable
+        onPress={() => { setExpanded((e) => !e); Haptics.selectionAsync(); }}
+        style={[styles.featureEditorHeader, isAr && { flexDirection: "row-reverse" }]}
+      >
+        <View style={styles.featIndexBadge}>
+          <Text style={styles.featIndexText}>{index + 1}</Text>
+        </View>
+        <Text style={[styles.featSummary, isAr && { textAlign: "right" }]} numberOfLines={1}>
+          {label || labelFn(index + 1)}
+        </Text>
+        <MaterialIcons name={expanded ? "expand-less" : "expand-more"} size={20} color="#6B7280" />
+      </Pressable>
+      {expanded && (
+        <View style={styles.featureEditorBody}>
+          <FieldRow label={labelTitleAr} value={feature.titleAr} onChange={(v) => onChange({ ...feature, titleAr: v })} isAr />
+          <FieldRow label={labelTitleEn} value={feature.titleEn} onChange={(v) => onChange({ ...feature, titleEn: v })} />
+          <FieldRow label={labelBodyAr} value={feature.bodyAr} onChange={(v) => onChange({ ...feature, bodyAr: v })} isAr multiline />
+          <FieldRow label={labelBodyEn} value={feature.bodyEn} onChange={(v) => onChange({ ...feature, bodyEn: v })} multiline />
+        </View>
+      )}
+      {index < 3 && <View style={styles.divider} />}
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PIN Gate
 // ─────────────────────────────────────────────────────────────────────────────
 function PinGate({ onUnlock }: { onUnlock: (pin: string) => void }) {
@@ -258,10 +313,11 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
 
   const [draft, setDraft] = useState<AppConfig>({
     branding: { ...config.branding },
-    content: { ...config.content },
+    content: { ...config.content, features: [...(config.content.features ?? [])] },
     platforms: { ...config.platforms },
     propertyTypes: [...(config.propertyTypes ?? [])],
   });
+  const [logoUploading, setLogoUploading] = useState(false);
   const [newPin, setNewPin] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState("");
@@ -381,6 +437,37 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
     [draft.branding, applyLocally]
   );
 
+  const pickAndUploadLogo = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        isAr ? "إذن مطلوب" : "Permission Required",
+        isAr ? "يرجى السماح بالوصول إلى معرض الصور" : "Please allow photo library access to upload a logo"
+      );
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+      base64: true,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    const { base64, mimeType } = result.assets[0];
+    if (!base64) return;
+    setLogoUploading(true);
+    try {
+      const dataUri = `data:${mimeType ?? "image/jpeg"};base64,${base64}`;
+      updateBranding("logoUrl", dataUri);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {
+      Alert.alert(isAr ? "خطأ" : "Error", isAr ? "فشل رفع الشعار" : "Failed to set logo");
+    } finally {
+      setLogoUploading(false);
+    }
+  }, [isAr, updateBranding]);
+
   async function handleSave() {
     setSaving(true);
     setSavedMsg("");
@@ -454,26 +541,52 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
             isAr={isAr}
           />
 
+          {/* ── Logo Upload ── */}
+          <Text style={[styles.fieldLabel, isAr && { textAlign: "right" }]}>{t.admin.logoPreview}</Text>
+          <View style={[styles.logoRow, isAr && { flexDirection: "row-reverse" }]}>
+            {draft.branding.logoUrl ? (
+              <Image
+                source={{ uri: draft.branding.logoUrl }}
+                style={styles.logoThumb}
+                contentFit="contain"
+              />
+            ) : (
+              <View style={styles.logoPlaceholder}>
+                <MaterialIcons name="image" size={28} color="#9CA3AF" />
+              </View>
+            )}
+            <View style={{ flex: 1, gap: 8 }}>
+              <Pressable
+                onPress={pickAndUploadLogo}
+                disabled={logoUploading}
+                style={({ pressed }) => [styles.uploadLogoBtn, pressed && { opacity: 0.8 }, logoUploading && { opacity: 0.6 }]}
+              >
+                {logoUploading
+                  ? <ActivityIndicator size="small" color="#2563EB" />
+                  : <MaterialIcons name="photo-library" size={16} color="#2563EB" />}
+                <Text style={styles.uploadLogoBtnText}>
+                  {logoUploading ? (isAr ? "جارٍ التحميل..." : "Loading...") : t.admin.logoUploadBtn}
+                </Text>
+              </Pressable>
+              {!!draft.branding.logoUrl && (
+                <Pressable
+                  onPress={() => updateBranding("logoUrl", null as unknown as string)}
+                  style={({ pressed }) => [styles.removeLogoBtn, pressed && { opacity: 0.7 }]}
+                >
+                  <MaterialIcons name="delete-outline" size={14} color="#DC2626" />
+                  <Text style={styles.removeLogoBtnText}>{t.admin.logoRemove}</Text>
+                </Pressable>
+              )}
+            </View>
+          </View>
+
           <FieldRow
-            label={t.admin.logoUrlLabel}
-            value={draft.branding.logoUrl ?? ""}
+            label={t.admin.logoOrUrl}
+            value={draft.branding.logoUrl?.startsWith("data:") ? "" : (draft.branding.logoUrl ?? "")}
             onChange={(v) => updateBranding("logoUrl", v || null as unknown as string)}
             placeholder="https://example.com/logo.png"
             isAr={isAr}
           />
-
-          {!!draft.branding.logoUrl && (
-            <View style={{ marginBottom: 14, alignItems: "center" }}>
-              <Text style={[styles.fieldLabel, isAr && { textAlign: "right", alignSelf: "flex-end" }]}>
-                {t.admin.logoPreview}
-              </Text>
-              <Image
-                source={{ uri: draft.branding.logoUrl }}
-                style={{ width: 72, height: 72, borderRadius: 16, marginTop: 8 }}
-                contentFit="contain"
-              />
-            </View>
-          )}
 
           {/* Preset Themes */}
           <Text style={[styles.fieldLabel, isAr && { textAlign: "right" }]}>{t.admin.presetsLabel}</Text>
@@ -568,6 +681,35 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
             value={draft.content.welcomeCtaEn}
             onChange={(v) => setDraft((d) => ({ ...d, content: { ...d.content, welcomeCtaEn: v } }))}
           />
+        </SectionCard>
+
+        {/* ── 2.5 WELCOME SCREEN FEATURES ─────────────────────────────────── */}
+        <SectionCard icon="stars" title={t.admin.featuresSection} iconBg="#F5F3FF" iconColor="#7C3AED" isAr={isAr}>
+          <Text style={[styles.fieldLabel, styles.pinHint, isAr && { textAlign: "right" }]}>
+            {t.admin.featuresHint}
+          </Text>
+          {draft.content.features.map((feat, idx) => (
+            <FeatureItemEditor
+              key={idx}
+              index={idx}
+              feature={feat}
+              onChange={(updated) =>
+                setDraft((d) => ({
+                  ...d,
+                  content: {
+                    ...d.content,
+                    features: d.content.features.map((f, i) => (i === idx ? updated : f)),
+                  },
+                }))
+              }
+              isAr={isAr}
+              labelFn={t.admin.featureItem}
+              labelTitleAr={t.admin.featureTitleAr}
+              labelTitleEn={t.admin.featureTitleEn}
+              labelBodyAr={t.admin.featureBodyAr}
+              labelBodyEn={t.admin.featureBodyEn}
+            />
+          ))}
         </SectionCard>
 
         {/* ── 3. PLATFORM CONTROL ────────────────────────────────────────── */}
@@ -1141,6 +1283,82 @@ const styles = StyleSheet.create({
     borderColor: "#DC2626",
   },
   opsClearBtnText: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: "#DC2626" },
+
+  // ── Logo upload ────────────────────────────────────────────────────────────
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 14,
+  },
+  logoThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+  },
+  logoPlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    borderStyle: "dashed",
+    backgroundColor: "#F9FAFB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  uploadLogoBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#2563EB",
+    backgroundColor: "#EFF6FF",
+  },
+  uploadLogoBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#2563EB" },
+  removeLogoBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "#FEF2F2",
+    alignSelf: "flex-start",
+  },
+  removeLogoBtnText: { fontSize: 12, fontFamily: "Inter_500Medium", color: "#DC2626" },
+
+  // ── Feature item editor ────────────────────────────────────────────────────
+  featureEditorHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 10,
+  },
+  featIndexBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    backgroundColor: "#F5F3FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  featIndexText: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#7C3AED" },
+  featSummary: { flex: 1, fontSize: 14, fontFamily: "Inter_500Medium", color: "#111827" },
+  featureEditorBody: {
+    paddingLeft: 12,
+    paddingTop: 4,
+    borderLeftWidth: 2,
+    borderLeftColor: "#EDE9FE",
+    marginLeft: 12,
+    marginBottom: 8,
+  },
 });
 
 const pinStyles = StyleSheet.create({

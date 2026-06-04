@@ -19,6 +19,13 @@ export interface PropertyTypeConfig {
   labelEn: string;
 }
 
+export interface FeatureItem {
+  titleAr: string;
+  titleEn: string;
+  bodyAr: string;
+  bodyEn: string;
+}
+
 export interface AppConfig {
   branding: {
     appName: string;
@@ -34,6 +41,7 @@ export interface AppConfig {
     welcomeHeadlineEn: string;
     welcomeCtaAr: string;
     welcomeCtaEn: string;
+    features: FeatureItem[];
   };
   platforms: {
     aqar: boolean;
@@ -59,6 +67,12 @@ export const DEFAULT_CONFIG: AppConfig = {
     welcomeHeadlineEn: 'Welcome to "Rkz" — Your Exclusive Digital Agent!',
     welcomeCtaAr: "لنبدأ الآن",
     welcomeCtaEn: "Let's Get Started",
+    features: [
+      { titleAr: "النشر التلقائي", titleEn: "Auto-Publishing", bodyAr: "نضمن ظهور عقارك في كافة المنصات العقارية الكبرى.", bodyEn: "We guarantee your property appears on all major real estate platforms." },
+      { titleAr: "التفاوض والاتفاق", titleEn: "Negotiation & Closing", bodyAr: "فريقنا يتولى ذلك بمهارة عالية؛ نحن نرد على الجميع ونفاوض نيابة عنك لنحقق لك أفضل صفقة.", bodyEn: "Our expert team handles it all — we respond and negotiate on your behalf to get you the best deal." },
+      { titleAr: "راحة بال تامة", titleEn: "Complete Peace of Mind", bodyAr: "لن يصلك أي اتصال من طرف ثالث، ولن يزعجك أحد؛ نحن الدرع الذي يحمي خصوصيتك.", bodyEn: "No third-party calls, no interruptions — we're the shield that protects your privacy." },
+      { titleAr: "الإدارة الذكية", titleEn: "Smart Management", bodyAr: "تابع كافة الاستفسارات وتحديث حالة عقارك في مكان واحد وبكل سهولة.", bodyEn: "Track all inquiries and your property status in one place, effortlessly." },
+    ],
   },
   platforms: {
     aqar: true,

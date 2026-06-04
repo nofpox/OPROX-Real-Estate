@@ -50,6 +50,9 @@ export default function LoginScreen() {
   const dynHeadline = isAr ? config.content.welcomeHeadlineAr : config.content.welcomeHeadlineEn;
   const dynCta = isAr ? config.content.welcomeCtaAr : config.content.welcomeCtaEn;
   const appName = config.branding.appName;
+  const dynFeatures = config.content.features?.length
+    ? config.content.features.map((f) => ({ title: isAr ? f.titleAr : f.titleEn, body: isAr ? f.bodyAr : f.bodyEn }))
+    : t.welcome.features;
 
   const [step, setStep] = useState<Step>("welcome");
   const [phone, setPhone] = useState("");
@@ -352,7 +355,7 @@ export default function LoginScreen() {
 
           <Text style={S.headline}>{dynHeadline}</Text>
 
-          {t.welcome.features.map((f, i) => (
+          {dynFeatures.map((f, i) => (
             <View key={i} style={S.featureRow}>
               <View style={S.featureIcon}>
                 <MaterialIcons name={FEATURE_ICONS[i]} size={22} color={colors.gold} />
