@@ -7,7 +7,58 @@ import { Resend } from "resend";
 const router = Router();
 
 const rkzResend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const SENDER = process.env.SENDER_EMAIL ?? "RKZ <onboarding@resend.dev>";
+const SENDER    = process.env.SENDER_EMAIL ?? "RKZ <onboarding@resend.dev>";
+
+/** Send a bilingual welcome email to a brand-new RKZ user on first registration. */
+async function sendRkzWelcomeEmail(to: string, name: string | null): Promise<void> {
+  if (!rkzResend) return;
+  const greeting = name ? name : to.split("@")[0];
+  await rkzResend.emails.send({
+    from:    SENDER,
+    to:      [to],
+    subject: "Welcome to RKZ — رمز التحقق | مرحباً بك في RKZ",
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
+        <!-- Header -->
+        <div style="background:#0A1628;padding:22px 28px;display:flex;align-items:center;gap:12px">
+          <div style="width:38px;height:38px;background:#D4A843;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏠</div>
+          <div>
+            <p style="margin:0;font-size:18px;font-weight:800;color:#fff;letter-spacing:2px">RKZ</p>
+            <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.5)">محرك النشر العقاري الفوري</p>
+          </div>
+        </div>
+        <!-- Body EN -->
+        <div style="padding:28px">
+          <h2 style="margin:0 0 10px;font-size:18px;font-weight:700;color:#111">Welcome to RKZ, ${greeting}! 🎉</h2>
+          <p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.7">
+            Your RKZ account has been activated. You now have access to Saudi Arabia's instant
+            property publishing engine — browse listings, submit inquiries, and manage your property search all in one place.
+          </p>
+          <div style="background:#f9f6ee;border:1px solid #D4A843;border-radius:8px;padding:14px 20px;margin:0 0 18px">
+            <p style="margin:0 0 4px;font-size:11px;color:#92400e;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Registered Email</p>
+            <p style="margin:0;font-size:15px;font-weight:600;color:#111;font-family:monospace">${to}</p>
+          </div>
+          <p style="margin:0 0 24px;color:#555;font-size:13px;line-height:1.6">
+            To sign in next time, simply open the RKZ app and enter your phone number and email — we'll send you a fresh verification code instantly.
+          </p>
+          <hr style="border:none;border-top:1px solid #eee;margin:0 0 24px"/>
+          <!-- AR section -->
+          <h2 style="margin:0 0 10px;font-size:17px;font-weight:700;color:#111;direction:rtl;text-align:right">مرحباً بك في RKZ، ${greeting}! 🎉</h2>
+          <p style="margin:0 0 16px;color:#555;font-size:13px;line-height:1.7;direction:rtl;text-align:right">
+            تم تفعيل حسابك في RKZ. يمكنك الآن تصفح العقارات وتقديم الاستفسارات وإدارة بحثك العقاري بكل سهولة.
+          </p>
+          <p style="margin:0 0 6px;font-size:13px;line-height:1.6;direction:rtl;text-align:right;color:#555">
+            لتسجيل الدخول في المرة القادمة، افتح تطبيق RKZ وأدخل رقم هاتفك وبريدك الإلكتروني — سنرسل لك رمز تحقق جديداً فوراً.
+          </p>
+          <p style="margin:24px 0 0;color:#aaa;font-size:11px;text-align:center;line-height:1.6">
+            If you did not create this account, please ignore this email.<br/>
+            إذا لم تُنشئ هذا الحساب، يرجى تجاهل هذه الرسالة.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
 
 // In-memory OTP store: pendingKey → { phone, email, otp, expiresAt }
 const pendingOtps = new Map<string, { phone: string; email: string; otp: string; expiresAt: number }>();
@@ -128,6 +179,11 @@ router.post("/rkz/auth/verify-otp", async (req, res) => {
       .insert(rkzUsersTable)
       .values({ phone, email, name: name?.trim() ?? null, authToken: token })
       .returning();
+
+    // Fire-and-forget: welcome email for brand-new registrations only
+    sendRkzWelcomeEmail(email, name?.trim() ?? null).catch((err) => {
+      req.log.warn({ err }, "rkz: welcome email failed (non-fatal)");
+    });
   }
 
   req.log.info({ userId: user.id, phone }, "rkz: user verified and logged in");

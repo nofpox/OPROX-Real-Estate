@@ -263,6 +263,120 @@ export async function sendWelcomeEmail(to: string, username: string, tempPasswor
   return true;
 }
 
+/**
+ * Send a bilingual welcome email to a newly self-registered portal client.
+ * Falls back silently when RESEND_API_KEY is not set.
+ */
+export async function sendPortalWelcomeEmail(to: string, displayName: string, username: string): Promise<void> {
+  if (!resend) return;
+  const domains  = process.env.REPLIT_DOMAINS ?? "";
+  const baseUrl  = domains.split(",")[0]?.trim() ? `https://${domains.split(",")[0].trim()}` : null;
+  const portalUrl = baseUrl ? `${baseUrl}/portal` : null;
+  const ctaBtn   = portalUrl
+    ? `<a href="${portalUrl}" style="display:inline-block;margin:20px 0;padding:13px 32px;background:#1a2744;color:#fff;font-weight:700;font-size:14px;border-radius:8px;text-decoration:none;letter-spacing:0.3px">Sign in to Investor Portal →</a>`
+    : `<p style="margin:14px 0;color:#555;font-size:14px">Open the platform and sign in to your account.</p>`;
+
+  await resend.emails.send({
+    from:    SENDER_FROM,
+    to:      [to],
+    subject: "Welcome to Rakez — Your account is ready | مرحباً بك في ركز",
+    html: `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
+        <!-- Header -->
+        <div style="background:#1a2744;padding:26px 32px">
+          <p style="margin:0;font-size:20px;font-weight:800;color:#fff;letter-spacing:0.3px">ركز | Rakez</p>
+          <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.5)">Investor Portal — Account Confirmation</p>
+        </div>
+        <!-- Body EN -->
+        <div style="padding:32px">
+          <h2 style="margin:0 0 10px;font-size:20px;font-weight:700;color:#111">Welcome, ${displayName}! 🎉</h2>
+          <p style="margin:0 0 20px;color:#555;font-size:14px;line-height:1.7">
+            Your Rakez Investor Portal account has been created successfully.
+            You can now sign in to access your managed properties, financial reports, and more.
+          </p>
+          <!-- Username -->
+          <div style="background:#f4f6fa;border:1px solid #e2e8f0;border-radius:8px;padding:14px 20px;margin:0 0 20px">
+            <p style="margin:0 0 4px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Your Username</p>
+            <p style="margin:0;font-size:18px;font-weight:700;color:#111;font-family:monospace">${username}</p>
+          </div>
+          ${ctaBtn}
+          <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
+          <!-- AR section -->
+          <h2 style="margin:0 0 10px;font-size:18px;font-weight:700;color:#111;direction:rtl;text-align:right">مرحباً، ${displayName}! 🎉</h2>
+          <p style="margin:0 0 20px;color:#555;font-size:14px;line-height:1.7;direction:rtl;text-align:right">
+            تم إنشاء حسابك في بوابة ركز للمستثمرين بنجاح.
+            يمكنك الآن تسجيل الدخول للوصول إلى عقاراتك المدارة والتقارير المالية والمزيد.
+          </p>
+          <div style="background:#f4f6fa;border:1px solid #e2e8f0;border-radius:8px;padding:14px 20px;margin:0 0 20px;direction:rtl">
+            <p style="margin:0 0 4px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">اسم المستخدم</p>
+            <p style="margin:0;font-size:18px;font-weight:700;color:#111;font-family:monospace;direction:ltr;text-align:left">${username}</p>
+          </div>
+          <p style="margin:0;color:#aaa;font-size:11px;text-align:center;line-height:1.6">
+            If you did not create this account, please contact us immediately.<br/>
+            إذا لم تُنشئ هذا الحساب، يرجى التواصل معنا فوراً.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Send a bilingual welcome email to a portal team member created by an admin,
+ * including their temporary password. Falls back silently without RESEND_API_KEY.
+ */
+export async function sendPortalTeamWelcomeEmail(to: string, displayName: string, username: string, tempPassword: string): Promise<void> {
+  if (!resend) return;
+  const domains  = process.env.REPLIT_DOMAINS ?? "";
+  const baseUrl  = domains.split(",")[0]?.trim() ? `https://${domains.split(",")[0].trim()}` : null;
+  const portalUrl = baseUrl ? `${baseUrl}/portal` : null;
+  const ctaBtn   = portalUrl
+    ? `<a href="${portalUrl}" style="display:inline-block;margin:20px 0;padding:13px 32px;background:#1a2744;color:#fff;font-weight:700;font-size:14px;border-radius:8px;text-decoration:none;letter-spacing:0.3px">Sign in to Portal →</a>`
+    : `<p style="margin:14px 0;color:#555;font-size:14px">Open the Investor Portal and sign in with the credentials below.</p>`;
+
+  await resend.emails.send({
+    from:    SENDER_FROM,
+    to:      [to],
+    subject: "You've been added to Rakez Portal — Your credentials inside | تمت إضافتك إلى بوابة ركز",
+    html: `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
+        <!-- Header -->
+        <div style="background:#1a2744;padding:26px 32px">
+          <p style="margin:0;font-size:20px;font-weight:800;color:#fff">ركز | Rakez</p>
+          <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.5)">Investor Portal — Team Invitation</p>
+        </div>
+        <div style="padding:32px">
+          <h2 style="margin:0 0 10px;font-size:20px;font-weight:700;color:#111">Welcome to the team, ${displayName}! 🎉</h2>
+          <p style="margin:0 0 20px;color:#555;font-size:14px;line-height:1.7">
+            An administrator has created a Rakez Investor Portal account for you.
+            Use the credentials below to sign in — you'll be prompted to set your own password on first login.
+          </p>
+          <div style="background:#f4f6fa;border:1px solid #e2e8f0;border-radius:8px;padding:14px 20px;margin:0 0 12px">
+            <p style="margin:0 0 4px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Username</p>
+            <p style="margin:0;font-size:18px;font-weight:700;color:#111;font-family:monospace">${username}</p>
+          </div>
+          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:18px 24px;margin:0 0 20px;text-align:center">
+            <p style="margin:0 0 6px;font-size:11px;color:#92400e;font-weight:700;text-transform:uppercase;letter-spacing:0.1em">Temporary Password</p>
+            <p style="margin:0;font-size:32px;font-weight:900;color:#92400e;letter-spacing:6px;font-family:monospace">${tempPassword}</p>
+            <p style="margin:8px 0 0;font-size:11px;color:#b45309">Change this on your first login.</p>
+          </div>
+          ${ctaBtn}
+          <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
+          <h2 style="margin:0 0 10px;font-size:18px;font-weight:700;color:#111;direction:rtl;text-align:right">مرحباً بك في الفريق، ${displayName}! 🎉</h2>
+          <p style="margin:0 0 14px;color:#555;font-size:13px;line-height:1.7;direction:rtl;text-align:right">
+            قام المسؤول بإنشاء حسابك في بوابة ركز. استخدم بيانات الاعتماد أدناه لتسجيل الدخول
+            — ستُطلب منك تغيير كلمة المرور في أول دخول.
+          </p>
+          <p style="margin:0;color:#aaa;font-size:11px;text-align:center;line-height:1.6">
+            If you were not expecting this, contact your administrator.<br/>
+            إذا لم تكن تتوقع ذلك، تواصل مع المسؤول.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
 export async function ensureAdmin() {
   try {
     // Ensure default tenant exists

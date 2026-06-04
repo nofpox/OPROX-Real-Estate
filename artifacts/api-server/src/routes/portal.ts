@@ -19,7 +19,7 @@ import {
   listingsTable as _listingsRef,
   listingInquiriesTable,
 } from "@workspace/db";
-import { sessions, getRoleTier, getPortalRoleTier, hashPwd, verifyPwd } from "./auth.js";
+import { sessions, getRoleTier, getPortalRoleTier, hashPwd, verifyPwd, sendPortalWelcomeEmail, sendPortalTeamWelcomeEmail } from "./auth.js";
 import type { SessionUser } from "../types.js";
 import { Resend } from "resend";
 import crypto from "node:crypto";
@@ -107,12 +107,14 @@ router.post("/portal/register", async (req, res) => {
       sendError(res, 409, "Username already taken");
       return;
     }
+    const safeDisplayName = String(displayName).trim();
+    const safeEmail       = String(email).trim().toLowerCase();
     const [newUser] = await db
       .insert(usersTable)
       .values({
         username:     uname,
-        displayName:  String(displayName).trim(),
-        email:        String(email).trim().toLowerCase(),
+        displayName:  safeDisplayName,
+        email:        safeEmail,
         phoneNumber:  phone ? String(phone).trim() : null,
         passwordHash: hashPwd(String(password)),
         role:         "client",
@@ -125,6 +127,12 @@ router.post("/portal/register", async (req, res) => {
         displayName: usersTable.displayName,
         role:        usersTable.role,
       });
+
+    // Fire-and-forget welcome email — does not block the response
+    sendPortalWelcomeEmail(safeEmail, safeDisplayName, uname).catch((err) => {
+      req.log?.warn({ err }, "POST /portal/register: welcome email failed (non-fatal)");
+    });
+
     sendSuccess(res, newUser);
   } catch (err) {
     req.log?.error({ err }, "POST /portal/register failed");
@@ -951,12 +959,15 @@ router.post("/portal/team", requireAuth, async (req, res) => {
     if (existing) { sendError(res, 409, "Username already taken"); return; }
 
     const tenantId = caller.tenantId ?? 1;
+    const safeDisplayName = String(displayName).trim();
+    const safeEmail       = String(email).trim().toLowerCase();
+    const safePassword    = String(password);
     const [newUser] = await db.insert(usersTable).values({
       username:     uname,
-      displayName:  String(displayName).trim(),
-      email:        String(email).trim().toLowerCase(),
+      displayName:  safeDisplayName,
+      email:        safeEmail,
       phoneNumber:  phone ? String(phone).trim() : null,
-      passwordHash: hashPwd(String(password)),
+      passwordHash: hashPwd(safePassword),
       role:         String(role),
       tenantId,
       isActive:     true,
@@ -967,6 +978,12 @@ router.post("/portal/team", requireAuth, async (req, res) => {
       role:        usersTable.role,
       isActive:    usersTable.isActive,
     });
+
+    // Fire-and-forget: send team welcome email with credentials
+    sendPortalTeamWelcomeEmail(safeEmail, safeDisplayName, uname, safePassword).catch((err) => {
+      req.log?.warn({ err }, "POST /portal/team: welcome email failed (non-fatal)");
+    });
+
     sendSuccess(res, newUser);
   } catch (err) {
     req.log?.error({ err }, "POST /portal/team failed");

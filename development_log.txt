@@ -105,6 +105,37 @@ ARCHITECTURE NOTES
 - No console.log in server code — use req.log
 - All new portal routes must be added to PUBLIC_PREFIXES only if unauthenticated
   (/portal/* is already in PUBLIC_PREFIXES — auth gating done per-route via requireAuth)
+[DONE] GLOBAL EMAIL NOTIFICATION AUDIT + IMPLEMENTATION — artifacts/api-server
+  AUDIT FINDINGS (what was already working):
+  - Staff/employee creation → sendWelcomeEmail() (staff.ts, users.ts) ✅
+  - PMS forgot-password → /auth/forgot-password + sendResetEmail() ✅
+  - Portal login OTP (2-step) → /portal/auth/login-step1 inline Resend email ✅
+  - Portal forgot-password → confirmed to call /auth/forgot-password via generated hooks
+    (searches usersTable by email — portal clients are role:"client" in usersTable) ✅
+  - RKZ mobile login OTP → /rkz/auth/login inline Resend email ✅
+  - Guest/lead contact form → sendLeadWelcomeEmail() in guest.ts ✅
+
+  GAPS FIXED:
+  1. Portal self-registration (POST /portal/register) — was: no email; now: fires
+     sendPortalWelcomeEmail(email, displayName, username) fire-and-forget after insert.
+     Template: bilingual EN+AR, shows username, CTA button links to /portal.
+
+  2. Portal team member creation (POST /portal/team) — was: no email; now: fires
+     sendPortalTeamWelcomeEmail(email, displayName, username, tempPassword) fire-and-forget.
+     Template: bilingual EN+AR, shows username + temporary password block.
+
+  3. RKZ new user first registration (POST /rkz/auth/verify-otp, existing.length === 0) —
+     was: no welcome email; now: fires sendRkzWelcomeEmail(email, name) fire-and-forget.
+     Template: bilingual EN+AR, RKZ brand colors (navy #0A1628, gold #D4A843), explains
+     that sign-in works via phone+email OTP (no password).
+
+  SCHEMA FIX (pre-existing bugs also repaired):
+  - conversations table: added agentType text DEFAULT 'app', userId int, tenantId int
+    (DB ALTER TABLE applied via executeSql; schema file updated)
+  - lib/integrations-openai-ai-server/src/image/client.ts: fixed 2 TS18048 errors
+    (response.data possibly undefined — added optional chaining .data?.[0])
+  - Full typecheck: 0 errors across all libs + api-server after all fixes
+
 - Saved search criteria shape:
     { propertyType?, listingType?, city?, minPrice?, maxPrice?, bedrooms? }
 - Match count query: filters active listings by all non-null criteria fields
