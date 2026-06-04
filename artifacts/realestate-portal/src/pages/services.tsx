@@ -46,7 +46,7 @@ export const Services: React.FC = () => {
         {services.map((section, idx) => {
           const title = isRtl ? section.titleAr : section.titleEn;
           const desc  = isRtl ? section.descAr  : section.descEn;
-          const items = isRtl ? section.itemsAr  : section.itemsEn;
+          const items = (isRtl ? section.itemsAr : section.itemsEn) ?? [];
           const reverse = idx % 2 === 1;
           const rowClass = reverse
             ? 'flex flex-col md:flex-row-reverse gap-12 items-center'
