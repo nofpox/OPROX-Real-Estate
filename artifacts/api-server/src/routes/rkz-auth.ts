@@ -2,8 +2,15 @@ import { Router } from "express";
 import { randomUUID } from "crypto";
 import { db, rkzUsersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { Resend } from "resend";
 
 const router = Router();
+
+const rkzResend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const SENDER = process.env.SENDER_EMAIL ?? "RKZ <onboarding@resend.dev>";
+
+// In-memory OTP store: pendingKey → { phone, email, otp, expiresAt }
+const pendingOtps = new Map<string, { phone: string; email: string; otp: string; expiresAt: number }>();
 
 // ── Token extraction helper ──────────────────────────────────────────────────
 export function extractRkzToken(req: { headers: Record<string, string | string[] | undefined> }): string | null {
@@ -25,36 +32,105 @@ export async function requireRkzAuth(req: any, res: any, next: any) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /rkz/auth/login
-// Creates user if not exists, issues a session token
-// Body: { phone, name? }
+// Step 1: accept phone + email, generate OTP, send to email
+// Body: { phone, email, name? }
+// Returns: { pendingKey } — plus demoOtp when RESEND_API_KEY is not set
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/rkz/auth/login", async (req, res) => {
-  const { phone, name } = req.body as { phone?: string; name?: string };
-  if (!phone || typeof phone !== "string") {
-    res.status(400).json({ error: "phone is required" });
-    return;
-  }
-  const normalised = phone.trim().replace(/\s+/g, "");
+  const { phone, email, name } = req.body as { phone?: string; email?: string; name?: string };
 
+  if (!phone || typeof phone !== "string") {
+    res.status(400).json({ error: "phone is required" }); return;
+  }
+  if (!email || typeof email !== "string" || !email.includes("@")) {
+    res.status(400).json({ error: "valid email is required" }); return;
+  }
+
+  const normalised = phone.trim().replace(/\s+/g, "");
+  const emailNorm  = email.trim().toLowerCase();
+
+  const otp        = String(Math.floor(100000 + Math.random() * 900000));
+  const pendingKey = randomUUID();
+  pendingOtps.set(pendingKey, { phone: normalised, email: emailNorm, otp, expiresAt: Date.now() + 5 * 60_000 });
+
+  if (rkzResend) {
+    try {
+      await rkzResend.emails.send({
+        from: SENDER,
+        to:   [emailNorm],
+        subject: "رمز التحقق | Verification Code – RKZ",
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
+            <div style="background:#0A1628;padding:20px 28px;display:flex;align-items:center;gap:12px">
+              <div style="width:40px;height:40px;background:#D4A843;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px">🏠</div>
+              <div>
+                <p style="margin:0;font-size:18px;font-weight:800;color:#fff;letter-spacing:2px">RKZ</p>
+                <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.5)">محرك النشر العقاري الفوري</p>
+              </div>
+            </div>
+            <div style="padding:28px">
+              <h2 style="margin:0 0 8px;font-size:18px;color:#111">Verification Code / رمز التحقق</h2>
+              <p style="margin:0 0 20px;color:#555;font-size:14px">Use this 6-digit code to complete your sign-in. It expires in <strong>5 minutes</strong>.<br/><span style="direction:rtl;display:block;margin-top:4px">أدخل الرمز أدناه لإتمام تسجيل دخولك. ينتهي خلال <strong>5 دقائق</strong>.</span></p>
+              <div style="background:#0A1628;border-radius:12px;padding:20px;text-align:center;letter-spacing:14px;font-size:40px;font-weight:900;color:#D4A843;font-family:monospace;margin:0 0 20px">${otp}</div>
+              <p style="margin:0;color:#aaa;font-size:11px;text-align:center">If you did not request this, please ignore this email.<br/>إذا لم تطلب هذا الرمز، يرجى تجاهل هذه الرسالة.</p>
+            </div>
+          </div>
+        `,
+      });
+    } catch (emailErr) {
+      req.log.error({ emailErr }, "rkz: Failed to send OTP email");
+    }
+  }
+
+  req.log.info({ phone: normalised }, "rkz: otp requested");
+  res.json({ pendingKey, ...(rkzResend ? {} : { demoOtp: otp }) });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /rkz/auth/verify-otp
+// Step 2: verify OTP and issue auth token
+// Body: { pendingKey, otp, name? }
+// Returns: { token, user }
+// ─────────────────────────────────────────────────────────────────────────────
+router.post("/rkz/auth/verify-otp", async (req, res) => {
+  const { pendingKey, otp, name } = req.body as { pendingKey?: string; otp?: string; name?: string };
+
+  if (!pendingKey || !otp) {
+    res.status(400).json({ error: "pendingKey and otp are required" }); return;
+  }
+
+  const pending = pendingOtps.get(String(pendingKey));
+  if (!pending) {
+    res.status(400).json({ error: "Invalid or expired verification session" }); return;
+  }
+  if (pending.expiresAt < Date.now()) {
+    pendingOtps.delete(String(pendingKey));
+    res.status(400).json({ error: "Verification code has expired. Please request a new one." }); return;
+  }
+  if (pending.otp !== String(otp).trim()) {
+    res.status(400).json({ error: "Invalid verification code" }); return;
+  }
+  pendingOtps.delete(String(pendingKey));
+
+  const { phone, email } = pending;
   const token = randomUUID();
 
-  const existing = await db.select().from(rkzUsersTable).where(eq(rkzUsersTable.phone, normalised)).limit(1);
-
+  const existing = await db.select().from(rkzUsersTable).where(eq(rkzUsersTable.phone, phone)).limit(1);
   let user;
   if (existing.length) {
     [user] = await db
       .update(rkzUsersTable)
-      .set({ authToken: token, ...(name ? { name: name.trim() } : {}) })
-      .where(eq(rkzUsersTable.phone, normalised))
+      .set({ authToken: token, email, ...(name ? { name: name.trim() } : {}) })
+      .where(eq(rkzUsersTable.phone, phone))
       .returning();
   } else {
     [user] = await db
       .insert(rkzUsersTable)
-      .values({ phone: normalised, name: name?.trim() ?? null, authToken: token })
+      .values({ phone, email, name: name?.trim() ?? null, authToken: token })
       .returning();
   }
 
-  req.log.info({ userId: user.id, phone: normalised }, "rkz: user login");
+  req.log.info({ userId: user.id, phone }, "rkz: user verified and logged in");
   res.json({ token, user: { id: user.id, phone: user.phone, name: user.name, email: user.email, authorized: user.authorized } });
 });
 

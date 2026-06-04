@@ -54,14 +54,16 @@ export default function LoginScreen() {
     ? config.content.features.map((f) => ({ title: isAr ? f.titleAr : f.titleEn, body: isAr ? f.bodyAr : f.bodyEn }))
     : t.welcome.features;
 
-  const [step, setStep] = useState<Step>("welcome");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [step,       setStep]       = useState<Step>("welcome");
+  const [phone,      setPhone]      = useState("");
+  const [email,      setEmail]      = useState("");
+  const [otp,        setOtp]        = useState(["", "", "", "", "", ""]);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState("");
 
-  // Holds the auth result after phone submission so OTP step can finalise it
-  const pendingAuth = useRef<LoginResponse | null>(null);
+  // Pending OTP session from backend
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
+  const [demoOtp,    setDemoOtp]    = useState<string | null>(null);
 
   const otpRefs = useRef<(TextInput | null)[]>([]);
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -84,15 +86,25 @@ export default function LoginScreen() {
       shake();
       return;
     }
+    const emailClean = email.trim().toLowerCase();
+    if (!emailClean || !emailClean.includes("@") || !emailClean.includes(".")) {
+      setError(t.login.emailRequired);
+      shake();
+      return;
+    }
     setError("");
     setLoading(true);
     try {
       const fullPhone = cleaned.startsWith("+") ? cleaned : `+966${cleaned}`;
-      const result = await apiPost<LoginResponse>("/rkz/auth/login", { phone: fullPhone });
-      pendingAuth.current = result;
+      const result = await apiPost<{ pendingKey: string; demoOtp?: string }>(
+        "/rkz/auth/login",
+        { phone: fullPhone, email: emailClean },
+      );
+      setPendingKey(result.pendingKey);
+      if (result.demoOtp) setDemoOtp(result.demoOtp);
     } catch {
-      // API unavailable — fall through to local-only mode
-      pendingAuth.current = null;
+      // API unavailable — fall through to local-only demo mode
+      setPendingKey(null);
     }
     setLoading(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -128,22 +140,30 @@ export default function LoginScreen() {
     setLoading(true);
     Keyboard.dismiss();
 
-    const auth = pendingAuth.current;
-    if (auth) {
-      // Real auth — store token and boot API sync
-      await setAuthToken(auth.token);
-      setUser({
-        phone: auth.user.phone,
-        name: auth.user.name,
-        email: auth.user.email,
-        authorized: auth.user.authorized,
-      });
-      // Fetch listings from API now that token is stored
-      await refreshFromApi().catch(() => {});
+    if (pendingKey) {
+      // Real auth — verify OTP on server
+      try {
+        const result = await apiPost<LoginResponse>("/rkz/auth/verify-otp", { pendingKey, otp: code });
+        await setAuthToken(result.token);
+        setUser({
+          phone: result.user.phone,
+          name: result.user.name,
+          email: result.user.email,
+          authorized: result.user.authorized,
+        });
+        await refreshFromApi().catch(() => {});
+      } catch {
+        setLoading(false);
+        setError(t.login.invalidOtp);
+        shake();
+        setOtp(["", "", "", "", "", ""]);
+        setTimeout(() => otpRefs.current[0]?.focus(), 100);
+        return;
+      }
     } else {
-      // Offline/demo mode — set user without token
+      // Offline/demo mode — bypass verification
       const fullPhone = phone.startsWith("+") ? phone : `+966${phone}`;
-      setUser({ phone: fullPhone, authorized: true });
+      setUser({ phone: fullPhone, email: email.trim() || undefined, authorized: true });
     }
 
     setLoading(false);
@@ -417,18 +437,32 @@ export default function LoginScreen() {
                   placeholderTextColor="rgba(255,255,255,0.25)"
                   keyboardType="phone-pad"
                   autoFocus
-                  returnKeyType="done"
-                  onSubmitEditing={handleSendOtp}
+                  returnKeyType="next"
                   textAlign="left"
                 />
               </View>
 
+              <Text style={[S.label, { marginTop: 16 }]}>{t.login.emailLabel}</Text>
+              <TextInput
+                style={S.inputBox}
+                value={email}
+                onChangeText={(v) => { setEmail(v); setError(""); }}
+                placeholder={t.login.emailPlaceholder}
+                placeholderTextColor="rgba(255,255,255,0.25)"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="done"
+                onSubmitEditing={handleSendOtp}
+                textAlign={isAr ? "right" : "left"}
+              />
+
               {!!error && <Text style={S.errorText}>{error}</Text>}
 
               <Pressable
-                style={({ pressed }) => [S.btn, (!phone || loading) && S.btnDisabled, pressed && { opacity: 0.85 }]}
+                style={({ pressed }) => [S.btn, (!phone || !email || loading) && S.btnDisabled, pressed && { opacity: 0.85 }]}
                 onPress={handleSendOtp}
-                disabled={!phone || loading}
+                disabled={!phone || !email || loading}
               >
                 {loading ? <ActivityIndicator color={colors.navy} /> : <Text style={S.btnText}>{t.login.sendOtp}</Text>}
               </Pressable>
@@ -438,14 +472,20 @@ export default function LoginScreen() {
             <>
               <Pressable
                 style={S.backBtn}
-                onPress={() => { setStep("phone"); setOtp(["", "", "", "", "", ""]); setError(""); }}
+                onPress={() => {
+                  setStep("phone");
+                  setOtp(["", "", "", "", "", ""]);
+                  setError("");
+                  setPendingKey(null);
+                  setDemoOtp(null);
+                }}
               >
                 <Ionicons name={isAr ? "chevron-forward" : "chevron-back"} size={18} color="rgba(255,255,255,0.55)" />
                 <Text style={S.backText}>{t.login.changePhone}</Text>
               </Pressable>
 
               <Text style={[S.label, { textAlign: "center" }]}>
-                {t.login.codeLabel(phone)}
+                {t.login.codeLabel(email.trim())}
               </Text>
 
               <Animated.View style={[S.otpRow, { transform: [{ translateX: shakeAnim }] }]}>
@@ -468,7 +508,10 @@ export default function LoginScreen() {
 
               {!!error && <Text style={S.errorText}>{error}</Text>}
               {loading && <ActivityIndicator color={colors.gold} style={{ marginTop: 16 }} />}
-              <Text style={[S.hint, { marginTop: 16 }]}>{t.login.demoHint}</Text>
+              {demoOtp
+                ? <Text style={[S.hint, { marginTop: 16, color: colors.gold }]}>{t.login.demoOtpHint(demoOtp)}</Text>
+                : <Text style={[S.hint, { marginTop: 16 }]}>{t.login.demoHint}</Text>
+              }
             </>
           )}
         </View>
