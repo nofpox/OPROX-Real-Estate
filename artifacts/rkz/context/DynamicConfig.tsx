@@ -26,6 +26,14 @@ export interface FeatureItem {
   bodyEn: string;
 }
 
+export interface PlatformConfig {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+  enabled: boolean;
+  color: string;
+}
+
 export interface AppConfig {
   branding: {
     appName: string;
@@ -43,12 +51,7 @@ export interface AppConfig {
     welcomeCtaEn: string;
     features: FeatureItem[];
   };
-  platforms: {
-    aqar: boolean;
-    bayut: boolean;
-    wasalt: boolean;
-    property_finder: boolean;
-  };
+  platforms: PlatformConfig[];
   propertyTypes: PropertyTypeConfig[];
 }
 
@@ -74,12 +77,12 @@ export const DEFAULT_CONFIG: AppConfig = {
       { titleAr: "الإدارة الذكية", titleEn: "Smart Management", bodyAr: "تابع كافة الاستفسارات وتحديث حالة عقارك في مكان واحد وبكل سهولة.", bodyEn: "Track all inquiries and your property status in one place, effortlessly." },
     ],
   },
-  platforms: {
-    aqar: true,
-    bayut: true,
-    wasalt: true,
-    property_finder: true,
-  },
+  platforms: [
+    { id: "aqar",            labelAr: "عقار",             labelEn: "Aqar",            enabled: true,  color: "#2563EB" },
+    { id: "bayut",           labelAr: "بيوت",             labelEn: "Bayut",           enabled: true,  color: "#7C3AED" },
+    { id: "wasalt",          labelAr: "وصلت",             labelEn: "Wasalt",          enabled: true,  color: "#059669" },
+    { id: "property_finder", labelAr: "بروبرتي فايندر",  labelEn: "Property Finder", enabled: true,  color: "#D97706" },
+  ],
   propertyTypes: [
     { id: "villa",      labelAr: "فيلا",          labelEn: "Villa" },
     { id: "apartment",  labelAr: "شقة",            labelEn: "Apartment" },
@@ -94,51 +97,44 @@ export const DEFAULT_CONFIG: AppConfig = {
   ],
 };
 
+export interface PinResult {
+  valid: boolean;
+  locked?: boolean;
+  minutesLeft?: number;
+  attemptsLeft?: number;
+}
+
 interface ConfigContextValue {
   config: AppConfig;
   isLoaded: boolean;
-  /** Apply changes locally for live preview (not persisted) */
   applyLocally: (updates: Partial<AppConfig>) => void;
-  /** Save snapshot so rollbackAdmin() can restore it */
   beginAdminSession: () => void;
-  /** Restore the snapshot taken by beginAdminSession() */
   rollbackAdmin: () => void;
-  /** Check PIN against server */
-  verifyPin: (pin: string) => Promise<boolean>;
-  /** Persist changes to server (requires PIN) */
+  verifyPin: (pin: string) => Promise<PinResult>;
   updateConfig: (pin: string, updates: Partial<AppConfig>) => Promise<void>;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Context — default value used before provider mounts
-// ─────────────────────────────────────────────────────────────────────────────
 const ConfigContext = createContext<ConfigContextValue>({
   config: DEFAULT_CONFIG,
   isLoaded: false,
   applyLocally: () => {},
   beginAdminSession: () => {},
   rollbackAdmin: () => {},
-  verifyPin: async () => false,
+  verifyPin: async () => ({ valid: false }),
   updateConfig: async () => {},
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-const CACHE_KEY = "rkz_app_config_v2";
+const CACHE_KEY = "rkz_app_config_v3";
 
 function deepMerge(base: AppConfig, patch: Partial<AppConfig>): AppConfig {
   return {
     branding: { ...base.branding, ...(patch.branding ?? {}) },
     content: { ...base.content, ...(patch.content ?? {}) },
-    platforms: { ...base.platforms, ...(patch.platforms ?? {}) },
+    platforms: patch.platforms ?? base.platforms,
     propertyTypes: patch.propertyTypes ?? base.propertyTypes,
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Provider
-// ─────────────────────────────────────────────────────────────────────────────
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -149,7 +145,6 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function load() {
-    // 1. Try cache first — instantaneous, works offline
     try {
       const cached = await AsyncStorage.getItem(CACHE_KEY);
       if (cached) {
@@ -158,7 +153,6 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {}
 
-    // 2. Authoritative fetch from server
     try {
       const res = await fetch(`${API_BASE}/rkz/config`);
       if (res.ok) {
@@ -186,17 +180,17 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
     setConfig(snapshotRef.current);
   }, []);
 
-  const verifyPin = useCallback(async (pin: string): Promise<boolean> => {
+  const verifyPin = useCallback(async (pin: string): Promise<PinResult> => {
     try {
       const res = await fetch(`${API_BASE}/rkz/admin/verify-pin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pin }),
       });
-      const data = await res.json() as { valid: boolean };
-      return data.valid === true;
+      const data = await res.json() as PinResult;
+      return data;
     } catch {
-      return false;
+      return { valid: false };
     }
   }, []);
 
@@ -213,7 +207,6 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
       }
       const updated = await res.json() as Partial<AppConfig>;
       setConfig((prev) => deepMerge(prev, updated));
-      // Update AsyncStorage cache
       try {
         await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(updated));
       } catch {}

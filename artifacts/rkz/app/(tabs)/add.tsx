@@ -22,16 +22,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { apiPost } from "@/constants/api";
 import {
-  PLATFORM_COLORS,
-  PLATFORM_LABELS,
-  Platform as PlatformType,
   useApp,
 } from "@/context/AppContext";
 import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
-
-const ALL_PLATFORMS: PlatformType[] = ["aqar", "bayut", "wasalt", "property_finder"];
 
 type Step = "form" | "publishing" | "done";
 
@@ -58,8 +53,8 @@ export default function AddPropertyScreen() {
   const [bedrooms, setBedrooms] = useState("");
   const [description, setDescription] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<Set<PlatformType>>(
-    new Set(ALL_PLATFORMS)
+  const [selectedPlatforms, setSelectedPlatforms] = useState<Set<string>>(
+    new Set(config.platforms.filter((p) => p.enabled).map((p) => p.id))
   );
   const [step, setStep] = useState<Step>("form");
 
@@ -69,11 +64,18 @@ export default function AddPropertyScreen() {
   const [descGenerating, setDescGenerating] = useState(false);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
-  const [publishedPlatforms, setPublishedPlatforms] = useState<PlatformType[]>([]);
+  const [publishedPlatforms, setPublishedPlatforms] = useState<string[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authAgreed, setAuthAgreed] = useState(false);
 
   const priceLocale = isAr ? "ar-SA" : "en-US";
+
+  const getPlatLabel = (id: string): string => {
+    const plat = config.platforms.find((p) => p.id === id);
+    return plat ? (isAr ? plat.labelAr : plat.labelEn) : id;
+  };
+  const getPlatColor = (id: string): string =>
+    config.platforms.find((p) => p.id === id)?.color ?? "#6B7280";
 
   async function pickImage() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -88,9 +90,9 @@ export default function AddPropertyScreen() {
       mediaTypes: "images",
       allowsMultipleSelection: true,
       quality: 0.6,
-      selectionLimit: 8,
+      selectionLimit: 10,
     });
-    if (!r.canceled) setPhotos((p) => [...p, ...r.assets.map((a) => a.uri)].slice(0, 8));
+    if (!r.canceled) setPhotos((p) => [...p, ...r.assets.map((a) => a.uri)].slice(0, 10));
   }
 
   async function detectLocation() {
@@ -169,7 +171,7 @@ export default function AddPropertyScreen() {
     setDescGenerating(false);
   }
 
-  function togglePlatform(p: PlatformType) {
+  function togglePlatform(p: string) {
     setSelectedPlatforms((prev) => {
       const next = new Set(prev);
       if (next.has(p)) {
@@ -667,7 +669,7 @@ export default function AddPropertyScreen() {
                     <ActivityIndicator size="small" color="rgba(255,255,255,0.4)" />
                   )}
                 </View>
-                <Text style={S.platformCheckText}>{PLATFORM_LABELS[p]}</Text>
+                <Text style={S.platformCheckText}>{getPlatLabel(p)}</Text>
                 {done && (
                   <Text style={{ color: "#4ADE80", fontSize: 12, fontFamily: "Inter_500Medium" }}>
                     {t.add.publishingDone}
@@ -714,7 +716,7 @@ export default function AddPropertyScreen() {
             setDescription("");
             setPropType(config.propertyTypes[0]?.id ?? "villa");
             setPriceSuggestion(null);
-            setSelectedPlatforms(new Set(ALL_PLATFORMS));
+            setSelectedPlatforms(new Set(config.platforms.filter((p) => p.enabled).map((p) => p.id)));
             progressAnim.setValue(0);
             setPublishedPlatforms([]);
             router.replace("/(tabs)");
@@ -926,7 +928,7 @@ export default function AddPropertyScreen() {
                 <Image source={{ uri }} style={S.photoThumb} />
               </Pressable>
             ))}
-            {photos.length < 8 && (
+            {photos.length < 10 && (
               <Pressable style={({ pressed }) => [S.addPhotoBtn, pressed && { opacity: 0.7 }]} onPress={pickImage}>
                 <Feather name="camera" size={24} color={colors.mutedForeground} />
               </Pressable>
@@ -938,20 +940,20 @@ export default function AddPropertyScreen() {
         <View style={S.section}>
           <Text style={S.label}>{t.add.platformsLabel(selectedPlatforms.size)}</Text>
           <View style={S.platformRow}>
-            {ALL_PLATFORMS.map((p) => {
-              const active = selectedPlatforms.has(p);
+            {config.platforms.filter((p) => p.enabled).map((plat) => {
+              const active = selectedPlatforms.has(plat.id);
               return (
                 <Pressable
-                  key={p}
+                  key={plat.id}
                   style={({ pressed }) => [
                     S.platformPill,
                     {
-                      backgroundColor: active ? PLATFORM_COLORS[p] : colors.muted,
-                      borderColor: active ? PLATFORM_COLORS[p] : colors.border,
+                      backgroundColor: active ? getPlatColor(plat.id) : colors.muted,
+                      borderColor: active ? getPlatColor(plat.id) : colors.border,
                     },
                     pressed && { opacity: 0.8 },
                   ]}
-                  onPress={() => togglePlatform(p)}
+                  onPress={() => togglePlatform(plat.id)}
                 >
                   <MaterialIcons
                     name={active ? "check" : "add"}
@@ -964,7 +966,7 @@ export default function AddPropertyScreen() {
                       { color: active ? "#FFFFFF" : colors.mutedForeground },
                     ]}
                   >
-                    {PLATFORM_LABELS[p]}
+                    {isAr ? plat.labelAr : plat.labelEn}
                   </Text>
                 </Pressable>
               );

@@ -19,7 +19,7 @@ import {
 
 export type PropertyType = string;
 
-export type Platform = "aqar" | "bayut" | "wasalt" | "property_finder";
+export type Platform = string;
 
 export type ListingStatus =
   | "draft"

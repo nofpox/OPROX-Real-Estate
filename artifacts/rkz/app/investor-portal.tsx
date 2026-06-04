@@ -492,7 +492,7 @@ export default function InvestorPortalScreen() {
                   hitSlop={8}
                 >
                   <MaterialIcons
-                    name={showPass ? "visibility-off" : "visibility"}
+                    name={showPass ? "visibility" : "visibility-off"}
                     size={20}
                     color={colors.mutedForeground}
                   />

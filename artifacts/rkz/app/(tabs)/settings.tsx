@@ -16,6 +16,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useApp } from "@/context/AppContext";
+import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -30,6 +31,7 @@ export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { user, setUser, properties } = useApp();
+  const { config } = useConfig();
   const { t, isAr } = useLocale();
 
   const [authorized, setAuthorized] = useState(user?.authorized ?? false);
@@ -299,27 +301,17 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t.settings.platformsSection}</Text>
           <View style={styles.platCard}>
-            {PLATFORM_ITEMS.map((item, i) => (
+            {config.platforms.filter(p => p.enabled).map((item, i) => (
               <React.Fragment key={item.id}>
                 {i > 0 && <View style={styles.settingDivider} />}
                 <View style={styles.platRow}>
                   <View style={[styles.platIcon, { backgroundColor: item.color + "20" }]}>
-                    <MaterialIcons name={item.icon} size={20} color={item.color} />
+                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: item.color }} />
                   </View>
-                  <Text style={styles.platName}>{item.name}</Text>
-                  <View
-                    style={[
-                      styles.connectedBadge,
-                      { backgroundColor: item.connected ? "#DCFCE7" : colors.muted },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.connectedText,
-                        { color: item.connected ? "#16A34A" : colors.mutedForeground },
-                      ]}
-                    >
-                      {item.connected ? t.settings.connected : t.settings.notConnected}
+                  <Text style={styles.platName}>{isAr ? item.labelAr : item.labelEn}</Text>
+                  <View style={[styles.connectedBadge, { backgroundColor: "#DCFCE7" }]}>
+                    <Text style={[styles.connectedText, { color: "#16A34A" }]}>
+                      {t.settings.connected}
                     </Text>
                   </View>
                 </View>
@@ -430,27 +422,29 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Admin Control Panel */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t.admin.adminEntry}</Text>
-          <View style={styles.settingCard}>
-            <Pressable
-              style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.8 }]}
-              onPress={() => router.push("/admin")}
-            >
-              <View style={[styles.settingIconBox, { backgroundColor: "#FEF3C7" }]}>
-                <MaterialIcons name="security" size={20} color="#D97706" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.settingLabel}>{t.admin.title}</Text>
-                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
-                  {t.admin.adminEntryDesc}
-                </Text>
-              </View>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
-            </Pressable>
+        {/* Admin Control Panel — only for authorized users */}
+        {user?.authorized && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t.admin.adminEntry}</Text>
+            <View style={styles.settingCard}>
+              <Pressable
+                style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.8 }]}
+                onPress={() => router.push("/admin")}
+              >
+                <View style={[styles.settingIconBox, { backgroundColor: "#FEF3C7" }]}>
+                  <MaterialIcons name="security" size={20} color="#D97706" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.settingLabel}>{t.admin.title}</Text>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                    {t.admin.adminEntryDesc}
+                  </Text>
+                </View>
+                <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
+              </Pressable>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Logout */}
         <Pressable

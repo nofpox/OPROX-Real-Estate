@@ -20,7 +20,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { API_BASE } from "@/constants/api";
-import { type AppConfig, type FeatureItem, DEFAULT_CONFIG, useConfig } from "@/context/DynamicConfig";
+import { type AppConfig, type FeatureItem, type PlatformConfig, type PinResult, DEFAULT_CONFIG, useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -220,6 +220,8 @@ function PinGate({ onUnlock }: { onUnlock: (pin: string) => void }) {
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [lockedMin, setLockedMin] = useState<number | null>(null);
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
   function shake() {
@@ -234,18 +236,28 @@ function PinGate({ onUnlock }: { onUnlock: (pin: string) => void }) {
   }
 
   async function handleSubmit() {
-    if (pin.length < 4) return;
+    if (pin.length < 8) return;
+    if (lockedMin !== null) return;
     setLoading(true);
-    const valid = await verifyPin(pin);
+    const result: PinResult = await verifyPin(pin);
     setLoading(false);
-    if (valid) {
+    if (result.valid) {
+      setLockedMin(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       onUnlock(pin);
+    } else if (result.locked) {
+      setPin("");
+      setLockedMin(result.minutesLeft ?? 30);
+      setError(true);
+      setErrorMsg(t.admin.lockedOut(result.minutesLeft ?? 30));
+      shake();
     } else {
       setPin("");
       setError(true);
+      const left = result.attemptsLeft ?? 0;
+      setErrorMsg(left > 0 ? `${t.admin.pinWrong} — ${t.admin.attemptsLeft(left)}` : t.admin.pinWrong);
       shake();
-      setTimeout(() => setError(false), 2500);
+      setTimeout(() => { setError(false); setErrorMsg(""); }, 3000);
     }
   }
 
@@ -269,27 +281,30 @@ function PinGate({ onUnlock }: { onUnlock: (pin: string) => void }) {
           <TextInput
             value={pin}
             onChangeText={(v) => {
-              setPin(v.replace(/[^0-9]/g, "").slice(0, 4));
+              if (lockedMin !== null) return;
+              setPin(v.slice(0, 24));
               setError(false);
+              setErrorMsg("");
             }}
             placeholder={t.admin.pinPlaceholder}
             placeholderTextColor="rgba(255,255,255,0.35)"
-            keyboardType="number-pad"
+            keyboardType="default"
             secureTextEntry
-            maxLength={4}
+            maxLength={24}
             autoFocus
-            style={[pinStyles.pinInput, error && pinStyles.pinInputError]}
+            editable={lockedMin === null}
+            style={[pinStyles.pinInput, error && pinStyles.pinInputError, lockedMin !== null && { opacity: 0.4 }]}
             onSubmitEditing={handleSubmit}
           />
-          {error && (
-            <Text style={pinStyles.errorText}>{t.admin.pinWrong}</Text>
+          {!!errorMsg && (
+            <Text style={[pinStyles.errorText, lockedMin !== null && { color: "#FCA5A5" }]}>{errorMsg}</Text>
           )}
         </Animated.View>
 
         <Pressable
           onPress={handleSubmit}
           style={({ pressed }) => [pinStyles.submitBtn, pressed && { opacity: 0.85 }]}
-          disabled={loading || pin.length < 4}
+          disabled={loading || pin.length < 8 || lockedMin !== null}
         >
           {loading ? (
             <ActivityIndicator color="#0A1628" size="small" />
@@ -314,12 +329,17 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
   const [draft, setDraft] = useState<AppConfig>({
     branding: { ...config.branding },
     content: { ...config.content, features: [...(config.content.features ?? [])] },
-    platforms: { ...config.platforms },
+    platforms: [...(config.platforms ?? [])],
     propertyTypes: [...(config.propertyTypes ?? [])],
   });
   const [logoUploading, setLogoUploading] = useState(false);
   const [newPin, setNewPin] = useState("");
   const [saving, setSaving] = useState(false);
+  const [newPlatId, setNewPlatId] = useState("");
+  const [newPlatLabelAr, setNewPlatLabelAr] = useState("");
+  const [newPlatLabelEn, setNewPlatLabelEn] = useState("");
+  const [newPlatColor, setNewPlatColor] = useState("#2563EB");
+  const [platError, setPlatError] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const hasSavedRef = useRef(false);
 
@@ -478,7 +498,7 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
         platforms: draft.platforms,
         propertyTypes: draft.propertyTypes,
       };
-      if (newPin.length === 4) {
+      if (newPin.length >= 8) {
         (updates as Record<string, unknown>).admin = { pin: newPin };
       }
       await updateConfig(authorizedPin, updates as Partial<AppConfig>);
@@ -714,35 +734,114 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
 
         {/* ── 3. PLATFORM CONTROL ────────────────────────────────────────── */}
         <SectionCard icon="public" title={t.admin.platformsSection} iconBg="#F0FDF4" iconColor="#16A34A" isAr={isAr}>
-          {(
-            [
-              { key: "aqar" as const, nameAr: "عقار", nameEn: "Aqar", color: "#2563EB" },
-              { key: "bayut" as const, nameAr: "بيوت", nameEn: "Bayut", color: "#7C3AED" },
-              { key: "wasalt" as const, nameAr: "وصلت", nameEn: "Wasalt", color: "#059669" },
-              { key: "property_finder" as const, nameAr: "بروبرتي فايندر", nameEn: "Property Finder", color: "#D97706" },
-            ] satisfies { key: keyof AppConfig["platforms"]; nameAr: string; nameEn: string; color: string }[]
-          ).map((item, i, arr) => (
-            <React.Fragment key={item.key}>
+          {draft.platforms.map((plat, idx) => (
+            <React.Fragment key={plat.id}>
               <View style={[styles.platformRow, isAr && { flexDirection: "row-reverse" }]}>
-                <View style={[styles.platDot, { backgroundColor: item.color + "20" }]}>
-                  <View style={[styles.platDotInner, { backgroundColor: item.color }]} />
+                <View style={[styles.platDot, { backgroundColor: plat.color + "20" }]}>
+                  <View style={[styles.platDotInner, { backgroundColor: plat.color }]} />
                 </View>
-                <Text style={[styles.platName, isAr && { textAlign: "right" }]}>
-                  {isAr ? item.nameAr : item.nameEn}
-                </Text>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={[styles.platName, isAr && { textAlign: "right" }]}>
+                    {plat.labelAr} / {plat.labelEn}
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: "Inter_400Regular", color: "#9CA3AF" }}>
+                    id: {plat.id}
+                  </Text>
+                </View>
                 <Switch
-                  value={draft.platforms[item.key]}
+                  value={plat.enabled}
                   onValueChange={(v) => {
                     Haptics.selectionAsync();
-                    setDraft((d) => ({ ...d, platforms: { ...d.platforms, [item.key]: v } }));
+                    setDraft((d) => ({
+                      ...d,
+                      platforms: d.platforms.map((p, i) => (i === idx ? { ...p, enabled: v } : p)),
+                    }));
                   }}
                   trackColor={{ false: "#D1D5DB", true: draft.branding.primaryColor }}
                   thumbColor="#FFFFFF"
                 />
+                <Pressable
+                  onPress={() => {
+                    setDraft((d) => ({ ...d, platforms: d.platforms.filter((_, i) => i !== idx) }));
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                  style={({ pressed }) => [styles.deleteTypeBtn, pressed && { opacity: 0.7 }, { marginLeft: 8 }]}
+                >
+                  <MaterialIcons name="delete-outline" size={18} color="#EF4444" />
+                </Pressable>
               </View>
-              {i < arr.length - 1 && <View style={styles.divider} />}
+              {idx < draft.platforms.length - 1 && <View style={styles.divider} />}
             </React.Fragment>
           ))}
+
+          {/* Add new platform form */}
+          <View style={[styles.divider, { marginVertical: 14 }]} />
+          {draft.platforms.length >= 10 ? (
+            <Text style={{ fontSize: 12, color: "#F59E0B", fontFamily: "Inter_500Medium", textAlign: isAr ? "right" : "left", marginBottom: 8 }}>
+              {t.admin.platformsMax}
+            </Text>
+          ) : (
+            <>
+              <FieldRow
+                label={t.admin.platformId}
+                value={newPlatId}
+                onChange={(v) => { setNewPlatId(v); setPlatError(""); }}
+                placeholder="nafath"
+                isAr={false}
+              />
+              <FieldRow
+                label={t.admin.platformLabelAr}
+                value={newPlatLabelAr}
+                onChange={(v) => { setNewPlatLabelAr(v); setPlatError(""); }}
+                placeholder="نافذة"
+                isAr
+              />
+              <FieldRow
+                label={t.admin.platformLabelEn}
+                value={newPlatLabelEn}
+                onChange={(v) => { setNewPlatLabelEn(v); setPlatError(""); }}
+                placeholder="Nafath"
+              />
+              <FieldRow
+                label={t.admin.platformColor}
+                value={newPlatColor}
+                onChange={(v) => { setNewPlatColor(v); setPlatError(""); }}
+                placeholder="#2563EB"
+                isAr={false}
+              />
+              {!!platError && (
+                <Text style={{ fontSize: 12, color: "#EF4444", marginBottom: 10, textAlign: isAr ? "right" : "left", fontFamily: "Inter_500Medium" }}>
+                  {platError}
+                </Text>
+              )}
+              <Pressable
+                onPress={() => {
+                  const id = newPlatId.trim().replace(/\s+/g, "_").toLowerCase();
+                  if (!id || !newPlatLabelAr.trim() || !newPlatLabelEn.trim()) {
+                    setPlatError(t.admin.platformRequired);
+                    return;
+                  }
+                  if (draft.platforms.some((p) => p.id === id)) {
+                    setPlatError(t.admin.platformDuplicate);
+                    return;
+                  }
+                  setDraft((d) => ({
+                    ...d,
+                    platforms: [
+                      ...d.platforms,
+                      { id, labelAr: newPlatLabelAr.trim(), labelEn: newPlatLabelEn.trim(), enabled: true, color: newPlatColor.trim() || "#2563EB" },
+                    ],
+                  }));
+                  setNewPlatId(""); setNewPlatLabelAr(""); setNewPlatLabelEn(""); setNewPlatColor("#2563EB"); setPlatError("");
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
+                style={({ pressed }) => [styles.addTypeBtn, pressed && { opacity: 0.85 }]}
+              >
+                <MaterialIcons name="add-circle-outline" size={18} color="#16A34A" />
+                <Text style={[styles.addTypeBtnText, { color: "#16A34A" }]}>{t.admin.addPlatformBtn}</Text>
+              </Pressable>
+            </>
+          )}
         </SectionCard>
 
         {/* ── 3.5 PROPERTY TYPES ─────────────────────────────────────────── */}
@@ -817,12 +916,12 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
           </Text>
           <TextInput
             value={newPin}
-            onChangeText={(v) => setNewPin(v.replace(/[^0-9]/g, "").slice(0, 4))}
+            onChangeText={(v) => setNewPin(v.slice(0, 24))}
             placeholder={t.admin.newPinLabel}
             placeholderTextColor="#9CA3AF"
-            keyboardType="number-pad"
+            keyboardType="default"
             secureTextEntry
-            maxLength={4}
+            maxLength={24}
             style={[styles.fieldInput, isAr && { textAlign: "right" }]}
           />
         </SectionCard>

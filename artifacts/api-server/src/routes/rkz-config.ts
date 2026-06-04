@@ -17,6 +17,14 @@ export interface FeatureItem {
   bodyEn: string;
 }
 
+export interface PlatformConfig {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+  enabled: boolean;
+  color: string;
+}
+
 export interface RkzConfig {
   branding: {
     appName: string;
@@ -34,12 +42,7 @@ export interface RkzConfig {
     welcomeCtaEn: string;
     features: FeatureItem[];
   };
-  platforms: {
-    aqar: boolean;
-    bayut: boolean;
-    wasalt: boolean;
-    property_finder: boolean;
-  };
+  platforms: PlatformConfig[];
   propertyTypes: PropertyTypeConfig[];
   admin: {
     pin: string;
@@ -68,12 +71,12 @@ const DEFAULT_CONFIG: RkzConfig = {
       { titleAr: "الإدارة الذكية", titleEn: "Smart Management", bodyAr: "تابع كافة الاستفسارات وتحديث حالة عقارك في مكان واحد وبكل سهولة.", bodyEn: "Track all inquiries and your property status in one place, effortlessly." },
     ],
   },
-  platforms: {
-    aqar: true,
-    bayut: true,
-    wasalt: true,
-    property_finder: true,
-  },
+  platforms: [
+    { id: "aqar",            labelAr: "عقار",            labelEn: "Aqar",            enabled: true, color: "#2563EB" },
+    { id: "bayut",           labelAr: "بيوت",            labelEn: "Bayut",           enabled: true, color: "#7C3AED" },
+    { id: "wasalt",          labelAr: "وصلت",            labelEn: "Wasalt",          enabled: true, color: "#059669" },
+    { id: "property_finder", labelAr: "بروبرتي فايندر", labelEn: "Property Finder", enabled: true, color: "#D97706" },
+  ],
   propertyTypes: [
     { id: "villa",      labelAr: "فيلا",          labelEn: "Villa" },
     { id: "apartment",  labelAr: "شقة",            labelEn: "Apartment" },
@@ -87,7 +90,7 @@ const DEFAULT_CONFIG: RkzConfig = {
     { id: "palace",     labelAr: "قصر",            labelEn: "Palace" },
   ],
   admin: {
-    pin: "1234",
+    pin: "12345678",
   },
 };
 
@@ -95,7 +98,7 @@ function deepMerge(base: RkzConfig, patch: Partial<RkzConfig>): RkzConfig {
   return {
     branding: { ...base.branding, ...(patch.branding ?? {}) },
     content: { ...base.content, ...(patch.content ?? {}) },
-    platforms: { ...base.platforms, ...(patch.platforms ?? {}) },
+    platforms: patch.platforms ?? base.platforms,
     propertyTypes: patch.propertyTypes ?? base.propertyTypes,
     admin: { ...base.admin, ...(patch.admin ?? {}) },
   };
@@ -105,7 +108,16 @@ function loadConfig(): RkzConfig {
   try {
     if (existsSync(CONFIG_FILE)) {
       const raw = readFileSync(CONFIG_FILE, "utf-8");
-      return deepMerge(DEFAULT_CONFIG, JSON.parse(raw) as Partial<RkzConfig>);
+      const parsed = JSON.parse(raw) as Partial<RkzConfig>;
+      // Migrate old platforms object format to array
+      if (parsed.platforms && !Array.isArray(parsed.platforms)) {
+        const old = parsed.platforms as unknown as Record<string, boolean>;
+        parsed.platforms = DEFAULT_CONFIG.platforms.map((p) => ({
+          ...p,
+          enabled: old[p.id] ?? p.enabled,
+        }));
+      }
+      return deepMerge(DEFAULT_CONFIG, parsed);
     }
   } catch {
     // Fall through to default
@@ -124,6 +136,11 @@ function saveConfig(config: RkzConfig): void {
 // In-memory cache — loaded once at startup
 let currentConfig: RkzConfig = loadConfig();
 
+// In-memory rate-limit for PIN attempts  { ip -> { count, lockedUntil } }
+const pinAttempts = new Map<string, { count: number; lockedUntil: number }>();
+const MAX_ATTEMPTS = 3;
+const LOCKOUT_MS = 30 * 60 * 1000; // 30 minutes
+
 const router = Router();
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -138,11 +155,33 @@ router.get("/rkz/config", (_req, res) => {
 // POST /rkz/admin/verify-pin  — verify admin PIN without making changes
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/rkz/admin/verify-pin", (req, res) => {
+  const ip = req.ip ?? "unknown";
   const { pin } = req.body as { pin?: string };
-  if (!pin || pin !== currentConfig.admin.pin) {
-    res.json({ valid: false });
+
+  const record = pinAttempts.get(ip);
+  const now = Date.now();
+
+  if (record && record.lockedUntil > now) {
+    const minutesLeft = Math.ceil((record.lockedUntil - now) / 60000);
+    res.status(429).json({ valid: false, locked: true, minutesLeft });
     return;
   }
+
+  if (!pin || pin !== currentConfig.admin.pin) {
+    const current = record ?? { count: 0, lockedUntil: 0 };
+    const newCount = current.count + 1;
+    const lockedUntil = newCount >= MAX_ATTEMPTS ? now + LOCKOUT_MS : 0;
+    pinAttempts.set(ip, { count: newCount, lockedUntil });
+    if (lockedUntil > 0) {
+      res.status(429).json({ valid: false, locked: true, minutesLeft: 30 });
+    } else {
+      res.json({ valid: false, locked: false, attemptsLeft: MAX_ATTEMPTS - newCount });
+    }
+    return;
+  }
+
+  // Success — clear attempt record
+  pinAttempts.delete(ip);
   res.json({ valid: true });
 });
 
