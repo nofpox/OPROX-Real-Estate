@@ -38,13 +38,15 @@ import rkzConfigRouter from "./rkz-config";
 import rkzAuthRouter from "./rkz-auth";
 import rkzListingsRouter from "./rkz-listings";
 import rkzPortalAuthRouter from "./rkz-portal-auth";
+import portalRouter from "./portal";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
   worker: 0, supervisor: 1, admin: 2,
 };
 
-const PUBLIC_PREFIXES = ["/auth/", "/health", "/unit-requests", "/unit-info/", "/service-categories", "/rkz/"];
+// /portal/ routes manage their own session auth via requireAuth (async cookie reader)
+const PUBLIC_PREFIXES = ["/auth/", "/health", "/unit-requests", "/unit-info/", "/service-categories", "/rkz/", "/portal/"];
 
 const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
 
@@ -169,6 +171,7 @@ router.use(rkzConfigRouter);
 router.use(rkzAuthRouter);
 router.use(rkzListingsRouter);
 router.use(rkzPortalAuthRouter);
+router.use(portalRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

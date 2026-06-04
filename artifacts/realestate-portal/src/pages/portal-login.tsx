@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useLocation, Link } from 'wouter';
+import { Link } from 'wouter';
 import { usePortalAuth } from '@/lib/portal-auth';
 import { useLanguage } from '@/lib/i18n';
 import { useForgotPassword, useResetPassword } from '@workspace/api-client-react';
@@ -11,9 +11,13 @@ import {
   Building, AlertCircle, CheckCircle2,
   ArrowLeft, ArrowRight, Mail, KeyRound,
   BarChart3, CalendarCheck, ShieldCheck, Lock,
+  Fingerprint, Smartphone, RefreshCw,
 } from 'lucide-react';
+import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 
-type View = 'login' | 'forgot-email' | 'forgot-otp' | 'forgot-done';
+type View = 'login' | 'otp' | 'biometric-offer' | 'forgot-email' | 'forgot-otp' | 'forgot-done';
+
+const PORTAL_WA_USER_KEY = 'portal_wa_user';
 
 const PORTAL_FEATURES = [
   {
@@ -38,11 +42,6 @@ const PORTAL_FEATURES = [
     descAr:  'معدلات الإشغال الحية وحالة الحجوزات لجميع العقارات.',
   },
 ];
-
-// ── Stable module-level sub-components ────────────────────────────────────────
-// IMPORTANT: defined OUTSIDE PortalLogin so their identity is stable across
-// re-renders. Inner component definitions get a new reference on every render,
-// which causes React to unmount/remount the subtree and steal input focus.
 
 const BrandingPanel: React.FC<{ isRtl: boolean }> = ({ isRtl }) => (
   <div className="hidden lg:flex lg:w-1/2 relative bg-primary flex-col justify-between p-12 overflow-hidden">
@@ -99,85 +98,197 @@ const RightPanel: React.FC<{ isRtl: boolean; children: React.ReactNode }> = ({ i
   </div>
 );
 
-// ── Main component ─────────────────────────────────────────────────────────────
-
 export const PortalLogin: React.FC = () => {
-  const { login, isAuthenticated, isLoading: authLoading } = usePortalAuth();
-  const [, setLocation] = useLocation();
-  const { t, isRtl }    = useLanguage();
+  const { isAuthenticated, isLoading: authLoading } = usePortalAuth();
+  const { t, isRtl } = useLanguage();
 
-  const [view,         setView]         = useState<View>('login');
-  const [error,        setError]        = useState('');
-  const [submitting,   setSubmitting]   = useState(false);
+  const [view,           setView]           = useState<View>('login');
+  const [error,          setError]          = useState('');
+  const [submitting,     setSubmitting]     = useState(false);
+  const [biometricBusy,  setBiometricBusy]  = useState(false);
 
-  // Login state
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [identifier,     setIdentifier]     = useState('');
+  const [password,       setPassword]       = useState('');
 
-  // Forgot-password state
-  const [fpEmail,  setFpEmail]  = useState('');
-  const [demoOtp,  setDemoOtp]  = useState('');
-  const [fpOtp,    setFpOtp]    = useState('');
-  const [newPwd,   setNewPwd]   = useState('');
+  const [pendingToken,   setPendingToken]   = useState('');
+  const [maskedEmail,    setMaskedEmail]    = useState('');
+  const [loginOtp,       setLoginOtp]       = useState('');
+  const [demoLoginOtp,   setDemoLoginOtp]   = useState('');
+
+  const [waAvailable,    setWaAvailable]    = useState(false);
+  const [waUser,         setWaUser]         = useState('');
+
+  const [fpEmail,        setFpEmail]        = useState('');
+  const [fpDemoOtp,      setFpDemoOtp]      = useState('');
+  const [fpOtp,          setFpOtp]          = useState('');
+  const [newPwd,         setNewPwd]         = useState('');
 
   const forgotMutation = useForgotPassword();
   const resetMutation  = useResetPassword();
 
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      setLocation('/portal/dashboard');
+      window.location.replace('/portal/dashboard');
     }
-  }, [isAuthenticated, authLoading, setLocation]);
+  }, [isAuthenticated, authLoading]);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSubmitting(true);
-    try {
-      const authedUser = await login({ username, password });
-      if (authedUser) setLocation('/portal/dashboard');
-    } catch {
-      setError(isRtl ? 'بيانات اعتماد غير صحيحة. يرجى المحاولة مرة أخرى.' : 'Invalid credentials. Please try again.');
-    } finally {
-      setSubmitting(false);
+  useEffect(() => {
+    const stored = localStorage.getItem(PORTAL_WA_USER_KEY) ?? '';
+    const supported = typeof window !== 'undefined' && !!window.PublicKeyCredential;
+    if (supported && stored) {
+      setWaAvailable(true);
+      setWaUser(stored);
     }
+  }, []);
+
+  const goBack = (toView: View) => () => { setView(toView); setError(''); };
+
+  const handleLoginStep1 = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!identifier.trim() || !password) return;
+    setError(''); setSubmitting(true);
+    try {
+      const res = await fetch('/api/portal/auth/login-step1', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: identifier.trim(), password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? (isRtl ? 'بيانات اعتماد غير صحيحة. يرجى المحاولة مرة أخرى.' : 'Invalid credentials. Please try again.'));
+        return;
+      }
+      setPendingToken(data.pendingToken);
+      setMaskedEmail(data.maskedEmail ?? '');
+      if (data.demoOtp) setDemoLoginOtp(data.demoOtp);
+      setLoginOtp('');
+      setView('otp');
+    } catch {
+      setError(isRtl ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'An error occurred. Please try again.');
+    } finally { setSubmitting(false); }
+  };
+
+  const handleLoginStep2 = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginOtp.length < 6) return;
+    setError(''); setSubmitting(true);
+    try {
+      const res = await fetch('/api/portal/auth/login-step2', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pendingToken, otp: loginOtp }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? (isRtl ? 'رمز التحقق غير صحيح أو منتهي الصلاحية.' : 'Invalid or expired verification code.'));
+        return;
+      }
+      const webAuthnOk = typeof window !== 'undefined' && !!window.PublicKeyCredential;
+      if (webAuthnOk) {
+        try {
+          const credRes = await fetch('/api/portal/auth/webauthn/credentials', { credentials: 'include' });
+          if (credRes.ok) {
+            const credData = await credRes.json();
+            if (credData.count === 0) { setView('biometric-offer'); return; }
+          }
+        } catch {}
+      }
+      window.location.replace('/portal/dashboard');
+    } catch {
+      setError(isRtl ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'An error occurred. Please try again.');
+    } finally { setSubmitting(false); }
+  };
+
+  const handleBiometricLogin = async () => {
+    if (!waUser) return;
+    setBiometricBusy(true); setError('');
+    try {
+      const optRes = await fetch('/api/portal/auth/webauthn/authenticate-options', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: waUser }),
+      });
+      if (!optRes.ok) throw new Error('Failed to get options');
+      const { challengeKey, ...options } = await optRes.json();
+      const authResponse = await startAuthentication({ optionsJSON: options });
+      const verifyRes = await fetch('/api/portal/auth/webauthn/authenticate-verify', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challengeKey, ...authResponse }),
+      });
+      if (!verifyRes.ok) {
+        const d = await verifyRes.json();
+        throw new Error(d.error ?? 'Verification failed');
+      }
+      window.location.replace('/portal/dashboard');
+    } catch (err) {
+      const msg = err instanceof Error ? err.name : '';
+      if (msg === 'NotAllowedError') {
+        setError(isRtl ? 'تم إلغاء التحقق البيومتري أو انتهت مهلته.' : 'Biometric verification was cancelled or timed out.');
+      } else {
+        setError(isRtl ? 'فشل التحقق البيومتري. يرجى استخدام كلمة المرور.' : 'Biometric verification failed. Please use your password instead.');
+      }
+    } finally { setBiometricBusy(false); }
+  };
+
+  const handleRegisterBiometric = async () => {
+    setBiometricBusy(true); setError('');
+    try {
+      const optRes = await fetch('/api/portal/auth/webauthn/register-options', {
+        method: 'POST', credentials: 'include',
+      });
+      if (!optRes.ok) throw new Error('Failed to get options');
+      const options = await optRes.json();
+      const regResponse = await startRegistration({ optionsJSON: options });
+      const verifyRes = await fetch('/api/portal/auth/webauthn/register-verify', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(regResponse),
+      });
+      if (!verifyRes.ok) throw new Error('Verification failed');
+      localStorage.setItem(PORTAL_WA_USER_KEY, identifier.trim());
+      window.location.replace('/portal/dashboard');
+    } catch (err) {
+      const name = err instanceof Error ? err.name : '';
+      if (name === 'NotAllowedError') {
+        window.location.replace('/portal/dashboard');
+      } else {
+        setError(isRtl ? 'فشل التسجيل البيومتري. يمكنك تفعيله لاحقاً.' : 'Biometric setup failed. You can enable it later from settings.');
+        setTimeout(() => window.location.replace('/portal/dashboard'), 2000);
+      }
+    } finally { setBiometricBusy(false); }
   };
 
   const handleForgotEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault(); setError('');
     try {
       const res = await forgotMutation.mutateAsync({ data: { email: fpEmail } });
       const otp = (res as Record<string, unknown>)?.otp;
-      if (otp) setDemoOtp(String(otp));
+      if (otp) setFpDemoOtp(String(otp));
       setView('forgot-otp');
     } catch {
-      setError(isRtl ? 'تعذّر إرسال رمز التحقق. يرجى التحقق من بريدك والمحاولة مجدداً.' : 'Failed to send verification code. Please check your email and try again.');
+      setError(isRtl ? 'تعذّر إرسال رمز التحقق.' : 'Failed to send verification code. Please check your email.');
     }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (newPwd.length < 8) {
-      setError(t('portal.passwordTooShort'));
-      return;
-    }
+    e.preventDefault(); setError('');
+    if (newPwd.length < 8) { setError(t('portal.passwordTooShort')); return; }
     try {
       await resetMutation.mutateAsync({ data: { resetToken: fpOtp, newPassword: newPwd } });
       setView('forgot-done');
     } catch {
-      setError(isRtl ? 'رمز غير صحيح أو منتهي الصلاحية. يرجى طلب رمز جديد.' : 'Invalid or expired code. Please request a new one.');
+      setError(isRtl ? 'رمز غير صحيح أو منتهي الصلاحية.' : 'Invalid or expired code. Please request a new one.');
     }
   };
 
-  const goBack = (toView: View) => () => {
-    setView(toView);
-    setError('');
-  };
+  if (authLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-muted">
+      <div className="h-8 w-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+    </div>
+  );
 
-  // ── View: Login ────────────────────────────────────────────────────────────
+  // ── View: Login (credentials) ───────────────────────────────────────────────
   if (view === 'login') return (
     <>
       <Helmet>
@@ -187,10 +298,45 @@ export const PortalLogin: React.FC = () => {
       <div className="min-h-screen flex">
         <BrandingPanel isRtl={isRtl} />
         <RightPanel isRtl={isRtl}>
-          <div className="mb-8">
+          <div className="mb-7">
             <h1 className="text-2xl font-bold text-primary">{t('portal.loginTitle')}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t('portal.loginSubtitle')}</p>
           </div>
+
+          {waAvailable && (
+            <div className="mb-5">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-14 border-2 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                onClick={handleBiometricLogin}
+                disabled={biometricBusy}
+              >
+                {biometricBusy ? (
+                  <span className="flex items-center gap-2.5">
+                    <RefreshCw className="h-5 w-5 animate-spin text-primary" />
+                    <span className="text-sm font-medium text-primary">{isRtl ? 'جاري التحقق...' : 'Verifying…'}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-3">
+                    <Fingerprint className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+                    <div className="text-start">
+                      <p className="text-sm font-semibold text-primary leading-tight">
+                        {isRtl ? 'تسجيل الدخول ببصمة الوجه / الإصبع' : 'Sign in with Face ID / Fingerprint'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{waUser}</p>
+                    </div>
+                  </span>
+                )}
+              </Button>
+              <div className="flex items-center gap-3 my-4">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground">{isRtl ? 'أو تسجيل الدخول بكلمة المرور' : 'or sign in with password'}</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+            </div>
+          )}
+
           <div className="bg-card border border-border rounded-xl shadow-sm p-6 md:p-8">
             {error && (
               <Alert variant="destructive" className="mb-4">
@@ -198,17 +344,18 @@ export const PortalLogin: React.FC = () => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <form className="space-y-5" onSubmit={handleLogin} noValidate>
+            <form className="space-y-5" onSubmit={handleLoginStep1} noValidate>
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-primary mb-1.5">
-                  {t('portal.username')}
+                <label htmlFor="identifier" className="block text-sm font-medium text-primary mb-1.5">
+                  {isRtl ? 'البريد الإلكتروني أو رقم الجوال' : 'Email, Mobile or Username'}
                 </label>
                 <Input
-                  id="username"
-                  autoComplete="username"
+                  id="identifier"
+                  autoComplete="username email"
                   required
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
+                  value={identifier}
+                  onChange={e => setIdentifier(e.target.value)}
+                  placeholder={isRtl ? 'example@domain.com أو 0501234567' : 'email@domain.com or username'}
                   className="h-10"
                 />
               </div>
@@ -225,7 +372,7 @@ export const PortalLogin: React.FC = () => {
                   onChange={e => setPassword(e.target.value)}
                   className="h-10"
                 />
-                <div className="text-right mt-1.5">
+                <div className="text-end mt-1.5">
                   <button
                     type="button"
                     onClick={goBack('forgot-email')}
@@ -238,12 +385,12 @@ export const PortalLogin: React.FC = () => {
               <Button
                 type="submit"
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-11 text-base"
-                disabled={submitting || authLoading}
+                disabled={submitting || !identifier.trim() || !password}
               >
                 {submitting ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    {t('portal.loggingIn')}
+                    {isRtl ? 'جاري التحقق...' : 'Verifying…'}
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
@@ -255,10 +402,9 @@ export const PortalLogin: React.FC = () => {
             </form>
             <div className="mt-5 pt-5 border-t border-border flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5 text-secondary" />
-              {isRtl ? 'اتصال آمن ومشفر' : 'Secured with encrypted connection'}
+              {isRtl ? 'اتصال آمن ومشفر — يتطلب رمز تحقق عبر البريد الإلكتروني' : 'End-to-end encrypted · Email OTP required'}
             </div>
           </div>
-          {/* Restricted notice */}
           <p className="text-center mt-5 text-xs text-muted-foreground leading-relaxed">
             {isRtl
               ? 'هذه البوابة مخصصة حصرياً للمستثمرين المسجلين. للحصول على وصول، يرجى التواصل مع فريق إدارة العلاقات.'
@@ -275,7 +421,161 @@ export const PortalLogin: React.FC = () => {
     </>
   );
 
-  // ── View: Forgot — enter email ─────────────────────────────────────────────
+  // ── View: OTP verification ──────────────────────────────────────────────────
+  if (view === 'otp') return (
+    <>
+      <Helmet><title>{isRtl ? 'التحقق من الهوية | ركز' : 'Verify Identity | Rakez'}</title></Helmet>
+      <div className="min-h-screen flex">
+        <BrandingPanel isRtl={isRtl} />
+        <RightPanel isRtl={isRtl}>
+          <button
+            onClick={goBack('login')}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-secondary transition-colors mb-6"
+          >
+            {isRtl ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
+            {t('portal.backToLogin')}
+          </button>
+          <div className="mb-8">
+            <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4">
+              <Smartphone className="h-6 w-6 text-secondary" />
+            </div>
+            <h1 className="text-2xl font-bold text-primary">
+              {isRtl ? 'التحقق من الهوية' : 'Verify Your Identity'}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {isRtl
+                ? `أرسلنا رمز مكون من 6 أرقام إلى ${maskedEmail}`
+                : `We sent a 6-digit code to ${maskedEmail}`}
+            </p>
+          </div>
+          <div className="bg-card border border-border rounded-xl shadow-sm p-6 md:p-8">
+            {demoLoginOtp && (
+              <Alert className="mb-4 border-amber-200 bg-amber-50 text-amber-800">
+                <AlertDescription className="text-sm">
+                  {isRtl ? 'وضع العرض التجريبي — الرمز: ' : 'Demo mode — OTP: '}
+                  <span className="font-mono font-bold tracking-widest text-base">{demoLoginOtp}</span>
+                </AlertDescription>
+              </Alert>
+            )}
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <form className="space-y-5" onSubmit={handleLoginStep2} noValidate>
+              <div>
+                <label htmlFor="login-otp" className="block text-sm font-medium text-primary mb-1.5">
+                  {isRtl ? 'رمز التحقق' : 'Verification Code'}
+                </label>
+                <Input
+                  id="login-otp"
+                  value={loginOtp}
+                  onChange={e => setLoginOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  required
+                  maxLength={6}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  disabled={submitting}
+                  placeholder="123456"
+                  className="h-14 text-center font-mono text-2xl tracking-[0.5em]"
+                />
+                <p className="text-xs text-muted-foreground mt-1.5 text-center">
+                  {isRtl ? 'ينتهي صلاحية الرمز خلال 5 دقائق' : 'Code expires in 5 minutes'}
+                </p>
+              </div>
+              <Button
+                type="submit"
+                className="w-full h-11 text-base"
+                disabled={submitting || loginOtp.length < 6}
+              >
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    {isRtl ? 'جاري التحقق...' : 'Verifying…'}
+                  </span>
+                ) : (isRtl ? 'تأكيد الرمز' : 'Confirm Code')}
+              </Button>
+            </form>
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={goBack('login')}
+                className="text-xs text-muted-foreground hover:text-secondary transition-colors inline-flex items-center gap-1"
+              >
+                <RefreshCw className="h-3 w-3" />
+                {isRtl ? 'لم يصل الرمز؟ أعد المحاولة' : "Didn't receive it? Go back and resend"}
+              </button>
+            </div>
+          </div>
+        </RightPanel>
+      </div>
+    </>
+  );
+
+  // ── View: Biometric offer (after first successful login) ────────────────────
+  if (view === 'biometric-offer') return (
+    <>
+      <Helmet><title>{isRtl ? 'تفعيل بصمة الدخول | ركز' : 'Enable Biometric Login | Rakez'}</title></Helmet>
+      <div className="min-h-screen flex">
+        <BrandingPanel isRtl={isRtl} />
+        <RightPanel isRtl={isRtl}>
+          <div className="bg-card border border-border rounded-xl shadow-sm p-8 text-center">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+              <Fingerprint className="h-10 w-10 text-primary" />
+            </div>
+            <h1 className="text-xl font-bold text-primary mb-2">
+              {isRtl ? 'تفعيل بصمة الدخول' : 'Enable Biometric Login'}
+            </h1>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-1">
+              {isRtl
+                ? 'سجّل الدخول في المرة القادمة بسرعة وأمان باستخدام بصمة الوجه أو الإصبع.'
+                : 'Next time, sign in instantly and securely using Face ID or your fingerprint.'}
+            </p>
+            <p className="text-xs text-muted-foreground/70 mb-7">
+              {isRtl ? 'بيانات البصمة تبقى على جهازك فقط ولا تُرسل إلى أي مكان.' : 'Biometric data stays on your device and is never transmitted.'}
+            </p>
+            {error && (
+              <Alert variant="destructive" className="mb-4 text-start">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-3">
+              <Button
+                className="w-full h-12 text-base"
+                onClick={handleRegisterBiometric}
+                disabled={biometricBusy}
+              >
+                {biometricBusy ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    {isRtl ? 'جاري التسجيل...' : 'Setting up…'}
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Fingerprint className="h-5 w-5" />
+                    {isRtl ? 'تفعيل بصمة الدخول' : 'Enable Biometric Login'}
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full h-10 text-sm text-muted-foreground"
+                disabled={biometricBusy}
+                onClick={() => window.location.replace('/portal/dashboard')}
+              >
+                {isRtl ? 'تخطي الآن — يمكنني تفعيله لاحقاً' : "Skip for now — I'll enable it later"}
+              </Button>
+            </div>
+          </div>
+        </RightPanel>
+      </div>
+    </>
+  );
+
+  // ── View: Forgot — enter email ──────────────────────────────────────────────
   if (view === 'forgot-email') return (
     <>
       <Helmet><title>Need Help Logging In? | Rakez</title></Helmet>
@@ -319,11 +619,7 @@ export const PortalLogin: React.FC = () => {
                   className="h-10"
                 />
               </div>
-              <Button
-                type="submit"
-                className="w-full h-11"
-                disabled={forgotMutation.isPending}
-              >
+              <Button type="submit" className="w-full h-11" disabled={forgotMutation.isPending}>
                 {forgotMutation.isPending ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
@@ -338,7 +634,7 @@ export const PortalLogin: React.FC = () => {
     </>
   );
 
-  // ── View: Forgot — verify OTP + new password ───────────────────────────────
+  // ── View: Forgot — verify OTP + new password ────────────────────────────────
   if (view === 'forgot-otp') return (
     <>
       <Helmet><title>Reset Password | Rakez</title></Helmet>
@@ -360,10 +656,10 @@ export const PortalLogin: React.FC = () => {
             <p className="mt-1 text-sm text-muted-foreground">{t('portal.verificationCodeHint')}</p>
           </div>
           <div className="bg-card border border-border rounded-xl shadow-sm p-6 md:p-8">
-            {demoOtp && (
+            {fpDemoOtp && (
               <Alert className="mb-4 border-amber-200 bg-amber-50 text-amber-800">
                 <AlertDescription className="font-mono font-bold text-base tracking-widest text-center">
-                  {t('portal.demoOtpHint').replace('{otp}', demoOtp)}
+                  {t('portal.demoOtpHint').replace('{otp}', fpDemoOtp)}
                 </AlertDescription>
               </Alert>
             )}
@@ -375,16 +671,14 @@ export const PortalLogin: React.FC = () => {
             )}
             <form className="space-y-5" onSubmit={handleResetPassword} noValidate>
               <div>
-                <label htmlFor="otp" className="block text-sm font-medium text-primary mb-1.5">
+                <label htmlFor="fp-otp" className="block text-sm font-medium text-primary mb-1.5">
                   {t('portal.verificationCode')}
                 </label>
                 <Input
-                  id="otp"
+                  id="fp-otp"
                   value={fpOtp}
                   onChange={e => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  required
-                  maxLength={6}
-                  inputMode="numeric"
+                  required maxLength={6} inputMode="numeric"
                   disabled={resetMutation.isPending}
                   placeholder="123456"
                   className="h-12 text-center font-mono text-xl tracking-widest"
@@ -404,11 +698,7 @@ export const PortalLogin: React.FC = () => {
                   className="h-10"
                 />
               </div>
-              <Button
-                type="submit"
-                className="w-full h-11"
-                disabled={resetMutation.isPending || fpOtp.length < 6}
-              >
+              <Button type="submit" className="w-full h-11" disabled={resetMutation.isPending || fpOtp.length < 6}>
                 {resetMutation.isPending ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
@@ -423,10 +713,10 @@ export const PortalLogin: React.FC = () => {
     </>
   );
 
-  // ── View: Forgot — success ─────────────────────────────────────────────────
+  // ── View: Forgot — success ──────────────────────────────────────────────────
   return (
     <>
-      <Helmet><title>Reset Password | Rakez</title></Helmet>
+      <Helmet><title>Password Reset | Rakez</title></Helmet>
       <div className="min-h-screen flex">
         <BrandingPanel isRtl={isRtl} />
         <RightPanel isRtl={isRtl}>
@@ -436,14 +726,7 @@ export const PortalLogin: React.FC = () => {
             </div>
             <h2 className="text-xl font-bold text-primary mb-2">{t('portal.resetSuccess')}</h2>
             <Button
-              onClick={() => {
-                setView('login');
-                setError('');
-                setFpEmail('');
-                setFpOtp('');
-                setNewPwd('');
-                setDemoOtp('');
-              }}
+              onClick={() => { setView('login'); setError(''); setFpEmail(''); setFpOtp(''); setNewPwd(''); setFpDemoOtp(''); }}
               className="mt-4 w-full h-11"
             >
               {t('portal.backToLogin')}

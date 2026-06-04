@@ -10,13 +10,23 @@ import {
   usersTable,
   settingsTable,
   supportTicketsTable,
+  customRolesTable,
   insertPortalPropertySchema,
   updatePortalPropertySchema,
   insertPortalUnitSchema,
   updatePortalUnitSchema,
 } from "@workspace/db";
-import { getRoleTier, getPortalRoleTier, hashPwd } from "./auth.js";
-import { eq, and, sql, desc, inArray, ne } from "drizzle-orm";
+import { sessions, getRoleTier, getPortalRoleTier, hashPwd, verifyPwd } from "./auth.js";
+import type { SessionUser } from "../types.js";
+import { Resend } from "resend";
+import crypto from "node:crypto";
+import {
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse,
+} from "@simplewebauthn/server";
+import { eq, and, or, sql, desc, inArray, ne } from "drizzle-orm";
 import { sendSuccess, sendError, parsePagination, buildMeta } from "../utils/response.js";
 import {
   portalCache,
@@ -28,15 +38,39 @@ import {
 
 const router = Router();
 
+// ── Portal auth helpers ────────────────────────────────────────────────────────
+const portalResend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const PORTAL_SENDER = process.env.SENDER_EMAIL ?? "ركز للحلول الذكية <onboarding@resend.dev>";
+
+// pending login OTPs: pendingToken → { userId, tenantId, otp, expiresAt }
+const pendingLoginTokens = new Map<string, { userId: number; tenantId: number | null; otp: string; expiresAt: number }>();
+
+// WebAuthn challenges (keyed by userId for registration, by challengeKey for auth)
+const waRegChallenges  = new Map<number, { challenge: string; expiresAt: number }>();
+const waAuthChallenges = new Map<string, { userId: number; challenge: string; expiresAt: number }>();
+
+// Relying-party settings derived from the deployed Replit domain (or localhost in dev)
+const rpID = (() => { const d = (process.env.REPLIT_DOMAINS ?? "").split(",")[0]?.trim(); return d || "localhost"; })();
+const rpOrigin = (() => { const d = (process.env.REPLIT_DOMAINS ?? "").split(",")[0]?.trim(); return d ? `https://${d}` : "http://localhost:80"; })();
+
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!domain || !local) return email;
+  return local.slice(0, 2) + "***@" + domain;
+}
+
 function tid(req: Request): number | null {
   return ((req as any).sessionUser as any)?.tenantId ?? null;
 }
 
-function requireAuth(req: Request, res: Response, next: NextFunction): void {
-  if (!(req as any).sessionUser) {
+async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const sid = req.headers.cookie?.match(/pms_session=([^;]+)/)?.[1];
+  const sessionUser = sid ? await sessions.get(sid) : undefined;
+  if (!sessionUser) {
     sendError(res, 401, "Authentication required");
     return;
   }
+  (req as any).sessionUser = sessionUser;
   next();
 }
 
@@ -893,7 +927,7 @@ router.post("/portal/team", requireAuth, async (req, res) => {
     const callerTierLevel = getPortalRoleTier(caller.role);
     if (callerTierLevel > 3) { sendError(res, 403, "Forbidden"); return; }
 
-    const { username, displayName, email, password, role } = req.body ?? {};
+    const { username, displayName, email, phone, password, role } = req.body ?? {};
     if (!username || !displayName || !email || !password || !role) {
       sendError(res, 400, "username, displayName, email, password and role are required"); return;
     }
@@ -918,6 +952,7 @@ router.post("/portal/team", requireAuth, async (req, res) => {
       username:     uname,
       displayName:  String(displayName).trim(),
       email:        String(email).trim().toLowerCase(),
+      phoneNumber:  phone ? String(phone).trim() : null,
       passwordHash: hashPwd(String(password)),
       role:         String(role),
       tenantId,
@@ -1018,6 +1053,256 @@ router.post("/portal/contact", requireAuth, async (req, res) => {
   } catch (err) {
     req.log?.error({ err }, "POST /portal/contact failed");
     sendError(res, 500, "Failed to send message");
+  }
+});
+
+// ── POST /portal/auth/login-step1 — verify credentials, send OTP ──────────────
+router.post("/portal/auth/login-step1", async (req, res) => {
+  try {
+    const { identifier, password } = req.body ?? {};
+    if (!identifier || !password) {
+      sendError(res, 400, "identifier and password are required"); return;
+    }
+    const ident = String(identifier).trim().toLowerCase();
+
+    const [user] = await db.select().from(usersTable).where(
+      and(
+        eq(usersTable.isActive, true),
+        or(eq(usersTable.username, ident), eq(usersTable.email, ident), eq(usersTable.phoneNumber, ident))
+      )
+    ).limit(1);
+
+    if (!user) {
+      await new Promise(r => setTimeout(r, 350)); // constant-time
+      sendError(res, 401, "Invalid credentials"); return;
+    }
+    const { valid } = verifyPwd(user.passwordHash, String(password));
+    if (!valid) { sendError(res, 401, "Invalid credentials"); return; }
+
+    if (!user.email) { sendError(res, 400, "Account has no email for OTP delivery"); return; }
+
+    const pendingToken = crypto.randomUUID();
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    pendingLoginTokens.set(pendingToken, { userId: user.id, tenantId: user.tenantId ?? null, otp, expiresAt: Date.now() + 5 * 60_000 });
+
+    if (portalResend) {
+      try {
+        await portalResend.emails.send({
+          from: PORTAL_SENDER,
+          to: [user.email],
+          subject: "رمز التحقق | Login Verification Code – ركز Rakez",
+          html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb"><div style="background:#1a2744;padding:20px 28px"><p style="margin:0;font-size:18px;font-weight:700;color:#fff">ركز | Rakez</p><p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.55)">Investor Portal — Login Verification</p></div><div style="padding:28px"><h2 style="margin:0 0 12px;font-size:18px;color:#111">Your Login Verification Code</h2><p style="margin:0 0 20px;color:#555;font-size:14px">Enter this 6-digit code to complete your sign-in. Expires in <strong>5 minutes</strong>.</p><div style="background:#1a2744;border-radius:12px;padding:20px;text-align:center;letter-spacing:12px;font-size:38px;font-weight:900;color:#fff;font-family:monospace;margin:0 0 20px">${otp}</div><p style="margin:0 0 16px;font-size:15px;font-weight:600;color:#111;direction:rtl;text-align:right">رمز التحقق لتسجيل دخولك إلى بوابة ركز</p><p style="margin:0;color:#aaa;font-size:11px;text-align:center">If you did not attempt to sign in, please ignore this email.<br/>إذا لم تحاول تسجيل الدخول، يرجى تجاهل هذه الرسالة.</p></div></div>`,
+        });
+      } catch (emailErr) {
+        req.log.error({ emailErr }, "Failed to send portal login OTP email");
+      }
+    }
+
+    const maskedEmail = maskEmail(user.email);
+    res.json({ ok: true, pendingToken, maskedEmail, ...(portalResend ? {} : { demoOtp: otp }) });
+  } catch (err) {
+    req.log.error({ err }, "POST /portal/auth/login-step1 failed");
+    sendError(res, 500, "Login failed");
+  }
+});
+
+// ── POST /portal/auth/login-step2 — verify OTP, create session ────────────────
+router.post("/portal/auth/login-step2", async (req, res) => {
+  try {
+    const { pendingToken, otp } = req.body ?? {};
+    if (!pendingToken || !otp) { sendError(res, 400, "pendingToken and otp are required"); return; }
+
+    const pending = pendingLoginTokens.get(String(pendingToken));
+    if (!pending) { sendError(res, 400, "Invalid or expired token"); return; }
+    if (pending.expiresAt < Date.now()) { pendingLoginTokens.delete(String(pendingToken)); sendError(res, 400, "Verification code has expired"); return; }
+    if (pending.otp !== String(otp).trim()) { sendError(res, 400, "Invalid verification code"); return; }
+    pendingLoginTokens.delete(String(pendingToken));
+
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, pending.userId));
+    if (!user || !user.isActive) { sendError(res, 401, "Account not found or inactive"); return; }
+
+    let effectivePerms: string[] = (() => { try { return JSON.parse(user.permissions); } catch { return []; } })();
+    if (user.customRoleId) {
+      const [cRole] = await db.select().from(customRolesTable).where(eq(customRolesTable.id, user.customRoleId));
+      if (cRole) { try { effectivePerms = JSON.parse(cRole.permissions); } catch {} }
+    }
+
+    const sessionId = crypto.randomUUID();
+    const sessionUser: SessionUser = {
+      id: user.id, username: user.username, displayName: user.displayName,
+      email: user.email ?? null, phoneNumber: user.phoneNumber ?? null,
+      role: user.role, permissions: effectivePerms, isActive: user.isActive,
+      createdAt: user.createdAt.toISOString(), mustChangePassword: user.mustChangePassword ?? false,
+      tenantId: pending.tenantId, isSuperAdmin: user.role === "super_admin",
+    };
+    await sessions.set(sessionId, sessionUser);
+    res.setHeader("Set-Cookie", `pms_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`);
+    res.json({ ok: true, user: sessionUser });
+  } catch (err) {
+    req.log.error({ err }, "POST /portal/auth/login-step2 failed");
+    sendError(res, 500, "Login verification failed");
+  }
+});
+
+// ── WebAuthn: check registered credentials ────────────────────────────────────
+router.get("/portal/auth/webauthn/credentials", requireAuth, async (req, res) => {
+  try {
+    const su = (req as any).sessionUser as SessionUser;
+    const result = await db.execute(sql`SELECT id, created_at FROM webauthn_credentials WHERE user_id = ${su.id}`);
+    res.json({ credentials: result.rows, count: result.rows.length });
+  } catch (err) {
+    req.log.error({ err }, "GET /portal/auth/webauthn/credentials failed");
+    sendError(res, 500, "Failed to fetch credentials");
+  }
+});
+
+// ── WebAuthn: start registration ──────────────────────────────────────────────
+router.post("/portal/auth/webauthn/register-options", requireAuth, async (req, res) => {
+  try {
+    const su = (req as any).sessionUser as SessionUser;
+    const existingRes = await db.execute(sql`SELECT credential_id, transports FROM webauthn_credentials WHERE user_id = ${su.id}`);
+    const existing = existingRes.rows as { credential_id: string; transports: string }[];
+
+    const options = await generateRegistrationOptions({
+      rpName: "Rakez Investor Portal",
+      rpID,
+      userName: su.username,
+      userDisplayName: su.displayName,
+      attestationType: "none",
+      authenticatorSelection: { residentKey: "preferred", userVerification: "required", authenticatorAttachment: "platform" },
+      excludeCredentials: existing.map(r => ({
+        id: r.credential_id,
+        transports: (() => { try { return JSON.parse(r.transports); } catch { return []; } })(),
+      })),
+    });
+
+    waRegChallenges.set(su.id, { challenge: options.challenge, expiresAt: Date.now() + 5 * 60_000 });
+    res.json(options);
+  } catch (err) {
+    req.log.error({ err }, "POST /portal/auth/webauthn/register-options failed");
+    sendError(res, 500, "Failed to generate registration options");
+  }
+});
+
+// ── WebAuthn: complete registration ───────────────────────────────────────────
+router.post("/portal/auth/webauthn/register-verify", requireAuth, async (req, res) => {
+  try {
+    const su = (req as any).sessionUser as SessionUser;
+    const ch = waRegChallenges.get(su.id);
+    if (!ch || ch.expiresAt < Date.now()) { waRegChallenges.delete(su.id); sendError(res, 400, "Registration session expired"); return; }
+
+    const verification = await verifyRegistrationResponse({
+      response: req.body,
+      expectedChallenge: ch.challenge,
+      expectedOrigin: rpOrigin,
+      expectedRPID: rpID,
+    });
+    if (!verification.verified || !verification.registrationInfo) { sendError(res, 400, "Registration verification failed"); return; }
+    waRegChallenges.delete(su.id);
+
+    const { credential } = verification.registrationInfo;
+    await db.execute(sql`
+      INSERT INTO webauthn_credentials (user_id, credential_id, public_key, counter, transports)
+      VALUES (${su.id}, ${credential.id}, ${Buffer.from(credential.publicKey).toString("base64url")}, ${credential.counter}, ${JSON.stringify(credential.transports ?? [])})
+      ON CONFLICT (credential_id) DO UPDATE SET public_key = EXCLUDED.public_key, counter = EXCLUDED.counter, transports = EXCLUDED.transports
+    `);
+    res.json({ ok: true, credentialId: credential.id });
+  } catch (err) {
+    req.log.error({ err }, "POST /portal/auth/webauthn/register-verify failed");
+    sendError(res, 500, "Failed to verify registration");
+  }
+});
+
+// ── WebAuthn: start authentication (public — no session required) ──────────────
+router.post("/portal/auth/webauthn/authenticate-options", async (req, res) => {
+  try {
+    const { identifier } = req.body ?? {};
+    if (!identifier) { sendError(res, 400, "identifier is required"); return; }
+
+    const ident = String(identifier).trim().toLowerCase();
+    const [user] = await db.select({ id: usersTable.id }).from(usersTable).where(
+      and(eq(usersTable.isActive, true), or(eq(usersTable.username, ident), eq(usersTable.email, ident), eq(usersTable.phoneNumber, ident)))
+    ).limit(1);
+
+    const credsRes = user
+      ? await db.execute(sql`SELECT credential_id, transports FROM webauthn_credentials WHERE user_id = ${user.id}`)
+      : { rows: [] };
+    const creds = credsRes.rows as { credential_id: string; transports: string }[];
+
+    const options = await generateAuthenticationOptions({
+      rpID,
+      allowCredentials: creds.map(c => ({ id: c.credential_id, transports: (() => { try { return JSON.parse(c.transports); } catch { return []; } })() })),
+      userVerification: "required",
+    });
+
+    const challengeKey = crypto.randomUUID();
+    waAuthChallenges.set(challengeKey, { userId: user?.id ?? -1, challenge: options.challenge, expiresAt: Date.now() + 5 * 60_000 });
+    res.json({ ...options, challengeKey });
+  } catch (err) {
+    req.log.error({ err }, "POST /portal/auth/webauthn/authenticate-options failed");
+    sendError(res, 500, "Failed to generate authentication options");
+  }
+});
+
+// ── WebAuthn: complete authentication — creates session ────────────────────────
+router.post("/portal/auth/webauthn/authenticate-verify", async (req, res) => {
+  try {
+    const { challengeKey, ...authResponse } = req.body ?? {};
+    if (!challengeKey) { sendError(res, 400, "challengeKey is required"); return; }
+
+    const ch = waAuthChallenges.get(String(challengeKey));
+    if (!ch || ch.expiresAt < Date.now()) { waAuthChallenges.delete(String(challengeKey)); sendError(res, 400, "Authentication session expired"); return; }
+    waAuthChallenges.delete(String(challengeKey));
+
+    if (ch.userId === -1) { sendError(res, 401, "No biometric credential found for this account"); return; }
+
+    const credId = String(authResponse.id ?? authResponse.rawId);
+    const credRes = await db.execute(sql`
+      SELECT id, credential_id, public_key, counter, transports FROM webauthn_credentials
+      WHERE credential_id = ${credId} AND user_id = ${ch.userId}
+    `);
+    const credRow = credRes.rows[0] as { id: number; credential_id: string; public_key: string; counter: number | bigint; transports: string } | undefined;
+    if (!credRow) { sendError(res, 401, "Credential not found"); return; }
+
+    const verification = await verifyAuthenticationResponse({
+      response: authResponse,
+      expectedChallenge: ch.challenge,
+      expectedOrigin: rpOrigin,
+      expectedRPID: rpID,
+      credential: {
+        id: credRow.credential_id,
+        publicKey: Buffer.from(credRow.public_key, "base64url"),
+        counter: Number(credRow.counter),
+        transports: (() => { try { return JSON.parse(credRow.transports); } catch { return []; } })(),
+      },
+    });
+    if (!verification.verified) { sendError(res, 401, "Biometric verification failed"); return; }
+
+    await db.execute(sql`UPDATE webauthn_credentials SET counter = ${verification.authenticationInfo.newCounter} WHERE id = ${credRow.id}`);
+
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, ch.userId));
+    if (!user || !user.isActive) { sendError(res, 401, "Account not found or inactive"); return; }
+
+    let effectivePerms: string[] = (() => { try { return JSON.parse(user.permissions); } catch { return []; } })();
+    if (user.customRoleId) {
+      const [cRole] = await db.select().from(customRolesTable).where(eq(customRolesTable.id, user.customRoleId));
+      if (cRole) { try { effectivePerms = JSON.parse(cRole.permissions); } catch {} }
+    }
+
+    const sessionId = crypto.randomUUID();
+    const sessionUser: SessionUser = {
+      id: user.id, username: user.username, displayName: user.displayName,
+      email: user.email ?? null, phoneNumber: user.phoneNumber ?? null,
+      role: user.role, permissions: effectivePerms, isActive: user.isActive,
+      createdAt: user.createdAt.toISOString(), mustChangePassword: user.mustChangePassword ?? false,
+      tenantId: user.tenantId ?? null, isSuperAdmin: user.role === "super_admin",
+    };
+    await sessions.set(sessionId, sessionUser);
+    res.setHeader("Set-Cookie", `pms_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`);
+    res.json({ ok: true, user: sessionUser });
+  } catch (err) {
+    req.log.error({ err }, "POST /portal/auth/webauthn/authenticate-verify failed");
+    sendError(res, 500, "Biometric authentication failed");
   }
 });
 

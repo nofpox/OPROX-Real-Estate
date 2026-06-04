@@ -674,9 +674,9 @@ const RbacPanel: React.FC<RbacPanelProps> = ({ user, t, isRtl }) => {
 // Staff Panel — team member CRUD
 // ═══════════════════════════════════════════════════════════════════════════════
 interface StaffPanelProps { t: (k: string) => string; isRtl: boolean; callerTierLevel: number; }
-const emptyStaffForm = () => ({ username: '', displayName: '', email: '', password: '', role: 'manager' });
+const emptyStaffForm = () => ({ username: '', displayName: '', email: '', phone: '', password: '', role: 'manager' });
 
-const StaffPanel: React.FC<StaffPanelProps> = ({ t, callerTierLevel }) => {
+const StaffPanel: React.FC<StaffPanelProps> = ({ t, isRtl, callerTierLevel }) => {
   const queryClient = useQueryClient();
   const { data: teamRes, isLoading } = useGetPortalTeam({ query: { enabled: true } } as any);
   const teamMembers: PortalTeamMember[] = (teamRes as any)?.data ?? [];
@@ -820,6 +820,10 @@ const StaffPanel: React.FC<StaffPanelProps> = ({ t, callerTierLevel }) => {
             <div className="space-y-1.5">
               <Label>{t('staff.email')} *</Label>
               <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="ahmed@example.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{isRtl ? 'رقم الجوال' : 'Mobile Number'}</Label>
+              <Input type="tel" value={form.phone ?? ''} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+966501234567" />
             </div>
             <div className="space-y-1.5">
               <Label>{t('staff.password')} *</Label>
