@@ -47,7 +47,8 @@ import {
   LogOut, Building, ArrowLeft, ArrowRight, TrendingUp, TrendingDown, DollarSign, BarChart2,
   Plus, Pencil, Trash2, Home, ChevronRight, Layers,
   Users, ShieldCheck, MessageSquare, CheckCircle,
-  Globe, Bell, FileText, UserPlus,
+  Globe, Bell, FileText, UserPlus, BrainCircuit, PowerOff, Power,
+  ClipboardList, ScrollText, RefreshCw, X, Check, Ban,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -154,6 +155,458 @@ interface UnitFormState {
 }
 const emptyPropForm = (): PropFormState => ({ name: '', type: 'apartment', address: '', city: '', country: 'SA', description: '', status: 'active' });
 const emptyUnitForm = (): UnitFormState => ({ unitNumber: '', floor: '', type: 'apartment', area: '', bedroomCount: '0', bathroomCount: '1', status: 'available', monthlyRent: '', notes: '' });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AI Governance Panel
+// ═══════════════════════════════════════════════════════════════════════════════
+type AiActionStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+interface AiAction {
+  id: number;
+  actionType: string;
+  targetEntity: string;
+  description: string;
+  proposedBy: string;
+  status: AiActionStatus;
+  reviewedByName: string | null;
+  reviewNote: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+}
+
+interface AiAuditEntry {
+  id: number;
+  event: string;
+  actorType: string;
+  actorName: string | null;
+  targetEntity: string | null;
+  description: string;
+  createdAt: string;
+}
+
+const STATUS_BADGE: Record<AiActionStatus, string> = {
+  pending:   'bg-amber-100 text-amber-800',
+  approved:  'bg-green-100 text-green-800',
+  rejected:  'bg-red-100 text-red-800',
+  cancelled: 'bg-slate-100 text-slate-700',
+};
+
+const EVENT_BADGE: Record<string, string> = {
+  KILL_SWITCH_ACTIVATED:   'bg-red-100 text-red-800',
+  KILL_SWITCH_DEACTIVATED: 'bg-green-100 text-green-800',
+  ACTION_PROPOSED:         'bg-blue-100 text-blue-800',
+  ACTION_APPROVED:         'bg-green-100 text-green-800',
+  ACTION_REJECTED:         'bg-red-100 text-red-800',
+  ACTION_CANCELLED:        'bg-slate-100 text-slate-700',
+};
+
+const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> = ({ isRtl }) => {
+  const [killActive,    setKillActive]   = useState<boolean | null>(null);
+  const [ksLoading,     setKsLoading]    = useState(true);
+  const [ksUpdating,    setKsUpdating]   = useState(false);
+  const [ksConfirm,     setKsConfirm]    = useState(false);
+
+  const [actions,       setActions]      = useState<AiAction[]>([]);
+  const [actionsTotal,  setActionsTotal] = useState(0);
+  const [actionsLoading,setActionsLoading] = useState(true);
+  const [statusFilter,  setStatusFilter] = useState<string>('pending');
+
+  const [auditLog,      setAuditLog]     = useState<AiAuditEntry[]>([]);
+  const [auditTotal,    setAuditTotal]   = useState(0);
+  const [auditLoading,  setAuditLoading] = useState(true);
+  const [auditPage,     setAuditPage]    = useState(0);
+
+  const [reviewId,      setReviewId]     = useState<number | null>(null);
+  const [reviewDecision,setReviewDecision] = useState<'approved' | 'rejected' | null>(null);
+  const [reviewNote,    setReviewNote]   = useState('');
+  const [reviewBusy,    setReviewBusy]   = useState(false);
+
+  const AUDIT_PAGE_SIZE = 20;
+
+  // ── Load kill-switch state ─────────────────────────────────────────────────
+  async function loadKs() {
+    setKsLoading(true);
+    try {
+      const r = await fetch('/api/ai-governance/kill-switch', { credentials: 'include' });
+      const d = await r.json();
+      setKillActive(d.active);
+    } catch { /* ignore */ }
+    setKsLoading(false);
+  }
+
+  // ── Load action queue ──────────────────────────────────────────────────────
+  async function loadActions(status: string) {
+    setActionsLoading(true);
+    try {
+      const qs = status === 'all' ? '' : `?status=${status}`;
+      const r = await fetch(`/api/ai-governance/action-queue${qs}&limit=50`, { credentials: 'include' });
+      const d = await r.json();
+      setActions(d.rows ?? []);
+      setActionsTotal(d.total ?? 0);
+    } catch { /* ignore */ }
+    setActionsLoading(false);
+  }
+
+  // ── Load audit log ─────────────────────────────────────────────────────────
+  async function loadAudit(page: number) {
+    setAuditLoading(true);
+    try {
+      const offset = page * AUDIT_PAGE_SIZE;
+      const r = await fetch(`/api/ai-governance/audit-log?limit=${AUDIT_PAGE_SIZE}&offset=${offset}`, { credentials: 'include' });
+      const d = await r.json();
+      setAuditLog(d.rows ?? []);
+      setAuditTotal(d.total ?? 0);
+    } catch { /* ignore */ }
+    setAuditLoading(false);
+  }
+
+  useEffect(() => { loadKs(); loadActions('pending'); loadAudit(0); }, []);
+
+  // ── Toggle kill-switch ─────────────────────────────────────────────────────
+  async function toggleKillSwitch() {
+    setKsUpdating(true);
+    try {
+      const r = await fetch('/api/ai-governance/kill-switch', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: !killActive }),
+      });
+      const d = await r.json();
+      setKillActive(d.active);
+    } catch { /* ignore */ }
+    setKsUpdating(false);
+    setKsConfirm(false);
+    loadAudit(0);
+  }
+
+  // ── Review an action ───────────────────────────────────────────────────────
+  async function submitReview() {
+    if (!reviewId || !reviewDecision) return;
+    setReviewBusy(true);
+    try {
+      await fetch(`/api/ai-governance/action-queue/${reviewId}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision: reviewDecision, note: reviewNote || undefined }),
+      });
+      setReviewId(null);
+      setReviewDecision(null);
+      setReviewNote('');
+      loadActions(statusFilter);
+      loadAudit(0);
+    } catch { /* ignore */ }
+    setReviewBusy(false);
+  }
+
+  const fmtDt = (s: string) => new Date(s).toLocaleString('en-SA', { dateStyle: 'short', timeStyle: 'short' });
+
+  return (
+    <div className={`space-y-6 ${isRtl ? 'rtl' : 'ltr'}`}>
+
+      {/* ── Header ────────────────────────────────────────────────────────── */}
+      <div>
+        <h1 className="text-xl font-bold text-primary font-serif flex items-center gap-2">
+          <BrainCircuit className="h-5 w-5" />
+          AI Governance
+        </h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Kill-switch, action queue, and immutable audit trail for all autonomous AI actions.
+        </p>
+      </div>
+
+      {/* ── Kill-switch card ──────────────────────────────────────────────── */}
+      <div className={`rounded-xl border-2 p-5 flex items-start gap-4 ${
+        killActive ? 'border-red-400 bg-red-50' : 'border-green-400 bg-green-50'
+      }`}>
+        <div className={`p-3 rounded-full ${killActive ? 'bg-red-100' : 'bg-green-100'}`}>
+          {killActive
+            ? <PowerOff className="h-6 w-6 text-red-600" />
+            : <Power className="h-6 w-6 text-green-600" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className={`font-bold text-base ${killActive ? 'text-red-800' : 'text-green-800'}`}>
+              {killActive ? 'AI Processing: HALTED' : 'AI Processing: ACTIVE'}
+            </p>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${killActive ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}`}>
+              {killActive ? 'KILL-SWITCH ON' : 'OPERATIONAL'}
+            </span>
+          </div>
+          <p className="text-sm mt-1 text-muted-foreground">
+            {killActive
+              ? 'All autonomous AI actions are blocked. New actions cannot be proposed or executed until you resume.'
+              : 'AI engine is active. Proposed actions require human review before execution.'}
+          </p>
+        </div>
+        <div className="shrink-0">
+          {ksLoading ? (
+            <Skeleton className="h-10 w-28 rounded-lg" />
+          ) : (
+            <button
+              onClick={() => setKsConfirm(true)}
+              disabled={ksUpdating}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+                killActive
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-red-600 hover:bg-red-700 text-white'
+              }`}
+            >
+              {ksUpdating ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
+              {killActive ? 'Resume AI' : 'Halt AI'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Action queue ──────────────────────────────────────────────────── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h2 className="font-semibold text-primary flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Action Queue
+            {actionsTotal > 0 && (
+              <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full font-medium">{actionsTotal}</span>
+            )}
+          </h2>
+          <div className="flex gap-2 flex-wrap">
+            {(['pending', 'approved', 'rejected', 'cancelled', 'all'] as const).map(s => (
+              <button
+                key={s}
+                onClick={() => { setStatusFilter(s); loadActions(s); }}
+                className={`text-xs px-3 py-1 rounded-full font-medium transition-colors capitalize ${
+                  statusFilter === s ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+            <button onClick={() => loadActions(statusFilter)} className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground hover:bg-muted/80">
+              <RefreshCw className="h-3 w-3" />
+            </button>
+          </div>
+        </div>
+
+        {actionsLoading ? (
+          <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
+        ) : actions.length === 0 ? (
+          <div className="border border-dashed border-border rounded-xl p-10 text-center text-muted-foreground text-sm">
+            No {statusFilter === 'all' ? '' : statusFilter} actions in the queue.
+          </div>
+        ) : (
+          <div className="border border-border rounded-xl overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 border-b border-border">
+                <tr>
+                  <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Action</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide hidden md:table-cell">Entity</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide hidden lg:table-cell">Proposed</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                  <th className="text-right px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {actions.map(a => (
+                  <tr key={a.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-primary truncate max-w-[180px] md:max-w-none">{a.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{a.actionType}</p>
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell text-muted-foreground text-xs">{a.targetEntity}</td>
+                    <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground text-xs whitespace-nowrap">{fmtDt(a.createdAt)}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${STATUS_BADGE[a.status] ?? 'bg-muted text-muted-foreground'}`}>
+                        {a.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {a.status === 'pending' ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => { setReviewId(a.id); setReviewDecision('approved'); setReviewNote(''); }}
+                            className="p-1.5 rounded-md bg-green-50 hover:bg-green-100 text-green-700 transition-colors"
+                            title="Approve"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => { setReviewId(a.id); setReviewDecision('rejected'); setReviewNote(''); }}
+                            className="p-1.5 rounded-md bg-red-50 hover:bg-red-100 text-red-700 transition-colors"
+                            title="Reject"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => { setReviewId(a.id); setReviewDecision('rejected'); setReviewNote('Cancelled by admin'); }}
+                            className="p-1.5 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors"
+                            title="Cancel"
+                          >
+                            <Ban className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">{a.reviewedByName ?? '—'}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ── Audit log ─────────────────────────────────────────────────────── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-semibold text-primary flex items-center gap-2">
+            <ScrollText className="h-4 w-4" />
+            Immutable Audit Trail
+            {auditTotal > 0 && (
+              <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full font-medium">{auditTotal} entries</span>
+            )}
+          </h2>
+          <button onClick={() => { setAuditPage(0); loadAudit(0); }} className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground hover:bg-muted/80">
+            <RefreshCw className="h-3 w-3" />
+          </button>
+        </div>
+
+        {auditLoading ? (
+          <div className="space-y-2">{[1,2,3,4].map(i => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
+        ) : auditLog.length === 0 ? (
+          <div className="border border-dashed border-border rounded-xl p-10 text-center text-muted-foreground text-sm">
+            No audit entries yet.
+          </div>
+        ) : (
+          <>
+            <div className="border border-border rounded-xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 border-b border-border">
+                  <tr>
+                    <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Event</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide hidden md:table-cell">Actor</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Description</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide hidden lg:table-cell whitespace-nowrap">Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {auditLog.map(entry => (
+                    <tr key={entry.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${EVENT_BADGE[entry.event] ?? 'bg-muted text-muted-foreground'}`}>
+                          {entry.event.replace(/_/g, ' ')}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 hidden md:table-cell">
+                        <p className="text-xs text-muted-foreground">{entry.actorName ?? '—'}</p>
+                        <p className="text-[10px] text-muted-foreground/60 capitalize">{entry.actorType}</p>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground max-w-[240px] truncate">{entry.description}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell whitespace-nowrap">{fmtDt(entry.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination */}
+            {auditTotal > AUDIT_PAGE_SIZE && (
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Showing {auditPage * AUDIT_PAGE_SIZE + 1}–{Math.min((auditPage + 1) * AUDIT_PAGE_SIZE, auditTotal)} of {auditTotal}</span>
+                <div className="flex gap-2">
+                  <button disabled={auditPage === 0} onClick={() => { const p = auditPage - 1; setAuditPage(p); loadAudit(p); }}
+                    className="px-3 py-1 rounded-md border border-border disabled:opacity-40">Prev</button>
+                  <button disabled={(auditPage + 1) * AUDIT_PAGE_SIZE >= auditTotal} onClick={() => { const p = auditPage + 1; setAuditPage(p); loadAudit(p); }}
+                    className="px-3 py-1 rounded-md border border-border disabled:opacity-40">Next</button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* ── Kill-switch confirm dialog ────────────────────────────────────── */}
+      <Dialog open={ksConfirm} onOpenChange={v => { if (!v) setKsConfirm(false); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {killActive ? <Power className="h-5 w-5 text-green-600" /> : <PowerOff className="h-5 w-5 text-red-600" />}
+              {killActive ? 'Resume AI Processing?' : 'Halt AI Processing?'}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground py-2">
+            {killActive
+              ? 'This will allow the AI engine to propose and execute autonomous actions again. Ensure you have reviewed the action queue before resuming.'
+              : 'This will immediately block all autonomous AI actions. No new actions can be proposed or executed until you resume. This action is logged in the immutable audit trail.'}
+          </p>
+          <DialogFooter className="gap-2">
+            <button onClick={() => setKsConfirm(false)} className="px-4 py-2 text-sm rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
+            <button
+              onClick={toggleKillSwitch}
+              disabled={ksUpdating}
+              className={`px-4 py-2 text-sm rounded-lg font-semibold text-white transition-colors flex items-center gap-2 ${
+                killActive ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+              }`}
+            >
+              {ksUpdating && <RefreshCw className="h-4 w-4 animate-spin" />}
+              {killActive ? 'Resume AI' : 'Halt AI'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Review action dialog ───────────────────────────────────────────── */}
+      <Dialog open={reviewId !== null} onOpenChange={v => { if (!v) { setReviewId(null); setReviewDecision(null); setReviewNote(''); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {reviewDecision === 'approved'
+                ? <><Check className="h-5 w-5 text-green-600" /> Approve Action</>
+                : <><X className="h-5 w-5 text-red-600" /> Reject Action</>}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {reviewId !== null && (() => {
+              const a = actions.find(x => x.id === reviewId);
+              return a ? (
+                <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                  <p className="font-medium text-primary">{a.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{a.actionType} · {a.targetEntity}</p>
+                </div>
+              ) : null;
+            })()}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Note (optional)</label>
+              <textarea
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                rows={3}
+                placeholder="Add a review note for the audit trail…"
+                value={reviewNote}
+                onChange={e => setReviewNote(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <button onClick={() => { setReviewId(null); setReviewDecision(null); setReviewNote(''); }}
+              className="px-4 py-2 text-sm rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors">
+              Cancel
+            </button>
+            <button
+              onClick={submitReview}
+              disabled={reviewBusy}
+              className={`px-4 py-2 text-sm rounded-lg font-semibold text-white transition-colors flex items-center gap-2 ${
+                reviewDecision === 'approved' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+              }`}
+            >
+              {reviewBusy && <RefreshCw className="h-4 w-4 animate-spin" />}
+              {reviewDecision === 'approved' ? 'Approve' : 'Reject'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CMS Panel — edit all website sections
@@ -1155,10 +1608,11 @@ export const PortalDashboard: React.FC = () => {
   const navItems = [
     ...(tierLevel <= 1 ? [{ key: 'cms',        icon: Globe,      label: t('admin.nav.cms')        }] : []),
     ...(tierLevel <= 3 ? [{ key: 'rbac',        icon: ShieldCheck,label: t('admin.nav.rbac')       }] : []),
-    ...(tierLevel <= 3 ? [{ key: 'staff',       icon: Users,      label: t('admin.nav.staff')      }] : []),
-    ...(tierLevel <= 7 ? [{ key: 'properties',  icon: Building,   label: t('admin.nav.properties') }] : []),
-    ...(tierLevel <= 7 ? [{ key: 'financials',  icon: BarChart2,  label: t('admin.nav.financials') }] : []),
-    ...(tierLevel > 7  ? [{ key: 'portfolio',   icon: TrendingUp, label: t('admin.nav.portfolio')  }] : []),
+    ...(tierLevel <= 3 ? [{ key: 'staff',       icon: Users,        label: t('admin.nav.staff')      }] : []),
+    ...(tierLevel <= 7 ? [{ key: 'properties',  icon: Building,     label: t('admin.nav.properties') }] : []),
+    ...(tierLevel <= 7 ? [{ key: 'financials',  icon: BarChart2,    label: t('admin.nav.financials') }] : []),
+    ...(tierLevel <= 3 ? [{ key: 'ai',          icon: BrainCircuit, label: t('admin.nav.ai')         }] : []),
+    ...(tierLevel > 7  ? [{ key: 'portfolio',   icon: TrendingUp,   label: t('admin.nav.portfolio')  }] : []),
   ] as { key: string; icon: React.ElementType; label: string }[];
 
   return (
@@ -1389,6 +1843,11 @@ export const PortalDashboard: React.FC = () => {
                 </Card>
               )}
             </div>
+          )}
+
+          {/* AI Governance — admin/manager only */}
+          {activePanel === 'ai' && tierLevel <= 3 && (
+            <AiGovernancePanel t={t} isRtl={isRtl} />
           )}
 
           {/* Portfolio (clients/investors) */}

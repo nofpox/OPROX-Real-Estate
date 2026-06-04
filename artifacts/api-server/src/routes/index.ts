@@ -40,6 +40,7 @@ import rkzListingsRouter from "./rkz-listings";
 import rkzPortalAuthRouter from "./rkz-portal-auth";
 import portalRouter from "./portal";
 import debugRouter from "./debug";
+import aiGovernanceRouter from "./aiGovernance";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
@@ -51,7 +52,7 @@ const PUBLIC_PREFIXES = ["/auth/", "/health", "/unit-requests", "/unit-info/", "
 
 const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
 
-const ADMIN_PREFIXES = ["/expenses", "/settings", "/archiving"];
+const ADMIN_PREFIXES = ["/expenses", "/settings", "/archiving", "/ai-governance"];
 
 const SUPERVISOR_PREFIXES = [
   "/users", "/activity-logs", "/staff", "/properties",
@@ -174,6 +175,7 @@ router.use(rkzListingsRouter);
 router.use(rkzPortalAuthRouter);
 router.use(portalRouter);
 router.use(debugRouter);
+router.use(aiGovernanceRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

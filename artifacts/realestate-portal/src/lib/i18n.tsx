@@ -365,6 +365,7 @@ const translations = {
     'admin.nav.properties': 'Properties',
     'admin.nav.financials': 'Financials',
     'admin.nav.portfolio':  'My Portfolio',
+    'admin.nav.ai':         'AI Governance',
 
     // ── CMS Editor ────────────────────────────────────────────────────────────
     'cms.title':            'CMS Editor',
@@ -765,6 +766,7 @@ const translations = {
     'admin.nav.properties': 'العقارات',
     'admin.nav.financials': 'المالية',
     'admin.nav.portfolio':  'محفظتي',
+    'admin.nav.ai':         'حوكمة الذكاء الاصطناعي',
 
     // ── CMS Editor ────────────────────────────────────────────────────────────
     'cms.title':            'محرر المحتوى',
