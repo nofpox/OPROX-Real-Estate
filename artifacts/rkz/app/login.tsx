@@ -176,8 +176,8 @@ export default function LoginScreen() {
 
   const S = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.navy },
-    inner: {
-      flex: 1,
+    innerScroll: {
+      flexGrow: 1,
       paddingHorizontal: 28,
       paddingTop: topPad,
       paddingBottom: bottomPad,
@@ -411,8 +411,17 @@ export default function LoginScreen() {
 
   // ── Phone / OTP screens ────────────────────────────────────────────────
   return (
-    <KeyboardAvoidingView style={S.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <View style={S.inner}>
+    <KeyboardAvoidingView
+      style={S.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+    >
+      <ScrollView
+        contentContainerStyle={S.innerScroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
         <View style={S.top}>
           <View style={S.logoBox}>
             <MaterialIcons name="home-work" size={32} color={colors.navy} />
@@ -523,7 +532,7 @@ export default function LoginScreen() {
             </Text>
           ))}
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
