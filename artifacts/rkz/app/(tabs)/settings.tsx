@@ -382,8 +382,8 @@ export default function SettingsScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 const domain = process.env.EXPO_PUBLIC_DOMAIN ?? "localhost";
                 const url = Platform.OS === "web"
-                  ? "/realestate-portal"
-                  : `https://${domain}/realestate-portal`;
+                  ? "/realestate/"
+                  : `https://${domain}/realestate/`;
                 await WebBrowser.openBrowserAsync(url, {
                   presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
                   toolbarColor: "#0A1628",
