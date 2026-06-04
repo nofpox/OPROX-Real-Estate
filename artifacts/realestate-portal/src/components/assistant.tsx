@@ -44,6 +44,29 @@ interface InquiryData {
 
 const EMPTY_INQUIRY: InquiryData = { type: null, name: '', email: '', phone: '' };
 
+// Property search wizard state
+type SearchStep =
+  | 'idle'
+  | 'pick_prop_type'
+  | 'pick_listing_type'
+  | 'collect_city'
+  | 'pick_price'
+  | 'pick_bedrooms'
+  | 'showing_results'
+  | 'saving'
+  | 'saved';
+
+interface SearchData {
+  propertyType?: string;
+  listingType?:  string;
+  city?:         string;
+  minPrice?:     string;
+  maxPrice?:     string;
+  bedrooms?:     number;
+}
+
+const EMPTY_SEARCH: SearchData = {};
+
 // ── Validators ────────────────────────────────────────────────────────────────
 
 function isValidEmail(v: string) {
@@ -83,6 +106,10 @@ export const SmartAssistant: React.FC = () => {
   const [inquiryStep, setInquiryStep] = useState<InquiryStep>('idle');
   const [inquiry, setInquiry]         = useState<InquiryData>(EMPTY_INQUIRY);
   const [inputError, setInputError]   = useState('');
+
+  // Search wizard
+  const [searchStep, setSearchStep] = useState<SearchStep>('idle');
+  const [search, setSearch]         = useState<SearchData>(EMPTY_SEARCH);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef       = useRef<HTMLInputElement>(null);
@@ -353,6 +380,240 @@ export const SmartAssistant: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRtl, pushMsg, goToListings, goToPortal, goToContact]);
 
+  // ── Property search wizard ────────────────────────────────────────────────────
+
+  const startSearchWizard = useCallback(() => {
+    setSearch(EMPTY_SEARCH);
+    setInputError('');
+    setSearchStep('pick_prop_type');
+    setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text: T('Find a property', 'أبحث عن عقار') }]);
+    botTyping(700);
+    pushMsg({
+      from: 'bot',
+      text: T('🏠 Great! Let\'s find the right property for you.\n\nWhat type of property are you looking for?', '🏠 ممتاز! دعنا نجد العقار المناسب لك.\n\nما نوع العقار الذي تبحث عنه؟'),
+      quickReplies: [
+        { label: T('🏢 Apartment', '🏢 شقة'),      action: () => selectPropertyType('apartment') },
+        { label: T('🏡 Villa',     '🏡 فيلا'),      action: () => selectPropertyType('villa') },
+        { label: T('🏨 Hotel',     '🏨 فندق'),      action: () => selectPropertyType('hotel') },
+        { label: T('🏘 Compound',  '🏘 مجمع'),      action: () => selectPropertyType('compound') },
+        { label: T('✨ Any type',  '✨ أي نوع'),    action: () => selectPropertyType('') },
+      ],
+    }, 700);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, botTyping]);
+
+  const selectPropertyType = useCallback((type: string) => {
+    const label = type === 'apartment' ? T('🏢 Apartment', '🏢 شقة')
+      : type === 'villa'     ? T('🏡 Villa', '🏡 فيلا')
+      : type === 'hotel'     ? T('🏨 Hotel', '🏨 فندق')
+      : type === 'compound'  ? T('🏘 Compound', '🏘 مجمع')
+      : T('✨ Any type', '✨ أي نوع');
+    setSearch(prev => ({ ...prev, propertyType: type || undefined }));
+    setSearchStep('pick_listing_type');
+    setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text: label }]);
+    botTyping(600);
+    pushMsg({
+      from: 'bot',
+      text: T('Are you looking to buy or rent?', 'هل تبحث للشراء أم للإيجار؟'),
+      quickReplies: [
+        { label: T('🏷 Buy',  '🏷 شراء'),  action: () => selectListingType('sale') },
+        { label: T('🔑 Rent', '🔑 إيجار'), action: () => selectListingType('rent') },
+        { label: T('✨ Either', '✨ كلاهما'), action: () => selectListingType('') },
+      ],
+    }, 600);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, botTyping]);
+
+  const selectListingType = useCallback((type: string) => {
+    const label = type === 'sale' ? T('🏷 Buy', '🏷 شراء')
+      : type === 'rent' ? T('🔑 Rent', '🔑 إيجار')
+      : T('✨ Either', '✨ كلاهما');
+    setSearch(prev => ({ ...prev, listingType: type || undefined }));
+    setSearchStep('collect_city');
+    setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text: label }]);
+    botTyping(600);
+    pushMsg({
+      from: 'bot',
+      text: T('Which city are you interested in? (type it or skip)', 'ما المدينة التي تهتم بها؟ (اكتبها أو تخطى)'),
+      quickReplies: [
+        { label: T('Riyadh',       'الرياض'),  action: () => submitSearchCity('Riyadh') },
+        { label: T('Jeddah',       'جدة'),     action: () => submitSearchCity('Jeddah') },
+        { label: T('Dammam',       'الدمام'),  action: () => submitSearchCity('Dammam') },
+        { label: T('⏭ Any city',  '⏭ أي مدينة'), action: () => submitSearchCity('') },
+      ],
+    }, 600);
+    setTimeout(() => inputRef.current?.focus(), 650);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, botTyping]);
+
+  const submitSearchCity = useCallback((raw: string) => {
+    const city = sanitize(raw);
+    setSearch(prev => ({ ...prev, city: city || undefined }));
+    setSearchStep('pick_price');
+    if (city) setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text: city }]);
+    else      setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text: T('Any city', 'أي مدينة') }]);
+    botTyping(600);
+    pushMsg({
+      from: 'bot',
+      text: T('What\'s your approximate budget? (SAR)', 'ما هي ميزانيتك التقريبية؟ (ريال)'),
+      quickReplies: [
+        { label: T('Under 500K',        'أقل من 500 ألف'),    action: () => selectPriceRange('', '500000') },
+        { label: T('500K – 1M',         '500 ألف – مليون'),   action: () => selectPriceRange('500000', '1000000') },
+        { label: T('1M – 3M',           'مليون – 3 مليون'),   action: () => selectPriceRange('1000000', '3000000') },
+        { label: T('3M – 10M',          '3 – 10 مليون'),      action: () => selectPriceRange('3000000', '10000000') },
+        { label: T('Above 10M',         'أكثر من 10 مليون'),  action: () => selectPriceRange('10000000', '') },
+        { label: T('⏭ No preference',  '⏭ غير محدد'),       action: () => selectPriceRange('', '') },
+      ],
+    }, 600);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, botTyping]);
+
+  const selectPriceRange = useCallback((min: string, max: string) => {
+    const label = !min && !max ? T('No preference', 'غير محدد')
+      : !min  ? T(`Under ${Number(max).toLocaleString()} SAR`,  `أقل من ${Number(max).toLocaleString()} ر.س`)
+      : !max  ? T(`Above ${Number(min).toLocaleString()} SAR`,  `أكثر من ${Number(min).toLocaleString()} ر.س`)
+      : T(`${Number(min).toLocaleString()}–${Number(max).toLocaleString()} SAR`, `${Number(min).toLocaleString()}–${Number(max).toLocaleString()} ر.س`);
+    setSearch(prev => ({ ...prev, minPrice: min || undefined, maxPrice: max || undefined }));
+    setSearchStep('pick_bedrooms');
+    setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text: label }]);
+    botTyping(600);
+    pushMsg({
+      from: 'bot',
+      text: T('How many bedrooms do you need?', 'كم عدد غرف النوم التي تحتاجها؟'),
+      quickReplies: [
+        { label: T('Studio',        'استوديو'),         action: () => selectBedrooms(0) },
+        { label: T('1 bedroom',     '1 غرفة'),          action: () => selectBedrooms(1) },
+        { label: T('2 bedrooms',    '2 غرفة'),          action: () => selectBedrooms(2) },
+        { label: T('3 bedrooms',    '3 غرف'),           action: () => selectBedrooms(3) },
+        { label: T('4+ bedrooms',   '4+ غرف'),         action: () => selectBedrooms(4) },
+        { label: T('⏭ Any',        '⏭ أي عدد'),       action: () => selectBedrooms(-1) },
+      ],
+    }, 600);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, botTyping]);
+
+  const selectBedrooms = useCallback((n: number) => {
+    const label = n < 0  ? T('Any', 'أي عدد')
+      : n === 0  ? T('Studio', 'استوديو')
+      : n >= 4   ? T('4+ bedrooms', '4+ غرف')
+      : T(`${n} bedroom${n !== 1 ? 's' : ''}`, `${n} غرف`);
+    const bedrooms = n >= 0 ? n : undefined;
+    const finalSearch: SearchData = {};
+    setSearch(prev => {
+      Object.assign(finalSearch, prev, { bedrooms });
+      return { ...prev, bedrooms };
+    });
+    setSearchStep('showing_results');
+    setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text: label }]);
+    setIsTyping(true);
+
+    // Build query params for listing count
+    setTimeout(async () => {
+      const params = new URLSearchParams({ status: 'active', _count: '1' });
+      if (finalSearch.propertyType) params.set('propertyType', finalSearch.propertyType);
+      if (finalSearch.listingType)  params.set('listingType',  finalSearch.listingType);
+      if (finalSearch.city)         params.set('city',         finalSearch.city);
+      if (finalSearch.minPrice)     params.set('minPrice',     finalSearch.minPrice);
+      if (finalSearch.maxPrice)     params.set('maxPrice',     finalSearch.maxPrice);
+      if (bedrooms !== undefined)   params.set('bedrooms',     String(bedrooms));
+
+      let count = 0;
+      try {
+        const res = await fetch(`/realestate-api/listings?${params.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
+          count = Array.isArray(data?.data) ? data.data.length
+            : Array.isArray(data)           ? data.length
+            : (data?.total ?? data?.count ?? 0);
+        }
+      } catch { /* silent */ }
+
+      setIsTyping(false);
+      pushMsg({
+        from: 'bot',
+        text: count > 0
+          ? T(
+              `🎯 Found ${count} matching ${count === 1 ? 'listing' : 'listings'}!\n\nYou can view them now, or save this search to get notified when new properties are added.`,
+              `🎯 وجدنا ${count} ${count === 1 ? 'عقار مطابق' : 'عقارات مطابقة'}!\n\nيمكنك عرضها الآن، أو حفظ البحث لتلقي تنبيه عند إضافة عقارات جديدة.`
+            )
+          : T(
+              '🔍 No exact matches right now — but the market updates frequently!\n\nSave this search and we\'ll notify you as soon as a matching property is listed.',
+              '🔍 لا توجد تطابقات دقيقة الآن — لكن السوق يتجدد باستمرار!\n\nاحفظ هذا البحث وسنعلمك فور توفر عقار مطابق.'
+            ),
+        quickReplies: [
+          ...(count > 0 ? [{ label: T('👀 View listings', '👀 عرض العقارات'), action: () => { const p = new URLSearchParams(); if (finalSearch.propertyType) p.set('propertyType', finalSearch.propertyType); if (finalSearch.listingType) p.set('listingType', finalSearch.listingType); if (finalSearch.city) p.set('city', finalSearch.city); setOpen(false); navigate(`/listings?${p.toString()}`); } }] : []),
+          { label: T('🔔 Save this search', '🔔 حفظ البحث'), action: () => saveSearchFlow(finalSearch) },
+          { label: T('🔄 Start over', '🔄 بحث جديد'),        action: handleReset },
+        ],
+      }, 0);
+    }, 800);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, navigate]);
+
+  const saveSearchFlow = useCallback((criteria: SearchData) => {
+    setSearchStep('saving');
+    const defaultName = [
+      criteria.propertyType,
+      criteria.listingType === 'sale' ? 'for sale' : criteria.listingType === 'rent' ? 'for rent' : undefined,
+      criteria.city,
+      criteria.bedrooms !== undefined ? `${criteria.bedrooms}BR` : undefined,
+    ].filter(Boolean).join(' ') || (isRtl ? 'بحث عقاري' : 'Property Search');
+
+    setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text: T('🔔 Save this search', '🔔 حفظ البحث') }]);
+    setIsTyping(true);
+
+    fetch('/realestate-api/portal/saved-searches', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name: defaultName, criteria, notifyEmail: true }),
+    }).then(async (res) => {
+      setIsTyping(false);
+      if (res.status === 401) {
+        setSearchStep('showing_results');
+        pushMsg({
+          from: 'bot',
+          text: T(
+            '🔑 To save searches and receive alerts, you need a free account.\n\nIt only takes 30 seconds to sign up!',
+            '🔑 لحفظ عمليات البحث وتلقي التنبيهات، تحتاج إلى حساب مجاني.\n\nالتسجيل لا يستغرق سوى 30 ثانية!'
+          ),
+          quickReplies: [
+            { label: T('Create free account', 'إنشاء حساب مجاني'), action: () => { setOpen(false); navigate('/join'); } },
+            { label: T('Sign in', 'تسجيل الدخول'),                  action: () => { setOpen(false); navigate('/portal'); } },
+            { label: T('← Back', '← رجوع'), action: () => showMainMenu() },
+          ],
+        }, 0);
+        return;
+      }
+      if (!res.ok) throw new Error('save_failed');
+      setSearchStep('saved');
+      pushMsg({
+        from: 'bot',
+        text: T(
+          `✅ Search saved as "${defaultName}"!\n\nYou'll get an email notification when a matching property is listed. Manage your searches in your Buyer Dashboard.`,
+          `✅ تم حفظ البحث بعنوان "${defaultName}"!\n\nستتلقى تنبيهًا عبر البريد الإلكتروني عند إضافة عقار مطابق. أدِر عمليات البحث من لوحة المشتري.`
+        ),
+        quickReplies: [
+          { label: T('📊 Buyer Dashboard', '📊 لوحة المشتري'), action: () => { setOpen(false); navigate('/portal/buyer'); } },
+          { label: T('Browse listings',     'تصفح العقارات'),   action: goToListings },
+          { label: T('🔄 New search',      '🔄 بحث جديد'),     action: handleReset },
+        ],
+      }, 0);
+    }).catch(() => {
+      setIsTyping(false);
+      setSearchStep('showing_results');
+      pushMsg({
+        from: 'bot',
+        text: T('⚠️ Could not save the search. Please try again.', '⚠️ تعذّر حفظ البحث. يُرجى المحاولة مجددًا.'),
+        quickReplies: [
+          { label: T('Try again', 'حاول مجددًا'), action: () => saveSearchFlow(criteria) },
+          { label: T('← Back', '← رجوع'),        action: () => showMainMenu() },
+        ],
+      }, 0);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRtl, pushMsg, navigate, goToListings]);
+
   // ── Main menu flows ───────────────────────────────────────────────────────────
 
   const showMainMenu = useCallback((delay = 0) => {
@@ -364,9 +625,10 @@ export const SmartAssistant: React.FC = () => {
         'مرحباً! 👋 أنا هنا للمساعدة. ماذا تبحث عن اليوم؟'
       ),
       quickReplies: [
+        { label: T('🏠 Find a property', '🏠 أبحث عن عقار'), action: startSearchWizard },
         { label: T('Looking to partner with Rakez', 'مهتم بالتعاون مع ركز'), action: startInquiryWizard },
         { label: T("I'm an existing client", 'أنا عميل حالي'), action: showInvestorFlow },
-        { label: T('Browse properties', 'تصفح العقارات'), action: showPropertiesFlow },
+        { label: T('Contact our team', 'تواصل مع الفريق'), action: showContactFlow },
       ],
     }, d + delay);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -512,6 +774,8 @@ export const SmartAssistant: React.FC = () => {
     setInquiryStep('idle');
     setInquiry(EMPTY_INQUIRY);
     setInputError('');
+    setSearchStep('idle');
+    setSearch(EMPTY_SEARCH);
     sendGreeting(false);
   }, [sendGreeting]);
 
@@ -526,11 +790,12 @@ export const SmartAssistant: React.FC = () => {
     if (inquiryStep === 'collect_name')  { submitCollectedName(text);  return; }
     if (inquiryStep === 'collect_email') { submitCollectedEmail(text); return; }
     if (inquiryStep === 'collect_phone') { submitCollectedPhone(text); return; }
+    if (searchStep === 'collect_city')   { submitSearchCity(text);     return; }
 
     // Not in wizard — free-text fallback
     setMessages(prev => [...prev, { id: `u-${Date.now()}`, from: 'user', text }]);
     showUnknownFallback(text);
-  }, [inputVal, inquiryStep, submitCollectedName, submitCollectedEmail, submitCollectedPhone, showUnknownFallback]);
+  }, [inputVal, inquiryStep, searchStep, submitCollectedName, submitCollectedEmail, submitCollectedPhone, submitSearchCity, showUnknownFallback]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
@@ -542,15 +807,18 @@ export const SmartAssistant: React.FC = () => {
     if (inquiryStep === 'collect_name')  return T('Type your full name…', 'اكتب اسمك الكامل…');
     if (inquiryStep === 'collect_email') return T('Type your email address…', 'اكتب بريدك الإلكتروني…');
     if (inquiryStep === 'collect_phone') return T('Type your phone number…', 'اكتب رقم هاتفك…');
+    if (searchStep === 'collect_city')   return T('Type a city or skip…', 'اكتب مدينة أو تخطى…');
     return T('Type your question…', 'اكتب سؤالك هنا…');
   })();
 
   const isInputActive: boolean = inquiryStep === 'collect_name'
     || inquiryStep === 'collect_email'
     || inquiryStep === 'collect_phone'
-    || inquiryStep === 'idle'
+    || searchStep === 'collect_city'
+    || (inquiryStep === 'idle' && searchStep === 'idle')
     || inquiryStep === 'done'
-    || inquiryStep === 'error';
+    || inquiryStep === 'error'
+    || searchStep === 'saved';
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
@@ -603,7 +871,7 @@ export const SmartAssistant: React.FC = () => {
           </button>
         </div>
 
-        {/* Progress indicator when in wizard */}
+        {/* Progress indicator — inquiry wizard */}
         {(inquiryStep !== 'idle' && inquiryStep !== 'done') && (
           <div className="shrink-0 bg-secondary/5 border-b border-border/40 px-4 py-2 flex items-center gap-2">
             <div className="flex gap-1">
@@ -626,6 +894,27 @@ export const SmartAssistant: React.FC = () => {
             </span>
             {inquiryStep === 'submitting' && <Loader2 className="h-3 w-3 animate-spin text-secondary ms-auto" />}
             {inquiryStep === 'confirm' && <CheckCircle2 className="h-3.5 w-3.5 text-secondary ms-auto" />}
+          </div>
+        )}
+
+        {/* Progress indicator — search wizard */}
+        {searchStep !== 'idle' && searchStep !== 'saved' && inquiryStep === 'idle' && (
+          <div className="shrink-0 bg-secondary/5 border-b border-border/40 px-4 py-2 flex items-center gap-2">
+            <div className="flex gap-1">
+              {(['pick_prop_type', 'pick_listing_type', 'collect_city', 'pick_price', 'pick_bedrooms', 'showing_results'] as SearchStep[]).map((_s, i) => {
+                const idx = ['pick_prop_type', 'pick_listing_type', 'collect_city', 'pick_price', 'pick_bedrooms', 'showing_results', 'saving'].indexOf(searchStep);
+                return (
+                  <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i <= idx ? 'bg-secondary w-5' : 'bg-border w-2.5'}`} />
+                );
+              })}
+            </div>
+            <span className="text-xs text-muted-foreground ms-1">
+              {searchStep === 'saving'
+                ? T('Saving…', 'جارٍ الحفظ…')
+                : T('Property Search', 'بحث عقاري')}
+            </span>
+            {searchStep === 'saving' && <Loader2 className="h-3 w-3 animate-spin text-secondary ms-auto" />}
+            {searchStep === 'showing_results' && <CheckCircle2 className="h-3.5 w-3.5 text-secondary ms-auto" />}
           </div>
         )}
 

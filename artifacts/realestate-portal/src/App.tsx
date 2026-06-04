@@ -16,6 +16,8 @@ import { CmsProvider } from "@/lib/cms-context";
 import { PortalLogin } from "@/pages/portal-login";
 import { PortalRegister } from "@/pages/portal-register";
 import { PortalDashboard } from "@/pages/portal-dashboard";
+import { Join } from "@/pages/join";
+import { BuyerDashboard } from "@/pages/buyer-dashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,9 +36,11 @@ function Router() {
       <Route path="/listings/:id" component={ListingDetail} />
       <Route path="/services" component={Services} />
       <Route path="/contact" component={Contact} />
+      <Route path="/join" component={Join} />
       <Route path="/portal" component={PortalLogin} />
       <Route path="/portal/register" component={PortalRegister} />
       <Route path="/portal/dashboard" component={PortalDashboard} />
+      <Route path="/portal/buyer" component={BuyerDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

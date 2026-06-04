@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, boolean, numeric, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, boolean, numeric, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -45,9 +45,21 @@ export const listingInquiriesTable = pgTable("listing_inquiries", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertListingSchema   = createInsertSchema(listingsTable).omit({ id: true, createdAt: true, updatedAt: true, viewCount: true });
-export const updateListingSchema   = insertListingSchema.partial();
-export const insertInquirySchema   = createInsertSchema(listingInquiriesTable).omit({ id: true, createdAt: true });
-export type InsertListing          = z.infer<typeof insertListingSchema>;
-export type Listing                = typeof listingsTable.$inferSelect;
-export type ListingInquiry         = typeof listingInquiriesTable.$inferSelect;
+export const savedSearchesTable = pgTable("saved_searches", {
+  id:          serial("id").primaryKey(),
+  tenantId:    integer("tenant_id").notNull().default(1),
+  userId:      integer("user_id").notNull(),
+  name:        text("name").notNull(),
+  criteria:    text("criteria").notNull().default("{}"), // JSON: {propertyType?,listingType?,city?,minPrice?,maxPrice?,bedrooms?}
+  notifyEmail: boolean("notify_email").notNull().default(true),
+  createdAt:   timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertListingSchema      = createInsertSchema(listingsTable).omit({ id: true, createdAt: true, updatedAt: true, viewCount: true });
+export const updateListingSchema      = insertListingSchema.partial();
+export const insertInquirySchema      = createInsertSchema(listingInquiriesTable).omit({ id: true, createdAt: true });
+export const insertSavedSearchSchema  = createInsertSchema(savedSearchesTable).omit({ id: true, createdAt: true });
+export type InsertListing             = z.infer<typeof insertListingSchema>;
+export type Listing                   = typeof listingsTable.$inferSelect;
+export type ListingInquiry            = typeof listingInquiriesTable.$inferSelect;
+export type SavedSearch               = typeof savedSearchesTable.$inferSelect;

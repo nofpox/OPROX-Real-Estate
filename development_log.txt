@@ -1,0 +1,112 @@
+RKZ PLATFORM — DEVELOPMENT LOG
+================================
+Last updated: 2026-06-04
+
+PURPOSE: Single source of truth for all completed work. Read this file before
+starting any task to prevent re-work or duplicate charges.
+
+═══════════════════════════════════════════════════════════════════
+COMPLETED TASKS
+═══════════════════════════════════════════════════════════════════
+
+[DONE] PORTAL SMART AUTH — artifacts/realestate-portal + artifacts/api-server
+  - 8 new routes: login-step1, login-step2, WebAuthn register/verify/authenticate
+  - portal-login.tsx rewritten with 5-view state machine (login, otp, biometric-offer,
+    forgot-email, forgot-otp, forgot-done)
+  - PUBLIC_PREFIXES updated in routes/index.ts
+
+[DONE] RKZ MOBILE AUTH — artifacts/rkz + artifacts/api-server
+  - Registration requires BOTH phone AND email (email is mandatory, not optional)
+  - OTP delivered via Resend email (not SMS) to reduce costs
+  - POST /rkz/auth/login now requires {phone, email}; returns {pendingKey, demoOtp?}
+  - POST /rkz/auth/verify-otp verifies OTP server-side (5-min expiry), issues token
+  - login.tsx updated: email TextInput added, codeLabel shows email address
+  - i18n updated (ar + en): emailLabel, emailPlaceholder, emailRequired,
+    demoOtpHint, invalidOtp keys added
+
+[DONE] CRASH FIX — artifacts/realestate-portal/src/pages/services.tsx line 66
+  - Guard: if (!rawItems || !Array.isArray(rawItems)) return null
+  - Sections with missing itemsAr/itemsEn now skip gracefully instead of crashing
+
+[DONE] FOOTER NAVIGATION CLEANUP — artifacts/realestate-portal/src/components/layout.tsx
+  - Removed "Site Map" column entirely from footer grid
+  - Removed inline nav links from copyright bar
+  - Footer now contains ONLY: logo, company description, address, email, phone, copyright
+
+[DONE] AI ASSISTANT — GUIDED INQUIRY WIZARD
+  - artifacts/realestate-portal/src/components/assistant.tsx fully rewritten
+  - "Partner with Rakez" flow: 5-step wizard with validated fields (name, email, phone)
+  - POST to /realestate-api/guest/contact with all fields on submit
+  - Progress bar, inline validation, sanitized inputs (HTML stripped, 300-char max)
+  - Input type adapts per step (email/tel/text keyboard)
+
+[DONE] MARKETPLACE — DB SCHEMA
+  - saved_searches table added to lib/db/src/schema/listings.ts
+  - Columns: id, tenant_id, user_id, name, criteria (JSON text), notify_email, created_at
+  - CREATE TABLE executed directly in PostgreSQL
+  - insertSavedSearchSchema + SavedSearch type exported from @workspace/db
+
+[DONE] MARKETPLACE — SAVED SEARCH API (artifacts/api-server/src/routes/portal.ts)
+  - GET    /portal/saved-searches       → list user's saved searches with live match counts
+  - POST   /portal/saved-searches       → create saved search (validates name required)
+  - PATCH  /portal/saved-searches/:id   → toggle notifyEmail (ownership-checked)
+  - DELETE /portal/saved-searches/:id   → delete (ownership-checked, returns 204)
+  - GET    /portal/buyer-dashboard      → aggregate: saved searches + inquiry history + counts
+  - All routes use requireAuth middleware; ownership enforced via userId scoping
+  - Imports: savedSearchesTable, listingsTable, listingInquiriesTable at top level
+  - gte/lte/ilike operators used for price range + city partial match + bedrooms filter
+
+[DONE] MARKETPLACE — /join LANDING PAGE (artifacts/realestate-portal/src/pages/join.tsx)
+  - High-conversion page at /join route
+  - Hero with animated background orbs, CTA buttons: Create Free Account + Sign In
+  - Benefits grid: AI search, saved alerts, buyer dashboard, direct access
+  - Social proof strip: 500+ listings / 24h response / 100% verified
+  - Final CTA section with 30-second sign-up promise
+  - Fully bilingual (en/ar), RTL-aware with CMS branding
+
+[DONE] MARKETPLACE — BUYER DASHBOARD (/portal/buyer)
+  - artifacts/realestate-portal/src/pages/buyer-dashboard.tsx
+  - Fetches /realestate-api/portal/buyer-dashboard (auth-gated, redirects to /portal on 401)
+  - Stats row: Saved Searches count, Active Alerts count, Inquiries Sent count
+  - Saved searches list: criteria chips, live match count badge, per-search notify toggle,
+    view matches link (passes criteria as URL params), delete button
+  - Recent inquiries list with status badge (new/contacted/closed)
+  - Quick nav tiles: Browse Listings + Investor Portal
+  - Empty states for both saved searches and inquiries
+
+[DONE] MARKETPLACE — AI SEARCH WIZARD (artifacts/realestate-portal/src/components/assistant.tsx)
+  - "🏠 Find a property" added as first option in main menu
+  - 6-step guided search: property type → buy/rent → city (text+buttons) → price range → bedrooms → results
+  - After bedrooms: fetches live match count from /realestate-api/listings?...
+  - Results message: "X matching listings found" + View / Save / Start Over options
+  - "Save this search": POST /realestate-api/portal/saved-searches (requires auth)
+  - Unauthenticated save → prompt to /join or /portal with clear messaging
+  - Successful save → redirect offer to Buyer Dashboard
+  - Search progress bar (6 dots) shown while wizard active
+  - City step has text input support + quick buttons (Riyadh, Jeddah, Dammam, Any)
+  - All validation mirrors inquiry wizard: sanitize(), typed steps, escape hatch on each step
+
+[DONE] APP ROUTING UPDATE — artifacts/realestate-portal/src/App.tsx
+  - /join route → Join component
+  - /portal/buyer route → BuyerDashboard component
+
+[DONE] PUBLISHING HALT
+  - No App Store / Google Play deployment has been initiated or is planned
+  - Focus: internal stability and logic refinement only
+
+═══════════════════════════════════════════════════════════════════
+ARCHITECTURE NOTES
+═══════════════════════════════════════════════════════════════════
+
+- API base: /api (port 8080, proxied through :80)
+- Real Estate API: /realestate-api (portal routes use requireAuth middleware)
+- Portal auth: session-based, pms_session cookie, requireAuth in portal.ts
+- DB: PostgreSQL via Drizzle ORM — use executeSql() for schema changes (non-TTY env)
+- No console.log in server code — use req.log
+- All new portal routes must be added to PUBLIC_PREFIXES only if unauthenticated
+  (/portal/* is already in PUBLIC_PREFIXES — auth gating done per-route via requireAuth)
+- Saved search criteria shape:
+    { propertyType?, listingType?, city?, minPrice?, maxPrice?, bedrooms? }
+- Match count query: filters active listings by all non-null criteria fields
+- ilike used for city (partial match), eq for propertyType/listingType/bedrooms,
+  gte/lte for price range

@@ -15,6 +15,9 @@ import {
   updatePortalPropertySchema,
   insertPortalUnitSchema,
   updatePortalUnitSchema,
+  savedSearchesTable,
+  listingsTable as _listingsRef,
+  listingInquiriesTable,
 } from "@workspace/db";
 import { sessions, getRoleTier, getPortalRoleTier, hashPwd, verifyPwd } from "./auth.js";
 import type { SessionUser } from "../types.js";
@@ -26,7 +29,7 @@ import {
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
 } from "@simplewebauthn/server";
-import { eq, and, or, sql, desc, inArray, ne } from "drizzle-orm";
+import { eq, and, or, sql, desc, inArray, ne, gte as _gte, lte as _lte, ilike as _ilike } from "drizzle-orm";
 import { sendSuccess, sendError, parsePagination, buildMeta } from "../utils/response.js";
 import {
   portalCache,
@@ -1303,6 +1306,147 @@ router.post("/portal/auth/webauthn/authenticate-verify", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "POST /portal/auth/webauthn/authenticate-verify failed");
     sendError(res, 500, "Biometric authentication failed");
+  }
+});
+
+// ── Saved Searches ────────────────────────────────────────────────────────────
+
+// GET /portal/saved-searches
+router.get("/portal/saved-searches", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).sessionUser as SessionUser;
+    const rows = await db
+      .select()
+      .from(savedSearchesTable)
+      .where(eq(savedSearchesTable.userId, user.id))
+      .orderBy(desc(savedSearchesTable.createdAt));
+
+    // For each saved search, count matching active listings
+    const withCounts = await Promise.all(rows.map(async (s) => {
+      let criteria: Record<string, string> = {};
+      try { criteria = JSON.parse(s.criteria); } catch { /* ignore */ }
+      const conds: import("drizzle-orm").SQL[] = [eq(_listingsRef.status, "active")];
+      if (criteria.propertyType) conds.push(eq(_listingsRef.propertyType, criteria.propertyType));
+      if (criteria.listingType)  conds.push(eq(_listingsRef.listingType,  criteria.listingType));
+      if (criteria.city)         conds.push(_ilike(_listingsRef.city, `%${criteria.city}%`));
+      if (criteria.minPrice)     conds.push(_gte(_listingsRef.price, criteria.minPrice));
+      if (criteria.maxPrice)     conds.push(_lte(_listingsRef.price, criteria.maxPrice));
+      if (criteria.bedrooms)     conds.push(eq(_listingsRef.bedrooms, Number(criteria.bedrooms)));
+      const [{ count }] = await db.select({ count: sql`count(*)::int` }).from(_listingsRef).where(and(...conds));
+      return { ...s, criteria, matchCount: Number(count) };
+    }));
+
+    sendSuccess(res, withCounts);
+  } catch (err) {
+    req.log.error({ err }, "GET /portal/saved-searches failed");
+    sendError(res, 500, "Failed to fetch saved searches");
+  }
+});
+
+// POST /portal/saved-searches
+router.post("/portal/saved-searches", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).sessionUser as SessionUser;
+    const { name, criteria, notifyEmail } = req.body as {
+      name: string;
+      criteria: Record<string, string | number | undefined>;
+      notifyEmail?: boolean;
+    };
+    if (!name || typeof name !== "string" || !name.trim()) {
+      sendError(res, 400, "name is required");
+      return;
+    }
+    const [row] = await db.insert(savedSearchesTable).values({
+      userId:      user.id,
+      tenantId:    user.tenantId ?? 1,
+      name:        name.trim().slice(0, 120),
+      criteria:    JSON.stringify(criteria ?? {}),
+      notifyEmail: notifyEmail !== false,
+    }).returning();
+    sendSuccess(res, row, undefined, 201);
+  } catch (err) {
+    req.log.error({ err }, "POST /portal/saved-searches failed");
+    sendError(res, 500, "Failed to save search");
+  }
+});
+
+// PATCH /portal/saved-searches/:id — toggle notifyEmail
+router.patch("/portal/saved-searches/:id", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).sessionUser as SessionUser;
+    const id   = parseInt(req.params.id as string, 10);
+    const { notifyEmail } = req.body as { notifyEmail: boolean };
+    const [row] = await db
+      .update(savedSearchesTable)
+      .set({ notifyEmail })
+      .where(and(eq(savedSearchesTable.id, id), eq(savedSearchesTable.userId, user.id)))
+      .returning();
+    if (!row) { sendError(res, 404, "Not found"); return; }
+    sendSuccess(res, row);
+  } catch (err) {
+    req.log.error({ err }, "PATCH /portal/saved-searches/:id failed");
+    sendError(res, 500, "Failed to update");
+  }
+});
+
+// DELETE /portal/saved-searches/:id
+router.delete("/portal/saved-searches/:id", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).sessionUser as SessionUser;
+    const id   = parseInt(req.params.id as string, 10);
+    await db
+      .delete(savedSearchesTable)
+      .where(and(eq(savedSearchesTable.id, id), eq(savedSearchesTable.userId, user.id)));
+    res.status(204).end();
+  } catch (err) {
+    req.log.error({ err }, "DELETE /portal/saved-searches/:id failed");
+    sendError(res, 500, "Failed to delete");
+  }
+});
+
+// GET /portal/buyer-dashboard — aggregate: saved searches + inquiry history
+router.get("/portal/buyer-dashboard", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).sessionUser as SessionUser;
+
+    const savedSearchRows = await db
+      .select()
+      .from(savedSearchesTable)
+      .where(eq(savedSearchesTable.userId, user.id))
+      .orderBy(desc(savedSearchesTable.createdAt));
+
+    const savedSearches = await Promise.all(savedSearchRows.map(async (s) => {
+      let criteria: Record<string, string> = {};
+      try { criteria = JSON.parse(s.criteria); } catch { /* ignore */ }
+      const conds: import("drizzle-orm").SQL[] = [eq(_listingsRef.status, "active")];
+      if (criteria.propertyType) conds.push(eq(_listingsRef.propertyType, criteria.propertyType));
+      if (criteria.listingType)  conds.push(eq(_listingsRef.listingType,  criteria.listingType));
+      if (criteria.city)         conds.push(_ilike(_listingsRef.city, `%${criteria.city}%`));
+      if (criteria.bedrooms)     conds.push(eq(_listingsRef.bedrooms, Number(criteria.bedrooms)));
+      const [{ count }] = await db.select({ count: sql`count(*)::int` }).from(_listingsRef).where(and(...conds));
+      return { ...s, criteria, matchCount: Number(count) };
+    }));
+
+    const recentInquiries = await db
+      .select()
+      .from(listingInquiriesTable)
+      .where(eq(listingInquiriesTable.email, (user as any).email ?? "__no_email__"))
+      .orderBy(desc(listingInquiriesTable.createdAt))
+      .limit(10);
+
+    const [{ total }] = await db
+      .select({ total: sql`count(*)::int` })
+      .from(listingInquiriesTable)
+      .where(eq(listingInquiriesTable.email, (user as any).email ?? "__no_email__"));
+
+    sendSuccess(res, {
+      savedSearches,
+      totalInquiries: Number(total),
+      recentInquiries,
+    });
+  } catch (err) {
+    req.log.error({ err }, "GET /portal/buyer-dashboard failed");
+    sendError(res, 500, "Failed to fetch buyer dashboard");
   }
 });
 
