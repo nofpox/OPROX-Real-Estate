@@ -47,3 +47,9 @@ id = "tRfu9uqJSrB7_JxVFHNgP"
 uri = "file://archive/staff-tablet-archive.tar.gz"
 type = "unspecified"
 title = "Staff Tablet Archive"
+
+[[outputs]]
+id = "1B1_m6yOwvCjmQDN9lLCD"
+uri = "file://rkz-mobile-source.zip"
+type = "unspecified"
+title = "RKZ Mobile App — Complete Build Package"
