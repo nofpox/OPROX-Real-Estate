@@ -1,10 +1,29 @@
 import { Router } from "express";
 import { db, aiActionQueueTable, aiAuditLogTable, settingsTable } from "@workspace/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, or } from "drizzle-orm";
 
 const router = Router();
 
-const AI_KILL_SWITCH_KEY = "ai_kill_switch";
+const AI_KILL_SWITCH_KEY     = "ai_kill_switch";
+const GLOBAL_AI_KILL_SWITCH_KEY = "ai_global_kill_switch";
+
+// Tenant-sentinel for system-wide (global) settings rows.
+// Stored under tenantId=1 so the FK constraint is satisfied; enforced for ALL tenants by isAiHalted().
+const GLOBAL_TENANT_SENTINEL = 1;
+
+// ── Exported helper: check global + tenant-level kill switch in one query ────
+export async function isAiHalted(tenantId: number): Promise<boolean> {
+  const rows = await db
+    .select({ value: settingsTable.value })
+    .from(settingsTable)
+    .where(
+      or(
+        and(eq(settingsTable.tenantId, GLOBAL_TENANT_SENTINEL), eq(settingsTable.key, GLOBAL_AI_KILL_SWITCH_KEY)),
+        and(eq(settingsTable.tenantId, tenantId),               eq(settingsTable.key, AI_KILL_SWITCH_KEY))
+      )
+    );
+  return rows.some(r => r.value === "true");
+}
 
 // ── Helper: write an audit log entry ────────────────────────────────────────
 async function writeAuditLog(params: {
@@ -39,7 +58,66 @@ async function writeAuditLog(params: {
   });
 }
 
-// ── Kill-switch ──────────────────────────────────────────────────────────────
+// ── Master Global Kill Switch (super_admin only) ─────────────────────────────
+
+// GET /ai-governance/global-kill-switch
+router.get("/ai-governance/global-kill-switch", async (req, res) => {
+  const session = (req as any).sessionUser;
+  if (session?.role !== "super_admin") {
+    res.status(403).json({ error: "FORBIDDEN", message: "Global kill switch requires super_admin role." });
+    return;
+  }
+  const row = await db
+    .select()
+    .from(settingsTable)
+    .where(and(eq(settingsTable.tenantId, GLOBAL_TENANT_SENTINEL), eq(settingsTable.key, GLOBAL_AI_KILL_SWITCH_KEY)))
+    .limit(1);
+  const active = row[0]?.value === "true";
+  res.json({ active });
+});
+
+// POST /ai-governance/global-kill-switch
+router.post("/ai-governance/global-kill-switch", async (req, res) => {
+  const session = (req as any).sessionUser;
+  if (session?.role !== "super_admin") {
+    res.status(403).json({ error: "FORBIDDEN", message: "Global kill switch requires super_admin role." });
+    return;
+  }
+  const { active } = req.body as { active: boolean };
+
+  const current = await db
+    .select()
+    .from(settingsTable)
+    .where(and(eq(settingsTable.tenantId, GLOBAL_TENANT_SENTINEL), eq(settingsTable.key, GLOBAL_AI_KILL_SWITCH_KEY)))
+    .limit(1);
+  const wasActive = current[0]?.value === "true";
+
+  await db
+    .insert(settingsTable)
+    .values({ tenantId: GLOBAL_TENANT_SENTINEL, key: GLOBAL_AI_KILL_SWITCH_KEY, value: String(active) })
+    .onConflictDoUpdate({
+      target: [settingsTable.tenantId, settingsTable.key],
+      set: { value: String(active), updatedAt: new Date() },
+    });
+
+  await writeAuditLog({
+    tenantId:    GLOBAL_TENANT_SENTINEL,
+    event:       active ? "GLOBAL_KILL_SWITCH_ACTIVATED" : "GLOBAL_KILL_SWITCH_DEACTIVATED",
+    actorType:   "human",
+    actorId:     session?.userId,
+    actorName:   session?.name ?? session?.email ?? "superadmin",
+    description: active
+      ? `[MASTER EMERGENCY] System-wide AI HALTED across ALL tenants by ${session?.name ?? "superadmin"}`
+      : `[MASTER EMERGENCY] System-wide AI RESUMED across ALL tenants by ${session?.name ?? "superadmin"}`,
+    beforeState: { active: wasActive, scope: "GLOBAL" },
+    afterState:  { active,            scope: "GLOBAL" },
+    ipAddress:   req.ip,
+  });
+
+  res.json({ active });
+});
+
+// ── Tenant-level Kill Switch ─────────────────────────────────────────────────
 
 // GET /ai-governance/kill-switch
 router.get("/ai-governance/kill-switch", async (req, res) => {
@@ -59,7 +137,6 @@ router.post("/ai-governance/kill-switch", async (req, res) => {
   const session = (req as any).sessionUser;
   const { active } = req.body as { active: boolean };
 
-  // Read current state for audit
   const current = await db
     .select()
     .from(settingsTable)
@@ -143,13 +220,8 @@ router.post("/ai-governance/action-queue", async (req, res) => {
     return;
   }
 
-  // Honour kill-switch — reject new proposals when halted
-  const ksRow = await db
-    .select()
-    .from(settingsTable)
-    .where(and(eq(settingsTable.tenantId, tenantId), eq(settingsTable.key, AI_KILL_SWITCH_KEY)))
-    .limit(1);
-  if (ksRow[0]?.value === "true") {
+  // Honour both global and tenant-level kill switches
+  if (await isAiHalted(tenantId)) {
     res.status(423).json({ error: "AI_HALTED", message: "AI autonomous processing is currently halted by the kill-switch." });
     return;
   }

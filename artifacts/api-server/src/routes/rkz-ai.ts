@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { isAiHalted } from "./aiGovernance.js";
 
 const router = Router();
 
@@ -36,6 +37,11 @@ function extractJson(raw: string): Record<string, unknown> {
 // Public — called from the RKZ Expo prototype (no PMS session)
 router.post("/rkz/suggest-price", async (req, res) => {
   try {
+    if (await isAiHalted(1)) {
+      res.status(423).json({ error: "AI_HALTED", message: "AI services are currently halted by the system administrator." });
+      return;
+    }
+
     const { type, city, district, area, bedrooms } = req.body as {
       type: string;
       city: string;
@@ -86,6 +92,11 @@ router.post("/rkz/suggest-price", async (req, res) => {
 // Public — called from the RKZ Expo prototype (no PMS session)
 router.post("/rkz/generate-description", async (req, res) => {
   try {
+    if (await isAiHalted(1)) {
+      res.status(423).json({ error: "AI_HALTED", message: "AI services are currently halted by the system administrator." });
+      return;
+    }
+
     const { type, city, district, area, bedrooms, price } = req.body as {
       type: string;
       city: string;

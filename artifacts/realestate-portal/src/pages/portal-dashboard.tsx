@@ -202,6 +202,16 @@ const EVENT_BADGE: Record<string, string> = {
 };
 
 const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> = ({ isRtl }) => {
+  const { user } = usePortalAuth();
+  const isSuperAdmin = user?.role === 'super_admin';
+
+  // ── Global kill switch state (super_admin only) ────────────────────────────
+  const [globalKillActive,  setGlobalKillActive]  = useState<boolean | null>(null);
+  const [gksLoading,        setGksLoading]        = useState(true);
+  const [gksUpdating,       setGksUpdating]       = useState(false);
+  const [gksConfirm,        setGksConfirm]        = useState(false);
+
+  // ── Tenant kill switch state ───────────────────────────────────────────────
   const [killActive,    setKillActive]   = useState<boolean | null>(null);
   const [ksLoading,     setKsLoading]    = useState(true);
   const [ksUpdating,    setKsUpdating]   = useState(false);
@@ -223,6 +233,34 @@ const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> 
   const [reviewBusy,    setReviewBusy]   = useState(false);
 
   const AUDIT_PAGE_SIZE = 20;
+
+  // ── Load global kill-switch state (super_admin only) ─────────────────────
+  async function loadGlobalKs() {
+    if (!isSuperAdmin) { setGksLoading(false); return; }
+    setGksLoading(true);
+    try {
+      const r = await fetch('/api/ai-governance/global-kill-switch', { credentials: 'include' });
+      if (r.ok) { const d = await r.json(); setGlobalKillActive(d.active); }
+    } catch { /* ignore */ }
+    setGksLoading(false);
+  }
+
+  // ── Toggle global kill-switch ──────────────────────────────────────────────
+  async function toggleGlobalKillSwitch() {
+    setGksUpdating(true);
+    try {
+      const r = await fetch('/api/ai-governance/global-kill-switch', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: !globalKillActive }),
+      });
+      if (r.ok) { const d = await r.json(); setGlobalKillActive(d.active); }
+    } catch { /* ignore */ }
+    setGksUpdating(false);
+    setGksConfirm(false);
+    loadAudit(0);
+  }
 
   // ── Load kill-switch state ─────────────────────────────────────────────────
   async function loadKs() {
@@ -261,7 +299,7 @@ const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> 
     setAuditLoading(false);
   }
 
-  useEffect(() => { loadKs(); loadActions('pending'); loadAudit(0); }, []);
+  useEffect(() => { loadGlobalKs(); loadKs(); loadActions('pending'); loadAudit(0); }, [isSuperAdmin]);
 
   // ── Toggle kill-switch ─────────────────────────────────────────────────────
   async function toggleKillSwitch() {
@@ -316,6 +354,55 @@ const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> 
           Kill-switch, action queue, and immutable audit trail for all autonomous AI actions.
         </p>
       </div>
+
+      {/* ── MASTER EMERGENCY Kill Switch (super_admin only) ─────────────── */}
+      {isSuperAdmin && (
+        <div className={`rounded-xl border-2 p-5 flex items-start gap-4 shadow-md ${
+          globalKillActive ? 'border-orange-500 bg-orange-50' : 'border-slate-400 bg-slate-50'
+        }`}>
+          <div className={`p-3 rounded-full ${globalKillActive ? 'bg-orange-100' : 'bg-slate-100'}`}>
+            {globalKillActive
+              ? <PowerOff className="h-6 w-6 text-orange-600" />
+              : <Power className="h-6 w-6 text-slate-500" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <p className={`font-bold text-base ${globalKillActive ? 'text-orange-800' : 'text-slate-700'}`}>
+                Master Emergency Kill Switch
+              </p>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                globalKillActive ? 'bg-orange-200 text-orange-800' : 'bg-slate-200 text-slate-600'
+              }`}>
+                {globalKillActive ? 'SYSTEM-WIDE HALT' : 'SYSTEM OPERATIONAL'}
+              </span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">SUPERADMIN</span>
+            </div>
+            <p className="text-sm mt-1 text-muted-foreground">
+              {globalKillActive
+                ? 'All AI processing is halted across every tenant and every app — RKZ, Portal, and Grand PMS simultaneously.'
+                : 'Instantly halt all AI-driven processes across the entire ecosystem. Overrides all tenant-level settings.'}
+            </p>
+          </div>
+          <div className="shrink-0">
+            {gksLoading ? (
+              <Skeleton className="h-10 w-32 rounded-lg" />
+            ) : (
+              <button
+                onClick={() => setGksConfirm(true)}
+                disabled={gksUpdating}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+                  globalKillActive
+                    ? 'bg-slate-600 hover:bg-slate-700 text-white'
+                    : 'bg-orange-600 hover:bg-orange-700 text-white'
+                }`}
+              >
+                {gksUpdating ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
+                {globalKillActive ? 'Resume All AI' : 'Emergency Halt'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Kill-switch card ──────────────────────────────────────────────── */}
       <div className={`rounded-xl border-2 p-5 flex items-start gap-4 ${
@@ -525,6 +612,44 @@ const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> 
           </>
         )}
       </div>
+
+      {/* ── Global kill-switch confirm dialog (super_admin only) ─────────── */}
+      {isSuperAdmin && (
+        <Dialog open={gksConfirm} onOpenChange={v => { if (!v) setGksConfirm(false); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {globalKillActive
+                  ? <><Power className="h-5 w-5 text-slate-600" /> Resume All AI Systems?</>
+                  : <><PowerOff className="h-5 w-5 text-orange-600" /> Emergency System Halt?</>}
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground py-2">
+              {globalKillActive
+                ? 'This will resume AI processing across ALL apps and ALL tenants simultaneously — RKZ, Real Estate Portal, and Grand PMS. Ensure the anomaly has been resolved before resuming.'
+                : 'This will instantly halt ALL AI-driven processes across the entire ecosystem — every tenant, every app, simultaneously. This overrides all tenant-level settings and is logged in the immutable audit trail.'}
+            </p>
+            {!globalKillActive && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 text-sm text-orange-800 font-medium">
+                ⚠ This is a system-wide emergency action. It cannot be undone without another administrator action.
+              </div>
+            )}
+            <DialogFooter className="gap-2">
+              <button onClick={() => setGksConfirm(false)} className="px-4 py-2 text-sm rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
+              <button
+                onClick={toggleGlobalKillSwitch}
+                disabled={gksUpdating}
+                className={`px-4 py-2 text-sm rounded-lg font-semibold text-white transition-colors flex items-center gap-2 ${
+                  globalKillActive ? 'bg-slate-600 hover:bg-slate-700' : 'bg-orange-600 hover:bg-orange-700'
+                }`}
+              >
+                {gksUpdating && <RefreshCw className="h-4 w-4 animate-spin" />}
+                {globalKillActive ? 'Resume All AI' : 'Confirm Emergency Halt'}
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* ── Kill-switch confirm dialog ────────────────────────────────────── */}
       <Dialog open={ksConfirm} onOpenChange={v => { if (!v) setKsConfirm(false); }}>

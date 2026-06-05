@@ -4,6 +4,7 @@ import { conversations, messages } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { eq, asc } from "drizzle-orm";
 import type { SessionUser } from "../auth.js";
+import { isAiHalted } from "../aiGovernance.js";
 
 const router = Router();
 
@@ -162,6 +163,12 @@ router.post("/conversations/:id/messages", async (req, res) => {
   const [conv] = await db.select().from(conversations).where(eq(conversations.id, id));
   if (!conv) {
     res.status(404).json({ error: "Conversation not found" });
+    return;
+  }
+
+  const tenantId = conv.tenantId ?? 1;
+  if (await isAiHalted(tenantId)) {
+    res.status(423).json({ error: "AI_HALTED", message: "AI services are currently halted by the system administrator." });
     return;
   }
 
