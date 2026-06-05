@@ -367,10 +367,11 @@ export const PortalLogin: React.FC = () => {
                   id="identifier"
                   autoComplete="username email"
                   required
+                  dir={isRtl ? 'rtl' : 'ltr'}
                   value={identifier}
                   onChange={e => setIdentifier(e.target.value)}
                   placeholder={isRtl ? 'example@domain.com أو 0501234567' : 'email@domain.com or username'}
-                  className="h-10"
+                  className={`h-10${isRtl ? ' text-right' : ''}`}
                 />
               </div>
               <div>
@@ -383,16 +384,17 @@ export const PortalLogin: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     required
+                    dir={isRtl ? 'rtl' : 'ltr'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="h-10 pr-10"
+                    className={`h-10 pe-10${isRtl ? ' text-right' : ''}`}
                   />
                   <button
                     type="button"
                     tabIndex={-1}
                     aria-label={showPassword ? (isRtl ? 'إخفاء كلمة المرور' : 'Hide password') : (isRtl ? 'إظهار كلمة المرور' : 'Show password')}
-                    onClick={() => setShowPassword(v => !v)}
-                    className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowPassword(v => !v); }}
+                    className="absolute inset-y-0 end-0 z-10 flex items-center px-3 text-muted-foreground hover:text-primary transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -502,11 +504,12 @@ export const PortalLogin: React.FC = () => {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   autoFocus
+                  dir="ltr"
                   disabled={submitting}
                   placeholder="123456"
-                  className="h-14 text-center font-mono text-2xl tracking-[0.5em]"
+                  className={`h-14 font-mono text-2xl tracking-[0.5em]${isRtl ? ' text-right' : ' text-left'}`}
                 />
-                <p className="text-xs text-muted-foreground mt-1.5 text-center">
+                <p className={`text-xs text-muted-foreground mt-1.5${isRtl ? ' text-right' : ' text-left'}`}>
                   {isRtl ? 'ينتهي صلاحية الرمز خلال 5 دقائق' : 'Code expires in 5 minutes'}
                 </p>
               </div>
@@ -704,9 +707,10 @@ export const PortalLogin: React.FC = () => {
                   value={fpOtp}
                   onChange={e => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   required maxLength={6} inputMode="numeric"
+                  dir="ltr"
                   disabled={resetMutation.isPending}
                   placeholder="123456"
-                  className="h-12 text-center font-mono text-xl tracking-widest"
+                  className={`h-12 font-mono text-xl tracking-widest${isRtl ? ' text-right' : ' text-left'}`}
                 />
               </div>
               <div>
@@ -719,16 +723,17 @@ export const PortalLogin: React.FC = () => {
                     type={showNewPwd ? 'text' : 'password'}
                     autoComplete="new-password"
                     required
+                    dir={isRtl ? 'rtl' : 'ltr'}
                     value={newPwd}
                     onChange={e => setNewPwd(e.target.value)}
-                    className="h-10 pr-10"
+                    className={`h-10 pe-10${isRtl ? ' text-right' : ''}`}
                   />
                   <button
                     type="button"
                     tabIndex={-1}
                     aria-label={showNewPwd ? (isRtl ? 'إخفاء كلمة المرور' : 'Hide password') : (isRtl ? 'إظهار كلمة المرور' : 'Show password')}
-                    onClick={() => setShowNewPwd(v => !v)}
-                    className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNewPwd(v => !v); }}
+                    className="absolute inset-y-0 end-0 z-10 flex items-center px-3 text-muted-foreground hover:text-primary transition-colors"
                   >
                     {showNewPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
