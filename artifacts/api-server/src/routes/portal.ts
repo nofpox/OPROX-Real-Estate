@@ -1124,7 +1124,29 @@ router.post("/portal/auth/login-step1", async (req, res) => {
     }
 
     const maskedEmail = maskEmail(user.email);
-    res.json({ ok: true, pendingToken, maskedEmail, ...((!portalResend || devOtp) ? { demoOtp: otp } : {}) });
+
+    // ── Dev bypass: create session immediately, skip step-2 OTP entirely ──
+    if (devOtp) {
+      let effectivePerms: string[] = (() => { try { return JSON.parse(user.permissions); } catch { return []; } })();
+      if (user.customRoleId) {
+        const [cRole] = await db.select().from(customRolesTable).where(eq(customRolesTable.id, user.customRoleId));
+        if (cRole) { try { effectivePerms = JSON.parse(cRole.permissions); } catch {} }
+      }
+      const sessionId = crypto.randomUUID();
+      const sessionUser: SessionUser = {
+        id: user.id, username: user.username, displayName: user.displayName,
+        email: user.email ?? null, phoneNumber: user.phoneNumber ?? null,
+        role: user.role, permissions: effectivePerms, isActive: user.isActive,
+        createdAt: user.createdAt.toISOString(), mustChangePassword: user.mustChangePassword ?? false,
+        tenantId: user.tenantId ?? null, isSuperAdmin: user.role === "super_admin",
+      };
+      await sessions.set(sessionId, sessionUser);
+      res.setHeader("Set-Cookie", `pms_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`);
+      res.json({ ok: true, directLogin: true, user: sessionUser });
+      return;
+    }
+
+    res.json({ ok: true, pendingToken, maskedEmail });
   } catch (err) {
     req.log.error({ err }, "POST /portal/auth/login-step1 failed");
     sendError(res, 500, "Login failed");

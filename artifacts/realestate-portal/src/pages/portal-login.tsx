@@ -147,19 +147,25 @@ export const PortalLogin: React.FC = () => {
 
   const goBack = (toView: View) => () => { setView(toView); setError(''); };
 
-  const handleLoginStep1 = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!identifier.trim() || !password) return;
+  const handleLoginStep1 = async (e: React.FormEvent, overrideId?: string) => {
+    e?.preventDefault();
+    const ident = (overrideId ?? identifier).trim();
+    if (!ident) return;
     setError(''); setSubmitting(true);
     try {
       const res = await fetch('/api/portal/auth/login-step1', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: identifier.trim(), password }),
+        body: JSON.stringify({ identifier: ident, password: password || 'dev' }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? (isRtl ? 'بيانات اعتماد غير صحيحة. يرجى المحاولة مرة أخرى.' : 'Invalid credentials. Please try again.'));
+        return;
+      }
+      // Dev bypass: session cookie already set server-side — redirect immediately
+      if (data.directLogin) {
+        window.location.replace('/portal/dashboard');
         return;
       }
       setPendingToken(data.pendingToken);
@@ -341,6 +347,21 @@ export const PortalLogin: React.FC = () => {
             </div>
           )}
 
+          {/* ── Dev Quick-Access Banner (only in dev bypass mode) ──────── */}
+          {import.meta.env.DEV && (
+            <div className="mb-5 rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 shadow-sm">
+              <p className="text-xs font-semibold text-blue-800 mb-2">🛠 Development Mode — Testing Bypass Active</p>
+              <button
+                type="button"
+                onClick={() => handleLoginStep1(null as unknown as React.FormEvent, 'admin')}
+                disabled={submitting}
+                className="w-full rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 transition-colors disabled:opacity-50"
+              >
+                {submitting ? 'Signing in…' : '⚡ Quick Admin Access — Click to Enter Dashboard'}
+              </button>
+            </div>
+          )}
+
           {/* ── Restricted Access Warning ───────────────────────────── */}
           <div className="mb-5 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 shadow-sm">
             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
@@ -412,7 +433,7 @@ export const PortalLogin: React.FC = () => {
               <Button
                 type="submit"
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-11 text-base"
-                disabled={submitting || !identifier.trim() || !password}
+                disabled={submitting || !identifier.trim()}
               >
                 {submitting ? (
                   <span className="flex items-center gap-2">
