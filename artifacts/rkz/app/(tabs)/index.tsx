@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { apiPost } from "@/constants/api";
+import { generateLocalReport, AIReport } from "@/constants/localReport";
 import {
   PLATFORM_COLORS,
   PLATFORM_LABELS,
@@ -73,30 +73,26 @@ export default function DashboardScreen() {
   async function fetchReport() {
     if (properties.length === 0) return;
     setReportLoading(true);
-    try {
-      const portfolioData = properties.map((p) => ({
-        type: p.type,
-        city: p.location.city,
-        district: p.location.district,
-        price: p.price,
-        area: p.area,
-        bedrooms: p.bedrooms,
-        status: p.platforms.some((x) => x.status === "published") ? "published" : "publishing",
-        views: totalViews(p),
-        leads: p.leads.length,
-        publishedAt: p.publishedAt,
-      }));
-      const result = await apiPost<AIReport>("/rkz/assistant/report", { properties: portfolioData });
-      setReport(result);
-      // Animate score
-      Animated.timing(scoreAnim, {
-        toValue: result.score,
-        duration: 1000,
-        useNativeDriver: false,
-      }).start();
-    } catch {
-      // Silently fail — report is optional
-    }
+    await new Promise((r) => setTimeout(r, 700));
+    const portfolioData = properties.map((p) => ({
+      type: p.type,
+      city: p.location.city,
+      district: p.location.district,
+      price: p.price,
+      area: p.area,
+      bedrooms: p.bedrooms,
+      status: p.platforms.some((x) => x.status === "published") ? "published" : "publishing",
+      views: totalViews(p),
+      leads: p.leads.length,
+      publishedAt: p.publishedAt,
+    }));
+    const result = generateLocalReport(portfolioData, isAr);
+    setReport(result);
+    Animated.timing(scoreAnim, {
+      toValue: result.score,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
     setReportLoading(false);
   }
 

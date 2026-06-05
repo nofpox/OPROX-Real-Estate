@@ -53,3 +53,9 @@ id = "1B1_m6yOwvCjmQDN9lLCD"
 uri = "file://rkz-mobile-source.zip"
 type = "unspecified"
 title = "RKZ Mobile App — Complete Build Package"
+
+[[outputs]]
+id = "30BdGdl2pNvQyFHDIfwD7"
+uri = "file://rkz-standalone.zip"
+type = "unspecified"
+title = "RKZ — Standalone Mobile App (No Server Required)"

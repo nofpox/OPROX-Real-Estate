@@ -19,7 +19,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { API_BASE } from "@/constants/api";
 import { type AppConfig, type FeatureItem, type PlatformConfig, type PinResult, DEFAULT_CONFIG, useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
@@ -389,31 +388,18 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
 
   const refreshOps = useCallback(async () => {
     setOpsLoading(true);
-    try {
-      const [chatRes, violRes, buyerRes] = await Promise.all([
-        fetch(`${API_BASE}/rkz/admin/chat-log?pin=${authorizedPin}`),
-        fetch(`${API_BASE}/rkz/admin/violations?pin=${authorizedPin}`),
-        fetch(`${API_BASE}/rkz/admin/buyer-intents?pin=${authorizedPin}`),
-      ]);
-      if (chatRes.ok) { const d = await chatRes.json(); setOpsChat(d.chatLog ?? []); }
-      if (violRes.ok) { const d = await violRes.json(); setOpsViolations(d.violations ?? []); }
-      if (buyerRes.ok) { const d = await buyerRes.json(); setOpsBuyers(d.buyerIntents ?? []); }
-      setOpsRefreshed(new Date());
-    } catch {}
+    await new Promise((r) => setTimeout(r, 400));
+    setOpsChat([]);
+    setOpsViolations([]);
+    setOpsBuyers([]);
+    setOpsRefreshed(new Date());
     setOpsLoading(false);
-  }, [authorizedPin]);
+  }, []);
 
   async function clearViolations() {
     setClearingViol(true);
-    try {
-      await fetch(`${API_BASE}/rkz/admin/violations`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: authorizedPin }),
-      });
-      setOpsViolations([]);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch {}
+    setOpsViolations([]);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setClearingViol(false);
   }
 

@@ -8,11 +8,6 @@ import React, {
   useState,
 } from "react";
 
-import { API_BASE } from "@/constants/api";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
 export interface PropertyTypeConfig {
   id: string;
   labelAr: string;
@@ -125,6 +120,8 @@ const ConfigContext = createContext<ConfigContextValue>({
 });
 
 const CACHE_KEY = "rkz_app_config_v3";
+const PIN_KEY = "rkz_admin_pin";
+const DEFAULT_PIN = "1234";
 
 function deepMerge(base: AppConfig, patch: Partial<AppConfig>): AppConfig {
   return {
@@ -152,16 +149,6 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         setConfig((prev) => deepMerge(prev, parsed));
       }
     } catch {}
-
-    try {
-      const res = await fetch(`${API_BASE}/rkz/config`);
-      if (res.ok) {
-        const remote = await res.json() as Partial<AppConfig>;
-        setConfig((prev) => deepMerge(prev, remote));
-        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(remote));
-      }
-    } catch {}
-
     setIsLoaded(true);
   }
 
@@ -182,13 +169,11 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
   const verifyPin = useCallback(async (pin: string): Promise<PinResult> => {
     try {
-      const res = await fetch(`${API_BASE}/rkz/admin/verify-pin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin }),
-      });
-      const data = await res.json() as PinResult;
-      return data;
+      const storedPin = await AsyncStorage.getItem(PIN_KEY) ?? DEFAULT_PIN;
+      if (pin === storedPin) {
+        return { valid: true };
+      }
+      return { valid: false, attemptsLeft: 3 };
     } catch {
       return { valid: false };
     }
@@ -196,20 +181,15 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
   const updateConfig = useCallback(
     async (pin: string, updates: Partial<AppConfig>): Promise<void> => {
-      const res = await fetch(`${API_BASE}/rkz/admin/config`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin, updates }),
-      });
-      if (!res.ok) {
-        const err = await res.json() as { error: string };
-        throw new Error(err.error ?? "Save failed");
+      const storedPin = await AsyncStorage.getItem(PIN_KEY) ?? DEFAULT_PIN;
+      if (pin !== storedPin) {
+        throw new Error("Invalid PIN");
       }
-      const updated = await res.json() as Partial<AppConfig>;
-      setConfig((prev) => deepMerge(prev, updated));
-      try {
-        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(updated));
-      } catch {}
+      setConfig((prev) => {
+        const merged = deepMerge(prev, updates);
+        AsyncStorage.setItem(CACHE_KEY, JSON.stringify(updates)).catch(() => {});
+        return merged;
+      });
     },
     []
   );

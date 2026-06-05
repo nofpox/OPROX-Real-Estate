@@ -372,10 +372,7 @@ export default function SettingsScreen() {
               style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.8 }]}
               onPress={async () => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                const domain = process.env.EXPO_PUBLIC_DOMAIN ?? "localhost";
-                const url = Platform.OS === "web"
-                  ? "/realestate/"
-                  : `https://${domain}/realestate/`;
+                  const url = "https://property-dashboard-nofabark.replit.app/realestate/";
                 await WebBrowser.openBrowserAsync(url, {
                   presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
                   toolbarColor: "#0A1628",

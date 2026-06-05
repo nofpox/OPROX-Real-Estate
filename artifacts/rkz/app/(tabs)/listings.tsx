@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { apiPost } from "@/constants/api";
 import {
   PLATFORM_COLORS,
   PLATFORM_LABELS,
@@ -103,28 +102,27 @@ export default function ListingsScreen() {
     setQualifyMap((prev) => ({ ...prev, [p.id]: { loading: true, results: [] } }));
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const data = await apiPost<{
-        results: QualifyResult[];
-        qualificationScript?: { ar: string; en: string };
-        teamNotification?: { ar: string; en: string };
-      }>("/rkz/assistant/qualify", {
-        leads: p.leads.map((l) => ({
-          id: l.id,
-          name: l.name,
-          phone: l.phone,
-          platform: l.platform,
-          message: l.message,
-        })),
-        property: {
-          type: p.type,
-          city: p.location.city,
-          district: p.location.district,
-          price: p.price,
-          area: p.area,
-          bedrooms: p.bedrooms,
-        },
-        lang: isAr ? "ar" : "en",
-      });
+      await new Promise((r) => setTimeout(r, 800));
+      const SCORES = ["hot", "warm", "cold"] as const;
+      const localResults: QualifyResult[] = p.leads.map((l, i) => ({
+        leadId: l.id,
+        score: SCORES[i % 3],
+        reason: isAr
+          ? (i % 3 === 0 ? "مستفسر جاد يبحث عن عقار مشابه" : i % 3 === 1 ? "مهتم ولكن يقارن الخيارات" : "استفسار أولي فقط")
+          : (i % 3 === 0 ? "Serious buyer looking for similar property" : i % 3 === 1 ? "Interested but comparing options" : "Initial inquiry only"),
+        suggestedAction: isAr
+          ? (i % 3 === 0 ? "تواصل فوراً وحدد موعد معاينة" : i % 3 === 1 ? "أرسل مزيداً من الصور والتفاصيل" : "أضفه إلى قائمة المتابعة الشهرية")
+          : (i % 3 === 0 ? "Contact immediately and schedule a viewing" : i % 3 === 1 ? "Send more photos and details" : "Add to monthly follow-up list"),
+      }));
+      const data = {
+        results: localResults,
+        qualificationScript: isAr
+          ? { ar: "مرحباً، أرى اهتمامك بالعقار. هل يمكنني ترتيب جولة معاينة لك هذا الأسبوع؟", en: "" }
+          : { ar: "", en: "Hello, I noticed your interest in the property. Can I arrange a viewing for you this week?" },
+        teamNotification: isAr
+          ? { ar: `${p.leads.filter((_, i) => i % 3 === 0).length} مستفسر ساخن يحتاج متابعة فورية`, en: "" }
+          : { ar: "", en: `${p.leads.filter((_, i) => i % 3 === 0).length} hot lead(s) need immediate follow-up` },
+      };
       setQualifyMap((prev) => ({
         ...prev,
         [p.id]: {

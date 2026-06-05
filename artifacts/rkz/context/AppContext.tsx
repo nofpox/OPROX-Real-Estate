@@ -4,21 +4,11 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from "react";
-import {
-  API_BASE,
-  apiDelete,
-  apiGet,
-  apiPatch,
-  apiPost,
-  clearAuthToken,
-  getAuthToken,
-} from "@/constants/api";
+import { clearAuthToken } from "@/constants/api";
 
 export type PropertyType = string;
-
 export type Platform = string;
 
 export type ListingStatus =
@@ -49,7 +39,7 @@ export interface Lead {
 }
 
 export interface Property {
-  id: string;          // local string; numeric string = API-backed (e.g. "12")
+  id: string;
   type: PropertyType;
   price: number;
   currency: "SAR";
@@ -76,53 +66,6 @@ export interface User {
   name?: string;
   email?: string;
   authorized: boolean;
-}
-
-interface ApiListing {
-  id: number;
-  type: string;
-  price: number;
-  currency: string;
-  city: string;
-  district?: string | null;
-  address?: string | null;
-  lat?: number | null;
-  lng?: number | null;
-  area?: number | null;
-  bedrooms?: number | null;
-  bathrooms?: number | null;
-  title?: string | null;
-  photos: string[];
-  platforms: PlatformStatus[];
-  status: string;
-  publishedAt?: string | null;
-  createdAt: string;
-  leads?: Lead[];
-}
-
-function mapApiToProperty(row: ApiListing): Property {
-  return {
-    id: String(row.id),
-    type: row.type as PropertyType,
-    price: Number(row.price),
-    currency: "SAR",
-    location: {
-      address: row.address ?? "",
-      city: row.city,
-      district: row.district ?? undefined,
-      lat: row.lat != null ? Number(row.lat) : undefined,
-      lng: row.lng != null ? Number(row.lng) : undefined,
-    },
-    area: row.area != null ? Number(row.area) : undefined,
-    bedrooms: row.bedrooms ?? undefined,
-    bathrooms: row.bathrooms ?? undefined,
-    photos: Array.isArray(row.photos) ? row.photos : [],
-    platforms: Array.isArray(row.platforms) ? row.platforms : buildPlatformStatuses(row.status as ListingStatus),
-    leads: row.leads ?? [],
-    publishedAt: row.publishedAt ?? undefined,
-    createdAt: row.createdAt,
-    title: row.title ?? undefined,
-  };
 }
 
 interface AppState {
@@ -216,83 +159,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const apiEnabledRef = useRef(false);
 
-  // ── Persist to AsyncStorage ──────────────────────────────────────────────
   const save = useCallback(async (u: User | null, props: Property[]) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ user: u, properties: props }));
     } catch {}
   }, []);
 
-  // ── Fetch from API and update state ─────────────────────────────────────
-  const refreshFromApi = useCallback(async () => {
-    try {
-      const rows = await apiGet<ApiListing[]>("/rkz/listings");
-      const apiProps = rows.map(mapApiToProperty);
-      setProperties(apiProps);
-      setUserState((u) => {
-        save(u, apiProps);
-        return u;
-      });
-    } catch {
-      // API unavailable — keep local state
-    }
-  }, [save]);
-
-  // ── Boot: load from AsyncStorage then refresh from API if authed ─────────
   useEffect(() => {
     async function boot() {
       try {
-        const [raw, token] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_KEY),
-          getAuthToken(),
-        ]);
-
+        const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
           if (parsed.user) setUserState(parsed.user);
           if (parsed.properties?.length) {
             setProperties(parsed.properties);
           } else {
-            setProperties(token ? [] : SEED_PROPERTIES);
+            setProperties(SEED_PROPERTIES);
           }
         } else {
-          setProperties(token ? [] : SEED_PROPERTIES);
+          setProperties(SEED_PROPERTIES);
         }
-
-        if (token) {
-          apiEnabledRef.current = true;
-          // Validate token and refresh listings in background
-          try {
-            const [meRes, listingsRes] = await Promise.all([
-              fetch(`${API_BASE}/rkz/auth/me`, { headers: { Authorization: `Bearer ${token}` } }),
-              fetch(`${API_BASE}/rkz/listings`,  { headers: { Authorization: `Bearer ${token}` } }),
-            ]);
-            if (meRes.ok) {
-              const me = await meRes.json() as { phone: string; name?: string; email?: string; authorized: boolean };
-              setUserState({ phone: me.phone, name: me.name, email: me.email, authorized: me.authorized });
-            }
-            if (listingsRes.ok) {
-              const rows = await listingsRes.json() as ApiListing[];
-              const apiProps = rows.map(mapApiToProperty);
-              setProperties(apiProps);
-              setUserState((u) => { save(u, apiProps); return u; });
-            }
-          } catch {}
-        }
-      } catch {}
+      } catch {
+        setProperties(SEED_PROPERTIES);
+      }
       setIsLoading(false);
     }
     void boot();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── setUser — also handles logout (null) ────────────────────────────────
   const setUser = useCallback(
     (u: User | null) => {
       if (!u) {
-        apiEnabledRef.current = false;
         void clearAuthToken();
         setUserState(null);
         setProperties(SEED_PROPERTIES);
@@ -305,7 +204,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [save]
   );
 
-  // ── addProperty ─────────────────────────────────────────────────────────
+  const refreshFromApi = useCallback(async () => {
+    // Standalone mode — no remote refresh
+  }, []);
+
   const addProperty = useCallback(
     async (data: Omit<Property, "id" | "createdAt" | "leads" | "platforms">) => {
       const localId = generateId();
@@ -317,50 +219,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         platforms: buildPlatformStatuses("publishing"),
       };
 
-      // Optimistic local update
       setProperties((prev) => { const next = [newProp, ...prev]; save(user, next); return next; });
-
-      if (apiEnabledRef.current) {
-        try {
-          const created = await apiPost<ApiListing>("/rkz/listings", {
-            type:        data.type,
-            price:       data.price,
-            currency:    data.currency,
-            city:        data.location.city,
-            district:    data.location.district,
-            address:     data.location.address,
-            lat:         data.location.lat,
-            lng:         data.location.lng,
-            area:        data.area,
-            bedrooms:    data.bedrooms,
-            bathrooms:   data.bathrooms,
-            title:       data.title,
-            photos:      data.photos,
-          });
-          const apiProp = mapApiToProperty(created);
-          // Replace the local-ID placeholder with the API-backed record
-          setProperties((prev) => {
-            const next = prev.map((p) => (p.id === localId ? apiProp : p));
-            save(user, next);
-            return next;
-          });
-          // Simulate publish completion
-          setTimeout(() => {
-            setProperties((prev) => {
-              const next = prev.map((p) =>
-                p.id === apiProp.id
-                  ? { ...p, publishedAt: new Date().toISOString(), platforms: buildPlatformStatuses("published") }
-                  : p
-              );
-              save(user, next);
-              return next;
-            });
-          }, 3500);
-          return apiProp;
-        } catch {
-          // API failed — keep local version, still do local publish simulation
-        }
-      }
 
       setTimeout(() => {
         setProperties((prev) => {
@@ -373,12 +232,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           return next;
         });
       }, 3000);
+
       return newProp;
     },
     [user, save]
   );
 
-  // ── updateProperty ───────────────────────────────────────────────────────
   const updateProperty = useCallback(
     (id: string, updates: Partial<Property>) => {
       setProperties((prev) => {
@@ -386,30 +245,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         save(user, next);
         return next;
       });
-      if (apiEnabledRef.current && /^\d+$/.test(id)) {
-        const apiPayload: Record<string, unknown> = {};
-        if (updates.type !== undefined)        apiPayload.type        = updates.type;
-        if (updates.price !== undefined)       apiPayload.price       = updates.price;
-        if (updates.area !== undefined)        apiPayload.area        = updates.area;
-        if (updates.bedrooms !== undefined)    apiPayload.bedrooms    = updates.bedrooms;
-        if (updates.bathrooms !== undefined)   apiPayload.bathrooms   = updates.bathrooms;
-        if (updates.title !== undefined)       apiPayload.title       = updates.title;
-        if (updates.photos !== undefined)      apiPayload.photos      = updates.photos;
-        if (updates.platforms !== undefined)   apiPayload.platforms   = updates.platforms;
-        if (updates.location) {
-          if (updates.location.city)     apiPayload.city     = updates.location.city;
-          if (updates.location.district) apiPayload.district = updates.location.district;
-          if (updates.location.address)  apiPayload.address  = updates.location.address;
-          if (updates.location.lat)      apiPayload.lat      = updates.location.lat;
-          if (updates.location.lng)      apiPayload.lng      = updates.location.lng;
-        }
-        apiPatch(`/rkz/listings/${id}`, apiPayload).catch(() => {});
-      }
     },
     [user, save]
   );
 
-  // ── deleteProperty ───────────────────────────────────────────────────────
   const deleteProperty = useCallback(
     (id: string) => {
       setProperties((prev) => {
@@ -417,14 +256,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         save(user, next);
         return next;
       });
-      if (apiEnabledRef.current && /^\d+$/.test(id)) {
-        apiDelete(`/rkz/listings/${id}`).catch(() => {});
-      }
     },
     [user, save]
   );
 
-  // ── markLeadRead ─────────────────────────────────────────────────────────
   const markLeadRead = useCallback(
     (propertyId: string, leadId: string) => {
       setProperties((prev) => {

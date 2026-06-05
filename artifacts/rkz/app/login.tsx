@@ -22,7 +22,7 @@ import { useApp } from "@/context/AppContext";
 import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
-import { apiPost, setAuthToken } from "@/constants/api";
+import { setAuthToken } from "@/constants/api";
 
 const { width } = Dimensions.get("window");
 
@@ -99,18 +99,7 @@ export default function LoginScreen() {
     }
     setError("");
     setLoading(true);
-    try {
-      const fullPhone = cleaned.startsWith("+") ? cleaned : `+966${cleaned}`;
-      const result = await apiPost<{ pendingKey: string; demoOtp?: string }>(
-        "/rkz/auth/login",
-        { phone: fullPhone, email: emailClean },
-      );
-      setPendingKey(result.pendingKey);
-      if (result.demoOtp) setDemoOtp(result.demoOtp);
-    } catch {
-      // API unavailable — fall through to local-only demo mode
-      setPendingKey(null);
-    }
+    setPendingKey(null);
     setLoading(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setStep("otp");
@@ -145,28 +134,7 @@ export default function LoginScreen() {
     setLoading(true);
     Keyboard.dismiss();
 
-    if (pendingKey) {
-      // Real auth — verify OTP on server
-      try {
-        const result = await apiPost<LoginResponse>("/rkz/auth/verify-otp", { pendingKey, otp: code });
-        await setAuthToken(result.token);
-        setUser({
-          phone: result.user.phone,
-          name: result.user.name,
-          email: result.user.email,
-          authorized: result.user.authorized,
-        });
-        await refreshFromApi().catch(() => {});
-      } catch {
-        setLoading(false);
-        setError(t.login.invalidOtp);
-        shake();
-        setOtp(["", "", "", "", "", ""]);
-        setTimeout(() => otpRefs.current[0]?.focus(), 100);
-        return;
-      }
-    } else {
-      // Offline/demo mode — bypass verification
+    {
       const fullPhone = phone.startsWith("+") ? phone : `+966${phone}`;
       setUser({ phone: fullPhone, email: email.trim() || undefined, authorized: true });
     }
