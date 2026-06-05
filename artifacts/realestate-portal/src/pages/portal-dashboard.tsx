@@ -1864,7 +1864,7 @@ export const PortalDashboard: React.FC = () => {
   const [contactError,     setContactError]     = useState('');
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) setLocation('/portal');
+    if (!import.meta.env.DEV && !isLoading && !isAuthenticated) setLocation('/portal');
   }, [isLoading, isAuthenticated, setLocation]);
 
   useEffect(() => {
@@ -1887,7 +1887,7 @@ export const PortalDashboard: React.FC = () => {
   const deletePropMut = useDeletePortalProperty();
   const invalidateProps = () => queryClient.invalidateQueries({ queryKey: getGetPortalPropertiesQueryKey() as any });
 
-  if (isLoading || !isAuthenticated) {
+  if (!import.meta.env.DEV && (isLoading || !isAuthenticated)) {
     return <div className="min-h-screen flex items-center justify-center bg-muted"><Skeleton className="h-32 w-64 rounded-xl" /></div>;
   }
 

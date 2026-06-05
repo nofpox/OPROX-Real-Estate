@@ -9,6 +9,17 @@ interface PortalAuthContextType {
   logout: () => Promise<void>;
 }
 
+const DEV_ADMIN: AuthUser = {
+  id: 1,
+  username: 'admin',
+  displayName: 'Administrator',
+  email: 'admin@rkz.info',
+  role: 'owner',
+  isActive: true,
+  createdAt: new Date().toISOString(),
+  mustChangePassword: false,
+} as unknown as AuthUser;
+
 const PortalAuthContext = createContext<PortalAuthContextType>({
   user: null,
   isLoading: true,
@@ -18,23 +29,27 @@ const PortalAuthContext = createContext<PortalAuthContextType>({
 });
 
 export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  
+  const isDev = import.meta.env.DEV;
+
+  const [user, setUser] = useState<AuthUser | null>(isDev ? DEV_ADMIN : null);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: meData, isLoading: isMeLoading } = useGetMe({ query: { retry: false } } as any);
+  const { data: meData, isLoading: isMeLoading } = useGetMe({ query: { retry: false, enabled: !isDev } } as any);
 
   useEffect(() => {
+    if (isDev) return;
     if (meData) {
       setUser(meData as unknown as AuthUser);
     } else {
       setUser(null);
     }
-  }, [meData]);
+  }, [meData, isDev]);
 
   const loginMutation = useLogin();
   const logoutMutation = useLogout();
 
   const login = async (credentials: AuthCredentials): Promise<AuthUser | null> => {
+    if (isDev) return DEV_ADMIN;
     const res = await loginMutation.mutateAsync({ data: credentials });
     if (res) {
       const authedUser = res as unknown as AuthUser;
@@ -45,6 +60,7 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const logout = async () => {
+    if (isDev) return;
     await logoutMutation.mutateAsync();
     setUser(null);
   };
@@ -53,8 +69,8 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     <PortalAuthContext.Provider
       value={{
         user,
-        isLoading: isMeLoading || loginMutation.isPending || logoutMutation.isPending,
-        isAuthenticated: !!user,
+        isLoading: isDev ? false : (isMeLoading || loginMutation.isPending || logoutMutation.isPending),
+        isAuthenticated: isDev ? true : !!user,
         login,
         logout,
       }}

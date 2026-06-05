@@ -44,6 +44,15 @@ export default function LoginScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { setUser, refreshFromApi } = useApp();
+
+  // Dev mode: skip login entirely and go straight to the main app
+  useEffect(() => {
+    if (__DEV__) {
+      setUser({ phone: 'dev', name: 'Admin', email: 'admin@rkz.info', authorized: true });
+      router.replace('/(tabs)');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const { t, isAr } = useLocale();
   const { config } = useConfig();
   const dynTagline = isAr ? config.content.welcomeTaglineAr : config.content.welcomeTaglineEn;

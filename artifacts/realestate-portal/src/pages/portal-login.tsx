@@ -132,6 +132,7 @@ export const PortalLogin: React.FC = () => {
   const DASH = (import.meta.env.BASE_URL ?? '/').replace(/\/$/, '') + '/portal/dashboard';
 
   useEffect(() => {
+    // In dev mode the auth context always returns isAuthenticated=true — go straight to dashboard
     if (isAuthenticated && !authLoading) {
       window.location.replace(DASH);
     }
@@ -345,21 +346,6 @@ export const PortalLogin: React.FC = () => {
                 <span className="text-xs text-muted-foreground">{isRtl ? 'أو تسجيل الدخول بكلمة المرور' : 'or sign in with password'}</span>
                 <div className="flex-1 h-px bg-border" />
               </div>
-            </div>
-          )}
-
-          {/* ── Dev Quick-Access Banner (only in dev bypass mode) ──────── */}
-          {import.meta.env.DEV && (
-            <div className="mb-5 rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 shadow-sm">
-              <p className="text-xs font-semibold text-blue-800 mb-2">🛠 Development Mode — Testing Bypass Active</p>
-              <button
-                type="button"
-                onClick={() => handleLoginStep1(null as unknown as React.FormEvent, 'admin')}
-                disabled={submitting}
-                className="w-full rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 transition-colors disabled:opacity-50"
-              >
-                {submitting ? 'Signing in…' : '⚡ Quick Admin Access — Click to Enter Dashboard'}
-              </button>
             </div>
           )}
 
