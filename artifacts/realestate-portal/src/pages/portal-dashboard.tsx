@@ -1718,15 +1718,15 @@ const StaffPanel: React.FC<StaffPanelProps> = ({ t, isRtl, callerTierLevel }) =>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
               <Label>{t('staff.name')} *</Label>
-              <Input value={form.displayName} onChange={e => setForm({ ...form, displayName: e.target.value })} placeholder="Ahmed Al-Rashid" />
+              <Input value={form.displayName} onChange={e => setForm({ ...form, displayName: e.target.value })} placeholder="Nada Yousef" />
             </div>
             <div className="space-y-1.5">
               <Label>{t('staff.username')} *</Label>
-              <Input value={form.username} onChange={e => setForm({ ...form, username: e.target.value.toLowerCase() })} placeholder="ahmed_rashid" />
+              <Input value={form.username} onChange={e => setForm({ ...form, username: e.target.value.toLowerCase() })} placeholder="nada_yousef" />
             </div>
             <div className="space-y-1.5">
               <Label>{t('staff.email')} *</Label>
-              <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="ahmed@example.com" />
+              <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="nada@example.com" />
             </div>
             <div className="space-y-1.5">
               <Label>{isRtl ? 'رقم الجوال' : 'Mobile Number'}</Label>

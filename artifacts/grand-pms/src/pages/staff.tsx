@@ -44,7 +44,7 @@ const VALID_SYSTEM_ROLES = SYSTEM_ROLES.map((r) => r.value) as [string, ...strin
 
 const CSV_HEADERS = ["name", "jobTitle", "systemRole", "email", "phone", "propertyId", "status"];
 const CSV_EXAMPLE_ROWS = [
-  ["Ahmed Al-Rashidi", "Civil Engineer", "supervisor", "ahmed@company.com", "+966501234567", "", "active"],
+  ["Nada Yousef", "Civil Engineer", "supervisor", "nada@company.com", "+966501234567", "", "active"],
   ["Sara Al-Qahtani", "HVAC Technician", "maintenance", "sara@company.com", "+966509876543", "", "active"],
   ["Khalid Al-Dosari", "Site Inspector", "security", "khalid@company.com", "+966512345678", "", "active"],
 ];

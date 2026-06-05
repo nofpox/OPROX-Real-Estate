@@ -461,7 +461,7 @@ export type Tenant = { id: number; slug: string; name: string; status: string; c
 export type CreateTenantInput = Partial<Tenant>;
 
 const LOCAL_PMS_USERS: PmsUser[] = [
-  { id: 1, username: "admin", displayName: "Ahmed Al-Rashidi", email: "admin@grandpms.com", role: "manager", status: "active" },
+  { id: 1, username: "admin", displayName: "Nada Yousef", email: "admin@grandpms.com", role: "manager", status: "active" },
   { id: 2, username: "manager", displayName: "Sara Al-Qahtani", email: "manager@grandpms.com", role: "supervisor", status: "active" },
   { id: 3, username: "worker", displayName: "Khalid Al-Dosari", email: "worker@grandpms.com", role: "maintenance", status: "active" },
 ];
@@ -674,7 +674,7 @@ export function useListActiveSessions() {
   return useQuery({
     queryKey: getListActiveSessionsQueryKey(),
     queryFn: (): ActiveSession[] => [
-      { id: 1, userId: 1, displayName: "Ahmed Al-Rashidi", role: "manager", ip: "192.168.1.1", lastSeen: new Date().toISOString() },
+      { id: 1, userId: 1, displayName: "Nada Yousef", role: "manager", ip: "192.168.1.1", lastSeen: new Date().toISOString() },
     ],
     staleTime: Infinity,
   });

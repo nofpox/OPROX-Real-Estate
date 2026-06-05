@@ -335,7 +335,7 @@ const ar: Translations = {
       guestName: "اسم النزيل",
       guestNamePlaceholder: "أحمد محمد",
       email: "البريد الإلكتروني",
-      emailPlaceholder: "ahmed@example.com",
+      emailPlaceholder: "nada@example.com",
       phone: "رقم الهاتف (اختياري)",
       phonePlaceholder: "+966 5X XXX XXXX",
       room: "الغرفة / الوحدة",

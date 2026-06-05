@@ -1071,7 +1071,7 @@ const en = {
       addTitle: "Add Team Member",
       editTitle: "Edit Team Member",
       fullName: "Full Name",
-      fullNamePlaceholder: "e.g. Ahmed Al-Rashid",
+      fullNamePlaceholder: "e.g. Nada Yousef",
       opsRole: "Operations Role",
       propertyAssignment: "Property Assignment",
       propertyDesc: "Leave empty to assign across all properties.",

@@ -89,7 +89,7 @@ export const ROOMS: Room[] = [
 ];
 
 export const STAFF: Staff[] = [
-  { id: 1, name: "Ahmed Al-Rashidi", role: "General Manager", systemRole: "manager", email: "ahmed@grandpms.com", phone: "+966501234567", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
+  { id: 1, name: "Nada Yousef", role: "General Manager", systemRole: "manager", email: "nada@grandpms.com", phone: "+966501234567", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
   { id: 2, name: "Sara Al-Qahtani", role: "Front Desk Supervisor", systemRole: "supervisor", email: "sara@grandpms.com", phone: "+966509876543", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
   { id: 3, name: "Khalid Al-Dosari", role: "Maintenance Technician", systemRole: "maintenance", email: "khalid@grandpms.com", phone: "+966512345678", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
   { id: 4, name: "Fatima Al-Zahrani", role: "Housekeeping Supervisor", systemRole: "cleaning", email: "fatima@grandpms.com", phone: "+966521234567", propertyId: 2, propertyName: "Sunset Apartments", status: "active", invitePending: false, hasAccount: true },
@@ -160,18 +160,18 @@ export const NOTIFICATIONS: Notification[] = [
 
 export const ACTIVITY_LOGS: ActivityLog[] = [
   { id: 1, action: "task.completed", entityType: "task", entityId: 3, actorName: "Omar Al-Shehri", actorRole: "security", createdAt: d(-1), details: "Security patrol rounds completed" },
-  { id: 2, action: "work_order.created", entityType: "work_order", entityId: 1, actorName: "Ahmed Al-Rashidi", actorRole: "manager", createdAt: d(-2), details: "AC replacement work order created" },
+  { id: 2, action: "work_order.created", entityType: "work_order", entityId: 1, actorName: "Nada Yousef", actorRole: "manager", createdAt: d(-2), details: "AC replacement work order created" },
   { id: 3, action: "task.status_changed", entityType: "task", entityId: 2, actorName: "Khalid Al-Dosari", actorRole: "maintenance", createdAt: d(-2), details: "Task moved to in-progress" },
-  { id: 4, action: "staff.created", entityType: "staff", entityId: 10, actorName: "Ahmed Al-Rashidi", actorRole: "manager", createdAt: d(-3), details: "New staff member added" },
+  { id: 4, action: "staff.created", entityType: "staff", entityId: 10, actorName: "Nada Yousef", actorRole: "manager", createdAt: d(-3), details: "New staff member added" },
   { id: 5, action: "property.updated", entityType: "property", entityId: 2, actorName: "Nadia Al-Otaibi", actorRole: "administrator", createdAt: d(-4), details: "Property details updated" },
   { id: 6, action: "task.report_submitted", entityType: "task", entityId: 5, actorName: "Sara Al-Qahtani", actorRole: "supervisor", createdAt: d(-2), details: "Work report submitted" },
   { id: 7, action: "work_order.status_changed", entityType: "work_order", entityId: 3, actorName: "Khalid Al-Dosari", actorRole: "maintenance", createdAt: d(-5), details: "Electrical inspection completed" },
-  { id: 8, action: "shift.created", entityType: "shift", entityId: 1, actorName: "Ahmed Al-Rashidi", actorRole: "manager", createdAt: d(-1), details: "Morning shift scheduled" },
+  { id: 8, action: "shift.created", entityType: "shift", entityId: 1, actorName: "Nada Yousef", actorRole: "manager", createdAt: d(-1), details: "Morning shift scheduled" },
 ];
 
 export const SUPPORT_TICKETS: SupportTicket[] = [
   { id: 1, title: "Cannot access reports", description: "The analytics page shows an error when I try to load the monthly report.", category: "bug", status: "open", submittedBy: "Sara Al-Qahtani", adminNotes: "", createdAt: d(-2) },
-  { id: 2, title: "Add bulk shift scheduling", description: "Would be very helpful to assign shifts to multiple staff at once.", category: "suggestion", status: "in-progress", submittedBy: "Ahmed Al-Rashidi", adminNotes: "Under review for next release", createdAt: d(-5) },
+  { id: 2, title: "Add bulk shift scheduling", description: "Would be very helpful to assign shifts to multiple staff at once.", category: "suggestion", status: "in-progress", submittedBy: "Nada Yousef", adminNotes: "Under review for next release", createdAt: d(-5) },
   { id: 3, title: "Login issue on mobile", description: "App freezes during login on Android 13 devices.", category: "bug", status: "resolved", submittedBy: "Layla Al-Ghamdi", adminNotes: "Fixed in latest update", createdAt: d(-10) },
 ];
 
@@ -199,11 +199,11 @@ export function nextId() { return ++_nextId; }
 export const LOCAL_USERS: Record<string, { password: string; user: User }> = {
   superadmin: {
     password: "superadmin123",
-    user: { id: 0, username: "superadmin", displayName: "Super Administrator", email: "super@grandpms.com", role: "super_admin", status: "active", mustChangePassword: false },
+    user: { id: 0, username: "superadmin", displayName: "Nada Yousef", email: "nada@grandpms.com", role: "super_admin", status: "active", mustChangePassword: false },
   },
   admin: {
     password: "admin123",
-    user: { id: 1, username: "admin", displayName: "Ahmed Al-Rashidi", email: "admin@grandpms.com", role: "super_admin", status: "active", mustChangePassword: false },
+    user: { id: 1, username: "superadmin", displayName: "Nada Yousef", email: "nada@grandpms.com", role: "super_admin", status: "active", mustChangePassword: false },
   },
   manager: {
     password: "manager123",
