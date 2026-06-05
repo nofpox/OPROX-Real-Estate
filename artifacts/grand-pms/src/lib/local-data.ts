@@ -197,13 +197,17 @@ export function nextId() { return ++_nextId; }
 // ── Local credentials ─────────────────────────────────────────────────────────
 
 export const LOCAL_USERS: Record<string, { password: string; user: User }> = {
+  superadmin: {
+    password: "superadmin123",
+    user: { id: 0, username: "superadmin", displayName: "Super Administrator", email: "super@grandpms.com", role: "super_admin", status: "active", mustChangePassword: false },
+  },
   admin: {
     password: "admin123",
-    user: { id: 1, username: "admin", displayName: "Ahmed Al-Rashidi", email: "admin@grandpms.com", role: "manager", status: "active", mustChangePassword: false },
+    user: { id: 1, username: "admin", displayName: "Ahmed Al-Rashidi", email: "admin@grandpms.com", role: "super_admin", status: "active", mustChangePassword: false },
   },
   manager: {
     password: "manager123",
-    user: { id: 2, username: "manager", displayName: "Sara Al-Qahtani", email: "manager@grandpms.com", role: "supervisor", status: "active", mustChangePassword: false },
+    user: { id: 2, username: "manager", displayName: "Sara Al-Qahtani", email: "manager@grandpms.com", role: "owner", status: "active", mustChangePassword: false },
   },
   worker: {
     password: "worker123",
