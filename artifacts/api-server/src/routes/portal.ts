@@ -1107,7 +1107,7 @@ router.post("/portal/auth/login-step1", async (req, res) => {
 
     const pendingToken = crypto.randomUUID();
     const devOtp = process.env.DEV_STATIC_OTP;
-    const otp = devOtp ?? String(Math.floor(100000 + Math.random() * 900000));
+    const otp = devOtp ?? String(Math.floor(1000 + Math.random() * 9000));
     pendingLoginTokens.set(pendingToken, { userId: user.id, tenantId: user.tenantId ?? null, otp, expiresAt: Date.now() + 30 * 60_000 });
 
     if (portalResend && !devOtp) {
@@ -1116,7 +1116,7 @@ router.post("/portal/auth/login-step1", async (req, res) => {
           from: PORTAL_SENDER,
           to: [user.email],
           subject: "رمز التحقق | Login Verification Code – ركز Rakez",
-          html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb"><div style="background:#1a2744;padding:20px 28px"><p style="margin:0;font-size:18px;font-weight:700;color:#fff">ركز | Rakez</p><p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.55)">Investor Portal — Login Verification</p></div><div style="padding:28px"><h2 style="margin:0 0 12px;font-size:18px;color:#111">Your Login Verification Code</h2><p style="margin:0 0 20px;color:#555;font-size:14px">Enter this 6-digit code to complete your sign-in. Expires in <strong>5 minutes</strong>.</p><div style="background:#1a2744;border-radius:12px;padding:20px;text-align:center;letter-spacing:12px;font-size:38px;font-weight:900;color:#fff;font-family:monospace;margin:0 0 20px">${otp}</div><p style="margin:0 0 16px;font-size:15px;font-weight:600;color:#111;direction:rtl;text-align:right">رمز التحقق لتسجيل دخولك إلى بوابة ركز</p><p style="margin:0;color:#aaa;font-size:11px;text-align:center">If you did not attempt to sign in, please ignore this email.<br/>إذا لم تحاول تسجيل الدخول، يرجى تجاهل هذه الرسالة.</p></div></div>`,
+          html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb"><div style="background:#1a2744;padding:20px 28px"><p style="margin:0;font-size:18px;font-weight:700;color:#fff">ركز | Rakez</p><p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.55)">Investor Portal — Login Verification</p></div><div style="padding:28px"><h2 style="margin:0 0 12px;font-size:18px;color:#111">Your Login Verification Code</h2><p style="margin:0 0 20px;color:#555;font-size:14px">Enter this 4-digit code to complete your sign-in. Expires in <strong>5 minutes</strong>.</p><div style="background:#1a2744;border-radius:12px;padding:20px;text-align:center;letter-spacing:12px;font-size:38px;font-weight:900;color:#fff;font-family:monospace;margin:0 0 20px">${otp}</div><p style="margin:0 0 16px;font-size:15px;font-weight:600;color:#111;direction:rtl;text-align:right">رمز التحقق لتسجيل دخولك إلى بوابة ركز</p><p style="margin:0;color:#aaa;font-size:11px;text-align:center">If you did not attempt to sign in, please ignore this email.<br/>إذا لم تحاول تسجيل الدخول، يرجى تجاهل هذه الرسالة.</p></div></div>`,
         });
       } catch (emailErr) {
         req.log.error({ emailErr }, "Failed to send portal login OTP email");

@@ -182,7 +182,7 @@ export const PortalLogin: React.FC = () => {
 
   const handleLoginStep2 = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginOtp.length < 6) return;
+    if (loginOtp.length < 4) return;
     setError(''); setSubmitting(true);
     try {
       const res = await fetch('/api/portal/auth/login-step2', {
@@ -479,8 +479,8 @@ export const PortalLogin: React.FC = () => {
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {isRtl
-                ? `أرسلنا رمز مكون من 6 أرقام إلى ${maskedEmail}`
-                : `We sent a 6-digit code to ${maskedEmail}`}
+                ? `أرسلنا رمز مكون من 4 أرقام إلى ${maskedEmail}`
+                : `We sent a 4-digit code to ${maskedEmail}`}
             </p>
           </div>
           <div className="bg-card border border-border rounded-xl shadow-sm p-6 md:p-8">
@@ -506,15 +506,15 @@ export const PortalLogin: React.FC = () => {
                 <Input
                   id="login-otp"
                   value={loginOtp}
-                  onChange={e => setLoginOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={e => setLoginOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   required
-                  maxLength={6}
+                  maxLength={4}
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   autoFocus
                   dir="ltr"
                   disabled={submitting}
-                  placeholder="123456"
+                  placeholder="1234"
                   style={{ textAlign: isRtl ? 'right' : 'left' }}
                   className="h-14 font-mono text-2xl tracking-[0.5em]"
                 />
@@ -525,7 +525,7 @@ export const PortalLogin: React.FC = () => {
               <Button
                 type="submit"
                 className="w-full h-11 text-base"
-                disabled={submitting || loginOtp.length < 6}
+                disabled={submitting || loginOtp.length < 4}
               >
                 {submitting ? (
                   <span className="flex items-center gap-2">
@@ -714,11 +714,11 @@ export const PortalLogin: React.FC = () => {
                 <Input
                   id="fp-otp"
                   value={fpOtp}
-                  onChange={e => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  required maxLength={6} inputMode="numeric"
+                  onChange={e => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  required maxLength={4} inputMode="numeric"
                   dir="ltr"
                   disabled={resetMutation.isPending}
-                  placeholder="123456"
+                  placeholder="1234"
                   style={{ textAlign: isRtl ? 'right' : 'left' }}
                   className="h-12 font-mono text-xl tracking-widest"
                 />
@@ -749,7 +749,7 @@ export const PortalLogin: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full h-11" disabled={resetMutation.isPending || fpOtp.length < 6}>
+              <Button type="submit" className="w-full h-11" disabled={resetMutation.isPending || fpOtp.length < 4}>
                 {resetMutation.isPending ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />

@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
+  Image,
   Platform,
   Pressable,
   RefreshControl,
@@ -15,7 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { generateLocalReport, AIReport } from "@/constants/localReport";
+import { generateLocalReport } from "@/constants/localReport";
 import {
   PLATFORM_COLORS,
   PLATFORM_LABELS,
@@ -23,6 +24,7 @@ import {
   Property,
   useApp,
 } from "@/context/AppContext";
+import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -55,6 +57,7 @@ export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const { properties, unreadLeadsCount } = useApp();
   const { t, isAr } = useLocale();
+  const { config } = useConfig();
   const [refreshing, setRefreshing] = useState(false);
   const [report, setReport] = useState<AIReport | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
@@ -518,7 +521,15 @@ export default function DashboardScreen() {
         <View style={S.headerTop}>
           <View>
             <Text style={S.greeting}>{t.dashboard.greeting}</Text>
-            <Text style={S.appName}>RKZ</Text>
+            {config.branding.logoUrl ? (
+              <Image
+                source={{ uri: config.branding.logoUrl }}
+                style={{ width: 90, height: 34, resizeMode: "contain" }}
+                fadeDuration={0}
+              />
+            ) : (
+              <Text style={S.appName}>{config.branding.appName || "RKZ"}</Text>
+            )}
           </View>
           <Pressable style={S.notifBtn}>
             <MaterialIcons name="notifications-none" size={22} color="#FFFFFF" />

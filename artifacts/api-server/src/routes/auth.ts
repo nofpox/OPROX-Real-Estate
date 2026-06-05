@@ -77,7 +77,7 @@ async function resendSend(
 }
 
 /**
- * Send a 6-digit OTP password-reset email via Resend (bilingual EN + AR).
+ * Send a 4-digit OTP password-reset email via Resend (bilingual EN + AR).
  * Falls back silently when RESEND_API_KEY is not set (demo mode).
  */
 async function sendResetEmail(to: string, username: string, otp: string): Promise<void> {
@@ -697,8 +697,8 @@ router.post("/auth/forgot-password", async (req, res) => {
     if (data.userId === user.id) resetTokens.delete(tok);
   }
 
-  // 6-digit numeric OTP, 3-minute expiry
-  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  // 4-digit numeric OTP, 3-minute expiry
+  const otp = String(Math.floor(1000 + Math.random() * 9000));
   resetTokens.set(otp, {
     userId:    user.id,
     tenantId:  user.tenantId ?? null,

@@ -10,6 +10,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -17,6 +18,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ADMIN_EVENTS_KEY, AdminEvent } from "@/hooks/useAIAssistant";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -56,10 +58,20 @@ const LOCAL_CREDENTIALS: Record<string, { password: string; user: PortalUser }> 
     password: "admin123",
     user: { id: 1, username: "admin", displayName: "Admin", role: "owner" },
   },
-  investor: {
-    password: "rkz2024",
-    user: { id: 2, username: "investor", displayName: "المستثمر", role: "investor" },
-  },
+};
+
+const EVENT_TYPE_COLORS: Record<AdminEvent["type"], string> = {
+  valuation_request: "#7C3AED",
+  partner_contact:   "#2563EB",
+  security_alert:    "#DC2626",
+  pending_search:    "#D97706",
+};
+
+const EVENT_TYPE_ICONS: Record<AdminEvent["type"], React.ComponentProps<typeof MaterialIcons>["name"]> = {
+  valuation_request: "assessment",
+  partner_contact:   "people",
+  security_alert:    "security",
+  pending_search:    "search",
 };
 
 const MOCK_STATS: PortalStats = {
@@ -113,22 +125,30 @@ export default function InvestorPortalScreen() {
   const { t, isAr } = useLocale();
   const tp = t.portal;
 
-  const [view,       setView]       = useState<PortalView>("login");
-  const [loading,    setLoading]    = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error,      setError]      = useState("");
-  const [username,   setUsername]   = useState("");
-  const [password,   setPassword]   = useState("");
-  const [showPass,   setShowPass]   = useState(false);
-  const [user,       setUser]       = useState<PortalUser | null>(null);
-  const [stats]    = useState<PortalStats>(MOCK_STATS);
-  const [bookings] = useState<RecentBooking[]>(MOCK_BOOKINGS);
+  const [view,        setView]        = useState<PortalView>("login");
+  const [loading,     setLoading]     = useState(true);
+  const [submitting,  setSubmitting]  = useState(false);
+  const [error,       setError]       = useState("");
+  const [username,    setUsername]    = useState("");
+  const [password,    setPassword]    = useState("");
+  const [showPass,    setShowPass]    = useState(false);
+  const [user,        setUser]        = useState<PortalUser | null>(null);
+  const [stats]     = useState<PortalStats>(MOCK_STATS);
+  const [bookings]  = useState<RecentBooking[]>(MOCK_BOOKINGS);
+  const [adminEvents, setAdminEvents] = useState<AdminEvent[]>([]);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const fadeIn = useCallback(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 320, useNativeDriver: true }).start();
   }, [fadeAnim]);
+
+  const loadAdminEvents = useCallback(async () => {
+    try {
+      const raw = await AsyncStorage.getItem(ADMIN_EVENTS_KEY);
+      if (raw) setAdminEvents(JSON.parse(raw) as AdminEvent[]);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -138,12 +158,26 @@ export default function InvestorPortalScreen() {
           setUser(JSON.parse(savedUser) as PortalUser);
           setView("dashboard");
         }
+        await loadAdminEvents();
       } finally {
         setLoading(false);
         fadeIn();
       }
     })();
   }, []);
+
+  const handleExport = useCallback(async () => {
+    try {
+      const header = "Type,Description,Timestamp\n";
+      const rows = adminEvents.map((e) =>
+        `"${e.type}","${e.description.replace(/"/g, '""')}","${new Date(e.timestamp).toISOString()}"`
+      ).join("\n");
+      const totalRevRow = `\n"KPI","Total Revenue","${stats.totalRevenue} SAR"`;
+      const occupancyRow = `\n"KPI","Occupancy Rate","${stats.occupancyRate}%"`;
+      const csv = header + rows + totalRevRow + occupancyRow;
+      await Share.share({ title: "Analytics Hub Export", message: csv });
+    } catch {}
+  }, [adminEvents, stats]);
 
   const handleLogin = async () => {
     if (!username.trim() || !password) {
@@ -236,6 +270,40 @@ export default function InvestorPortalScreen() {
               <BookingRow key={bk.id} booking={bk} tp={tp} s={s} isAr={isAr} />
             ))}
           </View>
+
+          {/* ── Admin Events Log ── */}
+          <View style={s.section}>
+            <View style={[s.sectionRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+              <Text style={[s.sectionTitle, { textAlign: isAr ? "right" : "left", flex: 1 }]}>
+                {isAr ? "سجل الأحداث" : "Admin Events Log"}
+              </Text>
+              <Pressable
+                onPress={loadAdminEvents}
+                hitSlop={8}
+                style={({ pressed }) => [s.refreshBtn, pressed && { opacity: 0.7 }]}
+              >
+                <MaterialIcons name="refresh" size={18} color="#0A1628" />
+              </Pressable>
+              <Pressable
+                onPress={handleExport}
+                hitSlop={8}
+                style={({ pressed }) => [s.exportBtn, pressed && { opacity: 0.7 }]}
+              >
+                <MaterialIcons name="share" size={16} color="#FFFFFF" />
+                <Text style={s.exportBtnText}>{isAr ? "تصدير" : "Export"}</Text>
+              </Pressable>
+            </View>
+            {adminEvents.length === 0 ? (
+              <View style={s.emptyRow}>
+                <MaterialIcons name="inbox" size={28} color="#CBD5E1" />
+                <Text style={s.emptyText}>{isAr ? "لا توجد أحداث مسجلة بعد" : "No events logged yet"}</Text>
+              </View>
+            ) : (
+              adminEvents.slice(0, 20).map((ev) => (
+                <AdminEventRow key={ev.id} event={ev} s={s} isAr={isAr} />
+              ))
+            )}
+          </View>
         </ScrollView>
       </Animated.View>
     );
@@ -254,8 +322,14 @@ export default function InvestorPortalScreen() {
                 <MaterialIcons name="lock" size={28} color="#D4A843" />
               </View>
               <Text style={[s.heroTitle, { textAlign: isAr ? "right" : "left" }]}>
-                {isAr ? "بوابة المستثمرين" : "Investor Portal"}
+                {isAr ? "مركز التحليلات" : "Analytics Hub"}
               </Text>
+              <View style={{ flexDirection: isAr ? "row-reverse" : "row", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                <MaterialIcons name="admin-panel-settings" size={14} color="#D4A843" />
+                <Text style={{ fontSize: 12, color: "#D4A843", fontFamily: "Inter_600SemiBold" }}>
+                  {isAr ? "للمديرين فقط" : "Admin Only"}
+                </Text>
+              </View>
               <Text style={[s.heroSub, { textAlign: isAr ? "right" : "left" }]}>
                 {isAr
                   ? "وصول آمن لإدارة عقاراتك والاطلاع على تقاريرك المالية."
@@ -355,6 +429,36 @@ export default function InvestorPortalScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </Animated.View>
+  );
+}
+
+function AdminEventRow({ event, s, isAr }: {
+  event: AdminEvent;
+  s: ReturnType<typeof makeStyles>;
+  isAr: boolean;
+}) {
+  const color = EVENT_TYPE_COLORS[event.type] ?? "#64748B";
+  const iconName = EVENT_TYPE_ICONS[event.type] ?? "info";
+  const timeStr = new Date(event.timestamp).toLocaleString(isAr ? "ar-SA" : "en-GB", {
+    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+  });
+  return (
+    <View style={[s.eventRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+      <View style={[s.eventIconBox, { backgroundColor: color + "18" }]}>
+        <MaterialIcons name={iconName} size={16} color={color} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <View style={{ flexDirection: isAr ? "row-reverse" : "row", alignItems: "center", gap: 6 }}>
+          <View style={[s.eventTypeBadge, { backgroundColor: color + "18" }]}>
+            <Text style={[s.eventTypeText, { color }]}>{event.type.replace(/_/g, " ")}</Text>
+          </View>
+        </View>
+        <Text style={[s.eventDesc, { textAlign: isAr ? "right" : "left" }]} numberOfLines={2}>
+          {event.description}
+        </Text>
+        <Text style={[s.eventTime, { textAlign: isAr ? "right" : "left" }]}>{timeStr}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -471,5 +575,15 @@ function makeStyles(
     hintText: { fontSize: 12, fontFamily: "Inter_500Medium", color: "#2563EB" },
     errorBanner: { flexDirection: "row", alignItems: "center", gap: 8, margin: 16, backgroundColor: "#FEF2F2", borderRadius: 10, padding: 12 },
     errorBannerText: { flex: 1, fontSize: 13, color: "#DC2626", fontFamily: "Inter_400Regular" },
+    sectionRow: { alignItems: "center", gap: 8, marginBottom: 12 },
+    refreshBtn: { width: 34, height: 34, borderRadius: 10, backgroundColor: "rgba(10,22,40,0.07)", alignItems: "center", justifyContent: "center" },
+    exportBtn: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "#0A1628", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
+    exportBtnText: { color: "#FFFFFF", fontSize: 12, fontFamily: "Inter_600SemiBold" },
+    eventRow: { backgroundColor: colors.card, borderRadius: 12, padding: 12, marginBottom: 8, gap: 10, alignItems: "flex-start", shadowColor: "#000", shadowOpacity: 0.03, shadowRadius: 3, elevation: 1 },
+    eventIconBox: { width: 32, height: 32, borderRadius: 9, alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 },
+    eventTypeBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
+    eventTypeText: { fontSize: 10, fontFamily: "Inter_600SemiBold", textTransform: "capitalize" },
+    eventDesc: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.foreground, lineHeight: 18 },
+    eventTime: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
   });
 }
