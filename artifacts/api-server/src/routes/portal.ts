@@ -1102,10 +1102,11 @@ router.post("/portal/auth/login-step1", async (req, res) => {
     if (!user.email) { sendError(res, 400, "Account has no email for OTP delivery"); return; }
 
     const pendingToken = crypto.randomUUID();
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
-    pendingLoginTokens.set(pendingToken, { userId: user.id, tenantId: user.tenantId ?? null, otp, expiresAt: Date.now() + 5 * 60_000 });
+    const devOtp = process.env.DEV_STATIC_OTP;
+    const otp = devOtp ?? String(Math.floor(100000 + Math.random() * 900000));
+    pendingLoginTokens.set(pendingToken, { userId: user.id, tenantId: user.tenantId ?? null, otp, expiresAt: Date.now() + 30 * 60_000 });
 
-    if (portalResend) {
+    if (portalResend && !devOtp) {
       try {
         await portalResend.emails.send({
           from: PORTAL_SENDER,
@@ -1119,7 +1120,7 @@ router.post("/portal/auth/login-step1", async (req, res) => {
     }
 
     const maskedEmail = maskEmail(user.email);
-    res.json({ ok: true, pendingToken, maskedEmail, ...(portalResend ? {} : { demoOtp: otp }) });
+    res.json({ ok: true, pendingToken, maskedEmail, ...((!portalResend || devOtp) ? { demoOtp: otp } : {}) });
   } catch (err) {
     req.log.error({ err }, "POST /portal/auth/login-step1 failed");
     sendError(res, 500, "Login failed");

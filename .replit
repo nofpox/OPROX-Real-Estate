@@ -62,3 +62,8 @@ externalPort = 3001
 [[ports]]
 localPort = 26233
 externalPort = 3003
+
+[userenv]
+
+[userenv.development]
+DEV_STATIC_OTP = "000000"
