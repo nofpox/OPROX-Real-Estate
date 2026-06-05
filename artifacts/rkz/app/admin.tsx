@@ -235,7 +235,7 @@ function PinGate({ onUnlock }: { onUnlock: (pin: string) => void }) {
   }
 
   async function handleSubmit() {
-    if (pin.length < 8) return;
+    if (pin.length < 4) return;
     if (lockedMin !== null) return;
     setLoading(true);
     const result: PinResult = await verifyPin(pin);
@@ -303,7 +303,7 @@ function PinGate({ onUnlock }: { onUnlock: (pin: string) => void }) {
         <Pressable
           onPress={handleSubmit}
           style={({ pressed }) => [pinStyles.submitBtn, pressed && { opacity: 0.85 }]}
-          disabled={loading || pin.length < 8 || lockedMin !== null}
+          disabled={loading || pin.length < 4 || lockedMin !== null}
         >
           {loading ? (
             <ActivityIndicator color="#0A1628" size="small" />
