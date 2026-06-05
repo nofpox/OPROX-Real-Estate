@@ -12,7 +12,7 @@ version = "1.0.0"
 [[services]]
 ensurePreviewReachable = "/status"
 name = "expo"
-paths = [ "/rkz/" ]
+paths = [ "/rkz/", "/rkz" ]
 localPort = 26232
 
 [services.development]
