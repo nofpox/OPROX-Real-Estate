@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/grand-pms/"
+title = "Grand PMS"
+version = "1.0.0"
+id = "artifacts/grand-pms"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/grand-pms/" ]
+localPort = 14320
+
+[services.development]
+run = "pnpm --filter @workspace/grand-pms run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/grand-pms", "run", "build" ]
+publicDir = "artifacts/grand-pms/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "14320"
+BASE_PATH = "/grand-pms/"
