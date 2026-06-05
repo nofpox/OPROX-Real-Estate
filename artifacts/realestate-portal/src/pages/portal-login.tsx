@@ -396,7 +396,7 @@ export const PortalLogin: React.FC = () => {
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowPassword(v => !v); }}
                     className="absolute inset-y-0 end-0 z-10 flex items-center px-3 text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </button>
                 </div>
                 <div className="text-end mt-1.5">
@@ -507,7 +507,8 @@ export const PortalLogin: React.FC = () => {
                   dir="ltr"
                   disabled={submitting}
                   placeholder="123456"
-                  className={`h-14 font-mono text-2xl tracking-[0.5em]${isRtl ? ' text-right' : ' text-left'}`}
+                  style={{ textAlign: isRtl ? 'right' : 'left' }}
+                  className="h-14 font-mono text-2xl tracking-[0.5em]"
                 />
                 <p className={`text-xs text-muted-foreground mt-1.5${isRtl ? ' text-right' : ' text-left'}`}>
                   {isRtl ? 'ينتهي صلاحية الرمز خلال 5 دقائق' : 'Code expires in 5 minutes'}
@@ -710,7 +711,8 @@ export const PortalLogin: React.FC = () => {
                   dir="ltr"
                   disabled={resetMutation.isPending}
                   placeholder="123456"
-                  className={`h-12 font-mono text-xl tracking-widest${isRtl ? ' text-right' : ' text-left'}`}
+                  style={{ textAlign: isRtl ? 'right' : 'left' }}
+                  className="h-12 font-mono text-xl tracking-widest"
                 />
               </div>
               <div>
@@ -735,7 +737,7 @@ export const PortalLogin: React.FC = () => {
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowNewPwd(v => !v); }}
                     className="absolute inset-y-0 end-0 z-10 flex items-center px-3 text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {showNewPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showNewPwd ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
