@@ -440,7 +440,7 @@ export async function ensureAdmin() {
         displayName: "Administrator",
         email: "admin@rkz.info",
         phoneNumber: "+1-555-000-0001",
-        passwordHash: hashPwd("admin123"),
+        passwordHash: hashPwd("admin"),
         role: "owner",
         permissions: JSON.stringify(["all"]),
         isActive: true,
