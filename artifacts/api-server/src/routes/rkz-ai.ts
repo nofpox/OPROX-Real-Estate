@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { openai } from "@workspace/integrations-openai-ai-server";
 import { isAiHalted } from "./aiGovernance.js";
+import { resolveAiClient, resolveAiModel } from "../lib/ai-provider.js";
 
 const router = Router();
 
@@ -64,10 +64,11 @@ router.post("/rkz/suggest-price", async (req, res) => {
 
     const prompt = `أنت خبير تقييم عقاري في السوق السعودي. اقترح نطاق سعر عادل لـ ${typeLabel} في ${city}${details ? `، ${details}` : ""}. استند إلى أسعار السوق الحالية في المملكة العربية السعودية 2024-2025. أجب بـ JSON فقط بهذا الشكل بدون أي نص إضافي: {"min":1000000,"max":2000000,"suggested":1500000,"note":"سبب قصير"}`;
 
+    const [aiClient, aiModel] = await Promise.all([resolveAiClient(1), resolveAiModel(1, "gpt-5.4")]);
     const parsed = await callWithRetry(
       async () => {
-        const r = await openai.chat.completions.create({
-          model: "gpt-5.4",
+        const r = await aiClient.chat.completions.create({
+          model: aiModel,
           max_completion_tokens: 512,
           messages: [{ role: "user", content: prompt }],
         });
@@ -121,10 +122,11 @@ router.post("/rkz/generate-description", async (req, res) => {
 
     const prompt = `أنت كاتب إعلانات عقارية محترف في السوق السعودي. اكتب وصفاً تسويقياً جذاباً باللغة العربية الفصحى لـ ${typeLabel} في ${city}${details ? `، ${details}` : ""}. الوصف يجب أن لا يتجاوز 80 كلمة، يبرز المزايا الرئيسية، ويثير اهتمام المشتري، وينتهي بنداء للتصرف مختصر. أجب بـ JSON فقط: {"description":"النص هنا"}`;
 
+    const [aiClient, aiModel] = await Promise.all([resolveAiClient(1), resolveAiModel(1, "gpt-5.4")]);
     const parsed = await callWithRetry(
       async () => {
-        const r = await openai.chat.completions.create({
-          model: "gpt-5.4",
+        const r = await aiClient.chat.completions.create({
+          model: aiModel,
           max_completion_tokens: 512,
           messages: [{ role: "user", content: prompt }],
         });

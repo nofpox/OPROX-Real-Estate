@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, aiActionQueueTable, aiAuditLogTable, settingsTable } from "@workspace/db";
-import { eq, and, desc, sql, or } from "drizzle-orm";
+import { eq, and, desc, sql, or, inArray } from "drizzle-orm";
+import { invalidateTenantAiCache, readAiProviderConfig } from "../lib/ai-provider.js";
 
 const router = Router();
 
@@ -344,4 +345,82 @@ router.get("/ai-governance/audit-log", async (req, res) => {
   res.json({ rows, total: count, limit, offset });
 });
 
+// ── AI Provider Configuration ─────────────────────────────────────────────────
+
+// GET /ai-governance/ai-provider  — read current tenant AI config (key masked)
+router.get("/ai-governance/ai-provider", async (req, res) => {
+  const tenantId: number = (req as any).tenantId ?? 1;
+  const config = await readAiProviderConfig(tenantId);
+  res.json(config);
+});
+
+// PUT /ai-governance/ai-provider  — set tenant AI provider; invalidates cached client
+router.put("/ai-governance/ai-provider", async (req, res) => {
+  const tenantId: number = (req as any).tenantId ?? 1;
+  const session = (req as any).sessionUser;
+  const { apiKey, baseURL, model } = req.body as {
+    apiKey?:  string;
+    baseURL?: string;
+    model?:   string;
+  };
+
+  const PROVIDER_SETTING_KEYS = ["ai_api_key", "ai_base_url", "ai_model"] as const;
+  type ProviderSettingKey = typeof PROVIDER_SETTING_KEYS[number];
+  const updates: { key: ProviderSettingKey; value: string }[] = [];
+  if (apiKey  !== undefined) updates.push({ key: "ai_api_key",  value: apiKey  || "" });
+  if (baseURL !== undefined) updates.push({ key: "ai_base_url", value: baseURL || "" });
+  if (model   !== undefined) updates.push({ key: "ai_model",    value: model   || "" });
+
+  for (const { key, value } of updates) {
+    if (value) {
+      await db.insert(settingsTable).values({ tenantId, key, value })
+        .onConflictDoUpdate({ target: [settingsTable.tenantId, settingsTable.key], set: { value, updatedAt: new Date() } });
+    } else {
+      await db.delete(settingsTable).where(and(eq(settingsTable.tenantId, tenantId), eq(settingsTable.key, key)));
+    }
+  }
+
+  // Expire cached client so the next AI request picks up the new key
+  invalidateTenantAiCache(tenantId);
+
+  await writeAuditLog({
+    tenantId,
+    event:       "AI_PROVIDER_UPDATED",
+    actorType:   "human",
+    actorId:     session?.userId,
+    actorName:   session?.name ?? session?.email,
+    description: `AI provider configuration updated by ${session?.name ?? "administrator"}`,
+    afterState:  { hasApiKey: !!apiKey, hasBaseURL: !!baseURL, model: model || null },
+    ipAddress:   req.ip,
+  });
+
+  const config = await readAiProviderConfig(tenantId);
+  res.json(config);
+});
+
+// DELETE /ai-governance/ai-provider  — revert to internal Rkz AI
+router.delete("/ai-governance/ai-provider", async (req, res) => {
+  const tenantId: number = (req as any).tenantId ?? 1;
+  const session = (req as any).sessionUser;
+
+  await db.delete(settingsTable).where(
+    and(eq(settingsTable.tenantId, tenantId), inArray(settingsTable.key, ["ai_api_key", "ai_base_url", "ai_model"]))
+  );
+
+  invalidateTenantAiCache(tenantId);
+
+  await writeAuditLog({
+    tenantId,
+    event:       "AI_PROVIDER_REVERTED",
+    actorType:   "human",
+    actorId:     session?.userId,
+    actorName:   session?.name ?? session?.email,
+    description: `AI provider reverted to internal Rkz AI by ${session?.name ?? "administrator"}`,
+    ipAddress:   req.ip,
+  });
+
+  res.json({ provider: "internal", hasCustomKey: false, maskedKey: null, baseURL: null, model: null });
+});
+
 export default router;
+

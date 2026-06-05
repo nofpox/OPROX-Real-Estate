@@ -205,6 +205,14 @@ const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> 
   const { user } = usePortalAuth();
   const isSuperAdmin = user?.role === 'super_admin';
 
+  // ── AI Provider config state ───────────────────────────────────────────────
+  type ProviderConfig = { hasCustomKey: boolean; maskedKey: string | null; baseURL: string | null; model: string | null; provider: "internal" | "custom" };
+  const [providerCfg,    setProviderCfg]    = useState<ProviderConfig | null>(null);
+  const [providerLoading,setProviderLoading]= useState(true);
+  const [providerSaving, setProviderSaving] = useState(false);
+  const [providerForm,   setProviderForm]   = useState({ apiKey: "", baseURL: "", model: "" });
+  const [providerEdit,   setProviderEdit]   = useState(false);
+
   // ── Global kill switch state (super_admin only) ────────────────────────────
   const [globalKillActive,  setGlobalKillActive]  = useState<boolean | null>(null);
   const [gksLoading,        setGksLoading]        = useState(true);
@@ -233,6 +241,42 @@ const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> 
   const [reviewBusy,    setReviewBusy]   = useState(false);
 
   const AUDIT_PAGE_SIZE = 20;
+
+  // ── AI Provider config load/save/clear ────────────────────────────────────
+  async function loadProviderCfg() {
+    setProviderLoading(true);
+    try {
+      const r = await fetch('/api/ai-governance/ai-provider', { credentials: 'include' });
+      if (r.ok) setProviderCfg(await r.json());
+    } catch { /* ignore */ }
+    setProviderLoading(false);
+  }
+
+  async function saveProviderCfg() {
+    setProviderSaving(true);
+    try {
+      const body: Record<string, string> = {};
+      if (providerForm.apiKey)  body.apiKey  = providerForm.apiKey;
+      if (providerForm.baseURL) body.baseURL  = providerForm.baseURL;
+      if (providerForm.model)   body.model    = providerForm.model;
+      const r = await fetch('/api/ai-governance/ai-provider', {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (r.ok) { setProviderCfg(await r.json()); setProviderEdit(false); setProviderForm({ apiKey: '', baseURL: '', model: '' }); loadAudit(0); }
+    } catch { /* ignore */ }
+    setProviderSaving(false);
+  }
+
+  async function clearProviderCfg() {
+    setProviderSaving(true);
+    try {
+      const r = await fetch('/api/ai-governance/ai-provider', { method: 'DELETE', credentials: 'include' });
+      if (r.ok) { setProviderCfg(await r.json()); setProviderEdit(false); loadAudit(0); }
+    } catch { /* ignore */ }
+    setProviderSaving(false);
+  }
 
   // ── Load global kill-switch state (super_admin only) ─────────────────────
   async function loadGlobalKs() {
@@ -299,7 +343,7 @@ const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> 
     setAuditLoading(false);
   }
 
-  useEffect(() => { loadGlobalKs(); loadKs(); loadActions('pending'); loadAudit(0); }, [isSuperAdmin]);
+  useEffect(() => { loadProviderCfg(); loadGlobalKs(); loadKs(); loadActions('pending'); loadAudit(0); }, [isSuperAdmin]);
 
   // ── Toggle kill-switch ─────────────────────────────────────────────────────
   async function toggleKillSwitch() {
@@ -403,6 +447,109 @@ const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> 
           </div>
         </div>
       )}
+
+      {/* ── AI Provider Configuration ─────────────────────────────────────── */}
+      <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-5 space-y-4">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-full bg-blue-100">
+              <BrainCircuit className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="font-bold text-base text-blue-900">AI Provider</p>
+              <p className="text-xs text-blue-700 mt-0.5">
+                {providerLoading ? 'Loading…' : providerCfg?.provider === 'custom'
+                  ? `Custom provider active${providerCfg.baseURL ? ` — ${providerCfg.baseURL}` : ' — OpenAI API'}`
+                  : 'Using internal Rkz proprietary AI (default)'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+              providerCfg?.provider === 'custom'
+                ? 'bg-blue-200 text-blue-800'
+                : 'bg-slate-200 text-slate-700'
+            }`}>
+              {providerCfg?.provider === 'custom' ? 'CUSTOM PROVIDER' : 'INTERNAL AI'}
+            </span>
+            {!providerEdit && (
+              <button onClick={() => setProviderEdit(true)}
+                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors">
+                Configure
+              </button>
+            )}
+            {providerCfg?.hasCustomKey && !providerEdit && (
+              <button onClick={clearProviderCfg} disabled={providerSaving}
+                className="px-3 py-1.5 rounded-lg bg-slate-500 hover:bg-slate-600 text-white text-xs font-semibold transition-colors flex items-center gap-1.5">
+                {providerSaving ? <RefreshCw className="h-3 w-3 animate-spin" /> : null}
+                Revert to Internal
+              </button>
+            )}
+          </div>
+        </div>
+
+        {providerCfg?.hasCustomKey && !providerEdit && (
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="bg-white rounded-lg p-3 border border-blue-200">
+              <p className="text-muted-foreground mb-0.5">API Key</p>
+              <p className="font-mono font-semibold text-slate-800">{providerCfg.maskedKey ?? '—'}</p>
+            </div>
+            <div className="bg-white rounded-lg p-3 border border-blue-200">
+              <p className="text-muted-foreground mb-0.5">Model</p>
+              <p className="font-semibold text-slate-800">{providerCfg.model ?? 'Default'}</p>
+            </div>
+            {providerCfg.baseURL && (
+              <div className="bg-white rounded-lg p-3 border border-blue-200 col-span-2">
+                <p className="text-muted-foreground mb-0.5">Base URL</p>
+                <p className="font-mono text-slate-800 truncate">{providerCfg.baseURL}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {providerEdit && (
+          <div className="space-y-3">
+            <div className="bg-blue-100 border border-blue-200 rounded-lg px-3 py-2.5 text-xs text-blue-800">
+              Compatible with any OpenAI-compatible provider: OpenAI, Azure OpenAI, Anthropic, Gemini, Groq, Mistral, Ollama.
+              Leave Base URL blank for standard OpenAI. Leave fields blank to keep existing values.
+            </div>
+            <div className="grid gap-2.5">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">API Key</label>
+                <input type="password" placeholder="sk-…  (leave blank to keep existing)"
+                  value={providerForm.apiKey}
+                  onChange={e => setProviderForm(f => ({ ...f, apiKey: e.target.value }))}
+                  className="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Base URL <span className="text-slate-400">(optional)</span></label>
+                <input type="url" placeholder="https://api.openai.com/v1  or your provider endpoint"
+                  value={providerForm.baseURL}
+                  onChange={e => setProviderForm(f => ({ ...f, baseURL: e.target.value }))}
+                  className="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Model <span className="text-slate-400">(optional, e.g. gpt-4o, claude-3-5-sonnet)</span></label>
+                <input type="text" placeholder="Leave blank to use default"
+                  value={providerForm.model}
+                  onChange={e => setProviderForm(f => ({ ...f, model: e.target.value }))}
+                  className="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => { setProviderEdit(false); setProviderForm({ apiKey: '', baseURL: '', model: '' }); }}
+                className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors">
+                Cancel
+              </button>
+              <button onClick={saveProviderCfg} disabled={providerSaving}
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors flex items-center gap-2">
+                {providerSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
+                Save Provider
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* ── Kill-switch card ──────────────────────────────────────────────── */}
       <div className={`rounded-xl border-2 p-5 flex items-start gap-4 ${

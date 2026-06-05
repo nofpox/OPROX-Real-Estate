@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { resolveAiClient, resolveAiModel } from "../lib/ai-provider.js";
 import { rkzCurrentConfig } from "./rkz-config";
 
 const router = Router();
@@ -213,8 +213,9 @@ Strict rules:
 • If asked about something outside your expertise, refer the user to the Rkz team
 • When you ask the lead qualification question about purchase method (Bank Financing, Cash, or other arrangements), append exactly [QR] at the very end of your response — with absolutely nothing after it`;
 
-    const r = await openai.chat.completions.create({
-      model: "gpt-5.4",
+    const [aiClient, aiModel] = await Promise.all([resolveAiClient((req as any).tenantId ?? 1), resolveAiModel((req as any).tenantId ?? 1, "gpt-5.4")]);
+    const r = await aiClient.chat.completions.create({
+      model: aiModel,
       max_completion_tokens: 600,
       messages: [
         { role: "system", content: systemPrompt },
@@ -362,10 +363,11 @@ ${summaryLang}
 Respond with valid JSON ONLY — no markdown, no extra text:
 {"results":[{"leadId":"...","score":"serious","summary":"brief reason","paymentMethod":"bank_financing","paymentSummary":"brief note on payment intent"}]}`;
 
+    const [aiClient, aiModel] = await Promise.all([resolveAiClient((req as any).tenantId ?? 1), resolveAiModel((req as any).tenantId ?? 1, "gpt-5.4")]);
     const parsed = await callWithRetry(
       async () => {
-        const r = await openai.chat.completions.create({
-          model: "gpt-5.4",
+        const r = await aiClient.chat.completions.create({
+          model: aiModel,
           max_completion_tokens: 1000,
           messages: [{ role: "user", content: prompt }],
         });
@@ -450,10 +452,11 @@ ${summaryLang}
 JSON ONLY:
 {"method":"bank_financing","summary":"brief explanation","notificationText":"ready-to-share team message"}`;
 
+    const [aiClient, aiModel] = await Promise.all([resolveAiClient((req as any).tenantId ?? 1), resolveAiModel((req as any).tenantId ?? 1, "gpt-5.4")]);
     const parsed = await callWithRetry(
       async () => {
-        const r = await openai.chat.completions.create({
-          model: "gpt-5.4",
+        const r = await aiClient.chat.completions.create({
+          model: aiModel,
           max_completion_tokens: 400,
           messages: [{ role: "user", content: prompt }],
         });
@@ -542,10 +545,11 @@ Respond with JSON ONLY, no extra text:
 
 Score is a portfolio health indicator from 0-100 based on: publish rate, view count, lead conversion ratio, and platform diversity.`;
 
+    const [aiClient, aiModel] = await Promise.all([resolveAiClient((req as any).tenantId ?? 1), resolveAiModel((req as any).tenantId ?? 1, "gpt-5.4")]);
     const parsed = await callWithRetry(
       async () => {
-        const r = await openai.chat.completions.create({
-          model: "gpt-5.4",
+        const r = await aiClient.chat.completions.create({
+          model: aiModel,
           max_completion_tokens: 800,
           messages: [{ role: "user", content: prompt }],
         });

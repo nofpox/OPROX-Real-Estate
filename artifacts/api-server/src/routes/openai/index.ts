@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { conversations, messages } from "@workspace/db";
-import { openai } from "@workspace/integrations-openai-ai-server";
 import { eq, asc } from "drizzle-orm";
 import type { SessionUser } from "../auth.js";
 import { isAiHalted } from "../aiGovernance.js";
+import { resolveAiClient, resolveAiModel } from "../../lib/ai-provider.js";
 
 const router = Router();
 
@@ -172,6 +172,11 @@ router.post("/conversations/:id/messages", async (req, res) => {
     return;
   }
 
+  const [aiClient, aiModel] = await Promise.all([
+    resolveAiClient(tenantId),
+    resolveAiModel(tenantId, "gpt-4.1"),
+  ]);
+
   const history = await db
     .select()
     .from(messages)
@@ -209,8 +214,8 @@ router.post("/conversations/:id/messages", async (req, res) => {
 
   try {
     let fullResponse = "";
-    const stream = await openai.chat.completions.create({
-      model: "gpt-4.1",
+    const stream = await aiClient.chat.completions.create({
+      model: aiModel,
       max_completion_tokens: 2048,
       messages: chatMessages,
       stream: true,
