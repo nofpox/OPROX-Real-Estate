@@ -23,7 +23,7 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack initialRouteName={__DEV__ ? "(tabs)" : "login"} screenOptions={{ headerShown: false }}>
       <Stack.Screen name="login" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="admin" options={{ headerShown: false, presentation: "card" }} />

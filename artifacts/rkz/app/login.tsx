@@ -1,6 +1,6 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -41,18 +41,14 @@ interface LoginResponse {
 }
 
 export default function LoginScreen() {
+  // Dev mode: skip login entirely — go straight to the main app
+  if (__DEV__) return <Redirect href="/(tabs)" />;
+
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { setUser, refreshFromApi } = useApp();
 
-  // Dev mode: skip login entirely and go straight to the main app
-  useEffect(() => {
-    if (__DEV__) {
-      setUser({ phone: 'dev', name: 'Admin', email: 'admin@rkz.info', authorized: true });
-      router.replace('/(tabs)');
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const { t, isAr } = useLocale();
   const { config } = useConfig();
   const dynTagline = isAr ? config.content.welcomeTaglineAr : config.content.welcomeTaglineEn;
