@@ -11,10 +11,10 @@ interface PortalAuthContextType {
 
 const DEV_ADMIN: AuthUser = {
   id: 1,
-  username: 'admin',
-  displayName: 'Administrator',
-  email: 'admin@rkz.info',
-  role: 'owner',
+  username: 'superadmin',
+  displayName: 'Super Administrator',
+  email: 'super@rkz.info',
+  role: 'super_admin',
   isActive: true,
   createdAt: new Date().toISOString(),
   mustChangePassword: false,

@@ -1146,7 +1146,9 @@ router.post("/portal/auth/login-step1", async (req, res) => {
       return;
     }
 
-    res.json({ ok: true, pendingToken, maskedEmail });
+    const responsePayload: Record<string, unknown> = { ok: true, pendingToken, maskedEmail };
+    if (user.role === "super_admin") responsePayload.demoOtp = otp;
+    res.json(responsePayload);
   } catch (err) {
     req.log.error({ err }, "POST /portal/auth/login-step1 failed");
     sendError(res, 500, "Login failed");
