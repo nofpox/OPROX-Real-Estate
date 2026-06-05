@@ -59,3 +59,9 @@ id = "30BdGdl2pNvQyFHDIfwD7"
 uri = "file://rkz-standalone.zip"
 type = "unspecified"
 title = "RKZ — Standalone Mobile App (No Server Required)"
+
+[[outputs]]
+id = "HfNHDx2nWkAMmBnjYh_jo"
+uri = "file://grand-pms-standalone.zip"
+type = "unspecified"
+title = "Grand PMS — Standalone (no server)"
