@@ -129,10 +129,11 @@ export const PortalLogin: React.FC = () => {
 
   const forgotMutation = useForgotPassword();
   const resetMutation  = useResetPassword();
+  const DASH = (import.meta.env.BASE_URL ?? '/').replace(/\/$/, '') + '/portal/dashboard';
 
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      window.location.replace('/portal/dashboard');
+      window.location.replace(DASH);
     }
   }, [isAuthenticated, authLoading]);
 
@@ -165,7 +166,7 @@ export const PortalLogin: React.FC = () => {
       }
       // Dev bypass: session cookie already set server-side — redirect immediately
       if (data.directLogin) {
-        window.location.replace('/portal/dashboard');
+        window.location.replace(DASH);
         return;
       }
       setPendingToken(data.pendingToken);
@@ -203,7 +204,7 @@ export const PortalLogin: React.FC = () => {
           }
         } catch {}
       }
-      window.location.replace('/portal/dashboard');
+      window.location.replace(DASH);
     } catch {
       setError(isRtl ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'An error occurred. Please try again.');
     } finally { setSubmitting(false); }
@@ -230,7 +231,7 @@ export const PortalLogin: React.FC = () => {
         const d = await verifyRes.json();
         throw new Error(d.error ?? 'Verification failed');
       }
-      window.location.replace('/portal/dashboard');
+      window.location.replace(DASH);
     } catch (err) {
       const msg = err instanceof Error ? err.name : '';
       if (msg === 'NotAllowedError') {
@@ -257,14 +258,14 @@ export const PortalLogin: React.FC = () => {
       });
       if (!verifyRes.ok) throw new Error('Verification failed');
       localStorage.setItem(PORTAL_WA_USER_KEY, identifier.trim());
-      window.location.replace('/portal/dashboard');
+      window.location.replace(DASH);
     } catch (err) {
       const name = err instanceof Error ? err.name : '';
       if (name === 'NotAllowedError') {
-        window.location.replace('/portal/dashboard');
+        window.location.replace(DASH);
       } else {
         setError(isRtl ? 'فشل التسجيل البيومتري. يمكنك تفعيله لاحقاً.' : 'Biometric setup failed. You can enable it later from settings.');
-        setTimeout(() => window.location.replace('/portal/dashboard'), 2000);
+        setTimeout(() => window.location.replace(DASH), 2000);
       }
     } finally { setBiometricBusy(false); }
   };
@@ -614,7 +615,7 @@ export const PortalLogin: React.FC = () => {
                 variant="ghost"
                 className="w-full h-10 text-sm text-muted-foreground"
                 disabled={biometricBusy}
-                onClick={() => window.location.replace('/portal/dashboard')}
+                onClick={() => window.location.replace(DASH)}
               >
                 {isRtl ? 'تخطي الآن — يمكنني تفعيله لاحقاً' : "Skip for now — I'll enable it later"}
               </Button>
