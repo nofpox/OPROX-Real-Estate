@@ -24,6 +24,8 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 30_000,   // data stays fresh 30 s — prevents over-fetching on re-renders
+      gcTime:    300_000,  // keep unused cache 5 min
     },
   },
 });

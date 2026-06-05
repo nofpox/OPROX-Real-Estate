@@ -34,16 +34,20 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [user, setUser] = useState<AuthUser | null>(isDev ? DEV_ADMIN : null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: meData, isLoading: isMeLoading } = useGetMe({ query: { retry: false, enabled: !isDev } } as any);
+  const { data: meData, isLoading: isMeLoading, isSuccess: isMeSuccess, isError: isMeError } = useGetMe({ query: { retry: false, enabled: !isDev } } as any);
 
   useEffect(() => {
     if (isDev) return;
-    if (meData) {
-      setUser(meData as unknown as AuthUser);
-    } else {
+    // Only update user state when the query has a definitive result.
+    // During loading, or during a transient network/server error, leave the
+    // current user state intact so the dashboard doesn't flicker to the login page.
+    if (isMeSuccess) {
+      setUser(meData ? (meData as unknown as AuthUser) : null);
+    } else if (isMeError) {
+      // Session genuinely expired (server confirmed 401) — clear user.
       setUser(null);
     }
-  }, [meData, isDev]);
+  }, [meData, isMeSuccess, isMeError, isDev]);
 
   const loginMutation = useLogin();
   const logoutMutation = useLogout();
