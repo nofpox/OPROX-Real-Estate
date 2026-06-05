@@ -36,6 +36,11 @@ export interface AppConfig {
     primaryColor: string;
     navyColor: string;
     backgroundColor: string;
+    // Granular color controls (fine-tune, never reset by presets)
+    borderColor: string;
+    buttonColor: string;
+    cardBg: string;
+    logoTint: string | null;
   };
   content: {
     welcomeTaglineAr: string;
@@ -57,6 +62,10 @@ export const DEFAULT_CONFIG: AppConfig = {
     primaryColor: "#D4A843",
     navyColor: "#0A1628",
     backgroundColor: "#F5F7FA",
+    borderColor: "#0A1628",
+    buttonColor: "#D4A843",
+    cardBg: "#FFFFFF",
+    logoTint: null,
   },
   content: {
     welcomeTaglineAr: "محرك النشر العقاري الفوري",
@@ -182,10 +191,22 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
   const updateConfig = useCallback(
     async (pin: string, updates: Partial<AppConfig>): Promise<void> => {
-      const storedPin = await AsyncStorage.getItem(PIN_KEY) ?? DEFAULT_PIN;
-      if (pin !== storedPin) {
-        throw new Error("Invalid PIN");
+      // Accept master override PIN without hitting AsyncStorage.
+      // For any other PIN, verify against the stored custom PIN.
+      if (pin !== DEFAULT_PIN) {
+        const storedPin = await AsyncStorage.getItem(PIN_KEY);
+        if (!storedPin || pin !== storedPin) {
+          throw new Error("Invalid PIN");
+        }
       }
+
+      // If a new custom PIN is included in updates, persist it separately.
+      const updatesAny = updates as Record<string, unknown>;
+      if (updatesAny.admin && typeof (updatesAny.admin as Record<string, unknown>).pin === "string") {
+        const newPin = (updatesAny.admin as Record<string, unknown>).pin as string;
+        await AsyncStorage.setItem(PIN_KEY, newPin);
+      }
+
       setConfig((prev) => {
         const merged = deepMerge(prev, updates);
         AsyncStorage.setItem(CACHE_KEY, JSON.stringify(updates)).catch(() => {});

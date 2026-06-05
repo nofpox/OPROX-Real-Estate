@@ -30,26 +30,38 @@ export function useColors() {
       ? (colors as Record<string, typeof colors.light>).dark
       : colors.light;
 
-  const { primaryColor, navyColor, backgroundColor } = config.branding;
+  const {
+    primaryColor,
+    navyColor,
+    backgroundColor,
+    borderColor,
+    buttonColor,
+    cardBg,
+    logoTint,
+  } = config.branding;
 
   return {
     // Static tokens (rarely overridden)
     ...base,
     radius: colors.radius,
     // ── Dynamic brand overrides ──────────────────────────────────────────
-    primary: primaryColor,
-    tint: primaryColor,
-    gold: primaryColor,
-    goldLight: hexBlend(primaryColor, 0.7),
-    navy: navyColor,
-    navyLight: hexBlend(navyColor, 0.25),
-    foreground: navyColor,
-    secondary: navyColor,
+    primary:             primaryColor,
+    tint:                primaryColor,
+    gold:                primaryColor,
+    goldLight:           hexBlend(primaryColor, 0.7),
+    navy:                navyColor,
+    navyLight:           hexBlend(navyColor, 0.25),
+    foreground:          navyColor,
+    secondary:           navyColor,
     secondaryForeground: "#FFFFFF",
-    accent: hexBlend(navyColor, 0.12),
-    accentForeground: "#FFFFFF",
-    background: backgroundColor,
-    card: scheme === "dark" ? "#1A2638" : "#FFFFFF",
-    cardForeground: navyColor,
+    accent:              hexBlend(navyColor, 0.12),
+    accentForeground:    "#FFFFFF",
+    background:          backgroundColor,
+    // ── Granular fine-tune overrides ─────────────────────────────────────
+    card:                cardBg ?? (scheme === "dark" ? "#1A2638" : "#FFFFFF"),
+    cardForeground:      navyColor,
+    border:              borderColor ?? navyColor,
+    button:              buttonColor ?? primaryColor,
+    logoTint:            logoTint ?? null,
   };
 }

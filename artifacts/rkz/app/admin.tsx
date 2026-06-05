@@ -416,12 +416,20 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
     };
   }, [rollbackAdmin]);
 
-  // Update branding field + live preview for colors
+  // Update branding field + live preview.
+  // Hex color fields and logo/tint are applied immediately for instant preview.
+  // Preset themes only touch primaryColor/navyColor/backgroundColor — the
+  // fine-tune fields (borderColor, buttonColor, cardBg, logoTint) are never
+  // overwritten by a preset, preserving manual selections.
   const updateBranding = useCallback(
-    (key: keyof AppConfig["branding"], value: string) => {
+    (key: keyof AppConfig["branding"], value: string | null) => {
       const newBranding = { ...draft.branding, [key]: value };
       setDraft((d) => ({ ...d, branding: newBranding }));
-      if (["primaryColor", "navyColor", "backgroundColor"].includes(key) && HEX_RE.test(value)) {
+      const HEX_KEYS = ["primaryColor", "navyColor", "backgroundColor", "borderColor", "buttonColor", "cardBg"];
+      const MEDIA_KEYS: (keyof AppConfig["branding"])[] = ["logoUrl", "logoTint"];
+      const isValidHex = HEX_KEYS.includes(key) && typeof value === "string" && HEX_RE.test(value);
+      const isMedia = MEDIA_KEYS.includes(key);
+      if (isValidHex || isMedia) {
         applyLocally({ branding: newBranding });
       }
     },
@@ -576,7 +584,7 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
               </Pressable>
               {!!draft.branding.logoUrl && (
                 <Pressable
-                  onPress={() => updateBranding("logoUrl", null as unknown as string)}
+                  onPress={() => updateBranding("logoUrl", null)}
                   style={({ pressed }) => [styles.removeLogoBtn, pressed && { opacity: 0.7 }]}
                 >
                   <MaterialIcons name="delete-outline" size={14} color="#DC2626" />
@@ -589,7 +597,7 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
           <FieldRow
             label={t.admin.logoOrUrl}
             value={draft.branding.logoUrl?.startsWith("data:") ? "" : (draft.branding.logoUrl ?? "")}
-            onChange={(v) => updateBranding("logoUrl", v || null as unknown as string)}
+            onChange={(v) => updateBranding("logoUrl", v || null)}
             placeholder="https://example.com/logo.png"
             isAr={isAr}
           />
@@ -630,6 +638,10 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
 
           <View style={styles.divider} />
 
+          {/* ── Theme palette (presets only touch these 3) ── */}
+          <Text style={[styles.fieldLabel, { fontWeight: "600", marginBottom: 6 }, isAr && { textAlign: "right" }]}>
+            {isAr ? "لوحة الألوان الرئيسية" : "Theme Palette"}
+          </Text>
           <ColorInput
             label={t.admin.primaryColorLabel}
             value={draft.branding.primaryColor}
@@ -646,6 +658,36 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
             label={t.admin.bgColorLabel}
             value={draft.branding.backgroundColor}
             onChange={(v) => updateBranding("backgroundColor", v)}
+            isAr={isAr}
+          />
+
+          {/* ── Fine-tune controls (never overwritten by presets) ── */}
+          <View style={[styles.divider, { marginVertical: 14 }]} />
+          <Text style={[styles.fieldLabel, { fontWeight: "600", marginBottom: 6 }, isAr && { textAlign: "right" }]}>
+            {isAr ? "🎨 تخصيص دقيق — يُقدَّم على الثيم" : "🎨 Fine-tune Colors — overrides theme"}
+          </Text>
+          <ColorInput
+            label={isAr ? "لون الإطار / الحدود" : "Border / Frame Color"}
+            value={draft.branding.borderColor ?? draft.branding.navyColor}
+            onChange={(v) => updateBranding("borderColor", v)}
+            isAr={isAr}
+          />
+          <ColorInput
+            label={isAr ? "لون الزر / التمييز" : "Button / Accent Color"}
+            value={draft.branding.buttonColor ?? draft.branding.primaryColor}
+            onChange={(v) => updateBranding("buttonColor", v)}
+            isAr={isAr}
+          />
+          <ColorInput
+            label={isAr ? "خلفية البطاقات / الداخلية" : "Card / Dashboard Background"}
+            value={draft.branding.cardBg ?? "#FFFFFF"}
+            onChange={(v) => updateBranding("cardBg", v)}
+            isAr={isAr}
+          />
+          <ColorInput
+            label={isAr ? "تلوين الشعار (اتركه فارغاً لإيقافه)" : "Logo Tint (leave blank to disable)"}
+            value={draft.branding.logoTint ?? ""}
+            onChange={(v) => updateBranding("logoTint", v.trim() || null)}
             isAr={isAr}
           />
         </SectionCard>
