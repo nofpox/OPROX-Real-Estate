@@ -623,14 +623,22 @@ export default function DashboardScreen() {
               />
             )}
           </View>
-          <Pressable style={S.notifBtn} onPress={() => setShowMessages(true)}>
-            <MaterialIcons name="notifications-none" size={22} color="#FFFFFF" />
-            {unreadLeadsCount > 0 && (
-              <View style={S.badge}>
-                <Text style={S.badgeText}>{unreadLeadsCount}</Text>
-              </View>
-            )}
-          </Pressable>
+          <View style={{ flexDirection: isAr ? "row-reverse" : "row", gap: 8 }}>
+            <Pressable
+              style={S.notifBtn}
+              onPress={() => router.push("/map-discovery")}
+            >
+              <MaterialIcons name="map" size={20} color="#FFFFFF" />
+            </Pressable>
+            <Pressable style={S.notifBtn} onPress={() => setShowMessages(true)}>
+              <MaterialIcons name="notifications-none" size={22} color="#FFFFFF" />
+              {unreadLeadsCount > 0 && (
+                <View style={S.badge}>
+                  <Text style={S.badgeText}>{unreadLeadsCount}</Text>
+                </View>
+              )}
+            </Pressable>
+          </View>
         </View>
         <View style={S.kpiRow}>
           <View style={S.kpi}>
