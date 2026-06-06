@@ -95,3 +95,21 @@ id = "fDLXLsTudcd-xgT1SuIea"
 uri = "file://attached_assets/generated_videos/rkz_cinematic_master.mp4"
 type = "video"
 title = "Rkz Cinematic Master — 28.5s · 1080p · 24fps"
+
+[[outputs]]
+id = "LhSY-5PBOkI6GJ7WsEvOo"
+uri = "file://attached_assets/generated_audio/rkz_voiceover.mp3"
+type = "audio"
+title = "rkz_voiceover"
+
+[[outputs]]
+id = "IqYI6aYypeXDk3Rf5cRPL"
+uri = "file://attached_assets/generated_audio/rkz_background_music.mp3"
+type = "audio"
+title = "rkz_najdi_ardah_cinematic"
+
+[[outputs]]
+id = "rU7-4iYEUtH2iAokp7nr0"
+uri = "file://attached_assets/generated_videos/rkz_cinematic_final.mp4"
+type = "video"
+title = "Rkz Cinematic Final — 37s · 1080p · Voiceover + Najdi Ardah Score"
