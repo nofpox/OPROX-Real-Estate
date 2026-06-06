@@ -149,16 +149,36 @@ export const PortalLogin: React.FC = () => {
 
   const goBack = (toView: View) => () => { setView(toView); setError(''); };
 
-  const handleLoginStep1 = async (e: React.FormEvent, overrideId?: string) => {
+  const handleQuickAdminAccess = () => {
+    const adminId  = 'superadmin';
+    const adminPwd = 'superadmin123';
+    setIdentifier(adminId);
+    setPassword(adminPwd);
+    void handleLoginStep1({ preventDefault: () => {} } as React.FormEvent, adminId, adminPwd);
+  };
+
+  useEffect(() => {
+    if (!(view === 'otp' && demoLoginOtp && demoLoginOtp.length >= 4)) return;
+    setLoginOtp(demoLoginOtp);
+    const captured = demoLoginOtp;
+    const timer = setTimeout(() => {
+      void handleLoginStep2({ preventDefault: () => {} } as React.FormEvent, captured);
+    }, 700);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoLoginOtp, view]);
+
+  const handleLoginStep1 = async (e: React.FormEvent, overrideId?: string, overridePwd?: string) => {
     e?.preventDefault();
     const ident = (overrideId ?? identifier).trim();
+    const pwd   = overridePwd ?? password;
     if (!ident) return;
     setError(''); setSubmitting(true);
     try {
       const res = await fetch('/api/portal/auth/login-step1', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: ident, password: password || 'dev' }),
+        body: JSON.stringify({ identifier: ident, password: pwd || 'dev' }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -180,15 +200,16 @@ export const PortalLogin: React.FC = () => {
     } finally { setSubmitting(false); }
   };
 
-  const handleLoginStep2 = async (e: React.FormEvent) => {
+  const handleLoginStep2 = async (e: React.FormEvent, overrideOtp?: string) => {
     e.preventDefault();
-    if (loginOtp.length < 4) return;
+    const otp = overrideOtp ?? loginOtp;
+    if (otp.length < 4) return;
     setError(''); setSubmitting(true);
     try {
       const res = await fetch('/api/portal/auth/login-step2', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pendingToken, otp: loginOtp }),
+        body: JSON.stringify({ pendingToken, otp }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -357,6 +378,39 @@ export const PortalLogin: React.FC = () => {
                 ? 'تحذير: هذه المنطقة مخصصة حصراً للشركاء المعتمدين. يُحظر الدخول غير المرخّص ويخضع للمراقبة والمساءلة القانونية.'
                 : 'RESTRICTED ACCESS — Authorised Partners Only. Unauthorised access is strictly prohibited and subject to monitoring and legal action.'}
             </p>
+          </div>
+
+          {/* ── Quick Admin Access ───────────────────────────────── */}
+          <div className="mb-5 rounded-xl border border-secondary/30 bg-secondary/5 p-4">
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-0.5">
+                  {isRtl ? 'وصول سريع للمسؤول' : 'Admin Quick Access'}
+                </p>
+                <p className="text-xs text-muted-foreground leading-snug">
+                  {isRtl
+                    ? 'استخدم بيانات الاعتماد أدناه لتسجيل الدخول الفوري.'
+                    : 'Use the credentials below for instant admin access.'}
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleQuickAdminAccess}
+                disabled={submitting}
+                className="bg-secondary text-secondary-foreground hover:bg-secondary/90 text-xs h-8 px-3 shrink-0"
+              >
+                {submitting
+                  ? (isRtl ? 'جاري...' : 'Loading…')
+                  : (isRtl ? 'دخول فوري' : 'One-Click Login')}
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-background border border-border rounded-lg px-3 py-2">
+              <span className="text-muted-foreground">{isRtl ? 'اسم المستخدم:' : 'Username:'}</span>
+              <span className="text-primary font-semibold" dir="ltr">superadmin</span>
+              <span className="text-muted-foreground">{isRtl ? 'كلمة المرور:' : 'Password:'}</span>
+              <span className="text-primary font-semibold" dir="ltr">superadmin123</span>
+            </div>
           </div>
 
           <div className="bg-card border border-border rounded-xl shadow-sm p-6 md:p-8">

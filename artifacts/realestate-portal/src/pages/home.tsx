@@ -146,25 +146,47 @@ export const Home: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {services.map((svc, i) => (
-              <div
-                key={i}
-                className="bg-card p-8 rounded-2xl border border-border hover:border-secondary hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
-              >
-                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-6 group-hover:bg-secondary/20 transition-colors">
-                  {svc.imageUrl
-                    ? <img src={svc.imageUrl} alt="" className="w-full h-full object-cover rounded-xl" />
-                    : <Building2 className="h-6 w-6 text-secondary" />
-                  }
-                </div>
-                <h3 className="text-lg font-bold text-primary mb-3">
-                  {isRtl ? svc.titleAr : svc.titleEn}
-                </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                  {isRtl ? svc.descAr : svc.descEn}
-                </p>
-              </div>
-            ))}
+            {services.map((svc, i) => {
+              const slug = (['hotel', 'compound', 'corporate'] as const)[i] ?? 'hotel';
+              return (
+                <Link
+                  key={i}
+                  href={`/services/${slug}`}
+                  className="group relative bg-card rounded-2xl border border-border overflow-hidden hover:border-secondary hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col"
+                >
+                  {/* Image */}
+                  <div className="relative aspect-video overflow-hidden bg-primary/10 shrink-0">
+                    {svc.imageUrl
+                      ? <img
+                          src={svc.imageUrl}
+                          alt={isRtl ? svc.titleAr : svc.titleEn}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      : <div className="w-full h-full flex items-center justify-center">
+                          <Building2 className="h-12 w-12 text-secondary/30" />
+                        </div>
+                    }
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  </div>
+                  {/* Content */}
+                  <div className="flex flex-col flex-1 p-6">
+                    <h3 className="text-lg font-bold text-primary mb-2">
+                      {isRtl ? svc.titleAr : svc.titleEn}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed flex-1">
+                      {isRtl ? svc.descAr : svc.descEn}
+                    </p>
+                    <div className="mt-5 flex items-center gap-1.5 text-secondary text-sm font-semibold">
+                      {isRtl ? 'اعرف المزيد' : 'View Details'}
+                      {isRtl
+                        ? <ArrowLeft  className="h-4 w-4" />
+                        : <ArrowRight className="h-4 w-4" />}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

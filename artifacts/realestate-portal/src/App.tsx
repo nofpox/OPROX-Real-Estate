@@ -20,6 +20,7 @@ import { PortalRegister } from "@/pages/portal-register";
 import { PortalDashboard } from "@/pages/portal-dashboard";
 import { Join } from "@/pages/join";
 import { BuyerDashboard } from "@/pages/buyer-dashboard";
+import { ServiceDetail } from "@/pages/service-detail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/portal/register" component={PortalRegister} />
       <Route path="/portal/dashboard" component={PortalDashboard} />
       <Route path="/portal/buyer" component={BuyerDashboard} />
+      <Route path="/services/:slug" component={ServiceDetail} />
       <Route component={NotFound} />
     </Switch>
   );
