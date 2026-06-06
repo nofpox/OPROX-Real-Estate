@@ -2,15 +2,17 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from "expo-web-browser";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,60 +22,61 @@ import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
-const PLATFORM_ITEMS = [
-  { id: "aqar", name: "عقار", icon: "home" as const, color: "#2563EB", connected: true },
-  { id: "bayut", name: "بيوت", icon: "villa" as const, color: "#7C3AED", connected: true },
-  { id: "wasalt", name: "وصلت", icon: "location-on" as const, color: "#059669", connected: false },
-  { id: "property_finder", name: "Property Finder", icon: "apartment" as const, color: "#D97706", connected: false },
-];
+// Admin PIN (hidden gate — 4 digits)
+const ADMIN_PIN = "0786";
+// Taps on version text required to surface the PIN modal
+const PIN_TAP_THRESHOLD = 7;
 
 export default function SettingsScreen() {
-  const colors = useColors();
-  const insets = useSafeAreaInsets();
+  const colors  = useColors();
+  const insets  = useSafeAreaInsets();
   const { user, setUser, properties } = useApp();
   const { config } = useConfig();
   const { t, isAr } = useLocale();
 
+  const [autoRenew,  setAutoRenew]  = useState(true);
+  const [notifs,     setNotifs]     = useState(true);
   const [authorized, setAuthorized] = useState(user?.authorized ?? false);
-  const [autoRenew, setAutoRenew] = useState(true);
-  const [notifs, setNotifs] = useState(true);
-  const [analysisDisabled, setAnalysisDisabled] = useState(false);
-  const [killswitchSaving, setKillswitchSaving] = useState(false);
-  const [killswitchSaved, setKillswitchSaved] = useState(false);
 
-  const apiBase = Platform.OS === "web"
-    ? "/api"
-    : "https://property-dashboard-nofabark.replit.app/api";
+  // ── Admin PIN gate ──────────────────────────────────────────────────────────
+  const [pinTapCount,   setPinTapCount]   = useState(0);
+  const [showPinModal,  setShowPinModal]  = useState(false);
+  const [pinValue,      setPinValue]      = useState("");
+  const [pinError,      setPinError]      = useState(false);
+  const pinInputRef = useRef<TextInput>(null);
+  const tapResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (!user?.authorized) return;
-    fetch(`${apiBase}/rkz/analysis-killswitch`)
-      .then((r) => r.json())
-      .then((d: { enabled?: boolean }) => setAnalysisDisabled(d.enabled ?? false))
-      .catch(() => {});
-  }, [user?.authorized]);
-
-  async function toggleAnalysisKillswitch(value: boolean) {
-    setKillswitchSaving(true);
-    setKillswitchSaved(false);
-    try {
-      await fetch(`${apiBase}/rkz/analysis-killswitch`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled: value }),
-      });
-      setAnalysisDisabled(value);
-      setKillswitchSaved(true);
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setTimeout(() => setKillswitchSaved(false), 2000);
-    } catch {
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    } finally {
-      setKillswitchSaving(false);
+  function handleVersionTap() {
+    const next = pinTapCount + 1;
+    setPinTapCount(next);
+    if (tapResetTimer.current) clearTimeout(tapResetTimer.current);
+    tapResetTimer.current = setTimeout(() => setPinTapCount(0), 2500);
+    if (next >= PIN_TAP_THRESHOLD) {
+      setPinTapCount(0);
+      setPinValue("");
+      setPinError(false);
+      setShowPinModal(true);
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setTimeout(() => pinInputRef.current?.focus(), 300);
     }
   }
 
-  const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
+  function handlePinSubmit() {
+    if (pinValue === ADMIN_PIN) {
+      setShowPinModal(false);
+      setPinValue("");
+      setPinError(false);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.push("/admin");
+    } else {
+      setPinError(true);
+      setPinValue("");
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setTimeout(() => setPinError(false), 1500);
+    }
+  }
+
+  const topPad    = insets.top + (Platform.OS === "web" ? 67 : 0);
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84) + 16;
 
   function handleLogout() {
@@ -82,247 +85,179 @@ export default function SettingsScreen() {
       {
         text: t.settings.logoutConfirm,
         style: "destructive",
-        onPress: () => {
-          setUser(null);
-          router.replace("/login");
-        },
+        onPress: () => { setUser(null); router.replace("/login"); },
       },
     ]);
   }
-
-  const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-    header: {
-      backgroundColor: colors.navy,
-      paddingTop: topPad + 16,
-      paddingBottom: 24,
-      paddingHorizontal: 20,
-    },
-    headerTitle: {
-      color: "#FFFFFF",
-      fontSize: 20,
-      fontFamily: "Inter_700Bold",
-      marginBottom: 4,
-      textAlign: isAr ? "right" : "left",
-    },
-    headerSub: {
-      color: "rgba(255,255,255,0.55)",
-      fontSize: 14,
-      fontFamily: "Inter_400Regular",
-      textAlign: isAr ? "right" : "left",
-    },
-    scroll: { flex: 1 },
-    profileCard: {
-      backgroundColor: colors.card,
-      marginHorizontal: 16,
-      marginTop: 16,
-      borderRadius: 16,
-      padding: 20,
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "center",
-      gap: 16,
-      shadowColor: "#000",
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      elevation: 1,
-    },
-    avatar: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: colors.navy,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    avatarText: { color: "#FFFFFF", fontSize: 22, fontFamily: "Inter_700Bold" },
-    profileName: {
-      fontSize: 17,
-      fontFamily: "Inter_700Bold",
-      color: colors.foreground,
-      textAlign: isAr ? "right" : "left",
-    },
-    profilePhone: {
-      fontSize: 14,
-      fontFamily: "Inter_400Regular",
-      color: colors.mutedForeground,
-      marginTop: 2,
-    },
-    profileStats: {
-      marginTop: 6,
-      flexDirection: isAr ? "row-reverse" : "row",
-      gap: 16,
-    },
-    profileStat: { fontSize: 12, fontFamily: "Inter_500Medium", color: colors.gold },
-    section: { marginTop: 20, paddingHorizontal: 16 },
-    sectionTitle: {
-      fontSize: 13,
-      fontFamily: "Inter_600SemiBold",
-      color: colors.mutedForeground,
-      marginBottom: 10,
-      paddingHorizontal: 4,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-      textAlign: isAr ? "right" : "left",
-    },
-    settingCard: {
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      overflow: "hidden",
-      shadowColor: "#000",
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      elevation: 1,
-    },
-    settingRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      gap: 12,
-    },
-    settingDivider: { height: 1, backgroundColor: colors.border, marginLeft: 52 },
-    settingIconBox: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    settingLabel: {
-      flex: 1,
-      fontSize: 15,
-      fontFamily: "Inter_500Medium",
-      color: colors.foreground,
-      textAlign: isAr ? "right" : "left",
-    },
-    authCard: {
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
-      shadowColor: "#000",
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      elevation: 1,
-    },
-    authTitle: {
-      fontSize: 15,
-      fontFamily: "Inter_700Bold",
-      color: colors.foreground,
-      marginBottom: 6,
-      textAlign: isAr ? "right" : "left",
-    },
-    authDesc: {
-      fontSize: 13,
-      fontFamily: "Inter_400Regular",
-      color: colors.mutedForeground,
-      lineHeight: 20,
-      marginBottom: 14,
-      textAlign: isAr ? "right" : "left",
-    },
-    authRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    authStatus: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
-    platCard: {
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      overflow: "hidden",
-      shadowColor: "#000",
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      elevation: 1,
-    },
-    platRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      gap: 12,
-    },
-    platIcon: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    platName: {
-      flex: 1,
-      fontSize: 15,
-      fontFamily: "Inter_500Medium",
-      color: colors.foreground,
-      textAlign: isAr ? "right" : "left",
-    },
-    connectedBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-    connectedText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
-    logoutBtn: {
-      marginHorizontal: 16,
-      marginTop: 20,
-      borderRadius: 14,
-      height: 52,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "#FEF2F2",
-      flexDirection: "row",
-      gap: 8,
-    },
-    logoutText: { fontSize: 15, fontFamily: "Inter_600SemiBold", color: colors.destructive },
-    version: {
-      textAlign: "center",
-      marginTop: 16,
-      color: colors.mutedForeground,
-      fontSize: 12,
-      fontFamily: "Inter_400Regular",
-    },
-  });
 
   const publishedCount = properties.filter((p) =>
     p.platforms.some((x) => x.status === "published")
   ).length;
 
+  const S = StyleSheet.create({
+    container:   { flex: 1, backgroundColor: colors.background },
+    header: {
+      backgroundColor: colors.navy,
+      paddingTop: topPad + 14,
+      paddingBottom: 22,
+      paddingHorizontal: 20,
+    },
+    headerRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    headerTextBlock: { flex: 1 },
+    headerTitle: {
+      color: "#FFFFFF", fontSize: 20, fontFamily: "Inter_700Bold", marginBottom: 3,
+      textAlign: isAr ? "right" : "left",
+    },
+    headerSub: {
+      color: "rgba(255,255,255,0.52)", fontSize: 14, fontFamily: "Inter_400Regular",
+      textAlign: isAr ? "right" : "left",
+    },
+    logoutIconBtn: {
+      width: 38, height: 38, borderRadius: 19,
+      backgroundColor: "rgba(255,255,255,0.08)",
+      alignItems: "center", justifyContent: "center",
+    },
+    scroll:   { flex: 1 },
+    profileCard: {
+      backgroundColor: colors.card,
+      marginHorizontal: 16, marginTop: 16, borderRadius: 16, padding: 20,
+      flexDirection: isAr ? "row-reverse" : "row", alignItems: "center", gap: 16,
+      shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1,
+    },
+    avatar: {
+      width: 56, height: 56, borderRadius: 28,
+      backgroundColor: colors.navy, alignItems: "center", justifyContent: "center",
+    },
+    avatarText:    { color: "#FFFFFF", fontSize: 22, fontFamily: "Inter_700Bold" },
+    profileName:   { fontSize: 17, fontFamily: "Inter_700Bold", color: colors.foreground, textAlign: isAr ? "right" : "left" },
+    profilePhone:  { fontSize: 14, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginTop: 2 },
+    profileStats:  { marginTop: 6, flexDirection: isAr ? "row-reverse" : "row", gap: 16 },
+    profileStat:   { fontSize: 12, fontFamily: "Inter_500Medium", color: colors.gold },
+    section:       { marginTop: 20, paddingHorizontal: 16 },
+    sectionTitle: {
+      fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground,
+      marginBottom: 10, paddingHorizontal: 4, textTransform: "uppercase",
+      letterSpacing: 0.5, textAlign: isAr ? "right" : "left",
+    },
+    card: {
+      backgroundColor: colors.card, borderRadius: 16, overflow: "hidden",
+      shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1,
+    },
+    row: {
+      flexDirection: isAr ? "row-reverse" : "row", alignItems: "center",
+      paddingHorizontal: 16, paddingVertical: 14, gap: 12,
+    },
+    divider:       { height: 1, backgroundColor: colors.border, marginLeft: 52 },
+    iconBox: {
+      width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center",
+    },
+    rowLabel: {
+      flex: 1, fontSize: 15, fontFamily: "Inter_500Medium", color: colors.foreground,
+      textAlign: isAr ? "right" : "left",
+    },
+    authCard: {
+      backgroundColor: colors.card, borderRadius: 16, padding: 16,
+      shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1,
+    },
+    authTitle:  { fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 6, textAlign: isAr ? "right" : "left" },
+    authDesc:   { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, lineHeight: 20, marginBottom: 14, textAlign: isAr ? "right" : "left" },
+    authRow:    { flexDirection: isAr ? "row-reverse" : "row", justifyContent: "space-between", alignItems: "center" },
+    authStatus: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+    connectedBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+    connectedText:  { fontSize: 12, fontFamily: "Inter_600SemiBold" },
+    versionText: {
+      textAlign: "center", marginTop: 16, marginBottom: 4,
+      color: colors.mutedForeground, fontSize: 12, fontFamily: "Inter_400Regular",
+    },
+
+    // PIN modal
+    modalOverlay: {
+      flex: 1, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center",
+    },
+    pinBox: {
+      backgroundColor: colors.card, borderRadius: 20, padding: 28,
+      width: "80%", maxWidth: 340, alignItems: "center",
+      shadowColor: "#000", shadowOpacity: 0.3, shadowRadius: 20, elevation: 12,
+    },
+    pinIconCircle: {
+      width: 60, height: 60, borderRadius: 30,
+      backgroundColor: "rgba(201,168,76,0.12)",
+      alignItems: "center", justifyContent: "center", marginBottom: 16,
+    },
+    pinTitle:   { fontSize: 17, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 6 },
+    pinSub:     { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.mutedForeground, marginBottom: 20, textAlign: "center" },
+    pinInput: {
+      width: "100%", height: 52, borderWidth: 1.5,
+      borderColor: pinError ? colors.destructive : colors.border,
+      borderRadius: 12, paddingHorizontal: 16,
+      fontSize: 24, fontFamily: "Inter_700Bold", color: colors.foreground,
+      letterSpacing: 8, textAlign: "center",
+      backgroundColor: colors.background,
+    },
+    pinError: { color: colors.destructive, fontSize: 13, fontFamily: "Inter_500Medium", marginTop: 8 },
+    pinSubmit: {
+      marginTop: 16, width: "100%", height: 50, borderRadius: 13,
+      backgroundColor: colors.gold, alignItems: "center", justifyContent: "center",
+    },
+    pinSubmitText: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#0A1628" },
+    pinCancel: { marginTop: 12 },
+    pinCancelText: { fontSize: 14, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
+  });
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t.settings.title}</Text>
-        <Text style={styles.headerSub}>{t.settings.subtitle}</Text>
+    <View style={S.container}>
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
+      <View style={S.header}>
+        <View style={S.headerRow}>
+          <View style={S.headerTextBlock}>
+            <Text style={S.headerTitle}>{t.settings.title}</Text>
+            <Text style={S.headerSub}>{t.settings.subtitle}</Text>
+          </View>
+          <Pressable style={S.logoutIconBtn} onPress={handleLogout} hitSlop={8}>
+            <MaterialIcons name="logout" size={18} color="rgba(255,255,255,0.7)" />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView
-        style={styles.scroll}
+        style={S.scroll}
         contentContainerStyle={{ paddingBottom: bottomPad }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{user?.phone?.charAt(3) ?? "م"}</Text>
+        {/* Profile card */}
+        <View style={S.profileCard}>
+          <View style={S.avatar}>
+            <Text style={S.avatarText}>{user?.phone?.charAt(3) ?? "م"}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.profileName}>{user?.name ?? t.settings.ownerFallback}</Text>
-            <Text style={styles.profilePhone}>{user ? `+966 ${user.phone}` : "—"}</Text>
-            <View style={styles.profileStats}>
-              <Text style={styles.profileStat}>{t.settings.propertyCount(properties.length)}</Text>
-              <Text style={styles.profileStat}>{t.settings.publishedCount(publishedCount)}</Text>
+            <Text style={S.profileName}>{user?.name ?? t.settings.ownerFallback}</Text>
+            <Text style={S.profilePhone}>{user ? `+966 ${user.phone}` : "—"}</Text>
+            <View style={S.profileStats}>
+              <Text style={S.profileStat}>{t.settings.propertyCount(properties.length)}</Text>
+              <Text style={S.profileStat}>{t.settings.publishedCount(publishedCount)}</Text>
             </View>
           </View>
         </View>
 
-        {/* Authorization */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t.settings.authSection}</Text>
-          <View style={styles.authCard}>
-            <Text style={styles.authTitle}>{t.settings.authTitle}</Text>
-            <Text style={styles.authDesc}>{t.settings.authDesc}</Text>
-            <View style={styles.authRow}>
-              <Text style={[styles.authStatus, { color: authorized ? colors.success : colors.mutedForeground }]}>
+        {/* Authorization toggle */}
+        <View style={S.section}>
+          <Text style={S.sectionTitle}>{t.settings.authSection}</Text>
+          <View style={S.authCard}>
+            <Text style={S.authTitle}>{t.settings.authTitle}</Text>
+            <Text style={S.authDesc}>{t.settings.authDesc}</Text>
+            <View style={S.authRow}>
+              <Text style={[S.authStatus, { color: authorized ? colors.success : colors.mutedForeground }]}>
                 {authorized ? t.settings.authEnabled : t.settings.authDisabled}
               </Text>
               <Switch
                 value={authorized}
                 onValueChange={(v) => {
                   setAuthorized(v);
-                  Haptics.selectionAsync();
+                  void Haptics.selectionAsync();
                   setUser(user ? { ...user, authorized: v } : null);
                 }}
                 trackColor={{ false: colors.border, true: colors.gold }}
@@ -333,21 +268,19 @@ export default function SettingsScreen() {
         </View>
 
         {/* Platform connections */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t.settings.platformsSection}</Text>
-          <View style={styles.platCard}>
-            {config.platforms.filter(p => p.enabled).map((item, i) => (
+        <View style={S.section}>
+          <Text style={S.sectionTitle}>{t.settings.platformsSection}</Text>
+          <View style={S.card}>
+            {config.platforms.filter((p) => p.enabled).map((item, i) => (
               <React.Fragment key={item.id}>
-                {i > 0 && <View style={styles.settingDivider} />}
-                <View style={styles.platRow}>
-                  <View style={[styles.platIcon, { backgroundColor: item.color + "20" }]}>
+                {i > 0 && <View style={S.divider} />}
+                <View style={S.row}>
+                  <View style={[S.iconBox, { backgroundColor: item.color + "20" }]}>
                     <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: item.color }} />
                   </View>
-                  <Text style={styles.platName}>{isAr ? item.labelAr : item.labelEn}</Text>
-                  <View style={[styles.connectedBadge, { backgroundColor: "#DCFCE7" }]}>
-                    <Text style={[styles.connectedText, { color: "#16A34A" }]}>
-                      {t.settings.connected}
-                    </Text>
+                  <Text style={S.rowLabel}>{isAr ? item.labelAr : item.labelEn}</Text>
+                  <View style={[S.connectedBadge, { backgroundColor: "#DCFCE7" }]}>
+                    <Text style={[S.connectedText, { color: "#16A34A" }]}>{t.settings.connected}</Text>
                   </View>
                 </View>
               </React.Fragment>
@@ -356,70 +289,64 @@ export default function SettingsScreen() {
         </View>
 
         {/* Preferences */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t.settings.prefsSection}</Text>
-          <View style={styles.settingCard}>
-            <View style={styles.settingRow}>
-              <View style={[styles.settingIconBox, { backgroundColor: "#EFF6FF" }]}>
+        <View style={S.section}>
+          <Text style={S.sectionTitle}>{t.settings.prefsSection}</Text>
+          <View style={S.card}>
+            <View style={S.row}>
+              <View style={[S.iconBox, { backgroundColor: "#EFF6FF" }]}>
                 <MaterialIcons name="autorenew" size={20} color="#2563EB" />
               </View>
-              <Text style={styles.settingLabel}>{t.settings.autoRenew}</Text>
+              <Text style={S.rowLabel}>{t.settings.autoRenew}</Text>
               <Switch
                 value={autoRenew}
-                onValueChange={(v) => { setAutoRenew(v); Haptics.selectionAsync(); }}
+                onValueChange={(v) => { setAutoRenew(v); void Haptics.selectionAsync(); }}
                 trackColor={{ false: colors.border, true: colors.gold }}
                 thumbColor="#FFFFFF"
               />
             </View>
-            <View style={styles.settingDivider} />
-            <View style={styles.settingRow}>
-              <View style={[styles.settingIconBox, { backgroundColor: "#FFF7ED" }]}>
+            <View style={S.divider} />
+            <View style={S.row}>
+              <View style={[S.iconBox, { backgroundColor: "#FFF7ED" }]}>
                 <MaterialIcons name="notifications-active" size={20} color="#D97706" />
               </View>
-              <Text style={styles.settingLabel}>{t.settings.notifications}</Text>
+              <Text style={S.rowLabel}>{t.settings.notifications}</Text>
               <Switch
                 value={notifs}
-                onValueChange={(v) => { setNotifs(v); Haptics.selectionAsync(); }}
+                onValueChange={(v) => { setNotifs(v); void Haptics.selectionAsync(); }}
                 trackColor={{ false: colors.border, true: colors.gold }}
                 thumbColor="#FFFFFF"
               />
             </View>
-            <View style={styles.settingDivider} />
-            <Pressable style={styles.settingRow}>
-              <View style={[styles.settingIconBox, { backgroundColor: "#F0FDF4" }]}>
+            <View style={S.divider} />
+            <Pressable style={S.row}>
+              <View style={[S.iconBox, { backgroundColor: "#F0FDF4" }]}>
                 <MaterialIcons name="support-agent" size={20} color="#16A34A" />
               </View>
-              <Text style={styles.settingLabel}>{t.settings.support}</Text>
-              <MaterialIcons
-                name={isAr ? "chevron-left" : "chevron-right"}
-                size={18}
-                color={colors.mutedForeground}
-              />
+              <Text style={S.rowLabel}>{t.settings.support}</Text>
+              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
             </Pressable>
           </View>
         </View>
 
-        {/* Company / About Rkz */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t.settings.companySection}</Text>
-          <View style={styles.settingCard}>
+        {/* Company / About */}
+        <View style={S.section}>
+          <Text style={S.sectionTitle}>{t.settings.companySection}</Text>
+          <View style={S.card}>
             <Pressable
-              style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.8 }]}
+              style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
               onPress={async () => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  const url = "https://property-dashboard-nofabark.replit.app/realestate/";
-                await WebBrowser.openBrowserAsync(url, {
-                  presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-                  toolbarColor: "#0A1628",
-                  controlsColor: "#D4A843",
-                });
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                await WebBrowser.openBrowserAsync(
+                  "https://property-dashboard-nofabark.replit.app/realestate/",
+                  { presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET, toolbarColor: "#0A1628", controlsColor: "#D4A843" }
+                );
               }}
             >
-              <View style={[styles.settingIconBox, { backgroundColor: "#FEF9EC" }]}>
+              <View style={[S.iconBox, { backgroundColor: "#FEF9EC" }]}>
                 <MaterialIcons name="language" size={20} color="#D4A843" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.settingLabel}>{t.settings.visitWebsite}</Text>
+                <Text style={S.rowLabel}>{t.settings.visitWebsite}</Text>
                 <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
                   {t.settings.visitWebsiteDesc}
                 </Text>
@@ -430,21 +357,18 @@ export default function SettingsScreen() {
         </View>
 
         {/* Investor Portal */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t.portal.menuTitle}</Text>
-          <View style={styles.settingCard}>
+        <View style={S.section}>
+          <Text style={S.sectionTitle}>{t.portal.menuTitle}</Text>
+          <View style={S.card}>
             <Pressable
-              style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.8 }]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                router.push("/investor-portal");
-              }}
+              style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
+              onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push("/investor-portal"); }}
             >
-              <View style={[styles.settingIconBox, { backgroundColor: "#FEF3C7" }]}>
+              <View style={[S.iconBox, { backgroundColor: "#FEF3C7" }]}>
                 <MaterialIcons name="lock" size={20} color="#B45309" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.settingLabel}>{t.portal.menuTitle}</Text>
+                <Text style={S.rowLabel}>{t.portal.menuTitle}</Text>
                 <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
                   {t.portal.menuDesc}
                 </Text>
@@ -454,68 +378,57 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Admin Control Panel — only for authorized users */}
-        {user?.authorized && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t.admin.adminEntry}</Text>
-            <View style={styles.settingCard}>
-              <Pressable
-                style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.8 }]}
-                onPress={() => router.push("/admin")}
-              >
-                <View style={[styles.settingIconBox, { backgroundColor: "#FEF3C7" }]}>
-                  <MaterialIcons name="security" size={20} color="#D97706" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.settingLabel}>{t.admin.title}</Text>
-                  <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
-                    {t.admin.adminEntryDesc}
-                  </Text>
-                </View>
-                <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
-              </Pressable>
-            </View>
-          </View>
-        )}
-
-        {/* AI Decision Engine Kill-Switch — admin only */}
-        {user?.authorized && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t.analysis.adminSection}</Text>
-            <View style={styles.settingCard}>
-              <View style={styles.settingRow}>
-                <View style={[styles.settingIconBox, { backgroundColor: analysisDisabled ? "#FEE2E2" : "#F0FDF4" }]}>
-                  <MaterialIcons name="query-stats" size={20} color={analysisDisabled ? "#EF4444" : "#16A34A"} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.settingLabel}>{t.analysis.killswitchLabel}</Text>
-                  <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
-                    {killswitchSaved ? t.analysis.killswitchSaved : t.analysis.killswitchDesc}
-                  </Text>
-                </View>
-                <Switch
-                  value={analysisDisabled}
-                  onValueChange={(v) => { void toggleAnalysisKillswitch(v); }}
-                  disabled={killswitchSaving}
-                  trackColor={{ false: colors.border, true: "#EF4444" }}
-                  thumbColor="#FFFFFF"
-                />
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Logout */}
-        <Pressable
-          style={({ pressed }) => [styles.logoutBtn, pressed && { opacity: 0.8 }]}
-          onPress={handleLogout}
-        >
-          <MaterialIcons name="logout" size={18} color={colors.destructive} />
-          <Text style={styles.logoutText}>{t.settings.logout}</Text>
+        {/* Version — tap 7× to open admin gate */}
+        <Pressable onPress={handleVersionTap}>
+          <Text style={S.versionText}>{t.settings.version}</Text>
         </Pressable>
-
-        <Text style={styles.version}>{t.settings.version}</Text>
       </ScrollView>
+
+      {/* ── Admin PIN Modal ──────────────────────────────────────────────────── */}
+      <Modal
+        visible={showPinModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPinModal(false)}
+      >
+        <Pressable style={S.modalOverlay} onPress={() => setShowPinModal(false)}>
+          <Pressable style={S.pinBox} onPress={(e) => e.stopPropagation()}>
+            <View style={S.pinIconCircle}>
+              <MaterialIcons name="admin-panel-settings" size={28} color={colors.gold} />
+            </View>
+            <Text style={S.pinTitle}>{isAr ? "وصول المشرف" : "Admin Access"}</Text>
+            <Text style={S.pinSub}>
+              {isAr ? "أدخل رمز المشرف للمتابعة" : "Enter admin PIN to continue"}
+            </Text>
+            <TextInput
+              ref={pinInputRef}
+              style={S.pinInput}
+              value={pinValue}
+              onChangeText={(v) => { setPinError(false); setPinValue(v.replace(/\D/g, "").slice(0, 4)); }}
+              placeholder="••••"
+              placeholderTextColor={colors.mutedForeground}
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={4}
+              onSubmitEditing={handlePinSubmit}
+              returnKeyType="go"
+            />
+            {pinError && (
+              <Text style={S.pinError}>{isAr ? "رمز غير صحيح" : "Incorrect PIN"}</Text>
+            )}
+            <Pressable
+              style={[S.pinSubmit, pinValue.length < 4 && { opacity: 0.5 }]}
+              onPress={handlePinSubmit}
+              disabled={pinValue.length < 4}
+            >
+              <Text style={S.pinSubmitText}>{isAr ? "دخول" : "Enter"}</Text>
+            </Pressable>
+            <Pressable style={S.pinCancel} onPress={() => setShowPinModal(false)}>
+              <Text style={S.pinCancelText}>{isAr ? "إلغاء" : "Cancel"}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
