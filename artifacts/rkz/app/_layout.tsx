@@ -25,6 +25,7 @@ function RootLayoutNav() {
   return (
     <Stack initialRouteName={__DEV__ ? "(tabs)" : "login"} screenOptions={{ headerShown: false }}>
       <Stack.Screen name="login" />
+      <Stack.Screen name="welcome" options={{ animation: "fade", gestureEnabled: false }} />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="admin" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen name="investor-portal" options={{ headerShown: false, presentation: "modal" }} />

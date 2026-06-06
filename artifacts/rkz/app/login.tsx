@@ -134,7 +134,8 @@ export default function LoginScreen() {
     setUser({ phone: fullPhone, email: email.trim() || undefined, authorized: true });
     setLoading(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.replace("/(tabs)");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    router.replace("/welcome" as any);
   }
 
   // ── Spacing tokens (responsive) ──────────────────────────────────────────
