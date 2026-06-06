@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
+  Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -16,6 +17,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useApp } from "@/context/AppContext";
@@ -23,6 +25,8 @@ import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 import { setAuthToken } from "@/constants/api";
+
+const RKAZ_LOGO = require("@/assets/images/rkaz-logo.jpg");
 
 const { width } = Dimensions.get("window");
 
@@ -158,12 +162,14 @@ export default function LoginScreen() {
     // ── Welcome ────────────────────────────────────────────────────────────
     welcomeScroll: { flex: 1 },
     logoBox: {
-      width: 64,
-      height: 64,
-      borderRadius: 16,
-      backgroundColor: colors.gold,
-      alignItems: "center",
-      justifyContent: "center",
+      alignSelf: "center",
+      marginTop: 16,
+      marginBottom: 12,
+    },
+    logoImage: {
+      width: 180,
+      height: 58,
+      resizeMode: "contain",
       alignSelf: "center",
       marginTop: 16,
       marginBottom: 12,
@@ -340,10 +346,7 @@ export default function LoginScreen() {
           contentContainerStyle={{ paddingHorizontal: 28, paddingTop: topPad, paddingBottom: bottomPad + 16 }}
           showsVerticalScrollIndicator={false}
         >
-          <View style={S.logoBox}>
-            <MaterialIcons name="home-work" size={32} color={colors.navy} />
-          </View>
-          <Text style={S.brandName}>{appName}</Text>
+          <Image source={RKAZ_LOGO} style={S.logoImage} />
           <Text style={S.tagline}>{dynTagline}</Text>
 
           <Text style={S.headline}>{dynHeadline}</Text>
@@ -396,10 +399,7 @@ export default function LoginScreen() {
         bounces={false}
       >
         <View style={S.top}>
-          <View style={S.logoBox}>
-            <MaterialIcons name="home-work" size={32} color={colors.navy} />
-          </View>
-          <Text style={S.brandName}>{appName}</Text>
+          <Image source={RKAZ_LOGO} style={S.logoImage} />
           <Text style={S.tagline}>{dynTagline}</Text>
         </View>
 

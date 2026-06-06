@@ -524,11 +524,15 @@ export default function DashboardScreen() {
             {config.branding.logoUrl ? (
               <Image
                 source={{ uri: config.branding.logoUrl }}
-                style={{ width: 90, height: 34, resizeMode: "contain" }}
+                style={{ width: 120, height: 40, resizeMode: "contain" }}
                 fadeDuration={0}
               />
             ) : (
-              <Text style={S.appName}>{config.branding.appName || "RKZ"}</Text>
+              <Image
+                source={require("@/assets/images/rkaz-logo.jpg")}
+                style={{ width: 120, height: 40, resizeMode: "contain" }}
+                fadeDuration={0}
+              />
             )}
           </View>
           <Pressable style={S.notifBtn}>
