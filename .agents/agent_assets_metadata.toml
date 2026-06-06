@@ -65,3 +65,27 @@ id = "HfNHDx2nWkAMmBnjYh_jo"
 uri = "file://grand-pms-standalone.zip"
 type = "unspecified"
 title = "Grand PMS — Standalone (no server)"
+
+[[outputs]]
+id = "xAN60vsU6X0acMz1RIUEG"
+uri = "file://attached_assets/generated_videos/clip1_falcon_desert_launch.mp4"
+type = "video"
+title = "Clip 1 — Falcon Desert Launch (8s)"
+
+[[outputs]]
+id = "l482Ym17HiSj6CGukV7aC"
+uri = "file://attached_assets/generated_videos/clip2_falcon_desert_flight.mp4"
+type = "video"
+title = "Clip 2 — Falcon Terrain Flight (8s)"
+
+[[outputs]]
+id = "Wb7UnSQ-3UHeZTHmiX7Mj"
+uri = "file://attached_assets/generated_videos/clip3_falcon_kafd_rkz_logo.mp4"
+type = "video"
+title = "Clip 3 — KAFD Entry with Rkz Logo (8s)"
+
+[[outputs]]
+id = "ZCdfKF-9yzKy6q97gMXUC"
+uri = "file://attached_assets/generated_videos/clip4_falcon_eye_zoom_tech.mp4"
+type = "video"
+title = "Clip 4 — Tech Eye Zoom (6s)"
