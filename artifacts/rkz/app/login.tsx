@@ -62,7 +62,7 @@ export default function LoginScreen() {
   const [step,       setStep]       = useState<Step>("welcome");
   const [phone,      setPhone]      = useState("");
   const [email,      setEmail]      = useState("");
-  const [otp,        setOtp]        = useState(["", "", "", "", "", ""]);
+  const [otp,        setOtp]        = useState(["", "", "", ""]);
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState("");
 
@@ -111,8 +111,8 @@ export default function LoginScreen() {
     const next = [...otp];
     next[index] = digit;
     setOtp(next);
-    if (digit && index < 5) otpRefs.current[index + 1]?.focus();
-    if (next.every((d) => d !== "") && next.join("").length === 6) {
+    if (digit && index < 3) otpRefs.current[index + 1]?.focus();
+    if (next.every((d) => d !== "") && next.join("").length === 4) {
       handleVerifyOtp(next);
     }
   }
@@ -125,7 +125,7 @@ export default function LoginScreen() {
 
   async function handleVerifyOtp(digits: string[]) {
     const code = digits.join("");
-    if (code.length < 6) {
+    if (code.length < 4) {
       setError(t.login.errorCode);
       shake();
       return;
@@ -293,7 +293,7 @@ export default function LoginScreen() {
     },
     otpRow: { flexDirection: "row", justifyContent: "center", gap: 10 },
     otpCell: {
-      width: (width - 56 - 50) / 6,
+      width: (width - 56 - 50) / 4,
       height: 58,
       borderRadius: 12,
       backgroundColor: "rgba(255,255,255,0.08)",
@@ -456,7 +456,7 @@ export default function LoginScreen() {
                 style={S.backBtn}
                 onPress={() => {
                   setStep("phone");
-                  setOtp(["", "", "", "", "", ""]);
+                  setOtp(["", "", "", ""]);
                   setError("");
                   setPendingKey(null);
                   setDemoOtp(null);
