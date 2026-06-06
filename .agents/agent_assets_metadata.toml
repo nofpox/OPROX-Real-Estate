@@ -6,6 +6,18 @@ uri = "file://artifacts/rkz/assets/images/icon.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "Ro1FlyRSXxrqoiVbFMBhU"
+uri = "file://artifacts/rkz-promo/public/images/falcon.png"
+type = "image"
+title = "Abstract falcon silhouette"
+
+[[generated]]
+id = "9XSEu49t4O9tf5srHO1ln"
+uri = "file://artifacts/rkz-promo/public/images/pattern.png"
+type = "image"
+title = "Gold geometric pattern"
+
 [[outputs]]
 id = "jCktAW9goz3sn4e0SeBUs"
 uri = "file://artifacts/rkz/qr.png"
@@ -125,3 +137,9 @@ id = "m-FFgRSXd3vgr8CGovKKk"
 uri = "file://attached_assets/generated_videos/rkz_cinematic_v3.mp4"
 type = "video"
 title = "Rkz Cinematic — 28.5s · 1080p · H.264 Main · 5 Mbps · Voiceover + Music"
+
+[[outputs]]
+id = "OJ4LT_bHFiMyzn31ZfDyb"
+uri = "file://artifacts/rkz-promo/public/audio/bg_music.mp3"
+type = "audio"
+title = "Rkz promo background music"
