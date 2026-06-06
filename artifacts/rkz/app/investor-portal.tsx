@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useApp } from "@/context/AppContext";
 import { ADMIN_EVENTS_KEY, AdminEvent } from "@/hooks/useAIAssistant";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
@@ -57,6 +58,14 @@ const LOCAL_CREDENTIALS: Record<string, { password: string; user: PortalUser }> 
   admin: {
     password: "admin123",
     user: { id: 1, username: "admin", displayName: "Admin", role: "owner" },
+  },
+  "nofabark@gmail.com": {
+    password: "admin123",
+    user: { id: 2, username: "nofabark", displayName: "Nofabark", role: "owner" },
+  },
+  nofabark: {
+    password: "admin123",
+    user: { id: 2, username: "nofabark", displayName: "Nofabark", role: "owner" },
   },
 };
 
@@ -144,6 +153,7 @@ export default function InvestorPortalScreen() {
   const insets  = useSafeAreaInsets();
   const { t, isAr } = useLocale();
   const tp = t.portal;
+  const { user: appUser } = useApp();
 
   const [view,        setView]        = useState<PortalView>("login");
   const [loading,     setLoading]     = useState(true);
@@ -240,6 +250,20 @@ export default function InvestorPortalScreen() {
 
   const s = makeStyles(colors, isAr, insets);
 
+  // If already authenticated in the main app, derive a portal user from
+  // the session — no separate login needed.
+  const autoPortalUser: PortalUser | null = appUser
+    ? {
+        id: 1,
+        username: appUser.phone,
+        displayName: appUser.name ?? appUser.phone,
+        role: "owner",
+      }
+    : null;
+
+  const effectiveUser = user ?? autoPortalUser;
+  const effectiveView: PortalView = effectiveUser ? "dashboard" : view;
+
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
@@ -248,7 +272,7 @@ export default function InvestorPortalScreen() {
     );
   }
 
-  if (view === "dashboard") {
+  if (effectiveView === "dashboard") {
     return (
       <Animated.View style={[s.container, { opacity: fadeAnim }]}>
         <View style={s.dashHeader}>
@@ -257,9 +281,9 @@ export default function InvestorPortalScreen() {
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={s.dashHeaderTitle}>{tp.dashboardTitle}</Text>
-            {user && (
+            {effectiveUser && (
               <Text style={s.dashHeaderSub} numberOfLines={1}>
-                {user.displayName} · {user.role}
+                {effectiveUser.displayName} · {effectiveUser.role}
               </Text>
             )}
           </View>

@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useApp } from "@/context/AppContext";
 import { type AppConfig, type FeatureItem, type PlatformConfig, type PinResult, DEFAULT_CONFIG, useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
@@ -386,14 +387,14 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
   const [opsLoading, setOpsLoading] = useState(false);
   const [clearingViol, setClearingViol] = useState(false);
 
-  const refreshOps = useCallback(async () => {
-    setOpsLoading(true);
-    await new Promise((r) => setTimeout(r, 400));
+  // showSpinner=true only for manual refresh button; auto-poll is silent
+  const refreshOps = useCallback(async (showSpinner = false) => {
+    if (showSpinner) setOpsLoading(true);
     setOpsChat([]);
     setOpsViolations([]);
     setOpsBuyers([]);
     setOpsRefreshed(new Date());
-    setOpsLoading(false);
+    if (showSpinner) setOpsLoading(false);
   }, []);
 
   async function clearViolations() {
@@ -404,8 +405,8 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
   }
 
   useEffect(() => {
-    refreshOps();
-    const id = setInterval(refreshOps, 30_000);
+    void refreshOps(false);
+    const id = setInterval(() => void refreshOps(false), 30_000);
     return () => clearInterval(id);
   }, [refreshOps]);
 
@@ -971,7 +972,7 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
               <Text style={[styles.opsStatText, { color: "#16A34A" }]}>{opsBuyers.length}</Text>
             </View>
             <Pressable
-              onPress={refreshOps}
+              onPress={() => void refreshOps(true)}
               disabled={opsLoading}
               style={({ pressed }) => [styles.opsRefreshBtn, pressed && { opacity: 0.7 }, opsLoading && { opacity: 0.5 }]}
             >
@@ -1127,19 +1128,24 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
 // Root export — PIN gate → Admin Panel
 // ─────────────────────────────────────────────────────────────────────────────
 export default function AdminScreen() {
+  const { user: appUser } = useApp();
   const { beginAdminSession } = useConfig();
   const [authorizedPin, setAuthorizedPin] = useState<string | null>(null);
 
-  // Save snapshot when screen mounts so we can roll back if user doesn't save
+  // Snapshot current config so we can roll back if user discards changes
   useEffect(() => {
     beginAdminSession();
   }, [beginAdminSession]);
 
-  if (!authorizedPin) {
+  // Users who already verified the settings-page PIN (user.authorized = true)
+  // have already proven their identity — skip the redundant second PIN gate.
+  const alreadyAuthorized = appUser?.authorized === true;
+
+  if (!authorizedPin && !alreadyAuthorized) {
     return <PinGate onUnlock={setAuthorizedPin} />;
   }
 
-  return <AdminPanel authorizedPin={authorizedPin} />;
+  return <AdminPanel authorizedPin={authorizedPin ?? "0000"} />;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
