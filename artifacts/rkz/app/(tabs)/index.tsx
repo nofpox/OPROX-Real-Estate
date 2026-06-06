@@ -20,6 +20,7 @@ import { ADMIN_EVENTS_KEY } from "@/hooks/useAIAssistant";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 import { useConfig } from "@/context/DynamicConfig";
+import HeatmapMapView, { HeatCell, HeatMetric } from "./HeatmapMapView";
 
 const NEGOTIATION_KEY    = "rkz_negotiation_requests";
 const DISCOVERY_FILTER_KEY = "rkz_discovery_filter";
@@ -83,32 +84,18 @@ function fmtPrice(n: number): string {
   return String(n);
 }
 
-// ── Heatmap synthetic intensity ────────────────────────────────────────────
-type HeatMetric = "occupancy" | "transactions";
-
-interface DistrictCell {
-  key: string;
-  city: string;
-  district: string;
-  count: number;
-  occupancy: number; // synthetic %
-  transactions: number; // synthetic deal count
-}
-
+// ── Heatmap data aggregation ───────────────────────────────────────────────
 function hashStr(str: string): number {
   let h = 0;
   for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
   return h;
 }
 
-function toHex2(v: number): string {
-  return Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0");
-}
-
 // Aggregate listings into per-district cells with deterministic synthetic
-// occupancy/transaction intensity. Data is illustrative (no live backend).
-function buildDistrictCells(listings: Listing[]): DistrictCell[] {
-  const map = new Map<string, DistrictCell>();
+// occupancy/transaction intensity. Returns HeatCell[] for HeatmapMapView.
+function buildDistrictCells(listings: Listing[]): HeatCell[] {
+  interface _Cell extends HeatCell { count: number }
+  const map = new Map<string, _Cell>();
   for (const l of listings) {
     const key = `${l.city}__${l.district}`;
     const existing = map.get(key);
@@ -121,18 +108,17 @@ function buildDistrictCells(listings: Listing[]): DistrictCell[] {
         city: l.city,
         district: l.district,
         count: 1,
-        occupancy: 45 + (h % 54), // 45–98%
-        transactions: 4 + (h % 22), // 4–25 base
+        occupancy: 45 + (h % 54),    // 45–98 %
+        transactions: 4 + (h % 22),  // 4–25 base
       });
     }
   }
-  // Density boost: more listings in a district → higher intensity.
-  const cells = Array.from(map.values()).map((c) => ({
+  const cells = Array.from(map.values()).map(({ count, ...c }) => ({
     ...c,
-    occupancy: Math.min(99, c.occupancy + (c.count - 1) * 3),
-    transactions: c.transactions + (c.count - 1) * 5,
+    occupancy: Math.min(99, c.occupancy + (count - 1) * 3),
+    transactions: c.transactions + (count - 1) * 5,
   }));
-  return cells.sort((a, b) => b.count - a.count || b.occupancy - a.occupancy);
+  return cells.sort((a, b) => b.occupancy - a.occupancy);
 }
 
 // ── Property Card ─────────────────────────────────────────────────────────
@@ -287,14 +273,6 @@ export default function DiscoveryMapScreen() {
     : ALL_LISTINGS.filter((l) => l.type === activeType);
 
   const cells = useMemo(() => buildDistrictCells(filtered), [filtered]);
-  const metricMax = useMemo(() => {
-    if (cells.length === 0) return 1;
-    return Math.max(...cells.map((c) => (heatMetric === "occupancy" ? c.occupancy : c.transactions)));
-  }, [cells, heatMetric]);
-  const metricMin = useMemo(() => {
-    if (cells.length === 0) return 0;
-    return Math.min(...cells.map((c) => (heatMetric === "occupancy" ? c.occupancy : c.transactions)));
-  }, [cells, heatMetric]);
 
   const s = makeStyles(colors, isAr, topPad, bottomPad);
 
@@ -378,93 +356,36 @@ export default function DiscoveryMapScreen() {
       </View>
 
       {viewMode === "heatmap" ? (
-        /* ── Heatmap ─────────────────────────────────────────────────────── */
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={s.gridContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />
-          }
-        >
-          {/* Metric sub-toggle */}
-          <View style={[s.metricRow, isAr && { flexDirection: "row-reverse" }]}>
+        /* ── Geographic Heatmap ───────────────────────────────────────────── */
+        <View style={{ flex: 1 }}>
+          {/* Metric sub-toggle bar above the map */}
+          <View style={[s.metricBar, isAr && { flexDirection: "row-reverse" }]}>
             {(["occupancy", "transactions"] as HeatMetric[]).map((m) => (
               <Pressable
                 key={m}
                 onPress={() => { void Haptics.selectionAsync(); setHeatMetric(m); }}
                 style={[s.metricPill, heatMetric === m && s.metricPillActive]}
               >
+                <MaterialIcons
+                  name={m === "occupancy" ? "donut-large" : "show-chart"}
+                  size={14}
+                  color={heatMetric === m ? "#FFFFFF" : colors.mutedForeground}
+                />
                 <Text style={[s.metricPillText, heatMetric === m && s.metricPillTextActive]}>
                   {m === "occupancy" ? t.heatmap.metricOccupancy : t.heatmap.metricTransactions}
                 </Text>
               </Pressable>
             ))}
-          </View>
-
-          <Text style={[s.heatTitle, isAr && { textAlign: "right" }]}>{t.heatmap.title}</Text>
-          <Text style={[s.heatSubtitle, isAr && { textAlign: "right" }]}>
-            {heatMetric === "occupancy" ? t.heatmap.subtitleOccupancy : t.heatmap.subtitleTransactions}
-          </Text>
-
-          {cells.length === 0 ? (
-            <View style={s.empty}>
-              <MaterialIcons name="search-off" size={48} color={colors.gold + "40"} />
-              <Text style={s.emptyText}>{t.heatmap.noData}</Text>
+            <View style={s.metricHint}>
+              <MaterialIcons name="touch-app" size={12} color={colors.mutedForeground} />
+              <Text style={s.metricHintText}>
+                {isAr ? "اضغط على النقاط للتفاصيل" : "Tap dots for details"}
+              </Text>
             </View>
-          ) : (
-            <>
-              <View style={s.heatGrid}>
-                {cells.map((c) => {
-                  const value = heatMetric === "occupancy" ? c.occupancy : c.transactions;
-                  const norm = metricMax === metricMin ? 1 : (value - metricMin) / (metricMax - metricMin);
-                  const alpha = 0.16 + norm * 0.84;
-                  const dark = norm > 0.55;
-                  return (
-                    <View
-                      key={c.key}
-                      style={[s.heatCell, { backgroundColor: colors.gold + toHex2(alpha * 255) }]}
-                    >
-                      <Text
-                        style={[s.heatValue, { color: dark ? "#0A1628" : colors.foreground }]}
-                      >
-                        {heatMetric === "occupancy" ? `${value}%` : value}
-                      </Text>
-                      <Text
-                        style={[s.heatUnit, { color: dark ? "rgba(10,22,40,0.7)" : colors.mutedForeground }]}
-                      >
-                        {heatMetric === "occupancy" ? t.heatmap.occupancyUnit : t.heatmap.transactionsUnit}
-                      </Text>
-                      <Text
-                        style={[s.heatDistrict, { color: dark ? "#0A1628" : colors.foreground }]}
-                        numberOfLines={1}
-                      >
-                        {c.district}
-                      </Text>
-                      <Text
-                        style={[s.heatCity, { color: dark ? "rgba(10,22,40,0.65)" : colors.mutedForeground }]}
-                        numberOfLines={1}
-                      >
-                        {c.city}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-
-              {/* Legend */}
-              <View style={[s.legendRow, isAr && { flexDirection: "row-reverse" }]}>
-                <Text style={s.legendLabel}>{t.heatmap.legendLow}</Text>
-                <View style={s.legendBar}>
-                  {[0.16, 0.36, 0.56, 0.76, 1].map((a) => (
-                    <View key={a} style={[s.legendChip, { backgroundColor: colors.gold + toHex2(a * 255) }]} />
-                  ))}
-                </View>
-                <Text style={s.legendLabel}>{t.heatmap.legendHigh}</Text>
-              </View>
-            </>
-          )}
-        </ScrollView>
+          </View>
+          {/* Full-screen geographic heatmap */}
+          <HeatmapMapView cells={cells} metric={heatMetric} isAr={isAr} />
+        </View>
       ) : (
         /* ── Property Grid ─────────────────────────────────────────────────── */
         <ScrollView
@@ -615,57 +536,33 @@ function makeStyles(
     toggleText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
     toggleTextActive: { color: "#0A1628" },
 
-    // ── Heatmap ─────────────────────────────────────────────────────────────
-    metricRow: { flexDirection: "row", gap: 8, marginBottom: 14 },
+    // ── Heatmap metric bar (sits above the WebView map) ─────────────────────
+    metricBar: {
+      flexDirection:     "row",
+      alignItems:        "center",
+      gap:               8,
+      paddingHorizontal: 12,
+      paddingVertical:   10,
+      backgroundColor:   colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
     metricPill: {
-      backgroundColor: colors.card,
-      borderWidth:     1,
-      borderColor:     colors.border,
-      borderRadius:    18,
-      paddingHorizontal: 16,
+      flexDirection:     "row",
+      alignItems:        "center",
+      gap:               5,
+      backgroundColor:   colors.card,
+      borderWidth:       1,
+      borderColor:       colors.border,
+      borderRadius:      18,
+      paddingHorizontal: 14,
       paddingVertical:   7,
     },
-    metricPillActive: { backgroundColor: colors.navy, borderColor: colors.navy },
-    metricPillText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
+    metricPillActive:     { backgroundColor: colors.navy, borderColor: colors.navy },
+    metricPillText:       { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
     metricPillTextActive: { color: "#FFFFFF" },
-    heatTitle: {
-      fontSize:   17,
-      fontFamily: "Inter_700Bold",
-      color:      colors.foreground,
-    },
-    heatSubtitle: {
-      fontSize:   13,
-      fontFamily: "Inter_400Regular",
-      color:      colors.mutedForeground,
-      marginTop:  2,
-      marginBottom: 16,
-    },
-    heatGrid: {
-      flexDirection:  "row",
-      flexWrap:       "wrap",
-      gap:            10,
-    },
-    heatCell: {
-      width:           (SCREEN_W - 32 - 20) / 3,
-      borderRadius:    14,
-      padding:         12,
-      minHeight:       96,
-      justifyContent:  "center",
-    },
-    heatValue: { fontSize: 20, fontFamily: "Inter_700Bold" },
-    heatUnit: { fontSize: 10, fontFamily: "Inter_400Regular", marginTop: 1 },
-    heatDistrict: { fontSize: 12, fontFamily: "Inter_700Bold", marginTop: 8 },
-    heatCity: { fontSize: 10, fontFamily: "Inter_400Regular", marginTop: 1 },
-    legendRow: {
-      flexDirection: "row",
-      alignItems:    "center",
-      justifyContent:"center",
-      gap:           8,
-      marginTop:     22,
-    },
-    legendLabel: { fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
-    legendBar: { flexDirection: "row", gap: 3 },
-    legendChip: { width: 26, height: 12, borderRadius: 3 },
+    metricHint:     { flex: 1, flexDirection: "row", alignItems: "center", gap: 4, justifyContent: "flex-end" },
+    metricHintText: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
 
     // ── Grid ──────────────────────────────────────────────────────────────
     gridContent: {

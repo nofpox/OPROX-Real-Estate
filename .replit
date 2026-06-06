@@ -67,6 +67,10 @@ externalPort = 3002
 localPort = 26232
 externalPort = 3000
 
+[[ports]]
+localPort = 26233
+externalPort = 4200
+
 [userenv]
 
 [userenv.development]
