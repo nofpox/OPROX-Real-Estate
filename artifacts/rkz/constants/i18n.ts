@@ -94,11 +94,11 @@ export const ar = {
     addProperty: "إضافة عقار",
   },
   portal: {
-    menuTitle: "بوابة المستثمرين",
+    menuTitle: "مركز التحليلات",
     menuDesc: "الوصول الآمن للتقارير المالية",
     restrictedNotice:
       "هذه البوابة مخصصة حصرياً للشركاء والمستثمرين الموثقين. للحصول على صلاحية الوصول، يرجى التواصل مع فريق إدارة العلاقات.",
-    loginTitle: "بوابة المستثمرين",
+    loginTitle: "مركز التحليلات",
     loginSubtitle: "وصول آمن لإدارة استثماراتك ومتابعة الأداء المالي.",
     usernameLabel: "اسم المستخدم",
     passwordLabel: "كلمة المرور",
@@ -402,11 +402,11 @@ export const en: Translations = {
     addProperty: "Add Property",
   },
   portal: {
-    menuTitle: "Investor Portal",
+    menuTitle: "Analytics Hub",
     menuDesc: "Secure access to financial reports",
     restrictedNotice:
       "This portal is restricted to our verified partners and investors only. Contact our relationship management team to request access.",
-    loginTitle: "Investor Portal",
+    loginTitle: "Analytics Hub",
     loginSubtitle: "Secure access to manage your properties and view financial performance.",
     usernameLabel: "Username",
     passwordLabel: "Password",
