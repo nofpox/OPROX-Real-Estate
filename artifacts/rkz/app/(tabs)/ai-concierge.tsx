@@ -1,6 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Animated,
   Keyboard,
@@ -16,457 +16,739 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
-import { useAIAssistant, type Message } from "@/hooks/useAIAssistant";
 import { useLocale } from "@/hooks/useLocale";
 
-// ── Typing indicator ─────────────────────────────────────────────────────────
-function TypingDots() {
-  const colors = useColors();
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
+// ── API base URL ──────────────────────────────────────────────────────────────
+function getApiBase(): string {
+  if (Platform.OS === "web") return "/api";
+  return "https://property-dashboard-nofabark.replit.app/api";
+}
 
-  useEffect(() => {
-    const bounce = (dot: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, { toValue: -5, duration: 220, useNativeDriver: true }),
-          Animated.timing(dot, { toValue: 0, duration: 220, useNativeDriver: true }),
-          Animated.delay(300),
-        ])
-      );
-    const anim = Animated.parallel([bounce(dot1, 0), bounce(dot2, 180), bounce(dot3, 360)]);
-    anim.start();
-    return () => anim.stop();
-  }, [dot1, dot2, dot3]);
+// ── Types ─────────────────────────────────────────────────────────────────────
+interface AnalysisResult {
+  eligibility_score: number;
+  recommended_payment_method: string;
+  reasoning_summary: string;
+}
+
+type Step = "form" | "result";
+
+// ── Score utilities ───────────────────────────────────────────────────────────
+function scoreColor(score: number, colors: ReturnType<typeof useColors>): string {
+  if (score >= 75) return "#22C55E";
+  if (score >= 50) return "#F59E0B";
+  if (score >= 25) return "#F97316";
+  return "#EF4444";
+}
+
+function scoreLabel(score: number, t: { excellent: string; good: string; moderate: string; low: string }): string {
+  if (score >= 75) return t.excellent;
+  if (score >= 50) return t.good;
+  if (score >= 25) return t.moderate;
+  return t.low;
+}
+
+// ── Payment method labels ─────────────────────────────────────────────────────
+function paymentLabel(method: string, t: { cash: string; mortgage: string; installment: string; leaseToOwn: string }): string {
+  switch (method) {
+    case "cash": return t.cash;
+    case "mortgage": return t.mortgage;
+    case "installment": return t.installment;
+    case "lease_to_own": return t.leaseToOwn;
+    default: return method;
+  }
+}
+
+function paymentIcon(method: string): keyof typeof MaterialIcons.glyphMap {
+  switch (method) {
+    case "cash": return "payments";
+    case "mortgage": return "account-balance";
+    case "installment": return "calendar-today";
+    case "lease_to_own": return "home";
+    default: return "payments";
+  }
+}
+
+// ── Animated Score Gauge ──────────────────────────────────────────────────────
+function ScoreGauge({ score, color }: { score: number; color: string }) {
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const [displayed, setDisplayed] = useState(0);
+
+  React.useEffect(() => {
+    const numAnim = new Animated.Value(0);
+    const listener = numAnim.addListener(({ value }) => {
+      setDisplayed(Math.round(value));
+    });
+    Animated.parallel([
+      Animated.timing(progressAnim, {
+        toValue: score / 100,
+        duration: 1100,
+        useNativeDriver: false,
+      }),
+      Animated.timing(numAnim, {
+        toValue: score,
+        duration: 1100,
+        useNativeDriver: false,
+      }),
+    ]).start(() => {
+      numAnim.removeListener(listener);
+    });
+    return () => numAnim.removeListener(listener);
+  }, [score]);
+
+  const barWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", "100%"],
+  });
 
   return (
-    <View style={{ flexDirection: "row", gap: 5, padding: 4 }}>
-      {[dot1, dot2, dot3].map((dot, i) => (
+    <View style={{ alignItems: "center", width: "100%" }}>
+      <Text style={{ fontSize: 56, fontFamily: "Inter_700Bold", color, letterSpacing: -2 }}>
+        {displayed}
+      </Text>
+      <Text style={{ fontSize: 14, fontFamily: "Inter_400Regular", color, opacity: 0.8, marginTop: -4, marginBottom: 12 }}>
+        / 100
+      </Text>
+      <View style={{ width: "100%", height: 10, backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 10, overflow: "hidden" }}>
         <Animated.View
-          key={i}
           style={{
-            width: 8,
-            height: 8,
-            borderRadius: 4,
-            backgroundColor: colors.gold,
-            transform: [{ translateY: dot }],
+            height: "100%",
+            borderRadius: 10,
+            backgroundColor: color,
+            width: barWidth,
           }}
         />
-      ))}
+      </View>
     </View>
   );
 }
 
-// ── Bold-text renderer for **bold** markers ──────────────────────────────────
-function RichText({ text, style }: { text: string; style: object }) {
-  const parts = text.split(/\*\*(.+?)\*\*/g);
+// ── Selector Pill Row ─────────────────────────────────────────────────────────
+function PillSelector({
+  options,
+  value,
+  onChange,
+  colors,
+  gold,
+}: {
+  options: { key: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+  colors: ReturnType<typeof useColors>;
+  gold: string;
+}) {
   return (
-    <Text style={style}>
-      {parts.map((part, i) =>
-        i % 2 === 1 ? (
-          <Text key={i} style={{ fontFamily: "Inter_700Bold" }}>
-            {part}
-          </Text>
-        ) : (
-          part
-        )
-      )}
-    </Text>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+      {options.map((opt) => {
+        const active = value === opt.key;
+        return (
+          <Pressable
+            key={opt.key}
+            onPress={() => { void Haptics.selectionAsync(); onChange(opt.key); }}
+            style={{
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderRadius: 20,
+              backgroundColor: active ? gold : colors.card,
+              borderWidth: 1.5,
+              borderColor: active ? gold : colors.border,
+            }}
+          >
+            <Text style={{
+              fontSize: 13,
+              fontFamily: "Inter_600SemiBold",
+              color: active ? "#0A1628" : colors.mutedForeground,
+            }}>
+              {opt.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
-// ── Quick-action suggestion chips ────────────────────────────────────────────
-const AR_SUGGESTIONS = [
-  "كيف أحسّن أداء عقاراتي؟",
-  "ما أفضل وقت للبيع في الرياض؟",
-  "تحليل نسب التحويل لديّ",
-];
-const EN_SUGGESTIONS = [
-  "How can I improve my listing performance?",
-  "What's the best time to sell in Riyadh?",
-  "Analyze my conversion rates",
-];
-
-export default function AIConciergeScreen() {
+// ── Main Screen ───────────────────────────────────────────────────────────────
+export default function AIDecisionEngineScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { t, isAr } = useLocale();
-  const { messages, isThinking, sendMessage, clearMessages, dismissQuickReplies } = useAIAssistant();
-
-  const [input, setInput] = useState("");
-  const scrollRef = useRef<ScrollView>(null);
-  const inputRef = useRef<TextInput>(null);
+  const at = t.analysis;
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
-  const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84);
+  const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84) + 16;
 
-  useEffect(() => {
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
-  }, [messages, isThinking]);
+  // ── Form state ─────────────────────────────────────────────────────────────
+  const [income, setIncome] = useState("");
+  const [budget, setBudget] = useState("");
+  const [commitments, setCommitments] = useState("");
+  const [propertyType, setPropertyType] = useState("apartment");
+  const [city, setCity] = useState("");
+  const [paymentPref, setPaymentPref] = useState("mortgage");
 
-  function handleSend() {
-    const text = input.trim();
-    if (!text || isThinking) return;
-    setInput("");
+  // ── Screen state ───────────────────────────────────────────────────────────
+  const [step, setStep] = useState<Step>("form");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [killswitch, setKillswitch] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // ── Option lists ───────────────────────────────────────────────────────────
+  const propertyTypeOptions = [
+    { key: "apartment", label: t.propertyTypes.apartment },
+    { key: "villa", label: t.propertyTypes.villa },
+    { key: "land", label: t.propertyTypes.land },
+    { key: "commercial", label: t.propertyTypes.commercial },
+  ];
+
+  const paymentOptions = [
+    { key: "mortgage", label: at.mortgage },
+    { key: "installment", label: at.installment },
+    { key: "cash", label: at.cash },
+    { key: "lease_to_own", label: at.leaseToOwn },
+  ];
+
+  // ── Analyze ────────────────────────────────────────────────────────────────
+  async function handleAnalyze() {
+    const inc = parseFloat(income.replace(/,/g, ""));
+    const bud = parseFloat(budget.replace(/,/g, ""));
+
+    if (!inc || !bud || inc <= 0 || bud <= 0) {
+      setErrorMsg(at.required);
+      return;
+    }
+    setErrorMsg(null);
     Keyboard.dismiss();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    void sendMessage(text);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${getApiBase()}/rkz/analysis`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          income: inc,
+          budget: bud,
+          existingCommitments: parseFloat(commitments.replace(/,/g, "")) || 0,
+          propertyType,
+          city: city.trim() || undefined,
+          paymentPreference: paymentPref,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.killswitch) {
+        setKillswitch(true);
+        setStep("result");
+        return;
+      }
+
+      setResult(data as AnalysisResult);
+      setKillswitch(false);
+      setStep("result");
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {
+      setErrorMsg(at.errorMsg);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function handleSuggestion(q: string) {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    void sendMessage(q);
+  function handleReset() {
+    void Haptics.selectionAsync();
+    setStep("form");
+    setResult(null);
+    setKillswitch(false);
+    setErrorMsg(null);
   }
 
-  function handleQuickReply(messageId: string, label: string) {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    dismissQuickReplies(messageId);
-    void sendMessage(label);
-  }
+  // ── Styles ─────────────────────────────────────────────────────────────────
+  const gold = colors.gold ?? "#C9A84C";
 
-  const S = StyleSheet.create({
+  const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     header: {
       backgroundColor: colors.navy,
-      paddingTop: topPad + 12,
-      paddingBottom: 16,
+      paddingTop: topPad + 16,
+      paddingBottom: 24,
       paddingHorizontal: 20,
+    },
+    headerRow: {
       flexDirection: isAr ? "row-reverse" : "row",
       alignItems: "center",
-      justifyContent: "space-between",
+      gap: 12,
     },
-    headerLeft: { flex: 1 },
+    headerIconBox: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: "rgba(201,168,76,0.18)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
     headerTitle: {
       color: "#FFFFFF",
-      fontSize: 18,
+      fontSize: 20,
       fontFamily: "Inter_700Bold",
       textAlign: isAr ? "right" : "left",
     },
     headerSub: {
-      color: "rgba(255,255,255,0.5)",
-      fontSize: 12,
+      color: "rgba(255,255,255,0.55)",
+      fontSize: 13,
       fontFamily: "Inter_400Regular",
       marginTop: 2,
       textAlign: isAr ? "right" : "left",
     },
-    clearBtn: {
-      padding: 6,
-      borderRadius: 8,
-      backgroundColor: "rgba(255,255,255,0.1)",
+    stepBar: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      marginHorizontal: 20,
+      marginTop: 20,
+      marginBottom: 4,
+      gap: 8,
+    },
+    stepPill: {
+      flex: 1,
+      height: 4,
+      borderRadius: 2,
     },
     scroll: { flex: 1 },
-    scrollContent: {
-      paddingHorizontal: 16,
-      paddingTop: 16,
-      paddingBottom: 16,
+    section: { marginTop: 20, paddingHorizontal: 16 },
+    sectionTitle: {
+      fontSize: 12,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.mutedForeground,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      marginBottom: 8,
+      textAlign: isAr ? "right" : "left",
     },
-    // Message bubbles
-    msgRow: {
-      marginBottom: 12,
-      maxWidth: "85%",
-    },
-    msgRowUser: { alignSelf: isAr ? "flex-start" : "flex-end" },
-    msgRowAI: { alignSelf: isAr ? "flex-end" : "flex-start" },
-    bubble: {
-      borderRadius: 18,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-    },
-    bubbleUser: {
-      backgroundColor: colors.navy,
-      borderBottomRightRadius: isAr ? 18 : 4,
-      borderBottomLeftRadius: isAr ? 4 : 18,
-    },
-    bubbleAI: {
+    card: {
       backgroundColor: colors.card,
-      borderBottomRightRadius: isAr ? 4 : 18,
-      borderBottomLeftRadius: isAr ? 18 : 4,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderLeftWidth: isAr ? 1 : 3,
-      borderLeftColor: isAr ? colors.border : colors.gold,
-      borderRightWidth: isAr ? 3 : 1,
-      borderRightColor: isAr ? colors.gold : colors.border,
+      borderRadius: 16,
+      padding: 16,
       shadowColor: "#000",
-      shadowOpacity: 0.04,
-      shadowRadius: 4,
-      shadowOffset: { width: 0, height: 1 },
-      elevation: 1,
-    },
-    msgTextUser: {
-      color: "#FFFFFF",
-      fontFamily: "Inter_400Regular",
-      fontSize: 15,
-      lineHeight: 22,
-      textAlign: isAr ? "left" : "right",
-    },
-    msgTextAI: {
-      color: colors.foreground,
-      fontFamily: "Inter_400Regular",
-      fontSize: 15,
-      lineHeight: 23,
-      textAlign: isAr ? "right" : "left",
-    },
-    timestamp: {
-      fontSize: 11,
-      fontFamily: "Inter_400Regular",
-      color: colors.mutedForeground,
-      marginTop: 4,
-      textAlign: isAr ? "right" : "left",
-    },
-    // Typing bubble
-    typingBubble: {
-      alignSelf: isAr ? "flex-end" : "flex-start",
-      backgroundColor: colors.card,
-      borderRadius: 18,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderLeftWidth: isAr ? 1 : 3,
-      borderLeftColor: isAr ? colors.border : colors.gold,
-      borderRightWidth: isAr ? 3 : 1,
-      borderRightColor: isAr ? colors.gold : colors.border,
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
       marginBottom: 12,
     },
-    // Suggestion chips
-    suggestionsRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      gap: 8,
-      flexWrap: "wrap",
-      marginTop: 8,
-      marginBottom: 4,
-    },
-    chip: {
-      borderRadius: 20,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      backgroundColor: colors.goldLight,
-      borderWidth: 1,
-      borderColor: colors.gold + "60",
-    },
-    chipText: {
-      fontSize: 13,
-      fontFamily: "Inter_500Medium",
-      color: colors.navyLight,
-    },
-    // Quick Reply chips — shown below AI messages when purchase method question is asked
-    quickReplyRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      flexWrap: "wrap",
-      gap: 8,
-      marginTop: 10,
-      paddingHorizontal: 2,
-    },
-    quickReplyChip: {
-      borderRadius: 22,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      backgroundColor: colors.navy,
-      borderWidth: 1.5,
-      borderColor: colors.gold,
-      shadowColor: colors.gold,
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-      shadowOffset: { width: 0, height: 2 },
-      elevation: 3,
-    },
-    quickReplyChipText: {
-      fontSize: 13,
-      fontFamily: "Inter_700Bold",
-      color: "#FFFFFF",
-      textAlign: "center",
-    },
-    quickReplyHint: {
-      fontSize: 11,
-      fontFamily: "Inter_400Regular",
-      color: colors.mutedForeground,
-      marginTop: 6,
-      textAlign: isAr ? "right" : "left",
-    },
-    // Input bar
-    inputBar: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "flex-end",
-      gap: 10,
-      paddingHorizontal: 16,
-      paddingTop: 10,
-      paddingBottom: bottomPad > 84 ? bottomPad - 84 + 10 : 10,
-      backgroundColor: colors.card,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    inputBox: {
-      flex: 1,
-      minHeight: 44,
-      maxHeight: 120,
-      backgroundColor: colors.muted,
-      borderRadius: 22,
-      paddingHorizontal: 18,
-      paddingVertical: 10,
-      fontFamily: "Inter_400Regular",
-      fontSize: 15,
+    label: {
+      fontSize: 14,
+      fontFamily: "Inter_600SemiBold",
       color: colors.foreground,
-      textAlignVertical: "center",
+      marginBottom: 8,
       textAlign: isAr ? "right" : "left",
     },
-    sendBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      backgroundColor: colors.gold,
+    input: {
+      height: 48,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      fontSize: 15,
+      fontFamily: "Inter_400Regular",
+      color: colors.foreground,
+      backgroundColor: colors.background,
+      textAlign: isAr ? "right" : "left",
+    },
+    analyzeBtn: {
+      marginHorizontal: 16,
+      marginTop: 8,
+      height: 56,
+      borderRadius: 16,
+      backgroundColor: gold,
       alignItems: "center",
       justifyContent: "center",
-      shadowColor: colors.gold,
+      flexDirection: "row",
+      gap: 8,
+      shadowColor: gold,
       shadowOpacity: 0.35,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    analyzeBtnText: {
+      fontSize: 16,
+      fontFamily: "Inter_700Bold",
+      color: "#0A1628",
+    },
+    errorText: {
+      color: colors.destructive,
+      fontSize: 13,
+      fontFamily: "Inter_500Medium",
+      textAlign: "center",
+      marginHorizontal: 16,
+      marginTop: 8,
+    },
+    gaugeCard: {
+      backgroundColor: colors.navy,
+      borderRadius: 20,
+      padding: 28,
+      alignItems: "center",
+      marginHorizontal: 16,
+      marginTop: 20,
+      shadowColor: "#000",
+      shadowOpacity: 0.15,
+      shadowRadius: 16,
+      elevation: 4,
+    },
+    gaugeLabel: {
+      fontSize: 13,
+      fontFamily: "Inter_600SemiBold",
+      color: "rgba(255,255,255,0.6)",
+      letterSpacing: 0.5,
+      textTransform: "uppercase",
+      marginBottom: 16,
+    },
+    scoreBadge: {
+      marginTop: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      borderRadius: 20,
+    },
+    scoreBadgeText: {
+      fontSize: 14,
+      fontFamily: "Inter_700Bold",
+      color: "#0A1628",
+    },
+    paymentCard: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 20,
+      marginHorizontal: 16,
+      marginTop: 12,
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 16,
+      shadowColor: "#000",
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    paymentIconBox: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: `${gold}22`,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    paymentTitle: {
+      fontSize: 12,
+      fontFamily: "Inter_500Medium",
+      color: colors.mutedForeground,
+      textAlign: isAr ? "right" : "left",
+    },
+    paymentValue: {
+      fontSize: 17,
+      fontFamily: "Inter_700Bold",
+      color: colors.foreground,
+      textAlign: isAr ? "right" : "left",
+      marginTop: 2,
+    },
+    reasoningCard: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 20,
+      marginHorizontal: 16,
+      marginTop: 12,
+      shadowColor: "#000",
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    reasoningLabel: {
+      fontSize: 12,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.mutedForeground,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      marginBottom: 10,
+      textAlign: isAr ? "right" : "left",
+    },
+    reasoningText: {
+      fontSize: 15,
+      fontFamily: "Inter_400Regular",
+      color: colors.foreground,
+      lineHeight: 24,
+      textAlign: isAr ? "right" : "left",
+    },
+    actionRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      marginHorizontal: 16,
+      marginTop: 16,
+      gap: 12,
+    },
+    resetBtn: {
+      flex: 1,
+      height: 50,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    resetBtnText: {
+      fontSize: 14,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.foreground,
+    },
+    contactBtn: {
+      flex: 1,
+      height: 50,
+      borderRadius: 14,
+      backgroundColor: gold,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    contactBtnText: {
+      fontSize: 14,
+      fontFamily: "Inter_700Bold",
+      color: "#0A1628",
+    },
+    killswitchCard: {
+      backgroundColor: colors.card,
+      borderRadius: 20,
+      padding: 32,
+      marginHorizontal: 16,
+      marginTop: 32,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOpacity: 0.06,
+      shadowRadius: 10,
       elevation: 3,
     },
-    sendBtnDisabled: { backgroundColor: colors.muted, shadowOpacity: 0 },
+    killswitchIcon: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: "#FEF2F2",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 20,
+    },
+    killswitchTitle: {
+      fontSize: 18,
+      fontFamily: "Inter_700Bold",
+      color: colors.foreground,
+      textAlign: "center",
+      marginBottom: 10,
+    },
+    killswitchMsg: {
+      fontSize: 14,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      textAlign: "center",
+      lineHeight: 22,
+      marginBottom: 24,
+    },
   });
 
-  const suggestions = isAr ? AR_SUGGESTIONS : EN_SUGGESTIONS;
-  const showSuggestions = messages.length <= 1 && !isThinking;
-
-  function formatTime(ts: number) {
-    const d = new Date(ts);
-    return d.toLocaleTimeString(isAr ? "ar-SA" : "en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
-  function renderMessage(msg: Message) {
-    const isUser = msg.role === "user";
-    const hasQR = !isUser && !!msg.quickReplies && msg.quickReplies.length > 0;
-    return (
-      <View
-        key={msg.id}
-        style={[S.msgRow, isUser ? S.msgRowUser : S.msgRowAI, hasQR && { maxWidth: "95%" }]}
-      >
-        <View style={[S.bubble, isUser ? S.bubbleUser : S.bubbleAI]}>
-          {isUser ? (
-            <Text style={S.msgTextUser}>{msg.content}</Text>
-          ) : (
-            <RichText text={msg.content} style={S.msgTextAI} />
-          )}
-        </View>
-        <Text style={[S.timestamp, isUser && { textAlign: isAr ? "left" : "right" }]}>
-          {formatTime(msg.ts)}
-        </Text>
-        {/* Quick Reply buttons — rendered below the message bubble */}
-        {hasQR && (
-          <>
-            <Text style={S.quickReplyHint}>
-              {isAr ? "اختر طريقة الشراء:" : "Select your purchase method:"}
-            </Text>
-            <View style={S.quickReplyRow}>
-              {msg.quickReplies!.map((qr) => (
-                <Pressable
-                  key={qr.value}
-                  style={({ pressed }) => [S.quickReplyChip, pressed && { opacity: 0.75, transform: [{ scale: 0.96 }] }]}
-                  onPress={() => handleQuickReply(msg.id, qr.label)}
-                >
-                  <Text style={S.quickReplyChipText}>{qr.label}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </>
-        )}
-      </View>
-    );
-  }
+  const sColor = result ? scoreColor(result.eligibility_score, colors) : gold;
+  const sLabel = result ? scoreLabel(result.eligibility_score, at) : "";
 
   return (
     <KeyboardAvoidingView
-      style={S.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      {/* ── Header ── */}
-      <View style={S.header}>
-        <View style={S.headerLeft}>
-          <Text style={S.headerTitle}>✨ {t.assistant.title}</Text>
-          <Text style={S.headerSub}>{t.assistant.subtitle}</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerRow}>
+          <View style={styles.headerIconBox}>
+            <MaterialIcons name="query-stats" size={22} color={gold} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle}>{at.title}</Text>
+            <Text style={styles.headerSub}>{at.subtitle}</Text>
+          </View>
         </View>
-        <Pressable
-          style={({ pressed }) => [S.clearBtn, pressed && { opacity: 0.7 }]}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            clearMessages();
-          }}
-        >
-          <MaterialIcons name="refresh" size={20} color="rgba(255,255,255,0.6)" />
-        </Pressable>
+
+        {/* Step indicator */}
+        <View style={styles.stepBar}>
+          <View style={[styles.stepPill, { backgroundColor: gold }]} />
+          <View style={[styles.stepPill, { backgroundColor: step === "result" ? gold : "rgba(255,255,255,0.2)" }]} />
+        </View>
+        <View style={{ flexDirection: isAr ? "row-reverse" : "row", justifyContent: "space-between", paddingHorizontal: 2, marginTop: 6 }}>
+          <Text style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: gold }}>{at.stepInput}</Text>
+          <Text style={{ fontSize: 11, fontFamily: "Inter_500Medium", color: step === "result" ? gold : "rgba(255,255,255,0.35)" }}>{at.stepResult}</Text>
+        </View>
       </View>
 
-      {/* ── Messages ── */}
       <ScrollView
-        ref={scrollRef}
-        style={S.scroll}
-        contentContainerStyle={S.scrollContent}
-        keyboardDismissMode="interactive"
+        style={styles.scroll}
+        contentContainerStyle={{ paddingBottom: bottomPad }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        {messages.map(renderMessage)}
+        {/* ── FORM STEP ─────────────────────────────────────────────────────── */}
+        {step === "form" && (
+          <>
+            {/* Financial inputs */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{at.stepInput}</Text>
 
-        {/* Typing indicator */}
-        {isThinking && (
-          <View style={S.typingBubble}>
-            <TypingDots />
+              <View style={styles.card}>
+                <Text style={styles.label}>{at.income} *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={income}
+                  onChangeText={setIncome}
+                  placeholder={at.incomePlaceholder}
+                  placeholderTextColor={colors.mutedForeground}
+                  keyboardType="numeric"
+                  returnKeyType="next"
+                />
+
+                <Text style={[styles.label, { marginTop: 16 }]}>{at.budget} *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={budget}
+                  onChangeText={setBudget}
+                  placeholder={at.budgetPlaceholder}
+                  placeholderTextColor={colors.mutedForeground}
+                  keyboardType="numeric"
+                  returnKeyType="next"
+                />
+
+                <Text style={[styles.label, { marginTop: 16 }]}>{at.commitments}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={commitments}
+                  onChangeText={setCommitments}
+                  placeholder={at.commitmentsPlaceholder}
+                  placeholderTextColor={colors.mutedForeground}
+                  keyboardType="numeric"
+                  returnKeyType="done"
+                />
+              </View>
+            </View>
+
+            {/* Property type */}
+            <View style={styles.section}>
+              <Text style={styles.label}>{at.propertyType}</Text>
+              <PillSelector
+                options={propertyTypeOptions}
+                value={propertyType}
+                onChange={setPropertyType}
+                colors={colors}
+                gold={gold}
+              />
+            </View>
+
+            {/* Payment preference */}
+            <View style={styles.section}>
+              <Text style={styles.label}>{at.paymentPref}</Text>
+              <PillSelector
+                options={paymentOptions}
+                value={paymentPref}
+                onChange={setPaymentPref}
+                colors={colors}
+                gold={gold}
+              />
+            </View>
+
+            {/* Location */}
+            <View style={styles.section}>
+              <Text style={styles.label}>{at.city}</Text>
+              <TextInput
+                style={styles.input}
+                value={city}
+                onChangeText={setCity}
+                placeholder={at.cityPlaceholder}
+                placeholderTextColor={colors.mutedForeground}
+                returnKeyType="done"
+              />
+            </View>
+
+            {errorMsg && <Text style={styles.errorText}>{errorMsg}</Text>}
+
+            <Pressable
+              style={({ pressed }) => [styles.analyzeBtn, { marginTop: 20, opacity: pressed || loading ? 0.85 : 1 }]}
+              onPress={() => { void handleAnalyze(); }}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <MaterialIcons name="hourglass-empty" size={20} color="#0A1628" />
+                  <Text style={styles.analyzeBtnText}>{at.analyzing}</Text>
+                </>
+              ) : (
+                <>
+                  <MaterialIcons name="query-stats" size={20} color="#0A1628" />
+                  <Text style={styles.analyzeBtnText}>{at.analyzeBtn}</Text>
+                </>
+              )}
+            </Pressable>
+          </>
+        )}
+
+        {/* ── RESULT STEP ───────────────────────────────────────────────────── */}
+        {step === "result" && killswitch && (
+          <View style={styles.killswitchCard}>
+            <View style={styles.killswitchIcon}>
+              <MaterialIcons name="pause-circle-outline" size={36} color="#EF4444" />
+            </View>
+            <Text style={styles.killswitchTitle}>{at.killswitchTitle}</Text>
+            <Text style={styles.killswitchMsg}>{at.killswitchMsg}</Text>
+            <Pressable style={[styles.contactBtn, { width: "100%", height: 52, borderRadius: 14 }]}>
+              <Text style={styles.contactBtnText}>{at.contactAdvisor}</Text>
+            </Pressable>
+            <Pressable onPress={handleReset} style={{ marginTop: 16 }}>
+              <Text style={{ color: colors.mutedForeground, fontFamily: "Inter_500Medium", fontSize: 14 }}>
+                ← {at.resetBtn}
+              </Text>
+            </Pressable>
           </View>
         )}
 
-        {/* Suggestion chips — only after greeting */}
-        {showSuggestions && (
-          <View style={S.suggestionsRow}>
-            {suggestions.map((q) => (
-              <Pressable
-                key={q}
-                style={({ pressed }) => [S.chip, pressed && { opacity: 0.75 }]}
-                onPress={() => handleSuggestion(q)}
-              >
-                <Text style={S.chipText}>{q}</Text>
+        {step === "result" && !killswitch && result && (
+          <>
+            {/* Eligibility gauge */}
+            <View style={styles.gaugeCard}>
+              <Text style={styles.gaugeLabel}>{at.eligibilityScore}</Text>
+              <ScoreGauge score={result.eligibility_score} color={sColor} />
+              <View style={[styles.scoreBadge, { backgroundColor: sColor, marginTop: 16 }]}>
+                <Text style={styles.scoreBadgeText}>{sLabel}</Text>
+              </View>
+            </View>
+
+            {/* Payment method */}
+            <View style={styles.paymentCard}>
+              <View style={styles.paymentIconBox}>
+                <MaterialIcons name={paymentIcon(result.recommended_payment_method)} size={24} color={gold} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.paymentTitle}>{at.paymentMethod}</Text>
+                <Text style={styles.paymentValue}>
+                  {paymentLabel(result.recommended_payment_method, at)}
+                </Text>
+              </View>
+              <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: `${gold}22` }}>
+                <Text style={{ fontSize: 12, fontFamily: "Inter_700Bold", color: gold }}>✓</Text>
+              </View>
+            </View>
+
+            {/* Reasoning summary */}
+            {result.reasoning_summary.length > 0 && (
+              <View style={styles.reasoningCard}>
+                <Text style={styles.reasoningLabel}>{at.reasoning}</Text>
+                <Text style={styles.reasoningText}>{result.reasoning_summary}</Text>
+              </View>
+            )}
+
+            {/* Actions */}
+            <View style={styles.actionRow}>
+              <Pressable style={styles.resetBtn} onPress={handleReset}>
+                <Text style={styles.resetBtnText}>{at.resetBtn}</Text>
               </Pressable>
-            ))}
-          </View>
+              <Pressable style={styles.contactBtn}>
+                <Text style={styles.contactBtnText}>{at.contactAdvisor}</Text>
+              </Pressable>
+            </View>
+          </>
         )}
       </ScrollView>
-
-      {/* ── Input Bar ── */}
-      <View style={S.inputBar}>
-        <TextInput
-          ref={inputRef}
-          style={S.inputBox}
-          value={input}
-          onChangeText={setInput}
-          placeholder={t.assistant.placeholder}
-          placeholderTextColor={colors.mutedForeground}
-          multiline
-          returnKeyType="send"
-          onSubmitEditing={handleSend}
-          blurOnSubmit={false}
-          editable={!isThinking}
-        />
-        <Pressable
-          style={({ pressed }) => [
-            S.sendBtn,
-            (!input.trim() || isThinking) && S.sendBtnDisabled,
-            pressed && input.trim() && { transform: [{ scale: 0.94 }] },
-          ]}
-          onPress={handleSend}
-          disabled={!input.trim() || isThinking}
-        >
-          <MaterialIcons
-            name={isAr ? "arrow-back" : "arrow-forward"}
-            size={20}
-            color={!input.trim() || isThinking ? colors.mutedForeground : colors.navy}
-          />
-        </Pressable>
-      </View>
     </KeyboardAvoidingView>
   );
 }

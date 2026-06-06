@@ -2,7 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from "expo-web-browser";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Platform,
@@ -37,6 +37,41 @@ export default function SettingsScreen() {
   const [authorized, setAuthorized] = useState(user?.authorized ?? false);
   const [autoRenew, setAutoRenew] = useState(true);
   const [notifs, setNotifs] = useState(true);
+  const [analysisDisabled, setAnalysisDisabled] = useState(false);
+  const [killswitchSaving, setKillswitchSaving] = useState(false);
+  const [killswitchSaved, setKillswitchSaved] = useState(false);
+
+  const apiBase = Platform.OS === "web"
+    ? "/api"
+    : "https://property-dashboard-nofabark.replit.app/api";
+
+  useEffect(() => {
+    if (!user?.authorized) return;
+    fetch(`${apiBase}/rkz/analysis-killswitch`)
+      .then((r) => r.json())
+      .then((d: { enabled?: boolean }) => setAnalysisDisabled(d.enabled ?? false))
+      .catch(() => {});
+  }, [user?.authorized]);
+
+  async function toggleAnalysisKillswitch(value: boolean) {
+    setKillswitchSaving(true);
+    setKillswitchSaved(false);
+    try {
+      await fetch(`${apiBase}/rkz/analysis-killswitch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: value }),
+      });
+      setAnalysisDisabled(value);
+      setKillswitchSaved(true);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setTimeout(() => setKillswitchSaved(false), 2000);
+    } catch {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setKillswitchSaving(false);
+    }
+  }
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84) + 16;
@@ -439,6 +474,33 @@ export default function SettingsScreen() {
                 </View>
                 <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
               </Pressable>
+            </View>
+          </View>
+        )}
+
+        {/* AI Decision Engine Kill-Switch — admin only */}
+        {user?.authorized && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t.analysis.adminSection}</Text>
+            <View style={styles.settingCard}>
+              <View style={styles.settingRow}>
+                <View style={[styles.settingIconBox, { backgroundColor: analysisDisabled ? "#FEE2E2" : "#F0FDF4" }]}>
+                  <MaterialIcons name="query-stats" size={20} color={analysisDisabled ? "#EF4444" : "#16A34A"} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.settingLabel}>{t.analysis.killswitchLabel}</Text>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                    {killswitchSaved ? t.analysis.killswitchSaved : t.analysis.killswitchDesc}
+                  </Text>
+                </View>
+                <Switch
+                  value={analysisDisabled}
+                  onValueChange={(v) => { void toggleAnalysisKillswitch(v); }}
+                  disabled={killswitchSaving}
+                  trackColor={{ false: colors.border, true: "#EF4444" }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
             </View>
           </View>
         )}
