@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   Animated,
@@ -562,6 +563,13 @@ export default function AIDecisionEngineScreen() {
             <Text style={styles.headerTitle}>{at.title}</Text>
             <Text style={styles.headerSub}>{at.subtitle}</Text>
           </View>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={10}
+            style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.1)", alignItems: "center", justifyContent: "center" }}
+          >
+            <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={20} color="rgba(255,255,255,0.8)" />
+          </Pressable>
         </View>
 
         {/* Step indicator */}

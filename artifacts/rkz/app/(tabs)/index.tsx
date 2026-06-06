@@ -3,9 +3,11 @@ import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   Dimensions,
   Image,
+  Modal,
   Platform,
   Pressable,
   RefreshControl,
@@ -55,7 +57,8 @@ function scoreColor(score: number): string {
 export default function DashboardScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { properties, unreadLeadsCount } = useApp();
+  const { properties, unreadLeadsCount, updateProperty } = useApp();
+  const [showMessages, setShowMessages] = useState(false);
   const { t, isAr } = useLocale();
   const { config } = useConfig();
   const [refreshing, setRefreshing] = useState(false);
@@ -435,6 +438,91 @@ export default function DashboardScreen() {
       fontFamily: "Inter_600SemiBold",
       fontSize: 15,
     },
+    // ── Message Center Modal ──────────────────────────────────────────────────
+    modalOverlay: {
+      position: "absolute",
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: "rgba(0,0,0,0.45)",
+    },
+    modalSheet: {
+      position: "absolute",
+      bottom: 0, left: 0, right: 0,
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingTop: 20,
+      paddingHorizontal: 20,
+      minHeight: 200,
+      shadowColor: "#000",
+      shadowOpacity: 0.18,
+      shadowRadius: 24,
+      elevation: 12,
+    },
+    modalHeader: {
+      alignItems: "center",
+      gap: 10,
+      marginBottom: 20,
+    },
+    modalTitle: {
+      flex: 1,
+      fontSize: 17,
+      fontFamily: "Inter_700Bold",
+      color: colors.foreground,
+      textAlign: isAr ? "right" : "left",
+    },
+    modalEmpty: {
+      alignItems: "center",
+      paddingVertical: 32,
+      gap: 10,
+    },
+    modalEmptyText: {
+      fontSize: 14,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+    },
+    modalItem: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: colors.background,
+      borderRadius: 14,
+      padding: 14,
+      marginBottom: 10,
+    },
+    modalItemIcon: {
+      width: 38,
+      height: 38,
+      borderRadius: 10,
+      backgroundColor: colors.navy + "15",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    modalItemTitle: {
+      fontSize: 14,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.foreground,
+      textAlign: isAr ? "right" : "left",
+    },
+    modalItemSub: {
+      fontSize: 12,
+      fontFamily: "Inter_400Regular",
+      color: colors.mutedForeground,
+      marginTop: 2,
+      textAlign: isAr ? "right" : "left",
+    },
+    modalBadge: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: colors.gold,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    modalBadgeText: {
+      fontSize: 11,
+      fontFamily: "Inter_700Bold",
+      color: colors.navy,
+    },
   });
 
   function renderCard(p: Property) {
@@ -535,7 +623,7 @@ export default function DashboardScreen() {
               />
             )}
           </View>
-          <Pressable style={S.notifBtn}>
+          <Pressable style={S.notifBtn} onPress={() => setShowMessages(true)}>
             <MaterialIcons name="notifications-none" size={22} color="#FFFFFF" />
             {unreadLeadsCount > 0 && (
               <View style={S.badge}>
@@ -628,11 +716,48 @@ export default function DashboardScreen() {
                   {report.actions.length > 0 && (
                     <>
                       <Text style={S.actionsLabel}>{t.assistant.actions}</Text>
-                      {report.actions.slice(0, 2).map((action, i) => (
-                        <View key={i} style={S.actionPill}>
-                          <Text style={S.actionText}>→ {action}</Text>
-                        </View>
-                      ))}
+                      {report.actions.slice(0, 2).map((action, i) => {
+                        const isPublishAction = i === 0 && properties.some(
+                          (p) => !p.platforms.some((x) => x.status === "published" || x.status === "publishing")
+                        );
+                        return (
+                          <Pressable
+                            key={i}
+                            style={({ pressed }) => [S.actionPill, pressed && { opacity: 0.75 }]}
+                            onPress={() => {
+                              if (isPublishAction) {
+                                const inactive = properties.filter(
+                                  (p) => !p.platforms.some((x) => x.status === "published" || x.status === "publishing")
+                                );
+                                Alert.alert(
+                                  isAr ? "نشر العقارات" : "Publish Properties",
+                                  isAr
+                                    ? `سيتم تفعيل نشر ${inactive.length} عقار غير منشور`
+                                    : `Activate publishing for ${inactive.length} inactive propert${inactive.length === 1 ? "y" : "ies"}?`,
+                                  [
+                                    { text: isAr ? "إلغاء" : "Cancel", style: "cancel" },
+                                    {
+                                      text: isAr ? "نشر الآن" : "Publish Now",
+                                      onPress: () => {
+                                        inactive.forEach((p) => {
+                                          updateProperty(p.id, {
+                                            platforms: p.platforms.map((x) => ({ ...x, status: "publishing" as const })),
+                                          });
+                                        });
+                                        void fetchReport();
+                                      },
+                                    },
+                                  ]
+                                );
+                              } else {
+                                router.push("/(tabs)/listings");
+                              }
+                            }}
+                          >
+                            <Text style={S.actionText}>→ {action}</Text>
+                          </Pressable>
+                        );
+                      })}
                     </>
                   )}
 
@@ -683,6 +808,59 @@ export default function DashboardScreen() {
       >
         <MaterialIcons name="add" size={30} color={colors.navy} />
       </Pressable>
+
+      {/* ── Message Center Modal ── */}
+      <Modal
+        visible={showMessages}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowMessages(false)}
+      >
+        <View style={{ flex: 1 }}>
+          <Pressable style={S.modalOverlay} onPress={() => setShowMessages(false)} />
+          <View style={[S.modalSheet, { paddingBottom: insets.bottom + 24 }]}>
+            <View style={[S.modalHeader, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+              <MaterialIcons name="inbox" size={20} color={colors.navy} />
+              <Text style={S.modalTitle}>{isAr ? "مركز الرسائل" : "Message Center"}</Text>
+              <Pressable onPress={() => setShowMessages(false)} hitSlop={10} style={{ marginLeft: "auto" }}>
+                <MaterialIcons name="close" size={22} color={colors.mutedForeground} />
+              </Pressable>
+            </View>
+            {properties.filter((p) => p.leads.some((l) => !l.read)).length === 0 ? (
+              <View style={S.modalEmpty}>
+                <MaterialIcons name="mark-email-read" size={44} color={colors.mutedForeground} />
+                <Text style={S.modalEmptyText}>{isAr ? "لا توجد رسائل جديدة" : "No new messages"}</Text>
+              </View>
+            ) : (
+              properties
+                .filter((p) => p.leads.some((l) => !l.read))
+                .map((p) => {
+                  const unread = p.leads.filter((l) => !l.read).length;
+                  return (
+                    <Pressable
+                      key={p.id}
+                      style={({ pressed }) => [S.modalItem, pressed && { opacity: 0.75 }]}
+                      onPress={() => { setShowMessages(false); router.push("/(tabs)/listings"); }}
+                    >
+                      <View style={S.modalItemIcon}>
+                        <MaterialIcons name="home" size={18} color={colors.navy} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={S.modalItemTitle} numberOfLines={1}>{p.title}</Text>
+                        <Text style={S.modalItemSub}>
+                          {unread} {isAr ? "استفسار جديد" : `new inquir${unread === 1 ? "y" : "ies"}`}
+                        </Text>
+                      </View>
+                      <View style={S.modalBadge}>
+                        <Text style={S.modalBadgeText}>{unread}</Text>
+                      </View>
+                    </Pressable>
+                  );
+                })
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

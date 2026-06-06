@@ -83,6 +83,26 @@ const MOCK_STATS: PortalStats = {
   occupancyRate: 78,
 };
 
+interface ServiceProvider {
+  id: number;
+  name: string;
+  nameAr: string;
+  specialty: string;
+  specialtyAr: string;
+  rating: number;
+  jobsDone: number;
+  onTimeRate: number;
+  avgCost: string;
+  iconName: React.ComponentProps<typeof MaterialIcons>["name"];
+}
+
+const MOCK_PROVIDERS: ServiceProvider[] = [
+  { id: 1, name: "Al-Faris Construction",  nameAr: "شركة الفارس للإنشاءات",  specialty: "Renovation",  specialtyAr: "تجديد وتشطيبات",         rating: 4.8, jobsDone: 142, onTimeRate: 94, avgCost: "12K–45K SAR",  iconName: "construction" },
+  { id: 2, name: "Madinah Plumbing Co.",   nameAr: "شركة المدينة للسباكة",   specialty: "Plumbing",    specialtyAr: "سباكة وصرف صحي",          rating: 4.5, jobsDone:  89, onTimeRate: 88, avgCost:  "800–5K SAR",  iconName: "plumbing" },
+  { id: 3, name: "Nour Electrical",        nameAr: "مؤسسة نور الكهرباء",     specialty: "Electrical",  specialtyAr: "كهرباء وأنظمة ذكية",      rating: 4.7, jobsDone: 207, onTimeRate: 96, avgCost:  "500–8K SAR",  iconName: "electrical-services" },
+  { id: 4, name: "GreenScape Gardens",     nameAr: "جرين سكيب للتشجير",     specialty: "Landscaping", specialtyAr: "تشجير وتجميل المباني",    rating: 4.3, jobsDone:  56, onTimeRate: 82, avgCost: "2K–15K SAR",   iconName: "park" },
+];
+
 const MOCK_BOOKINGS: RecentBooking[] = [
   { id: 1, guestName: "أحمد الشمري", checkIn: "2026-06-01", checkOut: "2026-06-07", status: "checked_in",  totalAmount: 18_500, roomName: "غرفة ديلوكس", propertyName: "فندق جراند داون تاون" },
   { id: 2, guestName: "Khalid Al-Ghamdi", checkIn: "2026-06-03", checkOut: "2026-06-10", status: "confirmed", totalAmount: 24_000, roomName: "Suite 201", propertyName: "Sunset Apartments" },
@@ -304,6 +324,29 @@ export default function InvestorPortalScreen() {
               ))
             )}
           </View>
+
+          {/* ── Maintenance & Construction Providers ── */}
+          <View style={s.section}>
+            <View style={[s.sectionRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.sectionTitle, { textAlign: isAr ? "right" : "left" }]}>
+                  {isAr ? "مزودو الصيانة والإنشاء" : "Maintenance & Construction Providers"}
+                </Text>
+                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: "#64748B", marginTop: 2, textAlign: isAr ? "right" : "left" }}>
+                  {isAr ? "مراقبة الجودة والأداء" : "Quality & performance monitoring"}
+                </Text>
+              </View>
+              <View style={[s.exportBtn, { backgroundColor: "#0891B218" }]}>
+                <MaterialIcons name="verified" size={14} color="#0891B2" />
+                <Text style={[s.exportBtnText, { color: "#0891B2" }]}>
+                  {isAr ? "موثّقون" : "Verified"}
+                </Text>
+              </View>
+            </View>
+            {MOCK_PROVIDERS.map((prov) => (
+              <ProviderCard key={prov.id} provider={prov} s={s} isAr={isAr} />
+            ))}
+          </View>
         </ScrollView>
       </Animated.View>
     );
@@ -429,6 +472,52 @@ export default function InvestorPortalScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </Animated.View>
+  );
+}
+
+function ProviderCard({ provider, s, isAr }: {
+  provider: ServiceProvider;
+  s: ReturnType<typeof makeStyles>;
+  isAr: boolean;
+}) {
+  return (
+    <View style={[s.providerCard, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+      <View style={[s.providerIconBox, { backgroundColor: "#0891B218" }]}>
+        <MaterialIcons name={provider.iconName} size={22} color="#0891B2" />
+      </View>
+      <View style={{ flex: 1, gap: 4 }}>
+        <View style={{ flexDirection: isAr ? "row-reverse" : "row", alignItems: "center", gap: 6 }}>
+          <Text style={[s.providerName, { textAlign: isAr ? "right" : "left" }]} numberOfLines={1}>
+            {isAr ? provider.nameAr : provider.name}
+          </Text>
+        </View>
+        <Text style={[s.providerSpecialty, { textAlign: isAr ? "right" : "left" }]}>
+          {isAr ? provider.specialtyAr : provider.specialty}
+        </Text>
+        <View style={[s.providerMetaRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+          <View style={s.providerMeta}>
+            <MaterialIcons name="star" size={12} color="#F59E0B" />
+            <Text style={s.providerMetaText}>{provider.rating}</Text>
+          </View>
+          <View style={s.providerMeta}>
+            <MaterialIcons name="check-circle" size={12} color="#16A34A" />
+            <Text style={s.providerMetaText}>{provider.jobsDone} {isAr ? "مهمة" : "jobs"}</Text>
+          </View>
+          <View style={s.providerMeta}>
+            <MaterialIcons name="schedule" size={12} color="#2563EB" />
+            <Text style={s.providerMetaText}>{provider.onTimeRate}% {isAr ? "في الوقت" : "on-time"}</Text>
+          </View>
+        </View>
+      </View>
+      <View style={{ alignItems: isAr ? "flex-start" : "flex-end", gap: 4 }}>
+        <View style={[s.providerRatingBadge, { backgroundColor: provider.onTimeRate >= 90 ? "#DCFCE7" : provider.onTimeRate >= 80 ? "#FEF9C3" : "#FEE2E2" }]}>
+          <Text style={[s.providerRatingText, { color: provider.onTimeRate >= 90 ? "#16A34A" : provider.onTimeRate >= 80 ? "#B45309" : "#DC2626" }]}>
+            {provider.onTimeRate >= 90 ? (isAr ? "ممتاز" : "Excellent") : provider.onTimeRate >= 80 ? (isAr ? "جيد" : "Good") : (isAr ? "مقبول" : "Fair")}
+          </Text>
+        </View>
+        <Text style={s.providerCost}>{provider.avgCost}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -585,5 +674,15 @@ function makeStyles(
     eventTypeText: { fontSize: 10, fontFamily: "Inter_600SemiBold", textTransform: "capitalize" },
     eventDesc: { fontSize: 13, fontFamily: "Inter_400Regular", color: colors.foreground, lineHeight: 18 },
     eventTime: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
+    providerCard: { backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12, alignItems: "center", shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
+    providerIconBox: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    providerName: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground, flex: 1 },
+    providerSpecialty: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
+    providerMetaRow: { gap: 10, marginTop: 2 },
+    providerMeta: { flexDirection: "row", alignItems: "center", gap: 3 },
+    providerMetaText: { fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
+    providerRatingBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+    providerRatingText: { fontSize: 11, fontFamily: "Inter_700Bold" },
+    providerCost: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: "right" },
   });
 }
