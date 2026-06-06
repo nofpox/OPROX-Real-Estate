@@ -369,7 +369,7 @@ export default function DiscoveryMapScreen() {
                 <MaterialIcons
                   name={m === "occupancy" ? "donut-large" : "show-chart"}
                   size={14}
-                  color={heatMetric === m ? "#FFFFFF" : colors.mutedForeground}
+                  color={heatMetric === m ? "#0A1628" : colors.mutedForeground}
                 />
                 <Text style={[s.metricPillText, heatMetric === m && s.metricPillTextActive]}>
                   {m === "occupancy" ? t.heatmap.metricOccupancy : t.heatmap.metricTransactions}
@@ -558,9 +558,9 @@ function makeStyles(
       paddingHorizontal: 14,
       paddingVertical:   7,
     },
-    metricPillActive:     { backgroundColor: colors.navy, borderColor: colors.navy },
+    metricPillActive:     { backgroundColor: colors.gold, borderColor: colors.gold },
     metricPillText:       { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
-    metricPillTextActive: { color: "#FFFFFF" },
+    metricPillTextActive: { color: "#0A1628" },
     metricHint:     { flex: 1, flexDirection: "row", alignItems: "center", gap: 4, justifyContent: "flex-end" },
     metricHintText: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
 
