@@ -1,4 +1,6 @@
 import { HelmetProvider } from "react-helmet-async";
+import { useState } from "react";
+import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -49,6 +51,19 @@ function Router() {
 }
 
 function App() {
+  const [showWelcome, setShowWelcome] = useState(
+    () => !sessionStorage.getItem("rkz_welcomed"),
+  );
+
+  function handleWelcomeDone() {
+    sessionStorage.setItem("rkz_welcomed", "1");
+    setShowWelcome(false);
+  }
+
+  if (showWelcome) {
+    return <WelcomeScreen onComplete={handleWelcomeDone} />;
+  }
+
   return (
     <HelmetProvider>
     <QueryClientProvider client={queryClient}>

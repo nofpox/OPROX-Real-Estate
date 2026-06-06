@@ -1,5 +1,6 @@
 import i18n from "@/i18n";
 import { useState } from "react";
+import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { useTheme } from "@/hooks/use-theme";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -82,8 +83,17 @@ function ThemeApplier() { useTheme(); return null; }
 
 function App() {
   const [authUser, setAuthUser] = useState<AuthUser>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
 
-  function handleLogout() { setAuthUser(null); }
+  function handleLogin(user: any) {
+    setAuthUser(user as AuthUser);
+    setShowWelcome(true);
+  }
+
+  function handleLogout() {
+    setAuthUser(null);
+    setShowWelcome(false);
+  }
 
   if (!authUser) {
     return (
@@ -91,11 +101,15 @@ function App() {
         <LanguageProvider>
           <QueryClientProvider client={queryClient}>
             <Toaster />
-            <Login onLogin={(user: any) => setAuthUser(user as AuthUser)} />
+            <Login onLogin={handleLogin} />
           </QueryClientProvider>
         </LanguageProvider>
       </I18nextProvider>
     );
+  }
+
+  if (showWelcome) {
+    return <WelcomeScreen onComplete={() => setShowWelcome(false)} />;
   }
 
   if (authUser.mustChangePassword) {
