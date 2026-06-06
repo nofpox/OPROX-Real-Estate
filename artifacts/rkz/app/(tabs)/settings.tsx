@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useLocale } from "@/hooks/useLocale";
 
 // Admin PIN (hidden gate — 4 digits)
@@ -33,6 +34,8 @@ export default function SettingsScreen() {
   const { user, setUser, properties } = useApp();
   const { config } = useConfig();
   const { t, isAr } = useLocale();
+
+  const isAdmin = useIsAdmin();
 
   const [autoRenew,  setAutoRenew]  = useState(true);
   const [notifs,     setNotifs]     = useState(true);
@@ -255,6 +258,33 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* ── Admin Dashboard (admin-only) ──────────────────────────────── */}
+        {isAdmin && (
+          <View style={S.section}>
+            <Text style={S.sectionTitle}>{isAr ? "إدارة النظام" : "System Administration"}</Text>
+            <View style={[S.card, { borderWidth: 1.5, borderColor: colors.gold + "55" }]}>
+              <Pressable
+                style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push("/admin-dashboard");
+                }}
+              >
+                <View style={[S.iconBox, { backgroundColor: "rgba(212,168,67,0.14)" }]}>
+                  <MaterialIcons name="admin-panel-settings" size={20} color={colors.gold} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={S.rowLabel}>{isAr ? "لوحة الإدارة" : "Admin Dashboard"}</Text>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                    {isAr ? "التحليلات · غرفة التحكم · إدارة العقود" : "Analytics · Control Room · Lease Management"}
+                  </Text>
+                </View>
+                <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.gold} />
+              </Pressable>
+            </View>
+          </View>
+        )}
+
         {/* Authorization toggle */}
         <View style={S.section}>
           <Text style={S.sectionTitle}>{t.settings.authSection}</Text>
@@ -368,54 +398,62 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Investor Portal */}
-        <View style={S.section}>
-          <Text style={S.sectionTitle}>{t.portal.menuTitle}</Text>
-          <View style={S.card}>
-            <Pressable
-              style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
-              onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push("/investor-portal"); }}
-            >
-              <View style={[S.iconBox, { backgroundColor: "#FEF3C7" }]}>
-                <MaterialIcons name="lock" size={20} color="#B45309" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={S.rowLabel}>{t.portal.menuTitle}</Text>
-                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
-                  {t.portal.menuDesc}
-                </Text>
-              </View>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
-            </Pressable>
+        {/* Investor Portal — admin only (accessible via Admin Dashboard) */}
+        {isAdmin && (
+          <View style={S.section}>
+            <Text style={S.sectionTitle}>{t.portal.menuTitle}</Text>
+            <View style={S.card}>
+              <Pressable
+                style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
+                onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push("/investor-portal"); }}
+              >
+                <View style={[S.iconBox, { backgroundColor: "#FEF3C7" }]}>
+                  <MaterialIcons name="bar-chart" size={20} color="#B45309" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={S.rowLabel}>{t.portal.menuTitle}</Text>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                    {t.portal.menuDesc}
+                  </Text>
+                </View>
+                <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
+              </Pressable>
+            </View>
           </View>
-        </View>
+        )}
 
-        {/* Lease & Tenant Management */}
-        <View style={S.section}>
-          <Text style={S.sectionTitle}>{t.lease.title}</Text>
-          <View style={S.card}>
-            <Pressable
-              style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
-              onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push("/leases"); }}
-            >
-              <View style={[S.iconBox, { backgroundColor: "#E0F2FE" }]}>
-                <MaterialIcons name="description" size={20} color="#0369A1" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={S.rowLabel}>{t.lease.entryTitle}</Text>
-                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
-                  {t.lease.entryDesc}
-                </Text>
-              </View>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
-            </Pressable>
+        {/* Lease & Tenant Management — admin only */}
+        {isAdmin && (
+          <View style={S.section}>
+            <Text style={S.sectionTitle}>{t.lease.title}</Text>
+            <View style={S.card}>
+              <Pressable
+                style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
+                onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push("/leases"); }}
+              >
+                <View style={[S.iconBox, { backgroundColor: "#E0F2FE" }]}>
+                  <MaterialIcons name="description" size={20} color="#0369A1" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={S.rowLabel}>{t.lease.entryTitle}</Text>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                    {t.lease.entryDesc}
+                  </Text>
+                </View>
+                <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
+              </Pressable>
+            </View>
           </View>
-        </View>
+        )}
 
-        {/* Version — tap 7× to open admin gate */}
-        <Pressable onPress={handleVersionTap}>
+        {/* Version — admin: tap 7× for legacy PIN gate; non-admin: static label */}
+        {isAdmin ? (
+          <Pressable onPress={handleVersionTap}>
+            <Text style={S.versionText}>{t.settings.version}</Text>
+          </Pressable>
+        ) : (
           <Text style={S.versionText}>{t.settings.version}</Text>
-        </Pressable>
+        )}
       </ScrollView>
 
       {/* ── Admin PIN Modal ──────────────────────────────────────────────────── */}

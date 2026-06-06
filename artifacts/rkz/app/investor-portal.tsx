@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PROPERTY_TYPE_LABELS, Property, useApp } from "@/context/AppContext";
 import { ADMIN_EVENTS_KEY, AdminEvent } from "@/hooks/useAIAssistant";
 import { useColors } from "@/hooks/useColors";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useLocale } from "@/hooks/useLocale";
 
 const PORTAL_USER_KEY = "portal_user";
@@ -154,15 +155,19 @@ export default function InvestorPortalScreen() {
   const { t, isAr } = useLocale();
   const tp = t.portal;
   const { user: appUser, properties } = useApp();
+  const isAdmin = useIsAdmin();
 
-  const [view,        setView]        = useState<PortalView>("login");
+  // Admin users bypass the login gate entirely
+  const [view,        setView]        = useState<PortalView>(() => isAdmin ? "dashboard" : "login");
   const [loading,     setLoading]     = useState(true);
   const [submitting,  setSubmitting]  = useState(false);
   const [error,       setError]       = useState("");
   const [username,    setUsername]    = useState("");
   const [password,    setPassword]    = useState("");
   const [showPass,    setShowPass]    = useState(false);
-  const [user,        setUser]        = useState<PortalUser | null>(null);
+  const [user,        setUser]        = useState<PortalUser | null>(() =>
+    isAdmin ? { id: 1, username: "admin", displayName: appUser?.name ?? "Admin", role: "owner" } : null
+  );
   const [stats]     = useState<PortalStats>(MOCK_STATS);
   const [bookings]  = useState<RecentBooking[]>(MOCK_BOOKINGS);
   const [adminEvents, setAdminEvents] = useState<AdminEvent[]>([]);

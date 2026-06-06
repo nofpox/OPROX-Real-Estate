@@ -27,6 +27,7 @@ function RootLayoutNav() {
       <Stack.Screen name="login" />
       <Stack.Screen name="welcome" options={{ animation: "fade", gestureEnabled: false }} />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="admin-dashboard" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen name="admin" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen name="investor-portal" options={{ headerShown: false, presentation: "modal" }} />
       <Stack.Screen name="leases" options={{ headerShown: false, presentation: "card" }} />

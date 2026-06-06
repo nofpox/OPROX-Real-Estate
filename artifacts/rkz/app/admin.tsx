@@ -21,7 +21,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useApp } from "@/context/AppContext";
 import { type AppConfig, type FeatureItem, type PlatformConfig, type PinResult, DEFAULT_CONFIG, useConfig } from "@/context/DynamicConfig";
+import { ADMIN_MASTER_PIN } from "@/constants/adminConfig";
 import { useColors } from "@/hooks/useColors";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useLocale } from "@/hooks/useLocale";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1130,22 +1132,24 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
 export default function AdminScreen() {
   const { user: appUser } = useApp();
   const { beginAdminSession } = useConfig();
-  const [authorizedPin, setAuthorizedPin] = useState<string | null>(null);
+  const isAdmin = useIsAdmin();
+
+  // Phone-identified admins and already-authorized users bypass the PIN gate.
+  const alreadyAuthorized = appUser?.authorized === true;
+  const [authorizedPin, setAuthorizedPin] = useState<string | null>(
+    isAdmin || alreadyAuthorized ? ADMIN_MASTER_PIN : null
+  );
 
   // Snapshot current config so we can roll back if user discards changes
   useEffect(() => {
     beginAdminSession();
   }, [beginAdminSession]);
 
-  // Users who already verified the settings-page PIN (user.authorized = true)
-  // have already proven their identity — skip the redundant second PIN gate.
-  const alreadyAuthorized = appUser?.authorized === true;
-
-  if (!authorizedPin && !alreadyAuthorized) {
+  if (!authorizedPin) {
     return <PinGate onUnlock={setAuthorizedPin} />;
   }
 
-  return <AdminPanel authorizedPin={authorizedPin ?? "0000"} />;
+  return <AdminPanel authorizedPin={authorizedPin} />;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
