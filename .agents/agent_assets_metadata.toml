@@ -113,3 +113,9 @@ id = "rU7-4iYEUtH2iAokp7nr0"
 uri = "file://attached_assets/generated_videos/rkz_cinematic_final.mp4"
 type = "video"
 title = "Rkz Cinematic Final — 37s · 1080p · Voiceover + Najdi Ardah Score"
+
+[[outputs]]
+id = "DQ_s7Mv2-VYHMJBuvbWRu"
+uri = "file://attached_assets/generated_videos/rkz_cinematic_final_v2.mp4"
+type = "video"
+title = "Rkz Cinematic — 37s · 1080p · H.264 High · Stereo AAC · Voiceover + Najdi Ardah Score"
