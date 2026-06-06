@@ -33,7 +33,9 @@ interface PriceSuggestion {
   min: number;
   max: number;
   suggested: number;
-  note: string;
+  note?: string;
+  confidence?: "high" | "medium" | "low";
+  insights?: string[];
 }
 
 export default function AddPropertyScreen() {

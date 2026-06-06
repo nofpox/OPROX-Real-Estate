@@ -1,13 +1,11 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Haptics from "expo-haptics";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
-  Image,
-  Modal,
   Platform,
   Pressable,
   RefreshControl,
@@ -18,857 +16,521 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { generateLocalReport } from "@/constants/localReport";
-import {
-  PLATFORM_COLORS,
-  PLATFORM_LABELS,
-  Platform as PlatformType,
-  Property,
-  useApp,
-} from "@/context/AppContext";
-import { useConfig } from "@/context/DynamicConfig";
+import { ADMIN_EVENTS_KEY } from "@/hooks/useAIAssistant";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
+import { useConfig } from "@/context/DynamicConfig";
 
-const { width: _width } = Dimensions.get("window");
+const NEGOTIATION_KEY    = "rkz_negotiation_requests";
+const DISCOVERY_FILTER_KEY = "rkz_discovery_filter";
 
-function totalViews(p: Property) {
-  return p.platforms.reduce((a, x) => a + (x.views ?? 0), 0);
+const { width: SCREEN_W } = Dimensions.get("window");
+
+// ── Static discovery listings ──────────────────────────────────────────────
+interface Listing {
+  id: string;
+  type: string;
+  city: string;
+  district: string;
+  price: number;
+  area: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  badge?: string;
 }
 
-function totalLeads(p: Property) {
-  return p.platforms.reduce((a, x) => a + (x.leads ?? 0), 0);
+const ALL_LISTINGS: Listing[] = [
+  { id: "d01", type: "villa",      city: "الرياض",       district: "النرجس",      price: 2_850_000, area: 450, bedrooms: 6, bathrooms: 7 },
+  { id: "d02", type: "apartment",  city: "جدة",           district: "الروضة",      price: 680_000,   area: 180, bedrooms: 3, bathrooms: 2 },
+  { id: "d03", type: "villa",      city: "الدمام",        district: "الشاطئ",      price: 1_950_000, area: 380, bedrooms: 5, bathrooms: 5 },
+  { id: "d04", type: "apartment",  city: "الرياض",       district: "الملقا",      price: 540_000,   area: 140, bedrooms: 2, bathrooms: 2 },
+  { id: "d05", type: "land",       city: "مكة المكرمة",  district: "العزيزية",    price: 3_200_000, area: 600 },
+  { id: "d06", type: "commercial", city: "الرياض",       district: "العليا",      price: 8_500_000, area: 1200 },
+  { id: "d07", type: "compound",   city: "الخبر",        district: "الكورنيش",    price: 4_600_000, area: 2000 },
+  { id: "d08", type: "villa",      city: "المدينة المنورة", district: "الورود",  price: 1_200_000, area: 300, bedrooms: 4, bathrooms: 3 },
+  { id: "d09", type: "apartment",  city: "الدمام",        district: "الراكة",      price: 420_000,   area: 120, bedrooms: 2, bathrooms: 1 },
+  { id: "d10", type: "warehouse",  city: "الرياض",       district: "الصناعية",    price: 6_800_000, area: 5000 },
+  { id: "d11", type: "farm",       city: "الطائف",        district: "الهضيبة",     price: 1_800_000, area: 10000 },
+  { id: "d12", type: "villa",      city: "جدة",           district: "التعمير",     price: 3_400_000, area: 520, bedrooms: 7, bathrooms: 6, badge: "جديد" },
+  { id: "d13", type: "apartment",  city: "الرياض",       district: "الياسمين",    price: 590_000,   area: 155, bedrooms: 3, bathrooms: 2 },
+  { id: "d14", type: "land",       city: "الخبر",        district: "الأمواج",     price: 5_100_000, area: 900 },
+  { id: "d15", type: "rest_house", city: "الطائف",        district: "الشفا",       price: 2_100_000, area: 800, bedrooms: 5 },
+  { id: "d16", type: "palace",     city: "الرياض",       district: "الحمراء",     price: 18_000_000, area: 2400, bedrooms: 12, bathrooms: 14, badge: "حصري" },
+];
+
+const TYPE_LABELS: Record<string, string> = {
+  villa: "فيلا", apartment: "شقة", land: "أرض", commercial: "تجاري",
+  compound: "مجمع", floor: "دور", warehouse: "مستودع", farm: "مزرعة",
+  rest_house: "استراحة", palace: "قصر",
+};
+
+const TYPE_ICON: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+  villa:      "home",
+  apartment:  "apartment",
+  land:       "terrain",
+  commercial: "storefront",
+  compound:   "location-city",
+  floor:      "layers",
+  warehouse:  "warehouse",
+  farm:       "grass",
+  rest_house: "weekend",
+  palace:     "castle",
+};
+
+function fmtPrice(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}م`;
+  if (n >= 1_000)     return `${(n / 1_000).toFixed(0)}ك`;
+  return String(n);
 }
 
-interface AIReport {
-  summary: string;
-  insights: string[];
-  actions: string[];
-  score: number;
-}
+// ── Property Card ─────────────────────────────────────────────────────────
+function PropertyCard({
+  listing,
+  onRequest,
+  s,
+  colors,
+}: {
+  listing: Listing;
+  onRequest: (l: Listing) => void;
+  s: ReturnType<typeof makeStyles>;
+  colors: ReturnType<typeof useColors>;
+}) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-// ── Score color ──────────────────────────────────────────────────────────────
-function scoreColor(score: number): string {
-  if (score >= 75) return "#4ADE80";
-  if (score >= 50) return "#FCD34D";
-  return "#F87171";
-}
+  const onPressIn  = () => Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
+  const onPressOut = () => Animated.spring(scaleAnim, { toValue: 1,    useNativeDriver: true }).start();
 
-export default function DashboardScreen() {
-  const colors = useColors();
-  const insets = useSafeAreaInsets();
-  const { properties, unreadLeadsCount, updateProperty } = useApp();
-  const [showMessages, setShowMessages] = useState(false);
-  const { t, isAr } = useLocale();
-  const { config } = useConfig();
-  const [refreshing, setRefreshing] = useState(false);
-  const [report, setReport] = useState<AIReport | null>(null);
-  const [reportLoading, setReportLoading] = useState(false);
-
-  const scoreAnim = useRef(new Animated.Value(0)).current;
-
-  const publishedCount = properties.filter((p) =>
-    p.platforms.some((x) => x.status === "published")
-  ).length;
-  const allViews = properties.reduce((a, p) => a + totalViews(p), 0);
-  const allLeads = properties.reduce((a, p) => a + totalLeads(p), 0);
-  const publishingCount = properties.filter((p) =>
-    p.platforms.some((x) => x.status === "publishing")
-  ).length;
-
-  async function fetchReport() {
-    if (properties.length === 0) return;
-    setReportLoading(true);
-    await new Promise((r) => setTimeout(r, 700));
-    const portfolioData = properties.map((p) => ({
-      type: p.type,
-      city: p.location.city,
-      district: p.location.district,
-      price: p.price,
-      area: p.area,
-      bedrooms: p.bedrooms,
-      status: p.platforms.some((x) => x.status === "published") ? "published" : "publishing",
-      views: totalViews(p),
-      leads: p.leads.length,
-      publishedAt: p.publishedAt,
-    }));
-    const result = generateLocalReport(portfolioData, isAr);
-    setReport(result);
-    Animated.timing(scoreAnim, {
-      toValue: result.score,
-      duration: 1000,
-      useNativeDriver: false,
-    }).start();
-    setReportLoading(false);
-  }
-
-  useEffect(() => {
-    const timer = setTimeout(() => { void fetchReport(); }, 800);
-    return () => clearTimeout(timer);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function onRefresh() {
-    setRefreshing(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setRefreshing(false);
-  }
-
-  const topPadding = insets.top + (Platform.OS === "web" ? 67 : 0);
-  const bottomPadding = insets.bottom + (Platform.OS === "web" ? 34 : 100);
-
-  const S = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-    header: {
-      backgroundColor: colors.navy,
-      paddingTop: topPadding + 16,
-      paddingBottom: 24,
-      paddingHorizontal: 20,
-    },
-    headerTop: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 20,
-    },
-    greeting: {
-      color: "rgba(255,255,255,0.6)",
-      fontSize: 13,
-      fontFamily: "Inter_400Regular",
-      textAlign: isAr ? "right" : "left",
-    },
-    appName: {
-      color: "#FFFFFF",
-      fontSize: 22,
-      fontFamily: "Inter_700Bold",
-      letterSpacing: 1,
-      textAlign: isAr ? "right" : "left",
-    },
-    notifBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: "rgba(255,255,255,0.1)",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    badge: {
-      position: "absolute",
-      top: -2,
-      right: -2,
-      width: 18,
-      height: 18,
-      borderRadius: 9,
-      backgroundColor: colors.gold,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    badgeText: { color: colors.navy, fontSize: 10, fontFamily: "Inter_700Bold" },
-    kpiRow: { flexDirection: "row", gap: 10 },
-    kpi: {
-      flex: 1,
-      backgroundColor: "rgba(255,255,255,0.1)",
-      borderRadius: 12,
-      padding: 14,
-    },
-    kpiValue: { color: "#FFFFFF", fontSize: 22, fontFamily: "Inter_700Bold" },
-    kpiLabel: {
-      color: "rgba(255,255,255,0.55)",
-      fontSize: 11,
-      fontFamily: "Inter_400Regular",
-      marginTop: 2,
-    },
-    kpiDot: { width: 6, height: 6, borderRadius: 3, marginBottom: 8 },
-    scroll: { flex: 1 },
-    // ── AI Report Card ────────────────────────────────────────────────────────
-    reportSection: { paddingHorizontal: 20, marginTop: 20 },
-    reportCard: {
-      backgroundColor: colors.goldLight,
-      borderRadius: 16,
-      padding: 16,
-      overflow: "hidden",
-    },
-    reportHeaderRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 12,
-    },
-    reportTitleRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "center",
-      gap: 8,
-    },
-    reportTitle: {
-      fontSize: 14,
-      fontFamily: "Inter_700Bold",
-      color: colors.navyLight,
-    },
-    scoreCircle: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      borderWidth: 3,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    scoreText: {
-      fontSize: 15,
-      fontFamily: "Inter_700Bold",
-    },
-    refreshBtn: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "center",
-      gap: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 8,
-      backgroundColor: colors.gold + "30",
-    },
-    refreshBtnText: {
-      fontSize: 12,
-      fontFamily: "Inter_500Medium",
-      color: colors.navyLight,
-    },
-    reportSummary: {
-      fontSize: 13,
-      fontFamily: "Inter_400Regular",
-      color: colors.navyLight,
-      lineHeight: 20,
-      marginBottom: 12,
-      textAlign: isAr ? "right" : "left",
-    },
-    insightRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "flex-start",
-      gap: 8,
-      marginBottom: 6,
-    },
-    insightDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: colors.gold,
-      marginTop: 7,
-      flexShrink: 0,
-    },
-    insightText: {
-      flex: 1,
-      fontSize: 13,
-      fontFamily: "Inter_500Medium",
-      color: colors.navyLight,
-      lineHeight: 20,
-      textAlign: isAr ? "right" : "left",
-    },
-    actionsLabel: {
-      fontSize: 12,
-      fontFamily: "Inter_700Bold",
-      color: colors.navy,
-      marginTop: 10,
-      marginBottom: 6,
-      textAlign: isAr ? "right" : "left",
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-    },
-    actionPill: {
-      backgroundColor: colors.navy + "15",
-      borderRadius: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      marginBottom: 4,
-    },
-    actionText: {
-      fontSize: 12,
-      fontFamily: "Inter_400Regular",
-      color: colors.navy,
-      textAlign: isAr ? "right" : "left",
-    },
-    reportLoadingBox: {
-      alignItems: "center",
-      paddingVertical: 20,
-      gap: 8,
-    },
-    reportLoadingText: {
-      fontSize: 13,
-      fontFamily: "Inter_400Regular",
-      color: colors.navyLight,
-    },
-    openAssistantRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 6,
-      marginTop: 12,
-      paddingTop: 12,
-      borderTopWidth: 1,
-      borderTopColor: colors.gold + "40",
-    },
-    openAssistantText: {
-      fontSize: 13,
-      fontFamily: "Inter_600SemiBold",
-      color: colors.navy,
-    },
-    // ── Properties section ────────────────────────────────────────────────────
-    section: { paddingHorizontal: 20, marginTop: 24 },
-    sectionHeader: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 14,
-    },
-    sectionTitle: {
-      fontSize: 16,
-      fontFamily: "Inter_700Bold",
-      color: colors.foreground,
-    },
-    seeAll: { fontSize: 13, fontFamily: "Inter_500Medium", color: colors.gold },
-    card: {
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 12,
-      shadowColor: "#000",
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: 2 },
-      elevation: 2,
-    },
-    cardTop: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      marginBottom: 12,
-    },
-    propTypeBadge: {
-      backgroundColor: colors.muted,
-      borderRadius: 6,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-    },
-    propTypeText: {
-      fontSize: 12,
-      fontFamily: "Inter_500Medium",
-      color: colors.mutedForeground,
-    },
-    propPrice: {
-      fontSize: 17,
-      fontFamily: "Inter_700Bold",
-      color: colors.foreground,
-      textAlign: isAr ? "right" : "left",
-    },
-    propCurrency: {
-      fontSize: 12,
-      fontFamily: "Inter_400Regular",
-      color: colors.mutedForeground,
-      textAlign: isAr ? "right" : "left",
-    },
-    propAddress: {
-      fontSize: 13,
-      fontFamily: "Inter_400Regular",
-      color: colors.mutedForeground,
-      marginBottom: 12,
-      textAlign: isAr ? "right" : "left",
-    },
-    statsRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      gap: 16,
-      marginBottom: 12,
-    },
-    statItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-    statText: {
-      fontSize: 13,
-      fontFamily: "Inter_500Medium",
-      color: colors.mutedForeground,
-    },
-    platformRow: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
-    platformPill: {
-      borderRadius: 6,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-    },
-    platformText: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: "#FFFFFF" },
-    statusDot: { width: 6, height: 6, borderRadius: 3 },
-    unreadBubble: {
-      backgroundColor: colors.destructive,
-      borderRadius: 8,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      marginLeft: 4,
-    },
-    unreadText: { color: "#FFFFFF", fontSize: 10, fontFamily: "Inter_700Bold" },
-    fab: {
-      position: "absolute",
-      bottom: insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84) + 16,
-      right: 20,
-      width: 60,
-      height: 60,
-      borderRadius: 30,
-      backgroundColor: colors.gold,
-      alignItems: "center",
-      justifyContent: "center",
-      shadowColor: colors.gold,
-      shadowOpacity: 0.5,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 8,
-    },
-    emptyState: { alignItems: "center", paddingVertical: 48, gap: 12 },
-    emptyTitle: {
-      fontSize: 16,
-      fontFamily: "Inter_600SemiBold",
-      color: colors.foreground,
-    },
-    emptySubtitle: {
-      fontSize: 14,
-      fontFamily: "Inter_400Regular",
-      color: colors.mutedForeground,
-      textAlign: "center",
-    },
-    emptyBtn: {
-      backgroundColor: colors.navy,
-      borderRadius: 12,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      marginTop: 8,
-    },
-    emptyBtnText: {
-      color: "#FFFFFF",
-      fontFamily: "Inter_600SemiBold",
-      fontSize: 15,
-    },
-    // ── Message Center Modal ──────────────────────────────────────────────────
-    modalOverlay: {
-      position: "absolute",
-      top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: "rgba(0,0,0,0.45)",
-    },
-    modalSheet: {
-      position: "absolute",
-      bottom: 0, left: 0, right: 0,
-      backgroundColor: colors.card,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      paddingTop: 20,
-      paddingHorizontal: 20,
-      minHeight: 200,
-      shadowColor: "#000",
-      shadowOpacity: 0.18,
-      shadowRadius: 24,
-      elevation: 12,
-    },
-    modalHeader: {
-      alignItems: "center",
-      gap: 10,
-      marginBottom: 20,
-    },
-    modalTitle: {
-      flex: 1,
-      fontSize: 17,
-      fontFamily: "Inter_700Bold",
-      color: colors.foreground,
-      textAlign: isAr ? "right" : "left",
-    },
-    modalEmpty: {
-      alignItems: "center",
-      paddingVertical: 32,
-      gap: 10,
-    },
-    modalEmptyText: {
-      fontSize: 14,
-      fontFamily: "Inter_400Regular",
-      color: colors.mutedForeground,
-    },
-    modalItem: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "center",
-      gap: 12,
-      backgroundColor: colors.background,
-      borderRadius: 14,
-      padding: 14,
-      marginBottom: 10,
-    },
-    modalItemIcon: {
-      width: 38,
-      height: 38,
-      borderRadius: 10,
-      backgroundColor: colors.navy + "15",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    modalItemTitle: {
-      fontSize: 14,
-      fontFamily: "Inter_600SemiBold",
-      color: colors.foreground,
-      textAlign: isAr ? "right" : "left",
-    },
-    modalItemSub: {
-      fontSize: 12,
-      fontFamily: "Inter_400Regular",
-      color: colors.mutedForeground,
-      marginTop: 2,
-      textAlign: isAr ? "right" : "left",
-    },
-    modalBadge: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      backgroundColor: colors.gold,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    modalBadgeText: {
-      fontSize: 11,
-      fontFamily: "Inter_700Bold",
-      color: colors.navy,
-    },
-  });
-
-  function renderCard(p: Property) {
-    const unread = p.leads.filter((l) => !l.read).length;
-    const priceLocale = isAr ? "ar-SA" : "en-US";
-    return (
-      <Pressable
-        key={p.id}
-        style={({ pressed }) => [S.card, pressed && { opacity: 0.92 }]}
-        onPress={() => router.push({ pathname: "/(tabs)/listings", params: { id: p.id } })}
-      >
-        <View style={S.cardTop}>
-          <View style={S.propTypeBadge}>
-            <Text style={S.propTypeText}>{(t.propertyTypes as Record<string, string>)[p.type] ?? p.type}</Text>
-          </View>
-          <View style={{ alignItems: isAr ? "flex-start" : "flex-end" }}>
-            <Text style={S.propPrice}>{p.price.toLocaleString(priceLocale)}</Text>
-            <Text style={S.propCurrency}>{t.dashboard.sar}</Text>
-          </View>
-        </View>
-        <Text style={S.propAddress} numberOfLines={1}>
-          {p.location.district ? `${p.location.district}، ` : ""}{p.location.city}
-        </Text>
-        <View style={S.statsRow}>
-          <View style={S.statItem}>
-            <MaterialIcons name="visibility" size={14} color={colors.mutedForeground} />
-            <Text style={S.statText}>{totalViews(p).toLocaleString()}</Text>
-          </View>
-          <View style={S.statItem}>
-            <MaterialIcons name="phone" size={14} color={colors.mutedForeground} />
-            <Text style={S.statText}>{t.dashboard.leadsCount(totalLeads(p))}</Text>
-            {unread > 0 && (
-              <View style={S.unreadBubble}>
-                <Text style={S.unreadText}>{unread}</Text>
-              </View>
-            )}
-          </View>
-          {p.area && (
-            <View style={S.statItem}>
-              <MaterialIcons name="square-foot" size={14} color={colors.mutedForeground} />
-              <Text style={S.statText}>{p.area} {isAr ? "م²" : "m²"}</Text>
-            </View>
-          )}
-        </View>
-        <View style={S.platformRow}>
-          {p.platforms.map((pl) => (
-            <View
-              key={pl.platform}
-              style={[
-                S.platformPill,
-                { backgroundColor: pl.status === "published" ? PLATFORM_COLORS[pl.platform] : colors.muted },
-              ]}
-            >
-              <View
-                style={[
-                  S.statusDot,
-                  {
-                    backgroundColor:
-                      pl.status === "published" ? "#4ADE80"
-                      : pl.status === "publishing" ? "#FCD34D"
-                      : "#F87171",
-                  },
-                ]}
-              />
-              <Text
-                style={[
-                  S.platformText,
-                  { color: pl.status === "published" ? "#FFFFFF" : colors.mutedForeground },
-                ]}
-              >
-                {PLATFORM_LABELS[pl.platform as PlatformType]}
-              </Text>
-            </View>
-          ))}
-        </View>
-      </Pressable>
-    );
-  }
+  const iconName = TYPE_ICON[listing.type] ?? "home";
 
   return (
-    <View style={S.container}>
-      {/* ── Navy header + KPIs ── */}
-      <View style={S.header}>
-        <View style={S.headerTop}>
-          <View>
-            <Text style={S.greeting}>{t.dashboard.greeting}</Text>
-            {config.branding.logoUrl ? (
-              <Image
-                source={{ uri: config.branding.logoUrl }}
-                style={{ width: 120, height: 40, resizeMode: "contain" }}
-                fadeDuration={0}
-              />
-            ) : (
-              <Image
-                source={require("@/assets/images/rkaz-logo.jpg")}
-                style={{ width: 120, height: 40, resizeMode: "contain" }}
-                fadeDuration={0}
-              />
-            )}
+    <Animated.View style={[s.card, { transform: [{ scale: scaleAnim }] }]}>
+      {/* Thumbnail placeholder */}
+      <View style={s.cardThumb}>
+        <MaterialIcons name={iconName} size={36} color={colors.gold} />
+        {listing.badge ? (
+          <View style={s.badgeChip}>
+            <Text style={s.badgeText}>{listing.badge}</Text>
           </View>
-          <View style={{ flexDirection: isAr ? "row-reverse" : "row", gap: 8 }}>
-            <Pressable
-              style={S.notifBtn}
-              onPress={() => router.push("/map-discovery")}
-            >
-              <MaterialIcons name="map" size={20} color="#FFFFFF" />
-            </Pressable>
-            <Pressable style={S.notifBtn} onPress={() => setShowMessages(true)}>
-              <MaterialIcons name="notifications-none" size={22} color="#FFFFFF" />
-              {unreadLeadsCount > 0 && (
-                <View style={S.badge}>
-                  <Text style={S.badgeText}>{unreadLeadsCount}</Text>
-                </View>
-              )}
-            </Pressable>
+        ) : null}
+      </View>
+
+      <View style={s.cardBody}>
+        {/* Type + City */}
+        <View style={s.cardRow}>
+          <View style={s.typeChip}>
+            <Text style={s.typeChipText}>{TYPE_LABELS[listing.type] ?? listing.type}</Text>
           </View>
+          <Text style={s.cityText} numberOfLines={1}>{listing.city}</Text>
         </View>
-        <View style={S.kpiRow}>
-          <View style={S.kpi}>
-            <View style={[S.kpiDot, { backgroundColor: "#4ADE80" }]} />
-            <Text style={S.kpiValue}>{publishedCount}</Text>
-            <Text style={S.kpiLabel}>{t.dashboard.published}</Text>
+
+        {/* District */}
+        <Text style={s.districtText} numberOfLines={1}>{listing.district}</Text>
+
+        {/* Price */}
+        <Text style={s.priceText}>{fmtPrice(listing.price)} <Text style={s.sarText}>ريال</Text></Text>
+
+        {/* Area + Beds */}
+        <View style={s.metaRow}>
+          <View style={s.metaItem}>
+            <MaterialIcons name="straighten" size={12} color="#94A3B8" />
+            <Text style={s.metaText}>{listing.area.toLocaleString()} م²</Text>
           </View>
-          <View style={S.kpi}>
-            <View style={[S.kpiDot, { backgroundColor: colors.gold }]} />
-            <Text style={S.kpiValue}>{allViews.toLocaleString()}</Text>
-            <Text style={S.kpiLabel}>{t.dashboard.views}</Text>
-          </View>
-          <View style={S.kpi}>
-            <View style={[S.kpiDot, { backgroundColor: "#60A5FA" }]} />
-            <Text style={S.kpiValue}>{allLeads}</Text>
-            <Text style={S.kpiLabel}>{t.dashboard.leads}</Text>
-          </View>
-          {publishingCount > 0 && (
-            <View style={S.kpi}>
-              <View style={[S.kpiDot, { backgroundColor: "#FCD34D" }]} />
-              <Text style={S.kpiValue}>{publishingCount}</Text>
-              <Text style={S.kpiLabel}>{t.dashboard.publishing}</Text>
+          {listing.bedrooms ? (
+            <View style={s.metaItem}>
+              <MaterialIcons name="hotel" size={12} color="#94A3B8" />
+              <Text style={s.metaText}>{listing.bedrooms} غرف</Text>
             </View>
-          )}
+          ) : null}
+        </View>
+
+        {/* Request Negotiation CTA */}
+        <Pressable
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
+          onPress={() => onRequest(listing)}
+          style={({ pressed }) => [s.reqBtn, pressed && { opacity: 0.85 }]}
+        >
+          <MaterialIcons name="handshake" size={15} color="#0A1628" />
+          <Text style={s.reqBtnText}>طلب تفاوض</Text>
+        </Pressable>
+      </View>
+    </Animated.View>
+  );
+}
+
+// ── Main Screen ───────────────────────────────────────────────────────────
+export default function DiscoveryMapScreen() {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const { isAr } = useLocale();
+  const { config } = useConfig();
+
+  const topPad    = insets.top    + (Platform.OS === "web" ? 67  : 0);
+  const bottomPad = insets.bottom + (Platform.OS === "web" ? 34  : 100);
+
+  // Build type filter list from config (matches DynamicConfig propertyTypes)
+  const filterTypes = ["all", ...config.propertyTypes.map((pt) => pt.id)];
+
+  const [activeType,   setActiveType]   = useState("all");
+  const [refreshing,   setRefreshing]   = useState(false);
+
+  // Load pre-selected filter from entry gate (set by role selection or previous session)
+  useEffect(() => {
+    AsyncStorage.getItem(DISCOVERY_FILTER_KEY).then((saved) => {
+      if (saved && filterTypes.includes(saved)) setActiveType(saved);
+    }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const saveFilter = useCallback((type: string) => {
+    setActiveType(type);
+    void AsyncStorage.setItem(DISCOVERY_FILTER_KEY, type);
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await new Promise((r) => setTimeout(r, 600));
+    setRefreshing(false);
+  }, []);
+
+  const handleRequest = useCallback(async (listing: Listing) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      // Log to admin events
+      const evRaw = await AsyncStorage.getItem(ADMIN_EVENTS_KEY);
+      const events = evRaw ? JSON.parse(evRaw) : [];
+      const newId  = Date.now().toString();
+      events.push({
+        id:          newId,
+        type:        "pending_search",
+        description: `طلب تفاوض: ${TYPE_LABELS[listing.type] ?? listing.type} في ${listing.city} — ${listing.price.toLocaleString()} ريال`,
+        timestamp:   new Date().toISOString(),
+      });
+      await AsyncStorage.setItem(ADMIN_EVENTS_KEY, JSON.stringify(events));
+
+      // Save to negotiation requests (read in طلباتي tab)
+      const reqRaw = await AsyncStorage.getItem(NEGOTIATION_KEY);
+      const reqs   = reqRaw ? JSON.parse(reqRaw) : [];
+      reqs.push({
+        id:     newId,
+        type:   listing.type,
+        city:   listing.city,
+        price:  listing.price,
+        ts:     new Date().toISOString(),
+        status: "pending",
+      });
+      await AsyncStorage.setItem(NEGOTIATION_KEY, JSON.stringify(reqs));
+    } catch {}
+
+    Alert.alert(
+      "تم إرسال الطلب",
+      "تم استلام طلبك، سيتم التواصل معك قريباً.",
+      [{ text: "حسناً", style: "default" }],
+    );
+  }, []);
+
+  const filtered = activeType === "all"
+    ? ALL_LISTINGS
+    : ALL_LISTINGS.filter((l) => l.type === activeType);
+
+  const s = makeStyles(colors, isAr, topPad, bottomPad);
+
+  return (
+    <View style={s.container}>
+      {/* ── Header ────────────────────────────────────────────────────────── */}
+      <View style={s.header}>
+        <View style={[s.headerRow, isAr && { flexDirection: "row-reverse" }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={[s.headerTitle, isAr && { textAlign: "right" }]}>
+              {isAr ? "استكشف العقارات" : "Discover Properties"}
+            </Text>
+            <View style={[s.locationRow, isAr && { flexDirection: "row-reverse" }]}>
+              <MaterialIcons name="location-on" size={14} color={colors.gold} />
+              <Text style={s.locationText}>{isAr ? "المملكة العربية السعودية" : "Saudi Arabia"}</Text>
+            </View>
+          </View>
+          <View style={s.countBadge}>
+            <Text style={s.countText}>{filtered.length}</Text>
+            <Text style={s.countLabel}>{isAr ? "عقار" : "listings"}</Text>
+          </View>
         </View>
       </View>
 
+      {/* ── Type Filter Pills ─────────────────────────────────────────────── */}
+      <View style={s.filterWrap}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[
+            s.filterScroll,
+            isAr && { flexDirection: "row-reverse" },
+          ]}
+        >
+          <Pressable
+            onPress={() => saveFilter("all")}
+            style={[s.pill, activeType === "all" && s.pillActive]}
+          >
+            <Text style={[s.pillText, activeType === "all" && s.pillTextActive]}>
+              {isAr ? "الكل" : "All"}
+            </Text>
+          </Pressable>
+          {config.propertyTypes.map((pt) => {
+            const isActive = activeType === pt.id;
+            return (
+              <Pressable
+                key={pt.id}
+                onPress={() => saveFilter(pt.id)}
+                style={[s.pill, isActive && s.pillActive]}
+              >
+                <MaterialIcons
+                  name={TYPE_ICON[pt.id] ?? "home"}
+                  size={14}
+                  color={isActive ? "#0A1628" : colors.mutedForeground}
+                />
+                <Text style={[s.pillText, isActive && s.pillTextActive]}>
+                  {isAr ? pt.labelAr : pt.labelEn}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* ── Property Grid ─────────────────────────────────────────────────── */}
       <ScrollView
-        style={S.scroll}
-        contentContainerStyle={{ paddingBottom: bottomPadding }}
+        style={{ flex: 1 }}
+        contentContainerStyle={s.gridContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />
+        }
       >
-        {/* ── AI Intelligence Report Card ── */}
-        {properties.length > 0 && (
-          <View style={S.reportSection}>
-            <View style={S.reportCard}>
-              {reportLoading ? (
-                <View style={S.reportLoadingBox}>
-                  <ActivityIndicator color={colors.navyLight} />
-                  <Text style={S.reportLoadingText}>{t.assistant.reportLoading}</Text>
-                </View>
-              ) : report ? (
-                <>
-                  <View style={S.reportHeaderRow}>
-                    <View style={S.reportTitleRow}>
-                      <Text style={{ fontSize: 18 }}>✨</Text>
-                      <Text style={S.reportTitle}>{t.assistant.reportTitle}</Text>
-                    </View>
-                    <View style={{ flexDirection: isAr ? "row-reverse" : "row", alignItems: "center", gap: 10 }}>
-                      <View
-                        style={[
-                          S.scoreCircle,
-                          {
-                            borderColor: scoreColor(report.score),
-                          },
-                        ]}
-                      >
-                        <Text style={[S.scoreText, { color: scoreColor(report.score) }]}>
-                          {report.score}
-                        </Text>
-                      </View>
-                      <Pressable
-                        style={({ pressed }) => [S.refreshBtn, pressed && { opacity: 0.7 }]}
-                        onPress={() => { void fetchReport(); }}
-                        disabled={reportLoading}
-                      >
-                        <MaterialIcons name="refresh" size={14} color={colors.navyLight} />
-                        <Text style={S.refreshBtnText}>{t.assistant.refreshReport}</Text>
-                      </Pressable>
-                    </View>
-                  </View>
-
-                  <Text style={S.reportSummary}>{report.summary}</Text>
-
-                  {report.insights.slice(0, 3).map((insight, i) => (
-                    <View key={i} style={S.insightRow}>
-                      <View style={S.insightDot} />
-                      <Text style={S.insightText}>{insight}</Text>
-                    </View>
-                  ))}
-
-                  {report.actions.length > 0 && (
-                    <>
-                      <Text style={S.actionsLabel}>{t.assistant.actions}</Text>
-                      {report.actions.slice(0, 2).map((action, i) => {
-                        const isPublishAction = i === 0 && properties.some(
-                          (p) => !p.platforms.some((x) => x.status === "published" || x.status === "publishing")
-                        );
-                        return (
-                          <Pressable
-                            key={i}
-                            style={({ pressed }) => [S.actionPill, pressed && { opacity: 0.75 }]}
-                            onPress={() => {
-                              if (isPublishAction) {
-                                const inactive = properties.filter(
-                                  (p) => !p.platforms.some((x) => x.status === "published" || x.status === "publishing")
-                                );
-                                Alert.alert(
-                                  isAr ? "نشر العقارات" : "Publish Properties",
-                                  isAr
-                                    ? `سيتم تفعيل نشر ${inactive.length} عقار غير منشور`
-                                    : `Activate publishing for ${inactive.length} inactive propert${inactive.length === 1 ? "y" : "ies"}?`,
-                                  [
-                                    { text: isAr ? "إلغاء" : "Cancel", style: "cancel" },
-                                    {
-                                      text: isAr ? "نشر الآن" : "Publish Now",
-                                      onPress: () => {
-                                        inactive.forEach((p) => {
-                                          updateProperty(p.id, {
-                                            platforms: p.platforms.map((x) => ({ ...x, status: "publishing" as const })),
-                                          });
-                                        });
-                                        void fetchReport();
-                                      },
-                                    },
-                                  ]
-                                );
-                              } else {
-                                router.push("/(tabs)/listings");
-                              }
-                            }}
-                          >
-                            <Text style={S.actionText}>→ {action}</Text>
-                          </Pressable>
-                        );
-                      })}
-                    </>
-                  )}
-
-                  <Pressable
-                    style={({ pressed }) => [S.openAssistantRow, pressed && { opacity: 0.75 }]}
-                    onPress={() => router.push("/(tabs)/ai-concierge")}
-                  >
-                    <Text style={{ fontSize: 14 }}>✨</Text>
-                    <Text style={S.openAssistantText}>{t.assistant.viewAssistant}</Text>
-                    <MaterialIcons
-                      name={isAr ? "chevron-left" : "chevron-right"}
-                      size={16}
-                      color={colors.navy}
-                    />
-                  </Pressable>
-                </>
-              ) : null}
-            </View>
+        {filtered.length === 0 ? (
+          <View style={s.empty}>
+            <MaterialIcons name="search-off" size={48} color={colors.gold + "40"} />
+            <Text style={s.emptyText}>{isAr ? "لا توجد عقارات في هذه الفئة" : "No listings in this category"}</Text>
+          </View>
+        ) : (
+          <View style={s.grid}>
+            {filtered.map((listing) => (
+              <PropertyCard
+                key={listing.id}
+                listing={listing}
+                onRequest={handleRequest}
+                s={s}
+                colors={colors}
+              />
+            ))}
           </View>
         )}
-
-        {/* ── Properties section ── */}
-        <View style={S.section}>
-          <View style={S.sectionHeader}>
-            <Text style={S.sectionTitle}>{t.dashboard.myProperties}</Text>
-            <Pressable onPress={() => router.push("/(tabs)/listings")}>
-              <Text style={S.seeAll}>{t.dashboard.seeAll}</Text>
-            </Pressable>
-          </View>
-          {properties.length === 0 ? (
-            <View style={S.emptyState}>
-              <MaterialIcons name="home-work" size={48} color={colors.mutedForeground} />
-              <Text style={S.emptyTitle}>{t.dashboard.emptyTitle}</Text>
-              <Text style={S.emptySubtitle}>{t.dashboard.emptySubtitle}</Text>
-              <Pressable style={S.emptyBtn} onPress={() => router.push("/(tabs)/add")}>
-                <Text style={S.emptyBtnText}>{t.dashboard.addProperty}</Text>
-              </Pressable>
-            </View>
-          ) : (
-            properties.map(renderCard)
-          )}
-        </View>
       </ScrollView>
-
-      <Pressable
-        style={({ pressed }) => [S.fab, pressed && { transform: [{ scale: 0.94 }] }]}
-        onPress={() => router.push("/(tabs)/add")}
-      >
-        <MaterialIcons name="add" size={30} color={colors.navy} />
-      </Pressable>
-
-      {/* ── Message Center Modal ── */}
-      <Modal
-        visible={showMessages}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowMessages(false)}
-      >
-        <View style={{ flex: 1 }}>
-          <Pressable style={S.modalOverlay} onPress={() => setShowMessages(false)} />
-          <View style={[S.modalSheet, { paddingBottom: insets.bottom + 24 }]}>
-            <View style={[S.modalHeader, { flexDirection: isAr ? "row-reverse" : "row" }]}>
-              <MaterialIcons name="inbox" size={20} color={colors.navy} />
-              <Text style={S.modalTitle}>{isAr ? "مركز الرسائل" : "Message Center"}</Text>
-              <Pressable onPress={() => setShowMessages(false)} hitSlop={10} style={{ marginLeft: "auto" }}>
-                <MaterialIcons name="close" size={22} color={colors.mutedForeground} />
-              </Pressable>
-            </View>
-            {properties.filter((p) => p.leads.some((l) => !l.read)).length === 0 ? (
-              <View style={S.modalEmpty}>
-                <MaterialIcons name="mark-email-read" size={44} color={colors.mutedForeground} />
-                <Text style={S.modalEmptyText}>{isAr ? "لا توجد رسائل جديدة" : "No new messages"}</Text>
-              </View>
-            ) : (
-              properties
-                .filter((p) => p.leads.some((l) => !l.read))
-                .map((p) => {
-                  const unread = p.leads.filter((l) => !l.read).length;
-                  return (
-                    <Pressable
-                      key={p.id}
-                      style={({ pressed }) => [S.modalItem, pressed && { opacity: 0.75 }]}
-                      onPress={() => { setShowMessages(false); router.push("/(tabs)/listings"); }}
-                    >
-                      <View style={S.modalItemIcon}>
-                        <MaterialIcons name="home" size={18} color={colors.navy} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={S.modalItemTitle} numberOfLines={1}>{p.title}</Text>
-                        <Text style={S.modalItemSub}>
-                          {unread} {isAr ? "استفسار جديد" : `new inquir${unread === 1 ? "y" : "ies"}`}
-                        </Text>
-                      </View>
-                      <View style={S.modalBadge}>
-                        <Text style={S.modalBadgeText}>{unread}</Text>
-                      </View>
-                    </Pressable>
-                  );
-                })
-            )}
-          </View>
-        </View>
-      </Modal>
     </View>
   );
+}
+
+function makeStyles(
+  colors: ReturnType<typeof useColors>,
+  isAr: boolean,
+  topPad: number,
+  bottomPad: number,
+) {
+  const CARD_W = (SCREEN_W - 48) / 2; // 2-column grid with padding
+
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+
+    // ── Header ────────────────────────────────────────────────────────────
+    header: {
+      backgroundColor:   colors.navy,
+      paddingTop:        topPad + 14,
+      paddingBottom:     18,
+      paddingHorizontal: 18,
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems:    "center",
+    },
+    headerTitle: {
+      color:      "#FFFFFF",
+      fontSize:   22,
+      fontFamily: "Inter_700Bold",
+      letterSpacing: 0.3,
+    },
+    locationRow: {
+      flexDirection: "row",
+      alignItems:    "center",
+      gap:           3,
+      marginTop:     4,
+    },
+    locationText: {
+      color:      "rgba(255,255,255,0.55)",
+      fontSize:   12,
+      fontFamily: "Inter_400Regular",
+    },
+    countBadge: {
+      backgroundColor: colors.gold + "22",
+      borderRadius:    12,
+      paddingHorizontal: 12,
+      paddingVertical:   8,
+      alignItems:      "center",
+    },
+    countText: {
+      color:      colors.gold,
+      fontSize:   20,
+      fontFamily: "Inter_700Bold",
+    },
+    countLabel: {
+      color:      colors.gold,
+      fontSize:   10,
+      fontFamily: "Inter_400Regular",
+    },
+
+    // ── Filter ────────────────────────────────────────────────────────────
+    filterWrap: {
+      backgroundColor:   colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    filterScroll: {
+      paddingHorizontal: 14,
+      paddingVertical:   10,
+      gap:               8,
+      flexDirection:     "row",
+    },
+    pill: {
+      flexDirection:   "row",
+      alignItems:      "center",
+      gap:             5,
+      backgroundColor: colors.card,
+      borderWidth:     1,
+      borderColor:     colors.border,
+      borderRadius:    20,
+      paddingHorizontal: 12,
+      paddingVertical:   7,
+    },
+    pillActive: {
+      backgroundColor: colors.gold,
+      borderColor:     colors.gold,
+    },
+    pillText: {
+      fontSize:   13,
+      fontFamily: "Inter_600SemiBold",
+      color:      colors.mutedForeground,
+    },
+    pillTextActive: { color: "#0A1628" },
+
+    // ── Grid ──────────────────────────────────────────────────────────────
+    gridContent: {
+      padding:       16,
+      paddingBottom: bottomPad,
+    },
+    grid: {
+      flexDirection:  "row",
+      flexWrap:       "wrap",
+      justifyContent: "space-between",
+      gap:            12,
+    },
+
+    // ── Card ──────────────────────────────────────────────────────────────
+    card: {
+      width:           CARD_W,
+      backgroundColor: colors.card,
+      borderRadius:    16,
+      overflow:        "hidden",
+      shadowColor:     "#000",
+      shadowOpacity:   0.06,
+      shadowRadius:    8,
+      elevation:       2,
+    },
+    cardThumb: {
+      height:          110,
+      backgroundColor: colors.navy,
+      alignItems:      "center",
+      justifyContent:  "center",
+      position:        "relative",
+    },
+    badgeChip: {
+      position:        "absolute",
+      top:             8,
+      right:           8,
+      backgroundColor: colors.gold,
+      borderRadius:    6,
+      paddingHorizontal: 7,
+      paddingVertical:   2,
+    },
+    badgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#0A1628" },
+
+    cardBody: { padding: 12 },
+
+    cardRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems:    "center",
+      justifyContent:"space-between",
+      marginBottom:  4,
+    },
+    typeChip: {
+      backgroundColor: colors.gold + "20",
+      borderRadius:    6,
+      paddingHorizontal: 7,
+      paddingVertical:   2,
+    },
+    typeChipText: { fontSize: 10, fontFamily: "Inter_700Bold", color: colors.gold },
+    cityText: {
+      fontSize:   11,
+      fontFamily: "Inter_400Regular",
+      color:      "#94A3B8",
+      flex:       1,
+      textAlign:  isAr ? "left" : "right",
+    },
+    districtText: {
+      fontSize:   12,
+      fontFamily: "Inter_500Medium",
+      color:      colors.foreground,
+      marginBottom: 6,
+      textAlign:  isAr ? "right" : "left",
+    },
+    priceText: {
+      fontSize:   16,
+      fontFamily: "Inter_700Bold",
+      color:      colors.gold,
+      textAlign:  isAr ? "right" : "left",
+    },
+    sarText: { fontSize: 12, fontFamily: "Inter_400Regular", color: "#94A3B8" },
+
+    metaRow: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      gap:           10,
+      marginTop:     6,
+      marginBottom:  10,
+    },
+    metaItem: {
+      flexDirection: "row",
+      alignItems:    "center",
+      gap:           3,
+    },
+    metaText: { fontSize: 11, fontFamily: "Inter_400Regular", color: "#94A3B8" },
+
+    reqBtn: {
+      flexDirection:   "row",
+      alignItems:      "center",
+      justifyContent:  "center",
+      gap:             5,
+      backgroundColor: colors.gold,
+      borderRadius:    10,
+      paddingVertical: 9,
+    },
+    reqBtnText: { fontSize: 12, fontFamily: "Inter_700Bold", color: "#0A1628" },
+
+    // ── Empty ──────────────────────────────────────────────────────────────
+    empty: {
+      alignItems:  "center",
+      paddingTop:  80,
+      gap:         12,
+    },
+    emptyText: {
+      fontSize:   15,
+      fontFamily: "Inter_500Medium",
+      color:      "#94A3B8",
+      textAlign:  "center",
+    },
+  });
 }

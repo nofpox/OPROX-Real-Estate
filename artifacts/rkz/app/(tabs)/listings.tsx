@@ -29,10 +29,9 @@ type Filter = "all" | "published" | "publishing" | "failed";
 
 interface QualifyResult {
   leadId: string;
-  score: "serious" | "maybe" | "not_serious";
-  summary: string;
-  paymentMethod: "bank_financing" | "cash" | "other" | "unknown";
-  paymentSummary: string;
+  score: "hot" | "warm" | "cold";
+  reason: string;
+  suggestedAction: string;
 }
 
 interface QualifyState {

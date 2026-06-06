@@ -72,7 +72,9 @@ interface AppState {
   user: User | null;
   properties: Property[];
   isLoading: boolean;
+  selectedRole: "buyer" | "seller" | null;
   setUser: (user: User | null) => void;
+  setSelectedRole: (r: "buyer" | "seller") => void;
   addProperty: (property: Omit<Property, "id" | "createdAt" | "leads" | "platforms">) => Promise<Property>;
   updateProperty: (id: string, updates: Partial<Property>) => void;
   deleteProperty: (id: string) => void;
@@ -84,6 +86,7 @@ interface AppState {
 const AppContext = createContext<AppState | null>(null);
 
 const STORAGE_KEY = "rkz_state";
+const ROLE_KEY    = "rkz_user_role";
 
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
@@ -159,6 +162,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedRole, setSelectedRoleState] = useState<"buyer" | "seller" | null>(null);
 
   const save = useCallback(async (u: User | null, props: Property[]) => {
     try {
@@ -184,6 +188,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } catch {
         setProperties(SEED_PROPERTIES);
       }
+      try {
+        const savedRole = await AsyncStorage.getItem(ROLE_KEY);
+        if (savedRole === "buyer" || savedRole === "seller") setSelectedRoleState(savedRole);
+      } catch {}
       setIsLoading(false);
     }
     void boot();
@@ -203,6 +211,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     },
     [save]
   );
+
+  const setSelectedRole = useCallback((r: "buyer" | "seller") => {
+    setSelectedRoleState(r);
+    void AsyncStorage.setItem(ROLE_KEY, r);
+  }, []);
 
   const refreshFromApi = useCallback(async () => {
     // Standalone mode — no remote refresh
@@ -286,7 +299,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         user,
         properties,
         isLoading,
+        selectedRole,
         setUser,
+        setSelectedRole,
         addProperty,
         updateProperty,
         deleteProperty,
