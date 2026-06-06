@@ -18,7 +18,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useApp } from "@/context/AppContext";
+import { PROPERTY_TYPE_LABELS, Property, useApp } from "@/context/AppContext";
 import { ADMIN_EVENTS_KEY, AdminEvent } from "@/hooks/useAIAssistant";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
@@ -153,7 +153,7 @@ export default function InvestorPortalScreen() {
   const insets  = useSafeAreaInsets();
   const { t, isAr } = useLocale();
   const tp = t.portal;
-  const { user: appUser } = useApp();
+  const { user: appUser, properties } = useApp();
 
   const [view,        setView]        = useState<PortalView>("login");
   const [loading,     setLoading]     = useState(true);
@@ -202,12 +202,13 @@ export default function InvestorPortalScreen() {
       const rows = adminEvents.map((e) =>
         `"${e.type}","${e.description.replace(/"/g, '""')}","${new Date(e.timestamp).toISOString()}"`
       ).join("\n");
-      const totalRevRow = `\n"KPI","Total Revenue","${stats.totalRevenue} SAR"`;
-      const occupancyRow = `\n"KPI","Occupancy Rate","${stats.occupancyRate}%"`;
-      const csv = header + rows + totalRevRow + occupancyRow;
+      const occupancyRow  = `\n"KPI","Occupancy Rate","${stats.occupancyRate}%"`;
+      const bookingsRow   = `\n"KPI","Active Bookings","${stats.activeBookings}"`;
+      const propertiesRow = `\n"KPI","Properties","${properties.length}"`;
+      const csv = header + rows + occupancyRow + bookingsRow + propertiesRow;
       await Share.share({ title: "Analytics Hub Export", message: csv });
     } catch {}
-  }, [adminEvents, stats]);
+  }, [adminEvents, stats, properties]);
 
   const handleLogin = async () => {
     if (!username.trim() || !password) {
@@ -295,12 +296,34 @@ export default function InvestorPortalScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={s.kpiGrid}>
-            <KpiCard label={tp.totalRevenue}   value={`${tp.sar} ${fmtSAR(stats.totalRevenue)}`}   icon="trending-up"              color="#16A34A" s={s} isAr={isAr} />
-            <KpiCard label={tp.totalExpenses}  value={`${tp.sar} ${fmtSAR(stats.totalExpenses)}`}  icon="trending-down"            color="#DC2626" s={s} isAr={isAr} />
-            <KpiCard label={tp.netProfit}      value={`${tp.sar} ${fmtSAR(stats.netProfit)}`}      icon="account-balance-wallet"   color="#2563EB" s={s} isAr={isAr} />
-            <KpiCard label={tp.activeBookings} value={String(stats.activeBookings)}                icon="event-available"          color="#D97706" s={s} isAr={isAr} />
-            <KpiCard label={tp.properties}     value={String(stats.totalProperties)}               icon="home-work"                color="#7C3AED" s={s} isAr={isAr} />
+            <KpiCard label={tp.properties}     value={String(properties.length || stats.totalProperties)} icon="home-work"       color="#7C3AED" s={s} isAr={isAr} />
             <KpiCard label={tp.occupancy}      value={`${stats.occupancyRate}%`}                   icon="donut-large"              color="#0891B2" s={s} isAr={isAr} />
+            <KpiCard label={tp.activeBookings} value={String(stats.activeBookings)}                icon="event-available"          color="#D97706" s={s} isAr={isAr} />
+            <KpiCard
+              label={isAr ? "إجمالي الاستفسارات" : "Total Leads"}
+              value={String(properties.reduce((sum, p) => sum + p.leads.length, 0))}
+              icon="contact-phone"
+              color="#16A34A"
+              s={s}
+              isAr={isAr}
+            />
+          </View>
+
+          {/* ── Property Portfolio ── */}
+          <View style={s.section}>
+            <Text style={[s.sectionTitle, { textAlign: isAr ? "right" : "left" }]}>
+              {isAr ? "محفظة العقارات" : "Property Portfolio"}
+            </Text>
+            {properties.length === 0 ? (
+              <View style={s.emptyRow}>
+                <MaterialIcons name="home-work" size={28} color="#CBD5E1" />
+                <Text style={s.emptyText}>{isAr ? "لا توجد عقارات بعد" : "No properties yet"}</Text>
+              </View>
+            ) : (
+              properties.map((p) => (
+                <PortfolioCard key={p.id} property={p} s={s} isAr={isAr} />
+              ))
+            )}
           </View>
 
           <View style={s.section}>
@@ -612,9 +635,51 @@ function BookingRow({ booking, tp, s, isAr }: {
         <View style={[s.statusBadge, { backgroundColor: statusColor + "18" }]}>
           <Text style={[s.statusText, { color: statusColor }]}>{statusLabel[booking.status] ?? booking.status}</Text>
         </View>
-        {booking.totalAmount != null && (
-          <Text style={s.bookingAmount}>{fmtSAR(booking.totalAmount)} SAR</Text>
-        )}
+      </View>
+    </View>
+  );
+}
+
+function PortfolioCard({ property, s, isAr }: {
+  property: Property;
+  s: ReturnType<typeof makeStyles>; isAr: boolean;
+}) {
+  const typeLabel = PROPERTY_TYPE_LABELS[property.type] ?? property.type;
+  const loc = [property.location.district, property.location.city].filter(Boolean).join(isAr ? "، " : ", ");
+  return (
+    <View style={[s.portfolioCard, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+      <View style={s.portfolioIconBox}>
+        <MaterialIcons name="apartment" size={22} color="#D4A843" />
+      </View>
+      <View style={{ flex: 1, gap: 3 }}>
+        <Text style={[s.portfolioTitle, { textAlign: isAr ? "right" : "left" }]} numberOfLines={1}>
+          {property.title || typeLabel}
+        </Text>
+        <Text style={[s.portfolioLoc, { textAlign: isAr ? "right" : "left" }]} numberOfLines={1}>
+          {loc || typeLabel}
+        </Text>
+        <View style={[s.portfolioMetaRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+          {property.area != null && (
+            <View style={s.portfolioMeta}>
+              <MaterialIcons name="square-foot" size={12} color="#64748B" />
+              <Text style={s.portfolioMetaText}>{property.area} {isAr ? "م²" : "m²"}</Text>
+            </View>
+          )}
+          {property.bedrooms != null && (
+            <View style={s.portfolioMeta}>
+              <MaterialIcons name="bed" size={12} color="#64748B" />
+              <Text style={s.portfolioMetaText}>{property.bedrooms}</Text>
+            </View>
+          )}
+          <View style={s.portfolioMeta}>
+            <MaterialIcons name="contact-phone" size={12} color="#16A34A" />
+            <Text style={s.portfolioMetaText}>{property.leads.length} {isAr ? "استفسار" : "leads"}</Text>
+          </View>
+        </View>
+      </View>
+      <View style={{ alignItems: isAr ? "flex-start" : "flex-end", gap: 4 }}>
+        <Text style={s.portfolioPrice}>{fmtSAR(property.price)}</Text>
+        <Text style={s.portfolioCurrency}>{property.currency}</Text>
       </View>
     </View>
   );
@@ -705,5 +770,14 @@ function makeStyles(
     providerRatingBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
     providerRatingText: { fontSize: 11, fontFamily: "Inter_700Bold" },
     providerCost: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: "right" },
+    portfolioCard: { backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12, alignItems: "center", shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
+    portfolioIconBox: { width: 44, height: 44, borderRadius: 12, backgroundColor: "rgba(212,168,67,0.12)", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    portfolioTitle: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.foreground },
+    portfolioLoc: { fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
+    portfolioMetaRow: { gap: 10, marginTop: 2 },
+    portfolioMeta: { flexDirection: "row", alignItems: "center", gap: 3 },
+    portfolioMetaText: { fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
+    portfolioPrice: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#D4A843" },
+    portfolioCurrency: { fontSize: 10, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
   });
 }

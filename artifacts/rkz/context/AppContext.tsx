@@ -6,7 +6,17 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import * as Localization from "expo-localization";
+
 import { clearAuthToken } from "@/constants/api";
+import { ar, en } from "@/constants/i18n";
+
+// Resolve the device-locale lease translation set (mirrors useLocale, but
+// usable outside React components for system-generated tenant messages).
+function leaseStrings() {
+  const lang = Localization.getLocales()[0]?.languageCode ?? "ar";
+  return (lang === "ar" ? ar : en).lease;
+}
 
 export type PropertyType = string;
 export type Platform = string;
@@ -68,6 +78,81 @@ export interface User {
   authorized: boolean;
 }
 
+// ── Lease & Tenant Management (self-contained landlord tool) ───────────────
+export type BillingCycle = "monthly" | "quarterly" | "annual";
+
+export interface Tenant {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  createdAt: string;
+}
+
+export interface RentPayment {
+  id: string;
+  dueDate: string; // yyyy-mm-dd the installment was due
+  paidAt: string; // ISO timestamp recorded
+  amount: number;
+}
+
+export interface Lease {
+  id: string;
+  tenantId: string;
+  propertyId?: string; // optional link to an existing Property
+  unitLabel?: string; // free-text unit / property descriptor
+  rentAmount: number;
+  cycle: BillingCycle;
+  startDate: string; // yyyy-mm-dd
+  endDate: string; // yyyy-mm-dd
+  nextDueDate: string; // yyyy-mm-dd
+  contractImageUri?: string;
+  status: "active" | "ended";
+  payments: RentPayment[];
+  createdAt: string;
+}
+
+export interface TenantNotification {
+  id: string;
+  leaseId: string;
+  tenantId: string;
+  type: "rent_due" | "lease_expiry" | "payment_confirmed";
+  message: string;
+  refDate: string; // milestone date this notification refers to (dedup key)
+  createdAt: string;
+}
+
+export interface LeaseAlerts {
+  dueSoon: Lease[]; // rent due within DUE_WINDOW_DAYS
+  expiringSoon: Lease[]; // lease ends within EXPIRY_WINDOW_DAYS
+}
+
+export const DUE_WINDOW_DAYS = 5;
+export const EXPIRY_WINDOW_DAYS = 90; // 3 months
+
+// Format a Date into a local YYYY-MM-DD string (no UTC conversion, so
+// date-only values never shift a day in UTC+ locales like KSA).
+function toLocalYmd(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+export function addCycle(dateStr: string, cycle: BillingCycle): string {
+  const d = new Date(dateStr + "T00:00:00");
+  if (cycle === "monthly") d.setMonth(d.getMonth() + 1);
+  else if (cycle === "quarterly") d.setMonth(d.getMonth() + 3);
+  else d.setFullYear(d.getFullYear() + 1);
+  return toLocalYmd(d);
+}
+
+export function daysUntil(dateStr: string): number {
+  const target = new Date(dateStr + "T00:00:00").getTime();
+  const today = new Date(toLocalYmd(new Date()) + "T00:00:00").getTime();
+  return Math.round((target - today) / 86_400_000);
+}
+
 interface AppState {
   user: User | null;
   properties: Property[];
@@ -81,12 +166,32 @@ interface AppState {
   markLeadRead: (propertyId: string, leadId: string) => void;
   unreadLeadsCount: number;
   refreshFromApi: () => Promise<void>;
+
+  // Lease & Tenant Management
+  tenants: Tenant[];
+  leases: Lease[];
+  notifications: TenantNotification[];
+  addLease: (input: {
+    tenant: Omit<Tenant, "id" | "createdAt">;
+    propertyId?: string;
+    unitLabel?: string;
+    rentAmount: number;
+    cycle: BillingCycle;
+    startDate: string;
+    endDate: string;
+    contractImageUri?: string;
+  }) => Lease;
+  updateLease: (id: string, updates: Partial<Lease>) => void;
+  deleteLease: (id: string) => void;
+  markRentPaid: (leaseId: string) => void;
+  leaseAlerts: LeaseAlerts;
 }
 
 const AppContext = createContext<AppState | null>(null);
 
 const STORAGE_KEY = "rkz_state";
 const ROLE_KEY    = "rkz_user_role";
+const LEASE_KEY   = "rkz_lease_state";
 
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
@@ -163,12 +268,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRole, setSelectedRoleState] = useState<"buyer" | "seller" | null>(null);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [leases, setLeases] = useState<Lease[]>([]);
+  const [notifications, setNotifications] = useState<TenantNotification[]>([]);
 
   const save = useCallback(async (u: User | null, props: Property[]) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ user: u, properties: props }));
     } catch {}
   }, []);
+
+  const saveLease = useCallback(
+    async (tn: Tenant[], ls: Lease[], nf: TenantNotification[]) => {
+      try {
+        await AsyncStorage.setItem(
+          LEASE_KEY,
+          JSON.stringify({ tenants: tn, leases: ls, notifications: nf }),
+        );
+      } catch {}
+    },
+    [],
+  );
 
   useEffect(() => {
     async function boot() {
@@ -191,6 +311,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         const savedRole = await AsyncStorage.getItem(ROLE_KEY);
         if (savedRole === "buyer" || savedRole === "seller") setSelectedRoleState(savedRole);
+      } catch {}
+      try {
+        const leaseRaw = await AsyncStorage.getItem(LEASE_KEY);
+        if (leaseRaw) {
+          const parsed = JSON.parse(leaseRaw);
+          if (Array.isArray(parsed.tenants)) setTenants(parsed.tenants);
+          if (Array.isArray(parsed.leases)) setLeases(parsed.leases);
+          if (Array.isArray(parsed.notifications)) setNotifications(parsed.notifications);
+        }
       } catch {}
       setIsLoading(false);
     }
@@ -288,6 +417,182 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [user, save]
   );
 
+  const addLease = useCallback<AppState["addLease"]>(
+    (input) => {
+      const now = new Date().toISOString();
+      const tenant: Tenant = {
+        ...input.tenant,
+        id: generateId(),
+        createdAt: now,
+      };
+      const lease: Lease = {
+        id: generateId(),
+        tenantId: tenant.id,
+        propertyId: input.propertyId,
+        unitLabel: input.unitLabel,
+        rentAmount: input.rentAmount,
+        cycle: input.cycle,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        nextDueDate: addCycle(input.startDate, input.cycle),
+        contractImageUri: input.contractImageUri,
+        status: "active",
+        payments: [],
+        createdAt: now,
+      };
+      setTenants((prevT) => {
+        const nextT = [tenant, ...prevT];
+        setLeases((prevL) => {
+          const nextL = [lease, ...prevL];
+          saveLease(nextT, nextL, notifications);
+          return nextL;
+        });
+        return nextT;
+      });
+      return lease;
+    },
+    [notifications, saveLease],
+  );
+
+  const updateLease = useCallback(
+    (id: string, updates: Partial<Lease>) => {
+      setLeases((prev) => {
+        const next = prev.map((l) => (l.id === id ? { ...l, ...updates } : l));
+        saveLease(tenants, next, notifications);
+        return next;
+      });
+    },
+    [tenants, notifications, saveLease],
+  );
+
+  const deleteLease = useCallback(
+    (id: string) => {
+      setLeases((prevL) => {
+        const target = prevL.find((l) => l.id === id);
+        const nextL = prevL.filter((l) => l.id !== id);
+        const nextN = notifications.filter((n) => n.leaseId !== id);
+        setNotifications(nextN);
+        if (target) {
+          setTenants((prevT) => {
+            const nextT = prevT.filter((tn) => tn.id !== target.tenantId);
+            saveLease(nextT, nextL, nextN);
+            return nextT;
+          });
+        } else {
+          saveLease(tenants, nextL, nextN);
+        }
+        return nextL;
+      });
+    },
+    [tenants, notifications, saveLease],
+  );
+
+  const markRentPaid = useCallback(
+    (leaseId: string) => {
+      setLeases((prevL) => {
+        let confirmation: TenantNotification | null = null;
+        const nextL = prevL.map((l) => {
+          if (l.id !== leaseId) return l;
+          const payment: RentPayment = {
+            id: generateId(),
+            dueDate: l.nextDueDate,
+            paidAt: new Date().toISOString(),
+            amount: l.rentAmount,
+          };
+          confirmation = {
+            id: generateId(),
+            leaseId: l.id,
+            tenantId: l.tenantId,
+            type: "payment_confirmed",
+            message: leaseStrings().notifyPaidMsg(l.rentAmount.toLocaleString("en-US"), l.nextDueDate),
+            refDate: l.nextDueDate,
+            createdAt: new Date().toISOString(),
+          };
+          return {
+            ...l,
+            payments: [payment, ...l.payments],
+            nextDueDate: addCycle(l.nextDueDate, l.cycle),
+          };
+        });
+        const nextN = confirmation ? [confirmation, ...notifications] : notifications;
+        if (confirmation) setNotifications(nextN);
+        saveLease(tenants, nextL, nextN);
+        return nextL;
+      });
+    },
+    [tenants, notifications, saveLease],
+  );
+
+  // Auto-generate tenant notifications for upcoming rent-due and lease-expiry
+  // milestones. Runs whenever leases change. Deduped by leaseId+type+refDate.
+  useEffect(() => {
+    if (isLoading) return;
+    const active = leases.filter((l) => l.status === "active");
+    const generated: TenantNotification[] = [];
+    const has = (leaseId: string, type: TenantNotification["type"], refDate: string) =>
+      notifications.some(
+        (n) => n.leaseId === leaseId && n.type === type && n.refDate === refDate,
+      ) || generated.some((n) => n.leaseId === leaseId && n.type === type && n.refDate === refDate);
+
+    for (const l of active) {
+      const tenant = tenants.find((tn) => tn.id === l.tenantId);
+      const dueIn = daysUntil(l.nextDueDate);
+      if (dueIn >= 0 && dueIn <= DUE_WINDOW_DAYS && !has(l.id, "rent_due", l.nextDueDate)) {
+        generated.push({
+          id: generateId(),
+          leaseId: l.id,
+          tenantId: l.tenantId,
+          type: "rent_due",
+          message: leaseStrings().notifyDueMsg(
+            tenant?.name ?? leaseStrings().tenantFallback,
+            l.rentAmount.toLocaleString("en-US"),
+            dueIn,
+            l.nextDueDate,
+          ),
+          refDate: l.nextDueDate,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      const expiresIn = daysUntil(l.endDate);
+      if (expiresIn >= 0 && expiresIn <= EXPIRY_WINDOW_DAYS && !has(l.id, "lease_expiry", l.endDate)) {
+        generated.push({
+          id: generateId(),
+          leaseId: l.id,
+          tenantId: l.tenantId,
+          type: "lease_expiry",
+          message: leaseStrings().notifyExpiryMsg(
+            tenant?.name ?? leaseStrings().tenantFallback,
+            expiresIn,
+            l.endDate,
+          ),
+          refDate: l.endDate,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    }
+
+    if (generated.length > 0) {
+      setNotifications((prev) => {
+        const next = [...generated, ...prev];
+        saveLease(tenants, leases, next);
+        return next;
+      });
+    }
+  }, [leases, tenants, isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const leaseAlerts: LeaseAlerts = {
+    dueSoon: leases.filter((l) => {
+      if (l.status !== "active") return false;
+      const d = daysUntil(l.nextDueDate);
+      return d >= 0 && d <= DUE_WINDOW_DAYS;
+    }),
+    expiringSoon: leases.filter((l) => {
+      if (l.status !== "active") return false;
+      const d = daysUntil(l.endDate);
+      return d >= 0 && d <= EXPIRY_WINDOW_DAYS;
+    }),
+  };
+
   const unreadLeadsCount = properties.reduce(
     (acc, p) => acc + p.leads.filter((l) => !l.read).length,
     0
@@ -308,6 +613,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         markLeadRead,
         unreadLeadsCount,
         refreshFromApi,
+        tenants,
+        leases,
+        notifications,
+        addLease,
+        updateLease,
+        deleteLease,
+        markRentPaid,
+        leaseAlerts,
       }}
     >
       {children}

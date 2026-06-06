@@ -76,13 +76,30 @@ export default function ListingsScreen() {
       paddingBottom: 16,
       paddingHorizontal: 20,
     },
+    headerTopRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      marginBottom: 14,
+    },
     headerTitle: {
+      flex: 1,
       color: "#FFFFFF",
       fontSize: 20,
       fontFamily: "Inter_700Bold",
-      marginBottom: 14,
       textAlign: isAr ? "right" : "left",
     },
+    leaseHeaderBtn: {
+      flexDirection: isAr ? "row-reverse" : "row",
+      alignItems: "center",
+      gap: 5,
+      backgroundColor: "rgba(255,255,255,0.1)",
+      borderRadius: 18,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+    },
+    leaseHeaderBtnText: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#FFFFFF" },
     filterRow: { flexDirection: "row", gap: 8 },
     filterPill: {
       borderRadius: 20,
@@ -553,7 +570,17 @@ export default function ListingsScreen() {
   return (
     <View style={S.container}>
       <View style={S.header}>
-        <Text style={S.headerTitle}>{t.listings.title(properties.length)}</Text>
+        <View style={[S.headerTopRow, isAr && { flexDirection: "row-reverse" }]}>
+          <Text style={S.headerTitle}>{t.listings.title(properties.length)}</Text>
+          <Pressable
+            style={S.leaseHeaderBtn}
+            hitSlop={8}
+            onPress={() => router.push("/leases")}
+          >
+            <MaterialIcons name="description" size={18} color={colors.gold} />
+            <Text style={S.leaseHeaderBtnText}>{t.lease.title}</Text>
+          </Pressable>
+        </View>
         <View style={S.filterRow}>
           {(["all", "published", "publishing"] as Filter[]).map((f) => (
             <Pressable

@@ -1,7 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -83,6 +83,58 @@ function fmtPrice(n: number): string {
   return String(n);
 }
 
+// ── Heatmap synthetic intensity ────────────────────────────────────────────
+type HeatMetric = "occupancy" | "transactions";
+
+interface DistrictCell {
+  key: string;
+  city: string;
+  district: string;
+  count: number;
+  occupancy: number; // synthetic %
+  transactions: number; // synthetic deal count
+}
+
+function hashStr(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function toHex2(v: number): string {
+  return Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0");
+}
+
+// Aggregate listings into per-district cells with deterministic synthetic
+// occupancy/transaction intensity. Data is illustrative (no live backend).
+function buildDistrictCells(listings: Listing[]): DistrictCell[] {
+  const map = new Map<string, DistrictCell>();
+  for (const l of listings) {
+    const key = `${l.city}__${l.district}`;
+    const existing = map.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      const h = hashStr(key);
+      map.set(key, {
+        key,
+        city: l.city,
+        district: l.district,
+        count: 1,
+        occupancy: 45 + (h % 54), // 45–98%
+        transactions: 4 + (h % 22), // 4–25 base
+      });
+    }
+  }
+  // Density boost: more listings in a district → higher intensity.
+  const cells = Array.from(map.values()).map((c) => ({
+    ...c,
+    occupancy: Math.min(99, c.occupancy + (c.count - 1) * 3),
+    transactions: c.transactions + (c.count - 1) * 5,
+  }));
+  return cells.sort((a, b) => b.count - a.count || b.occupancy - a.occupancy);
+}
+
 // ── Property Card ─────────────────────────────────────────────────────────
 function PropertyCard({
   listing,
@@ -162,7 +214,7 @@ function PropertyCard({
 export default function DiscoveryMapScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { isAr } = useLocale();
+  const { t, isAr } = useLocale();
   const { config } = useConfig();
 
   const topPad    = insets.top    + (Platform.OS === "web" ? 67  : 0);
@@ -173,6 +225,8 @@ export default function DiscoveryMapScreen() {
 
   const [activeType,   setActiveType]   = useState("all");
   const [refreshing,   setRefreshing]   = useState(false);
+  const [viewMode,     setViewMode]     = useState<"cards" | "heatmap">("cards");
+  const [heatMetric,   setHeatMetric]   = useState<HeatMetric>("occupancy");
 
   // Load pre-selected filter from entry gate (set by role selection or previous session)
   useEffect(() => {
@@ -231,6 +285,16 @@ export default function DiscoveryMapScreen() {
   const filtered = activeType === "all"
     ? ALL_LISTINGS
     : ALL_LISTINGS.filter((l) => l.type === activeType);
+
+  const cells = useMemo(() => buildDistrictCells(filtered), [filtered]);
+  const metricMax = useMemo(() => {
+    if (cells.length === 0) return 1;
+    return Math.max(...cells.map((c) => (heatMetric === "occupancy" ? c.occupancy : c.transactions)));
+  }, [cells, heatMetric]);
+  const metricMin = useMemo(() => {
+    if (cells.length === 0) return 0;
+    return Math.min(...cells.map((c) => (heatMetric === "occupancy" ? c.occupancy : c.transactions)));
+  }, [cells, heatMetric]);
 
   const s = makeStyles(colors, isAr, topPad, bottomPad);
 
@@ -295,34 +359,142 @@ export default function DiscoveryMapScreen() {
         </ScrollView>
       </View>
 
-      {/* ── Property Grid ─────────────────────────────────────────────────── */}
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={s.gridContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />
-        }
-      >
-        {filtered.length === 0 ? (
-          <View style={s.empty}>
-            <MaterialIcons name="search-off" size={48} color={colors.gold + "40"} />
-            <Text style={s.emptyText}>{isAr ? "لا توجد عقارات في هذه الفئة" : "No listings in this category"}</Text>
-          </View>
-        ) : (
-          <View style={s.grid}>
-            {filtered.map((listing) => (
-              <PropertyCard
-                key={listing.id}
-                listing={listing}
-                onRequest={handleRequest}
-                s={s}
-                colors={colors}
-              />
+      {/* ── View Toggle: Cards / Heatmap ──────────────────────────────────── */}
+      <View style={[s.toggleBar, isAr && { flexDirection: "row-reverse" }]}>
+        <Pressable
+          onPress={() => { void Haptics.selectionAsync(); setViewMode("cards"); }}
+          style={[s.toggleSeg, viewMode === "cards" && s.toggleSegActive]}
+        >
+          <MaterialIcons name="grid-view" size={16} color={viewMode === "cards" ? "#0A1628" : colors.mutedForeground} />
+          <Text style={[s.toggleText, viewMode === "cards" && s.toggleTextActive]}>{t.heatmap.cardsView}</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => { void Haptics.selectionAsync(); setViewMode("heatmap"); }}
+          style={[s.toggleSeg, viewMode === "heatmap" && s.toggleSegActive]}
+        >
+          <MaterialIcons name="local-fire-department" size={16} color={viewMode === "heatmap" ? "#0A1628" : colors.mutedForeground} />
+          <Text style={[s.toggleText, viewMode === "heatmap" && s.toggleTextActive]}>{t.heatmap.heatmapView}</Text>
+        </Pressable>
+      </View>
+
+      {viewMode === "heatmap" ? (
+        /* ── Heatmap ─────────────────────────────────────────────────────── */
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={s.gridContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />
+          }
+        >
+          {/* Metric sub-toggle */}
+          <View style={[s.metricRow, isAr && { flexDirection: "row-reverse" }]}>
+            {(["occupancy", "transactions"] as HeatMetric[]).map((m) => (
+              <Pressable
+                key={m}
+                onPress={() => { void Haptics.selectionAsync(); setHeatMetric(m); }}
+                style={[s.metricPill, heatMetric === m && s.metricPillActive]}
+              >
+                <Text style={[s.metricPillText, heatMetric === m && s.metricPillTextActive]}>
+                  {m === "occupancy" ? t.heatmap.metricOccupancy : t.heatmap.metricTransactions}
+                </Text>
+              </Pressable>
             ))}
           </View>
-        )}
-      </ScrollView>
+
+          <Text style={[s.heatTitle, isAr && { textAlign: "right" }]}>{t.heatmap.title}</Text>
+          <Text style={[s.heatSubtitle, isAr && { textAlign: "right" }]}>
+            {heatMetric === "occupancy" ? t.heatmap.subtitleOccupancy : t.heatmap.subtitleTransactions}
+          </Text>
+
+          {cells.length === 0 ? (
+            <View style={s.empty}>
+              <MaterialIcons name="search-off" size={48} color={colors.gold + "40"} />
+              <Text style={s.emptyText}>{t.heatmap.noData}</Text>
+            </View>
+          ) : (
+            <>
+              <View style={s.heatGrid}>
+                {cells.map((c) => {
+                  const value = heatMetric === "occupancy" ? c.occupancy : c.transactions;
+                  const norm = metricMax === metricMin ? 1 : (value - metricMin) / (metricMax - metricMin);
+                  const alpha = 0.16 + norm * 0.84;
+                  const dark = norm > 0.55;
+                  return (
+                    <View
+                      key={c.key}
+                      style={[s.heatCell, { backgroundColor: colors.gold + toHex2(alpha * 255) }]}
+                    >
+                      <Text
+                        style={[s.heatValue, { color: dark ? "#0A1628" : colors.foreground }]}
+                      >
+                        {heatMetric === "occupancy" ? `${value}%` : value}
+                      </Text>
+                      <Text
+                        style={[s.heatUnit, { color: dark ? "rgba(10,22,40,0.7)" : colors.mutedForeground }]}
+                      >
+                        {heatMetric === "occupancy" ? t.heatmap.occupancyUnit : t.heatmap.transactionsUnit}
+                      </Text>
+                      <Text
+                        style={[s.heatDistrict, { color: dark ? "#0A1628" : colors.foreground }]}
+                        numberOfLines={1}
+                      >
+                        {c.district}
+                      </Text>
+                      <Text
+                        style={[s.heatCity, { color: dark ? "rgba(10,22,40,0.65)" : colors.mutedForeground }]}
+                        numberOfLines={1}
+                      >
+                        {c.city}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+
+              {/* Legend */}
+              <View style={[s.legendRow, isAr && { flexDirection: "row-reverse" }]}>
+                <Text style={s.legendLabel}>{t.heatmap.legendLow}</Text>
+                <View style={s.legendBar}>
+                  {[0.16, 0.36, 0.56, 0.76, 1].map((a) => (
+                    <View key={a} style={[s.legendChip, { backgroundColor: colors.gold + toHex2(a * 255) }]} />
+                  ))}
+                </View>
+                <Text style={s.legendLabel}>{t.heatmap.legendHigh}</Text>
+              </View>
+            </>
+          )}
+        </ScrollView>
+      ) : (
+        /* ── Property Grid ─────────────────────────────────────────────────── */
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={s.gridContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />
+          }
+        >
+          {filtered.length === 0 ? (
+            <View style={s.empty}>
+              <MaterialIcons name="search-off" size={48} color={colors.gold + "40"} />
+              <Text style={s.emptyText}>{isAr ? "لا توجد عقارات في هذه الفئة" : "No listings in this category"}</Text>
+            </View>
+          ) : (
+            <View style={s.grid}>
+              {filtered.map((listing) => (
+                <PropertyCard
+                  key={listing.id}
+                  listing={listing}
+                  onRequest={handleRequest}
+                  s={s}
+                  colors={colors}
+                />
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -417,6 +589,83 @@ function makeStyles(
       color:      colors.mutedForeground,
     },
     pillTextActive: { color: "#0A1628" },
+
+    // ── View Toggle ─────────────────────────────────────────────────────────
+    toggleBar: {
+      flexDirection:     "row",
+      gap:               8,
+      paddingHorizontal: 16,
+      paddingTop:        12,
+      paddingBottom:     4,
+      backgroundColor:   colors.background,
+    },
+    toggleSeg: {
+      flex:            1,
+      flexDirection:   "row",
+      alignItems:      "center",
+      justifyContent:  "center",
+      gap:             6,
+      backgroundColor: colors.card,
+      borderWidth:     1,
+      borderColor:     colors.border,
+      borderRadius:    12,
+      paddingVertical: 10,
+    },
+    toggleSegActive: { backgroundColor: colors.gold, borderColor: colors.gold },
+    toggleText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
+    toggleTextActive: { color: "#0A1628" },
+
+    // ── Heatmap ─────────────────────────────────────────────────────────────
+    metricRow: { flexDirection: "row", gap: 8, marginBottom: 14 },
+    metricPill: {
+      backgroundColor: colors.card,
+      borderWidth:     1,
+      borderColor:     colors.border,
+      borderRadius:    18,
+      paddingHorizontal: 16,
+      paddingVertical:   7,
+    },
+    metricPillActive: { backgroundColor: colors.navy, borderColor: colors.navy },
+    metricPillText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
+    metricPillTextActive: { color: "#FFFFFF" },
+    heatTitle: {
+      fontSize:   17,
+      fontFamily: "Inter_700Bold",
+      color:      colors.foreground,
+    },
+    heatSubtitle: {
+      fontSize:   13,
+      fontFamily: "Inter_400Regular",
+      color:      colors.mutedForeground,
+      marginTop:  2,
+      marginBottom: 16,
+    },
+    heatGrid: {
+      flexDirection:  "row",
+      flexWrap:       "wrap",
+      gap:            10,
+    },
+    heatCell: {
+      width:           (SCREEN_W - 32 - 20) / 3,
+      borderRadius:    14,
+      padding:         12,
+      minHeight:       96,
+      justifyContent:  "center",
+    },
+    heatValue: { fontSize: 20, fontFamily: "Inter_700Bold" },
+    heatUnit: { fontSize: 10, fontFamily: "Inter_400Regular", marginTop: 1 },
+    heatDistrict: { fontSize: 12, fontFamily: "Inter_700Bold", marginTop: 8 },
+    heatCity: { fontSize: 10, fontFamily: "Inter_400Regular", marginTop: 1 },
+    legendRow: {
+      flexDirection: "row",
+      alignItems:    "center",
+      justifyContent:"center",
+      gap:           8,
+      marginTop:     22,
+    },
+    legendLabel: { fontSize: 11, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
+    legendBar: { flexDirection: "row", gap: 3 },
+    legendChip: { width: 26, height: 12, borderRadius: 3 },
 
     // ── Grid ──────────────────────────────────────────────────────────────
     gridContent: {

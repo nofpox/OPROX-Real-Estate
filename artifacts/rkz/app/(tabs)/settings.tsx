@@ -390,6 +390,28 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Lease & Tenant Management */}
+        <View style={S.section}>
+          <Text style={S.sectionTitle}>{t.lease.title}</Text>
+          <View style={S.card}>
+            <Pressable
+              style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
+              onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push("/leases"); }}
+            >
+              <View style={[S.iconBox, { backgroundColor: "#E0F2FE" }]}>
+                <MaterialIcons name="description" size={20} color="#0369A1" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={S.rowLabel}>{t.lease.entryTitle}</Text>
+                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                  {t.lease.entryDesc}
+                </Text>
+              </View>
+              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
+            </Pressable>
+          </View>
+        </View>
+
         {/* Version — tap 7× to open admin gate */}
         <Pressable onPress={handleVersionTap}>
           <Text style={S.versionText}>{t.settings.version}</Text>
