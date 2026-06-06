@@ -7,6 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useCallback } from "react";
 import {
+  Image,
   Modal,
   Platform,
   Pressable,
@@ -53,7 +54,11 @@ function RoleGate() {
       <View style={[gate.container, { backgroundColor: colors.navy }]}>
         {/* Logo area */}
         <View style={gate.logoArea}>
-          <Text style={gate.logoText}>ركز</Text>
+          <Image
+            source={require("@/assets/images/rkz-logo.jpg")}
+            style={gate.logo}
+            resizeMode="contain"
+          />
           <Text style={gate.tagline}>
             {isAr ? "محرك النشر العقاري الفوري" : "Instant Real Estate Publishing Engine"}
           </Text>
@@ -255,11 +260,10 @@ const gate = StyleSheet.create({
     alignItems:   "center",
     marginBottom: 48,
   },
-  logoText: {
-    color:        "#D4A843",
-    fontSize:     52,
-    fontFamily:   "Inter_700Bold",
-    letterSpacing: 4,
+  logo: {
+    width:  200,
+    height: 80,
+    marginBottom: 8,
   },
   tagline: {
     color:       "rgba(255,255,255,0.45)",

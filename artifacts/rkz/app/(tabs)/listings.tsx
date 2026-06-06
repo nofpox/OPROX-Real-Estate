@@ -3,12 +3,10 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Platform,
   Pressable,
-  Share,
   StyleSheet,
   Text,
   View,
@@ -27,20 +25,6 @@ import { useLocale } from "@/hooks/useLocale";
 
 type Filter = "all" | "published" | "publishing" | "failed";
 
-interface QualifyResult {
-  leadId: string;
-  score: "hot" | "warm" | "cold";
-  reason: string;
-  suggestedAction: string;
-}
-
-interface QualifyState {
-  loading: boolean;
-  results: QualifyResult[];
-  qualificationScript?: { ar: string; en: string };
-  teamNotification?: { ar: string; en: string };
-}
-
 const STATUS_COLORS = {
   published: "#4ADE80",
   publishing: "#FCD34D",
@@ -49,27 +33,13 @@ const STATUS_COLORS = {
   expired: "#94A3B8",
 };
 
-const SCORE_CONFIG = {
-  serious: { color: "#4ADE80", bg: "#DCFCE7" },
-  maybe: { color: "#D97706", bg: "#FEF3C7" },
-  not_serious: { color: "#E53E3E", bg: "#FEE2E2" },
-};
-
-const PAYMENT_CONFIG = {
-  bank_financing: { color: "#2563EB", bg: "#EFF6FF" },
-  cash: { color: "#059669", bg: "#ECFDF5" },
-  other: { color: "#D97706", bg: "#FEF3C7" },
-  unknown: { color: "#6B7280", bg: "#F3F4F6" },
-};
-
 export default function ListingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { properties, deleteProperty, markLeadRead } = useApp();
+  const { properties, deleteProperty } = useApp();
   const { t, isAr } = useLocale();
   const [filter, setFilter] = useState<Filter>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [qualifyMap, setQualifyMap] = useState<Record<string, QualifyState>>({});
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84) + 16;
@@ -94,48 +64,6 @@ export default function ListingsScreen() {
         },
       },
     ]);
-  }
-
-  async function handleQualify(p: Property) {
-    if (p.leads.length === 0) return;
-    setQualifyMap((prev) => ({ ...prev, [p.id]: { loading: true, results: [] } }));
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    try {
-      await new Promise((r) => setTimeout(r, 800));
-      const SCORES = ["hot", "warm", "cold"] as const;
-      const localResults: QualifyResult[] = p.leads.map((l, i) => ({
-        leadId: l.id,
-        score: SCORES[i % 3],
-        reason: isAr
-          ? (i % 3 === 0 ? "مستفسر جاد يبحث عن عقار مشابه" : i % 3 === 1 ? "مهتم ولكن يقارن الخيارات" : "استفسار أولي فقط")
-          : (i % 3 === 0 ? "Serious buyer looking for similar property" : i % 3 === 1 ? "Interested but comparing options" : "Initial inquiry only"),
-        suggestedAction: isAr
-          ? (i % 3 === 0 ? "تواصل فوراً وحدد موعد معاينة" : i % 3 === 1 ? "أرسل مزيداً من الصور والتفاصيل" : "أضفه إلى قائمة المتابعة الشهرية")
-          : (i % 3 === 0 ? "Contact immediately and schedule a viewing" : i % 3 === 1 ? "Send more photos and details" : "Add to monthly follow-up list"),
-      }));
-      const data = {
-        results: localResults,
-        qualificationScript: isAr
-          ? { ar: "مرحباً، أرى اهتمامك بالعقار. هل يمكنني ترتيب جولة معاينة لك هذا الأسبوع؟", en: "" }
-          : { ar: "", en: "Hello, I noticed your interest in the property. Can I arrange a viewing for you this week?" },
-        teamNotification: isAr
-          ? { ar: `${p.leads.filter((_, i) => i % 3 === 0).length} مستفسر ساخن يحتاج متابعة فورية`, en: "" }
-          : { ar: "", en: `${p.leads.filter((_, i) => i % 3 === 0).length} hot lead(s) need immediate follow-up` },
-      };
-      setQualifyMap((prev) => ({
-        ...prev,
-        [p.id]: {
-          loading: false,
-          results: data.results,
-          qualificationScript: data.qualificationScript,
-          teamNotification: data.teamNotification,
-        },
-      }));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch {
-      setQualifyMap((prev) => ({ ...prev, [p.id]: { loading: false, results: [] } }));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    }
   }
 
   const priceLocale = isAr ? "ar-SA" : "en-US";
@@ -530,23 +458,8 @@ export default function ListingsScreen() {
     return t.listings.statusFailed;
   }
 
-  function getScoreLabel(score: "serious" | "maybe" | "not_serious") {
-    if (score === "serious") return t.assistant.serious;
-    if (score === "maybe") return t.assistant.maybe;
-    return t.assistant.notSerious;
-  }
-
-  function getPaymentLabel(method: string) {
-    if (method === "bank_financing") return t.assistant.paymentBankFinancing;
-    if (method === "cash") return t.assistant.paymentCash;
-    if (method === "other") return t.assistant.paymentOther;
-    return t.assistant.paymentUnknown;
-  }
-
   function renderItem({ item: p }: { item: Property }) {
     const expanded = expandedId === p.id;
-    const unreadLeadCount = p.leads.filter((l) => !l.read).length;
-    const qs = qualifyMap[p.id];
 
     return (
       <View style={S.card}>
@@ -608,66 +521,17 @@ export default function ListingsScreen() {
           )}
         </View>
 
-        {/* Expanded: leads + AI qualification */}
+        {/* Expanded: inquiry count */}
         {expanded && p.leads.length > 0 && (
           <>
             <View style={S.divider} />
             <View style={S.qualifySection}>
-              {/* AI Qualify button */}
-              {!qs || (!qs.loading && qs.results.length === 0) ? (
-                <Pressable
-                  style={({ pressed }) => [S.qualifyBtn, pressed && { opacity: 0.75 }]}
-                  onPress={() => handleQualify(p)}
-                  disabled={qs?.loading}
-                >
-                  {qs?.loading ? (
-                    <ActivityIndicator size="small" color={colors.navy} />
-                  ) : (
-                    <Text style={{ fontSize: 14 }}>✨</Text>
-                  )}
-                  <Text style={S.qualifyBtnText}>
-                    {qs?.loading ? t.assistant.qualifying : t.assistant.qualifyBtn}
-                  </Text>
-                </Pressable>
-              ) : qs.results.length > 0 ? (
-                <>
-                  <View style={S.qualifyTitleRow}>
-                    <Text style={{ fontSize: 13 }}>✨</Text>
-                    <Text style={S.qualifyTitle}>{t.assistant.qualifyTitle}</Text>
-                    <Pressable
-                      onPress={() => handleQualify(p)}
-                      style={{ marginLeft: "auto" }}
-                    >
-                      <MaterialIcons name="refresh" size={16} color={colors.mutedForeground} />
-                    </Pressable>
-                  </View>
-                  {qs.qualificationScript && (
-                    <View style={S.scriptCard}>
-                      <View style={S.scriptHeader}>
-                        <MaterialIcons name="chat" size={13} color={colors.navy} />
-                        <Text style={S.scriptTitle}>{t.assistant.qualScriptTitle}</Text>
-                      </View>
-                      <Text style={S.scriptHint}>{t.assistant.qualScriptHint}</Text>
-                      <Text style={S.scriptText}>
-                        {isAr ? qs.qualificationScript.ar : qs.qualificationScript.en}
-                      </Text>
-                      <Pressable
-                        style={({ pressed }) => [S.scriptShareBtn, pressed && { opacity: 0.7 }]}
-                        onPress={() =>
-                          Share.share({
-                            message: isAr
-                              ? qs.qualificationScript!.ar
-                              : qs.qualificationScript!.en,
-                          })
-                        }
-                      >
-                        <MaterialIcons name="share" size={13} color={colors.gold} />
-                        <Text style={S.scriptShareText}>{t.assistant.qualScriptShare}</Text>
-                      </Pressable>
-                    </View>
-                  )}
-                </>
-              ) : null}
+              <View style={[S.qualifyTitleRow]}>
+                <MaterialIcons name="people" size={16} color={colors.gold} />
+                <Text style={[S.qualifyTitle, { color: colors.foreground }]}>
+                  {isAr ? `${p.leads.length} استفسار` : `${p.leads.length} Inquir${p.leads.length === 1 ? "y" : "ies"}`}
+                </Text>
+              </View>
             </View>
 
           </>
