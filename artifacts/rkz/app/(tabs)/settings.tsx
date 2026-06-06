@@ -80,12 +80,24 @@ export default function SettingsScreen() {
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84) + 16;
 
   function handleLogout() {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const doLogout = () => { setUser(null); router.replace("/login"); };
+    // RN-Web's Alert.alert ignores custom buttons / onPress, so logout would
+    // appear unresponsive on web. Use window.confirm there, native Alert elsewhere.
+    if (Platform.OS === "web") {
+      const ok =
+        typeof window !== "undefined"
+          ? window.confirm(`${t.settings.logoutTitle}\n\n${t.settings.logoutMsg}`)
+          : true;
+      if (ok) doLogout();
+      return;
+    }
     Alert.alert(t.settings.logoutTitle, t.settings.logoutMsg, [
       { text: t.settings.cancel, style: "cancel" },
       {
         text: t.settings.logoutConfirm,
         style: "destructive",
-        onPress: () => { setUser(null); router.replace("/login"); },
+        onPress: doLogout,
       },
     ]);
   }

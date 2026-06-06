@@ -10,7 +10,7 @@ interface AppAIAgentProps { authUser: AuthUser | null; }
 
 function buildGreeting(name: string|undefined, role: string|undefined): string {
   const fn = name?.split(" ")[0] || "";
-  return `Hi${fn ? " " + fn : ""}! I'm Layla 👋\nYour AI assistant for Grand PMS.\n\nI'm here to help you with tasks, rooms, maintenance, and anything else. What can I help you with today?`;
+  return `Hi${fn ? " " + fn : ""}! I'm Layla 👋\nYour AI assistant for Rkz.\n\nI'm here to help you with tasks, rooms, maintenance, and anything else. What can I help you with today?`;
 }
 
 const RULES: { pattern: RegExp; response: string }[] = [

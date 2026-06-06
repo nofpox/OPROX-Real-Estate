@@ -287,9 +287,6 @@ export default function InvestorPortalScreen() {
               </Text>
             )}
           </View>
-          <Pressable onPress={handleLogout} hitSlop={10} style={s.logoutBtn}>
-            <MaterialIcons name="logout" size={18} color="rgba(255,255,255,0.75)" />
-          </Pressable>
         </View>
 
         <ScrollView

@@ -96,9 +96,11 @@ export function WelcomeScreen({ onComplete }: Props) {
         <div style={{ color: GOLD, fontSize: 11, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>
           Rakez Smart Solutions
         </div>
-        <div style={{ color: TEXT_PRI, fontSize: 28, fontWeight: 700, letterSpacing: "-0.5px" }}>
-          Grand PMS
-        </div>
+        <img
+          src={`${import.meta.env.BASE_URL}rkz-logo.jpg`}
+          alt="Rkz"
+          style={{ height: 46, width: "auto", objectFit: "contain", margin: "0 auto", display: "block" }}
+        />
       </div>
 
       {/* Card */}

@@ -424,7 +424,13 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
             <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
               <Menu className="h-5 w-5" />
             </Button>
-            <Link href="/" className="font-serif text-lg font-bold">{settings.logoText} {settings.logoSub}</Link>
+            <Link href="/" className="flex items-center">
+              {settings.logoUrl ? (
+                <img src={settings.logoUrl} alt={settings.logoText} className="h-7 w-auto object-contain max-w-24" />
+              ) : (
+                <span className="font-serif text-lg font-bold">{settings.logoText} {settings.logoSub}</span>
+              )}
+            </Link>
           </div>
           <div className="hidden lg:flex items-center">
             <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_ICON_COLORS[role.id]}`}>

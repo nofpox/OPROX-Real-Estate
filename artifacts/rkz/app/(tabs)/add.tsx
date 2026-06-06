@@ -239,12 +239,9 @@ export default function AddPropertyScreen() {
     container: { flex: 1, backgroundColor: colors.background },
     header: {
       backgroundColor: colors.navy,
-      paddingTop: topPad + 16,
-      paddingBottom: 20,
+      paddingTop: topPad + 10,
+      paddingBottom: 10,
       paddingHorizontal: 20,
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "center",
-      gap: 12,
     },
     headerTitle: {
       color: "#FFFFFF",
@@ -732,12 +729,7 @@ export default function AddPropertyScreen() {
 
   return (
     <View style={S.container}>
-      <View style={S.header}>
-        <Pressable onPress={() => router.back()}>
-          <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={24} color="#FFFFFF" />
-        </Pressable>
-        <Text style={S.headerTitle}>{t.add.header}</Text>
-      </View>
+      <View style={S.header} />
 
       <ScrollView
         style={S.scroll}

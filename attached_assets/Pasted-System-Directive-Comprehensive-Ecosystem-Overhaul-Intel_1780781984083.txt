@@ -1,0 +1,23 @@
+System Directive: Comprehensive Ecosystem Overhaul & Intelligence Integration
+​To the Developer:
+The current implementation of the Rkz ecosystem requires an urgent and comprehensive structural upgrade to meet professional standards. You are directed to implement the following requirements immediately:
+​1. Critical Bug Fixes & Navigation Cleanup:
+​Settings Page: Repair the "Exit/Logout" button located at the top-left of the settings page (as shown in 1465.png); it is currently unresponsive and must be made fully functional.
+​Analytics Page Cleanup: Remove the redundant "Exit" button currently present on the Analytics page (circled in 1471.png).
+​Add Property Interface: In the "Add Property" page (as shown in 1470.png), remove the redundant "إضافة عقار جديد" header text and the accompanying arrow icon to eliminate user distraction.
+​2. Intelligent Heatmap & UI Reconfiguration:
+​Hybrid Map Interface: Implement a "Smart Heatmap" overlay on the main listing page, accessible via a prominent toggle button at the top. This button must allow users to zoom and filter properties geographically while maintaining the existing property list view.
+​Data Intelligence: The Heatmap must function as a "Smart Engine," dynamically visualizing real-time data such as occupancy rates and transaction values across the Kingdom.
+​Interface Reorganization: Relocate the property card list to the "Analytics" page. The Analytics page is to be repurposed exclusively as the primary property/tenant viewing area, removing all irrelevant financial data.
+​3. New Feature: Smart Lease & Tenant Management System:
+​Digital Archive: Implement a document scanner feature enabling users to upload/scan rental contracts directly.
+​Tenant Database: Create a structured database for each property, tracking: Tenant Name, Contact Info, Lease Start/End dates, and the scanned contract file.
+​Synchronized Automation Engine:
+​Dual-Sync Notifications: Push notifications must be sent to both the Landlord and the Tenant simultaneously.
+​Configurable Billing Cycles: Allow the Landlord to set billing periods (Monthly, Quarterly, Annually). The system must automatically generate a recurring notification schedule for the entire lease duration.
+​Proactive Alerts: Implement customizable "Pre-due Alerts" (e.g., 5 days prior to the payment due date) and "Lease Expiry Alerts" (1–3 months prior) to ensure proactive management for both parties.
+​4. Branding Uniformity:
+​Total Rebrand: Remove all "Grand PMS" text headers across the entire ecosystem.
+​Integration: Replace every instance with the official Rkz logo (as provided in 1416_2.jpg). This must be reflected consistently on all login screens, dashboards, and internal navigation menus.
+​To the Developer:
+You are engineering a unified, intelligent real estate technology ecosystem. The platform must be data-driven, fully functional, and the branding must be absolute. Confirm receipt of these directives and provide a timeline for completion.

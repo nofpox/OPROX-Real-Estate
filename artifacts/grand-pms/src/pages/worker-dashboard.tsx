@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, LogOut, Layers, Wrench, CheckCircle2, RefreshCw } from "lucide-react";
+import { LogOut, Layers, Wrench, CheckCircle2, RefreshCw } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import WorkerBottomNav from "@/components/worker-bottom-nav";
 import { useListRooms, useListProperties } from "@/lib/local-hooks";
@@ -35,8 +35,7 @@ export default function WorkerDashboard({ onLogout }: { onLogout: () => void }) 
       <div className="flex-1 overflow-auto pb-20">
         <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-amber-400"/>
-            <span className="font-semibold">Grand PMS</span>
+            <img src={`${import.meta.env.BASE_URL}rkz-logo.jpg`} alt="Rkz" className="h-7 w-auto object-contain" />
           </div>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />

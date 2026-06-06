@@ -423,7 +423,7 @@ const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> 
             </div>
             <p className="text-sm mt-1 text-muted-foreground">
               {globalKillActive
-                ? 'All AI processing is halted across every tenant and every app — RKZ, Portal, and Grand PMS simultaneously.'
+                ? 'All AI processing is halted across every tenant and every app — RKZ, Portal, and PMS simultaneously.'
                 : 'Instantly halt all AI-driven processes across the entire ecosystem. Overrides all tenant-level settings.'}
             </p>
           </div>
@@ -773,7 +773,7 @@ const AiGovernancePanel: React.FC<{ t: (k: string) => string; isRtl: boolean }> 
             </DialogHeader>
             <p className="text-sm text-muted-foreground py-2">
               {globalKillActive
-                ? 'This will resume AI processing across ALL apps and ALL tenants simultaneously — RKZ, Real Estate Portal, and Grand PMS. Ensure the anomaly has been resolved before resuming.'
+                ? 'This will resume AI processing across ALL apps and ALL tenants simultaneously — RKZ, Real Estate Portal, and PMS. Ensure the anomaly has been resolved before resuming.'
                 : 'This will instantly halt ALL AI-driven processes across the entire ecosystem — every tenant, every app, simultaneously. This overrides all tenant-level settings and is logged in the immutable audit trail.'}
             </p>
             {!globalKillActive && (

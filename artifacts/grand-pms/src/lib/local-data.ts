@@ -176,17 +176,17 @@ export const SUPPORT_TICKETS: SupportTicket[] = [
 ];
 
 export const APP_SETTINGS = {
-  propertyName: "Grand PMS",
-  logoText: "Grand",
-  logoSub: "Property Management System",
-  logoUrl: "",
+  propertyName: "Rkz",
+  logoText: "Rkz",
+  logoSub: "",
+  logoUrl: `${import.meta.env.BASE_URL}rkz-logo.jpg`,
   businessMode: "hotel" as const,
   enabledModules: ["maintenance", "housekeeping", "serviceRequests", "staff", "tasks"],
   navConfig: [],
   permissionMatrix: {},
   primaryColor: "",
   secondaryColor: "",
-  companyName: "Grand PMS",
+  companyName: "Rkz",
 };
 
 // ── ID counter ────────────────────────────────────────────────────────────────
