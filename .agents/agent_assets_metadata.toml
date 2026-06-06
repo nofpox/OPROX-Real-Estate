@@ -89,3 +89,9 @@ id = "ZCdfKF-9yzKy6q97gMXUC"
 uri = "file://attached_assets/generated_videos/clip4_falcon_eye_zoom_tech.mp4"
 type = "video"
 title = "Clip 4 — Tech Eye Zoom (6s)"
+
+[[outputs]]
+id = "fDLXLsTudcd-xgT1SuIea"
+uri = "file://attached_assets/generated_videos/rkz_cinematic_master.mp4"
+type = "video"
+title = "Rkz Cinematic Master — 28.5s · 1080p · 24fps"
