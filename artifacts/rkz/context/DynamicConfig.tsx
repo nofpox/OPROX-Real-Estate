@@ -70,7 +70,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   content: {
     welcomeTaglineAr: "محرك النشر العقاري الفوري",
     welcomeTaglineEn: "Instant Real Estate Publishing Engine",
-    welcomeHeadlineAr: 'أهلاً بك في "Rozoz".. نحن وكيلك الحصري!',
+    welcomeHeadlineAr: 'أهلاً بك في "روزوز".. نحن وكيلك الحصري!',
     welcomeHeadlineEn: 'Welcome to "Rozoz" — Your Exclusive Digital Agent!',
     welcomeCtaAr: "لنبدأ الآن",
     welcomeCtaEn: "Let's Get Started",
