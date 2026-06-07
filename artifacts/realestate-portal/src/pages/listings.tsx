@@ -118,66 +118,69 @@ export const ListingsBrowser: React.FC = () => {
 
         {/* Search + Filter bar */}
         <div className="bg-card border border-border rounded-xl shadow-sm p-4 mb-6">
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3">
-            {/* Search input */}
-            <div className="flex-1 relative">
-              <Search className={`absolute ${isRtl ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none`} />
-              <Input
-                placeholder={t('search.placeholder')}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                className={`${isRtl ? 'pr-9' : 'pl-9'} h-10`}
-              />
-            </div>
+          {/* Outer flex row: form (search/filters) + map button side-by-side on desktop */}
+          <div className="flex flex-col md:flex-row gap-3">
+            <form onSubmit={handleSearch} className="flex flex-1 flex-col md:flex-row gap-3">
+              {/* Search input */}
+              <div className="flex-1 relative">
+                <Search className={`absolute ${isRtl ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none`} />
+                <Input
+                  placeholder={t('search.placeholder')}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className={`${isRtl ? 'pr-9' : 'pl-9'} h-10`}
+                />
+              </div>
 
-            {/* Transaction type */}
-            <Select value={type} onValueChange={(v) => { setType(v); setPage(1); }}>
-              <SelectTrigger className="w-full md:w-44 h-10">
-                <SelectValue placeholder={isRtl ? 'نوع المعاملة' : 'Transaction'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isRtl ? 'جميع الأنواع' : 'All Types'}</SelectItem>
-                {LISTING_TYPES.map((lt) => (
-                  <SelectItem key={lt.value} value={lt.value}>
-                    {isRtl ? lt.labelAr : lt.labelEn}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {/* Transaction type */}
+              <Select value={type} onValueChange={(v) => { setType(v); setPage(1); }}>
+                <SelectTrigger className="w-full md:w-44 h-10">
+                  <SelectValue placeholder={isRtl ? 'نوع المعاملة' : 'Transaction'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRtl ? 'جميع الأنواع' : 'All Types'}</SelectItem>
+                  {LISTING_TYPES.map((lt) => (
+                    <SelectItem key={lt.value} value={lt.value}>
+                      {isRtl ? lt.labelAr : lt.labelEn}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {/* Property type */}
-            <Select value={propertyType} onValueChange={(v) => { setPropertyType(v); setPage(1); }}>
-              <SelectTrigger className="w-full md:w-44 h-10">
-                <SelectValue placeholder={isRtl ? 'نوع العقار' : 'Property Type'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isRtl ? 'جميع العقارات' : 'All Properties'}</SelectItem>
-                {PROPERTY_TYPES.map((pt) => (
-                  <SelectItem key={pt.value} value={pt.value}>
-                    {isRtl ? pt.labelAr : pt.labelEn}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {/* Property type */}
+              <Select value={propertyType} onValueChange={(v) => { setPropertyType(v); setPage(1); }}>
+                <SelectTrigger className="w-full md:w-44 h-10">
+                  <SelectValue placeholder={isRtl ? 'نوع العقار' : 'Property Type'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{isRtl ? 'جميع العقارات' : 'All Properties'}</SelectItem>
+                  {PROPERTY_TYPES.map((pt) => (
+                    <SelectItem key={pt.value} value={pt.value}>
+                      {isRtl ? pt.labelAr : pt.labelEn}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Button
-              type="submit"
-              className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-10 px-6 shrink-0"
-            >
-              <SlidersHorizontal className="h-4 w-4 me-2" />
-              {isRtl ? 'بحث' : 'Search'}
-            </Button>
+              <Button
+                type="submit"
+                className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-10 px-6 shrink-0"
+              >
+                <SlidersHorizontal className="h-4 w-4 me-2" />
+                {isRtl ? 'بحث' : 'Search'}
+              </Button>
+            </form>
 
-            <Button
+            {/* Map button — intentionally OUTSIDE the form to prevent mobile touch interference */}
+            <button
               type="button"
-              variant="outline"
-              className="h-10 px-5 shrink-0 gap-2 border-primary/30 hover:bg-primary hover:text-primary-foreground transition-colors"
+              className="h-10 px-5 shrink-0 gap-2 inline-flex items-center justify-center rounded-md border border-primary/30 bg-background text-sm font-medium transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95"
               onClick={() => setShowMap(true)}
             >
               <Map className="h-4 w-4" />
-              {isRtl ? 'عرض الخريطة' : 'View on Map'}
-            </Button>
-          </form>
+              <span className="ms-2">{isRtl ? 'عرض الخريطة' : 'View on Map'}</span>
+            </button>
+          </div>
 
           {/* Active filter chips */}
           {hasActiveFilters && (
