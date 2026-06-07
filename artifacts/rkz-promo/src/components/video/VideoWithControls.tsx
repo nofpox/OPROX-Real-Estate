@@ -207,8 +207,16 @@ export default function VideoWithControls() {
             {Math.floor((TOTAL_DURATION_MS - elapsed) / 1000)} ث
           </span>
 
-          {/* Download button */}
-          <RecordButton state={recordState} onClick={handleStartRecord} />
+          {/* Direct MP4 download */}
+          <a
+            href={`${import.meta.env.BASE_URL}videos/rozoz_cinematic.mp4`}
+            download="rozoz-promotional-film.mp4"
+            className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-gray-900 transition-all shrink-0"
+            style={{ fontFamily: "'Amiri', serif", direction: 'rtl' }}
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">تحميل الفيلم</span>
+          </a>
         </div>
       </div>
     </div>
