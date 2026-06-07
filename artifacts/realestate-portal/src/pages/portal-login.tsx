@@ -4,13 +4,45 @@ import { useLocation } from 'wouter';
 import { usePortalAuth } from '@/lib/portal-auth';
 import { useLanguage } from '@/lib/i18n';
 import {
-  Building, Lock, ArrowRight, ArrowLeft,
-  RefreshCw, KeyRound,
+  Lock, ArrowRight, ArrowLeft,
+  RefreshCw, KeyRound, Compass,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 type Step = 'creds' | 'otp';
+
+// Golden falcon SVG — inline brand mark (no external file dependency)
+function FalconMark({ size = 72 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Outer glow ring */}
+      <circle cx="50" cy="50" r="46" stroke="#C9A84C" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.5" />
+      {/* Body */}
+      <ellipse cx="52" cy="58" rx="18" ry="26" fill="#C9A84C" opacity="0.18" />
+      {/* Head */}
+      <circle cx="50" cy="34" r="14" fill="#C9A84C" />
+      {/* Beak */}
+      <path d="M44 38 Q40 43 44 44 L50 40Z" fill="#8B6914" />
+      {/* Eye highlight */}
+      <circle cx="46" cy="31" r="2.5" fill="#1A1200" />
+      <circle cx="45.3" cy="30.3" r="0.9" fill="white" />
+      {/* Crown feathers */}
+      <path d="M50 20 Q46 14 44 18 Q48 16 50 20Z" fill="#C9A84C" />
+      <path d="M50 20 Q52 13 55 17 Q52 15 50 20Z" fill="#C9A84C" />
+      <path d="M50 20 Q58 15 58 19 Q55 17 50 20Z" fill="#B8953A" />
+      {/* Wing left */}
+      <path d="M36 52 Q22 60 24 72 Q32 62 44 66 Q40 60 36 52Z" fill="#C9A84C" opacity="0.9" />
+      {/* Wing right */}
+      <path d="M64 52 Q78 60 76 72 Q68 62 56 66 Q60 60 64 52Z" fill="#C9A84C" opacity="0.9" />
+      {/* Chest markings */}
+      <path d="M44 52 Q50 46 56 52 Q50 80 44 52Z" fill="#B8953A" opacity="0.6" />
+      {/* Talons */}
+      <path d="M44 82 Q42 86 40 88 M44 82 Q44 87 43 90 M44 82 Q46 87 47 89" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M56 82 Q54 86 52 88 M56 82 Q56 87 55 90 M56 82 Q58 87 59 89" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export const PortalLogin: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading, setUserFromLoginResponse } = usePortalAuth();
@@ -27,7 +59,6 @@ export const PortalLogin: React.FC = () => {
   const [error,        setError]        = useState('');
   const [loading,      setLoading]      = useState(false);
 
-  // Once authenticated, navigate directly to dashboard (no hard reload)
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
       navigate('/portal/dashboard');
@@ -75,14 +106,17 @@ export const PortalLogin: React.FC = () => {
         setLoading(false); return;
       }
       if (data.user) {
-        // Update auth context state directly — no hard page reload
         setUserFromLoginResponse(data.user as Record<string, unknown>);
-        // useEffect above will trigger the navigate once isAuthenticated becomes true
       }
     } catch {
       setError(isRtl ? 'خطأ في الاتصال. يرجى المحاولة مرة أخرى.' : 'Connection error. Please try again.');
       setLoading(false);
     }
+  };
+
+  // Guest explore — navigates directly to the public RKZ portal (view-only by nature)
+  const handleGuestExplore = () => {
+    window.location.href = '/realestate/';
   };
 
   if (authLoading) {
@@ -102,20 +136,24 @@ export const PortalLogin: React.FC = () => {
         <title>{isRtl ? 'غرفة التحكم | ركز' : 'Admin Control Room | RKZ'}</title>
       </Helmet>
 
-      {/* Logo */}
-      <div className="mb-10 text-center">
-        <div className="inline-flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-2xl bg-secondary/20 border border-secondary/30 flex items-center justify-center">
-            <Building className="h-6 w-6 text-secondary" />
-          </div>
-          <span className="text-white text-xl font-bold">ركز | RKZ</span>
+      {/* ── Official Brand Mark ─────────────────────────────────────────────── */}
+      <div className="mb-10 flex flex-col items-center gap-3">
+        <div className="relative">
+          {/* Outer pulse ring */}
+          <div className="absolute inset-0 rounded-full bg-secondary/10 animate-pulse scale-110" />
+          <FalconMark size={80} />
         </div>
-        <p className="text-white/50 text-sm">
-          {isRtl ? 'غرفة التحكم الإدارية' : 'Admin Control Room'}
-        </p>
+        <div className="text-center">
+          <p className="text-white text-2xl font-bold tracking-widest" style={{ fontFamily: 'serif' }}>
+            ركز&nbsp;|&nbsp;RKZ
+          </p>
+          <p className="text-white/40 text-xs tracking-[0.25em] uppercase mt-1">
+            {isRtl ? 'الحلول الذكية للعقارات' : 'Smart Real Estate Solutions'}
+          </p>
+        </div>
       </div>
 
-      {/* Card */}
+      {/* ── Admin Login Card ────────────────────────────────────────────────── */}
       <div className="w-full max-w-sm bg-card rounded-2xl p-6 shadow-xl border border-border/50">
         {step === 'creds' ? (
           <form onSubmit={handleStep1} className="space-y-4">
@@ -246,6 +284,39 @@ export const PortalLogin: React.FC = () => {
             </button>
           </form>
         )}
+      </div>
+
+      {/* ── Divider ─────────────────────────────────────────────────────────── */}
+      <div className="w-full max-w-sm flex items-center gap-3 mt-5">
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-white/25 text-xs uppercase tracking-widest">
+          {isRtl ? 'أو' : 'or'}
+        </span>
+        <div className="flex-1 h-px bg-white/10" />
+      </div>
+
+      {/* ── Guest Explore Button ─────────────────────────────────────────────── */}
+      <div className="w-full max-w-sm mt-4">
+        <button
+          onClick={handleGuestExplore}
+          className="
+            group w-full h-14 rounded-2xl border border-secondary/40
+            bg-secondary/8 hover:bg-secondary/15
+            flex items-center justify-center gap-3
+            transition-all duration-300
+            hover:border-secondary/70 hover:shadow-[0_0_24px_rgba(201,168,76,0.18)]
+            active:scale-[0.98]
+          "
+          style={{ backgroundColor: 'rgba(201,168,76,0.06)' }}
+        >
+          <Compass className="h-5 w-5 text-secondary shrink-0 group-hover:rotate-12 transition-transform duration-300" />
+          <span className="text-secondary font-semibold text-sm tracking-wide text-center leading-snug">
+            استكشف تجربة Rkz&nbsp;&nbsp;|&nbsp;&nbsp;Explore Rkz Experience
+          </span>
+        </button>
+        <p className="text-white/20 text-[10px] text-center mt-2 tracking-wide">
+          {isRtl ? 'وصول للزوار — عرض فقط بدون بيانات' : 'Guest access — view only, no credentials needed'}
+        </p>
       </div>
 
       <p className="mt-8 text-xs text-white/20 text-center">

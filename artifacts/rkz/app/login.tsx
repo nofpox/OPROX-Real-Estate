@@ -247,6 +247,24 @@ export default function LoginScreen() {
       fontFamily: "Inter_700Bold",
       color:      colors.navy,
     },
+    guestBtn: {
+      borderRadius:    14,
+      height:          52,
+      alignItems:      "center",
+      justifyContent:  "center",
+      marginTop:       10,
+      borderWidth:     1.5,
+      borderColor:     colors.gold + "60",
+      backgroundColor: colors.gold + "12",
+      paddingHorizontal: 16,
+    },
+    guestBtnText: {
+      fontSize:   13,
+      fontFamily: "Inter_600SemiBold",
+      color:      colors.gold,
+      textAlign:  "center",
+      lineHeight: 18,
+    },
     platforms: {
       flexDirection:  "row",
       justifyContent: "center",
@@ -409,6 +427,21 @@ export default function LoginScreen() {
             }}
           >
             <Text style={S.ctaBtnText}>{dynCta}</Text>
+          </Pressable>
+
+          {/* ── Guest explore button ─────────────────────────────────── */}
+          <Pressable
+            style={({ pressed }) => [S.guestBtn, pressed && { opacity: 0.82 }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setUser({ phone: "guest", name: "ضيف | Guest", authorized: true });
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              router.replace("/welcome" as any);
+            }}
+          >
+            <Text style={S.guestBtnText}>
+              {isAr ? "استكشف تجربة Rkz  |  Explore Rkz Experience" : "Explore Rkz Experience  |  استكشف تجربة Rkz"}
+            </Text>
           </Pressable>
 
           <View style={S.platforms}>
