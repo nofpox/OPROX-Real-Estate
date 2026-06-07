@@ -16,10 +16,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { router } from "expo-router";
+
 import { ADMIN_EVENTS_KEY } from "@/hooks/useAIAssistant";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 import { useConfig } from "@/context/DynamicConfig";
+import { useApp } from "@/context/AppContext";
 import HeatmapMapView, { MapProperty } from "@/components/HeatmapMapView";
 
 const NEGOTIATION_KEY    = "rkz_negotiation_requests";
@@ -165,6 +168,21 @@ export default function DiscoveryMapScreen() {
   const insets = useSafeAreaInsets();
   const { t, isAr } = useLocale();
   const { config } = useConfig();
+  const { setUser } = useApp();
+
+  const handleLogout = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const doLogout = () => { setUser(null); router.replace("/login"); };
+    if (Platform.OS === "web") {
+      const ok = typeof window !== "undefined" ? window.confirm("هل تريد تسجيل الخروج؟") : true;
+      if (ok) doLogout();
+      return;
+    }
+    Alert.alert("تسجيل الخروج", "هل تريد تسجيل الخروج من روزوز؟", [
+      { text: "إلغاء", style: "cancel" },
+      { text: "خروج", style: "destructive", onPress: doLogout },
+    ]);
+  };
 
   const topPad    = insets.top    + (Platform.OS === "web" ? 67  : 0);
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34  : 100);
@@ -241,6 +259,12 @@ export default function DiscoveryMapScreen() {
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <View style={s.header}>
         <View style={[s.headerRow, isAr && { flexDirection: "row-reverse" }]}>
+          {/* Logout button — left side (RTL: right side) */}
+          <Pressable style={s.logoutBtn} onPress={handleLogout} hitSlop={10}>
+            <MaterialIcons name="logout" size={18} color="rgba(255,255,255,0.80)" />
+            <Text style={s.logoutBtnText}>{isAr ? "خروج" : "Sign out"}</Text>
+          </Pressable>
+
           <View style={{ flex: 1 }}>
             <Text style={[s.headerTitle, isAr && { textAlign: "right" }]}>
               {isAr ? "استكشف العقارات" : "Discover Properties"}
@@ -422,6 +446,21 @@ function makeStyles(
       color:      colors.gold,
       fontSize:   10,
       fontFamily: "Inter_400Regular",
+    },
+    logoutBtn: {
+      flexDirection:   "row",
+      alignItems:      "center",
+      gap:             5,
+      backgroundColor: "rgba(255,255,255,0.08)",
+      borderRadius:    10,
+      paddingHorizontal: 10,
+      paddingVertical:   7,
+      marginRight:     10,
+    },
+    logoutBtnText: {
+      color:      "rgba(255,255,255,0.80)",
+      fontSize:   13,
+      fontFamily: "Inter_600SemiBold",
     },
 
     // ── Filter ────────────────────────────────────────────────────────────
