@@ -45,6 +45,7 @@ export default function AddPropertyScreen() {
   const { t, isAr } = useLocale();
   const { config } = useConfig();
 
+  const [listingPurpose, setListingPurpose] = useState<"sale" | "rent">("sale");
   const [propType, setPropType] = useState<string>(config.propertyTypes[0]?.id ?? "villa");
   const [matchedBuyers, setMatchedBuyers] = useState(0);
   const [price, setPrice] = useState("");
@@ -173,9 +174,11 @@ export default function AddPropertyScreen() {
     const distStr = district ? (isAr ? `حي ${district}، ` : `${district} district, `) : "";
     const TYPE_AR: Record<string, string> = { villa: "فيلا", apartment: "شقة", land: "أرض", commercial: "عقار تجاري" };
     const typeLabel = isAr ? (TYPE_AR[propType] ?? propType) : propType;
+    const purposeAr = listingPurpose === "rent" ? "للإيجار" : "للبيع";
+    const purposeEn = listingPurpose === "rent" ? "For rent" : "For sale";
     const desc = isAr
-      ? `للبيع ${typeLabel} مميزة في ${distStr}${city}.\n${[areaStr, bedsStr].filter(Boolean).join(" | ")}.\nموقع استراتيجي بالقرب من الخدمات والطرق الرئيسية. تشطيبات عالية الجودة ومواصفات فاخرة. فرصة استثمارية لا تُفوَّت.`
-      : `For sale: premium ${typeLabel} in ${distStr}${city}.\n${[areaStr, bedsStr].filter(Boolean).join(" | ")}.\nStrategic location near main roads and amenities. High-quality finishes and premium specifications. An investment opportunity not to be missed.`;
+      ? `${purposeAr} ${typeLabel} مميزة في ${distStr}${city}.\n${[areaStr, bedsStr].filter(Boolean).join(" | ")}.\nموقع استراتيجي بالقرب من الخدمات والطرق الرئيسية. تشطيبات عالية الجودة ومواصفات فاخرة. فرصة ${listingPurpose === "rent" ? "استثمارية" : "لا تُفوَّت"}.`
+      : `${purposeEn}: premium ${typeLabel} in ${distStr}${city}.\n${[areaStr, bedsStr].filter(Boolean).join(" | ")}.\nStrategic location near main roads and amenities. High-quality finishes and premium specifications.`;
     setDescription(desc);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setDescGenerating(false);
@@ -556,6 +559,41 @@ export default function AddPropertyScreen() {
       marginBottom: 24,
     },
     matchBadgeText: { fontSize: 14, fontFamily: "Inter_600SemiBold", color: colors.gold, flex: 1, textAlign: isAr ? "right" : "left" },
+    // ── Purpose Toggle (Sale / Rent) ───────────────────────────────────
+    purposeRow: {
+      flexDirection: "row",
+      gap: 12,
+      marginHorizontal: 20,
+      marginTop: 20,
+      marginBottom: 4,
+    },
+    purposeBtn: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingVertical: 16,
+      borderRadius: 16,
+      backgroundColor: colors.card,
+      borderWidth: 2,
+      borderColor: colors.border,
+    },
+    purposeBtnActive: {
+      backgroundColor: colors.navy,
+      borderColor: colors.gold,
+    },
+    purposeBtnText: {
+      fontSize: 15,
+      fontFamily: "Inter_700Bold",
+      color: colors.mutedForeground,
+    },
+    purposeBtnTextActive: {
+      color: "#FFFFFF",
+    },
+    purposeIcon: {
+      fontSize: 20,
+    },
     // Digital Authorization Modal
     modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
     modalSheet: {
@@ -737,6 +775,36 @@ export default function AddPropertyScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* ── Purpose: Sale or Rent ─────────────────────────────────────── */}
+        <View style={[S.purposeRow, isAr && { flexDirection: "row-reverse" }]}>
+          <Pressable
+            style={({ pressed }) => [
+              S.purposeBtn,
+              listingPurpose === "sale" && S.purposeBtnActive,
+              pressed && { opacity: 0.85 },
+            ]}
+            onPress={() => { setListingPurpose("sale"); Haptics.selectionAsync(); }}
+          >
+            <Text style={S.purposeIcon}>🏷️</Text>
+            <Text style={[S.purposeBtnText, listingPurpose === "sale" && S.purposeBtnTextActive]}>
+              {isAr ? "عقار للبيع" : "For Sale"}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              S.purposeBtn,
+              listingPurpose === "rent" && S.purposeBtnActive,
+              pressed && { opacity: 0.85 },
+            ]}
+            onPress={() => { setListingPurpose("rent"); Haptics.selectionAsync(); }}
+          >
+            <Text style={S.purposeIcon}>🔑</Text>
+            <Text style={[S.purposeBtnText, listingPurpose === "rent" && S.purposeBtnTextActive]}>
+              {isAr ? "عقار للإيجار" : "For Rent"}
+            </Text>
+          </Pressable>
+        </View>
+
         {/* Property type — dynamic from Admin config */}
         <View style={S.section}>
           <Text style={S.label}>{t.add.typeLabel}</Text>
@@ -761,7 +829,11 @@ export default function AddPropertyScreen() {
 
         {/* Price + AI suggestion */}
         <View style={S.section}>
-          <Text style={S.label}>{t.add.priceLabel}</Text>
+          <Text style={S.label}>
+            {listingPurpose === "rent"
+              ? (isAr ? "الإيجار السنوي *" : "Annual Rent *")
+              : t.add.priceLabel}
+          </Text>
           <View style={S.priceRow}>
             <TextInput
               style={S.priceInput}
