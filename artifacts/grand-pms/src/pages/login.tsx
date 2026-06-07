@@ -45,7 +45,7 @@ export default function Login({ onLogin }: LoginProps) {
             </div>
           )}
           <CardTitle className="text-2xl font-serif">{settings.propertyName}</CardTitle>
-          <CardDescription>ركز للحلول الذكية · Rakez Smart Solutions</CardDescription>
+          <CardDescription>ركز للحلول الذكية · RKZ Smart Solutions</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

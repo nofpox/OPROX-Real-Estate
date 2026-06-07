@@ -2233,7 +2233,7 @@ export const PortalDashboard: React.FC = () => {
               <Building className="h-4 w-4 text-primary-foreground" />
             </div>
             <div className="hidden sm:block">
-              <p className="text-sm font-bold text-primary leading-none">{isRtl ? 'ركز للحلول الذكية' : 'Rakez Smart Solutions'}</p>
+              <p className="text-sm font-bold text-primary leading-none">{isRtl ? 'ركز للحلول الذكية' : 'RKZ Smart Solutions'}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{tierLevel <= 7 ? t('portal.managementPortal') : t('portal.myPortfolio')}</p>
             </div>
           </div>

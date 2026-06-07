@@ -110,7 +110,7 @@ export interface SiteContent {
 
 const DEFAULTS: SiteContent = {
   branding: {
-    companyNameEn: "Rakez Smart Solutions",
+    companyNameEn: "RKZ Smart Solutions",
     companyNameAr: "ركز للحلول الذكية",
     taglineEn: "Premium Property Management",
     taglineAr: "إدارة عقارات متميزة",
@@ -182,13 +182,13 @@ const DEFAULTS: SiteContent = {
   cta: {
     headlineEn: "Ready to Maximise Your Property's Potential?",
     headlineAr: "هل أنت مستعد لتعظيم قيمة عقارك؟",
-    subtitleEn: "Get in touch with our team today and discover how Rakez can transform your property assets into a performing investment.",
+    subtitleEn: "Get in touch with our team today and discover how RKZ can transform your property assets into a performing investment.",
     subtitleAr: "تواصل مع فريقنا اليوم واكتشف كيف يمكن لركز أن يحول أصولك العقارية إلى استثمار مثمر.",
     buttonEn: "Contact Us",
     buttonAr: "تواصل معنا",
   },
   about: {
-    titleEn: "About Rakez Smart Solutions",
+    titleEn: "About RKZ Smart Solutions",
     titleAr: "عن ركز للحلول الذكية",
     body: "",
     imageUrl: "",
@@ -199,7 +199,7 @@ const DEFAULTS: SiteContent = {
     pageTitleAr: "العقارات",
     subtitleEn: "Discover our curated selection of properties across Saudi Arabia.",
     subtitleAr: "اكتشف مجموعة عقاراتنا المختارة في المملكة العربية السعودية.",
-    metaDescription: "Browse properties for sale, rent, and under professional management by Rakez Smart Solutions.",
+    metaDescription: "Browse properties for sale, rent, and under professional management by RKZ Smart Solutions.",
   },
 };
 

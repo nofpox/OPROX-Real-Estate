@@ -26,7 +26,7 @@ const resetTokens = new Map<string, { userId: number; tenantId: number | null; e
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // Sender address: set SENDER_EMAIL env var to your verified Resend domain address
-// e.g. SENDER_EMAIL="Rakez PMS <noreply@yourdomain.com>"
+// e.g. SENDER_EMAIL="RKZ PMS <noreply@yourdomain.com>"
 // Falls back to Resend test address (only delivers to the account owner's email in test mode)
 const SENDER_FROM = process.env.SENDER_EMAIL ?? "ركز للحلول الذكية <onboarding@resend.dev>";
 // When no custom domain is configured, Resend's test sender only delivers to the
@@ -85,13 +85,13 @@ async function sendResetEmail(to: string, username: string, otp: string): Promis
   await resendSend({
     from:    SENDER_FROM,
     to:      [to],
-    subject: "مساعدة في الوصول | Access Help – ركز Rakez",
+    subject: "مساعدة في الوصول | Access Help – ركز | RKZ",
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:0;background:#f8f8f8">
 
         <!-- Header bar -->
         <div style="background:#1a2744;padding:24px 32px;border-radius:12px 12px 0 0">
-          <p style="margin:0;font-size:18px;font-weight:700;color:#fff;letter-spacing:0.3px">ركز | Rakez</p>
+          <p style="margin:0;font-size:18px;font-weight:700;color:#fff;letter-spacing:0.3px">ركز | RKZ</p>
           <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.55)">Investor Portal — Access Help</p>
         </div>
 
@@ -101,7 +101,7 @@ async function sendResetEmail(to: string, username: string, otp: string): Promis
           <!-- EN section -->
           <h2 style="margin:0 0 8px;font-size:17px;font-weight:700;color:#111">We're here to help you get back in</h2>
           <p style="margin:0 0 24px;color:#555;font-size:14px;line-height:1.6">
-            We received a request to help you access your Rakez Investor Portal account.
+            We received a request to help you access your RKZ Investor Portal account.
             Here is everything you need — your username and a one-time access code — in one place.
           </p>
 
@@ -322,19 +322,19 @@ export async function sendPortalWelcomeEmail(to: string, displayName: string, us
   await resendSend({
     from:    SENDER_FROM,
     to:      [to],
-    subject: "Welcome to Rakez — Your account is ready | مرحباً بك في ركز",
+    subject: "Welcome to RKZ — Your account is ready | مرحباً بك في ركز",
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
         <!-- Header -->
         <div style="background:#1a2744;padding:26px 32px">
-          <p style="margin:0;font-size:20px;font-weight:800;color:#fff;letter-spacing:0.3px">ركز | Rakez</p>
+          <p style="margin:0;font-size:20px;font-weight:800;color:#fff;letter-spacing:0.3px">ركز | RKZ</p>
           <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.5)">Investor Portal — Account Confirmation</p>
         </div>
         <!-- Body EN -->
         <div style="padding:32px">
           <h2 style="margin:0 0 10px;font-size:20px;font-weight:700;color:#111">Welcome, ${displayName}! 🎉</h2>
           <p style="margin:0 0 20px;color:#555;font-size:14px;line-height:1.7">
-            Your Rakez Investor Portal account has been created successfully.
+            Your RKZ Investor Portal account has been created successfully.
             You can now sign in to access your managed properties, financial reports, and more.
           </p>
           <!-- Username -->
@@ -380,18 +380,18 @@ export async function sendPortalTeamWelcomeEmail(to: string, displayName: string
   await resendSend({
     from:    SENDER_FROM,
     to:      [to],
-    subject: "You've been added to Rakez Portal — Your credentials inside | تمت إضافتك إلى بوابة ركز",
+    subject: "You've been added to RKZ Portal — Your credentials inside | تمت إضافتك إلى بوابة ركز",
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
         <!-- Header -->
         <div style="background:#1a2744;padding:26px 32px">
-          <p style="margin:0;font-size:20px;font-weight:800;color:#fff">ركز | Rakez</p>
+          <p style="margin:0;font-size:20px;font-weight:800;color:#fff">ركز | RKZ</p>
           <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.5)">Investor Portal — Team Invitation</p>
         </div>
         <div style="padding:32px">
           <h2 style="margin:0 0 10px;font-size:20px;font-weight:700;color:#111">Welcome to the team, ${displayName}! 🎉</h2>
           <p style="margin:0 0 20px;color:#555;font-size:14px;line-height:1.7">
-            An administrator has created a Rakez Investor Portal account for you.
+            An administrator has created a RKZ Investor Portal account for you.
             Use the credentials below to sign in — you'll be prompted to set your own password on first login.
           </p>
           <div style="background:#f4f6fa;border:1px solid #e2e8f0;border-radius:8px;padding:14px 20px;margin:0 0 12px">

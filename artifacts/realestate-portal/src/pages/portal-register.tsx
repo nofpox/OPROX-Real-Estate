@@ -11,7 +11,7 @@ export const PortalRegister: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{isRtl ? 'وصول مقيّد | ركز للحلول الذكية' : 'Access Restricted | Rakez Smart Solutions'}</title>
+        <title>{isRtl ? 'وصول مقيّد | ركز للحلول الذكية' : 'Access Restricted | RKZ Smart Solutions'}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
@@ -29,7 +29,7 @@ export const PortalRegister: React.FC = () => {
           <div className="relative z-10">
             <Link href="/" className="flex items-center gap-2.5 mb-14">
               <Building className="h-7 w-7 text-secondary" />
-              <span className="font-bold text-xl text-white">ركز | Rakez</span>
+              <span className="font-bold text-xl text-white">ركز | RKZ</span>
             </Link>
             <h2 className="text-3xl font-bold text-white mb-3">
               {isRtl ? 'بوابة المستثمرين' : 'Investor Portal'}
@@ -37,11 +37,11 @@ export const PortalRegister: React.FC = () => {
             <p className="text-primary-foreground/70 text-base leading-relaxed">
               {isRtl
                 ? 'وصول حصري للمستثمرين المسجلين وشركاء ركز للحلول الذكية.'
-                : 'Exclusive access for registered investors and partners of Rakez Smart Solutions.'}
+                : 'Exclusive access for registered investors and partners of RKZ Smart Solutions.'}
             </p>
           </div>
           <p className="relative z-10 text-xs text-primary-foreground/30">
-            © {new Date().getFullYear()} Rakez Smart Solutions
+            © {new Date().getFullYear()} RKZ Smart Solutions
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export const PortalRegister: React.FC = () => {
           <div className="lg:hidden mb-8 text-center">
             <Link href="/" className="inline-flex items-center gap-2 mb-2">
               <Building className="h-8 w-8 text-secondary" />
-              <span className="font-bold text-2xl text-primary">ركز | Rakez</span>
+              <span className="font-bold text-2xl text-primary">ركز | RKZ</span>
             </Link>
           </div>
 
@@ -69,7 +69,7 @@ export const PortalRegister: React.FC = () => {
               <p className="text-sm text-muted-foreground leading-relaxed mb-2">
                 {isRtl
                   ? 'هذه البوابة مخصصة حصرياً لشركائنا المستثمرين المسجلين لدى ركز للحلول الذكية.'
-                  : 'This portal is exclusively for our registered investment partners of Rakez Smart Solutions.'}
+                  : 'This portal is exclusively for our registered investment partners of RKZ Smart Solutions.'}
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                 {isRtl

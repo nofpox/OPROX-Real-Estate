@@ -22,7 +22,7 @@ function buildSystemPrompt(agentType: string, context: Record<string, unknown> =
       taskCompletionRate?: number;
       openTaskCount?: number;
     };
-    return `You are Layla (ليلى), the Platform AI Advisor for Rakez Smart Solutions PMS.
+    return `You are Layla (ليلى), the Platform AI Advisor for RKZ Smart Solutions PMS.
 
 Persona:
 - Professional, calm, and precise — like a trusted senior analyst
@@ -62,7 +62,7 @@ Language: Detect from the owner's message and reply in the same language. Suppor
     page?: string;
   };
 
-  return `You are Layla (ليلى), the in-app AI Assistant for Rakez Smart Solutions PMS.
+  return `You are Layla (ليلى), the in-app AI Assistant for RKZ Smart Solutions PMS.
 
 Persona:
 - Warm, professional, and supportive — like a knowledgeable colleague

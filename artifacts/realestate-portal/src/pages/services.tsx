@@ -152,7 +152,7 @@ export const Services: React.FC = () => {
           <p className="text-muted-foreground mb-8 leading-relaxed">
             {isRtl
               ? 'تواصل مع فريق ركز للمناقشة ومعرفة كيف يمكننا المساعدة في تعظيم قيمة عقاراتك.'
-              : 'Reach out to the Rakez team to discuss how we can help maximise the value of your portfolio.'}
+              : 'Reach out to the RKZ team to discuss how we can help maximise the value of your portfolio.'}
           </p>
           <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-12 px-10 rounded-full font-semibold">
             <Link href="/contact">

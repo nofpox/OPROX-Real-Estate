@@ -11,7 +11,7 @@ export interface TourStep {
 export const TOUR_STEPS: TourStep[] = [
   {
     id: "welcome",
-    title: "Welcome to Rakez Smart Solutions",
+    title: "Welcome to RKZ Smart Solutions",
     description: "Let's take a quick tour of the key features to help you get started. You can skip this at any time and restart it from the help button.",
     target: null,
     position: "center",

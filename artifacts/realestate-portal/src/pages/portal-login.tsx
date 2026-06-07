@@ -57,7 +57,7 @@ const BrandingPanel: React.FC<{ isRtl: boolean }> = ({ isRtl }) => (
     <div className="relative z-10">
       <Link href="/" className="flex items-center gap-2.5 mb-14">
         <Building className="h-7 w-7 text-secondary" />
-        <span className="font-bold text-xl text-white">ركز | Rakez</span>
+        <span className="font-bold text-xl text-white">ركز | RKZ</span>
       </Link>
       <h2 className="text-3xl font-bold text-white mb-3">
         {isRtl ? 'بوابة المستثمرين' : 'Investor Portal'}
@@ -82,7 +82,7 @@ const BrandingPanel: React.FC<{ isRtl: boolean }> = ({ isRtl }) => (
       </div>
     </div>
     <p className="relative z-10 text-xs text-primary-foreground/30">
-      © {new Date().getFullYear()} Rakez Smart Solutions
+      © {new Date().getFullYear()} RKZ Smart Solutions
     </p>
   </div>
 );
@@ -92,7 +92,7 @@ const RightPanel: React.FC<{ isRtl: boolean; children: React.ReactNode }> = ({ i
     <div className="lg:hidden mb-8 text-center">
       <Link href="/" className="inline-flex items-center gap-2 mb-2">
         <Building className="h-8 w-8 text-secondary" />
-        <span className="font-bold text-2xl text-primary">ركز | Rakez</span>
+        <span className="font-bold text-2xl text-primary">ركز | RKZ</span>
       </Link>
     </div>
     <div className="w-full max-w-md">{children}</div>
@@ -325,7 +325,7 @@ export const PortalLogin: React.FC = () => {
   if (view === 'login') return (
     <>
       <Helmet>
-        <title>{isRtl ? 'بوابة المستثمرين | ركز للحلول الذكية' : 'Investor Portal | Rakez Smart Solutions'}</title>
+        <title>{isRtl ? 'بوابة المستثمرين | ركز للحلول الذكية' : 'Investor Portal | RKZ Smart Solutions'}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="min-h-screen flex">
@@ -513,7 +513,7 @@ export const PortalLogin: React.FC = () => {
   // ── View: OTP verification ──────────────────────────────────────────────────
   if (view === 'otp') return (
     <>
-      <Helmet><title>{isRtl ? 'التحقق من الهوية | ركز' : 'Verify Identity | Rakez'}</title></Helmet>
+      <Helmet><title>{isRtl ? 'التحقق من الهوية | ركز' : 'Verify Identity | RKZ'}</title></Helmet>
       <div className="min-h-screen flex">
         <BrandingPanel isRtl={isRtl} />
         <RightPanel isRtl={isRtl}>
@@ -608,7 +608,7 @@ export const PortalLogin: React.FC = () => {
   // ── View: Biometric offer (after first successful login) ────────────────────
   if (view === 'biometric-offer') return (
     <>
-      <Helmet><title>{isRtl ? 'تفعيل بصمة الدخول | ركز' : 'Enable Biometric Login | Rakez'}</title></Helmet>
+      <Helmet><title>{isRtl ? 'تفعيل بصمة الدخول | ركز' : 'Enable Biometric Login | RKZ'}</title></Helmet>
       <div className="min-h-screen flex">
         <BrandingPanel isRtl={isRtl} />
         <RightPanel isRtl={isRtl}>
@@ -669,7 +669,7 @@ export const PortalLogin: React.FC = () => {
   // ── View: Forgot — enter email ──────────────────────────────────────────────
   if (view === 'forgot-email') return (
     <>
-      <Helmet><title>Need Help Logging In? | Rakez</title></Helmet>
+      <Helmet><title>Need Help Logging In? | RKZ</title></Helmet>
       <div className="min-h-screen flex">
         <BrandingPanel isRtl={isRtl} />
         <RightPanel isRtl={isRtl}>
@@ -728,7 +728,7 @@ export const PortalLogin: React.FC = () => {
   // ── View: Forgot — verify OTP + new password ────────────────────────────────
   if (view === 'forgot-otp') return (
     <>
-      <Helmet><title>Reset Password | Rakez</title></Helmet>
+      <Helmet><title>Reset Password | RKZ</title></Helmet>
       <div className="min-h-screen flex">
         <BrandingPanel isRtl={isRtl} />
         <RightPanel isRtl={isRtl}>
@@ -821,7 +821,7 @@ export const PortalLogin: React.FC = () => {
   // ── View: Forgot — success ──────────────────────────────────────────────────
   return (
     <>
-      <Helmet><title>Password Reset | Rakez</title></Helmet>
+      <Helmet><title>Password Reset | RKZ</title></Helmet>
       <div className="min-h-screen flex">
         <BrandingPanel isRtl={isRtl} />
         <RightPanel isRtl={isRtl}>

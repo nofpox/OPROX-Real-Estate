@@ -176,13 +176,13 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
   },
   announcements: [],
   about: {
-    titleEn: "About Rakez Smart Solutions",
+    titleEn: "About RKZ Smart Solutions",
     titleAr: "عن ركز للحلول الذكية",
-    body: "Rakez Smart Solutions is a leading property management company in Saudi Arabia, specializing in hotels, residential compounds, and corporate facilities.",
+    body: "RKZ Smart Solutions is a leading property management company in Saudi Arabia, specializing in hotels, residential compounds, and corporate facilities.",
     imageUrl: "",
   },
   branding: {
-    companyNameEn: "Rakez Smart Solutions",
+    companyNameEn: "RKZ Smart Solutions",
     companyNameAr: "ركز للحلول الذكية",
     taglineEn: "Premium Property Management",
     taglineAr: "إدارة عقارات متميزة",
@@ -264,7 +264,7 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     pageTitleAr: "العقارات",
     subtitleEn: "Discover our curated selection of properties across Saudi Arabia.",
     subtitleAr: "اكتشف مجموعة عقاراتنا المختارة في المملكة العربية السعودية.",
-    metaDescription: "Browse properties for sale, rent, and under professional management by Rakez Smart Solutions.",
+    metaDescription: "Browse properties for sale, rent, and under professional management by RKZ Smart Solutions.",
   },
   nav: [
     { href: "/",         labelEn: "Home",          labelAr: "الرئيسية"    },
@@ -280,7 +280,7 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
   cta: {
     headlineEn: "Ready to Maximise Your Property's Potential?",
     headlineAr: "هل أنت مستعد لتعظيم قيمة عقارك؟",
-    subtitleEn: "Get in touch with our team today and discover how Rakez can transform your property assets into a performing investment.",
+    subtitleEn: "Get in touch with our team today and discover how RKZ can transform your property assets into a performing investment.",
     subtitleAr: "تواصل مع فريقنا اليوم واكتشف كيف يمكن لركز أن يحول أصولك العقارية إلى استثمار مثمر.",
     buttonEn: "Contact Us",
     buttonAr: "تواصل معنا",

@@ -74,13 +74,13 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
   },
   announcements: [],
   about: {
-    titleEn: "About Rakez Smart Solutions",
+    titleEn: "About RKZ Smart Solutions",
     titleAr: "عن ركز للحلول الذكية",
-    body: "Rakez Smart Solutions is a leading property management company in Saudi Arabia.",
+    body: "RKZ Smart Solutions is a leading property management company in Saudi Arabia.",
     imageUrl: "",
   },
   branding: {
-    companyNameEn: "Rakez Smart Solutions",
+    companyNameEn: "RKZ Smart Solutions",
     companyNameAr: "ركز للحلول الذكية",
     taglineEn: "Premium Property Management",
     taglineAr: "إدارة عقارات متميزة",
@@ -117,7 +117,7 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     pageTitleAr: "العقارات",
     subtitleEn: "Discover our curated selection of properties across Saudi Arabia.",
     subtitleAr: "اكتشف مجموعة عقاراتنا المختارة في المملكة العربية السعودية.",
-    metaDescription: "Browse properties managed by Rakez Smart Solutions.",
+    metaDescription: "Browse properties managed by RKZ Smart Solutions.",
   },
   nav: [
     { href: "/",         labelEn: "Home",             labelAr: "الرئيسية" },

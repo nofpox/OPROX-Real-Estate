@@ -270,7 +270,7 @@ export const ar = {
     killswitchSaved: "تم الحفظ",
   },
   admin: {
-    title: "لوحة التحكم",
+    title: "غرفة التحكم",
     subtitle: "إدارة التطبيق بدون تعديل كود",
     pinTitle: "رمز الدخول الإداري",
     pinSubtitle: "الوصول مقيد للمديرين فقط",
@@ -700,7 +700,7 @@ export const en: Translations = {
     killswitchSaved: "Saved",
   },
   admin: {
-    title: "Admin Control Panel",
+    title: "Admin Control Room",
     subtitle: "Manage the app without code changes",
     pinTitle: "Admin Access PIN",
     pinSubtitle: "Restricted to administrators only",

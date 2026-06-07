@@ -52,7 +52,7 @@ const translations = {
     // ── General ─────────────────────────────────────────────────────────────
     'featured.title':   'Featured Properties',
     'services.title':   'Our Operational Services',
-    'footer.description': 'Rakez Smart Solutions — Focused and precise property management across Saudi Arabia.',
+    'footer.description': 'RKZ Smart Solutions — Focused and precise property management across Saudi Arabia.',
     'contact.title':    'Get in Touch',
     'search.placeholder': 'Search properties...',
 
@@ -62,15 +62,15 @@ const translations = {
     'cta.operational': 'Inquire for Management',
 
     // ── Listing detail ───────────────────────────────────────────────────────
-    'detail.operationalHeading':       'Under Rakez Management',
-    'detail.operationalText':          'This property is actively managed by Rakez Smart Solutions. Our team handles operations, staffing, maintenance, and reporting.',
+    'detail.operationalHeading':       'Under RKZ Management',
+    'detail.operationalText':          'This property is actively managed by RKZ Smart Solutions. Our team handles operations, staffing, maintenance, and reporting.',
     'detail.inquiry.saleHeading':      'Purchase Inquiry',
     'detail.inquiry.saleBtn':          'Send Purchase Inquiry',
     'detail.inquiry.rentHeading':      'Rental Inquiry',
     'detail.inquiry.rentBtn':          'Book a Viewing',
     'detail.inquiry.operationalHeading': 'Inquire for Management',
     'detail.inquiry.operationalBtn':   'Send Management Inquiry',
-    'detail.portalPrompt':             'Already a Rakez client?',
+    'detail.portalPrompt':             'Already an RKZ client?',
     'detail.portalLink':               'Sign in to your portal →',
 
     // ── Portal auth ──────────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ const translations = {
 
     // ── Portal register ───────────────────────────────────────────────────────
     'portal.registerTitle':           'Create a Client Account',
-    'portal.registerSubtitle':        'Join Rakez to manage your properties and portfolio',
+    'portal.registerSubtitle':        'Join RKZ to manage your properties and portfolio',
     'portal.fullName':                'Full name',
     'portal.phone':                   'Phone number',
     'portal.phoneDisclaimer':         'Your phone number is required for service updates only. We value your trust and are committed to protecting your privacy; it is at the heart of our relationship with you.',

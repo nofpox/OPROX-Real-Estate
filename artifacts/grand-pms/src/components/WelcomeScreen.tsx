@@ -94,7 +94,7 @@ export function WelcomeScreen({ onComplete }: Props) {
         textAlign: "center",
       }}>
         <div style={{ color: GOLD, fontSize: 11, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>
-          Rakez Smart Solutions
+          RKZ Smart Solutions
         </div>
         <img
           src={`${import.meta.env.BASE_URL}rkz-logo.jpg`}

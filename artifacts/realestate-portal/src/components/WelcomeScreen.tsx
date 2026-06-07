@@ -98,7 +98,7 @@ export function WelcomeScreen({ onComplete }: Props) {
           Real Estate Platform
         </div>
         <div style={{ color: TEXT_PRI, fontSize: 28, fontWeight: 700, letterSpacing: "-0.5px" }}>
-          ركز · Rakez
+          ركز · RKZ
         </div>
       </div>
 

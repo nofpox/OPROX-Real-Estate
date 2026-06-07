@@ -389,6 +389,18 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
   const [opsLoading, setOpsLoading] = useState(false);
   const [clearingViol, setClearingViol] = useState(false);
 
+  // ── Portal CMS state ──────────────────────────────────────────────────────
+  const [draftPortal, setDraftPortal] = useState<{
+    brandingNameEn: string; brandingNameAr: string;
+    heroTitleEn: string; heroTitleAr: string;
+    heroSubtitleEn: string; heroSubtitleAr: string;
+    footerDescEn: string;
+    contactEmail: string; contactPhone: string;
+  } | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalSaving, setPortalSaving] = useState(false);
+  const [portalMsg, setPortalMsg] = useState("");
+
   // showSpinner=true only for manual refresh button; auto-poll is silent
   const refreshOps = useCallback(async (showSpinner = false) => {
     if (showSpinner) setOpsLoading(true);
@@ -411,6 +423,70 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
     const id = setInterval(() => void refreshOps(false), 30_000);
     return () => clearInterval(id);
   }, [refreshOps]);
+
+  // ── Portal CMS helpers ───────────────────────────────────────────────────
+  const fetchPortalContent = useCallback(async () => {
+    setPortalLoading(true);
+    try {
+      const res = await fetch("/realestate-api/cms/site-content");
+      if (!res.ok) throw new Error("fetch failed");
+      const data = (await res.json()) as { content: Record<string, Record<string, string>> };
+      const c = data.content;
+      setDraftPortal({
+        brandingNameEn: c.branding?.companyNameEn  ?? "",
+        brandingNameAr: c.branding?.companyNameAr  ?? "",
+        heroTitleEn:    c.hero?.titleEn             ?? "",
+        heroTitleAr:    c.hero?.titleAr             ?? "",
+        heroSubtitleEn: c.hero?.subtitleEn          ?? "",
+        heroSubtitleAr: c.hero?.subtitleAr          ?? "",
+        footerDescEn:   c.footer?.descriptionEn     ?? "",
+        contactEmail:   c.contact?.email            ?? "",
+        contactPhone:   c.contact?.phone            ?? "",
+      });
+    } catch { /* portal unreachable */ }
+    setPortalLoading(false);
+  }, []);
+
+  useEffect(() => { void fetchPortalContent(); }, [fetchPortalContent]);
+
+  async function savePortalContent() {
+    if (!draftPortal) return;
+    setPortalSaving(true);
+    setPortalMsg("");
+    try {
+      const opts = (body: unknown) => ({
+        method: "PUT" as const,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include" as RequestCredentials,
+        body: JSON.stringify(body),
+      });
+      const results = await Promise.all([
+        fetch("/realestate-api/cms/site-content/branding", opts({
+          companyNameEn: draftPortal.brandingNameEn,
+          companyNameAr: draftPortal.brandingNameAr,
+        })),
+        fetch("/realestate-api/cms/site-content/hero", opts({
+          titleEn: draftPortal.heroTitleEn, titleAr: draftPortal.heroTitleAr,
+          subtitleEn: draftPortal.heroSubtitleEn, subtitleAr: draftPortal.heroSubtitleAr,
+        })),
+        fetch("/realestate-api/cms/site-content/footer", opts({ descriptionEn: draftPortal.footerDescEn })),
+        fetch("/realestate-api/cms/site-content/contact", opts({ email: draftPortal.contactEmail, phone: draftPortal.contactPhone })),
+      ]);
+      const failed = results.find(r => !r.ok);
+      if (failed) {
+        const st = failed.status;
+        setPortalMsg(st === 401 || st === 403
+          ? (isAr ? "❌ سجّل دخولك كمدير في البوابة أولاً" : "❌ Sign in as admin on Investor Portal first")
+          : (isAr ? "❌ فشل الحفظ" : "❌ Save failed"));
+      } else {
+        setPortalMsg(isAr ? "✅ تم الحفظ" : "✅ Saved");
+        setTimeout(() => setPortalMsg(""), 3500);
+      }
+    } catch {
+      setPortalMsg(isAr ? "❌ خطأ في الاتصال" : "❌ Connection error");
+    }
+    setPortalSaving(false);
+  }
 
   // Rollback live preview on unmount if not saved
   useEffect(() => {
@@ -1082,6 +1158,133 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
                 </View>
               </View>
             ))
+          )}
+        </SectionCard>
+
+        {/* ── 6. REAL ESTATE PORTAL CONTENT ──────────────────────────────── */}
+        <SectionCard icon="language" title={isAr ? "محتوى البوابة العقارية" : "Real Estate Portal CMS"} iconBg="#F0F9FF" iconColor="#0284C7" isAr={isAr}>
+          <Text style={[styles.fieldLabel, styles.pinHint, isAr && { textAlign: "right" }]}>
+            {isAr ? "تحرير محتوى الموقع العقاري مباشرةً من لوحة التحكم" : "Edit the real estate portal's live site content from here"}
+          </Text>
+          {portalLoading ? (
+            <ActivityIndicator size="small" color="#0284C7" style={{ marginVertical: 16 }} />
+          ) : draftPortal ? (
+            <>
+              {/* Branding */}
+              <Text style={[styles.fieldLabel, { fontWeight: "600", marginBottom: 8, marginTop: 4 }, isAr && { textAlign: "right" }]}>
+                {isAr ? "🏷️ العلامة التجارية" : "🏷️ Branding"}
+              </Text>
+              <FieldRow
+                label={isAr ? "اسم الشركة (إنجليزي)" : "Company Name (EN)"}
+                value={draftPortal.brandingNameEn}
+                onChange={(v) => setDraftPortal(d => d ? { ...d, brandingNameEn: v } : d)}
+                placeholder="RKZ Smart Solutions"
+              />
+              <FieldRow
+                label={isAr ? "اسم الشركة (عربي)" : "Company Name (AR)"}
+                value={draftPortal.brandingNameAr}
+                onChange={(v) => setDraftPortal(d => d ? { ...d, brandingNameAr: v } : d)}
+                placeholder="ركز للحلول الذكية"
+                isAr
+              />
+              <View style={[styles.divider, { marginVertical: 12 }]} />
+
+              {/* Hero */}
+              <Text style={[styles.fieldLabel, { fontWeight: "600", marginBottom: 8 }, isAr && { textAlign: "right" }]}>
+                {isAr ? "🖼️ القسم الرئيسي (Hero)" : "🖼️ Hero Section"}
+              </Text>
+              <FieldRow
+                label={isAr ? "العنوان الرئيسي (إنجليزي)" : "Hero Title (EN)"}
+                value={draftPortal.heroTitleEn}
+                onChange={(v) => setDraftPortal(d => d ? { ...d, heroTitleEn: v } : d)}
+                multiline
+              />
+              <FieldRow
+                label={isAr ? "العنوان الرئيسي (عربي)" : "Hero Title (AR)"}
+                value={draftPortal.heroTitleAr}
+                onChange={(v) => setDraftPortal(d => d ? { ...d, heroTitleAr: v } : d)}
+                multiline
+                isAr
+              />
+              <FieldRow
+                label={isAr ? "العنوان الفرعي (إنجليزي)" : "Hero Subtitle (EN)"}
+                value={draftPortal.heroSubtitleEn}
+                onChange={(v) => setDraftPortal(d => d ? { ...d, heroSubtitleEn: v } : d)}
+                multiline
+              />
+              <FieldRow
+                label={isAr ? "العنوان الفرعي (عربي)" : "Hero Subtitle (AR)"}
+                value={draftPortal.heroSubtitleAr}
+                onChange={(v) => setDraftPortal(d => d ? { ...d, heroSubtitleAr: v } : d)}
+                multiline
+                isAr
+              />
+              <View style={[styles.divider, { marginVertical: 12 }]} />
+
+              {/* Footer & Contact */}
+              <Text style={[styles.fieldLabel, { fontWeight: "600", marginBottom: 8 }, isAr && { textAlign: "right" }]}>
+                {isAr ? "📧 التذييل والتواصل" : "📧 Footer & Contact"}
+              </Text>
+              <FieldRow
+                label={isAr ? "وصف التذييل (إنجليزي)" : "Footer Description (EN)"}
+                value={draftPortal.footerDescEn}
+                onChange={(v) => setDraftPortal(d => d ? { ...d, footerDescEn: v } : d)}
+                multiline
+              />
+              <FieldRow
+                label={isAr ? "البريد الإلكتروني" : "Contact Email"}
+                value={draftPortal.contactEmail}
+                onChange={(v) => setDraftPortal(d => d ? { ...d, contactEmail: v } : d)}
+                placeholder="info@rkz-solutions.com"
+              />
+              <FieldRow
+                label={isAr ? "رقم الهاتف" : "Contact Phone"}
+                value={draftPortal.contactPhone}
+                onChange={(v) => setDraftPortal(d => d ? { ...d, contactPhone: v } : d)}
+                placeholder="+966 11 234 5678"
+              />
+
+              {!!portalMsg && (
+                <Text style={[
+                  styles.savedText,
+                  { marginTop: 8 },
+                  portalMsg.includes("❌") ? { color: "#DC2626" } : {},
+                  isAr && { textAlign: "right" },
+                ]}>
+                  {portalMsg}
+                </Text>
+              )}
+
+              <Pressable
+                onPress={savePortalContent}
+                disabled={portalSaving}
+                style={({ pressed }) => [
+                  styles.addTypeBtn,
+                  { marginTop: 12, backgroundColor: "#F0F9FF", borderColor: "#0284C7", borderWidth: 1 },
+                  pressed && { opacity: 0.8 },
+                  portalSaving && { opacity: 0.6 },
+                ]}
+              >
+                {portalSaving
+                  ? <ActivityIndicator size="small" color="#0284C7" />
+                  : <MaterialIcons name="cloud-upload" size={16} color="#0284C7" />}
+                <Text style={[styles.addTypeBtnText, { color: "#0284C7" }]}>
+                  {portalSaving
+                    ? (isAr ? "جارٍ الحفظ..." : "Saving...")
+                    : (isAr ? "حفظ محتوى البوابة" : "Save Portal Content")}
+                </Text>
+              </Pressable>
+
+              <Text style={[styles.pinHint, { marginTop: 8 }, isAr && { textAlign: "right" }]}>
+                {isAr
+                  ? "💡 يتطلب تسجيل الدخول كمدير في بوابة المستثمرين لحفظ التغييرات"
+                  : "💡 Requires admin sign-in on the Investor Portal to save changes"}
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.opsEmpty}>
+              {isAr ? "تعذّر الاتصال بالبوابة العقارية" : "Could not reach the real estate portal"}
+            </Text>
           )}
         </SectionCard>
 

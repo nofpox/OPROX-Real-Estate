@@ -227,14 +227,14 @@ const SERVICES: Record<string, ServiceData> = {
       { title: 'دفع الاستدامة',          desc: 'تدقيقات الطاقة ومبادرات خضراء وبرامج استدامة متوافقة مع ISO.' },
     ],
     projectsEn: [
-      { name: 'Aramco HQ Facilities – Dhahran',   desc: 'IFM of 3 corporate towers; 28% energy reduction and ISO 41001 certification achieved.', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600&auto=format&fit=crop' },
-      { name: 'STC Campus – Riyadh',              desc: '180,000 m² tech campus; full soft & hard services, 100% HSE compliance maintained.', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=600&auto=format&fit=crop' },
-      { name: 'Al Rajhi Bank – Multi-branch',     desc: '45-branch facility management; unified service standards and smart maintenance platform.', image: 'https://images.unsplash.com/photo-1464082354059-27db6ce50048?q=80&w=600&auto=format&fit=crop' },
+      { name: 'Corporate HQ Complex – Dhahran',   desc: 'IFM of 3 corporate towers; 28% energy reduction and ISO 41001 certification achieved.', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600&auto=format&fit=crop' },
+      { name: 'Tech Campus – Riyadh',              desc: '180,000 m² tech campus; full soft & hard services, 100% HSE compliance maintained.', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=600&auto=format&fit=crop' },
+      { name: 'National Bank – Multi-branch',      desc: '45-branch facility management; unified service standards and smart maintenance platform.', image: 'https://images.unsplash.com/photo-1464082354059-27db6ce50048?q=80&w=600&auto=format&fit=crop' },
     ],
     projectsAr: [
-      { name: 'مرافق أرامكو الرئيسية – الظهران', desc: 'إدارة مرافق 3 أبراج مؤسسية؛ خفض الطاقة 28% وتحقيق شهادة ISO 41001.', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600&auto=format&fit=crop' },
-      { name: 'حرم STC – الرياض',                 desc: 'حرم تقني 180,000 م²؛ خدمات صلبة وناعمة متكاملة مع الحفاظ على امتثال 100% لـ HSE.', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=600&auto=format&fit=crop' },
-      { name: 'بنك الراجحي – متعدد الفروع',       desc: 'إدارة مرافق 45 فرعاً؛ معايير خدمة موحدة ومنصة صيانة ذكية.', image: 'https://images.unsplash.com/photo-1464082354059-27db6ce50048?q=80&w=600&auto=format&fit=crop' },
+      { name: 'مجمع المقر الرئيسي – الظهران',    desc: 'إدارة مرافق 3 أبراج مؤسسية؛ خفض الطاقة 28% وتحقيق شهادة ISO 41001.', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600&auto=format&fit=crop' },
+      { name: 'الحرم التقني – الرياض',             desc: 'حرم تقني 180,000 م²؛ خدمات صلبة وناعمة متكاملة مع الحفاظ على امتثال 100% لـ HSE.', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=600&auto=format&fit=crop' },
+      { name: 'بنك وطني – متعدد الفروع',          desc: 'إدارة مرافق 45 فرعاً؛ معايير خدمة موحدة ومنصة صيانة ذكية.', image: 'https://images.unsplash.com/photo-1464082354059-27db6ce50048?q=80&w=600&auto=format&fit=crop' },
     ],
   },
 };
@@ -344,13 +344,14 @@ export const ServiceDetail: React.FC = () => {
             {svc.gallery.map((src, i) => (
               <div
                 key={i}
-                className={`overflow-hidden rounded-xl bg-primary/5 ${i === 0 ? 'col-span-2 row-span-2' : ''}`}
+                className={`overflow-hidden rounded-xl bg-primary/5 ${i === 0 ? 'col-span-2 aspect-[2/1]' : 'aspect-square'}`}
               >
                 <img
                   src={src}
                   alt={`${title} ${i + 1}`}
-                  className="w-full h-full object-cover aspect-square hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   loading="lazy"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
               </div>
             ))}
@@ -438,7 +439,7 @@ export const ServiceDetail: React.FC = () => {
             <p className="text-primary-foreground/70 mb-8 max-w-lg mx-auto leading-relaxed">
               {isRtl
                 ? 'تواصل مع فريقنا اليوم لمناقشة متطلباتك وتعرّف على كيفية تحقيق ركز لأهدافك.'
-                : 'Get in touch with our team today to discuss your requirements and see how Rakez can deliver for you.'}
+                : 'Get in touch with our team today to discuss your requirements and see how RKZ can deliver for you.'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-12 px-8 rounded-full font-semibold">
