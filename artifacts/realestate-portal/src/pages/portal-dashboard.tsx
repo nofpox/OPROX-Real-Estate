@@ -583,7 +583,7 @@ export const PortalDashboard: React.FC = () => {
     const [linksLoading, setLinksLoading] = useState(false);
     const [showGenForm, setShowGenForm] = useState(false);
     const [genPortal, setGenPortal] = useState<'rkz' | 'grand-pms'>('rkz');
-    const [genHours, setGenHours] = useState(4);
+    const genHours = 1; // Hard-locked to 1 hour on all platforms
     const [genLabel, setGenLabel] = useState('');
     const [genLoading, setGenLoading] = useState(false);
     const [newLink, setNewLink] = useState<string | null>(null);
@@ -716,24 +716,12 @@ export const PortalDashboard: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Expiry selector */}
-                <div>
-                  <p className="text-[11px] text-muted-foreground mb-1.5">{isRtl ? 'مدة الصلاحية' : 'Expires after'}</p>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {[1, 4, 24, 72].map(h => (
-                      <button
-                        key={h}
-                        onClick={() => setGenHours(h)}
-                        className={`text-xs py-1.5 rounded-lg border font-medium transition-colors ${
-                          genHours === h
-                            ? 'bg-secondary text-secondary-foreground border-secondary'
-                            : 'bg-card border-border text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        {h < 24 ? `${h}h` : `${h / 24}d`}
-                      </button>
-                    ))}
-                  </div>
+                {/* Expiry — fixed 1 hour, enforced on server */}
+                <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+                  <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                    {isRtl ? 'تنتهي صلاحية الرابط تلقائيًا بعد ساعة واحدة' : 'Link expires automatically after exactly 1 hour'}
+                  </span>
                 </div>
 
                 {/* Optional label */}

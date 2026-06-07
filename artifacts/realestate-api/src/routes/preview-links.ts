@@ -39,8 +39,7 @@ router.post("/cms/preview-links", requireAdmin, async (req: Request, res: Respon
       res.status(400).json({ error: "Invalid portal. Must be 'rkz' or 'grand-pms'" });
       return;
     }
-    const VALID_HOURS = [1, 4, 24, 72];
-    const expiryHours = VALID_HOURS.includes(Number(hours)) ? Number(hours) : 4;
+    // All preview links are hard-locked to exactly 1 hour regardless of any client input
     const sessionUser = (req as any).sessionUser as Record<string, unknown>;
     const createdBy = String(sessionUser?.displayName ?? sessionUser?.username ?? "admin");
 
@@ -50,7 +49,7 @@ router.post("/cms/preview-links", requireAdmin, async (req: Request, res: Respon
         ${portal},
         ${label ?? ""},
         ${createdBy},
-        NOW() + (${expiryHours} || ' hours')::interval
+        NOW() + INTERVAL '1 hour'
       )
       RETURNING id, token, portal, label, created_by, expires_at, created_at
     `);
