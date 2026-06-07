@@ -829,7 +829,7 @@ export const SmartAssistant: React.FC = () => {
       {/* ── Chat panel ──────────────────────────────────────────────────────── */}
       <div
         className={`
-          fixed bottom-24 end-4 md:end-6 z-50
+          fixed bottom-36 md:bottom-24 end-4 md:end-6 z-50
           w-[calc(100vw-2rem)] max-w-sm md:max-w-[360px]
           flex flex-col
           bg-card rounded-2xl shadow-2xl border border-border/60
@@ -1016,7 +1016,7 @@ export const SmartAssistant: React.FC = () => {
       <button
         onClick={open ? handleClose : handleOpen}
         className={`
-          fixed bottom-4 md:bottom-6 end-4 md:end-6 z-50
+          fixed bottom-20 md:bottom-6 end-4 md:end-6 z-50
           w-14 h-14 rounded-full shadow-lg shadow-black/20
           flex items-center justify-center
           transition-all duration-300
