@@ -64,7 +64,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             ))}
           </nav>
 
-          {/* ── RIGHT: Language + Investor Portal (desktop) ─────────────── */}
+          {/* ── RIGHT: Language toggle (desktop) ──────────────────────── */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
             <button
               onClick={toggleLanguage}
@@ -75,10 +75,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </button>
             <Link
               href="/portal"
-              className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"
+              className="flex items-center gap-2 border border-border text-muted-foreground hover:text-primary hover:border-primary/40 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
             >
-              <KeyRound className="h-4 w-4" />
-              {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
+              <KeyRound className="h-3.5 w-3.5" />
+              {isRtl ? 'الإدارة' : 'Admin'}
             </Link>
           </div>
 
@@ -121,10 +121,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <Link
                   href="/portal"
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold bg-secondary/10 text-secondary hover:bg-secondary/20 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
                 >
                   <KeyRound className="h-4 w-4" />
-                  {isRtl ? 'بوابة المستثمر' : 'Investor Portal'}
+                  {isRtl ? 'الإدارة' : 'Admin'}
                 </Link>
               </div>
             </nav>

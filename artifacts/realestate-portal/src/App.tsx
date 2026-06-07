@@ -16,19 +16,19 @@ import { Contact } from "@/pages/contact";
 import { PortalAuthProvider } from "@/lib/portal-auth";
 import { CmsProvider } from "@/lib/cms-context";
 import { PortalLogin } from "@/pages/portal-login";
-import { PortalRegister } from "@/pages/portal-register";
 import { PortalDashboard } from "@/pages/portal-dashboard";
-import { Join } from "@/pages/join";
-import { BuyerDashboard } from "@/pages/buyer-dashboard";
 import { ServiceDetail } from "@/pages/service-detail";
+import { Join } from "@/pages/join";
+import { PortalRegister } from "@/pages/portal-register";
+import { BuyerDashboard } from "@/pages/buyer-dashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 30_000,   // data stays fresh 30 s — prevents over-fetching on re-renders
-      gcTime:    300_000,  // keep unused cache 5 min
+      staleTime: 30_000,
+      gcTime:    300_000,
     },
   },
 });
@@ -40,13 +40,15 @@ function Router() {
       <Route path="/listings" component={ListingsBrowser} />
       <Route path="/listings/:id" component={ListingDetail} />
       <Route path="/services" component={Services} />
-      <Route path="/contact" component={Contact} />
-      <Route path="/join" component={Join} />
-      <Route path="/portal" component={PortalLogin} />
-      <Route path="/portal/register" component={PortalRegister} />
-      <Route path="/portal/dashboard" component={PortalDashboard} />
-      <Route path="/portal/buyer" component={BuyerDashboard} />
       <Route path="/services/:slug" component={ServiceDetail} />
+      <Route path="/contact" component={Contact} />
+      {/* Legacy user-facing routes — redirect to admin gate */}
+      <Route path="/join" component={Join} />
+      <Route path="/portal/register" component={PortalRegister} />
+      <Route path="/portal/buyer" component={BuyerDashboard} />
+      {/* Admin Control Room */}
+      <Route path="/portal" component={PortalLogin} />
+      <Route path="/portal/dashboard" component={PortalDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

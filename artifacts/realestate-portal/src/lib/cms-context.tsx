@@ -158,11 +158,10 @@ const DEFAULTS: SiteContent = {
     },
   ],
   nav: [
-    { href: "/",         labelEn: "Home",          labelAr: "الرئيسية"    },
-    { href: "/listings", labelEn: "Properties",    labelAr: "العقارات"    },
-    { href: "/services", labelEn: "Services",      labelAr: "الخدمات"     },
-    { href: "/contact",  labelEn: "Contact",       labelAr: "اتصل بنا"    },
-    { href: "/portal",   labelEn: "Investor Portal", labelAr: "بوابة المستثمر" },
+    { href: "/",         labelEn: "Home",       labelAr: "الرئيسية" },
+    { href: "/listings", labelEn: "Properties", labelAr: "العقارات" },
+    { href: "/services", labelEn: "Services",   labelAr: "الخدمات"  },
+    { href: "/contact",  labelEn: "Contact",    labelAr: "اتصل بنا" },
   ],
   contact: {
     email: "info@rkz-solutions.com",

@@ -119,7 +119,7 @@ const translations = {
     'portal.usernameHint':            'Letters, numbers, underscores only. 3–30 characters.',
 
     // ── Portal dashboard – role-based titles ────────────────────────────────
-    'portal.myPortfolio':       'Investor Portal',
+    'portal.myPortfolio':       'Admin Control Room',
     'portal.managementPortal':  'Admin Dashboard',
     'portal.investorPortfolio': 'Investor Portal',
 

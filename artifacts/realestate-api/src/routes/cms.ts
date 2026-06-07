@@ -120,11 +120,10 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     metaDescription: "Browse properties managed by RKZ Smart Solutions.",
   },
   nav: [
-    { href: "/",         labelEn: "Home",             labelAr: "الرئيسية" },
-    { href: "/listings", labelEn: "Properties",       labelAr: "العقارات" },
-    { href: "/services", labelEn: "Services",         labelAr: "الخدمات" },
-    { href: "/contact",  labelEn: "Contact",          labelAr: "اتصل بنا" },
-    { href: "/portal",   labelEn: "Investor Portal",  labelAr: "بوابة المستثمر" },
+    { href: "/",         labelEn: "Home",       labelAr: "الرئيسية" },
+    { href: "/listings", labelEn: "Properties", labelAr: "العقارات" },
+    { href: "/services", labelEn: "Services",   labelAr: "الخدمات"  },
+    { href: "/contact",  labelEn: "Contact",    labelAr: "اتصل بنا" },
   ],
   footer: {
     descriptionEn: "Your trusted partner for premium property management across Saudi Arabia.",
