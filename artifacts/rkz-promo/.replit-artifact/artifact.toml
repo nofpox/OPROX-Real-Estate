@@ -1,6 +1,6 @@
 kind = "video"
 previewPath = "/rkz-promo/"
-title = "Rkz — Promotional Film"
+title = "روزوز — الفيلم الترويجي"
 version = "1.0.0"
 id = "artifacts/rkz-promo"
 router = "path"
