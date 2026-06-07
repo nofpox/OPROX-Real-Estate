@@ -58,7 +58,7 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  /* Rakez Theme - Light */
+  /* Rkz Theme - Light */
   /* Background: Off-white #F8F9FA */
   --background: 210 20% 98%;
   /* Foreground: Very dark blue #0A192F */
@@ -111,7 +111,7 @@
 }
 
 .dark {
-  /* Rakez Theme - Dark */
+  /* Rkz Theme - Dark */
   --background: 216 65% 11%;
   --foreground: 210 20% 98%;
   
