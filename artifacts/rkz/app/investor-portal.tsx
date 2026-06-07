@@ -157,16 +157,16 @@ export default function InvestorPortalScreen() {
   const { user: appUser, properties } = useApp();
   const isAdmin = useIsAdmin();
 
-  // Admin users bypass the login gate entirely
-  const [view,        setView]        = useState<PortalView>(() => isAdmin ? "dashboard" : "login");
+  // Access is now gated by PIN in settings — always open on dashboard
+  const [view,        setView]        = useState<PortalView>("dashboard");
   const [loading,     setLoading]     = useState(true);
   const [submitting,  setSubmitting]  = useState(false);
   const [error,       setError]       = useState("");
   const [username,    setUsername]    = useState("");
   const [password,    setPassword]    = useState("");
   const [showPass,    setShowPass]    = useState(false);
-  const [user,        setUser]        = useState<PortalUser | null>(() =>
-    isAdmin ? { id: 1, username: "admin", displayName: appUser?.name ?? "Admin", role: "owner" } : null
+  const [user,        setUser]        = useState<PortalUser | null>(
+    () => ({ id: 1, username: "admin", displayName: appUser?.name ?? "Admin", role: "owner" })
   );
   const [stats]     = useState<PortalStats>(MOCK_STATS);
   const [bookings]  = useState<RecentBooking[]>(MOCK_BOOKINGS);

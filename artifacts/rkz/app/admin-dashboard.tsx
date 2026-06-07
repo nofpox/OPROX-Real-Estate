@@ -43,12 +43,7 @@ export default function AdminDashboardScreen() {
 
   const [events, setEvents] = useState<AdminEvent[]>([]);
 
-  // Redirect non-admin users immediately
-  useEffect(() => {
-    if (!isAdmin) {
-      router.replace("/(tabs)");
-    }
-  }, [isAdmin]);
+  // No redirect — access is now gated by PIN in settings.tsx
 
   // Load recent admin events
   useEffect(() => {
