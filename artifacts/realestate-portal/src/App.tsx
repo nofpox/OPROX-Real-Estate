@@ -21,6 +21,7 @@ import { ServiceDetail } from "@/pages/service-detail";
 import { Join } from "@/pages/join";
 import { PortalRegister } from "@/pages/portal-register";
 import { BuyerDashboard } from "@/pages/buyer-dashboard";
+import { PreviewToken } from "@/pages/preview-token";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +50,8 @@ function Router() {
       {/* Admin Control Room */}
       <Route path="/portal" component={PortalLogin} />
       <Route path="/portal/dashboard" component={PortalDashboard} />
+      {/* Secure temporary preview links (public, no auth) */}
+      <Route path="/preview/:token" component={PreviewToken} />
       <Route component={NotFound} />
     </Switch>
   );

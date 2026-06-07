@@ -16,6 +16,7 @@ import {
   LogOut, RefreshCw, ExternalLink, Save, Globe,
   CheckCircle2, AlertCircle, Pencil, X, Building,
   MapPin, Phone, Mail, Image as ImageIcon, Type, Map,
+  Link2, Clock, Copy, Trash2, Plus, Shield, CheckCheck,
 } from 'lucide-react';
 import { SmartHeatmap } from '@/components/SmartHeatmap';
 
@@ -572,66 +573,341 @@ export const PortalDashboard: React.FC = () => {
   );
 
   // ── Settings tab ──────────────────────────────────────────────────────────────
-  const SettingsTab = () => (
-    <div className="space-y-4">
-      {/* Admin account card */}
-      <Card>
-        <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="text-sm font-semibold">{isRtl ? 'حساب المدير' : 'Admin Account'}</CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4 space-y-2 pt-0">
-          {[
-            { label: isRtl ? 'الاسم'  : 'Name',  value: user?.displayName ?? '—' },
-            { label: isRtl ? 'البريد' : 'Email', value: user?.email       ?? '—' },
-            { label: isRtl ? 'الدور'  : 'Role',  value: user?.role        ?? '—' },
-          ].map(({ label, value }) => (
-            <div key={label} className="flex justify-between items-center py-1.5 border-b border-border/50 last:border-0">
-              <span className="text-xs text-muted-foreground">{label}</span>
-              <span className="text-xs font-medium dir-ltr">{value}</span>
+  const SettingsTab = () => {
+    // Preview Links state
+    type PreviewLink = {
+      id: number; token: string; portal: string; label: string;
+      created_by: string; expires_at: string; revoked_at: string | null; created_at: string;
+    };
+    const [links, setLinks] = useState<PreviewLink[]>([]);
+    const [linksLoading, setLinksLoading] = useState(false);
+    const [showGenForm, setShowGenForm] = useState(false);
+    const [genPortal, setGenPortal] = useState<'rkz' | 'grand-pms'>('rkz');
+    const [genHours, setGenHours] = useState(4);
+    const [genLabel, setGenLabel] = useState('');
+    const [genLoading, setGenLoading] = useState(false);
+    const [newLink, setNewLink] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
+    const [revoking, setRevoking] = useState<number | null>(null);
+
+    const fetchLinks = useCallback(async () => {
+      setLinksLoading(true);
+      try {
+        const r = await fetch(`${BASE}/cms/preview-links`, { credentials: 'include' });
+        if (r.ok) { const j = await r.json(); setLinks(j.links ?? []); }
+      } finally { setLinksLoading(false); }
+    }, []);
+
+    useEffect(() => { fetchLinks(); }, [fetchLinks]);
+
+    async function generateLink() {
+      setGenLoading(true);
+      try {
+        const r = await fetch(`${BASE}/cms/preview-links`, {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ portal: genPortal, hours: genHours, label: genLabel }),
+        });
+        if (r.ok) {
+          const j = await r.json();
+          const token = j.link?.token as string;
+          const url = `${window.location.origin}/realestate/preview/${token}`;
+          setNewLink(url);
+          setShowGenForm(false);
+          setGenLabel('');
+          await fetchLinks();
+        }
+      } finally { setGenLoading(false); }
+    }
+
+    async function revokeLink(id: number) {
+      setRevoking(id);
+      try {
+        await fetch(`${BASE}/cms/preview-links/${id}`, { method: 'DELETE', credentials: 'include' });
+        await fetchLinks();
+        if (newLink?.includes(links.find(l => l.id === id)?.token ?? '___')) setNewLink(null);
+      } finally { setRevoking(null); }
+    }
+
+    function copyLink(url: string) {
+      navigator.clipboard.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+    }
+
+    function isExpired(link: PreviewLink) { return new Date(link.expires_at) < new Date(); }
+    function isActive(link: PreviewLink) { return !link.revoked_at && !isExpired(link); }
+
+    function timeLabel(link: PreviewLink) {
+      if (link.revoked_at) return isRtl ? 'مُلغى' : 'Revoked';
+      if (isExpired(link)) return isRtl ? 'منتهي' : 'Expired';
+      const diff = new Date(link.expires_at).getTime() - Date.now();
+      const h = Math.floor(diff / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    }
+
+    function portalLabel(portal: string) {
+      if (portal === 'grand-pms') return 'Grand PMS';
+      return 'RKZ Portal';
+    }
+
+    return (
+      <div className="space-y-4">
+        {/* Admin account card */}
+        <Card>
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-sm font-semibold">{isRtl ? 'حساب المدير' : 'Admin Account'}</CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 space-y-2 pt-0">
+            {[
+              { label: isRtl ? 'الاسم'  : 'Name',  value: user?.displayName ?? '—' },
+              { label: isRtl ? 'البريد' : 'Email', value: user?.email       ?? '—' },
+              { label: isRtl ? 'الدور'  : 'Role',  value: user?.role        ?? '—' },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex justify-between items-center py-1.5 border-b border-border/50 last:border-0">
+                <span className="text-xs text-muted-foreground">{label}</span>
+                <span className="text-xs font-medium dir-ltr">{value}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* ── Preview Links ── */}
+        <Card>
+          <CardHeader className="pb-2 pt-4 px-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-semibold">
+                  {isRtl ? 'روابط المعاينة المؤقتة' : 'Secure Preview Links'}
+                </CardTitle>
+              </div>
+              <button
+                onClick={() => { setShowGenForm(v => !v); setNewLink(null); }}
+                className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1.5 rounded-lg transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {isRtl ? 'إنشاء رابط' : 'Generate'}
+              </button>
             </div>
-          ))}
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0 space-y-3">
 
-      {/* Site links */}
-      <Card>
-        <CardHeader className="pb-2 pt-4 px-4">
-          <CardTitle className="text-sm font-semibold">{isRtl ? 'روابط النظام' : 'System Links'}</CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4 space-y-1 pt-0">
-          {[
-            { label: isRtl ? 'الموقع العام'           : 'Public Site',       href: '/realestate/' },
-            { label: isRtl ? 'لوحة التحكم الرئيسية'  : 'Main PMS Dashboard', href: '/hotel-dashboard/' },
-          ].map(({ label, href }) => (
-            <a
-              key={href}
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-muted transition-colors"
-            >
-              <span className="text-sm">{label}</span>
-              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-            </a>
-          ))}
-        </CardContent>
-      </Card>
+            {/* Generator form */}
+            {showGenForm && (
+              <div className="bg-muted/60 rounded-xl p-3 space-y-3 border border-border/60">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {isRtl ? 'إعدادات الرابط' : 'Link Settings'}
+                </p>
 
-      {/* Logout */}
-      <Button
-        variant="outline"
-        className="w-full h-11 text-destructive border-destructive/30 hover:bg-destructive/5 font-semibold"
-        onClick={handleLogout}
-      >
-        <LogOut className="h-4 w-4 me-2" />
-        {isRtl ? 'تسجيل الخروج' : 'Sign Out'}
-      </Button>
+                {/* Portal selector */}
+                <div className="grid grid-cols-2 gap-2">
+                  {(['rkz', 'grand-pms'] as const).map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setGenPortal(p)}
+                      className={`text-xs py-2 px-3 rounded-lg border font-medium transition-colors ${
+                        genPortal === p
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-card border-border text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {p === 'rkz' ? 'RKZ Portal' : 'Grand PMS'}
+                    </button>
+                  ))}
+                </div>
 
-      <p className="text-center text-xs text-muted-foreground/60 pt-2">
-        RKZ Smart Solutions © {new Date().getFullYear()}
-      </p>
-    </div>
-  );
+                {/* Expiry selector */}
+                <div>
+                  <p className="text-[11px] text-muted-foreground mb-1.5">{isRtl ? 'مدة الصلاحية' : 'Expires after'}</p>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[1, 4, 24, 72].map(h => (
+                      <button
+                        key={h}
+                        onClick={() => setGenHours(h)}
+                        className={`text-xs py-1.5 rounded-lg border font-medium transition-colors ${
+                          genHours === h
+                            ? 'bg-secondary text-secondary-foreground border-secondary'
+                            : 'bg-card border-border text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {h < 24 ? `${h}h` : `${h / 24}d`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Optional label */}
+                <Input
+                  value={genLabel}
+                  onChange={e => setGenLabel(e.target.value)}
+                  placeholder={isRtl ? 'وصف اختياري…' : 'Optional label…'}
+                  className="h-8 text-xs"
+                />
+
+                <Button
+                  size="sm"
+                  className="w-full h-9"
+                  onClick={generateLink}
+                  disabled={genLoading}
+                >
+                  {genLoading
+                    ? (isRtl ? 'جارٍ الإنشاء…' : 'Generating…')
+                    : (isRtl ? 'إنشاء الرابط الآن' : 'Create Preview Link')}
+                </Button>
+              </div>
+            )}
+
+            {/* Newly generated link */}
+            {newLink && (
+              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl p-3 space-y-2">
+                <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span className="text-xs font-semibold">{isRtl ? 'تم إنشاء الرابط بنجاح' : 'Preview link created!'}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-card rounded-lg px-2.5 py-2 border border-border/60">
+                  <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="text-[11px] text-foreground font-mono flex-1 truncate dir-ltr">{newLink}</span>
+                  <button onClick={() => copyLink(newLink)} className="shrink-0 text-primary hover:text-primary/80 transition-colors">
+                    {copied ? <CheckCheck className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground/70">
+                  {isRtl ? 'شارك هذا الرابط — سينتهي تلقائيًا' : 'Share this link — it will auto-expire.'}
+                </p>
+              </div>
+            )}
+
+            {/* Active links list */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium">
+                  {isRtl ? 'الروابط النشطة' : 'Active Links'}
+                </p>
+                <button onClick={fetchLinks} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <RefreshCw className={`h-3 w-3 ${linksLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+
+              {linksLoading && (
+                <div className="space-y-2">
+                  {[1,2].map(i => <Skeleton key={i} className="h-12 rounded-xl" />)}
+                </div>
+              )}
+
+              {!linksLoading && links.filter(isActive).length === 0 && (
+                <p className="text-xs text-muted-foreground/60 text-center py-4">
+                  {isRtl ? 'لا توجد روابط نشطة' : 'No active preview links'}
+                </p>
+              )}
+
+              {!linksLoading && links.filter(isActive).map(link => (
+                <div key={link.id} className="flex items-center gap-2 bg-muted/50 rounded-xl px-3 py-2.5 border border-border/40">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 font-medium">
+                        {portalLabel(link.portal)}
+                      </Badge>
+                      {link.label && (
+                        <span className="text-[11px] text-muted-foreground truncate">{link.label}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span>{timeLabel(link)}</span>
+                      <span className="text-border">·</span>
+                      <span className="font-mono truncate dir-ltr">{link.token.slice(0, 8)}…</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => copyLink(`${window.location.origin}/realestate/preview/${link.token}`)}
+                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      title="Copy link"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => revokeLink(link.id)}
+                      disabled={revoking === link.id}
+                      className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                      title="Revoke link"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {/* Expired/revoked history (collapsed) */}
+              {!linksLoading && links.filter(l => !isActive(l)).length > 0 && (
+                <details className="group">
+                  <summary className="text-[11px] text-muted-foreground/60 cursor-pointer hover:text-muted-foreground list-none flex items-center gap-1 py-1">
+                    <span className="group-open:hidden">▶</span>
+                    <span className="hidden group-open:inline">▼</span>
+                    {isRtl
+                      ? `${links.filter(l => !isActive(l)).length} روابط منتهية/ملغاة`
+                      : `${links.filter(l => !isActive(l)).length} expired / revoked`}
+                  </summary>
+                  <div className="space-y-1 mt-1">
+                    {links.filter(l => !isActive(l)).map(link => (
+                      <div key={link.id} className="flex items-center gap-2 bg-muted/20 rounded-xl px-3 py-2 border border-border/20 opacity-60">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4">
+                              {portalLabel(link.portal)}
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground">{timeLabel(link)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Site links */}
+        <Card>
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-sm font-semibold">{isRtl ? 'روابط النظام' : 'System Links'}</CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 space-y-1 pt-0">
+            {[
+              { label: isRtl ? 'الموقع العام'           : 'Public Site',       href: '/realestate/' },
+              { label: isRtl ? 'لوحة التحكم الرئيسية'  : 'Main PMS Dashboard', href: '/hotel-dashboard/' },
+            ].map(({ label, href }) => (
+              <a
+                key={href}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-muted transition-colors"
+              >
+                <span className="text-sm">{label}</span>
+                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+              </a>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Logout */}
+        <Button
+          variant="outline"
+          className="w-full h-11 text-destructive border-destructive/30 hover:bg-destructive/5 font-semibold"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4 me-2" />
+          {isRtl ? 'تسجيل الخروج' : 'Sign Out'}
+        </Button>
+
+        <p className="text-center text-xs text-muted-foreground/60 pt-2">
+          RKZ Smart Solutions © {new Date().getFullYear()}
+        </p>
+      </div>
+    );
+  };
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
