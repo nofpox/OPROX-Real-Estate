@@ -12,6 +12,18 @@ import { StyleSheet, Text, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 
 // ── Types (mirror native file exactly so consumers compile without changes) ─
+export interface MapProperty {
+  id: string;
+  city: string;
+  district: string;
+  type: string;
+  price: number;
+  area: number;
+  bedrooms?: number;
+  badge?: string;
+}
+
+// Legacy exports kept for any stale imports.
 export interface HeatCell {
   key: string;
   city: string;
@@ -22,8 +34,7 @@ export interface HeatCell {
 export type HeatMetric = "occupancy" | "transactions";
 
 interface Props {
-  cells: HeatCell[];
-  metric: HeatMetric;
+  properties: MapProperty[];
   isAr?: boolean;
 }
 
@@ -58,15 +69,13 @@ const CITY_COORDS: Record<string, [number, number]> = {
 };
 
 // ── HTML builder (identical to native version) ──────────────────────────────
-function buildMapHtml(cells: HeatCell[]): string {
-  const features = cells.map((c) => {
-    const coords = DISTRICT_COORDS[c.key] ?? CITY_COORDS[c.city] ?? [24.7136, 46.6753];
-    return { ...c, lat: coords[0], lng: coords[1] };
-  });
-  const dataJson = JSON.stringify(features);
+function buildMapHtml(properties: MapProperty[]): string {
+  const coordsJson = JSON.stringify(DISTRICT_COORDS);
+  const cityJson   = JSON.stringify(CITY_COORDS);
+  const dataJson   = JSON.stringify(properties);
 
   return `<!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
@@ -74,19 +83,44 @@ function buildMapHtml(cells: HeatCell[]): string {
 <style>
   html, body { height: 100%; margin: 0; padding: 0; background: #0a1628; }
   #map { height: 100%; width: 100%; }
+
+  .price-icon { overflow: visible !important; background: none !important; border: none !important; }
+  .price-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.65);
+    cursor: pointer;
+    direction: rtl;
+    transform: translate(-50%, -50%);
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .price-pill:hover { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 5px 18px rgba(0,0,0,0.8); }
+  .price-green { background: #22c55e; color: #fff;    border: 1.5px solid #16a34a; }
+  .price-gold  { background: #D4A843; color: #0A1628; border: 1.5px solid #b8902e; }
+
   .lf-popup .leaflet-popup-content-wrapper {
     background: #0f2040; border: 1.5px solid #D4A843; border-radius: 14px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.55); color: #f1f5f9;
-    font-family: -apple-system, sans-serif; padding: 0;
+    font-family: -apple-system, sans-serif; padding: 0; direction: rtl;
   }
   .lf-popup .leaflet-popup-tip-container { display: none; }
-  .lf-popup .leaflet-popup-content { margin: 14px 16px; }
-  .pop-district { font-size: 15px; font-weight: 700; color: #D4A843; margin-bottom: 3px; }
-  .pop-city     { font-size: 12px; color: #94a3b8; margin-bottom: 10px; }
-  .pop-row      { display: flex; gap: 14px; }
-  .pop-item     { text-align: center; }
-  .pop-val      { font-size: 20px; font-weight: 700; color: #ffffff; }
-  .pop-lbl      { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+  .lf-popup .leaflet-popup-content { margin: 14px 16px; min-width: 180px; }
+  .pop-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-direction: row-reverse; }
+  .pop-type  { font-size: 11px; background: rgba(212,168,67,0.2); color: #D4A843; padding: 2px 8px; border-radius: 10px; }
+  .pop-badge { font-size: 10px; background: #D4A843; color: #0A1628; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+  .pop-title { font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 2px; text-align: right; }
+  .pop-city  { font-size: 11px; color: #94a3b8; margin-bottom: 10px; text-align: right; }
+  .pop-row   { display: flex; gap: 8px; flex-direction: row-reverse; justify-content: flex-end; }
+  .pop-item  { text-align: center; min-width: 52px; }
+  .pop-val   { font-size: 16px; font-weight: 700; color: #D4A843; }
+  .pop-lbl   { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
   .leaflet-control-zoom a { background: #0f2040 !important; color: #D4A843 !important; border-color: #1e3a5f !important; }
   .leaflet-control-zoom a:hover { background: #1e3a5f !important; }
   .leaflet-control-attribution { background: rgba(10,22,40,0.7) !important; color: #64748b !important; font-size: 9px; }
@@ -96,57 +130,79 @@ function buildMapHtml(cells: HeatCell[]): string {
 <body>
 <div id="map"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
 (function () {
-  var DISTRICTS = ${dataJson};
-  var heatLayer = null;
-  var map;
-  function makeOffsets(n, count) {
-    var pts = [];
-    for (var j = 0; j < count; j++) {
-      var angle = ((n * count + j) * 137.508) * Math.PI / 180;
-      var r = 0.03 + (j % 5) * 0.018;
-      pts.push([Math.cos(angle) * r, Math.sin(angle) * r]);
-    }
-    return pts;
+  var DISTRICT_COORDS = ${coordsJson};
+  var CITY_COORDS     = ${cityJson};
+  var PROPS           = ${dataJson};
+
+  var TYPE_LABELS = {
+    villa:'فيلا', apartment:'شقة', land:'أرض', commercial:'تجاري',
+    compound:'مجمع', floor:'دور', warehouse:'مستودع', farm:'مزرعة',
+    rest_house:'استراحة', palace:'قصر'
+  };
+
+  function fmtPrice(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + ' مليون';
+    if (n >= 1000)    return Math.round(n / 1000) + ' ألف';
+    return n.toString();
   }
-  var OFFSETS = DISTRICTS.map(function(_, i) { return makeOffsets(i, 12); });
-  function buildHeatPoints(metric) {
-    var pts = [];
-    DISTRICTS.forEach(function(d, i) {
-      var raw = metric === "occupancy" ? d.occupancy / 100 : Math.min(1, d.transactions / 28);
-      pts.push([d.lat, d.lng, raw]);
-      OFFSETS[i].forEach(function(off) { pts.push([d.lat + off[0], d.lng + off[1], raw * 0.55]); });
+
+  var districtIdx = {};
+  var features = PROPS.map(function(p) {
+    var key = p.city + '__' + p.district;
+    var idx = districtIdx[key] !== undefined ? districtIdx[key] : 0;
+    districtIdx[key] = idx + 1;
+    var base = DISTRICT_COORDS[key] || CITY_COORDS[p.city] || [24.7136, 46.6753];
+    var angle = idx * 2.399;
+    var r = idx === 0 ? 0 : 0.014 + Math.floor(idx / 5) * 0.009;
+    return Object.assign({}, p, {
+      lat: base[0] + Math.cos(angle) * r,
+      lng: base[1] + Math.sin(angle) * r,
     });
-    return pts;
-  }
-  function updateMetric(metric) {
-    if (heatLayer) { map.removeLayer(heatLayer); }
-    heatLayer = L.heatLayer(buildHeatPoints(metric), {
-      radius: 52, blur: 36, maxZoom: 14, max: 1.0,
-      gradient: { 0.0: "#1e3a8a", 0.25: "#0891b2", 0.50: "#16a34a", 0.70: "#d97706", 0.85: "#ea580c", 1.0: "#dc2626" }
-    }).addTo(map);
-  }
-  window.updateMetric = updateMetric;
-  map = L.map("map", { center: [23.8, 44.8], zoom: 5, zoomControl: true, attributionControl: true });
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+  });
+
+  var map = L.map('map', {
+    center: [23.8, 44.8], zoom: 5,
+    zoomControl: true, attributionControl: true,
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: "abcd", maxZoom: 18,
+    subdomains: 'abcd', maxZoom: 18,
   }).addTo(map);
-  updateMetric("occupancy");
-  DISTRICTS.forEach(function(d) {
-    var marker = L.circleMarker([d.lat, d.lng], {
-      radius: 9, fillColor: "#D4A843", color: "#0a1628", weight: 2, fillOpacity: 0.95,
-    }).addTo(map);
+
+  features.forEach(function(p) {
+    var isGold    = p.price >= 5000000 || !!p.badge;
+    var cls       = isGold ? 'price-gold' : 'price-green';
+    var typeLabel = TYPE_LABELS[p.type] || p.type;
+    var priceLabel = fmtPrice(p.price);
+
+    var icon = L.divIcon({
+      html:       '<div class="price-pill ' + cls + '">' + priceLabel + '</div>',
+      className:  'price-icon',
+      iconSize:   [0, 0],
+      iconAnchor: [0, 0],
+    });
+
+    var badgeHtml   = p.badge ? '<span class="pop-badge">' + p.badge + '</span>' : '';
+    var bedroomHtml = p.bedrooms
+      ? '<div class="pop-item"><div class="pop-val">' + p.bedrooms + '</div><div class="pop-lbl">غرف</div></div>'
+      : '';
+
     var popupHtml =
-      '<div class="pop-district">' + d.district + '</div>' +
-      '<div class="pop-city">' + d.city + '</div>' +
+      '<div class="pop-header"><span class="pop-type">' + typeLabel + '</span>' + badgeHtml + '</div>' +
+      '<div class="pop-title">' + typeLabel + ' ' + p.district + '</div>' +
+      '<div class="pop-city">' + p.city + ' — ' + p.district + '</div>' +
       '<div class="pop-row">' +
-        '<div class="pop-item"><div class="pop-val">' + d.occupancy + '%</div><div class="pop-lbl">إشغال / Occupancy</div></div>' +
-        '<div class="pop-item"><div class="pop-val">' + d.transactions + '</div><div class="pop-lbl">صفقات / Deals</div></div>' +
+        '<div class="pop-item"><div class="pop-val">' + priceLabel + '</div><div class="pop-lbl">السعر</div></div>' +
+        '<div class="pop-item"><div class="pop-val">' + p.area.toLocaleString() + '</div><div class="pop-lbl">م²</div></div>' +
+        bedroomHtml +
       '</div>';
-    marker.bindPopup(popupHtml, { className: "lf-popup", maxWidth: 220, closeButton: true });
+
+    L.marker([p.lat, p.lng], { icon: icon })
+      .bindPopup(popupHtml, { className: 'lf-popup', maxWidth: 260, closeButton: true })
+      .addTo(map);
   });
 })();
 </script>
@@ -157,7 +213,7 @@ function buildMapHtml(cells: HeatCell[]): string {
 const MAP_HEIGHT = 420;
 
 // ── Component ───────────────────────────────────────────────────────────────
-export default function HeatmapMapView({ cells, metric, isAr }: Props) {
+export default function HeatmapMapView({ properties, isAr }: Props) {
   const colors = useColors();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -166,12 +222,11 @@ export default function HeatmapMapView({ cells, metric, isAr }: Props) {
   const iframeRef    = useRef<any>(null);
   const htmlRef      = useRef<string>("");
 
-  // Build HTML on first render / when cells change
-  const cellsKey    = cells.map((c) => c.key).join(",");
-  const prevCellsKey = useRef(cellsKey);
-  if (htmlRef.current === "" || prevCellsKey.current !== cellsKey) {
-    prevCellsKey.current = cellsKey;
-    htmlRef.current = buildMapHtml(cells);
+  const propsKey    = properties.map((p) => p.id).join(",");
+  const prevKey     = useRef(propsKey);
+  if (htmlRef.current === "" || prevKey.current !== propsKey) {
+    prevKey.current = propsKey;
+    htmlRef.current = buildMapHtml(properties);
   }
 
   // Mount iframe once into the View's underlying DOM node
@@ -183,7 +238,6 @@ export default function HeatmapMapView({ cells, metric, isAr }: Props) {
     iframe.style.cssText = `width:100%;height:${MAP_HEIGHT}px;border:none;display:block;`;
     iframe.srcdoc = htmlRef.current;
 
-    // Clear any previous iframe and insert the new one
     while (container.firstChild) container.removeChild(container.firstChild);
     container.appendChild(iframe);
     iframeRef.current = iframe;
@@ -191,31 +245,13 @@ export default function HeatmapMapView({ cells, metric, isAr }: Props) {
     return () => {
       try { container.removeChild(iframe); } catch { /* already removed */ }
     };
-  }, []); // mount once — metric changes handled via eval below
+  }, []); // mount once
 
-  // Switch metric without reloading the iframe
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-    // The iframe may still be loading; retry until Leaflet is ready
-    let attempts = 0;
-    const tryInject = () => {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        iframe.contentWindow?.eval(`window.updateMetric && window.updateMetric("${metric}"); true;`);
-      } catch {
-        if (++attempts < 10) setTimeout(tryInject, 200);
-      }
-    };
-    const t = setTimeout(tryInject, 150);
-    return () => clearTimeout(t);
-  }, [metric]);
-
-  if (cells.length === 0) {
+  if (properties.length === 0) {
     return (
       <View style={[styles.empty, { backgroundColor: colors.background }]}>
         <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-          {isAr ? "لا توجد بيانات للعرض" : "No data to display"}
+          {isAr ? "لا توجد عقارات للعرض" : "No properties to display"}
         </Text>
       </View>
     );

@@ -1,7 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -20,7 +20,7 @@ import { ADMIN_EVENTS_KEY } from "@/hooks/useAIAssistant";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 import { useConfig } from "@/context/DynamicConfig";
-import HeatmapMapView, { HeatCell, HeatMetric } from "@/components/HeatmapMapView";
+import HeatmapMapView, { MapProperty } from "@/components/HeatmapMapView";
 
 const NEGOTIATION_KEY    = "rkz_negotiation_requests";
 const DISCOVERY_FILTER_KEY = "rkz_discovery_filter";
@@ -82,43 +82,6 @@ function fmtPrice(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}م`;
   if (n >= 1_000)     return `${(n / 1_000).toFixed(0)}ك`;
   return String(n);
-}
-
-// ── Heatmap data aggregation ───────────────────────────────────────────────
-function hashStr(str: string): number {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
-  return h;
-}
-
-// Aggregate listings into per-district cells with deterministic synthetic
-// occupancy/transaction intensity. Returns HeatCell[] for HeatmapMapView.
-function buildDistrictCells(listings: Listing[]): HeatCell[] {
-  interface _Cell extends HeatCell { count: number }
-  const map = new Map<string, _Cell>();
-  for (const l of listings) {
-    const key = `${l.city}__${l.district}`;
-    const existing = map.get(key);
-    if (existing) {
-      existing.count += 1;
-    } else {
-      const h = hashStr(key);
-      map.set(key, {
-        key,
-        city: l.city,
-        district: l.district,
-        count: 1,
-        occupancy: 45 + (h % 54),    // 45–98 %
-        transactions: 4 + (h % 22),  // 4–25 base
-      });
-    }
-  }
-  const cells = Array.from(map.values()).map(({ count, ...c }) => ({
-    ...c,
-    occupancy: Math.min(99, c.occupancy + (count - 1) * 3),
-    transactions: c.transactions + (count - 1) * 5,
-  }));
-  return cells.sort((a, b) => b.occupancy - a.occupancy);
 }
 
 // ── Property Card ─────────────────────────────────────────────────────────
@@ -212,7 +175,6 @@ export default function DiscoveryMapScreen() {
   const [activeType,   setActiveType]   = useState("all");
   const [refreshing,   setRefreshing]   = useState(false);
   const [viewMode,     setViewMode]     = useState<"cards" | "heatmap">("cards");
-  const [heatMetric,   setHeatMetric]   = useState<HeatMetric>("occupancy");
 
   // Load pre-selected filter from entry gate (set by role selection or previous session)
   useEffect(() => {
@@ -271,8 +233,6 @@ export default function DiscoveryMapScreen() {
   const filtered = activeType === "all"
     ? ALL_LISTINGS
     : ALL_LISTINGS.filter((l) => l.type === activeType);
-
-  const cells = useMemo(() => buildDistrictCells(filtered), [filtered]);
 
   const s = makeStyles(colors, isAr, topPad, bottomPad);
 
@@ -350,41 +310,28 @@ export default function DiscoveryMapScreen() {
           onPress={() => { void Haptics.selectionAsync(); setViewMode("heatmap"); }}
           style={[s.toggleSeg, viewMode === "heatmap" && s.toggleSegActive]}
         >
-          <MaterialIcons name="local-fire-department" size={16} color={viewMode === "heatmap" ? "#0A1628" : colors.mutedForeground} />
-          <Text style={[s.toggleText, viewMode === "heatmap" && s.toggleTextActive]}>{t.heatmap.heatmapView}</Text>
+          <MaterialIcons name="map" size={16} color={viewMode === "heatmap" ? "#0A1628" : colors.mutedForeground} />
+          <Text style={[s.toggleText, viewMode === "heatmap" && s.toggleTextActive]}>{isAr ? "الخريطة" : "Map"}</Text>
         </Pressable>
       </View>
 
       {viewMode === "heatmap" ? (
-        /* ── Geographic Heatmap ───────────────────────────────────────────── */
+        /* ── Property Price Map ───────────────────────────────────────────── */
         <View style={{ flex: 1 }}>
-          {/* Metric sub-toggle bar above the map */}
+          {/* Hint bar */}
           <View style={[s.metricBar, isAr && { flexDirection: "row-reverse" }]}>
-            {(["occupancy", "transactions"] as HeatMetric[]).map((m) => (
-              <Pressable
-                key={m}
-                onPress={() => { void Haptics.selectionAsync(); setHeatMetric(m); }}
-                style={[s.metricPill, heatMetric === m && s.metricPillActive]}
-              >
-                <MaterialIcons
-                  name={m === "occupancy" ? "donut-large" : "show-chart"}
-                  size={14}
-                  color={heatMetric === m ? "#0A1628" : colors.mutedForeground}
-                />
-                <Text style={[s.metricPillText, heatMetric === m && s.metricPillTextActive]}>
-                  {m === "occupancy" ? t.heatmap.metricOccupancy : t.heatmap.metricTransactions}
-                </Text>
-              </Pressable>
-            ))}
+            <MaterialIcons name="touch-app" size={14} color={colors.mutedForeground} />
+            <Text style={s.metricHintText}>
+              {isAr ? "اضغط على السعر لعرض تفاصيل العقار" : "Tap a price to see property details"}
+            </Text>
             <View style={s.metricHint}>
-              <MaterialIcons name="touch-app" size={12} color={colors.mutedForeground} />
-              <Text style={s.metricHintText}>
-                {isAr ? "اضغط على النقاط للتفاصيل" : "Tap dots for details"}
-              </Text>
+              <View style={[s.legendDot, { backgroundColor: "#22c55e" }]} />
+              <Text style={s.metricHintText}>{isAr ? "متاح" : "Available"}</Text>
+              <View style={[s.legendDot, { backgroundColor: "#D4A843", marginStart: 8 }]} />
+              <Text style={s.metricHintText}>{isAr ? "مميز" : "Featured"}</Text>
             </View>
           </View>
-          {/* Full-screen geographic heatmap */}
-          <HeatmapMapView cells={cells} metric={heatMetric} isAr={isAr} />
+          <HeatmapMapView properties={filtered as MapProperty[]} isAr={isAr} />
         </View>
       ) : (
         /* ── Property Grid ─────────────────────────────────────────────────── */
@@ -563,6 +510,7 @@ function makeStyles(
     metricPillTextActive: { color: "#0A1628" },
     metricHint:     { flex: 1, flexDirection: "row", alignItems: "center", gap: 4, justifyContent: "flex-end" },
     metricHintText: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
+    legendDot:      { width: 8, height: 8, borderRadius: 4 },
 
     // ── Grid ──────────────────────────────────────────────────────────────
     gridContent: {

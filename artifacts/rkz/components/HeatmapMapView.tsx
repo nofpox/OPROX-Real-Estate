@@ -1,55 +1,62 @@
 /**
- * HeatmapMapView — Leaflet/OpenStreetMap geographic heatmap embedded in a
- * WebView. Shows Saudi real estate district intensity (occupancy or deal
- * volume) as a proper colour-gradient heat layer, with gold dot markers that
- * open data pop-ups on tap. The metric can be switched live via
- * injectJavaScript without destroying the WebView.
+ * HeatmapMapView — Leaflet/OpenStreetMap individual property marker map
+ * embedded in a WebView. Each listing renders as a price-label pill
+ * (green = standard, gold = high-value/featured). Tapping a pill opens a
+ * property detail popup.
+ *
+ * The file retains the "HeatmapMapView" name for backward-compat with
+ * existing imports; the heatmap overlay has been replaced by per-property
+ * markers.
  */
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { WebView } from "react-native-webview";
 
 import { useColors } from "@/hooks/useColors";
 
-// ── District coordinate lookup (approximate real-world positions) ──────────
-// Keyed by `${city}__${district}` to match buildDistrictCells output.
+// ── District coordinate lookup ─────────────────────────────────────────────
 const DISTRICT_COORDS: Record<string, [number, number]> = {
-  // الرياض
-  "الرياض__النرجس":    [24.774, 46.633],
-  "الرياض__الملقا":    [24.761, 46.637],
-  "الرياض__العليا":    [24.694, 46.682],
-  "الرياض__الياسمين":  [24.802, 46.650],
-  "الرياض__الصناعية":  [24.619, 46.722],
-  "الرياض__الحمراء":   [24.678, 46.705],
-  // جدة
-  "جدة__الروضة":       [21.553, 39.172],
-  "جدة__التعمير":      [21.527, 39.183],
-  // الدمام
-  "الدمام__الشاطئ":    [26.452, 50.046],
-  "الدمام__الراكة":    [26.427, 50.082],
-  // مكة المكرمة
-  "مكة المكرمة__العزيزية": [21.362, 39.848],
-  // الخبر
-  "الخبر__الكورنيش":   [26.300, 50.192],
-  "الخبر__الأمواج":    [26.272, 50.212],
-  // المدينة المنورة
-  "المدينة المنورة__الورود": [24.523, 39.574],
-  // الطائف
-  "الطائف__الهضيبة":   [21.280, 40.420],
-  "الطائف__الشفا":     [21.218, 40.348],
+  "الرياض__النرجس":          [24.774, 46.633],
+  "الرياض__الملقا":          [24.761, 46.637],
+  "الرياض__العليا":          [24.694, 46.682],
+  "الرياض__الياسمين":        [24.802, 46.650],
+  "الرياض__الصناعية":        [24.619, 46.722],
+  "الرياض__الحمراء":         [24.678, 46.705],
+  "جدة__الروضة":             [21.553, 39.172],
+  "جدة__التعمير":            [21.527, 39.183],
+  "الدمام__الشاطئ":          [26.452, 50.046],
+  "الدمام__الراكة":          [26.427, 50.082],
+  "مكة المكرمة__العزيزية":   [21.362, 39.848],
+  "الخبر__الكورنيش":         [26.300, 50.192],
+  "الخبر__الأمواج":          [26.272, 50.212],
+  "المدينة المنورة__الورود":  [24.523, 39.574],
+  "الطائف__الهضيبة":         [21.280, 40.420],
+  "الطائف__الشفا":           [21.218, 40.348],
 };
 
-// City-centre fallback coordinates when a district has no exact match.
 const CITY_COORDS: Record<string, [number, number]> = {
-  "الرياض":            [24.7136, 46.6753],
-  "جدة":               [21.4858, 39.1925],
-  "الدمام":            [26.4207, 50.0888],
-  "مكة المكرمة":       [21.3891, 39.8579],
-  "الخبر":             [26.2172, 50.1971],
-  "المدينة المنورة":   [24.5247, 39.5692],
-  "الطائف":            [21.2827, 40.4146],
+  "الرياض":           [24.7136, 46.6753],
+  "جدة":              [21.4858, 39.1925],
+  "الدمام":           [26.4207, 50.0888],
+  "مكة المكرمة":      [21.3891, 39.8579],
+  "الخبر":            [26.2172, 50.1971],
+  "المدينة المنورة":  [24.5247, 39.5692],
+  "الطائف":           [21.2827, 40.4146],
 };
 
+// ── Types ──────────────────────────────────────────────────────────────────
+export interface MapProperty {
+  id: string;
+  city: string;
+  district: string;
+  type: string;
+  price: number;
+  area: number;
+  bedrooms?: number;
+  badge?: string;
+}
+
+// Legacy exports kept for any stale imports.
 export interface HeatCell {
   key: string;
   city: string;
@@ -57,182 +64,153 @@ export interface HeatCell {
   occupancy: number;
   transactions: number;
 }
-
 export type HeatMetric = "occupancy" | "transactions";
 
 interface Props {
-  cells: HeatCell[];
-  metric: HeatMetric;
+  properties: MapProperty[];
   isAr?: boolean;
 }
 
 // ── HTML generator ─────────────────────────────────────────────────────────
-function buildMapHtml(cells: HeatCell[]): string {
-  // Augment cells with resolved coordinates.
-  const features = cells.map((c) => {
-    const coords = DISTRICT_COORDS[c.key]
-      ?? CITY_COORDS[c.city]
-      ?? [24.7136, 46.6753];
-    return { ...c, lat: coords[0], lng: coords[1] };
-  });
-
-  const dataJson = JSON.stringify(features);
+function buildMapHtml(properties: MapProperty[]): string {
+  const coordsJson = JSON.stringify(DISTRICT_COORDS);
+  const cityJson   = JSON.stringify(CITY_COORDS);
+  const dataJson   = JSON.stringify(properties);
 
   return `<!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport"
-  content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
-<link rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
   html, body { height: 100%; margin: 0; padding: 0; background: #0a1628; }
   #map { height: 100%; width: 100%; }
 
-  /* Pop-up style */
+  /* ── Price pill markers ────────────────────────────────────────────────── */
+  .price-icon { overflow: visible !important; background: none !important; border: none !important; }
+  .price-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.65);
+    cursor: pointer;
+    direction: rtl;
+    transform: translate(-50%, -50%);
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .price-pill:hover { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 5px 18px rgba(0,0,0,0.8); }
+  .price-green { background: #22c55e; color: #fff;    border: 1.5px solid #16a34a; }
+  .price-gold  { background: #D4A843; color: #0A1628; border: 1.5px solid #b8902e; }
+
+  /* ── Popup ──────────────────────────────────────────────────────────────── */
   .lf-popup .leaflet-popup-content-wrapper {
-    background: #0f2040;
-    border: 1.5px solid #D4A843;
-    border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.55);
-    color: #f1f5f9;
-    font-family: -apple-system, sans-serif;
-    padding: 0;
+    background: #0f2040; border: 1.5px solid #D4A843; border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.55); color: #f1f5f9;
+    font-family: -apple-system, sans-serif; padding: 0; direction: rtl;
   }
   .lf-popup .leaflet-popup-tip-container { display: none; }
-  .lf-popup .leaflet-popup-content { margin: 14px 16px; }
-  .pop-district { font-size: 15px; font-weight: 700; color: #D4A843; margin-bottom: 3px; }
-  .pop-city     { font-size: 12px; color: #94a3b8; margin-bottom: 10px; }
-  .pop-row      { display: flex; gap: 14px; }
-  .pop-item     { text-align: center; }
-  .pop-val      { font-size: 20px; font-weight: 700; color: #ffffff; }
-  .pop-lbl      { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+  .lf-popup .leaflet-popup-content { margin: 14px 16px; min-width: 180px; }
+  .pop-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-direction: row-reverse; }
+  .pop-type  { font-size: 11px; background: rgba(212,168,67,0.2); color: #D4A843; padding: 2px 8px; border-radius: 10px; }
+  .pop-badge { font-size: 10px; background: #D4A843; color: #0A1628; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+  .pop-title { font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 2px; text-align: right; }
+  .pop-city  { font-size: 11px; color: #94a3b8; margin-bottom: 10px; text-align: right; }
+  .pop-row   { display: flex; gap: 8px; flex-direction: row-reverse; justify-content: flex-end; }
+  .pop-item  { text-align: center; min-width: 52px; }
+  .pop-val   { font-size: 16px; font-weight: 700; color: #D4A843; }
+  .pop-lbl   { font-size: 10px; color: #94a3b8; margin-top: 2px; }
 
-  /* Zoom control colours */
-  .leaflet-control-zoom a {
-    background: #0f2040 !important;
-    color: #D4A843 !important;
-    border-color: #1e3a5f !important;
-  }
+  /* ── Controls ────────────────────────────────────────────────────────────── */
+  .leaflet-control-zoom a { background: #0f2040 !important; color: #D4A843 !important; border-color: #1e3a5f !important; }
   .leaflet-control-zoom a:hover { background: #1e3a5f !important; }
-  .leaflet-control-attribution {
-    background: rgba(10,22,40,0.7) !important;
-    color: #64748b !important;
-    font-size: 9px;
-  }
+  .leaflet-control-attribution { background: rgba(10,22,40,0.7) !important; color: #64748b !important; font-size: 9px; }
   .leaflet-control-attribution a { color: #D4A843 !important; }
 </style>
 </head>
 <body>
 <div id="map"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
 (function () {
-  var DISTRICTS = ${dataJson};
-  var currentMetric = "occupancy";
-  var heatLayer = null;
-  var map;
+  var DISTRICT_COORDS = ${coordsJson};
+  var CITY_COORDS     = ${cityJson};
+  var PROPS           = ${dataJson};
 
-  /* Golden-angle spiral offsets for stable heat spread around each district. */
-  function makeOffsets(n, count) {
-    var pts = [];
-    for (var j = 0; j < count; j++) {
-      var angle = ((n * count + j) * 137.508) * Math.PI / 180;
-      var r = 0.03 + (j % 5) * 0.018;
-      pts.push([Math.cos(angle) * r, Math.sin(angle) * r]);
-    }
-    return pts;
+  var TYPE_LABELS = {
+    villa:'فيلا', apartment:'شقة', land:'أرض', commercial:'تجاري',
+    compound:'مجمع', floor:'دور', warehouse:'مستودع', farm:'مزرعة',
+    rest_house:'استراحة', palace:'قصر'
+  };
+
+  function fmtPrice(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + ' مليون';
+    if (n >= 1000)    return Math.round(n / 1000) + ' ألف';
+    return n.toString();
   }
 
-  var OFFSETS = DISTRICTS.map(function(_, i) { return makeOffsets(i, 12); });
-
-  function buildHeatPoints(metric) {
-    var pts = [];
-    DISTRICTS.forEach(function(d, i) {
-      var raw = metric === "occupancy" ? d.occupancy / 100 : Math.min(1, d.transactions / 28);
-      pts.push([d.lat, d.lng, raw]);
-      OFFSETS[i].forEach(function(off) {
-        pts.push([d.lat + off[0], d.lng + off[1], raw * 0.55]);
-      });
+  /* Spiral offset so multiple properties in the same district don't overlap */
+  var districtIdx = {};
+  var features = PROPS.map(function(p) {
+    var key = p.city + '__' + p.district;
+    var idx = districtIdx[key] !== undefined ? districtIdx[key] : 0;
+    districtIdx[key] = idx + 1;
+    var base = DISTRICT_COORDS[key] || CITY_COORDS[p.city] || [24.7136, 46.6753];
+    var angle = idx * 2.399; /* golden angle in radians */
+    var r = idx === 0 ? 0 : 0.014 + Math.floor(idx / 5) * 0.009;
+    return Object.assign({}, p, {
+      lat: base[0] + Math.cos(angle) * r,
+      lng: base[1] + Math.sin(angle) * r,
     });
-    return pts;
-  }
-
-  function updateMetric(metric) {
-    currentMetric = metric;
-    if (heatLayer) { map.removeLayer(heatLayer); }
-    heatLayer = L.heatLayer(buildHeatPoints(metric), {
-      radius: 52,
-      blur: 36,
-      maxZoom: 14,
-      max: 1.0,
-      gradient: {
-        0.0:  "#1e3a8a",
-        0.25: "#0891b2",
-        0.50: "#16a34a",
-        0.70: "#d97706",
-        0.85: "#ea580c",
-        1.0:  "#dc2626"
-      }
-    }).addTo(map);
-  }
-
-  /* Expose for injectJavaScript calls from React Native */
-  window.updateMetric = updateMetric;
-
-  /* Init map */
-  map = L.map("map", {
-    center: [23.8, 44.8],
-    zoom: 5,
-    zoomControl: true,
-    attributionControl: true,
   });
 
-  /* CartoDB Dark Matter tiles — no API key required */
-  L.tileLayer(
-    "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-    {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: "abcd",
-      maxZoom: 18,
-    }
-  ).addTo(map);
+  /* Init map centred on Saudi Arabia */
+  var map = L.map('map', {
+    center: [23.8, 44.8], zoom: 5,
+    zoomControl: true, attributionControl: true,
+  });
 
-  /* Initial heat layer */
-  updateMetric("occupancy");
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 18,
+  }).addTo(map);
 
-  /* Gold dot markers with data pop-ups */
-  DISTRICTS.forEach(function(d) {
-    var marker = L.circleMarker([d.lat, d.lng], {
-      radius: 9,
-      fillColor: "#D4A843",
-      color: "#0a1628",
-      weight: 2,
-      fillOpacity: 0.95,
-      className: "district-marker",
-    }).addTo(map);
+  features.forEach(function(p) {
+    var isGold     = p.price >= 5000000 || !!p.badge;
+    var cls        = isGold ? 'price-gold' : 'price-green';
+    var typeLabel  = TYPE_LABELS[p.type] || p.type;
+    var priceLabel = fmtPrice(p.price);
+
+    var icon = L.divIcon({
+      html:       '<div class="price-pill ' + cls + '">' + priceLabel + '</div>',
+      className:  'price-icon',
+      iconSize:   [0, 0],
+      iconAnchor: [0, 0],
+    });
+
+    var badgeHtml    = p.badge ? '<span class="pop-badge">' + p.badge + '</span>' : '';
+    var bedroomHtml  = p.bedrooms
+      ? '<div class="pop-item"><div class="pop-val">' + p.bedrooms + '</div><div class="pop-lbl">غرف</div></div>'
+      : '';
 
     var popupHtml =
-      '<div class="pop-district">' + d.district + '</div>' +
-      '<div class="pop-city">' + d.city + '</div>' +
+      '<div class="pop-header"><span class="pop-type">' + typeLabel + '</span>' + badgeHtml + '</div>' +
+      '<div class="pop-title">' + typeLabel + ' ' + p.district + '</div>' +
+      '<div class="pop-city">' + p.city + ' — ' + p.district + '</div>' +
       '<div class="pop-row">' +
-        '<div class="pop-item">' +
-          '<div class="pop-val">' + d.occupancy + '%</div>' +
-          '<div class="pop-lbl">إشغال / Occupancy</div>' +
-        '</div>' +
-        '<div class="pop-item">' +
-          '<div class="pop-val">' + d.transactions + '</div>' +
-          '<div class="pop-lbl">صفقات / Deals</div>' +
-        '</div>' +
+        '<div class="pop-item"><div class="pop-val">' + priceLabel + '</div><div class="pop-lbl">السعر</div></div>' +
+        '<div class="pop-item"><div class="pop-val">' + p.area.toLocaleString() + '</div><div class="pop-lbl">م²</div></div>' +
+        bedroomHtml +
       '</div>';
 
-    marker.bindPopup(popupHtml, {
-      className: "lf-popup",
-      maxWidth: 220,
-      closeButton: true,
-    });
+    L.marker([p.lat, p.lng], { icon: icon })
+      .bindPopup(popupHtml, { className: 'lf-popup', maxWidth: 260, closeButton: true })
+      .addTo(map);
   });
 })();
 </script>
@@ -241,37 +219,24 @@ function buildMapHtml(cells: HeatCell[]): string {
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
-export default function HeatmapMapView({ cells, metric, isAr }: Props) {
-  const colors = useColors();
-  const webRef = useRef<WebView>(null);
+export default function HeatmapMapView({ properties, isAr }: Props) {
+  const colors  = useColors();
+  const webRef  = useRef<WebView>(null);
   const htmlRef = useRef<string>("");
 
-  // Build HTML once when cells change (not on metric change — metric is
-  // updated via injectJavaScript without destroying the WebView).
-  if (htmlRef.current === "") {
-    htmlRef.current = buildMapHtml(cells);
+  const propsKey = properties.map((p) => p.id).join(",");
+  const prevKey  = useRef(propsKey);
+
+  if (htmlRef.current === "" || prevKey.current !== propsKey) {
+    prevKey.current = propsKey;
+    htmlRef.current = buildMapHtml(properties);
   }
 
-  // Rebuild when cell data changes (filter switch).
-  const cellsKey = cells.map((c) => c.key).join(",");
-  const prevCellsKey = useRef(cellsKey);
-  if (prevCellsKey.current !== cellsKey) {
-    prevCellsKey.current = cellsKey;
-    htmlRef.current = buildMapHtml(cells);
-  }
-
-  // Update metric on the live map without re-loading the WebView.
-  useEffect(() => {
-    webRef.current?.injectJavaScript(
-      `window.updateMetric && window.updateMetric("${metric}"); true;`
-    );
-  }, [metric]);
-
-  if (cells.length === 0) {
+  if (properties.length === 0) {
     return (
       <View style={[styles.empty, { backgroundColor: colors.background }]}>
         <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-          {isAr ? "لا توجد بيانات للعرض" : "No data to display"}
+          {isAr ? "لا توجد عقارات للعرض" : "No properties to display"}
         </Text>
       </View>
     );
@@ -285,15 +250,13 @@ export default function HeatmapMapView({ cells, metric, isAr }: Props) {
       originWhitelist={["*"]}
       javaScriptEnabled
       domStorageEnabled
-      // Android: allow loading CartoDB + Leaflet CDN over https.
       mixedContentMode="always"
-      // Disable vertical bouncing so the map scrolls fluidly.
       bounces={false}
       scrollEnabled={false}
       showsHorizontalScrollIndicator={false}
       showsVerticalScrollIndicator={false}
       onError={(e) =>
-        console.warn("HeatmapMapView error:", e.nativeEvent.description)
+        console.warn("PropertyMapView error:", e.nativeEvent.description)
       }
     />
   );
