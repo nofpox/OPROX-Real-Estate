@@ -21,8 +21,8 @@ const GOLD = "#C9A84C";
 const TEXT_PRIMARY = "#F5F0E8";
 const TEXT_MUTED = "rgba(245,240,232,0.55)";
 
-const LOGO_W = Math.min(width * 0.52, 220);
-const LOGO_H = Math.round(LOGO_W / 2.4);
+const LOGO_W = Math.min(width * 0.72, 300);
+const LOGO_H = Math.round(LOGO_W / 2.5);
 
 const FEATURES = [
   { icon: "flash_on",    ar: "نشر فوري على جميع المنصات",  en: "Instant multi-platform publishing"  },
@@ -32,8 +32,8 @@ const FEATURES = [
 
 export default function WelcomeScreen() {
   const bgOpacity   = useRef(new Animated.Value(0)).current;
-  const logoOpacity = useRef(new Animated.Value(0)).current;
-  const logoScale   = useRef(new Animated.Value(0.88)).current;
+  const logoOpacity = useRef(new Animated.Value(1)).current;
+  const logoScale   = useRef(new Animated.Value(0.92)).current;
   const bodyOpacity = useRef(new Animated.Value(0)).current;
   const bodyY       = useRef(new Animated.Value(16)).current;
   const ctaOpacity  = useRef(new Animated.Value(0)).current;
@@ -49,12 +49,9 @@ export default function WelcomeScreen() {
   }, []);
 
   useEffect(() => {
-    Animated.sequence([
-      Animated.timing(bgOpacity,   { toValue: 1, duration: 500, useNativeDriver: true }),
-      Animated.parallel([
-        Animated.timing(logoOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.spring(logoScale,   { toValue: 1, tension: 60, friction: 10, useNativeDriver: true }),
-      ]),
+    Animated.parallel([
+      Animated.timing(bgOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.spring(logoScale, { toValue: 1, tension: 70, friction: 10, useNativeDriver: true }),
     ]).start();
 
     const bodyTimer = setTimeout(() => {
