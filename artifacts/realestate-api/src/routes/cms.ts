@@ -66,7 +66,7 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop",
   },
   contact: {
-    email: "info@rakez-solutions.com",
+    email: "info@rkz-solutions.com",
     phone: "+966 11 234 5678",
     whatsapp: "",
     addressEn: "King Fahd Road, Olaya District\nRiyadh, Saudi Arabia",

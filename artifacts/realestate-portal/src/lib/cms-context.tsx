@@ -165,9 +165,9 @@ const DEFAULTS: SiteContent = {
     { href: "/portal",   labelEn: "Investor Portal", labelAr: "بوابة المستثمر" },
   ],
   contact: {
-    email: "info@rakez-solutions.com",
-    salesEmail: "sales@rakez-solutions.com",
-    supportEmail: "support@rakez-solutions.com",
+    email: "info@rkz-solutions.com",
+    salesEmail: "sales@rkz-solutions.com",
+    supportEmail: "support@rkz-solutions.com",
     phone: "+966 11 234 5678",
     fax: "+966 11 234 5679",
     supportPhone: "9200 12345",

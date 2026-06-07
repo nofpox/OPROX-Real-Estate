@@ -38,7 +38,7 @@ export const ListingDetail: React.FC = () => {
     "@type":      "RealEstateListing",
     "name":       listing.title,
     "description": listing.description,
-    "url":        `https://rakez.sa/realestate/listings/${listing.id}`,
+    "url":        `https://rkz.sa/realestate/listings/${listing.id}`,
     "image":      ogImage || undefined,
     "address": {
       "@type":           "PostalAddress",
@@ -293,8 +293,8 @@ export const ListingDetail: React.FC = () => {
                       <Info className="h-4 w-4 text-primary shrink-0" />
                       <p>
                         {isRtl ? 'استفسارات؟ راسلنا على' : 'Questions? Email'}{' '}
-                        <a href="mailto:sales@rakez.sa" className="text-secondary font-medium hover:underline">
-                          sales@rakez.sa
+                        <a href="mailto:sales@rkz.sa" className="text-secondary font-medium hover:underline">
+                          sales@rkz.sa
                         </a>
                       </p>
                     </div>
@@ -393,8 +393,8 @@ export const ListingDetail: React.FC = () => {
                       <Info className="h-5 w-5 text-primary shrink-0" />
                       <p>
                         {isRtl ? 'أو تواصل معنا مباشرة على' : 'Or contact us directly at'}{' '}
-                        <a href="mailto:sales@rakez.sa" className="text-secondary font-medium hover:underline">
-                          sales@rakez.sa
+                        <a href="mailto:sales@rkz.sa" className="text-secondary font-medium hover:underline">
+                          sales@rkz.sa
                         </a>
                       </p>
                     </div>
