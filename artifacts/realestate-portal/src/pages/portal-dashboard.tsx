@@ -15,12 +15,13 @@ import {
   LayoutDashboard, FileEdit, ListFilter, Settings,
   LogOut, RefreshCw, ExternalLink, Save, Globe,
   CheckCircle2, AlertCircle, Pencil, X, Building,
-  MapPin, Phone, Mail, Image as ImageIcon, Type,
+  MapPin, Phone, Mail, Image as ImageIcon, Type, Map,
 } from 'lucide-react';
+import { SmartHeatmap } from '@/components/SmartHeatmap';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = 'overview' | 'content' | 'listings' | 'settings';
+type Tab = 'overview' | 'content' | 'listings' | 'heatmap' | 'settings';
 
 interface LiveStats {
   properties_count: number;
@@ -232,12 +233,13 @@ export const PortalDashboard: React.FC = () => {
 
   useEffect(() => { void loadStats(); }, [loadStats]);
 
-  // ── Load listings on tab switch ──────────────────────────────────────────────
+  // ── Load listings on tab switch (shared by Listings + Heatmap tabs) ─────────
   useEffect(() => {
-    if (activeTab !== 'listings') return;
+    if (activeTab !== 'listings' && activeTab !== 'heatmap') return;
+    if (listings.length > 0) return; // already loaded
     setListingsLoading(true);
     void fetchListings().then(l => { setListings(l); setListingsLoading(false); });
-  }, [activeTab]);
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogout = async () => {
     await logout();
@@ -261,6 +263,7 @@ export const PortalDashboard: React.FC = () => {
     overview:  isRtl ? 'نظرة عامة'    : 'Overview',
     content:   isRtl ? 'إدارة المحتوى' : 'Content',
     listings:  isRtl ? 'العقارات'      : 'Listings',
+    heatmap:   isRtl ? 'الخريطة الذكية' : 'Smart Map',
     settings:  isRtl ? 'الإعدادات'     : 'Settings',
   };
 
@@ -268,6 +271,7 @@ export const PortalDashboard: React.FC = () => {
     { key: 'overview',  icon: LayoutDashboard, label: L.overview  },
     { key: 'content',   icon: FileEdit,        label: L.content   },
     { key: 'listings',  icon: Building2,       label: L.listings  },
+    { key: 'heatmap',   icon: Map,             label: L.heatmap   },
     { key: 'settings',  icon: Settings,        label: L.settings  },
   ];
 
@@ -515,6 +519,46 @@ export const PortalDashboard: React.FC = () => {
     );
   };
 
+  // ── Heatmap tab ───────────────────────────────────────────────────────────────
+  const HeatmapTab = () => (
+    <div className="space-y-3">
+      <div>
+        <h2 className="text-base font-bold">
+          {isRtl ? 'الخريطة الحرارية الذكية' : 'Smart Heatmap'}
+        </h2>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {isRtl
+            ? 'تصور كثافة العقارات والإشغال عبر المناطق السعودية. انقر على أي دائرة ذهبية للتفاصيل.'
+            : 'Visualise property density and occupancy across Saudi districts. Tap any gold dot for details.'}
+        </p>
+      </div>
+
+      {listingsLoading ? (
+        <div className="rounded-2xl overflow-hidden bg-slate-900 flex items-center justify-center" style={{ height: 420 }}>
+          <div className="text-center">
+            <RefreshCw className="h-6 w-6 text-amber-400 animate-spin mx-auto mb-2" />
+            <p className="text-xs text-slate-400">{isRtl ? 'جارٍ تحميل الخريطة…' : 'Loading map…'}</p>
+          </div>
+        </div>
+      ) : (
+        <SmartHeatmap listings={listings} isRtl={isRtl} />
+      )}
+
+      <div className="grid grid-cols-3 gap-2 pt-1">
+        {[
+          { city: isRtl ? 'الرياض'         : 'Riyadh',   pct: '88%' },
+          { city: isRtl ? 'جدة'            : 'Jeddah',   pct: '79%' },
+          { city: isRtl ? 'الدمام'         : 'Dammam',   pct: '64%' },
+        ].map(({ city, pct }) => (
+          <div key={city} className="bg-card border border-border rounded-xl p-3 text-center">
+            <p className="text-base font-bold text-primary">{pct}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">{city}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   // ── Settings tab ──────────────────────────────────────────────────────────────
   const SettingsTab = () => (
     <div className="space-y-4">
@@ -610,12 +654,13 @@ export const PortalDashboard: React.FC = () => {
         {activeTab === 'overview'  && <OverviewTab  />}
         {activeTab === 'content'   && <ContentTab   />}
         {activeTab === 'listings'  && <ListingsTab  />}
+        {activeTab === 'heatmap'   && <HeatmapTab   />}
         {activeTab === 'settings'  && <SettingsTab  />}
       </main>
 
       {/* Bottom tab bar */}
       <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border z-40 safe-area-bottom">
-        <div className="grid grid-cols-4 max-w-xl mx-auto">
+        <div className="grid grid-cols-5 max-w-xl mx-auto">
           {TABS.map(({ key, icon: Icon, label }) => (
             <button
               key={key}
