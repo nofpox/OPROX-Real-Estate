@@ -115,32 +115,14 @@ export default function VideoTemplate({
               filter: 'blur(24px)',
             }} />
             <div className="relative flex flex-col items-center">
-              <p style={{
-                fontFamily: "'Amiri', 'Scheherazade New', serif",
-                fontSize: 'clamp(5rem, 13vw, 11rem)',
-                color: '#E8C84A',
-                textShadow: '0 2px 6px rgba(0,0,0,0.9), 0 0 60px rgba(232,200,74,1), 0 0 120px rgba(232,200,74,0.6)',
-                direction: 'rtl',
-                lineHeight: 1,
-                fontWeight: 700,
-              }}>
-                روزوز
-              </p>
-              <div style={{
-                height: '2px', width: '55%',
-                background: 'linear-gradient(to right, transparent, #E8C84A, transparent)',
-                margin: '0.5rem 0',
-              }} />
-              <p style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: 'clamp(1rem, 2.5vw, 2.2rem)',
-                color: '#E8C84A',
-                textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 30px rgba(232,200,74,0.8)',
-                letterSpacing: '0.5em',
-                fontWeight: 600,
-              }}>
-                ROZOZ
-              </p>
+              <img
+                src={`${import.meta.env.BASE_URL}rozoz-logo.png`}
+                alt="Rozoz"
+                style={{
+                  width: 'clamp(180px, 30vw, 360px)',
+                  filter: 'drop-shadow(0 0 40px rgba(232,200,74,0.9)) drop-shadow(0 4px 8px rgba(0,0,0,0.95))',
+                }}
+              />
             </div>
           </motion.div>
         )}
