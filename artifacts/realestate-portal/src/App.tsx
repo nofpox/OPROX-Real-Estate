@@ -54,11 +54,11 @@ function Router() {
 
 function App() {
   const [showWelcome, setShowWelcome] = useState(
-    () => !sessionStorage.getItem("rkz_welcomed"),
+    () => !localStorage.getItem("rkz_welcomed"),
   );
 
   function handleWelcomeDone() {
-    sessionStorage.setItem("rkz_welcomed", "1");
+    localStorage.setItem("rkz_welcomed", "1");
     setShowWelcome(false);
   }
 

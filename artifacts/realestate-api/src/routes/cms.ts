@@ -139,9 +139,9 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     buttonAr: "تواصل معنا",
   },
   leadEmail: {
-    subject: "Welcome to Rkaz – Your Visit Confirmation",
-    intro: "Thank you for your interest in Rkaz. We are pleased to confirm that we have received your request.\n\nOur team is currently reviewing your inquiry and will contact you shortly.",
-    mapsUrl: "https://www.google.com/maps/search/Rkaz+Riyadh+Saudi+Arabia",
+    subject: "Welcome to RKZ – Your Visit Confirmation",
+    intro: "Thank you for your interest in RKZ Smart Solutions. We are pleased to confirm that we have received your request.\n\nOur team is currently reviewing your inquiry and will contact you shortly.",
+    mapsUrl: "https://www.google.com/maps/search/RKZ+Smart+Solutions+Riyadh+Saudi+Arabia",
     bccEmail: "",
   },
 };
