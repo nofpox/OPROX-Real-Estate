@@ -142,4 +142,10 @@ title = "Rkz Cinematic — 28.5s · 1080p · H.264 Main · 5 Mbps · Voiceover +
 id = "OJ4LT_bHFiMyzn31ZfDyb"
 uri = "file://artifacts/rkz-promo/public/audio/bg_music.mp3"
 type = "audio"
-title = "saudi_ardah"
+title = "saudi_ardah_najdiyah"
+
+[[outputs]]
+id = "SCMCgpdy1xU_W11n0E5x2"
+uri = "file://artifacts/rkz-promo/public/audio/voiceover.mp3"
+type = "audio"
+title = "arabic_saudi_voiceover"

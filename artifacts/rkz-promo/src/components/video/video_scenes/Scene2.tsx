@@ -46,68 +46,35 @@ export function Scene2() {
       <div className="absolute inset-0 bg-gradient-to-t from-bg-dark via-bg-dark/30 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-b from-bg-dark/50 via-transparent to-transparent" />
 
-      {/* ── "روزوز" Arabic calligraphy on the skyscraper ─────────────────────── */}
-      {/* Positioned at upper-center, overlaid on the tallest building */}
+      {/* ── ROZOZ logo on the skyscraper ─────────────────────────────────────── */}
       <motion.div
         className="absolute"
-        style={{ top: '14%', left: '50%', transform: 'translateX(-50%)', zIndex: 5 }}
+        style={{ top: '12%', left: '50%', transform: 'translateX(-50%)', zIndex: 5 }}
         initial={{ opacity: 0, scale: 0.82 }}
-        animate={
-          phase >= 2
-            ? { opacity: 1, scale: 1 }
-            : { opacity: 0, scale: 0.82 }
-        }
+        animate={phase >= 2 ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.82 }}
         transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Outer glow aura */}
-        <motion.div
-          className="absolute inset-0 rounded-2xl"
+        {/* Glow aura behind logo */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse at center, rgba(201,168,76,0.4) 0%, transparent 70%)',
+          filter: 'blur(22px)',
+          transform: 'scale(1.8)',
+        }} />
+        <motion.img
+          src={`${import.meta.env.BASE_URL}rozoz-logo.png`}
+          alt="ROZOZ"
           style={{
-            background: 'radial-gradient(ellipse at center, rgba(201,168,76,0.35) 0%, transparent 70%)',
-            filter: 'blur(18px)',
-            transform: 'scale(1.6)',
+            width: 'clamp(160px, 22vw, 280px)',
+            filter: 'drop-shadow(0 0 30px rgba(201,168,76,0.95)) drop-shadow(0 4px 10px rgba(0,0,0,0.9))',
           }}
-          animate={phase >= 3 ? { opacity: [0.6, 1, 0.6] } : { opacity: 0.6 }}
+          animate={phase >= 3 ? { filter: [
+            'drop-shadow(0 0 30px rgba(201,168,76,0.95)) drop-shadow(0 4px 10px rgba(0,0,0,0.9))',
+            'drop-shadow(0 0 55px rgba(201,168,76,1))    drop-shadow(0 4px 10px rgba(0,0,0,0.9))',
+            'drop-shadow(0 0 30px rgba(201,168,76,0.95)) drop-shadow(0 4px 10px rgba(0,0,0,0.9))',
+          ] } : {}}
           transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
         />
-        {/* The calligraphy text */}
-        <motion.p
-          style={{
-            fontFamily: "'Amiri', 'Scheherazade New', serif",
-            fontSize: 'clamp(3rem, 7vw, 6rem)',
-            color: '#C9A84C',
-            textShadow:
-              '0 0 40px rgba(201,168,76,0.9), 0 0 80px rgba(201,168,76,0.5), 0 2px 8px rgba(0,0,0,0.8)',
-            letterSpacing: '0.08em',
-            direction: 'rtl',
-            whiteSpace: 'nowrap',
-            lineHeight: 1,
-          }}
-          animate={phase >= 3 ? { textShadow: [
-            '0 0 40px rgba(201,168,76,0.9), 0 0 80px rgba(201,168,76,0.5), 0 2px 8px rgba(0,0,0,0.8)',
-            '0 0 60px rgba(201,168,76,1),   0 0 120px rgba(201,168,76,0.7), 0 2px 8px rgba(0,0,0,0.8)',
-            '0 0 40px rgba(201,168,76,0.9), 0 0 80px rgba(201,168,76,0.5), 0 2px 8px rgba(0,0,0,0.8)',
-          ] } : {}}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          روزوز
-        </motion.p>
-        {/* ROZOZ latin beneath in smaller caps */}
-        <motion.p
-          style={{
-            fontFamily: "'Cinzel', serif",
-            fontSize: 'clamp(0.75rem, 1.8vw, 1.4rem)',
-            color: 'rgba(201,168,76,0.65)',
-            letterSpacing: '0.55em',
-            textAlign: 'center',
-            marginTop: '4px',
-          }}
-          initial={{ opacity: 0 }}
-          animate={phase >= 3 ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 1, delay: 0.3 }}
-        >
-          ROZOZ
-        </motion.p>
       </motion.div>
 
       {/* ── Falcon sweeping the skyline ──────────────────────────────────────── */}
