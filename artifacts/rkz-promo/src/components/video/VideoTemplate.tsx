@@ -3,21 +3,18 @@ import { useEffect, useRef } from 'react';
 import { useVideoPlayer } from '@/lib/video';
 import { Scene1 } from './video_scenes/Scene1';
 import { Scene2 } from './video_scenes/Scene2';
-import { Scene3 } from './video_scenes/Scene3';
 import { Scene4 } from './video_scenes/Scene4';
 
 export const SCENE_DURATIONS: Record<string, number> = {
-  atmosphere_desert: 5500,
-  atmosphere_city: 5500,
-  product_reveal: 12000,
-  brand_close: 5500,
+  atmosphere_desert: 7000,
+  atmosphere_city:   7000,
+  brand_close:       7000,
 };
 
 const SCENE_COMPONENTS: Record<string, React.ComponentType> = {
   atmosphere_desert: Scene1,
-  atmosphere_city: Scene2,
-  product_reveal: Scene3,
-  brand_close: Scene4,
+  atmosphere_city:   Scene2,
+  brand_close:       Scene4,
 };
 
 const SCENE_START_SEC: Record<string, number> = (() => {
