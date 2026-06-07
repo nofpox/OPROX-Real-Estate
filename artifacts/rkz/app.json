@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "RKZ",
+    "name": "Rozoz",
     "slug": "rkz",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -35,14 +35,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "RKZ needs access to your photos to add property images.",
-          "cameraPermission": "RKZ needs your camera to take property photos."
+          "photosPermission": "Rozoz needs access to your photos to add property images.",
+          "cameraPermission": "Rozoz needs your camera to take property photos."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "RKZ uses your location to auto-fill the property address."
+          "locationWhenInUsePermission": "Rozoz uses your location to auto-fill the property address."
         }
       ]
     ],

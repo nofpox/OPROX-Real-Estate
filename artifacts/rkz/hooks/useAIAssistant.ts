@@ -171,14 +171,14 @@ function localReply(
   if (isGreet) {
     return isAr
       ? {
-          reply: `مرحباً بك في ركز! 👋 كيف يمكنني مساعدتك في إيجاد عقارك المثالي اليوم؟\n\nلديك حالياً **${ctx.totalProperties}** عقارات بإجمالي **${ctx.totalViews.toLocaleString("ar-SA")}** مشاهدة.`,
+          reply: `مرحباً بك في Rozoz! 👋 كيف يمكنني مساعدتك في إيجاد عقارك المثالي اليوم؟\n\nلديك حالياً **${ctx.totalProperties}** عقارات بإجمالي **${ctx.totalViews.toLocaleString("ar-SA")}** مشاهدة.`,
           quickReplies: [
             { label: "أداء المحفظة", value: "كيف أداء محفظتي؟" },
             { label: "ابحث عن عقار", value: "أبحث عن عقار للشراء" },
           ],
         }
       : {
-          reply: `Welcome to Rkz! 👋 How can I help you find your ideal property today?\n\nYou currently have **${ctx.totalProperties}** properties with **${ctx.totalViews.toLocaleString()}** total views.`,
+          reply: `Welcome to Rozoz! 👋 How can I help you find your ideal property today?\n\nYou currently have **${ctx.totalProperties}** properties with **${ctx.totalViews.toLocaleString()}** total views.`,
           quickReplies: [
             { label: "Portfolio performance", value: "How is my portfolio performing?" },
             { label: "Find a property", value: "Looking for a property to buy" },
@@ -340,8 +340,8 @@ export function useAIAssistant() {
       : c.totalViews.toLocaleString();
 
     const content = isAr
-      ? `مرحباً بك في ركز! ✨ كيف يمكنني مساعدتك في إيجاد عقارك المثالي اليوم؟\n\nمحفظتك تضم **${c.totalProperties}** عقارات، ${c.publishedCount} منها منشورة مع **${viewsStr}** مشاهدة و**${c.totalLeads}** مستفسر.\n\nاسألني عن البحث عن عقار، أداء محفظتك، التسعير، أو اطلب تقييماً متخصصاً.`
-      : `Welcome to Rkz! ✨ How can I help you find your ideal property today?\n\nYour portfolio has **${c.totalProperties}** properties, ${c.publishedCount} published with **${viewsStr}** views and **${c.totalLeads}** leads.\n\nAsk me about finding a property, your portfolio performance, pricing, or request an expert valuation.`;
+      ? `مرحباً بك في Rozoz! ✨ كيف يمكنني مساعدتك في إيجاد عقارك المثالي اليوم؟\n\nمحفظتك تضم **${c.totalProperties}** عقارات، ${c.publishedCount} منها منشورة مع **${viewsStr}** مشاهدة و**${c.totalLeads}** مستفسر.\n\nاسألني عن البحث عن عقار، أداء محفظتك، التسعير، أو اطلب تقييماً متخصصاً.`
+      : `Welcome to Rozoz! ✨ How can I help you find your ideal property today?\n\nYour portfolio has **${c.totalProperties}** properties, ${c.publishedCount} published with **${viewsStr}** views and **${c.totalLeads}** leads.\n\nAsk me about finding a property, your portfolio performance, pricing, or request an expert valuation.`;
 
     const quickReplies: QuickReply[] = isAr
       ? [

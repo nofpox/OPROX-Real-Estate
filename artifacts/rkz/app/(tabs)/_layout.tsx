@@ -55,7 +55,7 @@ function RoleGate() {
         {/* Logo area */}
         <View style={gate.logoArea}>
           <Image
-            source={require("@/assets/images/rkz-logo.jpg")}
+            source={require("@/assets/images/rozoz-logo.png")}
             style={gate.logo}
             resizeMode="contain"
           />
