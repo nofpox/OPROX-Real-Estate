@@ -149,3 +149,9 @@ id = "SCMCgpdy1xU_W11n0E5x2"
 uri = "file://artifacts/rkz-promo/public/audio/voiceover.mp3"
 type = "audio"
 title = "arabic_saudi_voiceover"
+
+[[outputs]]
+id = "qNOlHGYtm1ReNKK2g1ePS"
+uri = "file://rozoz-code.tar.gz"
+type = "unspecified"
+title = "روزوز — كل الكود المصدري"
