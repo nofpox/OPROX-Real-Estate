@@ -6,8 +6,8 @@ export function Scene3() {
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase(1), 800), // UI card appears
-      setTimeout(() => setPhase(2), 1500), // Gauge fills
+      setTimeout(() => setPhase(1), 800),
+      setTimeout(() => setPhase(2), 1500),
     ];
     return () => timers.forEach((t) => clearTimeout(t));
   }, []);
@@ -21,9 +21,8 @@ export function Scene3() {
       transition={{ duration: 1.2 }}
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--color-bg-muted)_0%,_var(--color-bg-dark)_100%)] opacity-80" />
-      
-      {/* Pattern background */}
-      <motion.img 
+
+      <motion.img
         src={`${import.meta.env.BASE_URL}images/pattern.png`}
         className="absolute inset-0 w-full h-full object-cover opacity-10 mix-blend-overlay"
         animate={{ opacity: [0.05, 0.1, 0.05] }}
@@ -39,28 +38,32 @@ export function Scene3() {
       >
         {/* App Header */}
         <div className="pt-10 pb-6 px-8 text-center border-b border-primary/10">
-          <motion.h3 
-            className="text-primary font-display text-xl tracking-wide uppercase"
+          <motion.h3
+            className="text-primary text-xl tracking-wide"
+            style={{ fontFamily: "'Amiri', serif", direction: 'rtl' }}
             initial={{ opacity: 0, y: -10 }}
             animate={phase >= 1 ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
           >
-            Eligibility Analysis Engine
+            محرك تحليل الأهلية
           </motion.h3>
+          <motion.p
+            className="text-text-muted text-sm mt-1"
+            style={{ fontFamily: "'Amiri', serif", direction: 'rtl', fontSize: '0.75rem' }}
+            initial={{ opacity: 0 }}
+            animate={phase >= 1 ? { opacity: 0.6 } : { opacity: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            مدعوم بالذكاء الاصطناعي · روزوز
+          </motion.p>
         </div>
 
         {/* App Body */}
         <div className="flex-1 px-8 py-10 flex flex-col items-center justify-center gap-8">
-          
-          {/* Gauge Container */}
+
+          {/* Gauge */}
           <div className="relative w-48 h-48 flex items-center justify-center">
-            {/* Background ring */}
             <svg className="absolute inset-0 w-full h-full -rotate-90">
-              <circle
-                cx="96" cy="96" r="80"
-                stroke="currentColor" strokeWidth="8" fill="none"
-                className="text-white/5"
-              />
-              {/* Progress ring */}
+              <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="8" fill="none" className="text-white/5" />
               <motion.circle
                 cx="96" cy="96" r="80"
                 stroke="#22c55e" strokeWidth="8" fill="none"
@@ -71,9 +74,8 @@ export function Scene3() {
                 transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
               />
             </svg>
-            
             <div className="text-center">
-              <motion.div 
+              <motion.div
                 className="text-6xl font-body font-light text-text-primary leading-none"
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={phase >= 2 ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
@@ -86,24 +88,48 @@ export function Scene3() {
 
           <div className="flex flex-col items-center gap-4 w-full">
             <motion.div
-              className="bg-[#22c55e]/10 text-[#22c55e] px-4 py-1.5 rounded-full font-body text-sm font-medium tracking-wide uppercase"
+              className="bg-[#22c55e]/10 text-[#22c55e] px-4 py-1.5 rounded-full font-body text-sm font-medium tracking-wide"
+              style={{ fontFamily: "'Amiri', serif", direction: 'rtl' }}
               initial={{ opacity: 0, y: 10 }}
               animate={phase >= 2 ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
               transition={{ duration: 0.5, delay: 0.8 }}
             >
-              Recommended: Mortgage
+              التوصية: تمويل عقاري
             </motion.div>
-            
+
             <motion.p
               className="text-text-muted font-body text-sm text-center px-4"
+              style={{ fontFamily: "'Amiri', serif", direction: 'rtl' }}
               initial={{ opacity: 0 }}
               animate={phase >= 2 ? { opacity: 1 } : { opacity: 0 }}
               transition={{ duration: 0.5, delay: 1 }}
             >
-              Strong repayment profile — 27% DTI ratio
+              ملف سداد متين — نسبة دين للدخل 27%
             </motion.p>
           </div>
         </div>
+      </motion.div>
+
+      {/* Voiceover subtitle */}
+      <motion.div
+        className="absolute bottom-12 left-0 right-0 flex justify-center px-8"
+        initial={{ opacity: 0, y: 8 }}
+        animate={phase >= 2 ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+        transition={{ duration: 1, delay: 0.5 }}
+      >
+        <p
+          className="text-text-primary/80 text-[1.5vw] text-center px-6 py-2 rounded-xl"
+          style={{
+            fontFamily: "'Amiri', serif",
+            direction: 'rtl',
+            background: 'rgba(10,14,26,0.55)',
+            backdropFilter: 'blur(6px)',
+            letterSpacing: '0.03em',
+            lineHeight: '1.8',
+          }}
+        >
+          بتقنية الذكاء الاصطناعي، روزوز تحلّل أهليتك وترسم طريقك نحو عقار أحلامك
+        </p>
       </motion.div>
     </motion.div>
   );

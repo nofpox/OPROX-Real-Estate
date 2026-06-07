@@ -212,31 +212,33 @@ function HowToModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="bg-gray-900 border border-white/10 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl">
-        <h2 className="text-white font-bold text-xl mb-2">Download Promotional Film</h2>
-        <p className="text-white/60 text-sm mb-6 leading-relaxed">
-          Click <strong className="text-amber-400">Download Video</strong> and your browser will
-          ask you to share <strong className="text-white">This Tab</strong>.
-          Select it and click <strong className="text-white">Share</strong> — the film plays
-          through once automatically, then the file downloads to your device.
+        <h2 className="text-white font-bold text-xl mb-2" style={{ fontFamily: "'Amiri', serif", direction: 'rtl' }}>تحميل الفيلم الترويجي</h2>
+        <p className="text-white/60 text-sm mb-6 leading-relaxed" style={{ fontFamily: "'Amiri', serif", direction: 'rtl', lineHeight: 1.8 }}>
+          اضغط على <strong className="text-amber-400">تحميل الفيلم</strong> وسيطلب منك المتصفح
+          مشاركة <strong className="text-white">هذه التبويبة</strong>.
+          اخترها واضغط <strong className="text-white">مشاركة</strong> — سيُشغَّل الفيلم تلقائياً
+          ثم يُحفظ الملف على جهازك.
         </p>
         <div className="bg-white/5 rounded-xl p-4 mb-6 space-y-2 text-sm text-white/50">
-          <div className="flex gap-2"><span className="text-amber-400">1.</span><span>Click <em>Download Video</em> below</span></div>
-          <div className="flex gap-2"><span className="text-amber-400">2.</span><span>Choose <em>This Tab</em> in the browser dialog</span></div>
-          <div className="flex gap-2"><span className="text-amber-400">3.</span><span>Click <em>Share</em></span></div>
-          <div className="flex gap-2"><span className="text-amber-400">4.</span><span>Film plays once — file downloads automatically</span></div>
+          <div className="flex gap-2" style={{ direction: 'rtl', fontFamily: "'Amiri', serif" }}><span className="text-amber-400">١.</span><span>اضغط على <em>تحميل الفيلم</em></span></div>
+          <div className="flex gap-2" style={{ direction: 'rtl', fontFamily: "'Amiri', serif" }}><span className="text-amber-400">٢.</span><span>اختر <em>هذه التبويبة</em> من نافذة المتصفح</span></div>
+          <div className="flex gap-2" style={{ direction: 'rtl', fontFamily: "'Amiri', serif" }}><span className="text-amber-400">٣.</span><span>اضغط <em>مشاركة</em></span></div>
+          <div className="flex gap-2" style={{ direction: 'rtl', fontFamily: "'Amiri', serif" }}><span className="text-amber-400">٤.</span><span>يُشغَّل الفيلم مرةً واحدة ثم يُحمَّل تلقائياً</span></div>
         </div>
         <div className="flex gap-3">
           <button
             onClick={onClose}
             className="flex-1 py-3 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 transition-colors text-sm"
+            style={{ fontFamily: "'Amiri', serif" }}
           >
-            Cancel
+            إلغاء
           </button>
           <button
             onClick={onClose}
             className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-900 font-semibold transition-colors text-sm"
+            style={{ fontFamily: "'Amiri', serif" }}
           >
-            Got it
+            فهمت
           </button>
         </div>
       </div>
@@ -339,7 +341,7 @@ export default function VideoWithControls() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'rkz-promotional-film.webm';
+        a.download = 'rozoz-promotional-film.webm';
         a.click();
         URL.revokeObjectURL(url);
         setRecordState('done');

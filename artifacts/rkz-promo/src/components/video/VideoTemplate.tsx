@@ -3,17 +3,20 @@ import { useEffect, useRef } from 'react';
 import { useVideoPlayer } from '@/lib/video';
 import { Scene1 } from './video_scenes/Scene1';
 import { Scene2 } from './video_scenes/Scene2';
+import { Scene3 } from './video_scenes/Scene3';
 import { Scene4 } from './video_scenes/Scene4';
 
 export const SCENE_DURATIONS: Record<string, number> = {
-  atmosphere_desert: 7000,
-  atmosphere_city:   7000,
-  brand_close:       7000,
+  atmosphere_desert: 8000,
+  atmosphere_city:   8000,
+  ai_engine:         7000,
+  brand_close:       8000,
 };
 
 const SCENE_COMPONENTS: Record<string, React.ComponentType> = {
   atmosphere_desert: Scene1,
   atmosphere_city:   Scene2,
+  ai_engine:         Scene3,
   brand_close:       Scene4,
 };
 
@@ -54,7 +57,7 @@ export default function VideoTemplate({
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.volume = 0.45;
+    audio.volume = 0.42;
     const targetTime = SCENE_START_SEC[baseSceneKey] ?? 0;
     if (Math.abs(audio.currentTime - targetTime) > AUDIO_SEEK_EPSILON_SEC) {
       audio.currentTime = targetTime;
@@ -67,12 +70,13 @@ export default function VideoTemplate({
       className="w-full h-screen overflow-hidden relative"
       style={{ backgroundColor: 'var(--color-bg-dark)' }}
     >
+      {/* Scene-transition gold line */}
       <motion.div
         className="absolute top-1/2 left-0 h-[1px] bg-primary z-50 pointer-events-none"
         animate={{
           width: ['0%', '100%', '0%', '100%'][sceneIndex % 4],
           left: ['0%', '0%', '100%', '0%'][sceneIndex % 4],
-          opacity: sceneIndex === 2 ? 0 : 0.4,
+          opacity: sceneIndex === 3 ? 0 : 0.4,
         }}
         transition={{ duration: 2, ease: 'easeInOut' }}
       />
@@ -81,11 +85,13 @@ export default function VideoTemplate({
         {SceneComponent && <SceneComponent key={currentSceneKey} />}
       </AnimatePresence>
 
+      {/* Saudi Ardah background music */}
       <audio
         ref={audioRef}
         src={`${import.meta.env.BASE_URL}audio/bg_music.mp3`}
         preload="auto"
         autoPlay
+        loop
         muted={muted}
       />
     </div>
