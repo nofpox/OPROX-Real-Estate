@@ -94,48 +94,6 @@ export default function VideoTemplate({
         </p>
       </motion.div>
 
-      {/* ── ALWAYS-ON BRAND STRIP — BOTTOM: ROZOZ ────────────────────────── */}
-      {/* Mirrored placement at the bottom edge. Latin, same golden tone.     */}
-      <motion.div
-        className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-6 pointer-events-none"
-        style={{ zIndex: 20 }}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.2 }}
-      >
-        {/* Dark band */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 60%, transparent 100%)',
-            height: '180px',
-          }}
-        />
-        {/* ROZOZ — Latin, large, golden */}
-        <p
-          className="relative"
-          style={{
-            fontFamily: "'Cinzel', 'Cormorant Garamond', serif",
-            fontSize: 'clamp(2rem, 4.5vw, 4rem)',
-            color: '#E8C84A',
-            textShadow: '0 2px 4px rgba(0,0,0,0.95), 0 0 40px rgba(232,200,74,0.8), 0 0 80px rgba(232,200,74,0.4)',
-            letterSpacing: '0.55em',
-            fontWeight: 600,
-          }}
-        >
-          ROZOZ
-        </p>
-        {/* Thin gold rule above ROZOZ for polish */}
-        <div
-          className="relative mt-1"
-          style={{
-            height: '1px',
-            width: 'clamp(80px, 14vw, 160px)',
-            background: 'linear-gradient(to right, transparent, #E8C84A, transparent)',
-            opacity: 0.7,
-          }}
-        />
-      </motion.div>
 
       {/* ── RKZ COVER (17–27.5 s) — replace tower logo with روزوز ─────────── */}
       <AnimatePresence>
@@ -207,31 +165,6 @@ export default function VideoTemplate({
         )}
       </AnimatePresence>
 
-      {/* ── OUTRO TAGLINE (30–37 s) ───────────────────────────────────────── */}
-      <AnimatePresence>
-        {showOutro && (
-          <motion.div
-            key="outro"
-            className="absolute inset-x-0 flex justify-center pointer-events-none"
-            style={{ top: '50%', transform: 'translateY(-50%)', zIndex: 18 }}
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.1 }}
-          >
-            <p style={{
-              fontFamily: "'Amiri', serif",
-              fontSize: 'clamp(1.1rem, 2.6vw, 2.4rem)',
-              color: 'rgba(245,240,232,0.9)',
-              direction: 'rtl',
-              textShadow: '0 2px 8px rgba(0,0,0,0.95)',
-              letterSpacing: '0.04em',
-            }}>
-              حمّل تطبيق روزوز الآن
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ── SAUDI ARDAH MUSIC ─────────────────────────────────────────────── */}
       <audio
