@@ -307,6 +307,17 @@ export default function LoginScreen() {
       fontFamily:      "Inter_500Medium",
       fontSize:        17,
     },
+    emailBox: {
+      backgroundColor: "rgba(255,255,255,0.08)",
+      borderRadius:    12,
+      paddingHorizontal: 16,
+      height:          56,
+      borderWidth:     1,
+      borderColor:     "rgba(255,255,255,0.15)",
+      color:           "#FFFFFF",
+      fontFamily:      "Inter_500Medium",
+      fontSize:        17,
+    },
     btn: {
       backgroundColor: colors.gold,
       borderRadius:    14,
@@ -454,7 +465,7 @@ export default function LoginScreen() {
 
               <Text style={[S.label, { marginTop: 16 }]}>{t.login.emailLabel}</Text>
               <TextInput
-                style={S.inputBox}
+                style={S.emailBox}
                 value={email}
                 onChangeText={(v) => { setEmail(v); setError(""); }}
                 placeholder={t.login.emailPlaceholder}
@@ -462,6 +473,7 @@ export default function LoginScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                multiline={false}
                 returnKeyType="done"
                 onSubmitEditing={handleSendOtp}
                 textAlign={isAr ? "right" : "left"}

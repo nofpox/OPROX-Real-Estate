@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -360,7 +361,37 @@ export default function SettingsScreen() {
               />
             </View>
             <View style={S.divider} />
-            <Pressable style={S.row}>
+            <Pressable
+              style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
+              onPress={async () => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                if (Platform.OS === "web") {
+                  await WebBrowser.openBrowserAsync(
+                    "https://property-dashboard-nofabark.replit.app/realestate/contact",
+                    { presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET, toolbarColor: "#0A1628", controlsColor: "#D4A843" }
+                  );
+                } else {
+                  Alert.alert(
+                    isAr ? "الدعم والمساعدة" : "Support & Help",
+                    isAr ? "تواصل مع فريق الدعم" : "Contact our support team",
+                    [
+                      {
+                        text: isAr ? "إرسال بريد إلكتروني" : "Send Email",
+                        onPress: () => void Linking.openURL("mailto:support@rkz-solutions.com"),
+                      },
+                      {
+                        text: isAr ? "زيارة صفحة المساعدة" : "Visit Help Page",
+                        onPress: () => void WebBrowser.openBrowserAsync(
+                          "https://property-dashboard-nofabark.replit.app/realestate/contact",
+                          { toolbarColor: "#0A1628", controlsColor: "#D4A843" }
+                        ),
+                      },
+                      { text: isAr ? "إلغاء" : "Cancel", style: "cancel" },
+                    ]
+                  );
+                }
+              }}
+            >
               <View style={[S.iconBox, { backgroundColor: "#F0FDF4" }]}>
                 <MaterialIcons name="support-agent" size={20} color="#16A34A" />
               </View>

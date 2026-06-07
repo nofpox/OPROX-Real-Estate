@@ -61,6 +61,7 @@ export default function MyRequestsScreen() {
 
   const [activeTab,  setActiveTab]  = useState<TabKey>("requests");
   const [requests,   setRequests]   = useState<NegotiationRequest[]>([]);
+  const [sentIds,    setSentIds]    = useState<Set<number>>(new Set());
   const [refreshing, setRefreshing] = useState(false);
 
   const topPad    = insets.top    + (Platform.OS === "web" ? 67  : 0);
@@ -85,6 +86,7 @@ export default function MyRequestsScreen() {
 
   const requestService = useCallback(async (provider: ServiceProvider) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSentIds(prev => { const s = new Set(prev); s.add(provider.id); return s; });
     try {
       const raw    = await AsyncStorage.getItem(ADMIN_EVENTS_KEY);
       const events = raw ? JSON.parse(raw) : [];
@@ -96,12 +98,14 @@ export default function MyRequestsScreen() {
       });
       await AsyncStorage.setItem(ADMIN_EVENTS_KEY, JSON.stringify(events));
     } catch {}
-    Alert.alert(
-      isAr ? "تم إرسال الطلب" : "Request Sent",
-      isAr
-        ? "تم استلام طلبك، سيتم التواصل معك قريباً."
-        : "Your request has been received. We will contact you shortly.",
-    );
+    if (Platform.OS !== "web") {
+      Alert.alert(
+        isAr ? "تم إرسال الطلب" : "Request Sent",
+        isAr
+          ? "تم استلام طلبك، سيتم التواصل معك قريباً."
+          : "Your request has been received. We will contact you shortly.",
+      );
+    }
   }, [isAr]);
 
   const s = styles(colors, isAr, topPad, bottomPad);
@@ -218,11 +222,22 @@ export default function MyRequestsScreen() {
                 <Text style={[s.provSpec, isAr && { textAlign: "right" }]}>{item.specialty}</Text>
               </View>
               <Pressable
-                onPress={() => void requestService(item)}
-                style={({ pressed }) => [s.reqBtn, pressed && { opacity: 0.75 }]}
+                onPress={() => { if (!sentIds.has(item.id)) void requestService(item); }}
+                disabled={sentIds.has(item.id)}
+                style={({ pressed }) => [
+                  s.reqBtn,
+                  sentIds.has(item.id) && s.reqBtnSent,
+                  pressed && !sentIds.has(item.id) && { opacity: 0.75 },
+                ]}
               >
-                <MaterialIcons name="send" size={15} color="#0A1628" />
-                <Text style={s.reqBtnText}>{isAr ? "طلب" : "Request"}</Text>
+                <MaterialIcons
+                  name={sentIds.has(item.id) ? "check" : "send"}
+                  size={15}
+                  color="#0A1628"
+                />
+                <Text style={s.reqBtnText}>
+                  {sentIds.has(item.id) ? (isAr ? "تم" : "Sent") : (isAr ? "طلب" : "Request")}
+                </Text>
               </Pressable>
             </View>
           )}
@@ -394,6 +409,9 @@ function styles(
       paddingHorizontal: 12,
       paddingVertical:   8,
       borderRadius:    10,
+    },
+    reqBtnSent: {
+      backgroundColor: "#16A34A",
     },
     reqBtnText: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#0A1628" },
   });
