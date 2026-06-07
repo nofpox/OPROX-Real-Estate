@@ -8,13 +8,13 @@ import { logger } from "../lib/logger.js";
 const router = Router();
 
 const rkzResend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const SENDER    = process.env.SENDER_EMAIL ?? "RKZ <onboarding@resend.dev>";
+const SENDER    = process.env.SENDER_EMAIL ?? "Rozoz <onboarding@resend.dev>";
 
 logger.info(
   { sender: SENDER, usingTestSender: !process.env.SENDER_EMAIL },
   !process.env.SENDER_EMAIL
-    ? "RKZ Resend: SENDER_EMAIL not set — using onboarding@resend.dev (test mode: delivers only to Resend account owner)"
-    : "RKZ Resend: using custom SENDER_EMAIL domain"
+    ? "Rozoz Resend: SENDER_EMAIL not set — using onboarding@resend.dev (test mode: delivers only to Resend account owner)"
+    : "Rozoz Resend: using custom SENDER_EMAIL domain"
 );
 
 /**
@@ -35,43 +35,43 @@ async function rkzResendSend(
       subject: payload.subject,
       htmlPreview: payload.html.slice(0, 300).replace(/\s+/g, " ").trim(),
     },
-    `RKZ RESEND PRE-SEND [${label}]`
+    `Rozoz RESEND PRE-SEND [${label}]`
   );
   // ─────────────────────────────────────────────────────────────────────────
   const { data, error } = await rkzResend.emails.send(payload);
   if (error) {
     logger.error(
       { label, to: payload.to, from: payload.from, resendStatus: (error as any).statusCode, resendError: error.message },
-      `RKZ RESEND ERROR [${label}]: ${error.message}`
+      `Rozoz RESEND ERROR [${label}]: ${error.message}`
     );
     throw new Error(`Resend delivery failed (${label}): ${error.message}`);
   }
   logger.info({ label, to: payload.to, emailId: (data as any)?.id }, `rkz email dispatched: ${label}`);
 }
 
-/** Send a bilingual welcome email to a brand-new RKZ user on first registration. */
+/** Send a bilingual welcome email to a brand-new Rozoz user on first registration. */
 async function sendRkzWelcomeEmail(to: string, name: string | null): Promise<void> {
   if (!rkzResend) return;
   const greeting = name ? name : to.split("@")[0];
   await rkzResendSend({
     from:    SENDER,
     to:      [to],
-    subject: "Welcome to RKZ — رمز التحقق | مرحباً بك في RKZ",
+    subject: "Welcome to Rozoz — رمز التحقق | مرحباً بك في Rozoz",
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
         <!-- Header -->
         <div style="background:#0A1628;padding:22px 28px;display:flex;align-items:center;gap:12px">
           <div style="width:38px;height:38px;background:#D4A843;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏠</div>
           <div>
-            <p style="margin:0;font-size:18px;font-weight:800;color:#fff;letter-spacing:2px">RKZ</p>
+            <p style="margin:0;font-size:18px;font-weight:800;color:#fff;letter-spacing:2px">Rozoz</p>
             <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.5)">محرك النشر العقاري الفوري</p>
           </div>
         </div>
         <!-- Body EN -->
         <div style="padding:28px">
-          <h2 style="margin:0 0 10px;font-size:18px;font-weight:700;color:#111">Welcome to RKZ, ${greeting}! 🎉</h2>
+          <h2 style="margin:0 0 10px;font-size:18px;font-weight:700;color:#111">Welcome to Rozoz, ${greeting}! 🎉</h2>
           <p style="margin:0 0 18px;color:#555;font-size:14px;line-height:1.7">
-            Your RKZ account has been activated. You now have access to Saudi Arabia's instant
+            Your Rozoz account has been activated. You now have access to Saudi Arabia's instant
             property publishing engine — browse listings, submit inquiries, and manage your property search all in one place.
           </p>
           <div style="background:#f9f6ee;border:1px solid #D4A843;border-radius:8px;padding:14px 20px;margin:0 0 18px">
@@ -79,16 +79,16 @@ async function sendRkzWelcomeEmail(to: string, name: string | null): Promise<voi
             <p style="margin:0;font-size:15px;font-weight:600;color:#111;font-family:monospace">${to}</p>
           </div>
           <p style="margin:0 0 24px;color:#555;font-size:13px;line-height:1.6">
-            To sign in next time, simply open the RKZ app and enter your phone number and email — we'll send you a fresh verification code instantly.
+            To sign in next time, simply open the Rozoz app and enter your phone number and email — we'll send you a fresh verification code instantly.
           </p>
           <hr style="border:none;border-top:1px solid #eee;margin:0 0 24px"/>
           <!-- AR section -->
-          <h2 style="margin:0 0 10px;font-size:17px;font-weight:700;color:#111;direction:rtl;text-align:right">مرحباً بك في RKZ، ${greeting}! 🎉</h2>
+          <h2 style="margin:0 0 10px;font-size:17px;font-weight:700;color:#111;direction:rtl;text-align:right">مرحباً بك في Rozoz، ${greeting}! 🎉</h2>
           <p style="margin:0 0 16px;color:#555;font-size:13px;line-height:1.7;direction:rtl;text-align:right">
-            تم تفعيل حسابك في RKZ. يمكنك الآن تصفح العقارات وتقديم الاستفسارات وإدارة بحثك العقاري بكل سهولة.
+            تم تفعيل حسابك في Rozoz. يمكنك الآن تصفح العقارات وتقديم الاستفسارات وإدارة بحثك العقاري بكل سهولة.
           </p>
           <p style="margin:0 0 6px;font-size:13px;line-height:1.6;direction:rtl;text-align:right;color:#555">
-            لتسجيل الدخول في المرة القادمة، افتح تطبيق RKZ وأدخل رقم هاتفك وبريدك الإلكتروني — سنرسل لك رمز تحقق جديداً فوراً.
+            لتسجيل الدخول في المرة القادمة، افتح تطبيق Rozoz وأدخل رقم هاتفك وبريدك الإلكتروني — سنرسل لك رمز تحقق جديداً فوراً.
           </p>
           <p style="margin:24px 0 0;color:#aaa;font-size:11px;text-align:center;line-height:1.6">
             If you did not create this account, please ignore this email.<br/>
@@ -114,7 +114,7 @@ export function extractRkzToken(req: { headers: Record<string, string | string[]
 // ── Auth middleware — attaches rkzUser to request ────────────────────────────
 export async function requireRkzAuth(req: any, res: any, next: any) {
   const token = extractRkzToken(req);
-  if (!token) { res.status(401).json({ error: "RKZ auth token required" }); return; }
+  if (!token) { res.status(401).json({ error: "Rozoz auth token required" }); return; }
   const [user] = await db.select().from(rkzUsersTable).where(eq(rkzUsersTable.authToken, token)).limit(1);
   if (!user) { res.status(401).json({ error: "Invalid or expired token" }); return; }
   req.rkzUser = user;
@@ -149,13 +149,13 @@ router.post("/rkz/auth/login", async (req, res) => {
       await rkzResendSend({
         from: SENDER,
         to:   [emailNorm],
-        subject: "رمز التحقق | Verification Code – RKZ",
+        subject: "رمز التحقق | Verification Code – Rozoz",
         html: `
           <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
             <div style="background:#0A1628;padding:20px 28px;display:flex;align-items:center;gap:12px">
               <div style="width:40px;height:40px;background:#D4A843;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px">🏠</div>
               <div>
-                <p style="margin:0;font-size:18px;font-weight:800;color:#fff;letter-spacing:2px">RKZ</p>
+                <p style="margin:0;font-size:18px;font-weight:800;color:#fff;letter-spacing:2px">Rozoz</p>
                 <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.5)">محرك النشر العقاري الفوري</p>
               </div>
             </div>

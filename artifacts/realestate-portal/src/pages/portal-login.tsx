@@ -12,35 +12,14 @@ import { Input } from '@/components/ui/input';
 
 type Step = 'creds' | 'otp';
 
-// Golden falcon SVG — inline brand mark (no external file dependency)
-function FalconMark({ size = 72 }: { size?: number }) {
+function RozozLogo({ className = "" }: { className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Outer glow ring */}
-      <circle cx="50" cy="50" r="46" stroke="#C9A84C" strokeWidth="1.2" strokeDasharray="4 3" opacity="0.5" />
-      {/* Body */}
-      <ellipse cx="52" cy="58" rx="18" ry="26" fill="#C9A84C" opacity="0.18" />
-      {/* Head */}
-      <circle cx="50" cy="34" r="14" fill="#C9A84C" />
-      {/* Beak */}
-      <path d="M44 38 Q40 43 44 44 L50 40Z" fill="#8B6914" />
-      {/* Eye highlight */}
-      <circle cx="46" cy="31" r="2.5" fill="#1A1200" />
-      <circle cx="45.3" cy="30.3" r="0.9" fill="white" />
-      {/* Crown feathers */}
-      <path d="M50 20 Q46 14 44 18 Q48 16 50 20Z" fill="#C9A84C" />
-      <path d="M50 20 Q52 13 55 17 Q52 15 50 20Z" fill="#C9A84C" />
-      <path d="M50 20 Q58 15 58 19 Q55 17 50 20Z" fill="#B8953A" />
-      {/* Wing left */}
-      <path d="M36 52 Q22 60 24 72 Q32 62 44 66 Q40 60 36 52Z" fill="#C9A84C" opacity="0.9" />
-      {/* Wing right */}
-      <path d="M64 52 Q78 60 76 72 Q68 62 56 66 Q60 60 64 52Z" fill="#C9A84C" opacity="0.9" />
-      {/* Chest markings */}
-      <path d="M44 52 Q50 46 56 52 Q50 80 44 52Z" fill="#B8953A" opacity="0.6" />
-      {/* Talons */}
-      <path d="M44 82 Q42 86 40 88 M44 82 Q44 87 43 90 M44 82 Q46 87 47 89" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M56 82 Q54 86 52 88 M56 82 Q56 87 55 90 M56 82 Q58 87 59 89" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
+    <img
+      src="/realestate/rozoz-logo.png"
+      alt="Rozoz"
+      className={`object-contain ${className}`}
+      onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+    />
   );
 }
 
@@ -138,19 +117,10 @@ export const PortalLogin: React.FC = () => {
 
       {/* ── Official Brand Mark ─────────────────────────────────────────────── */}
       <div className="mb-10 flex flex-col items-center gap-3">
-        <div className="relative">
-          {/* Outer pulse ring */}
-          <div className="absolute inset-0 rounded-full bg-secondary/10 animate-pulse scale-110" />
-          <FalconMark size={80} />
-        </div>
-        <div className="text-center">
-          <p className="text-white text-2xl font-bold tracking-widest" style={{ fontFamily: 'serif' }}>
-            روزوز&nbsp;|&nbsp;Rozoz
-          </p>
-          <p className="text-white/40 text-xs tracking-[0.25em] uppercase mt-1">
-            {isRtl ? 'الحلول الذكية للعقارات' : 'Smart Real Estate Solutions'}
-          </p>
-        </div>
+        <RozozLogo className="h-24 w-auto" />
+        <p className="text-white/40 text-xs tracking-[0.25em] uppercase mt-1">
+          {isRtl ? 'الحلول الذكية للعقارات' : 'Smart Real Estate Solutions'}
+        </p>
       </div>
 
       {/* ── Admin Login Card ────────────────────────────────────────────────── */}

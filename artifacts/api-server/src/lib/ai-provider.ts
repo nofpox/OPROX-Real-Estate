@@ -6,8 +6,8 @@
  * internal proprietary Replit-managed client — whose key is never stored in the DB
  * and never exposed via any API endpoint.
  *
- * This makes Grand PMS / Rkz white-label ready: licensed copies use their own AI key;
- * the internal Rkz intelligence remains a secure, private asset.
+ * This makes Grand PMS / Rozoz white-label ready: licensed copies use their own AI key;
+ * the internal Rozoz intelligence remains a secure, private asset.
  */
 
 import OpenAI from "openai";
@@ -46,7 +46,7 @@ async function loadConfig(tenantId: number): Promise<TenantAiConfig> {
  * Resolve the OpenAI-compatible client for a tenant.
  *
  * - Tenant has ai_api_key configured → custom client (their own AI subscription)
- * - No key set → internal proprietary Rkz AI (env-managed, never exposed)
+ * - No key set → internal proprietary Rozoz AI (env-managed, never exposed)
  *
  * Supports any OpenAI-compatible provider: OpenAI, Azure OpenAI, Anthropic
  * (via their compatibility layer), Gemini, Groq, Mistral, Ollama, etc.

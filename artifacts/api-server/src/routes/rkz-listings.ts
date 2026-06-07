@@ -58,7 +58,7 @@ router.get("/rkz/public/listings", async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// All routes below require RKZ auth
+// All routes below require Rozoz auth
 // ─────────────────────────────────────────────────────────────────────────────
 
 // GET /rkz/listings  — listings for the authenticated user

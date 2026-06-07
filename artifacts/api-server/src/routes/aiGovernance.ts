@@ -398,7 +398,7 @@ router.put("/ai-governance/ai-provider", async (req, res) => {
   res.json(config);
 });
 
-// DELETE /ai-governance/ai-provider  — revert to internal Rkz AI
+// DELETE /ai-governance/ai-provider  — revert to internal Rozoz AI
 router.delete("/ai-governance/ai-provider", async (req, res) => {
   const tenantId: number = (req as any).tenantId ?? 1;
   const session = (req as any).sessionUser;
@@ -415,7 +415,7 @@ router.delete("/ai-governance/ai-provider", async (req, res) => {
     actorType:   "human",
     actorId:     session?.userId,
     actorName:   session?.name ?? session?.email,
-    description: `AI provider reverted to internal Rkz AI by ${session?.name ?? "administrator"}`,
+    description: `AI provider reverted to internal Rozoz AI by ${session?.name ?? "administrator"}`,
     ipAddress:   req.ip,
   });
 

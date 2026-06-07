@@ -32,8 +32,8 @@ router.post("/debug/test-email", async (req, res) => {
     return;
   }
 
-  const from   = process.env.SENDER_EMAIL ?? "ركز للحلول الذكية <onboarding@resend.dev>";
-  const subject = "[RKZ Debug] Test email from API server";
+  const from   = process.env.SENDER_EMAIL ?? "روزوز للحلول الذكية <onboarding@resend.dev>";
+  const subject = "[Rozoz Debug] Test email from API server";
   const html    = `
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#fff;border:1px solid #e5e7eb;border-radius:8px">
       <h2 style="margin:0 0 12px;font-size:18px;color:#111">✅ Test email — server is talking to Resend</h2>

@@ -6,7 +6,7 @@ import { eq, and } from "drizzle-orm";
 
 const router = Router();
 
-const SYSTEM_PROMPT = `You are the Rkz Real Estate Analysis Engine. Do not initiate chat. Process input data and return a JSON object with exactly these three keys: eligibility_score (integer 0–100 representing buyer financial readiness), recommended_payment_method (one of: cash, mortgage, installment, lease_to_own), reasoning_summary (2–3 concise professional sentences explaining the score and recommendation, in the same language as the user input). Tone: Professional, premium, concise. Return only valid JSON — no prose, no markdown.`;
+const SYSTEM_PROMPT = `You are the Rozoz Real Estate Analysis Engine. Do not initiate chat. Process input data and return a JSON object with exactly these three keys: eligibility_score (integer 0–100 representing buyer financial readiness), recommended_payment_method (one of: cash, mortgage, installment, lease_to_own), reasoning_summary (2–3 concise professional sentences explaining the score and recommendation, in the same language as the user input). Tone: Professional, premium, concise. Return only valid JSON — no prose, no markdown.`;
 
 function extractJson(raw: string): Record<string, unknown> {
   const stripped = raw.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "").trim();
@@ -29,7 +29,7 @@ async function isAnalysisKillswitchActive(): Promise<boolean> {
 }
 
 // POST /rkz/analysis
-// Public — called from the RKZ Expo app (no PMS session required)
+// Public — called from the Rozoz Expo app (no PMS session required)
 router.post("/rkz/analysis", async (req, res) => {
   try {
     if (await isAiHalted(1)) {

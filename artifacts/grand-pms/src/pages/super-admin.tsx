@@ -525,7 +525,7 @@ function TenantConfigPanel({ tenant, onClose }: { tenant: Tenant; onClose: () =>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Main Word</Label>
-                    <Input value={logoText} onChange={(e) => { setLogoText(e.target.value); setDirty(true); }} placeholder="ركز" className="font-serif" />
+                    <Input value={logoText} onChange={(e) => { setLogoText(e.target.value); setDirty(true); }} placeholder="روزوز" className="font-serif" />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Sub Word</Label>
@@ -1018,12 +1018,12 @@ export default function SuperAdminPage() {
                     <div className="space-y-1.5">
                       <Label htmlFor="propertyName">Property Name</Label>
                       <Input id="propertyName" value={propertyName}
-                        onChange={(e) => { setPropertyName(e.target.value); setDirty(true); }} placeholder="ركز للحلول الذكية" />
+                        onChange={(e) => { setPropertyName(e.target.value); setDirty(true); }} placeholder="روزوز للحلول الذكية" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
                         <Label>Logo — Main Word</Label>
-                        <Input value={logoText} onChange={(e) => { setLogoText(e.target.value); setDirty(true); }} placeholder="ركز" className="font-serif" />
+                        <Input value={logoText} onChange={(e) => { setLogoText(e.target.value); setDirty(true); }} placeholder="روزوز" className="font-serif" />
                       </div>
                       <div className="space-y-1.5">
                         <Label>Logo — Sub Word</Label>

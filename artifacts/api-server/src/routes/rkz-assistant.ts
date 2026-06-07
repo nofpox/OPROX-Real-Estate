@@ -152,8 +152,8 @@ router.post("/rkz/assistant/chat", async (req, res) => {
       if (chatLog.length > 200) chatLog.shift();
       const isArShield = lang === "ar";
       const warning = isArShield
-        ? "عذراً، لأسباب تتعلق بالخصوصية وضمان جودة الخدمة، لا يمكن مشاركة بيانات التواصل الشخصية خارج المنصة. يُرجى الاستمرار في التواصل عبر ركز لضمان حقوقك وحماية بيانات جميع الأطراف. 🛡️"
-        : "I'm sorry — for privacy and service quality reasons, personal contact information cannot be shared outside the platform. Please continue communicating through Rkz to protect your rights and everyone's data. 🛡️";
+        ? "عذراً، لأسباب تتعلق بالخصوصية وضمان جودة الخدمة، لا يمكن مشاركة بيانات التواصل الشخصية خارج المنصة. يُرجى الاستمرار في التواصل عبر Rozoz لضمان حقوقك وحماية بيانات جميع الأطراف. 🛡️"
+        : "I'm sorry — for privacy and service quality reasons, personal contact information cannot be shared outside the platform. Please continue communicating through Rozoz to protect your rights and everyone's data. 🛡️";
       res.json({ reply: warning, blocked: true });
       return;
     }
@@ -178,7 +178,7 @@ router.post("/rkz/assistant/chat", async (req, res) => {
       : "";
 
     const systemPrompt = isAr
-      ? `أنت "مساعد ركز الذكي" — وكيل عقاري رقمي متخصص في السوق السعودي، تعمل ضمن منصة "ركز" للنشر العقاري الفوري على عقار وبيوت ووصلت و Property Finder.
+      ? `أنت "مساعد روزوز الذكي" — وكيل عقاري رقمي متخصص في السوق السعودي، تعمل ضمن منصة "Rozoz" للنشر العقاري الفوري على عقار وبيوت ووصلت و Property Finder.
 
 ${portfolioSummary}
 
@@ -193,9 +193,9 @@ ${portfolioSummary}
 • يجب أن تكون جميع ردودك باللغة العربية الفصحى دائماً — حتى لو كتب المستخدم بالإنجليزية
 • الردود مختصرة ومباشرة — أقل من 120 كلمة
 • لا تتخيل معلومات خارج نطاق العقارات السعودية
-• إذا سُئلت عن شيء خارج اختصاصك، أحل المستخدم لفريق ركز
+• إذا سُئلت عن شيء خارج اختصاصك، أحل المستخدم لفريق Rozoz
 • عندما تطرح سؤال تأهيل المستفسر حول طريقة الشراء (التمويل البنكي أو النقد أو ترتيبات أخرى)، أضف الرمز [QR] في نهاية ردّك تماماً — دون أي نص إضافي بعده`
-      : `You are "Rkz AI Assistant" — a digital real estate agent specializing in the Saudi market, operating within the "Rkz" platform for instant property publishing on Aqar, Bayut, Wasalt, and Property Finder.
+      : `You are "Rozoz AI Assistant" — a digital real estate agent specializing in the Saudi market, operating within the "Rozoz" platform for instant property publishing on Aqar, Bayut, Wasalt, and Property Finder.
 
 ${portfolioSummary}
 
@@ -210,7 +210,7 @@ Strict rules:
 • ALL responses MUST be in English — even if the user writes in Arabic
 • Responses must be concise and direct — under 120 words
 • Do not fabricate information outside Saudi real estate scope
-• If asked about something outside your expertise, refer the user to the Rkz team
+• If asked about something outside your expertise, refer the user to the Rozoz team
 • When you ask the lead qualification question about purchase method (Bank Financing, Cash, or other arrangements), append exactly [QR] at the very end of your response — with absolutely nothing after it`;
 
     const [aiClient, aiModel] = await Promise.all([resolveAiClient((req as any).tenantId ?? 1), resolveAiModel((req as any).tenantId ?? 1, "gpt-5.4")]);
@@ -404,8 +404,8 @@ Respond with valid JSON ONLY — no markdown, no extra text:
     const maybeCount = results.filter((r) => r.score === "maybe").length;
 
     const teamNotification = {
-      ar: `📊 تقرير تأهيل المستفسرين — منصة ركز\n\n🏠 العقار: ${propDetailsAr}\n👥 إجمالي المستفسرين: ${results.length}\n✅ جادون: ${seriousCount}  ⚠️ محتملون: ${maybeCount}\n\n💰 طرق الشراء المُفضّلة:\n🏦 تمويل بنكي: ${bankCount}\n💵 نقد (كاش): ${cashCount}\n🔄 طرق أخرى: ${otherCount}\n❓ غير محدد: ${unknownCount}\n\n📌 رسالة التأهيل المُرسَلة:\n"${qualificationScript.ar}"\n\nتم التحليل بواسطة مساعد ركز الذكي ✨`,
-      en: `📊 Lead Qualification Report — Rkz Platform\n\n🏠 Property: ${propDetailsEn}\n👥 Total Leads: ${results.length}\n✅ Serious: ${seriousCount}  ⚠️ Maybe: ${maybeCount}\n\n💰 Preferred Purchase Methods:\n🏦 Bank Financing: ${bankCount}\n💵 Cash Payment: ${cashCount}\n🔄 Other Methods: ${otherCount}\n❓ Not Specified: ${unknownCount}\n\n📌 Qualification Message Sent:\n"${qualificationScript.en}"\n\nAnalyzed by Rkz AI Assistant ✨`,
+      ar: `📊 تقرير تأهيل المستفسرين — منصة Rozoz\n\n🏠 العقار: ${propDetailsAr}\n👥 إجمالي المستفسرين: ${results.length}\n✅ جادون: ${seriousCount}  ⚠️ محتملون: ${maybeCount}\n\n💰 طرق الشراء المُفضّلة:\n🏦 تمويل بنكي: ${bankCount}\n💵 نقد (كاش): ${cashCount}\n🔄 طرق أخرى: ${otherCount}\n❓ غير محدد: ${unknownCount}\n\n📌 رسالة التأهيل المُرسَلة:\n"${qualificationScript.ar}"\n\nتم التحليل بواسطة مساعد روزوز الذكي ✨`,
+      en: `📊 Lead Qualification Report — Rozoz Platform\n\n🏠 Property: ${propDetailsEn}\n👥 Total Leads: ${results.length}\n✅ Serious: ${seriousCount}  ⚠️ Maybe: ${maybeCount}\n\n💰 Preferred Purchase Methods:\n🏦 Bank Financing: ${bankCount}\n💵 Cash Payment: ${cashCount}\n🔄 Other Methods: ${otherCount}\n❓ Not Specified: ${unknownCount}\n\n📌 Qualification Message Sent:\n"${qualificationScript.en}"\n\nAnalyzed by Rozoz AI Assistant ✨`,
     };
 
     res.json({ results, qualificationScript, teamNotification });
@@ -518,7 +518,7 @@ router.post("/rkz/assistant/report", async (req, res) => {
       .join("\n");
 
     const prompt = isAr
-      ? `أنت محلل عقاري استراتيجي لمنصة ركز السعودية. قدّم تقريراً تحليلياً دقيقاً عن محفظة العقارات التالية:
+      ? `أنت محلل عقاري استراتيجي لمنصة Rozoz السعودية. قدّم تقريراً تحليلياً دقيقاً عن محفظة العقارات التالية:
 
 ${portfolioText}
 
@@ -531,7 +531,7 @@ ${portfolioText}
 }
 
 حيث score مؤشر صحة المحفظة من 0 إلى 100 بناءً على: نسبة النشر، عدد المشاهدات، نسبة التحويل للمستفسرين، وتنوع المنصات.`
-      : `You are a strategic real estate analyst for the Saudi Rkz platform. Provide a precise analytical report on the following property portfolio:
+      : `You are a strategic real estate analyst for the Saudi Rozoz platform. Provide a precise analytical report on the following property portfolio:
 
 ${portfolioText}
 

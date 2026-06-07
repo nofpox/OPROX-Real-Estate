@@ -300,7 +300,7 @@ export const ListingsBrowser: React.FC = () => {
         )}
       </div>
 
-      {/* ── Rkz App Listings ─────────────────────────────────────────────── */}
+      {/* ── Rozoz App Listings ─────────────────────────────────────────────── */}
       {(rkzLoading || rkzListings.length > 0) && (
         <div className="mt-14">
           <div className={`flex items-center gap-3 mb-6 ${isRtl ? 'flex-row-reverse' : ''}`}>

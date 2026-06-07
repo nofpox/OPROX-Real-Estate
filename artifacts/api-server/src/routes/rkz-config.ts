@@ -51,7 +51,7 @@ export interface RkzConfig {
 
 const DEFAULT_CONFIG: RkzConfig = {
   branding: {
-    appName: "RKZ",
+    appName: "Rozoz",
     logoUrl: null,
     primaryColor: "#D4A843",
     navyColor: "#0A1628",
@@ -60,8 +60,8 @@ const DEFAULT_CONFIG: RkzConfig = {
   content: {
     welcomeTaglineAr: "محرك النشر العقاري الفوري",
     welcomeTaglineEn: "Instant Real Estate Publishing Engine",
-    welcomeHeadlineAr: 'أهلاً بك في "ركز".. نحن وكيلك الحصري!',
-    welcomeHeadlineEn: 'Welcome to "Rkz" — Your Exclusive Digital Agent!',
+    welcomeHeadlineAr: 'أهلاً بك في "روزوز".. نحن وكيلك الحصري!',
+    welcomeHeadlineEn: 'Welcome to "Rozoz" — Your Exclusive Digital Agent!',
     welcomeCtaAr: "لنبدأ الآن",
     welcomeCtaEn: "Let's Get Started",
     features: [

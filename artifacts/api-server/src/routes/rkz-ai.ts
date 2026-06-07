@@ -34,7 +34,7 @@ function extractJson(raw: string): Record<string, unknown> {
 }
 
 // POST /rkz/suggest-price
-// Public — called from the RKZ Expo prototype (no PMS session)
+// Public — called from the Rozoz Expo app (no PMS session)
 router.post("/rkz/suggest-price", async (req, res) => {
   try {
     if (await isAiHalted(1)) {
@@ -90,7 +90,7 @@ router.post("/rkz/suggest-price", async (req, res) => {
 });
 
 // POST /rkz/generate-description
-// Public — called from the RKZ Expo prototype (no PMS session)
+// Public — called from the Rozoz Expo app (no PMS session)
 router.post("/rkz/generate-description", async (req, res) => {
   try {
     if (await isAiHalted(1)) {
