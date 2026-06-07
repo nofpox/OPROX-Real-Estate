@@ -55,8 +55,11 @@ function Router() {
 }
 
 function App() {
+  // Never show the marketing welcome screen on admin portal paths
+  const isPortalPath = window.location.pathname.includes("/portal");
+
   const [showWelcome, setShowWelcome] = useState(
-    () => !localStorage.getItem("rkz_welcomed"),
+    () => !isPortalPath && !localStorage.getItem("rkz_welcomed"),
   );
 
   function handleWelcomeDone() {

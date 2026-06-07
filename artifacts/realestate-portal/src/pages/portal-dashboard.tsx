@@ -246,7 +246,13 @@ export const PortalDashboard: React.FC = () => {
     navigate('/portal');
   };
 
-  // ── Loading state ─────────────────────────────────────────────────────────────
+  // ── Auth guard ────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/portal');
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -254,7 +260,13 @@ export const PortalDashboard: React.FC = () => {
       </div>
     );
   }
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   // ── Label helpers ─────────────────────────────────────────────────────────────
   const L = {

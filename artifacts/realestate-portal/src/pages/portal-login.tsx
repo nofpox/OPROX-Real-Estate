@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'wouter';
 import { usePortalAuth } from '@/lib/portal-auth';
 import { useLanguage } from '@/lib/i18n';
 import {
@@ -12,9 +13,9 @@ import { Input } from '@/components/ui/input';
 type Step = 'creds' | 'otp';
 
 export const PortalLogin: React.FC = () => {
-  const { isAuthenticated, isLoading: authLoading } = usePortalAuth();
+  const { isAuthenticated, isLoading: authLoading, setUserFromLoginResponse } = usePortalAuth();
   const { isRtl } = useLanguage();
-  const DASH = (import.meta.env.BASE_URL ?? '/').replace(/\/$/, '') + '/portal/dashboard';
+  const [, navigate] = useLocation();
 
   const [step,         setStep]         = useState<Step>('creds');
   const [identifier,   setIdentifier]   = useState('');
@@ -26,11 +27,12 @@ export const PortalLogin: React.FC = () => {
   const [error,        setError]        = useState('');
   const [loading,      setLoading]      = useState(false);
 
+  // Once authenticated, navigate directly to dashboard (no hard reload)
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
-      window.location.replace(DASH);
+      navigate('/portal/dashboard');
     }
-  }, [isAuthenticated, authLoading, DASH]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleStep1 = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,11 +74,15 @@ export const PortalLogin: React.FC = () => {
         setError(String(data.error ?? (isRtl ? 'رمز غير صحيح' : 'Invalid code')));
         setLoading(false); return;
       }
-      if (data.user) window.location.replace(DASH);
+      if (data.user) {
+        // Update auth context state directly — no hard page reload
+        setUserFromLoginResponse(data.user as Record<string, unknown>);
+        // useEffect above will trigger the navigate once isAuthenticated becomes true
+      }
     } catch {
       setError(isRtl ? 'خطأ في الاتصال. يرجى المحاولة مرة أخرى.' : 'Connection error. Please try again.');
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   if (authLoading) {

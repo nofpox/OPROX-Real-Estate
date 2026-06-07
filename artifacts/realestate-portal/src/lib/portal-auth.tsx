@@ -6,6 +6,7 @@ interface PortalAuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (credentials: AuthCredentials) => Promise<AuthUser | null>;
+  setUserFromLoginResponse: (userData: Record<string, unknown>) => void;
   logout: () => Promise<void>;
 }
 
@@ -25,6 +26,7 @@ const PortalAuthContext = createContext<PortalAuthContextType>({
   isLoading: true,
   isAuthenticated: false,
   login: async () => null,
+  setUserFromLoginResponse: () => {},
   logout: async () => {},
 });
 
@@ -38,13 +40,9 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   useEffect(() => {
     if (isDev) return;
-    // Only update user state when the query has a definitive result.
-    // During loading, or during a transient network/server error, leave the
-    // current user state intact so the dashboard doesn't flicker to the login page.
     if (isMeSuccess) {
       setUser(meData ? (meData as unknown as AuthUser) : null);
     } else if (isMeError) {
-      // Session genuinely expired (server confirmed 401) — clear user.
       setUser(null);
     }
   }, [meData, isMeSuccess, isMeError, isDev]);
@@ -63,6 +61,22 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return null;
   };
 
+  // Call this after a successful custom 2-step login to update state immediately
+  // without requiring a hard page reload or waiting for useGetMe to refetch.
+  const setUserFromLoginResponse = (userData: Record<string, unknown>) => {
+    const authedUser: AuthUser = {
+      id:                 userData.id               as number,
+      username:           userData.username          as string,
+      displayName:        (userData.displayName ?? userData.username) as string,
+      email:              (userData.email ?? null)   as string | null,
+      role:               (userData.role ?? 'admin') as string,
+      isActive:           true,
+      createdAt:          new Date().toISOString(),
+      mustChangePassword: false,
+    } as unknown as AuthUser;
+    setUser(authedUser);
+  };
+
   const logout = async () => {
     if (isDev) return;
     await logoutMutation.mutateAsync();
@@ -76,6 +90,7 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         isLoading: isDev ? false : (isMeLoading || loginMutation.isPending || logoutMutation.isPending),
         isAuthenticated: isDev ? true : !!user,
         login,
+        setUserFromLoginResponse,
         logout,
       }}
     >
