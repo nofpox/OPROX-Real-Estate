@@ -20,7 +20,7 @@ import { ADMIN_EVENTS_KEY } from "@/hooks/useAIAssistant";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 import { useConfig } from "@/context/DynamicConfig";
-import HeatmapMapView, { HeatCell, HeatMetric } from "./HeatmapMapView";
+import HeatmapMapView, { HeatCell, HeatMetric } from "@/components/HeatmapMapView";
 
 const NEGOTIATION_KEY    = "rkz_negotiation_requests";
 const DISCOVERY_FILTER_KEY = "rkz_discovery_filter";

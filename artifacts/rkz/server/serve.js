@@ -5,6 +5,7 @@
  * - Browser requests (no expo-platform header) → SPA: serve dist/index.html
  * - Native requests with expo-platform header → served from static-build/ manifests
  * - Static assets (JS, CSS, fonts, images) → served directly from dist/
+ * - POST /error-log → captures browser-side JS errors into server stdout
  */
 
 const http = require("http");
@@ -32,6 +33,17 @@ const MIME_TYPES = {
   ".otf": "font/otf",
   ".map": "application/json",
 };
+
+// Injected into every index.html response — captures JS errors and sends
+// them to our /error-log endpoint so they appear in the deployment logs.
+const errorCaptureScript = `<script>
+(function(){
+  var _base="${basePath}";
+  function send(d){try{var x=new XMLHttpRequest();x.open("POST",_base+"/error-log",true);x.setRequestHeader("Content-Type","application/json");x.send(JSON.stringify(d));}catch(e){}}
+  window.addEventListener("error",function(e){send({t:"error",msg:e.message,src:e.filename,line:e.lineno,col:e.colno,stack:e.error&&e.error.stack});});
+  window.addEventListener("unhandledrejection",function(e){send({t:"rejection",msg:String(e.reason),stack:e.reason&&e.reason.stack});});
+})();
+</script>`;
 
 function serveManifest(platform, res) {
   const manifestPath = path.join(STATIC_ROOT, platform, "manifest.json");
@@ -62,16 +74,25 @@ function serveFile(root, urlPath, res, fallbackToIndex = false) {
   if (fs.existsSync(filePath) && !fs.statSync(filePath).isDirectory()) {
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || "application/octet-stream";
-    res.writeHead(200, { "content-type": contentType });
-    res.end(fs.readFileSync(filePath));
+    if (ext === ".html") {
+      let html = fs.readFileSync(filePath, "utf-8");
+      html = html.replace("</head>", errorCaptureScript + "</head>");
+      res.writeHead(200, { "content-type": contentType });
+      res.end(html);
+    } else {
+      res.writeHead(200, { "content-type": contentType });
+      res.end(fs.readFileSync(filePath));
+    }
     return;
   }
 
   if (fallbackToIndex) {
     const indexPath = path.join(root, "index.html");
     if (fs.existsSync(indexPath)) {
+      let html = fs.readFileSync(indexPath, "utf-8");
+      html = html.replace("</head>", errorCaptureScript + "</head>");
       res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-      res.end(fs.readFileSync(indexPath));
+      res.end(html);
       return;
     }
   }
@@ -86,6 +107,30 @@ const server = http.createServer((req, res) => {
 
   if (basePath && pathname.startsWith(basePath)) {
     pathname = pathname.slice(basePath.length) || "/";
+  }
+
+  // ── Error log endpoint ─────────────────────────────────────────────────────
+  if (req.method === "POST" && pathname === "/error-log") {
+    let body = "";
+    req.on("data", (chunk) => { body += chunk; });
+    req.on("end", () => {
+      try {
+        const d = JSON.parse(body);
+        console.error("[BROWSER-ERROR]", d.t, "|", d.msg, "|", d.src, "line", d.line, "|", d.stack || "");
+      } catch {
+        console.error("[BROWSER-ERROR raw]", body.slice(0, 500));
+      }
+    });
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  // ── Health check ───────────────────────────────────────────────────────────
+  if (pathname === "/healthz" || pathname === "/status") {
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify({ ok: true }));
+    return;
   }
 
   const platform = req.headers["expo-platform"];
