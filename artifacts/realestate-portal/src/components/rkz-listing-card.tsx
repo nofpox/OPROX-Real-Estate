@@ -101,7 +101,7 @@ export const RkzListingCard: React.FC<Props> = ({ listing }) => {
         <div className={`absolute top-3 ${isRtl ? 'left-3' : 'right-3'}`}>
           <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-full bg-secondary/90 text-secondary-foreground shadow-sm">
             <Smartphone className="h-3 w-3" />
-            {isRtl ? 'تطبيق ركز' : 'Rkz App'}
+            {isRtl ? 'تطبيق روزوز' : 'Rozoz App'}
           </span>
         </div>
 

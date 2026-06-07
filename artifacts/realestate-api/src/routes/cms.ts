@@ -74,14 +74,14 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
   },
   announcements: [],
   about: {
-    titleEn: "About RKZ Smart Solutions",
-    titleAr: "عن ركز للحلول الذكية",
-    body: "RKZ Smart Solutions is a leading property management company in Saudi Arabia.",
+    titleEn: "About Rozoz Smart Solutions",
+    titleAr: "عن روزوز للحلول الذكية",
+    body: "Rozoz Smart Solutions is a leading property management company in Saudi Arabia.",
     imageUrl: "",
   },
   branding: {
-    companyNameEn: "RKZ Smart Solutions",
-    companyNameAr: "ركز للحلول الذكية",
+    companyNameEn: "Rozoz Smart Solutions",
+    companyNameAr: "روزوز للحلول الذكية",
     taglineEn: "Premium Property Management",
     taglineAr: "إدارة عقارات متميزة",
     logoUrl: "",
@@ -117,7 +117,7 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     pageTitleAr: "العقارات",
     subtitleEn: "Discover our curated selection of properties across Saudi Arabia.",
     subtitleAr: "اكتشف مجموعة عقاراتنا المختارة في المملكة العربية السعودية.",
-    metaDescription: "Browse properties managed by RKZ Smart Solutions.",
+    metaDescription: "Browse properties managed by Rozoz Smart Solutions.",
   },
   nav: [
     { href: "/",         labelEn: "Home",       labelAr: "الرئيسية" },
@@ -138,9 +138,9 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     buttonAr: "تواصل معنا",
   },
   leadEmail: {
-    subject: "Welcome to RKZ – Your Visit Confirmation",
-    intro: "Thank you for your interest in RKZ Smart Solutions. We are pleased to confirm that we have received your request.\n\nOur team is currently reviewing your inquiry and will contact you shortly.",
-    mapsUrl: "https://www.google.com/maps/search/RKZ+Smart+Solutions+Riyadh+Saudi+Arabia",
+    subject: "Welcome to Rozoz – Your Visit Confirmation",
+    intro: "Thank you for your interest in Rozoz Smart Solutions. We are pleased to confirm that we have received your request.\n\nOur team is currently reviewing your inquiry and will contact you shortly.",
+    mapsUrl: "https://www.google.com/maps/search/Rozoz+Smart+Solutions+Riyadh+Saudi+Arabia",
     bccEmail: "",
   },
 };

@@ -307,7 +307,7 @@ export const ListingsBrowser: React.FC = () => {
             <div className="flex items-center gap-2 bg-secondary/10 border border-secondary/20 text-secondary px-3 py-1.5 rounded-full">
               <Smartphone className="h-4 w-4" />
               <span className="text-sm font-semibold">
-                {isRtl ? 'عقارات من تطبيق ركز' : 'Listings from Rkz App'}
+                {isRtl ? 'عقارات من تطبيق روزوز' : 'Listings from Rozoz App'}
               </span>
             </div>
             <div className="h-px flex-1 bg-border" />
@@ -335,8 +335,8 @@ export const ListingsBrowser: React.FC = () => {
 
           <p className="text-xs text-muted-foreground text-center mt-6">
             {isRtl
-              ? 'هذه العقارات مدرجة مباشرةً من تطبيق ركز للجوال'
-              : 'These listings are posted directly from the Rkz mobile app'}
+              ? 'هذه العقارات مدرجة مباشرةً من تطبيق روزوز للجوال'
+              : 'These listings are posted directly from the Rozoz mobile app'}
           </p>
         </div>
       )}

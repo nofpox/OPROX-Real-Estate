@@ -114,7 +114,7 @@ export const PortalLogin: React.FC = () => {
     }
   };
 
-  // Guest explore — navigates directly to the public RKZ portal (view-only by nature)
+  // Guest explore — navigates directly to the public Rozoz portal (view-only by nature)
   const handleGuestExplore = () => {
     window.location.href = '/realestate/';
   };
@@ -133,7 +133,7 @@ export const PortalLogin: React.FC = () => {
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <Helmet>
-        <title>{isRtl ? 'غرفة التحكم | ركز' : 'Admin Control Room | RKZ'}</title>
+        <title>{isRtl ? 'غرفة التحكم | روزوز' : 'Admin Control Room | Rozoz'}</title>
       </Helmet>
 
       {/* ── Official Brand Mark ─────────────────────────────────────────────── */}
@@ -145,7 +145,7 @@ export const PortalLogin: React.FC = () => {
         </div>
         <div className="text-center">
           <p className="text-white text-2xl font-bold tracking-widest" style={{ fontFamily: 'serif' }}>
-            ركز&nbsp;|&nbsp;RKZ
+            روزوز&nbsp;|&nbsp;Rozoz
           </p>
           <p className="text-white/40 text-xs tracking-[0.25em] uppercase mt-1">
             {isRtl ? 'الحلول الذكية للعقارات' : 'Smart Real Estate Solutions'}
@@ -311,7 +311,7 @@ export const PortalLogin: React.FC = () => {
         >
           <Compass className="h-5 w-5 text-secondary shrink-0 group-hover:rotate-12 transition-transform duration-300" />
           <span className="text-secondary font-semibold text-sm tracking-wide text-center leading-snug">
-            استكشف تجربة Rkz&nbsp;&nbsp;|&nbsp;&nbsp;Explore Rkz Experience
+            استكشف تجربة Rozoz&nbsp;&nbsp;|&nbsp;&nbsp;Explore Rozoz Experience
           </span>
         </button>
         <p className="text-white/20 text-[10px] text-center mt-2 tracking-wide">
@@ -320,7 +320,7 @@ export const PortalLogin: React.FC = () => {
       </div>
 
       <p className="mt-8 text-xs text-white/20 text-center">
-        © {new Date().getFullYear()} RKZ Smart Solutions
+        © {new Date().getFullYear()} Rozoz Smart Solutions
       </p>
     </div>
   );

@@ -647,7 +647,7 @@ export const PortalDashboard: React.FC = () => {
 
     function portalLabel(portal: string) {
       if (portal === 'grand-pms') return 'Grand PMS';
-      return 'RKZ Portal';
+      return 'Rozoz Portal';
     }
 
     return (
@@ -711,7 +711,7 @@ export const PortalDashboard: React.FC = () => {
                           : 'bg-card border-border text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {p === 'rkz' ? 'RKZ Portal' : 'Grand PMS'}
+                      {p === 'rkz' ? 'Rozoz Portal' : 'Grand PMS'}
                     </button>
                   ))}
                 </div>
@@ -891,7 +891,7 @@ export const PortalDashboard: React.FC = () => {
         </Button>
 
         <p className="text-center text-xs text-muted-foreground/60 pt-2">
-          RKZ Smart Solutions © {new Date().getFullYear()}
+          Rozoz Smart Solutions © {new Date().getFullYear()}
         </p>
       </div>
     );
@@ -902,7 +902,7 @@ export const PortalDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-muted/40" dir={isRtl ? 'rtl' : 'ltr'}>
       <Helmet>
-        <title>{isRtl ? 'غرفة التحكم | ركز' : 'Admin Control Room | RKZ'}</title>
+        <title>{isRtl ? 'غرفة التحكم | روزوز' : 'Admin Control Room | Rozoz'}</title>
       </Helmet>
 
       {/* Top header */}

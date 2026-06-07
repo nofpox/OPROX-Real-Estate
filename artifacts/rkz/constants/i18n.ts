@@ -1,7 +1,7 @@
 export const ar = {
   welcome: {
     tagline: "محرك النشر العقاري الفوري",
-    headline: 'أهلاً بك في "ركز".. نحن وكيلك الحصري!',
+    headline: 'أهلاً بك في "روزوز".. نحن وكيلك الحصري!',
     features: [
       {
         title: "النشر التلقائي",
@@ -138,7 +138,7 @@ export const ar = {
     authSection: "التفويض القانوني",
     authTitle: "تفويض الوساطة العقارية",
     authDesc:
-      "بتفعيل هذا الخيار، تمنح RKZ صلاحية التصرف بوصفها وسيطاً معتمداً للنشر على المنصات نيابةً عنك وفق اتفاقية الخدمة.",
+      "بتفعيل هذا الخيار، تمنح Rozoz صلاحية التصرف بوصفها وسيطاً معتمداً للنشر على المنصات نيابةً عنك وفق اتفاقية الخدمة.",
     authEnabled: "مفعّل",
     authDisabled: "غير مفعّل",
     platformsSection: "منصات النشر",
@@ -154,9 +154,9 @@ export const ar = {
     cancel: "إلغاء",
     logoutConfirm: "خروج",
     companySection: "الشركة",
-    visitWebsite: "زيارة موقع ركز",
+    visitWebsite: "زيارة موقع روزوز",
     visitWebsiteDesc: "اكتشف خدماتنا الكاملة للإدارة العقارية",
-    version: "RKZ v1.0 — محرك النشر العقاري الفوري",
+    version: "Rozoz v1.0 — محرك النشر العقاري الفوري",
   },
   add: {
     header: "إضافة عقار جديد",
@@ -191,14 +191,14 @@ export const ar = {
     backHome: "العودة للرئيسية",
     authModalTitle: "اتفاقية التفويض الرقمي",
     authModalBody:
-      'بتأكيدك، تفوّض منصة Rkz للتصرف بوصفها وكيلك الرقمي لنشر عقارك وإدارته وتحديث بياناته على المنصات العقارية الكبرى (عقار، بيوت، وصلة، Property Finder وغيرها) لتحقيق أقصى قدر من الوصول.\n\nنلتزم بدقة المعلومات المقدمة والتعامل مع الاستفسارات الأولية نيابةً عنك. بموافقتك، تُقرّ بصحة جميع البيانات التي أدخلتها.',
+      'بتأكيدك، تفوّض منصة Rozoz للتصرف بوصفها وكيلك الرقمي لنشر عقارك وإدارته وتحديث بياناته على المنصات العقارية الكبرى (عقار، بيوت، وصلة، Property Finder وغيرها) لتحقيق أقصى قدر من الوصول.\n\nنلتزم بدقة المعلومات المقدمة والتعامل مع الاستفسارات الأولية نيابةً عنك. بموافقتك، تُقرّ بصحة جميع البيانات التي أدخلتها.',
     authCheckLabel: "أوافق على شروط التفويض الرقمي",
     authConfirmBtn: "تأكيد ونشر العقار",
     authCancelBtn: "إلغاء",
   },
   assistant: {
     tabLabel: "المساعد",
-    title: "مساعد ركز الذكي",
+    title: "مساعد روزوز الذكي",
     subtitle: "مساعدك العقاري على مدار الساعة",
     placeholder: "اسأل عن عقاراتك أو السوق...",
     thinking: "يفكر...",
@@ -431,7 +431,7 @@ export type Translations = typeof ar;
 export const en: Translations = {
   welcome: {
     tagline: "Instant Real Estate Publishing Engine",
-    headline: 'Welcome to "Rkz" — Your Exclusive Digital Agent!',
+    headline: 'Welcome to "Rozoz" — Your Exclusive Digital Agent!',
     features: [
       {
         title: "Auto-Publishing",
@@ -567,7 +567,7 @@ export const en: Translations = {
     authSection: "Legal Authorization",
     authTitle: "Real Estate Brokerage Authorization",
     authDesc:
-      "By enabling this, you grant RKZ the authority to act as an accredited broker to publish listings on platforms on your behalf, per the service agreement.",
+      "By enabling this, you grant Rozoz the authority to act as an accredited broker to publish listings on platforms on your behalf, per the service agreement.",
     authEnabled: "Enabled",
     authDisabled: "Disabled",
     platformsSection: "Publishing Platforms",
@@ -583,9 +583,9 @@ export const en: Translations = {
     cancel: "Cancel",
     logoutConfirm: "Log Out",
     companySection: "Company",
-    visitWebsite: "Visit Rkz Website",
+    visitWebsite: "Visit Rozoz Website",
     visitWebsiteDesc: "Explore our full property management services",
-    version: "RKZ v1.0 — Instant Real Estate Publishing Engine",
+    version: "Rozoz v1.0 — Instant Real Estate Publishing Engine",
   },
   add: {
     header: "Add New Property",
@@ -621,14 +621,14 @@ export const en: Translations = {
     backHome: "Back to Home",
     authModalTitle: "Digital Authorization Agreement",
     authModalBody:
-      "By confirming, you authorize 'Rkz' to act as your digital agent to list, manage, and update your property on major real estate platforms (Aqar, Bayut, etc.) to maximize visibility.",
+      "By confirming, you authorize 'Rozoz' to act as your digital agent to list, manage, and update your property on major real estate platforms (Aqar, Bayut, etc.) to maximize visibility.",
     authCheckLabel: "I agree to the Digital Authorization Terms.",
     authConfirmBtn: "Confirm & Publish Property",
     authCancelBtn: "Cancel",
   },
   assistant: {
     tabLabel: "Assistant",
-    title: "Rkz AI Assistant",
+    title: "Rozoz AI Assistant",
     subtitle: "Your 24/7 real estate advisor",
     placeholder: "Ask about your properties or the market...",
     thinking: "Thinking...",

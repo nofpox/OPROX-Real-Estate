@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 const BASE = '/realestate-api';
 
 const PORTAL_META: Record<string, { label: string; labelAr: string; path: string }> = {
-  'rkz':       { label: 'RKZ Real Estate Portal',    labelAr: 'بوابة ركز العقارية',       path: '/realestate/' },
+  'rkz':       { label: 'Rozoz Real Estate Portal',    labelAr: 'بوابة روزوز العقارية',       path: '/realestate/' },
   'grand-pms': { label: 'Grand PMS Dashboard',       labelAr: 'لوحة تحكم جراند',           path: '/hotel-dashboard/' },
 };
 
@@ -72,7 +72,7 @@ export function PreviewToken() {
     const isRevoked = status === 'revoked';
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
-        <Helmet><title>Preview Link Invalid | RKZ</title></Helmet>
+        <Helmet><title>Preview Link Invalid | Rozoz</title></Helmet>
         <div className="bg-card border border-border rounded-2xl p-8 max-w-sm w-full text-center shadow-xl space-y-4">
           <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
             {isRevoked ? <XCircle className="h-7 w-7 text-destructive" /> : <AlertTriangle className="h-7 w-7 text-destructive" />}
@@ -90,7 +90,7 @@ export function PreviewToken() {
             </p>
           </div>
           <Button variant="outline" className="w-full" onClick={() => navigate('/realestate/')}>
-            Go to RKZ Home
+            Go to Rozoz Home
           </Button>
         </div>
       </div>
@@ -99,7 +99,7 @@ export function PreviewToken() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
-      <Helmet><title>Preview Access | RKZ</title></Helmet>
+      <Helmet><title>Preview Access | Rozoz</title></Helmet>
       <div className="bg-card border border-border rounded-2xl p-8 max-w-sm w-full text-center shadow-xl space-y-5">
         {/* Icon */}
         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">

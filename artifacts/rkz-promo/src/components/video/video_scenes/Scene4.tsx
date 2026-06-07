@@ -94,7 +94,7 @@ export function Scene4() {
               className="font-display text-primary leading-none"
               style={{ fontSize: 'clamp(2.8rem, 6vw, 5rem)', letterSpacing: '0.12em' }}
             >
-              Rkz
+              Rozoz
             </span>
             <span
               className="text-text-muted font-body uppercase tracking-[0.3em]"
@@ -121,7 +121,7 @@ export function Scene4() {
           animate={phase >= 3 ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
           transition={{ duration: 1.1, ease: 'easeOut' }}
         >
-          Download the Rkz app now
+          Download the Rozoz app now
         </motion.p>
       </div>
     </motion.div>

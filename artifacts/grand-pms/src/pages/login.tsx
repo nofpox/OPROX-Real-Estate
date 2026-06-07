@@ -50,10 +50,10 @@ export default function Login({ onLogin }: LoginProps) {
         <FalconMark size={88} />
         <div className="text-center space-y-1">
           <p className="font-serif text-3xl font-bold text-white tracking-widest">
-            ركز <span className="text-[#C9A84C]">|</span> RKZ
+            روزوز <span className="text-[#C9A84C]">|</span> Rozoz
           </p>
           <p className="text-xs text-white/40 tracking-[0.25em] uppercase">
-            Smart Solutions · ركز للحلول الذكية
+            Smart Solutions · روزوز للحلول الذكية
           </p>
         </div>
       </div>

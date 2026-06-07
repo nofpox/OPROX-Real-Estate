@@ -94,11 +94,11 @@ export function WelcomeScreen({ onComplete }: Props) {
         textAlign: "center",
       }}>
         <div style={{ color: GOLD, fontSize: 11, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>
-          RKZ Smart Solutions
+          Rozoz Smart Solutions
         </div>
         <img
           src={`${import.meta.env.BASE_URL}rkz-logo.jpg`}
-          alt="Rkz"
+          alt="Rozoz"
           style={{ height: 46, width: "auto", objectFit: "contain", margin: "0 auto", display: "block" }}
         />
       </div>
@@ -184,7 +184,7 @@ export function WelcomeScreen({ onComplete }: Props) {
         transition: "opacity 0.5s ease, transform 0.5s ease",
       }}>
         <span style={{ color: TEXT_PRI, fontSize: 14, letterSpacing: "0.4px", textAlign: "center" }}>
-          Download the Rkz app now
+          Download the Rozoz app now
         </span>
         <div style={{ width: 32, height: 1.5, background: GOLD, borderRadius: 1 }} />
       </div>

@@ -88,7 +88,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
             <div className={`absolute top-3 ${isRtl ? 'left-3' : 'right-3'}`}>
               <span className="flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground text-xs font-medium rounded shadow-sm">
                 <ShieldCheck className="w-3 h-3" />
-                RKZ
+                Rozoz
               </span>
             </div>
           )}

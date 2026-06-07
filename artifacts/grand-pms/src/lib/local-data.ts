@@ -176,8 +176,8 @@ export const SUPPORT_TICKETS: SupportTicket[] = [
 ];
 
 export const APP_SETTINGS = {
-  propertyName: "Rkz",
-  logoText: "Rkz",
+  propertyName: "Rozoz",
+  logoText: "Rozoz",
   logoSub: "",
   logoUrl: `${import.meta.env.BASE_URL}rkz-logo.jpg`,
   businessMode: "hotel" as const,
@@ -186,7 +186,7 @@ export const APP_SETTINGS = {
   permissionMatrix: {},
   primaryColor: "",
   secondaryColor: "",
-  companyName: "Rkz",
+  companyName: "Rozoz",
 };
 
 // ── ID counter ────────────────────────────────────────────────────────────────
