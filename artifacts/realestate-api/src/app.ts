@@ -27,6 +27,7 @@ const WORKSPACE_ROOT = "/home/runner/workspace";
 
 app.get("/realestate-api/media/:filename", (req, res) => {
   const allowed = [
+    "rozoz_web.mp4",
     "rozoz_arabic_final.mp4",
     "rkz_cinematic_v3.mp4",
     "rkz_cinematic_final_v2.mp4",
@@ -223,7 +224,7 @@ app.get("/realestate-api/watch", (_req, res) => {
       controlslist="nodownload"
       oncontextmenu="return false"
     >
-      <source src="/realestate-api/media/rozoz_arabic_final.mp4" type="video/mp4">
+      <source src="/realestate-api/media/rozoz_web.mp4" type="video/mp4">
     </video>
     <div class="video-glow"></div>
   </div>
