@@ -8,7 +8,8 @@ export type AppRole =
   | "supervisor"
   | "maintenance"
   | "cleaning"
-  | "security";
+  | "security"
+  | "preview_guest";
 
 export interface RoleDefinition {
   id: AppRole;
@@ -19,6 +20,7 @@ export interface RoleDefinition {
 }
 
 export function mapDbRoleToAppRole(dbRole: string): AppRole {
+  if (dbRole === "preview_guest") return "preview_guest";
   if (dbRole === "super_admin") return "super_admin";
   if (dbRole === "owner" || dbRole === "admin") return "super_admin";
   if (dbRole === "admin-manager") return "admin_manager";
@@ -103,6 +105,14 @@ export const ROLES: RoleDefinition[] = [
     allowedNav: ["/tasks"],
     taskCategories: ["security"],
   },
+  // Preview guest — read-only demo access granted via one-time preview link
+  {
+    id: "preview_guest",
+    label: "Preview Guest",
+    description: "Read-only preview access — Dashboard and Properties only",
+    allowedNav: ["/", "/properties"],
+    taskCategories: [],
+  },
 ];
 
 interface RoleContextValue {
@@ -111,6 +121,7 @@ interface RoleContextValue {
   can: (path: string) => boolean;
   allowedTaskCategories: string[] | null;
   actualDbRole: string;
+  isPreviewGuest: boolean;
 }
 
 const RoleContext = createContext<RoleContextValue | null>(null);
@@ -141,6 +152,7 @@ export function RoleProvider({
         can,
         allowedTaskCategories: role.taskCategories,
         actualDbRole: initialRole,
+        isPreviewGuest: roleId === "preview_guest",
       }}
     >
       {children}

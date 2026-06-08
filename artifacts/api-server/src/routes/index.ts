@@ -49,7 +49,7 @@ const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
 };
 
 // /portal/ routes manage their own session auth via requireAuth (async cookie reader)
-const PUBLIC_PREFIXES = ["/auth/", "/health", "/unit-requests", "/unit-info/", "/service-categories", "/rkz/", "/portal/", "/debug/"];
+const PUBLIC_PREFIXES = ["/auth/", "/health", "/unit-requests", "/unit-info/", "/service-categories", "/rkz/", "/portal/", "/debug/", "/preview/authenticate"];
 
 const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
 

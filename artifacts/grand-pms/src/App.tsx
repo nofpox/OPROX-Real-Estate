@@ -1,5 +1,6 @@
 import i18n from "@/i18n";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { useTheme } from "@/hooks/use-theme";
 import { Switch, Route, Router as WouterRouter } from "wouter";
@@ -45,7 +46,7 @@ const queryClient = new QueryClient({
 
 function normTier(role: string): "admin" | "supervisor" | "worker" {
   if (["owner", "admin", "super_admin", "manager", "admin_manager"].includes(role)) return "admin";
-  if (["supervisor", "administrator", "partner", "investor", "front-desk", "property-manager", "site-supervisor"].includes(role)) return "supervisor";
+  if (["supervisor", "administrator", "partner", "investor", "front-desk", "property-manager", "site-supervisor", "preview_guest"].includes(role)) return "supervisor";
   return "worker";
 }
 
@@ -81,9 +82,69 @@ function Router() {
 
 function ThemeApplier() { useTheme(); return null; }
 
+const PREVIEW_SESSION_KEY = "gms_preview_guest";
+
 function App() {
-  const [authUser, setAuthUser] = useState<AuthUser>(null);
+  // Restore a still-valid preview guest session from sessionStorage on page refresh
+  const [authUser, setAuthUser] = useState<AuthUser>(() => {
+    try {
+      const stored = sessionStorage.getItem(PREVIEW_SESSION_KEY);
+      if (stored) {
+        const { expiresAt, user } = JSON.parse(stored) as { expiresAt: string; user: AuthUser };
+        if (user && new Date(expiresAt) > new Date()) return user;
+        sessionStorage.removeItem(PREVIEW_SESSION_KEY);
+      }
+    } catch {}
+    return null;
+  });
+
+  // Show a loading screen while exchanging the preview_token from the URL
+  const [previewExchanging, setPreviewExchanging] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get("preview_token")) return false;
+    // If we already restored a valid session from sessionStorage, no exchange needed
+    try {
+      const stored = sessionStorage.getItem(PREVIEW_SESSION_KEY);
+      if (stored) {
+        const { expiresAt } = JSON.parse(stored) as { expiresAt: string };
+        if (new Date(expiresAt) > new Date()) return false;
+      }
+    } catch {}
+    return true;
+  });
+
   const [showWelcome, setShowWelcome] = useState(false);
+
+  // Exchange a one-time preview_token from the URL for a real guest session
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("preview_token");
+    if (!token) return;
+    if (authUser) {
+      // Already authenticated (e.g. from sessionStorage) — just clean URL
+      window.history.replaceState({}, "", window.location.pathname);
+      setPreviewExchanging(false);
+      return;
+    }
+    fetch("/api/preview/authenticate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ token }),
+    })
+      .then(async (r) => {
+        if (!r.ok) { setPreviewExchanging(false); return; }
+        const data = await r.json() as { user: AuthUser; expiresAt: string };
+        sessionStorage.setItem(PREVIEW_SESSION_KEY, JSON.stringify({
+          expiresAt: data.expiresAt,
+          user: data.user,
+        }));
+        window.history.replaceState({}, "", window.location.pathname);
+        setAuthUser(data.user);
+        setPreviewExchanging(false);
+      })
+      .catch(() => setPreviewExchanging(false));
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleLogin(user: any) {
     setAuthUser(user as AuthUser);
@@ -91,8 +152,18 @@ function App() {
   }
 
   function handleLogout() {
+    sessionStorage.removeItem(PREVIEW_SESSION_KEY);
     setAuthUser(null);
     setShowWelcome(false);
+  }
+
+  // Show spinner while exchanging preview token to avoid Login flash
+  if (previewExchanging) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-muted">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   if (!authUser) {
@@ -108,7 +179,7 @@ function App() {
     );
   }
 
-  if (showWelcome) {
+  if (showWelcome && authUser?.role !== "preview_guest") {
     return <WelcomeScreen onComplete={() => setShowWelcome(false)} />;
   }
 

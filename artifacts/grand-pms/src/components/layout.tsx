@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard, DoorOpen, Menu, Building2,
@@ -6,6 +6,7 @@ import {
   MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert, BarChart2,
   Ticket, MessageCircleQuestion, Settings2, HelpCircle,
   Calendar, Users, DollarSign, Archive, TrendingUp, Monitor, LayoutTemplate,
+  Clock, Eye, LogOut,
 } from "lucide-react";
 import { SupportDialog } from "@/components/support-dialog";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,30 @@ import {
 import { NotificationBell } from "@/components/notification-bell";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useRole, ROLES, type AppRole, isOwnerTier } from "@/contexts/role-context";
+
+const PREVIEW_SESSION_KEY = "gms_preview_guest";
+
+function usePreviewCountdown(): string {
+  const [label, setLabel] = useState("");
+  useEffect(() => {
+    function compute() {
+      try {
+        const stored = sessionStorage.getItem(PREVIEW_SESSION_KEY);
+        if (!stored) { setLabel(""); return; }
+        const { expiresAt } = JSON.parse(stored) as { expiresAt: string };
+        const diff = new Date(expiresAt).getTime() - Date.now();
+        if (diff <= 0) { setLabel("منتهية"); return; }
+        const m = Math.floor(diff / 60_000);
+        const s = Math.floor((diff % 60_000) / 1000);
+        setLabel(`${m}:${s.toString().padStart(2, "0")}`);
+      } catch { setLabel(""); }
+    }
+    compute();
+    const id = setInterval(compute, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return label;
+}
 import { useLanguage } from "@/contexts/language-context";
 import { useTranslation } from "react-i18next";
 import type { AuthUser } from "@/App";
@@ -50,14 +75,15 @@ const NAV_ITEMS = [
 
 /* Role pill colours — solid only, no opacity modifiers */
 const ROLE_ICON_COLORS: Record<string, string> = {
-  super_admin:   "bg-red-100 text-red-700",
-  admin_manager: "bg-indigo-100 text-indigo-700",
-  manager:       "bg-purple-100 text-purple-700",
-  administrator: "bg-teal-100 text-teal-700",
-  supervisor:    "bg-amber-100 text-amber-700",
-  maintenance:   "bg-orange-100 text-orange-700",
-  cleaning:      "bg-green-100 text-green-700",
-  security:        "bg-blue-100 text-blue-700",
+  super_admin:    "bg-red-100 text-red-700",
+  admin_manager:  "bg-indigo-100 text-indigo-700",
+  manager:        "bg-purple-100 text-purple-700",
+  administrator:  "bg-teal-100 text-teal-700",
+  supervisor:     "bg-amber-100 text-amber-700",
+  maintenance:    "bg-orange-100 text-orange-700",
+  cleaning:       "bg-green-100 text-green-700",
+  security:       "bg-blue-100 text-blue-700",
+  preview_guest:  "bg-amber-100 text-amber-700",
   content_manager: "bg-indigo-100 text-indigo-700",
   secretary:       "bg-pink-100 text-pink-700",
 };
@@ -201,7 +227,14 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
           <p className="text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground px-1 mb-1.5" style={{ opacity: 0.4 }}>
             {t("roles.viewingAs")}
           </p>
-          {isOwnerTier(authUser?.role ?? "") ? (
+          {role.id === "preview_guest" ? (
+            <div className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 bg-amber-50 text-sm font-medium border border-amber-200">
+              <span className="h-5 w-5 rounded-full flex items-center justify-center shrink-0 bg-amber-100 text-amber-700">
+                <Eye className="h-3 w-3" />
+              </span>
+              <span className="flex-1 text-start text-amber-900">وضع معاينة</span>
+            </div>
+          ) : isOwnerTier(authUser?.role ?? "") ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button data-tour="tour-role-switcher" className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 bg-sidebar-accent text-sm font-medium">
@@ -274,6 +307,32 @@ function SidebarContent({ authUser, onLogout, onClose }: SidebarContentProps) {
   );
 }
 
+function PreviewGuestBanner({ onLogout }: { onLogout: () => void }) {
+  const countdown = usePreviewCountdown();
+  return (
+    <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-900 text-sm">
+      <div className="flex items-center gap-2 min-w-0">
+        <Eye className="h-4 w-4 shrink-0 text-amber-600" />
+        <span className="font-semibold">وضع المعاينة — للقراءة فقط</span>
+        {countdown && (
+          <span className="flex items-center gap-1 text-amber-700 text-xs font-mono">
+            <Clock className="h-3 w-3" />
+            {countdown}
+          </span>
+        )}
+      </div>
+      <button
+        onClick={() => { sessionStorage.removeItem("gms_preview_guest"); onLogout(); }}
+        className="flex items-center gap-1.5 shrink-0 text-xs font-medium text-amber-800 hover:text-amber-950 transition-colors"
+        title="إنهاء الجلسة"
+      >
+        <LogOut className="h-3.5 w-3.5" />
+        إنهاء الجلسة
+      </button>
+    </div>
+  );
+}
+
 export function Layout({ children, authUser, onLogout }: LayoutProps) {
   const [location, navigate] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -310,7 +369,7 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
   React.useEffect(() => { setMobileOpen(false); }, [location]);
 
   /* Route guard — redirect to first allowed page if current path is inaccessible */
-  const { can, role } = useRole();
+  const { can, role, isPreviewGuest } = useRole();
   React.useEffect(() => {
     if (!can(location)) {
       const firstAllowed = role.allowedNav.find((p) => p !== "*") ?? "/tasks";
@@ -433,9 +492,9 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
             </Link>
           </div>
           <div className="hidden lg:flex items-center">
-            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_ICON_COLORS[role.id]}`}>
+            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_ICON_COLORS[role.id] ?? "bg-gray-100 text-gray-700"}`}>
               <Shield className="h-3 w-3" />
-              {t(`roles.${role.id}`)}
+              {role.id === "preview_guest" ? "وضع معاينة" : t(`roles.${role.id}`)}
             </span>
           </div>
           <div className="flex items-center gap-2 ms-auto">
@@ -452,6 +511,9 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
             <NotificationBell />
           </div>
         </header>
+
+        {/* Preview-guest mode banner */}
+        {isPreviewGuest && <PreviewGuestBanner onLogout={onLogout} />}
 
         {/* isolation:isolate removed — overflow-auto on the parent already
             establishes a stacking context; the nested isolation was creating

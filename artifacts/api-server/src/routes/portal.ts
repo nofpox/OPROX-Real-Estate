@@ -1496,4 +1496,59 @@ router.get("/portal/buyer-dashboard", requireAuth, async (req, res) => {
   }
 });
 
+// ── Grand PMS preview-guest authentication ────────────────────────────────────
+// Exchanges a one-time preview link token for a real (limited) pms_session.
+// Public endpoint — no prior auth required.
+router.post("/preview/authenticate", async (req, res) => {
+  const { token } = req.body as { token?: string };
+  if (!token) { res.status(400).json({ error: "Token required" }); return; }
+  try {
+    const result = await db.execute(sql`
+      SELECT id, portal, expires_at, revoked_at
+      FROM preview_links
+      WHERE token = ${token}::uuid
+    `);
+    const link = result.rows[0] as {
+      id: number; portal: string; expires_at: Date; revoked_at: string | null;
+    } | undefined;
+    if (!link) { res.status(404).json({ error: "Invalid token" }); return; }
+    if (link.revoked_at) { res.status(410).json({ error: "Token already used" }); return; }
+    if (new Date(link.expires_at) < new Date()) { res.status(410).json({ error: "Token expired" }); return; }
+    if (link.portal !== "grand-pms") { res.status(400).json({ error: "Token is not for Grand PMS" }); return; }
+    // Consume — one-time use
+    await db.execute(sql`UPDATE preview_links SET revoked_at = NOW() WHERE id = ${link.id}`);
+    // Create a temporary session expiring at the same time as the preview link
+    const sessionId = crypto.randomUUID();
+    const expiresAt = new Date(link.expires_at);
+    const guestUser: SessionUser = {
+      id: 0,
+      username: "preview_guest",
+      displayName: "زيارة تجريبية",
+      role: "preview_guest",
+      tenantId: null,
+      permissions: [],
+    };
+    await db.execute(sql`
+      INSERT INTO user_sessions (session_id, user_id, tenant_id, user_data, expires_at)
+      VALUES (
+        ${sessionId},
+        0,
+        NULL,
+        ${JSON.stringify(guestUser)}::jsonb,
+        ${expiresAt.toISOString()}::timestamptz
+      )
+      ON CONFLICT (session_id) DO NOTHING
+    `);
+    const maxAge = Math.max(60, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
+    res.setHeader(
+      "Set-Cookie",
+      `pms_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`,
+    );
+    res.json({ ok: true, user: guestUser, expiresAt: expiresAt.toISOString() });
+  } catch (err) {
+    req.log.error({ err }, "POST /preview/authenticate failed");
+    res.status(500).json({ error: "Internal error" });
+  }
+});
+
 export default router;

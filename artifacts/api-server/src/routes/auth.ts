@@ -152,6 +152,7 @@ async function sendResetEmail(to: string, username: string, otp: string): Promis
 }
 
 export function getRoleTier(role: string): "admin" | "supervisor" | "worker" {
+  if (role === "preview_guest") return "supervisor";
   if (role === "owner" || role === "admin" || role === "super_admin") return "admin";
   if (
     role === "manager" || role === "property-manager" || role === "site-supervisor" ||
