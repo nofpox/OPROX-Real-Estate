@@ -647,7 +647,7 @@ export const PortalDashboard: React.FC = () => {
 
     function portalLabel(portal: string) {
       if (portal === 'grand-pms') return 'Grand PMS';
-      return 'Rozoz Portal';
+      return isRtl ? 'المنصة العقارية' : 'Real Estate Portal';
     }
 
     return (
@@ -711,7 +711,7 @@ export const PortalDashboard: React.FC = () => {
                           : 'bg-card border-border text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {p === 'rkz' ? 'Rozoz Portal' : 'Grand PMS'}
+                      {p === 'rkz' ? (isRtl ? 'المنصة العقارية' : 'Real Estate Portal') : 'Grand PMS'}
                     </button>
                   ))}
                 </div>
@@ -863,8 +863,9 @@ export const PortalDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-1 pt-0">
             {[
-              { label: isRtl ? 'الموقع العام'           : 'Public Site',       href: '/realestate/' },
-              { label: isRtl ? 'لوحة التحكم الرئيسية'  : 'Main PMS Dashboard', href: '/hotel-dashboard/' },
+              { label: isRtl ? 'الموقع العام'           : 'Public Site',          href: '/realestate/' },
+              { label: isRtl ? 'لوحة إدارة المنصة'     : 'Portal Admin',          href: '/realestate/login' },
+              { label: isRtl ? 'لوحة التحكم الرئيسية'  : 'Grand PMS Dashboard',   href: '/grand-pms/' },
             ].map(({ label, href }) => (
               <a
                 key={href}
