@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Search, Building, X, SlidersHorizontal, Map, Smartphone } from 'lucide-react';
+import { Search, Building, X, SlidersHorizontal, Map, Smartphone, TrendingUp } from 'lucide-react';
 import { ListingCard } from '@/components/listing-card';
 import { MapView } from '@/components/map-view';
+import { SmartHeatmap } from '@/components/SmartHeatmap';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RkzListingCard, type RkzListing } from '@/components/rkz-listing-card';
 
@@ -298,6 +299,27 @@ export const ListingsBrowser: React.FC = () => {
             )}
           </>
         )}
+      </div>
+
+      {/* ── Smart Heatmap ──────────────────────────────────────────────────── */}
+      <div className="mt-14">
+        <div className={`flex items-center gap-3 mb-6 ${isRtl ? 'flex-row-reverse' : ''}`}>
+          <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary px-3 py-1.5 rounded-full">
+            <TrendingUp className="h-4 w-4" />
+            <span className="text-sm font-semibold">
+              {isRtl ? 'الخريطة الحرارية الذكية' : 'Smart Market Heatmap'}
+            </span>
+          </div>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+        <SmartHeatmap
+          listings={listings.map((l) => ({
+            city: (l as { city?: string | null }).city ?? null,
+            isActive: (l as { status?: string | null }).status === 'active',
+            propertyType: (l as { propertyType?: string | null }).propertyType ?? null,
+          }))}
+          isRtl={isRtl}
+        />
       </div>
 
       {/* ── Rozoz App Listings ─────────────────────────────────────────────── */}
