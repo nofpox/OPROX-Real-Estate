@@ -233,3 +233,9 @@ id = "SvZHLqfmHvhpBwtCtB11C"
 uri = "file://attached_assets/generated_audio/voice_test_bill.mp3"
 type = "audio"
 title = "صوت 3 — Bill (حكيم، ناضج)"
+
+[[outputs]]
+id = "R2DVBL_tDoNFs0tuKcQZh"
+uri = "file://exports/rozoz-platform-study.pdf"
+type = "pdf"
+title = "دراسة منصة روزوز للحلول الذكية"
