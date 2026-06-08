@@ -191,3 +191,21 @@ id = "M6cH2moo0nO2738teOWWp"
 uri = "file://attached_assets/generated_audio/rozoz_seg3.mp3"
 type = "audio"
 title = "speech"
+
+[[outputs]]
+id = "vqD4lHHIJ04XiBIdMBDLs"
+uri = "file://attached_assets/generated_audio/saudi_option1_oud.mp3"
+type = "audio"
+title = "خيار 1 — عود ورباب (هادئ وسينمائي)"
+
+[[outputs]]
+id = "p1D2F51Nllz15ghtQP-HD"
+uri = "file://attached_assets/generated_audio/saudi_option2_mizmar.mp3"
+type = "audio"
+title = "خيار 2 — مزمار ودف (ملحمي قبلي)"
+
+[[outputs]]
+id = "nBGGnZAV305RTd7essUCK"
+uri = "file://attached_assets/generated_audio/saudi_option3_qanun.mp3"
+type = "audio"
+title = "خيار 3 — قانون وأوركسترا (رؤية 2030)"
