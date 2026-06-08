@@ -94,6 +94,29 @@ router.delete("/cms/preview-links/:id", requireAdmin, async (req: Request, res: 
   }
 });
 
+// ── POST /preview/generate — public link generation (no admin auth, for mobile) ─
+router.post("/preview/generate", async (req: Request, res: Response) => {
+  try {
+    const { label, portal } = req.body as { label?: string; portal?: string };
+    const targetPortal = portal === "grand-pms" ? "grand-pms" : "rkz";
+    const rows = await db.execute(sql`
+      INSERT INTO preview_links (portal, label, created_by, expires_at)
+      VALUES (
+        ${targetPortal},
+        ${label ?? ""},
+        'mobile',
+        NOW() + INTERVAL '1 hour'
+      )
+      RETURNING id, token, portal, label, expires_at, created_at
+    `);
+    const link = (rows as any).rows?.[0] ?? (rows as any[])[0];
+    res.json({ link });
+  } catch (err) {
+    req.log?.error(err, "POST /preview/generate");
+    res.status(500).json({ error: "Failed to generate preview link" });
+  }
+});
+
 // ── GET /preview/:token — public token validation (no auth) ───────────────────
 router.get("/preview/:token", async (req: Request, res: Response) => {
   try {

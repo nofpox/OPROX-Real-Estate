@@ -7,6 +7,7 @@ import {
   FlatList,
   Platform,
   Pressable,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -40,6 +41,7 @@ export default function ListingsScreen() {
   const { t, isAr } = useLocale();
   const [filter, setFilter] = useState<Filter>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [sharingId, setSharingId] = useState<string | null>(null);
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84) + 16;
@@ -64,6 +66,40 @@ export default function ListingsScreen() {
         },
       },
     ]);
+  }
+
+  async function handleShare(propertyTitle: string, propertyId: string) {
+    setSharingId(propertyId);
+    try {
+      const r = await fetch("/realestate-api/preview/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: propertyTitle, portal: "rkz" }),
+      });
+      if (!r.ok) throw new Error("server error");
+      const data = (await r.json()) as { link: { token: string } };
+      const token = data.link?.token;
+      if (!token) throw new Error("no token");
+      const origin =
+        Platform.OS === "web" && typeof window !== "undefined"
+          ? window.location.origin
+          : "";
+      const url = `${origin}/realestate/preview/${token}`;
+      await Share.share({
+        message: isAr
+          ? `شاهد هذا العقار على روزوز:\n${url}`
+          : `View this property on Rozoz:\n${url}`,
+        url,
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {
+      Alert.alert(
+        isAr ? "خطأ" : "Error",
+        isAr ? "تعذّر إنشاء الرابط. حاول مجدداً." : "Failed to generate link. Please try again."
+      );
+    } finally {
+      setSharingId(null);
+    }
   }
 
   const priceLocale = isAr ? "ar-SA" : "en-US";
@@ -426,6 +462,21 @@ export default function ListingsScreen() {
       color: colors.gold,
     },
     unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.destructive, marginTop: 4 },
+    shareBtn: {
+      marginHorizontal: 16,
+      marginTop: 0,
+      marginBottom: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      backgroundColor: colors.navy + "10",
+      borderRadius: 10,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: colors.navy + "20",
+    },
+    shareBtnText: { fontSize: 14, fontFamily: "Inter_500Medium", color: colors.navy },
     deleteBtn: {
       margin: 16,
       marginTop: 0,
@@ -557,6 +608,22 @@ export default function ListingsScreen() {
         {expanded && (
           <>
             <View style={S.divider} />
+            <Pressable
+              style={S.shareBtn}
+              onPress={() => handleShare(p.title ?? p.type, p.id)}
+              disabled={sharingId === p.id}
+            >
+              <MaterialIcons
+                name={sharingId === p.id ? "hourglass-empty" : "share"}
+                size={18}
+                color={colors.navy}
+              />
+              <Text style={S.shareBtnText}>
+                {sharingId === p.id
+                  ? (isAr ? "جارٍ الإنشاء…" : "Generating…")
+                  : (isAr ? "مشاركة رابط مؤقت" : "Share Temp Link")}
+              </Text>
+            </Pressable>
             <Pressable style={S.deleteBtn} onPress={() => handleDelete(p.id)}>
               <MaterialIcons name="delete-outline" size={18} color={colors.destructive} />
               <Text style={S.deleteBtnText}>{t.listings.deleteProperty}</Text>
