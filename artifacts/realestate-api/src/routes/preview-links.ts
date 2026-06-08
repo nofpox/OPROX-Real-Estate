@@ -117,6 +117,29 @@ router.post("/preview/generate", async (req: Request, res: Response) => {
   }
 });
 
+// ── POST /preview/:token/consume — one-time use: mark token as used (no auth) ─
+router.post("/preview/:token/consume", async (req: Request, res: Response) => {
+  try {
+    const { token } = req.params;
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(token)) {
+      res.status(400).json({ error: "Invalid token format" });
+      return;
+    }
+    await db.execute(sql`
+      UPDATE preview_links
+      SET revoked_at = NOW()
+      WHERE token = ${token}::uuid
+        AND revoked_at IS NULL
+        AND expires_at > NOW()
+    `);
+    res.json({ ok: true });
+  } catch (err) {
+    req.log?.error(err, "POST /preview/:token/consume");
+    res.status(500).json({ error: "Failed to consume token" });
+  }
+});
+
 // ── GET /preview/:token — public token validation (no auth) ───────────────────
 router.get("/preview/:token", async (req: Request, res: Response) => {
   try {
