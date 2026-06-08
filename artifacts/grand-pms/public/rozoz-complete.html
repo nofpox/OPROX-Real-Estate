@@ -4,6 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ملف روزوز الكامل — دراسة المنصة + دراسة الجدوى</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
     *{margin:0;padding:0;box-sizing:border-box;}
@@ -30,7 +32,17 @@
     .toc-chip{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#c8daf0;font-size:12px;font-weight:600;padding:6px 14px;border-radius:18px;}
     .print-btn{display:block;width:fit-content;margin:32px auto 0;background:#f4b942;color:#0a1a38;font-family:'Cairo',sans-serif;font-size:15px;font-weight:800;padding:12px 36px;border-radius:10px;border:none;cursor:pointer;letter-spacing:0.5px;}
     .print-btn:hover{background:#e8a822;}
-    @media print{.print-btn{display:none;}}
+    .print-btn:disabled{background:#999;cursor:not-allowed;}
+    /* PDF overlay */
+    #pdf-overlay{display:none;position:fixed;inset:0;background:rgba(5,16,32,0.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+    #pdf-overlay.active{display:flex;}
+    .pdf-spinner{width:56px;height:56px;border:5px solid rgba(244,185,66,0.3);border-top-color:#f4b942;border-radius:50%;animation:spin 0.8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .pdf-msg{font-family:'Cairo',sans-serif;font-size:16px;font-weight:700;color:#fff;text-align:center;line-height:1.8;}
+    .pdf-msg small{display:block;font-size:12px;color:#8fa8cc;margin-top:4px;}
+    .pdf-progress{width:260px;height:6px;background:rgba(255,255,255,0.15);border-radius:4px;overflow:hidden;}
+    .pdf-progress-bar{height:100%;background:linear-gradient(90deg,#f4b942,#e8821a);border-radius:4px;transition:width 0.4s ease;width:0%;}
+    @media print{.print-btn{display:none;} #pdf-overlay{display:none!important;}}
 
     /* ══════════════════════════════════════════
        PART 1 — PLATFORM STUDY
@@ -205,7 +217,7 @@
       <div class="toc-chip">🌍 إكسبو 2030</div>
       <div class="toc-chip">🏙️ رؤية 2030</div>
     </div>
-    <button class="print-btn" onclick="window.print()">🖨️ طباعة / حفظ كـ PDF</button>
+    <button class="print-btn" id="pdf-btn" onclick="generatePDF()">⬇️ تنزيل PDF</button>
   </div>
   <div class="doc-footer">
     <strong>روزوز للحلول الذكية</strong> &nbsp;·&nbsp; Rozoz Smart Solutions &nbsp;·&nbsp; الملف الاستثماري الكامل — وثيقة داخلية سرية | يونيو 2026
@@ -553,5 +565,100 @@
   <div class="doc-footer"><strong>روزوز للحلول الذكية</strong> &nbsp;·&nbsp; الوثيقة الثانية: دراسة الجدوى الاقتصادية — السوق السعودي | يونيو 2026</div>
 </div>
 
+<!-- PDF Loading Overlay -->
+<div id="pdf-overlay">
+  <div class="pdf-spinner"></div>
+  <div class="pdf-msg">
+    جاري إنشاء ملف PDF...
+    <small id="pdf-status">جاري تجهيز الصفحات</small>
+  </div>
+  <div class="pdf-progress"><div class="pdf-progress-bar" id="pdf-bar"></div></div>
+</div>
+
+<script>
+async function generatePDF() {
+  const btn = document.getElementById('pdf-btn');
+  const overlay = document.getElementById('pdf-overlay');
+  const bar = document.getElementById('pdf-bar');
+  const status = document.getElementById('pdf-status');
+
+  btn.disabled = true;
+  overlay.classList.add('active');
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const docs = document.querySelectorAll('.doc');
+    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const margin = 0;
+    const usableW = pageW - margin * 2;
+    const usableH = pageH - margin * 2;
+
+    const labels = ['الغلاف والفهرس', 'دراسة المنصة', 'دراسة الجدوى'];
+
+    for (let i = 0; i < docs.length; i++) {
+      status.textContent = `جاري معالجة: ${labels[i] || 'القسم ' + (i + 1)}`;
+      bar.style.width = Math.round((i / docs.length) * 80) + '%';
+
+      const el = docs[i];
+      // temporarily expand for full capture
+      const prevBorderRadius = el.style.borderRadius;
+      el.style.borderRadius = '0';
+
+      const canvas = await html2canvas(el, {
+        scale: 1.8,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 980,
+      });
+
+      el.style.borderRadius = prevBorderRadius;
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const imgW = usableW;
+      const imgH = (canvas.height * imgW) / canvas.width;
+
+      if (i > 0) pdf.addPage();
+
+      // Split tall image across A4 pages
+      let yRemaining = imgH;
+      let srcY = 0;
+
+      while (yRemaining > 0) {
+        const sliceH = Math.min(usableH, yRemaining);
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = Math.round((sliceH / imgW) * canvas.width);
+        const ctx = sliceCanvas.getContext('2d');
+        ctx.drawImage(canvas, 0, srcY * (canvas.width / imgW), canvas.width, sliceCanvas.height, 0, 0, sliceCanvas.width, sliceCanvas.height);
+        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.92);
+        pdf.addImage(sliceData, 'JPEG', margin, margin, imgW, sliceH);
+        yRemaining -= sliceH;
+        srcY += sliceH;
+        if (yRemaining > 0) pdf.addPage();
+      }
+    }
+
+    bar.style.width = '100%';
+    status.textContent = 'جاري حفظ الملف...';
+    await new Promise(r => setTimeout(r, 300));
+
+    pdf.save('روزوز-الملف-الكامل-2026.pdf');
+
+  } catch (err) {
+    console.error(err);
+    alert('حدث خطأ أثناء إنشاء PDF. حاول مرة أخرى.');
+  } finally {
+    overlay.classList.remove('active');
+    btn.disabled = false;
+    bar.style.width = '0%';
+  }
+}
+</script>
 </body>
 </html>
