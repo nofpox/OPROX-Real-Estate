@@ -173,3 +173,21 @@ id = "h7N4K03rQiT0XBqeu36BW"
 uri = "file://attached_assets/generated_audio/rozoz_saudi_traditional.mp3"
 type = "audio"
 title = "rozoz_saudi_traditional"
+
+[[outputs]]
+id = "2XsGxAh3bVPLI2k1KXaY0"
+uri = "file://attached_assets/generated_audio/rozoz_seg1.mp3"
+type = "audio"
+title = "speech"
+
+[[outputs]]
+id = "I-2VxUctd0ZqIHUGUNo_Q"
+uri = "file://attached_assets/generated_audio/rozoz_seg2.mp3"
+type = "audio"
+title = "speech"
+
+[[outputs]]
+id = "M6cH2moo0nO2738teOWWp"
+uri = "file://attached_assets/generated_audio/rozoz_seg3.mp3"
+type = "audio"
+title = "speech"

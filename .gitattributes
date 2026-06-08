@@ -5,3 +5,4 @@ attached_assets/generated_videos/rkz_cinematic_final_v2.mp4 filter=lfs diff=lfs 
 artifacts/rkz-promo/public/videos/rozoz_cinematic.mp4 filter=lfs diff=lfs merge=lfs -text
 artifacts/realestate-portal/public/preview-film.mp4 filter=lfs diff=lfs merge=lfs -text
 attached_assets/generated_videos/rozoz_arabic_final.mp4 filter=lfs diff=lfs merge=lfs -text
+attached_assets/generated_videos/rozoz_concat.mp4 filter=lfs diff=lfs merge=lfs -text
