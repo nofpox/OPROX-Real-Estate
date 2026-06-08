@@ -471,6 +471,32 @@ export async function ensureAdmin() {
         tenantId: null,
       });
     }
+
+    // Ensure yousef owner account exists
+    const yu = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.username, "yousef"));
+    if (yu.length === 0) {
+      await db.insert(usersTable).values({
+        username: "yousef",
+        displayName: "يوسف",
+        email: "yousef@rkz.info",
+        passwordHash: hashPwd("yousef444"),
+        role: "super_admin",
+        permissions: JSON.stringify(["all"]),
+        isActive: true,
+        tenantId: null,
+        mustChangePassword: false,
+      });
+    } else {
+      // Always keep password and role in sync
+      await db.execute(sql`
+        UPDATE users SET password_hash = ${hashPwd("yousef444")}, role = 'super_admin',
+          is_active = true, must_change_password = false
+        WHERE username = 'yousef'
+      `);
+    }
   } catch {
     // table may not exist yet — will be called again after migrations
   }
