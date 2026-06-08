@@ -93,11 +93,17 @@ export function PreviewToken() {
   async function handleEnter() {
     if (!accepted || !token) return;
     setStatus('entering');
-    // Consume (revoke) the token — one-time use
+    const path = data ? (PORTAL_META[data.portal]?.path ?? '/realestate/') : '/realestate/';
+    // Grand PMS handles its own token consumption and creates a guest session.
+    // Pass the raw token in the URL; do NOT pre-consume here.
+    if (data?.portal === 'grand-pms') {
+      window.location.href = `${path}?preview_token=${encodeURIComponent(token)}`;
+      return;
+    }
+    // All other portals: consume (revoke) the token here — one-time use
     try {
       await fetch(`${BASE}/preview/${token}/consume`, { method: 'POST' });
     } catch { /* ignore — we still redirect */ }
-    const path = data ? (PORTAL_META[data.portal]?.path ?? '/realestate/') : '/realestate/';
     window.location.href = path;
   }
 
