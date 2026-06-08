@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>دراسة الجدوى — منصة روزوز العقارية</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+      background: #eef2f7;
+      color: #1a1a2e;
+      direction: rtl;
+      font-size: 15px;
+    }
+
+    .page {
+      max-width: 900px;
+      margin: 36px auto;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 6px 40px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+
+    /* ── COVER ── */
+    .cover {
+      background: linear-gradient(145deg, #051428 0%, #0f2044 50%, #1a3a6b 100%);
+      color: #fff;
+      padding: 56px 56px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: -60px;
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(243,185,66,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .cover::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 7px;
+      background: linear-gradient(90deg, #f4b942, #e8821a, #f4b942);
+    }
+    .cover-label {
+      display: inline-block;
+      background: rgba(244,185,66,0.18);
+      border: 1px solid rgba(244,185,66,0.4);
+      color: #f4b942;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border-radius: 20px;
+      margin-bottom: 22px;
+    }
+    .cover h1 {
+      font-size: 38px;
+      font-weight: 900;
+      line-height: 1.35;
+      margin-bottom: 12px;
+    }
+    .cover h1 span { color: #f4b942; }
+    .cover .sub {
+      font-size: 16px;
+      color: #c0d0ee;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+    .cover-chips {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #d4e2f8;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 20px;
+    }
+
+    /* ── BODY ── */
+    .body { padding: 52px 56px; }
+
+    /* ── SUMMARY CARDS ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 44px;
+    }
+    .kpi-card {
+      background: linear-gradient(135deg, #f0f5ff, #e8f0fe);
+      border: 1px solid #d0ddf8;
+      border-radius: 12px;
+      padding: 18px 16px;
+      text-align: center;
+    }
+    .kpi-card .val {
+      font-size: 22px;
+      font-weight: 900;
+      color: #0f2044;
+      line-height: 1.2;
+    }
+    .kpi-card .val span { font-size: 13px; font-weight: 600; color: #2355a0; }
+    .kpi-card .lbl {
+      font-size: 11px;
+      color: #6b7a9a;
+      margin-top: 5px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── SECTION ── */
+    .section { margin-bottom: 44px; }
+    .section-title {
+      font-size: 19px;
+      font-weight: 900;
+      color: #0f2044;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e4eaf8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title .num {
+      background: #0f2044;
+      color: #f4b942;
+      font-size: 12px;
+      font-weight: 800;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── HIGHLIGHT BOX ── */
+    .hl-box {
+      background: linear-gradient(135deg, #eef4ff, #f5f8ff);
+      border-right: 5px solid #2355a0;
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin-bottom: 18px;
+      line-height: 1.9;
+      color: #2a3a5e;
+    }
+    .hl-box.gold  { border-right-color: #f4b942; background: linear-gradient(135deg, #fffbea, #fff9e0); }
+    .hl-box.green { border-right-color: #10b981; background: linear-gradient(135deg, #ecfdf5, #f0fdf8); }
+    .hl-box.red   { border-right-color: #e53e3e; background: linear-gradient(135deg, #fff5f5, #fef2f2); }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 4px; }
+    thead tr { background: #0f2044; color: #fff; }
+    thead th { padding: 11px 14px; text-align: right; font-weight: 700; font-size: 13px; }
+    tbody tr { border-bottom: 1px solid #eef0f7; }
+    tbody tr:nth-child(even) { background: #f8faff; }
+    tbody td { padding: 11px 14px; color: #2a3a5e; line-height: 1.7; }
+    tbody td:first-child { font-weight: 700; color: #0f2044; }
+    tfoot tr { background: #f0f5ff; border-top: 2px solid #2355a0; }
+    tfoot td { padding: 11px 14px; font-weight: 800; color: #0f2044; }
+
+    /* ── PROGRESS BAR ── */
+    .bar-row { margin-bottom: 12px; }
+    .bar-label { display: flex; justify-content: space-between; font-size: 13px; color: #334155; margin-bottom: 4px; font-weight: 600; }
+    .bar-track { background: #e4eaf5; border-radius: 6px; height: 10px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #2355a0, #3b82f6); }
+    .bar-fill.gold { background: linear-gradient(90deg, #d97706, #f4b942); }
+    .bar-fill.green { background: linear-gradient(90deg, #059669, #10b981); }
+    .bar-fill.red   { background: linear-gradient(90deg, #dc2626, #f87171); }
+
+    /* ── TIMELINE ── */
+    .timeline { position: relative; padding-right: 32px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      right: 10px; top: 0; bottom: 0;
+      width: 2px;
+      background: #dce6fa;
+    }
+    .tl-item { position: relative; margin-bottom: 24px; }
+    .tl-dot {
+      position: absolute;
+      right: -26px; top: 4px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #2355a0;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px #2355a0;
+    }
+    .tl-dot.gold { background: #f4b942; box-shadow: 0 0 0 2px #f4b942; }
+    .tl-dot.green { background: #10b981; box-shadow: 0 0 0 2px #10b981; }
+    .tl-phase { font-size: 11px; font-weight: 800; color: #2355a0; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+    .tl-phase.gold { color: #d97706; }
+    .tl-phase.green { color: #059669; }
+    .tl-title { font-size: 15px; font-weight: 800; color: #0f2044; margin-bottom: 4px; }
+    .tl-body { font-size: 13px; color: #4a5878; line-height: 1.8; }
+
+    /* ── RISK TABLE ── */
+    .risk-high   { color: #c0392b; font-weight: 800; }
+    .risk-med    { color: #d97706; font-weight: 800; }
+    .risk-low    { color: #059669; font-weight: 800; }
+
+    /* ── 2-COL ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+    /* ── REVENUE TABLE HIGHLIGHT ── */
+    .total-row td { color: #0f2044 !important; font-weight: 900 !important; background: #e8f0fe !important; font-size: 15px; }
+
+    /* ── CONCLUSION ── */
+    .conclusion {
+      background: linear-gradient(135deg, #0f2044, #1a3a6b);
+      border-radius: 12px;
+      padding: 28px 32px;
+      color: #fff;
+      margin-bottom: 40px;
+    }
+    .conclusion h3 { font-size: 17px; font-weight: 800; color: #f4b942; margin-bottom: 12px; }
+    .conclusion p { font-size: 14px; line-height: 2.1; opacity: 0.92; }
+    .conclusion strong { color: #f4b942; }
+
+    /* ── LEGAL ── */
+    .legal {
+      border: 3px solid #c0392b;
+      border-radius: 12px;
+      background: #fff5f5;
+      padding: 26px 30px;
+      text-align: center;
+      margin-top: 40px;
+    }
+    .legal-badge {
+      display: inline-block;
+      background: #c0392b;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      padding: 5px 16px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+    }
+    .legal p { font-size: 17px; font-weight: 900; color: #c0392b; line-height: 1.9; }
+    .legal .sub { margin-top: 10px; font-size: 12px; font-weight: 600; color: #7f1d1d; opacity: 0.85; }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: #0f2044;
+      color: #8fa3c8;
+      text-align: center;
+      padding: 16px 32px;
+      font-size: 12px;
+    }
+    .footer strong { color: #f4b942; }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: #fff; }
+      .page { max-width: 100%; margin: 0; border-radius: 0; box-shadow: none; }
+      .kpi-row { grid-template-columns: repeat(4,1fr); }
+      .section { break-inside: avoid; }
+      .legal { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-label">📊 Feasibility Study — دراسة الجدوى</div>
+    <h1>منصة <span>روزوز</span><br/>العقارية الذكية</h1>
+    <div class="sub">
+      تحليل مالي وتسويقي وتشغيلي شامل — السنوات ١ إلى ٣<br/>
+      يونيو 2026 &nbsp;|&nbsp; روزوز للحلول الذكية
+    </div>
+    <div class="cover-chips">
+      <div class="chip">📅 أفق الدراسة: ٣ سنوات</div>
+      <div class="chip">💰 استثمار مبدئي: ٨٠٠٠ – ١٢٠٠٠ $</div>
+      <div class="chip">📈 نقطة التعادل: الشهر ٩</div>
+      <div class="chip">🔒 سري — للاستخدام الداخلي</div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="val">٣<span> سنوات</span></div>
+        <div class="lbl">أفق التحليل المالي</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">٩<span> شهر</span></div>
+        <div class="lbl">نقطة التعادل المتوقعة</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">٣٤٠<span>%</span></div>
+        <div class="lbl">العائد على الاستثمار (ROI) — السنة ٣</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">٣<span> أنظمة</span></div>
+        <div class="lbl">مكونات المنصة المتكاملة</div>
+      </div>
+    </div>
+
+    <!-- 1. EXECUTIVE SUMMARY -->
+    <div class="section">
+      <div class="section-title"><span class="num">١</span>الملخص التنفيذي</div>
+      <div class="hl-box">
+        منصة <strong>روزوز</strong> هي مشروع تقني عقاري متكامل يجمع ثلاثة أنظمة مترابطة: بوابة ويب للمستهلكين والشركاء، تطبيق جوال ذكي (ROZOZ) مع مساعد ذكاء اصطناعي، ونظام إدارة عقارية (روزوز PMS) للشركات والمُلّاك. يستهدف المشروع سوق العقارات في المنطقة العربية الذي تجاوز حجمه <strong>٢٥٠ مليار دولار</strong> مع معدل نمو سنوي يبلغ <strong>٧–٩٪</strong>. يعتمد النموذج الاقتصادي على خمسة مصادر إيراد متنوعة تبدأ بالاشتراكات الشهرية وتمتد إلى العمولات وخدمات المستثمرين.
+      </div>
+      <div class="hl-box gold">
+        <strong>الفرصة الرئيسية:</strong> غياب منصة عربية متكاملة تجمع البحث والإدارة التشغيلية في منظومة واحدة. معظم المنافسين يتخصصون في طرف واحد فقط من دورة العقار، مما يُبقي فجوة سوقية واضحة لروزوز لاحتلالها.
+      </div>
+    </div>
+
+    <!-- 2. MARKET -->
+    <div class="section">
+      <div class="section-title"><span class="num">٢</span>تحليل السوق</div>
+      <div class="two-col">
+        <div class="hl-box" style="margin-bottom:0">
+          <strong>حجم السوق الكلي</strong><br/>
+          السوق العقاري العربي: +٢٥٠ مليار $<br/>
+          نمو سنوي: ٧ – ٩٪<br/>
+          المستخدمون الرقميون: ٣٨٠+ مليون مستخدم إنترنت في المنطقة العربية
+        </div>
+        <div class="hl-box green" style="margin-bottom:0">
+          <strong>السوق القابل للاستهداف (TAM)</strong><br/>
+          شركات الإدارة العقارية: ١٢,٠٠٠+ شركة<br/>
+          الوكلاء العقاريون: ٤٥,٠٠٠+ وكيل<br/>
+          الباحثون عن سكن رقمياً: ٥+ مليون شهرياً
+        </div>
+      </div>
+      <div style="margin-top: 16px;">
+        <p style="font-weight:700; color:#0f2044; margin-bottom:10px;">حصة السوق المستهدفة خلال ٣ سنوات:</p>
+        <div class="bar-row">
+          <div class="bar-label"><span>شركات إدارة عقارية (اشتراك PMS)</span><span>٠.٥٪ → ٥٠ شركة</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:35%"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>وكلاء عقاريون مُدرَجون</span><span>١٪ → ٤٥٠ وكيل</span></div>
+          <div class="bar-track"><div class="bar-fill gold" style="width:50%"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>مستخدمو التطبيق النشطون</span><span>٠.١٪ → ٥,٠٠٠ مستخدم</span></div>
+          <div class="bar-track"><div class="bar-fill green" style="width:60%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. COMPETITION -->
+    <div class="section">
+      <div class="section-title"><span class="num">٣</span>تحليل المنافسة</div>
+      <table>
+        <thead>
+          <tr>
+            <th>المنافس</th>
+            <th>نوع المنصة</th>
+            <th>نقطة الضعف</th>
+            <th>ميزة روزوز</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>منصات الإعلانات العقارية المحلية</td>
+            <td>بوابة إعلانات فقط</td>
+            <td>لا إدارة، لا ذكاء اصطناعي، لا تطبيق متكامل</td>
+            <td>روزوز تُغطي الدورة كاملة</td>
+          </tr>
+          <tr>
+            <td>أنظمة PMS الدولية (Cloudbeds, Guesty)</td>
+            <td>إدارة فنادق فقط</td>
+            <td>لا دعم عربي كافٍ، لا بوابة عملاء، تكلفة عالية جداً</td>
+            <td>روزوز محلية، ثنائية اللغة، مُتكاملة</td>
+          </tr>
+          <tr>
+            <td>تطبيقات العقارات الدولية (Bayut, Property Finder)</td>
+            <td>بحث وإعلان</td>
+            <td>لا إدارة تشغيلية، لا مساعد ذكاء اصطناعي، رسوم مرتفعة للإدراج</td>
+            <td>ROZOZ يقدم ذكاء اصطناعياً حقيقياً + إدارة</td>
+          </tr>
+          <tr>
+            <td>أنظمة إدارة الأصول المحلية</td>
+            <td>محاسبة وإيجارات</td>
+            <td>واجهة قديمة، لا تطبيق جوال، لا تكامل مع السوق</td>
+            <td>روزوز حديثة، جوال أوّلاً، سوق متكامل</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. BUSINESS MODEL -->
+    <div class="section">
+      <div class="section-title"><span class="num">٤</span>نموذج الأعمال — مصادر الإيراد</div>
+      <table>
+        <thead>
+          <tr>
+            <th>المصدر</th>
+            <th>الوصف</th>
+            <th>السعر المقترح</th>
+            <th>التكرار</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>اشتراك روزوز PMS</td>
+            <td>نظام الإدارة الكامل للشركات والملاك</td>
+            <td>١٥٠ – ٤٠٠ $ / شهر</td>
+            <td>شهري / سنوي</td>
+          </tr>
+          <tr>
+            <td>إدراج الإعلانات المميزة</td>
+            <td>ظهور متقدم في البحث والخريطة</td>
+            <td>٣٠ – ٨٠ $ / شهر / إعلان</td>
+            <td>شهري</td>
+          </tr>
+          <tr>
+            <td>عمولة الحجوزات</td>
+            <td>نسبة على كل حجز مؤكد عبر المنصة</td>
+            <td>٢ – ٤٪ من قيمة الحجز</td>
+            <td>لكل صفقة</td>
+          </tr>
+          <tr>
+            <td>تقييم عقاري</td>
+            <td>طلب تقييم احترافي للمستثمرين</td>
+            <td>٥٠ – ١٢٠ $ / تقييم</td>
+            <td>لكل طلب</td>
+          </tr>
+          <tr>
+            <td>تقارير السوق المدفوعة</td>
+            <td>تحليلات منطقة بعينها للمستثمرين</td>
+            <td>٣٠ – ٨٠ $ / تقرير</td>
+            <td>لكل تقرير</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 5. INVESTMENT -->
+    <div class="section">
+      <div class="section-title"><span class="num">٥</span>هيكل التكاليف والاستثمار المبدئي</div>
+      <div class="two-col">
+        <div>
+          <p style="font-weight:800; color:#0f2044; margin-bottom:12px;">التكاليف التأسيسية (مرة واحدة)</p>
+          <table>
+            <thead><tr><th>البند</th><th>التكلفة ($)</th></tr></thead>
+            <tbody>
+              <tr><td>تطوير المنصة والتطبيق</td><td>٤,٠٠٠ – ٦,٠٠٠</td></tr>
+              <tr><td>التصميم وتجربة المستخدم</td><td>٨٠٠ – ١,٢٠٠</td></tr>
+              <tr><td>الخوادم والبنية التحتية (سنة)</td><td>٦٠٠ – ١,٠٠٠</td></tr>
+              <tr><td>التسويق والإطلاق</td><td>١,٠٠٠ – ٢,٠٠٠</td></tr>
+              <tr><td>المتنوعات والاحتياطي</td><td>٦٠٠ – ١,٨٠٠</td></tr>
+            </tbody>
+            <tfoot>
+              <tr><td>الإجمالي</td><td><strong>٧,٠٠٠ – ١٢,٠٠٠ $</strong></td></tr>
+            </tfoot>
+          </table>
+        </div>
+        <div>
+          <p style="font-weight:800; color:#0f2044; margin-bottom:12px;">التكاليف التشغيلية الشهرية</p>
+          <table>
+            <thead><tr><th>البند</th><th>التكلفة ($)</th></tr></thead>
+            <tbody>
+              <tr><td>الخوادم والـ APIs</td><td>٨٠ – ١٥٠</td></tr>
+              <tr><td>خدمات الذكاء الاصطناعي</td><td>٥٠ – ١٢٠</td></tr>
+              <tr><td>دعم العملاء والصيانة</td><td>٢٠٠ – ٤٠٠</td></tr>
+              <tr><td>التسويق الرقمي المستمر</td><td>٣٠٠ – ٥٠٠</td></tr>
+              <tr><td>المتنوعات</td><td>٧٠ – ١٣٠</td></tr>
+            </tbody>
+            <tfoot>
+              <tr><td>إجمالي / شهر</td><td><strong>٧٠٠ – ١,٣٠٠ $</strong></td></tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. REVENUE PROJECTIONS -->
+    <div class="section">
+      <div class="section-title"><span class="num">٦</span>توقعات الإيراد — ثلاث سنوات</div>
+      <table>
+        <thead>
+          <tr>
+            <th>المصدر</th>
+            <th>السنة الأولى ($)</th>
+            <th>السنة الثانية ($)</th>
+            <th>السنة الثالثة ($)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>اشتراكات PMS</td>
+            <td>٣,٦٠٠</td>
+            <td>١٢,٠٠٠</td>
+            <td>٢٨,٨٠٠</td>
+          </tr>
+          <tr>
+            <td>الإدراجات المميزة</td>
+            <td>١,٨٠٠</td>
+            <td>٥,٤٠٠</td>
+            <td>١٣,٥٠٠</td>
+          </tr>
+          <tr>
+            <td>عمولات الحجوزات</td>
+            <td>٢,٤٠٠</td>
+            <td>٧,٢٠٠</td>
+            <td>١٨,٠٠٠</td>
+          </tr>
+          <tr>
+            <td>تقييمات + تقارير</td>
+            <td>٦٠٠</td>
+            <td>٢,٤٠٠</td>
+            <td>٦,٠٠٠</td>
+          </tr>
+          <tr class="total-row">
+            <td>إجمالي الإيراد</td>
+            <td>٨,٤٠٠ $</td>
+            <td>٢٧,٠٠٠ $</td>
+            <td>٦٦,٣٠٠ $</td>
+          </tr>
+          <tr style="background:#fafbff;">
+            <td>إجمالي التكاليف</td>
+            <td>٢٠,٤٠٠ $</td>
+            <td>١٢,٠٠٠ $</td>
+            <td>١٣,٢٠٠ $</td>
+          </tr>
+          <tr style="background:#ecfdf5; font-weight:900;">
+            <td style="color:#065f46; font-weight:900;">صافي الربح / (الخسارة)</td>
+            <td style="color:#c0392b; font-weight:900;">(١١,٧٠٠) $</td>
+            <td style="color:#065f46; font-weight:900;">١٥,٠٠٠ $</td>
+            <td style="color:#065f46; font-weight:900;">٥٣,١٠٠ $</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="hl-box green" style="margin-top:14px;">
+        <strong>ملاحظة:</strong> الخسارة في السنة الأولى طبيعية وتشمل التكاليف التأسيسية. بدءاً من الشهر التاسع يبدأ التدفق النقدي في التحسن تدريجياً مع نمو قاعدة المشتركين.
+      </div>
+    </div>
+
+    <!-- 7. BREAK-EVEN -->
+    <div class="section">
+      <div class="section-title"><span class="num">٧</span>تحليل نقطة التعادل</div>
+      <div class="hl-box gold">
+        <strong>نقطة التعادل الشهرية:</strong> يحتاج المشروع لتحقيق <strong>٩٠٠ – ١,٣٠٠ $</strong> شهرياً لتغطية التكاليف التشغيلية. هذا يعادل:
+      </div>
+      <div class="two-col" style="margin-top:0;">
+        <div class="hl-box" style="margin-bottom:0; text-align:center;">
+          <div style="font-size:26px; font-weight:900; color:#0f2044;">٦ – ٩</div>
+          <div style="font-size:13px; color:#6b7a9a; margin-top:4px;">شركات مشتركة بـ PMS</div>
+        </div>
+        <div class="hl-box gold" style="margin-bottom:0; text-align:center;">
+          <div style="font-size:26px; font-weight:900; color:#0f2044;">٣٠ – ٤٥</div>
+          <div style="font-size:13px; color:#6b7a9a; margin-top:4px;">إعلاناً مميزاً نشطاً</div>
+        </div>
+      </div>
+      <p style="margin-top:14px; font-size:14px; color:#4a5878; line-height:1.8;">
+        بناءً على خطة الإطلاق والتسويق المقترحة، يُتوقع الوصول لنقطة التعادل <strong>في الشهر التاسع</strong> من الإطلاق، مع تسارع ملحوظ في النمو خلال السنة الثانية.
+      </p>
+    </div>
+
+    <!-- 8. TIMELINE -->
+    <div class="section">
+      <div class="section-title"><span class="num">٨</span>خطة التنفيذ والإطار الزمني</div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-phase">المرحلة ١ — الأشهر ١ – ٣</div>
+          <div class="tl-title">الإطلاق والانتشار الأولي</div>
+          <div class="tl-body">الإطلاق الرسمي لبوابة الويب وتطبيق ROZOZ. استهداف ١٠ شركات إدارة عقارات للاشتراك التجريبي. إطلاق حملة تسويقية رقمية مكثفة. التركيز على جمع الملاحظات وتحسين التجربة.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot gold"></div>
+          <div class="tl-phase gold">المرحلة ٢ — الأشهر ٤ – ٦</div>
+          <div class="tl-title">التوسع وبناء القاعدة</div>
+          <div class="tl-body">استهداف ٢٥ شركة مشتركة و١٠٠+ وكيل عقاري مُدرج. تطوير شراكات مع شركات التطوير العقاري الكبرى. تفعيل نظام العمولات على الحجوزات. إطلاق تقارير السوق المدفوعة للمستثمرين.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot green"></div>
+          <div class="tl-phase green">المرحلة ٣ — الأشهر ٧ – ١٢</div>
+          <div class="tl-title">الاستدامة والربحية</div>
+          <div class="tl-body">الوصول لـ ٥٠ شركة مشتركة و٣٠٠+ وكيل. تجاوز نقطة التعادل. تطوير إصدار متقدم من الذكاء الاصطناعي. استكشاف التوسع الجغرافي لأسواق عربية مجاورة.</div>
+        </div>
+        <div class="tl-item" style="margin-bottom:0">
+          <div class="tl-dot" style="background:#7c3aed; box-shadow: 0 0 0 2px #7c3aed;"></div>
+          <div class="tl-phase" style="color:#7c3aed;">المرحلة ٤ — السنة الثانية</div>
+          <div class="tl-title">النضج والتوسع الإقليمي</div>
+          <div class="tl-body">الوصول لـ ١٠٠+ شركة مشتركة. إطلاق خطط اشتراك للمطورين العقاريين الكبار. تطوير API للتكامل مع أنظمة المحاسبة والبنوك. دراسة التوسع إلى أسواق الخليج.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. RISKS -->
+    <div class="section">
+      <div class="section-title"><span class="num">٩</span>تحليل المخاطر وخطط التخفيف</div>
+      <table>
+        <thead>
+          <tr>
+            <th>الخطر</th>
+            <th>الاحتمال</th>
+            <th>التأثير</th>
+            <th>خطة التخفيف</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>بطء اعتماد السوق للحل الرقمي</td>
+            <td class="risk-med">متوسط</td>
+            <td class="risk-high">عالٍ</td>
+            <td>تقديم تجربة مجانية ٣٠ يوماً + دعم مباشر للتأهيل</td>
+          </tr>
+          <tr>
+            <td>دخول منافس كبير للسوق</td>
+            <td class="risk-low">منخفض</td>
+            <td class="risk-high">عالٍ</td>
+            <td>التمركز في المحلية والتخصص العربي كميزة دفاعية</td>
+          </tr>
+          <tr>
+            <td>تكاليف الذكاء الاصطناعي المرتفعة</td>
+            <td class="risk-med">متوسط</td>
+            <td class="risk-med">متوسط</td>
+            <td>حد استهلاك ذكي لكل مستخدم + نماذج خفيفة للمهام المتكررة</td>
+          </tr>
+          <tr>
+            <td>صعوبة جمع قاعدة بيانات العقارات</td>
+            <td class="risk-high">مرتفع</td>
+            <td class="risk-med">متوسط</td>
+            <td>شراكات مبكرة مع الوكلاء + حوافز الإدراج المجاني في البداية</td>
+          </tr>
+          <tr>
+            <td>مشاكل تقنية أو أمن البيانات</td>
+            <td class="risk-low">منخفض</td>
+            <td class="risk-high">عالٍ</td>
+            <td>بنية تحتية سحابية موثوقة + تشفير كامل + نسخ احتياطية يومية</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 10. CONCLUSION -->
+    <div class="conclusion">
+      <h3>✅ الخلاصة والتوصية</h3>
+      <p>
+        دراسة الجدوى تؤكد أن مشروع روزوز <strong>قابل للتطبيق اقتصادياً</strong> وذو إمكانية نمو قوية في السوق العربية.
+        الاستثمار المبدئي <strong>٨,٠٠٠ – ١٢,٠٠٠ دولار</strong> معقول نسبةً لحجم المنتج المقدَّم والسوق المستهدَف.
+        نقطة التعادل في <strong>الشهر التاسع</strong> تُعتبر جيدة لمشاريع SaaS في مراحلها الأولى.
+        المشروع يُتوقع أن يُحقق <strong>عائداً على الاستثمار يتجاوز ٣٤٠٪</strong> في نهاية السنة الثالثة
+        — بشرط تنفيذ خطة التسويق واكتساب المشتركين وفق الجدول الزمني المقترح.
+      </p>
+    </div>
+
+    <!-- LEGAL -->
+    <div class="legal">
+      <div class="legal-badge">⚠️ ملاحظة قانونية هامة</div>
+      <p>
+        يتضمن هذا المشروع <strong>ثلاث أفكار وابتكارات محمية</strong><br/>
+        لا يمكن الإفصاح عنها أو عرضها في هذه الدراسة<br/>
+        حمايةً لحقوق صاحب المشروع الفكرية والابتكارية
+      </p>
+      <div class="sub">
+        جميع الحقوق محفوظة © 2026 — روزوز للحلول الذكية<br/>
+        يُحظر الاطلاع أو النسخ أو إعادة الاستخدام دون إذن كتابي مسبق
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <strong>روزوز للحلول الذكية</strong> &nbsp;·&nbsp; Rozoz Smart Solutions &nbsp;·&nbsp;
+    دراسة الجدوى — وثيقة داخلية سرية &nbsp;|&nbsp; يونيو 2026
+  </div>
+
+</div>
+</body>
+</html>
