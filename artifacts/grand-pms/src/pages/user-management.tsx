@@ -628,7 +628,7 @@ function RolesLibrary() {
 
   function openEdit(role: CustomRole) {
     setEditing(role);
-    setForm({ name: role.name, description: role.description, color: role.color, permissions: [...role.permissions] });
+    setForm({ name: role.name, description: role.description, color: role.color ?? "#6366f1", permissions: [...role.permissions] });
     setDialogOpen(true);
   }
 

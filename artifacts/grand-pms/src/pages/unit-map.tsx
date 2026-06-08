@@ -52,8 +52,8 @@ export default function UnitMap() {
   const [search,       setSearch]       = useState("");
   const [activeRoom,   setActiveRoom]   = useState<Room | null>(null);
 
-  const { data: roomsRaw,  isLoading: roomsLoading }  = useListRooms({});
-  const { data: propsRaw,  isLoading: propsLoading }  = useListProperties({});
+  const { data: roomsRaw,  isLoading: roomsLoading }  = useListRooms();
+  const { data: propsRaw,  isLoading: propsLoading }  = useListProperties();
 
   const rooms:      Room[]     = useMemo(() => (roomsRaw as any)?.data ?? roomsRaw ?? [],  [roomsRaw]);
   const properties: Property[] = useMemo(() => (propsRaw as any)?.data ?? propsRaw ?? [], [propsRaw]);
@@ -325,7 +325,7 @@ export default function UnitMap() {
                     <div className="rounded-lg bg-slate-100 p-3">
                       <p className="text-xs font-medium text-muted-foreground mb-2">{t("unitMap.details.amenities")}</p>
                       <div className="flex flex-wrap gap-1.5">
-                        {activeRoom.amenities.split(",").map(a => (
+                        {activeRoom.amenities.split(",").map((a: string) => (
                           <Badge key={a} variant="outline" className="text-xs">{a.trim()}</Badge>
                         ))}
                       </div>

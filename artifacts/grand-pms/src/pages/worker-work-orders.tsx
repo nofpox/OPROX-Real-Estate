@@ -68,7 +68,7 @@ export default function WorkerWorkOrders() {
           ))}
         </div>
       </div>
-      <WorkerBottomNav/>
+      <WorkerBottomNav active="work-orders" />
     </div>
   );
 }

@@ -13,6 +13,8 @@ import {
   type Shift, type Notification, type ActivityLog, type SupportTicket,
 } from "./local-data";
 
+export type { Property, Room, SupportTicket, ActivityLog, Task, WorkOrder };
+
 const LOCAL_TASK_COMMENTS: any[] = [];
 
 // ── Query key factories ───────────────────────────────────────────────────────
@@ -33,7 +35,7 @@ export const getListUsersQueryKey        = (_?: any) => ["listUsers"];
 export const getListCustomRolesQueryKey  = () => ["listCustomRoles"];
 export const getListTenantsQueryKey      = () => ["listTenants"];
 export const getListActiveSessionsQueryKey = () => ["listActiveSessions"];
-export const getListCustomFieldsQueryKey = () => ["listCustomFields"];
+export const getListCustomFieldsQueryKey = (_?: any) => ["listCustomFields"];
 
 // ── Generic mutation result ───────────────────────────────────────────────────
 
@@ -273,7 +275,7 @@ export function useCreateTaskComment() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: { taskId: number; authorName: string; body: string; imageUrl?: string } }) => {
-      const comment = { id: Date.now(), taskId: id, ...data, createdAt: new Date().toISOString() };
+      const comment = { id: Date.now(), ...data, taskId: id, createdAt: new Date().toISOString() };
       LOCAL_TASK_COMMENTS.push(comment);
       return comment;
     },
@@ -448,22 +450,22 @@ export function useGetOccupancyHeatmap(_params?: any) {
 
 // ── USERS (User Management) ───────────────────────────────────────────────────
 
-export type PmsUser = { id: number; username: string; displayName: string; email: string; role: string; status: string };
+export type PmsUser = { id: number; username: string; displayName: string; email: string | null; role: string; status: string; isActive: boolean; createdAt: string };
 export type ActiveSession = { id: number; userId: number; displayName: string; role: string; ip: string; lastSeen: string };
-export type CustomRole = { id: number; name: string; description: string; permissions: string[] };
-export type CustomField = { id: number; entityType: string; fieldType: string; label: string; isRequired: boolean; options: string[] };
+export type CustomRole = { id: number; name: string; description: string; permissions: string[]; color?: string };
+export type CustomField = { id: number; entityType: string; fieldType: string; label: string; isRequired: boolean; options: string[]; fieldLabel?: string; fieldKey?: string; required?: boolean; active?: boolean; sortOrder?: number };
 export type CreateCustomFieldInput = Partial<CustomField>;
 export type UpdateCustomFieldInput = Partial<CustomField>;
-export type NavConfigItem = { id: string; order: number; visible: boolean };
+export type NavConfigItem = { id: string; order: number; visible: boolean; label?: string };
 export type PermissionMatrix = Record<string, string[]>;
-export type ServiceCategory = { id: number; slug: string; label: string; icon: string; color: string; isActive: boolean; responseTimeMin: number; sortOrder: number };
-export type Tenant = { id: number; slug: string; name: string; status: string; createdAt: string };
+export type ServiceCategory = { id: number; slug: string; name?: string; label: string; icon: string; color: string; isActive: boolean; responseTimeMin: number; sortOrder: number; requiresTimeSlot?: boolean; propertyTypes?: string; priority?: string };
+export type Tenant = { id: number; slug: string; name: string; status: string; createdAt: string; plan?: string; isActive?: boolean; logoText?: string; logoSub?: string; contactEmail?: string; contactPhone?: string };
 export type CreateTenantInput = Partial<Tenant>;
 
 const LOCAL_PMS_USERS: PmsUser[] = [
-  { id: 1, username: "admin", displayName: "Nada Yousef", email: "admin@grandpms.com", role: "manager", status: "active" },
-  { id: 2, username: "manager", displayName: "Sara Al-Qahtani", email: "manager@grandpms.com", role: "supervisor", status: "active" },
-  { id: 3, username: "worker", displayName: "Khalid Al-Dosari", email: "worker@grandpms.com", role: "maintenance", status: "active" },
+  { id: 1, username: "admin", displayName: "Nada Yousef", email: "admin@grandpms.com", role: "manager", status: "active", isActive: true, createdAt: new Date().toISOString() },
+  { id: 2, username: "manager", displayName: "Sara Al-Qahtani", email: "manager@grandpms.com", role: "supervisor", status: "active", isActive: true, createdAt: new Date().toISOString() },
+  { id: 3, username: "worker", displayName: "Khalid Al-Dosari", email: "worker@grandpms.com", role: "maintenance", status: "active", isActive: true, createdAt: new Date().toISOString() },
 ];
 
 const LOCAL_CUSTOM_ROLES: CustomRole[] = [];
@@ -485,7 +487,7 @@ export function useCreateUser() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ data }: { data: Partial<PmsUser> }) => {
-      const nu = { id: nextId(), username: data.username ?? "", displayName: data.displayName ?? "", email: data.email ?? "", role: data.role ?? "supervisor", status: "active" };
+      const nu: PmsUser = { id: nextId(), username: data.username ?? "", displayName: data.displayName ?? "", email: data.email ?? null, role: data.role ?? "supervisor", status: "active", isActive: true, createdAt: new Date().toISOString() };
       LOCAL_PMS_USERS.push(nu); return nu;
     },
     onSettled: () => qc.invalidateQueries({ queryKey: getListUsersQueryKey() }),

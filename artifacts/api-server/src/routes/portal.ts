@@ -1527,6 +1527,12 @@ router.post("/preview/authenticate", async (req, res) => {
       role: "preview_guest",
       tenantId: null,
       permissions: [],
+      email: null,
+      phoneNumber: null,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      mustChangePassword: false,
+      isSuperAdmin: false,
     };
     await db.execute(sql`
       INSERT INTO user_sessions (session_id, user_id, tenant_id, user_data, expires_at)

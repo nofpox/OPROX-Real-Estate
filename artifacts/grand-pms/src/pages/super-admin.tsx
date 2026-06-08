@@ -139,7 +139,7 @@ function TenantFormDialog({
 
   useEffect(() => {
     if (editing) {
-      setName(editing.name); setSlug(editing.slug); setPlan(editing.plan);
+      setName(editing.name); setSlug(editing.slug); setPlan(editing.plan ?? "");
       setContactEmail(editing.contactEmail ?? ""); setContactPhone(editing.contactPhone ?? "");
       setLogoText(editing.logoText ?? ""); setLogoSub(editing.logoSub ?? "");
       setAdminUser(""); setAdminPass("");
@@ -275,7 +275,7 @@ function TenantRow({
   onActivate:  (t: Tenant) => void;
   onConfigure: (t: Tenant) => void;
 }) {
-  const planColor  = PLAN_COLORS[tenant.plan] ?? "bg-gray-100 text-gray-700";
+  const planColor  = PLAN_COLORS[tenant.plan ?? ""] ?? "bg-gray-100 text-gray-700";
   const suspended  = (tenant as any).status === "suspended" || !tenant.isActive;
 
   return (

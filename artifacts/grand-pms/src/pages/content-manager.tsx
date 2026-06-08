@@ -317,7 +317,7 @@ function ListingsEditorTab() {
     try {
       const newMedia = [...(edited.media ?? [])];
       for (let i = 0; i < files.length; i++) {
-        const url = await uploadImageFile(files[i]);
+        const url = await uploadImage(files[i]);
         newMedia.push({ url, caption: "" });
       }
       setEdited(e => ({ ...e, media: newMedia }));
@@ -591,7 +591,7 @@ function SiteContentTab() {
     if (!files?.length) return;
     setUploading(true);
     try {
-      const url = await uploadImageFile(files[0]);
+      const url = await uploadImage(files[0]);
       if (section === "hero")     setHeroLocal(h => h ? { ...h, imageUrl: url } : null);
       if (section === "about")    setAboutLocal(a => a ? { ...a, imageUrl: url } : null);
       if (section === "branding") setBrandingLocal(b => b ? { ...b, logoUrl: url } : null);
@@ -607,7 +607,7 @@ function SiteContentTab() {
     if (!files?.length) return;
     setUploading(true);
     try {
-      const url = await uploadImageFile(files[0]);
+      const url = await uploadImage(files[0]);
       setServicesLocal(s => s ? s.map((svc, i) => i === idx ? { ...svc, imageUrl: url } : svc) : null);
       toast({ title: "Image uploaded" });
     } catch (err) {

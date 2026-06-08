@@ -14,6 +14,7 @@ export type Property = {
 export type Room = {
   id: number; name: string; type: string; status: string; capacity: number;
   pricePerNight: number; propertyId: number; propertyName?: string;
+  description?: string; amenities?: string;
 };
 
 export type Staff = {
@@ -27,13 +28,16 @@ export type Task = {
   propertyId: number; propertyName?: string; unitId?: number; unitName?: string;
   assignedToId?: number; assigneeName?: string; supervisorId?: number;
   description?: string; dueDate?: string; createdAt: string; completedAt?: string;
-  reportStatus: string; afterPhotoUrl?: string; completionLat?: number; completionLng?: number;
+  reportStatus: string; afterPhotoUrl?: string; beforePhotoUrl?: string;
+  completionLat?: number; completionLng?: number;
+  startedAt?: string; submittedAt?: string; approvedAt?: string;
+  rejectedAt?: string; escalatedAt?: string; rejectionNotes?: string;
 };
 
 export type WorkOrder = {
   id: number; title: string; description?: string; priority: string; status: string;
   propertyId: number; propertyName?: string; unitId?: number; unitName?: string;
-  assignedTo?: string; dueDate?: string; createdAt: string;
+  assignedTo?: string; dueDate?: string; createdAt: string; completedAt?: string;
 };
 
 export type Shift = {
@@ -49,7 +53,7 @@ export type Notification = {
 export type ActivityLog = {
   id: number; action: string; entityType: string; entityId: number;
   actorName: string; actorRole: string; createdAt: string; proofPhotoUrl?: string;
-  details?: string;
+  details?: string; entityLabel?: string; propertyName?: string;
 };
 
 export type User = {
@@ -59,7 +63,7 @@ export type User = {
 
 export type SupportTicket = {
   id: number; title: string; description: string; category: string;
-  status: string; submittedBy?: string; adminNotes?: string; createdAt: string;
+  status: string; submittedBy?: string; submittedByName?: string; submittedByRole?: string; adminNotes?: string; createdAt: string;
 };
 
 // ── In-Memory Stores ──────────────────────────────────────────────────────────
@@ -175,7 +179,18 @@ export const SUPPORT_TICKETS: SupportTicket[] = [
   { id: 3, title: "Login issue on mobile", description: "App freezes during login on Android 13 devices.", category: "bug", status: "resolved", submittedBy: "Layla Al-Ghamdi", adminNotes: "Fixed in latest update", createdAt: d(-10) },
 ];
 
-export const APP_SETTINGS = {
+export const APP_SETTINGS: {
+  propertyName: string; logoText: string; logoSub: string; logoUrl: string;
+  businessMode: "hotel"; enabledModules: string[]; navConfig: any[];
+  permissionMatrix: Record<string, string[]>; primaryColor: string;
+  secondaryColor: string; companyName: string;
+  taskRequirements?: Record<string, boolean>;
+  taskTypes?: string[];
+  contactEmail?: string;
+  contactPhone?: string;
+  contactAddress?: string;
+  [key: string]: unknown;
+} = {
   propertyName: "Rozoz",
   logoText: "Rozoz",
   logoSub: "",

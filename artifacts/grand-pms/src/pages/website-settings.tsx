@@ -151,7 +151,7 @@ function ImageUploadField({ label, value, onChange }: { label: string; value: st
     if (!files?.length) return;
     setUploading(true);
     try {
-      const url = await uploadImageFile(files[0]);
+      const url = await uploadImage(files[0]);
       onChange(url);
       toast({ title: "Image uploaded" });
     } catch (err) {
@@ -877,7 +877,7 @@ function MiscTab({ content, onSave }: { content: SiteContent; onSave: (s: string
     if (!files?.length) return;
     setImgUploading(true);
     try {
-      const url = await uploadImageFile(files[0]);
+      const url = await uploadImage(files[0]);
       setAboutLocal(a => ({ ...a, imageUrl: url }));
       toast({ title: "Image uploaded" });
     } catch (err) {

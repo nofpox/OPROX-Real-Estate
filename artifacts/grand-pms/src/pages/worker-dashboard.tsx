@@ -74,7 +74,7 @@ export default function WorkerDashboard({ onLogout }: { onLogout: () => void }) 
           </div>
         </div>
       </div>
-      <WorkerBottomNav />
+      <WorkerBottomNav active="units" />
     </div>
   );
 }

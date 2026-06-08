@@ -290,7 +290,7 @@ function TaskTypesTab() {
 
   useEffect(() => {
     if (settings?.taskTypes) {
-      setTypes(settings.taskTypes as TaskType[]);
+      setTypes(settings.taskTypes as unknown as TaskType[]);
     }
   }, [settings]);
 
@@ -535,7 +535,7 @@ function TaskRequirementsTab() {
 
   useEffect(() => {
     if (settings?.taskRequirements) {
-      setReqs(settings.taskRequirements as TaskRequirements);
+      setReqs(settings.taskRequirements as unknown as TaskRequirements);
     }
   }, [settings]);
 
@@ -662,12 +662,12 @@ function FieldDialog({
   useEffect(() => {
     if (editing) {
       setForm({
-        fieldLabel: editing.fieldLabel,
-        fieldKey:   editing.fieldKey,
+        fieldLabel: editing.fieldLabel ?? "",
+        fieldKey:   editing.fieldKey ?? "",
         fieldType:  editing.fieldType as FieldType,
         options:    (editing.options ?? []).join(", "),
-        required:   editing.required,
-        active:     editing.active,
+        required:   editing.required ?? false,
+        active:     editing.active ?? true,
       });
       setKeyTouched(true);
     } else {
@@ -817,7 +817,7 @@ function CustomFieldsTab() {
   }
 
   const isSaving = createMut.isPending || updateMut.isPending;
-  const sortedFields = (fields ?? []).slice().sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id);
+  const sortedFields = (fields ?? []).slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.id - b.id);
 
   return (
     <>

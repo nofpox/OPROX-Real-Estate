@@ -77,7 +77,7 @@ export default function PropertyDetail() {
   const createMutation = useCreateRoom({ mutation: { onSuccess: () => { invalidateRooms(); setAddOpen(false); setForm(DEFAULT_FORM); toast({ title: t("rooms.createSuccess") }); }, onError: () => toast({ title: t("rooms.createFailed"), variant: "destructive" }) } });
   const updateMutation = useUpdateRoom({ mutation: { onSuccess: () => { invalidateRooms(); setEditRoom(null); toast({ title: t("rooms.updateSuccess") }); }, onError: () => toast({ title: t("rooms.updateFailed"), variant: "destructive" }) } });
   const deleteMutation = useDeleteRoom({ mutation: { onSuccess: () => { invalidateRooms(); setDeleteRoom(null); toast({ title: t("rooms.deleteSuccess") }); }, onError: () => toast({ title: t("rooms.deleteFailed"), variant: "destructive" }) } });
-  const bulkMutation = useCreateRoomsBulk({ mutation: { onSuccess: (rooms) => { invalidateRooms(); setBulkOpen(false); toast({ title: t("properties.detail.bulkAdded", { count: rooms.length }) }); }, onError: () => toast({ title: t("properties.detail.bulkAddFailed"), variant: "destructive" }) } });
+  const bulkMutation = useCreateRoomsBulk({ mutation: { onSuccess: (rooms: any[]) => { invalidateRooms(); setBulkOpen(false); toast({ title: t("properties.detail.bulkAdded", { count: rooms.length }) }); }, onError: () => toast({ title: t("properties.detail.bulkAddFailed"), variant: "destructive" }) } });
 
   function openEdit(room: Room) {
     setForm({ name: room.name, type: room.type, status: room.status, capacity: String(room.capacity ?? 2), pricePerNight: String(room.pricePerNight ?? 0) });
@@ -98,7 +98,7 @@ export default function PropertyDetail() {
   const bulkCount = Math.max(0, Math.min(100, bulkEnd - bulkStart + 1));
 
   function submitBulk() {
-    bulkMutation.mutate({ data: { propertyId, prefix: bulkForm.prefix, startNumber: bulkStart, endNumber: bulkEnd, type: bulkForm.type, status: bulkForm.status, capacity: parseInt(bulkForm.capacity) || 2, pricePerNight: parseFloat(bulkForm.pricePerNight) || 0 } });
+    bulkMutation.mutate({ data: { propertyId, prefix: bulkForm.prefix, start: bulkStart, end: bulkEnd, type: bulkForm.type, status: bulkForm.status, capacity: parseInt(bulkForm.capacity) || 2, pricePerNight: parseFloat(bulkForm.pricePerNight) || 0 } });
   }
 
   function downloadQR() {
@@ -164,7 +164,7 @@ export default function PropertyDetail() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {[
-          { icon: Building2, label: t("properties.detail.totalRooms"), value: stats?.unitCount || 0, color: "" },
+          { icon: Building2, label: t("properties.detail.totalRooms"), value: stats?.totalRooms || 0, color: "" },
           { icon: AlertCircle, label: t("properties.detail.openWorkOrders", "Open Work Orders"), value: stats?.openWorkOrders || 0, color: "text-amber-600 dark:text-amber-500" },
         ].map(({ icon: Icon, label, value, color }) => (
           <Card key={label} className="shadow-sm">

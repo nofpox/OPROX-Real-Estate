@@ -78,7 +78,7 @@ export default function WorkerTasks() {
           ))}
         </div>
       </div>
-      <WorkerBottomNav/>
+      <WorkerBottomNav active="tasks" />
     </div>
   );
 }

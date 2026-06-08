@@ -53,7 +53,7 @@ router.post("/cms/preview-links", requireAdmin, async (req: Request, res: Respon
       )
       RETURNING id, token, portal, label, created_by, expires_at, created_at
     `);
-    const link = (rows as any).rows?.[0] ?? (rows as any[])[0];
+    const link = (rows as any).rows?.[0] ?? (rows as unknown as any[])[0];
     res.json({ link });
   } catch (err) {
     req.log?.error(err, "POST /cms/preview-links");
@@ -81,7 +81,7 @@ router.get("/cms/preview-links", requireAdmin, async (req: Request, res: Respons
 // ── DELETE /cms/preview-links/:id — manually revoke a link ───────────────────
 router.delete("/cms/preview-links/:id", requireAdmin, async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
     await db.execute(sql`
       UPDATE preview_links SET revoked_at = NOW()
@@ -99,7 +99,7 @@ router.post("/preview/generate", async (req: Request, res: Response) => {
   try {
     const { label, portal } = req.body as { label?: string; portal?: string };
     const ALLOWED_PUBLIC = ["rkz", "grand-pms", "rkz-app"];
-    const targetPortal = ALLOWED_PUBLIC.includes(portal) ? portal : "rkz";
+    const targetPortal = portal && ALLOWED_PUBLIC.includes(portal) ? portal : "rkz";
     const rows = await db.execute(sql`
       INSERT INTO preview_links (portal, label, created_by, expires_at)
       VALUES (
@@ -110,7 +110,7 @@ router.post("/preview/generate", async (req: Request, res: Response) => {
       )
       RETURNING id, token, portal, label, expires_at, created_at
     `);
-    const link = (rows as any).rows?.[0] ?? (rows as any[])[0];
+    const link = (rows as any).rows?.[0] ?? (rows as unknown as any[])[0];
     res.json({ link });
   } catch (err) {
     req.log?.error(err, "POST /preview/generate");
@@ -121,7 +121,7 @@ router.post("/preview/generate", async (req: Request, res: Response) => {
 // ── POST /preview/:token/consume — one-time use: mark token as used (no auth) ─
 router.post("/preview/:token/consume", async (req: Request, res: Response) => {
   try {
-    const { token } = req.params;
+    const token = String(req.params.token);
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!UUID_RE.test(token)) {
       res.status(400).json({ error: "Invalid token format" });
@@ -144,7 +144,7 @@ router.post("/preview/:token/consume", async (req: Request, res: Response) => {
 // ── GET /preview/:token — public token validation (no auth) ───────────────────
 router.get("/preview/:token", async (req: Request, res: Response) => {
   try {
-    const { token } = req.params;
+    const token = String(req.params.token);
     // Basic UUID format check
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!UUID_RE.test(token)) {

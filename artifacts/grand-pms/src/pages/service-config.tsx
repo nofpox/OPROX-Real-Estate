@@ -166,15 +166,16 @@ export default function ServiceConfig() {
 
   function openEdit(cat: ServiceCategory) {
     setEditTarget(cat);
-    const isAll = cat.propertyTypes === "all" || cat.propertyTypes === "";
+    const pt = cat.propertyTypes ?? "all";
+    const isAll = pt === "all" || pt === "";
     setForm({
-      name:             cat.name,
+      name:             cat.name ?? "",
       icon:             cat.icon,
       color:            cat.color,
-      propertyTypes:    isAll ? [] : cat.propertyTypes.split(",").map(t => t.trim()),
+      propertyTypes:    isAll ? [] : pt.split(",").map((t: string) => t.trim()),
       applyAll:         isAll,
-      priority:         cat.priority,
-      requiresTimeSlot: cat.requiresTimeSlot,
+      priority:         cat.priority ?? "medium",
+      requiresTimeSlot: cat.requiresTimeSlot ?? false,
       sortOrder:        cat.sortOrder,
     });
     setModalOpen(true);
@@ -206,7 +207,7 @@ export default function ServiceConfig() {
   const filtered = tab === "all"
     ? categories
     : categories.filter(c => {
-        const types = c.propertyTypes.split(",").map(t => t.trim());
+        const types = (c.propertyTypes ?? "all").split(",").map((t: string) => t.trim());
         return types.includes("all") || types.includes(tab);
       });
 
@@ -244,7 +245,7 @@ export default function ServiceConfig() {
             {t.key !== "all" && (
               <span className="ml-1.5 text-xs opacity-70">
                 ({categories.filter(c => {
-                  const types = c.propertyTypes.split(",").map(s => s.trim());
+                  const types = (c.propertyTypes ?? "all").split(",").map((s: string) => s.trim());
                   return types.includes("all") || types.includes(t.key);
                 }).length})
               </span>
@@ -283,8 +284,8 @@ export default function ServiceConfig() {
                       <div>
                         <p className="font-semibold text-slate-800 leading-tight">{cat.name}</p>
                         <div className="flex items-center gap-1 mt-0.5">
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${PRIORITY_COLORS[cat.priority] ?? "bg-slate-100 text-slate-600"}`}>
-                            {PRIORITY_LABELS[cat.priority] ?? cat.priority}
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${PRIORITY_COLORS[cat.priority ?? ""] ?? "bg-slate-100 text-slate-600"}`}>
+                            {PRIORITY_LABELS[cat.priority ?? ""] ?? cat.priority}
                           </span>
                           {cat.requiresTimeSlot && (
                             <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600">
@@ -305,7 +306,7 @@ export default function ServiceConfig() {
                     <div className="flex items-center gap-1">
                       <Building2 size={11} className="text-slate-400" />
                       <span className="text-[11px] text-slate-400">
-                        {cat.propertyTypes === "all" ? "All types" : cat.propertyTypes.replace(/,/g, " · ")}
+                        {(!cat.propertyTypes || cat.propertyTypes === "all") ? "All types" : cat.propertyTypes.replace(/,/g, " · ")}
                       </span>
                     </div>
                     <div className="flex gap-1">

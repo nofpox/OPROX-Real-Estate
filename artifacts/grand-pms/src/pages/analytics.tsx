@@ -292,7 +292,7 @@ export default function Analytics() {
   const { data: staff = [],      isLoading: staffLoading }      = useListStaff({})  as { data: any[]; isLoading: boolean };
   const { data: properties = [], isLoading: propsLoading }      = useListProperties() as { data: any[]; isLoading: boolean };
 
-  const opStats = null;
+  const opStats = null as any;
 
   const isLoading = tasksLoading || staffLoading || propsLoading;
 
@@ -766,7 +766,7 @@ export default function Analytics() {
       {/* ── Operational tab ──────────────────────────────────────────────────── */}
       {activeTab === "operational" && (
         <div className="space-y-8">
-          {opLoading ? (
+          {isLoading ? (
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-32 rounded-xl" />
