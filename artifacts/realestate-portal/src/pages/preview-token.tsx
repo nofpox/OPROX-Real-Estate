@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 const BASE = '/realestate-api';
 
 const PORTAL_META: Record<string, { label: string; labelAr: string; path: string }> = {
-  'rkz':       { label: 'Rozoz Real Estate Portal', labelAr: 'بوابة روزوز العقارية', path: '/realestate/' },
-  'grand-pms': { label: 'Grand PMS Dashboard',      labelAr: 'لوحة تحكم جراند',      path: '/hotel-dashboard/' },
+  'rkz':       { label: 'Rozoz Real Estate Portal', labelAr: 'بوابة روزوز العقارية',  path: '/realestate/' },
+  'grand-pms': { label: 'Grand PMS Dashboard',      labelAr: 'لوحة تحكم جراند',       path: '/grand-pms/' },
+  'rkz-app':   { label: 'Rozoz Mobile App',         labelAr: 'تطبيق روزوز للجوال',    path: '/rkz/' },
 };
 
 type Status = 'loading' | 'disclaimer' | 'entering' | 'expired' | 'revoked' | 'invalid';

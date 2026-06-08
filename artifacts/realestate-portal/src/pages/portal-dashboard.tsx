@@ -582,7 +582,7 @@ export const PortalDashboard: React.FC = () => {
     const [links, setLinks] = useState<PreviewLink[]>([]);
     const [linksLoading, setLinksLoading] = useState(false);
     const [showGenForm, setShowGenForm] = useState(false);
-    const [genPortal, setGenPortal] = useState<'rkz' | 'grand-pms'>('rkz');
+    const [genPortal, setGenPortal] = useState<'rkz' | 'grand-pms' | 'rkz-app'>('rkz');
     const genHours = 1; // Hard-locked to 1 hour on all platforms
     const [genLabel, setGenLabel] = useState('');
     const [genLoading, setGenLoading] = useState(false);
@@ -647,6 +647,7 @@ export const PortalDashboard: React.FC = () => {
 
     function portalLabel(portal: string) {
       if (portal === 'grand-pms') return 'Grand PMS';
+      if (portal === 'rkz-app') return isRtl ? 'تطبيق روزوز' : 'Rozoz App';
       return isRtl ? 'المنصة العقارية' : 'Real Estate Portal';
     }
 
@@ -700,18 +701,22 @@ export const PortalDashboard: React.FC = () => {
                 </p>
 
                 {/* Portal selector */}
-                <div className="grid grid-cols-2 gap-2">
-                  {(['rkz', 'grand-pms'] as const).map(p => (
+                <div className="grid grid-cols-3 gap-2">
+                  {(['rkz', 'grand-pms', 'rkz-app'] as const).map(p => (
                     <button
                       key={p}
                       onClick={() => setGenPortal(p)}
-                      className={`text-xs py-2 px-3 rounded-lg border font-medium transition-colors ${
+                      className={`text-xs py-2 px-2 rounded-lg border font-medium transition-colors text-center ${
                         genPortal === p
                           ? 'bg-primary text-primary-foreground border-primary'
                           : 'bg-card border-border text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {p === 'rkz' ? (isRtl ? 'المنصة العقارية' : 'Real Estate Portal') : 'Grand PMS'}
+                      {p === 'rkz'
+                        ? (isRtl ? 'المنصة العقارية' : 'Real Estate Portal')
+                        : p === 'rkz-app'
+                        ? (isRtl ? 'تطبيق روزوز' : 'Rozoz App')
+                        : 'Grand PMS'}
                     </button>
                   ))}
                 </div>
