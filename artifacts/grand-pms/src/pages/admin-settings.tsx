@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -33,7 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Pencil, Trash2, SlidersHorizontal, Tag, ToggleLeft,
   Building2, ListChecks, CheckSquare, ShieldCheck, Shield, Lock,
-  Palette, Upload,
+  Palette, Upload, Link2, Clock, Copy, CheckCheck, RefreshCw,
 } from "lucide-react";
 import type { PermissionMatrix } from "@/lib/local-hooks";
 import { applyPrimaryColor, applySidebarColor, HEX_RE } from "@/hooks/use-theme";
@@ -41,7 +41,7 @@ import { useLanguage } from "@/contexts/language-context";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type MainTab = "systemInfo" | "taskTypes" | "taskRequirements" | "customFields" | "permissions" | "appearance";
+type MainTab = "systemInfo" | "taskTypes" | "taskRequirements" | "customFields" | "permissions" | "appearance" | "previewLinks";
 type EntityTab = "asset" | "task";
 type FieldType = "text" | "number" | "select" | "date" | "boolean";
 
@@ -96,6 +96,7 @@ const TAB_META: Array<{ key: MainTab; icon: React.ReactNode; label?: string }> =
   { key: "customFields",     icon: <SlidersHorizontal className="h-4 w-4" /> },
   { key: "permissions",      icon: <ShieldCheck className="h-4 w-4" />, label: "Role Permissions" },
   { key: "appearance",       icon: <Palette className="h-4 w-4" />,     label: "Appearance" },
+  { key: "previewLinks",     icon: <Link2 className="h-4 w-4" />,       label: "Preview Links" },
 ];
 
 // ─── Permission rows (for owner-level role permission editing) ────────────────
@@ -1576,6 +1577,236 @@ function PermissionsTab() {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Main page
+// ─── Preview Links Tab ────────────────────────────────────────────────────────
+
+const GRAND_PMS_API = "/realestate-api";
+
+function PreviewLinksTab() {
+  type PLink = {
+    id: number; token: string; portal: string; label: string;
+    created_by: string; expires_at: string; revoked_at: string | null; created_at: string;
+  };
+  const [links,      setLinks]      = useState<PLink[]>([]);
+  const [loading,    setLoading]    = useState(false);
+  const [showForm,   setShowForm]   = useState(false);
+  const [label,      setLabel]      = useState("");
+  const [genLoading, setGenLoading] = useState(false);
+  const [newLink,    setNewLink]    = useState<string | null>(null);
+  const [copied,     setCopied]     = useState(false);
+  const [revoking,   setRevoking]   = useState<number | null>(null);
+  const { toast } = useToast();
+
+  const fetchLinks = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch(`${GRAND_PMS_API}/cms/preview-links`, { credentials: "include" });
+      if (r.ok) {
+        const j = await r.json();
+        setLinks((j.links ?? []).filter((l: PLink) => l.portal === "grand-pms"));
+      }
+    } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { void fetchLinks(); }, [fetchLinks]);
+
+  async function generate() {
+    setGenLoading(true);
+    try {
+      const r = await fetch(`${GRAND_PMS_API}/cms/preview-links`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ portal: "grand-pms", hours: 1, label }),
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const token = j.link?.token as string;
+        setNewLink(`${window.location.origin}/realestate/preview/${token}`);
+        setShowForm(false);
+        setLabel("");
+        toast({ title: "Preview link created successfully" });
+        await fetchLinks();
+      } else {
+        toast({ title: "Failed to generate link", variant: "destructive" });
+      }
+    } finally { setGenLoading(false); }
+  }
+
+  async function revoke(id: number) {
+    setRevoking(id);
+    try {
+      await fetch(`${GRAND_PMS_API}/cms/preview-links/${id}`, { method: "DELETE", credentials: "include" });
+      await fetchLinks();
+      const revokedToken = links.find(l => l.id === id)?.token ?? "___";
+      if (newLink?.includes(revokedToken)) setNewLink(null);
+    } finally { setRevoking(null); }
+  }
+
+  function copyLink(url: string) {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  function isExpired(link: PLink) { return new Date(link.expires_at) < new Date(); }
+  function isActive(link: PLink)  { return !link.revoked_at && !isExpired(link); }
+
+  function timeLabel(link: PLink) {
+    if (link.revoked_at) return "Revoked";
+    if (isExpired(link)) return "Expired";
+    const diff = new Date(link.expires_at).getTime() - Date.now();
+    const h = Math.floor(diff / 3_600_000);
+    const m = Math.floor((diff % 3_600_000) / 60_000);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  }
+
+  const activeLinks  = links.filter(isActive);
+  const expiredLinks = links.filter(l => !isActive(l));
+
+  return (
+    <div className="space-y-6 max-w-xl">
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold">Grand PMS Preview Links</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Temporary 1-hour access links — Grand PMS only
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => { setShowForm(v => !v); setNewLink(null); }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Generate Link
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+
+          {showForm && (
+            <div className="bg-muted/60 rounded-xl p-4 space-y-3 border border-border/60">
+              <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+                <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                  Link expires automatically after exactly 1 hour
+                </span>
+              </div>
+              <Input
+                value={label}
+                onChange={e => setLabel(e.target.value)}
+                placeholder="Optional label…"
+                className="h-9 text-sm"
+              />
+              <Button className="w-full" onClick={generate} disabled={genLoading}>
+                {genLoading ? "Generating…" : "Create Grand PMS Preview Link"}
+              </Button>
+            </div>
+          )}
+
+          {newLink && (
+            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl p-3 space-y-2">
+              <p className="text-xs font-semibold text-green-700 dark:text-green-400">
+                ✓ Preview link created!
+              </p>
+              <div className="flex items-center gap-2 bg-card rounded-lg px-2.5 py-2 border border-border/60">
+                <span className="text-[11px] text-foreground font-mono flex-1 truncate dir-ltr">{newLink}</span>
+                <button
+                  onClick={() => copyLink(newLink)}
+                  className="shrink-0 text-primary hover:text-primary/80 transition-colors"
+                >
+                  {copied
+                    ? <CheckCheck className="h-4 w-4 text-green-600" />
+                    : <Copy className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground/70">
+                Share this link — it will auto-expire after 1 hour.
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
+                Active Links
+              </p>
+              <button onClick={fetchLinks} className="text-muted-foreground hover:text-foreground transition-colors">
+                <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+              </button>
+            </div>
+
+            {loading && <Skeleton className="h-12 rounded-xl" />}
+
+            {!loading && activeLinks.length === 0 && (
+              <p className="text-xs text-muted-foreground/60 text-center py-3">
+                No active preview links
+              </p>
+            )}
+
+            {!loading && activeLinks.map(link => (
+              <div key={link.id} className="flex items-center gap-2 bg-muted/50 rounded-xl px-3 py-2.5 border border-border/40">
+                <div className="flex-1 min-w-0">
+                  {link.label && (
+                    <p className="text-xs text-foreground truncate mb-0.5">{link.label}</p>
+                  )}
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    <span>{timeLabel(link)}</span>
+                    <span className="text-border">·</span>
+                    <span className="font-mono dir-ltr">{link.token.slice(0, 8)}…</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => copyLink(`${window.location.origin}/realestate/preview/${link.token}`)}
+                    className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    title="Copy link"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => revoke(link.id)}
+                    disabled={revoking === link.id}
+                    className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                    title="Revoke link"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {!loading && expiredLinks.length > 0 && (
+              <details className="group">
+                <summary className="text-[11px] text-muted-foreground/60 cursor-pointer hover:text-muted-foreground list-none flex items-center gap-1 py-1">
+                  <span className="group-open:hidden">▶</span>
+                  <span className="hidden group-open:inline">▼</span>
+                  {expiredLinks.length} expired / revoked
+                </summary>
+                <div className="space-y-1 mt-1">
+                  {expiredLinks.map(link => (
+                    <div key={link.id} className="flex items-center gap-2 bg-muted/20 rounded-xl px-3 py-2 border border-border/20 opacity-60">
+                      <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                        {link.label && <span className="text-[10px] text-muted-foreground truncate">{link.label}</span>}
+                        <span className="text-[10px] text-muted-foreground">{timeLabel(link)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function AdminSettingsInner() {
@@ -1617,6 +1848,7 @@ function AdminSettingsInner() {
       {activeTab === "customFields"     && <CustomFieldsTab />}
       {activeTab === "permissions"      && <PermissionsTab />}
       {activeTab === "appearance"       && <AppearanceTab />}
+      {activeTab === "previewLinks"     && <PreviewLinksTab />}
     </div>
   );
 }

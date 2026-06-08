@@ -582,7 +582,6 @@ export const PortalDashboard: React.FC = () => {
     const [links, setLinks] = useState<PreviewLink[]>([]);
     const [linksLoading, setLinksLoading] = useState(false);
     const [showGenForm, setShowGenForm] = useState(false);
-    const [genPortal, setGenPortal] = useState<'rkz' | 'grand-pms' | 'rkz-app'>('rkz');
     const genHours = 1; // Hard-locked to 1 hour on all platforms
     const [genLabel, setGenLabel] = useState('');
     const [genLoading, setGenLoading] = useState(false);
@@ -606,7 +605,7 @@ export const PortalDashboard: React.FC = () => {
         const r = await fetch(`${BASE}/cms/preview-links`, {
           method: 'POST', credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ portal: genPortal, hours: genHours, label: genLabel }),
+          body: JSON.stringify({ portal: 'rkz', hours: genHours, label: genLabel }),
         });
         if (r.ok) {
           const j = await r.json();
@@ -643,12 +642,6 @@ export const PortalDashboard: React.FC = () => {
       const h = Math.floor(diff / 3_600_000);
       const m = Math.floor((diff % 3_600_000) / 60_000);
       return h > 0 ? `${h}h ${m}m` : `${m}m`;
-    }
-
-    function portalLabel(portal: string) {
-      if (portal === 'grand-pms') return 'Grand PMS';
-      if (portal === 'rkz-app') return isRtl ? 'تطبيق روزوز' : 'Rozoz App';
-      return isRtl ? 'المنصة العقارية' : 'Real Estate Portal';
     }
 
     return (
@@ -696,31 +689,6 @@ export const PortalDashboard: React.FC = () => {
             {/* Generator form */}
             {showGenForm && (
               <div className="bg-muted/60 rounded-xl p-3 space-y-3 border border-border/60">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  {isRtl ? 'إعدادات الرابط' : 'Link Settings'}
-                </p>
-
-                {/* Portal selector */}
-                <div className="grid grid-cols-3 gap-2">
-                  {(['rkz', 'grand-pms', 'rkz-app'] as const).map(p => (
-                    <button
-                      key={p}
-                      onClick={() => setGenPortal(p)}
-                      className={`text-xs py-2 px-2 rounded-lg border font-medium transition-colors text-center ${
-                        genPortal === p
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-card border-border text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {p === 'rkz'
-                        ? (isRtl ? 'المنصة العقارية' : 'Real Estate Portal')
-                        : p === 'rkz-app'
-                        ? (isRtl ? 'تطبيق روزوز' : 'Rozoz App')
-                        : 'Grand PMS'}
-                    </button>
-                  ))}
-                </div>
-
                 {/* Expiry — fixed 1 hour, enforced on server */}
                 <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
                   <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
@@ -793,13 +761,10 @@ export const PortalDashboard: React.FC = () => {
                 </p>
               )}
 
-              {!linksLoading && links.filter(isActive).map(link => (
+              {!linksLoading && links.filter(l => l.portal === 'rkz' && isActive(l)).map(link => (
                 <div key={link.id} className="flex items-center gap-2 bg-muted/50 rounded-xl px-3 py-2.5 border border-border/40">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4 font-medium">
-                        {portalLabel(link.portal)}
-                      </Badge>
                       {link.label && (
                         <span className="text-[11px] text-muted-foreground truncate">{link.label}</span>
                       )}
@@ -832,23 +797,21 @@ export const PortalDashboard: React.FC = () => {
               ))}
 
               {/* Expired/revoked history (collapsed) */}
-              {!linksLoading && links.filter(l => !isActive(l)).length > 0 && (
+              {!linksLoading && links.filter(l => l.portal === 'rkz' && !isActive(l)).length > 0 && (
                 <details className="group">
                   <summary className="text-[11px] text-muted-foreground/60 cursor-pointer hover:text-muted-foreground list-none flex items-center gap-1 py-1">
                     <span className="group-open:hidden">▶</span>
                     <span className="hidden group-open:inline">▼</span>
                     {isRtl
-                      ? `${links.filter(l => !isActive(l)).length} روابط منتهية/ملغاة`
-                      : `${links.filter(l => !isActive(l)).length} expired / revoked`}
+                      ? `${links.filter(l => l.portal === 'rkz' && !isActive(l)).length} روابط منتهية/ملغاة`
+                      : `${links.filter(l => l.portal === 'rkz' && !isActive(l)).length} expired / revoked`}
                   </summary>
                   <div className="space-y-1 mt-1">
-                    {links.filter(l => !isActive(l)).map(link => (
+                    {links.filter(l => l.portal === 'rkz' && !isActive(l)).map(link => (
                       <div key={link.id} className="flex items-center gap-2 bg-muted/20 rounded-xl px-3 py-2 border border-border/20 opacity-60">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4">
-                              {portalLabel(link.portal)}
-                            </Badge>
+                            {link.label && <span className="text-[10px] text-muted-foreground truncate">{link.label}</span>}
                             <span className="text-[10px] text-muted-foreground">{timeLabel(link)}</span>
                           </div>
                         </div>
@@ -868,9 +831,8 @@ export const PortalDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-1 pt-0">
             {[
-              { label: isRtl ? 'الموقع العام'           : 'Public Site',          href: '/realestate/' },
-              { label: isRtl ? 'لوحة إدارة المنصة'     : 'Portal Admin',          href: '/realestate/login' },
-              { label: isRtl ? 'لوحة التحكم الرئيسية'  : 'Grand PMS Dashboard',   href: '/grand-pms/' },
+              { label: isRtl ? 'الموقع العام'       : 'Public Site',   href: '/realestate/' },
+              { label: isRtl ? 'لوحة إدارة المنصة' : 'Portal Admin',  href: '/realestate/login' },
             ].map(({ label, href }) => (
               <a
                 key={href}

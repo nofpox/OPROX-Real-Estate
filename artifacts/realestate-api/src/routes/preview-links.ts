@@ -34,9 +34,9 @@ router.post("/cms/preview-links", requireAdmin, async (req: Request, res: Respon
       label?: string;
       hours: number;
     };
-    const VALID_PORTALS = ["rkz", "grand-pms"];
+    const VALID_PORTALS = ["rkz", "grand-pms", "rkz-app"];
     if (!VALID_PORTALS.includes(portal)) {
-      res.status(400).json({ error: "Invalid portal. Must be 'rkz' or 'grand-pms'" });
+      res.status(400).json({ error: "Invalid portal" });
       return;
     }
     // All preview links are hard-locked to exactly 1 hour regardless of any client input
@@ -98,7 +98,8 @@ router.delete("/cms/preview-links/:id", requireAdmin, async (req: Request, res: 
 router.post("/preview/generate", async (req: Request, res: Response) => {
   try {
     const { label, portal } = req.body as { label?: string; portal?: string };
-    const targetPortal = portal === "grand-pms" ? "grand-pms" : "rkz";
+    const ALLOWED_PUBLIC = ["rkz", "grand-pms", "rkz-app"];
+    const targetPortal = ALLOWED_PUBLIC.includes(portal) ? portal : "rkz";
     const rows = await db.execute(sql`
       INSERT INTO preview_links (portal, label, created_by, expires_at)
       VALUES (
