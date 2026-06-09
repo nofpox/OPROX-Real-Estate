@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Rozoz MSREP",
-    "slug": "rkz",
+    "slug": "rozoz-msrep",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "rkz",
+    "scheme": "rozoz-msrep",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -15,10 +15,10 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.rkz.app"
+      "bundleIdentifier": "com.rozoz.msrep"
     },
     "android": {
-      "package": "com.rkz.app"
+      "package": "com.rozoz.msrep"
     },
     "web": {
       "favicon": "./assets/images/icon.png"

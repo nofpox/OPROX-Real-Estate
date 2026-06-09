@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/rozoz-mobile",
+  "name": "@workspace/rozoz-msrep",
   "version": "0.0.0",
   "private": true,
   "main": "expo-router/entry",
