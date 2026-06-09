@@ -1,6 +1,6 @@
-# Grand PMS — Standalone
+# Rozoz — Standalone
 
-A fully self-contained version of the Grand PMS hotel dashboard. **Zero server, zero API calls** — everything runs locally in your browser.
+A fully self-contained version of the Rozoz hotel dashboard. **Zero server, zero API calls** — everything runs locally in your browser.
 
 ## Quick Start
 

@@ -451,7 +451,7 @@ const ar: Translations = {
     },
     fields: {
       name: "اسم العقار",
-      namePlaceholder: "فندق جراند الرئيسي",
+      namePlaceholder: "فندق روزوز الرئيسي",
       type: "تصنيف العقار",
       selectType: "اختر التصنيف",
       status: "الحالة",
@@ -1187,8 +1187,8 @@ const ar: Translations = {
     systemInfo: {
       title: "معلومات النظام",
       subtitle: "بيانات الشركة المعروضة في جميع أنحاء النظام.",
-      companyName: "اسم الشركة", companyNamePlaceholder: "مثال: مجموعة جراند للعقارات",
-      contactEmail: "البريد الإلكتروني للتواصل", contactEmailPlaceholder: "مثال: info@grandproperties.com",
+      companyName: "اسم الشركة", companyNamePlaceholder: "مثال: مجموعة روزوز للعقارات",
+      contactEmail: "البريد الإلكتروني للتواصل", contactEmailPlaceholder: "مثال: info@rozoz.com",
       contactPhone: "رقم الهاتف", contactPhonePlaceholder: "مثال: +971 50 000 0000",
       contactAddress: "العنوان", contactAddressPlaceholder: "مثال: دبي، الإمارات",
       saveBtn: "حفظ المعلومات", saved: "تم حفظ معلومات النظام.", error: "فشل الحفظ. يرجى المحاولة مجدداً.",

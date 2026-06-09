@@ -1,5 +1,5 @@
 /**
- * Grand PMS — Load Test Simulation
+ * Rozoz — Load Test Simulation
  *
  * Uses autocannon to fire concurrent HTTP requests against the key booking
  * and financial endpoints and prints a structured performance report.
@@ -81,7 +81,7 @@ function printReport(results: Array<{ title: string; result: ACResult }>): void 
   ].join("  ");
 
   console.log(`\n${"═".repeat(100)}`);
-  console.log("  GRAND PMS — LOAD TEST RESULTS");
+  console.log("  ROZOZ — LOAD TEST RESULTS");
   console.log(`${"═".repeat(100)}`);
   console.log(`  ${HEADER}`);
   console.log(`  ${LINE}`);
@@ -114,7 +114,7 @@ function printReport(results: Array<{ title: string; result: ACResult }>): void 
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
   console.log("\n══════════════════════════════════════════════════════════════");
-  console.log("  Grand PMS Load Test — starting...");
+  console.log("  Rozoz Load Test — starting...");
   console.log("══════════════════════════════════════════════════════════════");
 
   // 1. Get auth session

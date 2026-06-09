@@ -1,5 +1,5 @@
 /**
- * SmartHeatmap — Web-native port of the RKZ Leaflet geographic heatmap.
+ * SmartHeatmap — Web-native port of the Rozoz Leaflet geographic heatmap.
  * Shows Saudi real estate district intensity (occupancy or deal volume) as a
  * colour-gradient heat layer, with gold markers that open data pop-ups.
  * Pure React — no React Native dependencies.

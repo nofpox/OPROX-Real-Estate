@@ -383,7 +383,7 @@ export default function SettingsScreen() {
                     [
                       {
                         text: isAr ? "إرسال بريد إلكتروني" : "Send Email",
-                        onPress: () => void Linking.openURL("mailto:support@rkz-solutions.com"),
+                        onPress: () => void Linking.openURL("mailto:support@rozoz.com"),
                       },
                       {
                         text: isAr ? "زيارة صفحة المساعدة" : "Visit Help Page",

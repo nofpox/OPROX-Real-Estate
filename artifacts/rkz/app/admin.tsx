@@ -1235,7 +1235,7 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
                 label={isAr ? "البريد الإلكتروني" : "Contact Email"}
                 value={draftPortal.contactEmail}
                 onChange={(v) => setDraftPortal(d => d ? { ...d, contactEmail: v } : d)}
-                placeholder="info@rkz-solutions.com"
+                placeholder="info@rozoz.com"
               />
               <FieldRow
                 label={isAr ? "رقم الهاتف" : "Contact Phone"}

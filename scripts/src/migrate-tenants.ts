@@ -43,11 +43,11 @@ const steps: string[] = [
     END IF;
   END$$`,
   `INSERT INTO tenants (id, name, slug, plan, status, logo_text, logo_sub)
-   VALUES (1, 'Grand PMS Demo', 'grand-pms', 'enterprise', 'active', 'Grand', 'PMS')
+   VALUES (1, 'Rozoz Demo', 'grand-pms', 'enterprise', 'active', 'Rozoz', 'Smart')
    ON CONFLICT (slug) DO NOTHING`,
   `INSERT INTO users (username, display_name, email, password_hash, role, permissions, is_active, tenant_id)
    VALUES (
-     'superadmin', 'Super Administrator', 'super@grandpms.io',
+     'superadmin', 'Super Administrator', 'super@rozoz.com',
      encode(digest('grand-pms::superadmin123', 'sha256'), 'hex'),
      'super_admin', '["all"]', TRUE, NULL
    ) ON CONFLICT (username) DO NOTHING`,
