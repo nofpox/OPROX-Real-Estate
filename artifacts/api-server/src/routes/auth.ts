@@ -484,7 +484,7 @@ export async function ensureAdmin() {
       await db.insert(usersTable).values({
         username: "yousef",
         displayName: "يوسف",
-        email: "yousef@rkz.info",
+        email: "nofabark@gmail.com",
         passwordHash: hashPwd("yousef171965"),
         role: "super_admin",
         permissions: JSON.stringify(["all"]),
