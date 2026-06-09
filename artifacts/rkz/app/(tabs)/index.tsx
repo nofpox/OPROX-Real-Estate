@@ -178,7 +178,7 @@ export default function DiscoveryMapScreen() {
       if (ok) doLogout();
       return;
     }
-    Alert.alert("تسجيل الخروج", "هل تريد تسجيل الخروج من Rozoz MSREP؟", [
+    Alert.alert("تسجيل الخروج", "هل تريد تسجيل الخروج من ROZOZ؟", [
       { text: "إلغاء", style: "cancel" },
       { text: "خروج", style: "destructive", onPress: doLogout },
     ]);
