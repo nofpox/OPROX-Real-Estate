@@ -68,7 +68,7 @@ export default function Login({ onLogin }: LoginProps) {
       </button>
 
       <p className="text-white/20 text-[11px] tracking-widest uppercase">
-        Property Management System
+        Smart Solutions · روزوز للحلول الذكية
       </p>
 
       <p className="text-white/15 text-[10px] tracking-wide">
