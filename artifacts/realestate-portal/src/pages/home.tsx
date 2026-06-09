@@ -208,8 +208,53 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* ── Testimonials ──────────────────────────────────────────────────────── */}
+      <section className="py-24 bg-muted">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="text-center mb-14">
+            <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-3">
+              {isRtl ? 'ما يقوله عملاؤنا' : 'What Our Clients Say'}
+            </p>
+            <h2 className="text-3xl font-bold text-primary">
+              {isRtl ? 'ثقة أصحاب العقارات' : 'Trusted by Property Owners'}
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {(isRtl ? [
+              { quote: 'منذ تسليم الفندق لروزوز، ارتفعت نسبة الإشغال بشكل ملحوظ وأصبحت تقاريرهم الشهرية مرجعاً أعتمد عليه.', name: 'م. عبدالله العمري', role: 'مالك فندق — الرياض' },
+              { quote: 'لم أتوقع أن تكون الإدارة بهذا المستوى من الدقة. الفريق محترف وتواصلهم ممتاز في كل وقت.', name: 'المهندس خالد الغامدي', role: 'مالك مجمع سكني — جدة' },
+              { quote: 'روزوز أعادت تنظيم المجمع كاملاً خلال شهرين. المستأجرون أكثر رضا والعائد المالي تحسّن.', name: 'أ. نورة السعيد', role: 'مستثمرة عقارية — الدمام' },
+            ] : [
+              { quote: 'Since handing our hotel to Rozoz, occupancy has improved significantly and their monthly reports are the reference I rely on.', name: 'Eng. Abdullah Al-Omari', role: 'Hotel Owner — Riyadh' },
+              { quote: "I didn't expect management at this level of precision. The team is professional and their communication is excellent at all times.", name: 'Eng. Khalid Al-Ghamdi', role: 'Compound Owner — Jeddah' },
+              { quote: 'Rozoz reorganized the entire compound within two months. Tenants are happier and financial returns improved.', name: 'Noura Al-Saeed', role: 'Real Estate Investor — Dammam' },
+            ]).map((t, i) => (
+              <div key={i} className={`bg-card rounded-2xl border border-border p-6 flex flex-col gap-4 hover:border-secondary/40 hover:shadow-md transition-all duration-300 ${isRtl ? 'text-right' : ''}`}>
+                <div className="flex gap-1">
+                  {[...Array(5)].map((_, s) => (
+                    <span key={s} className="text-secondary text-sm">★</span>
+                  ))}
+                </div>
+                <p className="text-muted-foreground text-sm leading-relaxed flex-1">
+                  {isRtl ? `"${t.quote}"` : `"${t.quote}"`}
+                </p>
+                <div className={`flex items-center gap-3 pt-2 border-t border-border ${isRtl ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-9 h-9 rounded-full bg-secondary/15 flex items-center justify-center text-secondary font-bold text-sm shrink-0">
+                    {t.name.charAt(isRtl ? t.name.length - 1 : 0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-primary">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Services Overview ──────────────────────────────────────────────────── */}
-      <section className="py-28 bg-muted">
+      <section className="py-28 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-3">

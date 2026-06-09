@@ -20,7 +20,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     href === '/' ? location === '/' || location === '' : location.startsWith(href);
 
   // Center nav: only Properties, Services, Contact — no home, no portal
-  const ALLOWED_HREFS = ['/listings', '/services', '/contact'];
+  const ALLOWED_HREFS = ['/listings', '/about', '/services', '/contact'];
   const centerNav = nav.filter(n => ALLOWED_HREFS.includes(n.href));
 
   return (

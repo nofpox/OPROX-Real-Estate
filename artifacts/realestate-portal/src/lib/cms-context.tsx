@@ -159,7 +159,7 @@ const DEFAULTS: SiteContent = {
   ],
   nav: [
     { href: "/",         labelEn: "Home",       labelAr: "الرئيسية" },
-    { href: "/listings", labelEn: "Properties", labelAr: "العقارات" },
+    { href: "/listings", labelEn: "Our Portfolio", labelAr: "محفظتنا" },
     { href: "/services", labelEn: "Services",   labelAr: "الخدمات"  },
     { href: "/contact",  labelEn: "Contact",    labelAr: "اتصل بنا" },
   ],
@@ -194,10 +194,10 @@ const DEFAULTS: SiteContent = {
   },
   announcements: [],
   listingsPage: {
-    pageTitleEn: "Property Listings",
-    pageTitleAr: "العقارات",
-    subtitleEn: "Discover our curated selection of properties across Saudi Arabia.",
-    subtitleAr: "اكتشف مجموعة عقاراتنا المختارة في المملكة العربية السعودية.",
+    pageTitleEn: "Our Managed Portfolio",
+    pageTitleAr: "محفظتنا المُدارة",
+    subtitleEn: "Explore the properties we manage across Saudi Arabia.",
+    subtitleAr: "استعرض العقارات التي تُديرها روزوز في المملكة العربية السعودية.",
     metaDescription: "Browse properties for sale, rent, and under professional management by Rozoz Smart Solutions.",
   },
 };

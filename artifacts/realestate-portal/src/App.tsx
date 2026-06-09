@@ -20,6 +20,7 @@ import { PortalDashboard } from "@/pages/portal-dashboard";
 import { ServiceDetail } from "@/pages/service-detail";
 import { Join } from "@/pages/join";
 import { GetStarted } from "@/pages/get-started";
+import { About } from "@/pages/about";
 import { PortalRegister } from "@/pages/portal-register";
 import { BuyerDashboard } from "@/pages/buyer-dashboard";
 import { PreviewToken } from "@/pages/preview-token";
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/services/:slug" component={ServiceDetail} />
       <Route path="/contact" component={Contact} />
       <Route path="/get-started" component={GetStarted} />
+      <Route path="/about" component={About} />
       {/* Legacy user-facing routes — redirect to admin gate */}
       <Route path="/join" component={Join} />
       <Route path="/portal/register" component={PortalRegister} />

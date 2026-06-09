@@ -3,6 +3,6 @@ import { useLocation } from 'wouter';
 
 export const Join: React.FC = () => {
   const [, navigate] = useLocation();
-  useEffect(() => { navigate('/listings'); }, [navigate]);
+  useEffect(() => { navigate('/get-started'); }, [navigate]);
   return null;
 };

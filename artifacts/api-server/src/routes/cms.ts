@@ -267,11 +267,12 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     metaDescription: "Browse properties for sale, rent, and under professional management by Rozoz Smart Solutions.",
   },
   nav: [
-    { href: "/",         labelEn: "Home",          labelAr: "الرئيسية"    },
-    { href: "/listings", labelEn: "Properties",    labelAr: "العقارات"    },
-    { href: "/services", labelEn: "Services",      labelAr: "الخدمات"     },
-    { href: "/contact",  labelEn: "Contact",       labelAr: "اتصل بنا"    },
-    { href: "/portal",   labelEn: "Investor Portal", labelAr: "بوابة المستثمر" },
+    { href: "/",         labelEn: "Home",             labelAr: "الرئيسية"         },
+    { href: "/listings", labelEn: "Our Portfolio",    labelAr: "محفظتنا"          },
+    { href: "/about",    labelEn: "About",            labelAr: "عنّا"             },
+    { href: "/services", labelEn: "Services",         labelAr: "الخدمات"          },
+    { href: "/contact",  labelEn: "Contact",          labelAr: "اتصل بنا"         },
+    { href: "/portal",   labelEn: "Investor Portal",  labelAr: "بوابة المستثمر"   },
   ],
   footer: {
     descriptionEn: "Your trusted partner for premium property management across Saudi Arabia — hotels, compounds, and corporate facilities.",
