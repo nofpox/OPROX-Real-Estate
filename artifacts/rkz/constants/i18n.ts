@@ -43,7 +43,7 @@ export const ar = {
     home: "الرئيسية",
     add: "إضافة",
     listings: "عقاراتي",
-    myRequests: "طلباتي",
+    myRequests: "الخدمات",
     settings: "الإعدادات",
   },
   propertyTypes: {
@@ -472,7 +472,7 @@ export const en: Translations = {
     home: "Home",
     add: "Add",
     listings: "Listings",
-    myRequests: "My Requests",
+    myRequests: "Services",
     settings: "Settings",
   },
   propertyTypes: {

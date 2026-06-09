@@ -116,7 +116,7 @@ function NativeTabLayout() {
     { name: "index",        sf: { default: "map",           selected: "map.fill"             }, label: t.tabs.home       },
     { name: "add",          sf: { default: "plus.circle",   selected: "plus.circle.fill"     }, label: t.tabs.add        },
     { name: "listings",     sf: { default: "list.bullet",   selected: "list.bullet.circle.fill" }, label: t.tabs.listings },
-    { name: "ai-concierge", sf: { default: "checklist",     selected: "checklist.checked"    }, label: t.tabs.myRequests },
+    { name: "ai-concierge", sf: { default: "wrench.and.screwdriver", selected: "wrench.and.screwdriver.fill" }, label: t.tabs.myRequests },
     { name: "settings",     sf: { default: "gearshape",     selected: "gearshape.fill"       }, label: t.tabs.settings   },
   ];
 
@@ -174,8 +174,8 @@ function ClassicTabLayout() {
       title: t.tabs.myRequests,
       icon:  (color: string) =>
         isIOS
-          ? <SymbolView name="checklist" tintColor={color} size={24} />
-          : <MaterialIcons name="assignment" size={24} color={color} />,
+          ? <SymbolView name="wrench.and.screwdriver" tintColor={color} size={24} />
+          : <MaterialIcons name="build-circle" size={24} color={color} />,
     },
     {
       name:  "settings",
