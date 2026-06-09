@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
 import { useCms } from '@/lib/cms-context';
-import { Building, Menu, X, Globe, MapPin, Mail, Phone, KeyRound } from 'lucide-react';
+import { Building, Menu, X, Globe, MapPin, Mail, Phone, KeyRound, ArrowLeft, ArrowRight } from 'lucide-react';
 import { SmartAssistant } from './assistant';
 import { SmartAppBanner } from './SmartAppBanner';
 
@@ -64,7 +64,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             ))}
           </nav>
 
-          {/* ── RIGHT: Language toggle (desktop) ──────────────────────── */}
+          {/* ── RIGHT: Language toggle + CTA + Admin (desktop) ───────────── */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
             <button
               onClick={toggleLanguage}
@@ -73,6 +73,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             >
               <Globe className="h-4 w-4" />
             </button>
+            <Link
+              href="/get-started"
+              className="flex items-center gap-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm"
+            >
+              {isRtl ? 'ابدأ معنا' : 'Get Started'}
+              {isRtl
+                ? <ArrowLeft  className="h-3.5 w-3.5" />
+                : <ArrowRight className="h-3.5 w-3.5" />}
+            </Link>
             <Link
               href="/portal"
               className="flex items-center gap-2 border border-border text-muted-foreground hover:text-primary hover:border-primary/40 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
@@ -117,7 +126,17 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   {isRtl ? labelAr : labelEn}
                 </Link>
               ))}
-              <div className="mt-1 pt-2 border-t border-border/60">
+              <div className="mt-1 pt-2 border-t border-border/60 flex flex-col gap-1">
+                <Link
+                  href="/get-started"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors"
+                >
+                  {isRtl ? 'ابدأ معنا' : 'Get Started'}
+                  {isRtl
+                    ? <ArrowLeft  className="h-4 w-4" />
+                    : <ArrowRight className="h-4 w-4" />}
+                </Link>
                 <Link
                   href="/portal"
                   onClick={() => setIsMenuOpen(false)}

@@ -40,7 +40,7 @@ export const ListingsBrowser: React.FC = () => {
   const [inputValue,   setInputValue]   = useState('');
   const [propertyType, setPropertyType] = useState<string>('all');
   const [type,         setType]         = useState<string>('all');
-  const [showMap,      setShowMap]      = useState(true);
+  const [showMap,      setShowMap]      = useState(false);
 
   const [rkzListings, setRkzListings]       = useState<RkzListing[]>([]);
   const [rkzLoading,  setRkzLoading]        = useState(true);

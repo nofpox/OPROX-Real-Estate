@@ -4,13 +4,32 @@ import { Link } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
 import { useCms } from '@/lib/cms-context';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowLeft, Building2, Users, TrendingUp, Award, CheckCircle2 } from 'lucide-react';
+import {
+  ArrowRight, ArrowLeft, Building2, Users, TrendingUp, Award,
+  CheckCircle2, MessageCircle,
+} from 'lucide-react';
 
 const STAT_ICONS = [Building2, Users, TrendingUp, Award];
 
+const ROZOZ_WHATSAPP = 'https://wa.me/966500000000';
+
+// ── How-it-works steps ────────────────────────────────────────────────────────
+const STEPS = {
+  ar: [
+    { num: '01', title: 'تواصل معنا',    desc: 'أخبرنا عن عقارك وتوقعاتك — خبراؤنا يستمعون بعناية.' },
+    { num: '02', title: 'نُقيّم ونقترح', desc: 'نزور العقار ونُعدّ خطة إدارية شاملة مع عرض سعر شفاف.' },
+    { num: '03', title: 'نتولى الإدارة', desc: 'بعد توقيع العقد، فريقنا يُدير كل شيء ويُبلّغك بتقارير منتظمة.' },
+  ],
+  en: [
+    { num: '01', title: 'Contact Us',       desc: 'Tell us about your property — our experts listen carefully.' },
+    { num: '02', title: 'We Assess & Plan', desc: 'We visit the property and prepare a full management plan with a transparent proposal.' },
+    { num: '03', title: 'We Manage It All', desc: 'After signing, our team handles everything with regular reports for you.' },
+  ],
+};
+
 type LiveStats = Record<string, number>;
 
-type LeadForm = { name: string; email: string; phone: string };
+type LeadForm   = { name: string; email: string; phone: string };
 type LeadStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 export const Home: React.FC = () => {
@@ -18,8 +37,7 @@ export const Home: React.FC = () => {
   const { content } = useCms();
   const [liveStats, setLiveStats] = useState<LiveStats>({});
 
-  // Lead capture form state
-  const [lead, setLead] = useState<LeadForm>({ name: '', email: '', phone: '' });
+  const [lead,       setLead]       = useState<LeadForm>({ name: '', email: '', phone: '' });
   const [leadStatus, setLeadStatus] = useState<LeadStatus>('idle');
 
   useEffect(() => {
@@ -30,6 +48,8 @@ export const Home: React.FC = () => {
   }, []);
 
   const { hero, stats, services, branding } = content;
+
+  const steps = isRtl ? STEPS.ar : STEPS.en;
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,18 +114,27 @@ export const Home: React.FC = () => {
             {isRtl ? hero.subtitleAr : hero.subtitleEn}
           </p>
 
-          {/* Single primary CTA → Services */}
-          <Button
-            asChild size="lg"
-            className="bg-secondary text-secondary-foreground hover:bg-secondary/90 text-sm font-semibold px-10 h-12 shadow-xl shadow-black/20 rounded-full"
-          >
-            <Link href="/services">
-              {isRtl ? 'اعرف المزيد' : 'Explore Services'}
-              {isRtl
-                ? <ArrowLeft  className="ms-2.5 h-4 w-4" />
-                : <ArrowRight className="ms-2.5 h-4 w-4" />}
-            </Link>
-          </Button>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <Button
+              asChild size="lg"
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/90 text-sm font-semibold px-10 h-12 shadow-xl shadow-black/20 rounded-full"
+            >
+              <Link href="/get-started">
+                {isRtl ? 'ابدأ معنا اليوم' : 'Get Started Today'}
+                {isRtl
+                  ? <ArrowLeft  className="ms-2.5 h-4 w-4" />
+                  : <ArrowRight className="ms-2.5 h-4 w-4" />}
+              </Link>
+            </Button>
+            <Button
+              asChild size="lg" variant="outline"
+              className="border-white/40 text-white hover:bg-white/10 hover:border-white/60 text-sm font-medium px-8 h-12 rounded-full bg-transparent"
+            >
+              <Link href="/services">
+                {isRtl ? 'خدماتنا' : 'Our Services'}
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -115,9 +144,14 @@ export const Home: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10 rtl:divide-x-reverse">
             {stats.map((stat, i) => {
               const Icon = STAT_ICONS[i % STAT_ICONS.length];
-              const displayValue = stat.liveKey && liveStats[stat.liveKey] !== undefined
-                ? liveStats[stat.liveKey].toLocaleString()
+              const rawValue = stat.liveKey && liveStats[stat.liveKey] !== undefined
+                ? liveStats[stat.liveKey]
+                : undefined;
+              const displayValue = rawValue !== undefined
+                ? rawValue.toLocaleString()
                 : stat.value;
+              // skip stats that would show a plain "0"
+              if (displayValue === '0') return null;
               return (
                 <div key={i} className="flex flex-col items-center gap-1 py-8 px-4 text-center">
                   <Icon className="h-4 w-4 text-secondary mb-2 opacity-70" />
@@ -128,6 +162,48 @@ export const Home: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it works ──────────────────────────────────────────────────────── */}
+      <section className="py-24 bg-background">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="text-center mb-16">
+            <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-3">
+              {isRtl ? 'الطريقة' : 'The Process'}
+            </p>
+            <h2 className="text-3xl font-bold text-primary mb-4">
+              {isRtl ? 'كيف نعمل معك؟' : 'How We Work With You'}
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+              {isRtl
+                ? 'ثلاث خطوات بسيطة تفصلك عن إدارة احترافية لعقارك'
+                : 'Three simple steps to professional property management'}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {steps.map((step, i) => (
+              <div key={i} className={`flex flex-col ${isRtl ? 'items-end text-right' : 'items-start'} gap-4`}>
+                <div className="w-14 h-14 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
+                  <span className="text-secondary font-bold text-xl tabular-nums">{step.num}</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-primary text-lg mb-1.5">{step.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className={`mt-12 flex ${isRtl ? 'justify-end' : 'justify-start'} md:justify-center`}>
+            <Button asChild size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full px-10 h-12 text-sm font-semibold">
+              <Link href="/get-started">
+                {isRtl ? 'ابدأ الآن' : 'Start Now'}
+                {isRtl
+                  ? <ArrowLeft  className="ms-2.5 h-4 w-4" />
+                  : <ArrowRight className="ms-2.5 h-4 w-4" />}
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -154,7 +230,6 @@ export const Home: React.FC = () => {
                   href={`/services/${slug}`}
                   className="group relative bg-card rounded-2xl border border-border overflow-hidden hover:border-secondary hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col"
                 >
-                  {/* Image */}
                   <div className="relative aspect-video overflow-hidden bg-primary/10 shrink-0">
                     {svc.imageUrl
                       ? <img
@@ -169,7 +244,6 @@ export const Home: React.FC = () => {
                     }
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                   </div>
-                  {/* Content */}
                   <div className="flex flex-col flex-1 p-6">
                     <h3 className="text-lg font-bold text-primary mb-2">
                       {isRtl ? svc.titleAr : svc.titleEn}
@@ -191,12 +265,35 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* ── WhatsApp CTA ──────────────────────────────────────────────────────── */}
+      <section className="py-14 bg-background">
+        <div className="container mx-auto px-4 max-w-2xl text-center">
+          <MessageCircle className="h-8 w-8 text-[#25D366] mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-primary mb-2">
+            {isRtl ? 'تحدث مع فريقنا مباشرة' : 'Talk to Our Team Directly'}
+          </h3>
+          <p className="text-muted-foreground text-sm mb-6">
+            {isRtl
+              ? 'هل لديك سؤال سريع؟ فريقنا متاح على واتساب.'
+              : 'Have a quick question? Our team is available on WhatsApp.'}
+          </p>
+          <a
+            href={ROZOZ_WHATSAPP}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-[#25D366] text-white px-8 h-11 rounded-full font-semibold text-sm hover:bg-[#22c55e] transition-colors shadow-lg shadow-green-500/20"
+          >
+            <MessageCircle className="h-4 w-4" />
+            {isRtl ? 'تواصل عبر واتساب' : 'Chat on WhatsApp'}
+          </a>
+        </div>
+      </section>
+
       {/* ── Interested in Partnering? ──────────────────────────────────────────── */}
-      <section id="partner-inquiry" className="py-28 bg-background">
+      <section id="partner-inquiry" className="py-28 bg-muted">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
-            {/* Left — copy */}
             <div>
               <p className="text-secondary text-xs font-semibold uppercase tracking-widest mb-4">
                 {isRtl ? 'انضم إلينا' : 'New Inquiries'}
@@ -209,10 +306,8 @@ export const Home: React.FC = () => {
                   ? 'إذا كنت تمتلك عقارات وتبحث عن شركة إدارة محترفة، أو ترغب في الاستثمار ضمن محفظتنا — أخبرنا بذلك وسيتواصل معك فريقنا خلال 24 ساعة.'
                   : "Whether you own properties looking for professional management, or want to explore investment opportunities within our portfolio — share your interest and our team will be in touch within 24 hours."}
               </p>
-
             </div>
 
-            {/* Right — form */}
             <div className="bg-card rounded-2xl border border-border p-8 shadow-sm">
               {leadStatus === 'success' ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
