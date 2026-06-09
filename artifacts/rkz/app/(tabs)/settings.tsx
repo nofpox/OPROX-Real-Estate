@@ -435,30 +435,32 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Owner Hub — always visible */}
-        <View style={S.section}>
-          <Text style={S.sectionTitle}>{isAr ? "لوحة المالك" : "Owner Hub"}</Text>
-          <View style={S.card}>
-            <Pressable
-              style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                router.push("/investor-portal");
-              }}
-            >
-              <View style={[S.iconBox, { backgroundColor: "#FEF3C7" }]}>
-                <MaterialIcons name="home-work" size={20} color="#B45309" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={S.rowLabel}>{isAr ? "لوحة المالك" : "Owner Hub"}</Text>
-                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
-                  {isAr ? "نظرة عامة على أملاكك وإيجاراتك" : "Overview of your properties & leases"}
-                </Text>
-              </View>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
-            </Pressable>
+        {/* Analytics Hub — admin-only */}
+        {isAdmin && (
+          <View style={S.section}>
+            <Text style={S.sectionTitle}>{isAr ? "مركز التحليلات" : "Analytics Hub"}</Text>
+            <View style={S.card}>
+              <Pressable
+                style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push("/investor-portal");
+                }}
+              >
+                <View style={[S.iconBox, { backgroundColor: "#FEF3C7" }]}>
+                  <MaterialIcons name="bar-chart" size={20} color="#B45309" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={S.rowLabel}>{isAr ? "مركز التحليلات" : "Analytics Hub"}</Text>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                    {isAr ? "الوصول الآمن للتقارير المالية" : "Secure access to financial reports"}
+                  </Text>
+                </View>
+                <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.mutedForeground} />
+              </Pressable>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Lease & Tenant Management — PIN-protected, always visible */}
         <View style={S.section}>
