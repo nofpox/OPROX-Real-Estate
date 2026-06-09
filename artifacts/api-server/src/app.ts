@@ -53,7 +53,7 @@ app.use(wafMiddleware);
 
 app.use("/api", router);
 
-app.get("/", (_req, res) => { res.redirect(301, "/realestate/"); });
+app.get("/", (_req, res) => { res.redirect(301, "/grand-pms/"); });
 
 // ── Scheduled maintenance tasks ───────────────────────────────────────────────
 // Daily compressed DB backup (./backups/) + weekly vulnerability scan.
