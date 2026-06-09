@@ -4,7 +4,7 @@ A comprehensive Property Management System dashboard for hotel, compound, and ap
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/rozoz-pms-api run dev` — run the API server (port 5000)
 - `pnpm --filter @workspace/hotel-dashboard run dev` — run the frontend dashboard
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages

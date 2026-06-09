@@ -15,10 +15,10 @@ paths = [ "/grand-pms/", "/grand-pms" ]
 localPort = 14320
 
 [services.development]
-run = "pnpm --filter @workspace/grand-pms run dev"
+run = "pnpm --filter @workspace/rozoz-pms run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/grand-pms", "run", "build" ]
+build = [ "pnpm", "--filter", "@workspace/rozoz-pms", "run", "build" ]
 publicDir = "artifacts/grand-pms/dist/public"
 serve = "static"
 

@@ -15,10 +15,10 @@ paths = [ "/realestate/" ]
 localPort = 19855
 
 [services.development]
-run = "pnpm --filter @workspace/realestate-portal run dev"
+run = "pnpm --filter @workspace/rozoz-portal run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/realestate-portal", "run", "build" ]
+build = [ "pnpm", "--filter", "@workspace/rozoz-portal", "run", "build" ]
 publicDir = "artifacts/realestate-portal/dist/public"
 serve = "static"
 

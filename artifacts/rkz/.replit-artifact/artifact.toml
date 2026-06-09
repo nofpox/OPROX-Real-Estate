@@ -16,11 +16,11 @@ paths = [ "/rkz/", "/rkz" ]
 localPort = 26232
 
 [services.development]
-run = "pnpm --filter @workspace/rkz run dev"
+run = "pnpm --filter @workspace/rozoz-mobile run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/rkz", "run", "build" ]
-run = [ "pnpm", "--filter", "@workspace/rkz", "run", "serve" ]
+build = [ "pnpm", "--filter", "@workspace/rozoz-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/rozoz-mobile", "run", "serve" ]
 
 [services.env]
 PORT = "26232"
