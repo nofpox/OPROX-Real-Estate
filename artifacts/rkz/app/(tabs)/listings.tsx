@@ -87,8 +87,8 @@ export default function ListingsScreen() {
       const url = `${origin}/realestate/preview/${token}`;
       await Share.share({
         message: isAr
-          ? `شاهد هذا العقار على Razzor MSREP:\n${url}`
-          : `View this property on Razzor MSREP:\n${url}`,
+          ? `شاهد هذا العقار على Rozoz MSREP:\n${url}`
+          : `View this property on Rozoz MSREP:\n${url}`,
         url,
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

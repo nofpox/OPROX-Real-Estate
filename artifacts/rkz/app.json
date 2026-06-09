@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Razzor MSREP",
+    "name": "Rozoz MSREP",
     "slug": "rkz",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -35,14 +35,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Razzor MSREP needs access to your photos to add property images.",
-          "cameraPermission": "Razzor MSREP needs your camera to take property photos."
+          "photosPermission": "Rozoz MSREP needs access to your photos to add property images.",
+          "cameraPermission": "Rozoz MSREP needs your camera to take property photos."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Razzor MSREP uses your location to auto-fill the property address."
+          "locationWhenInUsePermission": "Rozoz MSREP uses your location to auto-fill the property address."
         }
       ]
     ],
