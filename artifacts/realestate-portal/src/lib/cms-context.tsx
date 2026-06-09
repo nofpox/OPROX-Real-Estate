@@ -160,6 +160,7 @@ const DEFAULTS: SiteContent = {
   nav: [
     { href: "/",         labelEn: "Home",       labelAr: "الرئيسية" },
     { href: "/listings", labelEn: "Our Portfolio", labelAr: "محفظتنا" },
+    { href: "/about",    labelEn: "About",         labelAr: "عنّا"    },
     { href: "/services", labelEn: "Services",   labelAr: "الخدمات"  },
     { href: "/contact",  labelEn: "Contact",    labelAr: "اتصل بنا" },
   ],

@@ -46,7 +46,7 @@ export const About: React.FC = () => {
   const pillars = isRtl ? PILLARS.ar : PILLARS.en;
 
   return (
-    <div className="flex flex-col w-full" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="flex flex-col w-full">
       <Helmet>
         <title>{isRtl ? `عن روزوز | ${branding.companyNameAr}` : `About | ${branding.companyNameEn}`}</title>
         <meta name="description" content={isRtl
@@ -159,14 +159,15 @@ export const About: React.FC = () => {
               ? 'دعنا نُدير عقارك باحترافية — تواصل معنا اليوم وسنضع خطة مخصصة لك.'
               : "Let us manage your property professionally — contact us today and we'll create a customized plan for you."}
           </p>
-          <Button asChild size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full px-10 h-12 font-semibold">
-            <Link href="/get-started">
-              {isRtl ? 'ابدأ معنا' : 'Get Started'}
-              {isRtl
-                ? <ArrowLeft  className="ms-2.5 h-4 w-4" />
-                : <ArrowRight className="ms-2.5 h-4 w-4" />}
-            </Link>
-          </Button>
+          <Link
+            href="/get-started"
+            className="inline-flex items-center gap-2.5 bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full px-10 h-12 font-semibold text-sm transition-colors"
+          >
+            {isRtl ? 'ابدأ معنا' : 'Get Started'}
+            {isRtl
+              ? <ArrowLeft  className="h-4 w-4" />
+              : <ArrowRight className="h-4 w-4" />}
+          </Link>
         </div>
       </section>
     </div>
