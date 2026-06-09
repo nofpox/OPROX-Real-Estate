@@ -10,8 +10,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const ROZOZ_WHATSAPP = 'https://wa.me/966500000000';
-
 // ── What we manage ────────────────────────────────────────────────────────────
 const MANAGES = {
   ar: [

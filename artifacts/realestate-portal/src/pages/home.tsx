@@ -11,7 +11,7 @@ import {
 
 const STAT_ICONS = [Building2, Users, TrendingUp, Award];
 
-const ROZOZ_WHATSAPP = 'https://wa.me/966500000000';
+const ROZOZ_WHATSAPP = '';
 
 // ── How-it-works steps ────────────────────────────────────────────────────────
 const STEPS = {
