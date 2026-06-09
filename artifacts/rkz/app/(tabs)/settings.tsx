@@ -265,31 +265,32 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* ── Admin Dashboard (PIN-protected, always visible) ───────────── */}
-        <View style={S.section}>
-          <Text style={S.sectionTitle}>{isAr ? "إدارة النظام" : "System Administration"}</Text>
-          <View style={[S.card, { borderWidth: 1.5, borderColor: colors.gold + "55" }]}>
-            <Pressable
-              style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                if (isAdmin) { router.push("/admin-dashboard"); }
-                else { openPinModal("/admin-dashboard"); }
-              }}
-            >
-              <View style={[S.iconBox, { backgroundColor: "rgba(212,168,67,0.14)" }]}>
-                <MaterialIcons name="admin-panel-settings" size={20} color={colors.gold} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={S.rowLabel}>{isAr ? "لوحة الإدارة" : "Admin Dashboard"}</Text>
-                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
-                  {isAr ? "التحليلات · غرفة التحكم · إدارة العقود" : "Analytics · Control Room · Lease Management"}
-                </Text>
-              </View>
-              <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.gold} />
-            </Pressable>
+        {/* ── Admin Dashboard (admin-only, hidden from regular users) ──── */}
+        {isAdmin && (
+          <View style={S.section}>
+            <Text style={S.sectionTitle}>{isAr ? "إدارة النظام" : "System Administration"}</Text>
+            <View style={[S.card, { borderWidth: 1.5, borderColor: colors.gold + "55" }]}>
+              <Pressable
+                style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  router.push("/admin-dashboard");
+                }}
+              >
+                <View style={[S.iconBox, { backgroundColor: "rgba(212,168,67,0.14)" }]}>
+                  <MaterialIcons name="admin-panel-settings" size={20} color={colors.gold} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={S.rowLabel}>{isAr ? "لوحة الإدارة" : "Admin Dashboard"}</Text>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                    {isAr ? "التحليلات · غرفة التحكم · إدارة العقود" : "Analytics · Control Room · Lease Management"}
+                  </Text>
+                </View>
+                <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={18} color={colors.gold} />
+              </Pressable>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Authorization toggle */}
         <View style={S.section}>
