@@ -70,6 +70,10 @@ export default function Login({ onLogin }: LoginProps) {
       <p className="text-white/20 text-[11px] tracking-widest uppercase">
         Property Management System
       </p>
+
+      <p className="text-white/15 text-[10px] tracking-wide">
+        © {new Date().getFullYear()} جميع الحقوق محفوظة لـ Rozoz
+      </p>
     </div>
   );
 }
