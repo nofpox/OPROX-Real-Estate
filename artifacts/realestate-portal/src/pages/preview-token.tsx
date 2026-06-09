@@ -11,7 +11,7 @@ const BASE = '/realestate-api';
 
 const PORTAL_META: Record<string, { label: string; labelAr: string; path: string }> = {
   'rkz':       { label: 'Rozoz Real Estate Portal', labelAr: 'بوابة روزوز العقارية',  path: '/realestate/' },
-  'grand-pms': { label: 'Grand PMS Dashboard',      labelAr: 'لوحة تحكم جراند',       path: '/grand-pms/' },
+  'grand-pms': { label: 'Rozoz Dashboard',      labelAr: 'لوحة تحكم روزوز',       path: '/grand-pms/' },
   'rkz-app':   { label: 'Rozoz Mobile App',         labelAr: 'تطبيق روزوز للجوال',    path: '/rkz/' },
 };
 
@@ -94,7 +94,7 @@ export function PreviewToken() {
     if (!accepted || !token) return;
     setStatus('entering');
     const path = data ? (PORTAL_META[data.portal]?.path ?? '/realestate/') : '/realestate/';
-    // Grand PMS handles its own token consumption and creates a guest session.
+    // Rozoz PMS handles its own token consumption and creates a guest session.
     // Pass the raw token in the URL; do NOT pre-consume here.
     if (data?.portal === 'grand-pms') {
       window.location.href = `${path}?preview_token=${encodeURIComponent(token)}`;

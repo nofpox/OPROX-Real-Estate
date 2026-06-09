@@ -232,7 +232,7 @@ function TenantFormDialog({
               </div>
               <div className="space-y-1.5">
                 <Label>Logo Sub Word</Label>
-                <Input value={logoSub} placeholder="PMS"
+                <Input value={logoSub} placeholder="Rozoz"
                   onChange={(e) => setLogoSub(e.target.value)} />
               </div>
               {!editing && (
@@ -529,7 +529,7 @@ function TenantConfigPanel({ tenant, onClose }: { tenant: Tenant; onClose: () =>
                   </div>
                   <div className="space-y-1.5">
                     <Label>Sub Word</Label>
-                    <Input value={logoSub} onChange={(e) => { setLogoSub(e.target.value); setDirty(true); }} placeholder="PMS" />
+                    <Input value={logoSub} onChange={(e) => { setLogoSub(e.target.value); setDirty(true); }} placeholder="Rozoz" />
                   </div>
                 </div>
                 <div className="rounded-lg border border-dashed p-4 space-y-3">
@@ -853,7 +853,7 @@ export default function SuperAdminPage() {
   }
 
   const logoDisplay = logoText || data?.logoText || "Grand";
-  const logoSubDisplay = logoSub || data?.logoSub || "PMS";
+  const logoSubDisplay = logoSub || data?.logoSub || "Rozoz";
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -1036,7 +1036,7 @@ export default function SuperAdminPage() {
                           ) : (
                             <>
                               <span className="font-serif font-bold text-foreground">{logoText || "Grand"}</span>{" "}
-                              <span className="font-medium text-muted-foreground">{logoSub || "PMS"}</span>
+                              <span className="font-medium text-muted-foreground">{logoSub || "Rozoz"}</span>
                             </>
                           )}
                           <span className="text-xs text-muted-foreground">preview</span>
@@ -1059,7 +1059,7 @@ export default function SuperAdminPage() {
                             ) : (
                               <span className="text-xs">
                                 <span className="font-serif font-bold text-foreground">{logoText || "Grand"}</span>
-                                <span className="text-muted-foreground ml-1">{logoSub || "PMS"}</span>
+                                <span className="text-muted-foreground ml-1">{logoSub || "Rozoz"}</span>
                               </span>
                             )}
                           </div>

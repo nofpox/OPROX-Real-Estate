@@ -26,7 +26,7 @@ const resetTokens = new Map<string, { userId: number; tenantId: number | null; e
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // Sender address: set SENDER_EMAIL env var to your verified Resend domain address
-// e.g. SENDER_EMAIL="Rozoz PMS <noreply@yourdomain.com>"
+// e.g. SENDER_EMAIL="Rozoz <noreply@yourdomain.com>"
 // Falls back to Resend test address (only delivers to the account owner's email in test mode)
 const SENDER_FROM = process.env.SENDER_EMAIL ?? "روزوز للحلول الذكية <onboarding@resend.dev>";
 // When no custom domain is configured, Resend's test sender only delivers to the
@@ -242,27 +242,27 @@ export async function sendWelcomeEmail(to: string, username: string, tempPasswor
     ? `https://${domains.split(",")[0].trim()}`
     : null;
   const loginLine = appUrl
-    ? `<a href="${appUrl}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#f59e0b;color:#fff;font-weight:700;font-size:15px;border-radius:8px;text-decoration:none;">Open Rakz PMS →</a>`
-    : `<p style="margin:16px 0 0;color:#555;font-size:14px">Open the Rakz PMS app and sign in with the credentials below.</p>`;
+    ? `<a href="${appUrl}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#f59e0b;color:#fff;font-weight:700;font-size:15px;border-radius:8px;text-decoration:none;">Open Rozoz →</a>`
+    : `<p style="margin:16px 0 0;color:#555;font-size:14px">Open the Rozoz app and sign in with the credentials below.</p>`;
 
   await resendSend({
     from:    SENDER_FROM,
     to:      [to],
-    subject: "You're invited — Your Rakz PMS account is ready",
+    subject: "You're invited — Your Rozoz account is ready",
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
 
         <!-- Header -->
         <div style="background:#1e293b;padding:28px 32px;display:flex;align-items:center;gap:12px">
-          <span style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.5px;font-family:Georgia,serif">Rakz</span>
-          <span style="font-size:14px;color:#94a3b8;font-weight:500">Property Management System</span>
+          <span style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.5px;font-family:Georgia,serif">Rozoz</span>
+          <span style="font-size:14px;color:#94a3b8;font-weight:500">Smart Solutions</span>
         </div>
 
         <!-- Body -->
         <div style="padding:32px">
           <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111">Welcome aboard! 🎉</h2>
           <p style="margin:0 0 24px;color:#555;font-size:15px;line-height:1.6">
-            Your manager has created a Rakz PMS account for you. Use the access code below to sign in for
+            Your manager has created a Rozoz account for you. Use the access code below to sign in for
             the <strong>first time</strong> — you'll be prompted to set your own password immediately.
           </p>
 
@@ -286,7 +286,7 @@ export async function sendWelcomeEmail(to: string, username: string, tempPasswor
           <div style="margin:24px 0 0;background:#f8fafc;border-radius:8px;padding:16px 20px">
             <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.06em">Steps to get started</p>
             <ol style="margin:0;padding-left:18px;color:#555;font-size:13px;line-height:1.8">
-              <li>Click the button above (or navigate to the Rakz PMS app)</li>
+              <li>Click the button above (or navigate to the Rozoz app)</li>
               <li>Enter your <strong>Username</strong> and the <strong>One-Time Access Code</strong></li>
               <li>Set your personal password when prompted</li>
               <li>You're in — explore your dashboard!</li>

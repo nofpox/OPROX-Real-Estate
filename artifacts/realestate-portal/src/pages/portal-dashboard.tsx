@@ -457,7 +457,7 @@ export const PortalDashboard: React.FC = () => {
             {isRtl ? 'لا توجد عقارات مضافة بعد' : 'No listings added yet'}
           </p>
           <p className="text-xs text-muted-foreground/70 mt-1">
-            {isRtl ? 'أضف عقارات عبر لوحة التحكم الرئيسية' : 'Add listings via the main PMS'}
+            {isRtl ? 'أضف عقارات عبر لوحة التحكم الرئيسية' : 'Add listings via Rozoz'}
           </p>
         </div>
       );

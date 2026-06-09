@@ -95,7 +95,7 @@ interface TourContextValue {
 
 const TourContext = createContext<TourContextValue | null>(null);
 
-const STORAGE_KEY = "rakz:tour-v1";
+const STORAGE_KEY = "rozoz:tour-v1";
 
 export function TourProvider({
   children,

@@ -53,7 +53,7 @@ const ROUTE_HINTS: Record<string, HintConfig> = {
   },
 };
 
-const STORAGE_KEY = "rakz:hints-dismissed-v1";
+const STORAGE_KEY = "rozoz:hints-dismissed-v1";
 
 function getDismissed(): Set<string> {
   try {

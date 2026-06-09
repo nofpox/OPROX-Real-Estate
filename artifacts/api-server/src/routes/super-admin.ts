@@ -94,7 +94,7 @@ router.post("/super-admin/tenants", async (req, res) => {
     contactEmail: contactEmail ? String(contactEmail) : null,
     contactPhone: contactPhone ? String(contactPhone) : null,
     logoText: logoText ? String(logoText) : String(name).slice(0, 2).toUpperCase(),
-    logoSub: logoSub ? String(logoSub) : "PMS",
+    logoSub: logoSub ? String(logoSub) : "Rozoz",
     isActive: true,
   }).returning();
 
@@ -102,7 +102,7 @@ router.post("/super-admin/tenants", async (req, res) => {
   const DEFAULTS: Record<string, string> = {
     propertyName: String(name),
     logoText: tenant.logoText ?? String(name).slice(0, 2).toUpperCase(),
-    logoSub: tenant.logoSub ?? "PMS",
+    logoSub: tenant.logoSub ?? "Rozoz",
     businessMode: "hotel",
     enabledModules: JSON.stringify(["bookings", "maintenance", "housekeeping", "serviceRequests"]),
     companyName: String(name),

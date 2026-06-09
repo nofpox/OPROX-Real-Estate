@@ -17,7 +17,7 @@ interface QueueEntry {
   timestamp: number;
 }
 
-const QUEUE_KEY = "rakz:offline-queue";
+const QUEUE_KEY = "rozoz:offline-queue";
 
 export function getQueue(): QueueEntry[] {
   try {

@@ -199,7 +199,7 @@ const zh: Translations = {
     updateSuccess: "物业已更新", updateFailed: "更新失败",
     createSuccess: "物业已创建", createFailed: "创建失败",
     kpi: { totalProperties: "总物业数", activeUnits: "活跃单元", portfolioRevenue: "组合总营收" },
-    fields: { name: "物业名称", namePlaceholder: "Rakz", type: "物业类型", selectType: "选择类型", status: "状态", selectStatus: "选择状态", address: "地址", addressPlaceholder: "主街123号", city: "城市", cityPlaceholder: "北京", country: "国家", countryPlaceholder: "中国", description: "描述（可选）", descriptionPlaceholder: "物业描述..." },
+    fields: { name: "物业名称", namePlaceholder: "Rozoz", type: "物业类型", selectType: "选择类型", status: "状态", selectStatus: "选择状态", address: "地址", addressPlaceholder: "主街123号", city: "城市", cityPlaceholder: "北京", country: "国家", countryPlaceholder: "中国", description: "描述（可选）", descriptionPlaceholder: "物业描述..." },
     detail: { backToProperties: "返回物业", notFound: "未找到物业", rooms: "单元", workOrders: "工单", revenue: "营收", expenses: "支出", netProfit: "净利润", occupancyRate: "入住率", totalRooms: "总单元数", activeBookings: "活跃预订", openWorkOrders: "未结工单", noRooms: "此物业无单元。", noWorkOrders: "无未结工单。", addUnit: "添加单元", editUnit: "编辑单元", bulkAdd: "批量添加", bulkAddTitle: "批量添加单元", bulkAddDesc: "使用连续编号批量生成单元，每次最多100个。", bulkPrefix: "名称前缀", bulkPrefixPlaceholder: "如：单元、公寓、房间", bulkStart: "起始编号", bulkEnd: "结束编号", bulkGenerate: "生成 {{count}} 个单元", bulkPreview: "将创建：{{first}} → {{last}}（{{count}} 个单元）", bulkAdded: "已添加 {{count}} 个单元", bulkAddFailed: "批量添加失败", bulkMaxError: "每次最多100个单元。", qrCode: "二维码", downloadQR: "下载", copyLink: "复制链接", linkCopied: "链接已复制！", deleteUnitConfirm: "删除此单元？此操作不可撤销。" },
     revenue: "营收", netIncome: "净收入", units: "单元",
   },
