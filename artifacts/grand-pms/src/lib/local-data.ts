@@ -93,16 +93,16 @@ export const ROOMS: Room[] = [
 ];
 
 export const STAFF: Staff[] = [
-  { id: 1, name: "Nada Yousef", role: "General Manager", systemRole: "manager", email: "nada@grandpms.com", phone: "+966501234567", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
-  { id: 2, name: "Sara Al-Qahtani", role: "Front Desk Supervisor", systemRole: "supervisor", email: "sara@grandpms.com", phone: "+966509876543", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
-  { id: 3, name: "Khalid Al-Dosari", role: "Maintenance Technician", systemRole: "maintenance", email: "khalid@grandpms.com", phone: "+966512345678", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
-  { id: 4, name: "Fatima Al-Zahrani", role: "Housekeeping Supervisor", systemRole: "cleaning", email: "fatima@grandpms.com", phone: "+966521234567", propertyId: 2, propertyName: "Sunset Apartments", status: "active", invitePending: false, hasAccount: true },
-  { id: 5, name: "Omar Al-Shehri", role: "Security Officer", systemRole: "security", email: "omar@grandpms.com", phone: "+966531234567", propertyId: 2, propertyName: "Sunset Apartments", status: "active", invitePending: false, hasAccount: true },
-  { id: 6, name: "Nadia Al-Otaibi", role: "Property Manager", systemRole: "administrator", email: "nadia@grandpms.com", phone: "+966541234567", propertyId: 3, propertyName: "Oakwood Compound", status: "active", invitePending: false, hasAccount: true },
-  { id: 7, name: "Youssef Al-Harbi", role: "HVAC Technician", systemRole: "maintenance", email: "youssef@grandpms.com", phone: "+966551234567", propertyId: 3, propertyName: "Oakwood Compound", status: "active", invitePending: false, hasAccount: true },
-  { id: 8, name: "Layla Al-Ghamdi", role: "Receptionist", systemRole: "supervisor", email: "layla@grandpms.com", phone: "+966561234567", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
-  { id: 9, name: "Hassan Al-Mutairi", role: "Security Guard", systemRole: "security", email: "hassan@grandpms.com", phone: "+966571234567", propertyId: 2, propertyName: "Sunset Apartments", status: "active", invitePending: false, hasAccount: true },
-  { id: 10, name: "Reem Al-Anazi", role: "Cleaning Staff", systemRole: "cleaning", email: "reem@grandpms.com", phone: "+966581234567", propertyId: 3, propertyName: "Oakwood Compound", status: "inactive", invitePending: false, hasAccount: false },
+  { id: 1, name: "Nada Yousef", role: "General Manager", systemRole: "manager", email: "nada@rozozpms.com", phone: "+966501234567", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
+  { id: 2, name: "Sara Al-Qahtani", role: "Front Desk Supervisor", systemRole: "supervisor", email: "sara@rozozpms.com", phone: "+966509876543", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
+  { id: 3, name: "Khalid Al-Dosari", role: "Maintenance Technician", systemRole: "maintenance", email: "khalid@rozozpms.com", phone: "+966512345678", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
+  { id: 4, name: "Fatima Al-Zahrani", role: "Housekeeping Supervisor", systemRole: "cleaning", email: "fatima@rozozpms.com", phone: "+966521234567", propertyId: 2, propertyName: "Sunset Apartments", status: "active", invitePending: false, hasAccount: true },
+  { id: 5, name: "Omar Al-Shehri", role: "Security Officer", systemRole: "security", email: "omar@rozozpms.com", phone: "+966531234567", propertyId: 2, propertyName: "Sunset Apartments", status: "active", invitePending: false, hasAccount: true },
+  { id: 6, name: "Nadia Al-Otaibi", role: "Property Manager", systemRole: "administrator", email: "nadia@rozozpms.com", phone: "+966541234567", propertyId: 3, propertyName: "Oakwood Compound", status: "active", invitePending: false, hasAccount: true },
+  { id: 7, name: "Youssef Al-Harbi", role: "HVAC Technician", systemRole: "maintenance", email: "youssef@rozozpms.com", phone: "+966551234567", propertyId: 3, propertyName: "Oakwood Compound", status: "active", invitePending: false, hasAccount: true },
+  { id: 8, name: "Layla Al-Ghamdi", role: "Receptionist", systemRole: "supervisor", email: "layla@rozozpms.com", phone: "+966561234567", propertyId: 1, propertyName: "Grand Hotel Downtown", status: "active", invitePending: false, hasAccount: true },
+  { id: 9, name: "Hassan Al-Mutairi", role: "Security Guard", systemRole: "security", email: "hassan@rozozpms.com", phone: "+966571234567", propertyId: 2, propertyName: "Sunset Apartments", status: "active", invitePending: false, hasAccount: true },
+  { id: 10, name: "Reem Al-Anazi", role: "Cleaning Staff", systemRole: "cleaning", email: "reem@rozozpms.com", phone: "+966581234567", propertyId: 3, propertyName: "Oakwood Compound", status: "inactive", invitePending: false, hasAccount: false },
 ];
 
 const now = new Date();
@@ -214,19 +214,19 @@ export function nextId() { return ++_nextId; }
 export const LOCAL_USERS: Record<string, { password: string; user: User }> = {
   superadmin: {
     password: "yousef171965",
-    user: { id: 0, username: "superadmin", displayName: "Nada Yousef", email: "nada@grandpms.com", role: "super_admin", status: "active", mustChangePassword: false },
+    user: { id: 0, username: "superadmin", displayName: "Nada Yousef", email: "nada@rozozpms.com", role: "super_admin", status: "active", mustChangePassword: false },
   },
   admin: {
     password: "yousef171965",
-    user: { id: 1, username: "superadmin", displayName: "Nada Yousef", email: "nada@grandpms.com", role: "super_admin", status: "active", mustChangePassword: false },
+    user: { id: 1, username: "superadmin", displayName: "Nada Yousef", email: "nada@rozozpms.com", role: "super_admin", status: "active", mustChangePassword: false },
   },
   manager: {
     password: "manager123",
-    user: { id: 2, username: "manager", displayName: "Sara Al-Qahtani", email: "manager@grandpms.com", role: "owner", status: "active", mustChangePassword: false },
+    user: { id: 2, username: "manager", displayName: "Sara Al-Qahtani", email: "manager@rozozpms.com", role: "owner", status: "active", mustChangePassword: false },
   },
   worker: {
     password: "worker123",
-    user: { id: 3, username: "worker", displayName: "Khalid Al-Dosari", email: "worker@grandpms.com", role: "maintenance", status: "active", mustChangePassword: false },
+    user: { id: 3, username: "worker", displayName: "Khalid Al-Dosari", email: "worker@rozozpms.com", role: "maintenance", status: "active", mustChangePassword: false },
   },
 };
 

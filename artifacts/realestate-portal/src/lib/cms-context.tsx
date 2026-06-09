@@ -165,9 +165,9 @@ const DEFAULTS: SiteContent = {
     { href: "/contact",  labelEn: "Contact",    labelAr: "اتصل بنا" },
   ],
   contact: {
-    email: "info@rkz-solutions.com",
-    salesEmail: "sales@rkz-solutions.com",
-    supportEmail: "support@rkz-solutions.com",
+    email: "info@rozoz.com",
+    salesEmail: "sales@rozoz.com",
+    supportEmail: "support@rozoz.com",
     phone: "+966 11 234 5678",
     fax: "+966 11 234 5679",
     supportPhone: "9200 12345",

@@ -33,11 +33,11 @@ export default function SuspendedPage({ onSignOut }: SuspendedPageProps) {
           </p>
           <div className="space-y-2">
             <a
-              href="mailto:support@grandpms.io"
+              href="mailto:support@rozozpms.com"
               className="flex items-center gap-2.5 text-sm text-red-700 dark:text-red-300 hover:underline"
             >
               <Mail className="h-4 w-4 shrink-0" />
-              support@grandpms.io
+              support@rozozpms.com
             </a>
             <a
               href="tel:+18005550100"

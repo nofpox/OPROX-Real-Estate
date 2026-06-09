@@ -439,7 +439,7 @@ export async function ensureAdmin() {
       await db.insert(usersTable).values({
         username: "admin",
         displayName: "Administrator",
-        email: "admin@rkz.info",
+        email: "admin@rozoz.com",
         phoneNumber: "+1-555-000-0001",
         passwordHash: hashPwd("yousef171965"),
         role: "owner",
@@ -465,7 +465,7 @@ export async function ensureAdmin() {
       await db.insert(usersTable).values({
         username: "superadmin",
         displayName: "Super Administrator",
-        email: "super@rkz.info",
+        email: "super@rozoz.com",
         phoneNumber: "+1-555-000-0000",
         passwordHash: hashPwd("yousef171965"),
         role: "super_admin",

@@ -14,7 +14,7 @@ const DEV_ADMIN: AuthUser = {
   id: 1,
   username: 'superadmin',
   displayName: 'Super Administrator',
-  email: 'super@rkz.info',
+  email: 'super@rozoz.com',
   role: 'super_admin',
   isActive: true,
   createdAt: new Date().toISOString(),

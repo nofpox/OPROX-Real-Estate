@@ -146,7 +146,7 @@ export const PortalLogin: React.FC = () => {
               <Input
                 value={identifier}
                 onChange={e => setIdentifier(e.target.value)}
-                placeholder="admin@rkz.info"
+                placeholder="placeholder@rozoz.com"
                 type="text"
                 autoComplete="username"
                 autoFocus

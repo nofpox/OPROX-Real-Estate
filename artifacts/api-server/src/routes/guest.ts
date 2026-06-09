@@ -43,7 +43,7 @@ async function sendLeadWelcomeEmail(to: string, name: string, tenantId = 1): Pro
     .map(p => `<p style="margin:0 0 14px;color:#444;font-size:14px;line-height:1.75">${p.replace(/\n/g, "<br/>")}</p>`)
     .join("");
 
-  const servicesUrl = "https://rkz-solutions.com/services";
+  const servicesUrl = "https://rozoz.com/services";
   const year = new Date().getFullYear();
 
   const html = `

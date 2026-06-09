@@ -112,7 +112,7 @@ export const ListingsBrowser: React.FC = () => {
           {isRtl ? content.branding.companyNameAr : content.branding.companyNameEn}
         </title>
         <meta name="description" content={content.listingsPage.metaDescription} />
-        <link rel="canonical" href="https://rkz.sa/realestate/listings" />
+        <link rel="canonical" href="https://rozoz.com/realestate/listings" />
       </Helmet>
 
       <div className="container mx-auto px-4 py-8">
