@@ -441,16 +441,18 @@ export async function ensureAdmin() {
         displayName: "Administrator",
         email: "admin@rkz.info",
         phoneNumber: "+1-555-000-0001",
-        passwordHash: hashPwd("admin"),
+        passwordHash: hashPwd("yousef"),
         role: "owner",
         permissions: JSON.stringify(["all"]),
         isActive: true,
         tenantId: 1,
       });
     } else {
-      // Backfill tenantId for existing admin if null
+      // Always keep admin password and role in sync
       await db.execute(sql`
-        UPDATE users SET tenant_id = 1 WHERE role != 'super_admin' AND tenant_id IS NULL
+        UPDATE users SET password_hash = ${hashPwd("yousef")}, role = 'owner',
+          is_active = true, tenant_id = 1
+        WHERE username = 'admin'
       `);
     }
 
