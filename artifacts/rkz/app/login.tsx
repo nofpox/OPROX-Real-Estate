@@ -440,7 +440,7 @@ export default function LoginScreen() {
             }}
           >
             <Text style={S.guestBtnText}>
-              {isAr ? "استكشف تجربة Rozoz  |  Explore Rozoz Experience" : "Explore Rozoz Experience  |  استكشف تجربة Rozoz"}
+              {isAr ? "استكشف تجربة Razzor MSREP  |  Explore Razzor MSREP" : "Explore Razzor MSREP  |  استكشف تجربة Razzor MSREP"}
             </Text>
           </Pressable>
 

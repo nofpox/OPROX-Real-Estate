@@ -178,7 +178,7 @@ export default function DiscoveryMapScreen() {
       if (ok) doLogout();
       return;
     }
-    Alert.alert("تسجيل الخروج", "هل تريد تسجيل الخروج من روزوز؟", [
+    Alert.alert("تسجيل الخروج", "هل تريد تسجيل الخروج من Razzor MSREP؟", [
       { text: "إلغاء", style: "cancel" },
       { text: "خروج", style: "destructive", onPress: doLogout },
     ]);

@@ -1,7 +1,7 @@
 export const ar = {
   welcome: {
     tagline: "محرك النشر العقاري الفوري",
-    headline: 'أهلاً بك في "روزوز".. نحن وكيلك الحصري!',
+    headline: 'أهلاً بك في "Razzor MSREP".. نحن وكيلك الحصري!',
     features: [
       {
         title: "النشر التلقائي",
