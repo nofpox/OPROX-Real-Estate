@@ -429,20 +429,6 @@ export default function LoginScreen() {
             <Text style={S.ctaBtnText}>{dynCta}</Text>
           </Pressable>
 
-          {/* ── Guest explore button ─────────────────────────────────── */}
-          <Pressable
-            style={({ pressed }) => [S.guestBtn, pressed && { opacity: 0.82 }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setUser({ phone: "guest", name: "ضيف | Guest", authorized: true });
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              router.replace("/welcome" as any);
-            }}
-          >
-            <Text style={S.guestBtnText}>
-              {isAr ? "استكشف تجربة ROZOZ  |  Explore ROZOZ" : "Explore ROZOZ  |  استكشف تجربة ROZOZ"}
-            </Text>
-          </Pressable>
 
           <View style={S.platforms}>
             {platformNames.map((p) => (
