@@ -213,11 +213,11 @@ export function nextId() { return ++_nextId; }
 
 export const LOCAL_USERS: Record<string, { password: string; user: User }> = {
   superadmin: {
-    password: "yousef",
+    password: "yousef171965",
     user: { id: 0, username: "superadmin", displayName: "Nada Yousef", email: "nada@grandpms.com", role: "super_admin", status: "active", mustChangePassword: false },
   },
   admin: {
-    password: "yousef",
+    password: "yousef171965",
     user: { id: 1, username: "superadmin", displayName: "Nada Yousef", email: "nada@grandpms.com", role: "super_admin", status: "active", mustChangePassword: false },
   },
   manager: {

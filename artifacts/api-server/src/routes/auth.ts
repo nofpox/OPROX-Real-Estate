@@ -441,7 +441,7 @@ export async function ensureAdmin() {
         displayName: "Administrator",
         email: "admin@rkz.info",
         phoneNumber: "+1-555-000-0001",
-        passwordHash: hashPwd("yousef"),
+        passwordHash: hashPwd("yousef171965"),
         role: "owner",
         permissions: JSON.stringify(["all"]),
         isActive: true,
@@ -450,7 +450,7 @@ export async function ensureAdmin() {
     } else {
       // Always keep admin password and role in sync
       await db.execute(sql`
-        UPDATE users SET password_hash = ${hashPwd("yousef")}, role = 'owner',
+        UPDATE users SET password_hash = ${hashPwd("yousef171965")}, role = 'owner',
           is_active = true, tenant_id = 1
         WHERE username = 'admin'
       `);
@@ -467,7 +467,7 @@ export async function ensureAdmin() {
         displayName: "Super Administrator",
         email: "super@rkz.info",
         phoneNumber: "+1-555-000-0000",
-        passwordHash: hashPwd("yousef"),
+        passwordHash: hashPwd("yousef171965"),
         role: "super_admin",
         permissions: JSON.stringify(["all"]),
         isActive: true,
@@ -485,7 +485,7 @@ export async function ensureAdmin() {
         username: "yousef",
         displayName: "يوسف",
         email: "yousef@rkz.info",
-        passwordHash: hashPwd("yousef"),
+        passwordHash: hashPwd("yousef171965"),
         role: "super_admin",
         permissions: JSON.stringify(["all"]),
         isActive: true,
@@ -495,7 +495,7 @@ export async function ensureAdmin() {
     } else {
       // Always keep password and role in sync
       await db.execute(sql`
-        UPDATE users SET password_hash = ${hashPwd("yousef")}, role = 'super_admin',
+        UPDATE users SET password_hash = ${hashPwd("yousef171965")}, role = 'super_admin',
           is_active = true, must_change_password = false
         WHERE username = 'yousef'
       `);
