@@ -49,7 +49,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true,
-      "baseUrl": "/rkz"
+      "baseUrl": "/rozoz-msrep"
     }
   }
 }
