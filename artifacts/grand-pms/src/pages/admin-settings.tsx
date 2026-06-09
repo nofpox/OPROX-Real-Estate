@@ -1669,9 +1669,9 @@ function PreviewLinksTab() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold">Grand PMS Preview Links</p>
+              <p className="font-semibold">Rozoz PMS Preview Links</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Temporary 1-hour access links — Grand PMS only
+                Temporary 1-hour access links — Rozoz PMS only
               </p>
             </div>
             <Button
@@ -1702,7 +1702,7 @@ function PreviewLinksTab() {
                 className="h-9 text-sm"
               />
               <Button className="w-full" onClick={generate} disabled={genLoading}>
-                {genLoading ? "Generating…" : "Create Grand PMS Preview Link"}
+                {genLoading ? "Generating…" : "Create Rozoz PMS Preview Link"}
               </Button>
             </div>
           )}

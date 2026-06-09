@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/grand-pms/"
-title = "Grand PMS"
+title = "Rozoz PMS"
 version = "1.0.0"
 id = "artifacts/grand-pms"
 router = "path"

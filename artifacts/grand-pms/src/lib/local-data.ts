@@ -1,5 +1,5 @@
 /**
- * LOCAL DATA STORE — Grand PMS Standalone
+ * LOCAL DATA STORE — Rozoz PMS Standalone
  * All data lives in memory. No server, no network calls.
  * CRUD operations mutate these arrays and trigger React Query cache invalidation.
  */

@@ -1,4 +1,4 @@
-# Grand PMS
+# Rozoz PMS
 
 A comprehensive Property Management System dashboard for hotel, compound, and apartment portfolio management.
 
@@ -45,7 +45,7 @@ A comprehensive Property Management System dashboard for hotel, compound, and ap
 
 ## Product
 
-**Grand PMS** gives property managers a unified dashboard across hotels, compounds, and apartments:
+**Rozoz PMS** gives property managers a unified dashboard across hotels, compounds, and apartments:
 
 - **Dashboard** — KPI cards (revenue, occupancy, rooms, bookings), 42-day occupancy heatmap per property, recent activity feed, quick actions
 - **Bookings** — Full booking lifecycle (confirmed → checked-in → checked-out), date-range filtering, new booking form

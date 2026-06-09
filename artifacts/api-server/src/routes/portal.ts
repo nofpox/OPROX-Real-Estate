@@ -1496,7 +1496,7 @@ router.get("/portal/buyer-dashboard", requireAuth, async (req, res) => {
   }
 });
 
-// ── Grand PMS preview-guest authentication ────────────────────────────────────
+// ── Rozoz PMS preview-guest authentication ────────────────────────────────────
 // Exchanges a one-time preview link token for a real (limited) pms_session.
 // Public endpoint — no prior auth required.
 router.post("/preview/authenticate", async (req, res) => {
@@ -1514,7 +1514,7 @@ router.post("/preview/authenticate", async (req, res) => {
     if (!link) { res.status(404).json({ error: "Invalid token" }); return; }
     if (link.revoked_at) { res.status(410).json({ error: "Token already used" }); return; }
     if (new Date(link.expires_at) < new Date()) { res.status(410).json({ error: "Token expired" }); return; }
-    if (link.portal !== "grand-pms") { res.status(400).json({ error: "Token is not for Grand PMS" }); return; }
+    if (link.portal !== "grand-pms") { res.status(400).json({ error: "Token is not for Rozoz PMS" }); return; }
     // Consume — one-time use
     await db.execute(sql`UPDATE preview_links SET revoked_at = NOW() WHERE id = ${link.id}`);
     // Create a temporary session expiring at the same time as the preview link

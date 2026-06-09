@@ -6,7 +6,7 @@
  * internal proprietary Replit-managed client — whose key is never stored in the DB
  * and never exposed via any API endpoint.
  *
- * This makes Grand PMS / Rozoz white-label ready: licensed copies use their own AI key;
+ * This makes Rozoz PMS white-label ready: licensed copies use their own AI key;
  * the internal Rozoz intelligence remains a secure, private asset.
  */
 
