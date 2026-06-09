@@ -239,3 +239,9 @@ id = "R2DVBL_tDoNFs0tuKcQZh"
 uri = "file://exports/rozoz-platform-study.pdf"
 type = "pdf"
 title = "دراسة منصة روزوز للحلول الذكية"
+
+[[outputs]]
+id = "jEO_v2vtHhHnd0G_S6AWU"
+uri = "file://rozoz-source.tar.gz"
+type = "unspecified"
+title = "Rozoz — Source Code"
