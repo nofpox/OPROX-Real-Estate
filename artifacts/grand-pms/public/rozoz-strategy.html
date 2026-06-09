@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>روزوز — التحليل الاستراتيجي الكامل</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Cairo',Tahoma,sans-serif;background:#e8edf4;color:#1a1a2e;direction:rtl;font-size:15px;}
+    .doc{max-width:900px;margin:32px auto;background:#fff;border-radius:14px;box-shadow:0 6px 40px rgba(0,0,0,0.13);overflow:hidden;}
+
+    /* COVER */
+    .cover{background:linear-gradient(145deg,#020a16 0%,#0a1a38 50%,#0f2044 100%);color:#fff;padding:56px 52px 48px;position:relative;overflow:hidden;}
+    .cover::after{content:'';position:absolute;bottom:0;left:0;right:0;height:7px;background:linear-gradient(90deg,#006c35,#00843d,#006c35,#f4b942,#f4b942,#006c35);}
+    .cover-logo{text-align:center;margin-bottom:20px;}
+    .cover-logo img{height:80px;border-radius:8px;}
+    .cover-title{font-size:13px;font-weight:700;letter-spacing:3px;color:#f4b942;text-align:center;margin-bottom:8px;}
+    .cover-h1{font-size:32px;font-weight:900;color:#fff;text-align:center;line-height:1.4;margin-bottom:8px;}
+    .cover-sub{font-size:14px;color:#b8cce8;text-align:center;margin-bottom:28px;}
+    .cover-meta{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;}
+    .cover-chip{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#c8daf0;font-size:12px;font-weight:600;padding:6px 14px;border-radius:18px;}
+
+    /* BODY */
+    .body{padding:48px 52px;}
+    .print-btn{display:block;width:fit-content;margin:28px auto 0;background:#f4b942;color:#0a1a38;font-family:'Cairo',sans-serif;font-size:15px;font-weight:800;padding:12px 36px;border-radius:10px;border:none;cursor:pointer;}
+    .print-btn:hover{background:#e8a822;}
+    .print-btn:disabled{background:#999;cursor:not-allowed;}
+
+    /* PDF overlay */
+    #pdf-overlay{display:none;position:fixed;inset:0;background:rgba(5,16,32,0.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+    #pdf-overlay.active{display:flex;}
+    .pdf-spinner{width:52px;height:52px;border:5px solid rgba(244,185,66,0.3);border-top-color:#f4b942;border-radius:50%;animation:spin 0.8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .pdf-msg{font-family:'Cairo',sans-serif;font-size:16px;font-weight:700;color:#fff;text-align:center;line-height:1.8;}
+    .pdf-msg small{display:block;font-size:12px;color:#8fa8cc;margin-top:4px;}
+    .pdf-progress{width:240px;height:6px;background:rgba(255,255,255,0.15);border-radius:4px;overflow:hidden;}
+    .pdf-progress-bar{height:100%;background:linear-gradient(90deg,#f4b942,#e8821a);border-radius:4px;transition:width 0.4s ease;width:0%;}
+
+    /* SECTIONS */
+    .section{margin-bottom:40px;}
+    .section-title{font-size:20px;font-weight:900;color:#0f2044;margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid #e8eefc;display:flex;align-items:center;gap:10px;}
+    .section-title .num{background:#0f2044;color:#f4b942;font-size:12px;font-weight:800;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .hl{background:linear-gradient(135deg,#eef4ff,#f5f8ff);border-right:5px solid #2355a0;border-radius:8px;padding:16px 20px;margin-bottom:14px;line-height:2;color:#2a3a5e;font-size:14px;}
+    .hl.gold{border-right-color:#f4b942;background:linear-gradient(135deg,#fffbea,#fff9e0);}
+    .hl.green{border-right-color:#10b981;background:linear-gradient(135deg,#ecfdf5,#f0fdf8);}
+    .hl.red{border-right-color:#c0392b;background:linear-gradient(135deg,#fff5f5,#fee2e2);}
+    .hl.dark{border-right-color:#0f2044;background:linear-gradient(135deg,#f0f4fc,#e8eef8);}
+    .conclusion{background:linear-gradient(135deg,#0f2044,#1a3a6b);border-radius:12px;padding:26px 30px;color:#fff;margin-bottom:24px;}
+    .conclusion h3{font-size:16px;font-weight:800;color:#f4b942;margin-bottom:12px;}
+    .conclusion p{font-size:14px;line-height:2.1;opacity:.92;}
+    .conclusion strong{color:#f4b942;}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+    .card{border:1px solid #e4eaf5;border-radius:10px;padding:16px 18px;}
+    .card h4{font-size:14px;font-weight:800;color:#0f2044;margin-bottom:8px;}
+    .card p{font-size:13px;color:#4a5878;line-height:1.8;}
+    .card.gold{background:linear-gradient(135deg,#fffbea,#fff3cd);border-color:#f4d57a;}
+    .card.green{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#6ee7b7;}
+    .card.red{background:linear-gradient(135deg,#fff5f5,#fee2e2);border-color:#fca5a5;}
+    .pitch-step{background:#f8faff;border:1px solid #dce6fa;border-radius:10px;padding:18px 22px;margin-bottom:12px;}
+    .pitch-step .step-num{font-size:11px;font-weight:800;color:#2355a0;letter-spacing:1px;margin-bottom:4px;}
+    .pitch-step .step-title{font-size:15px;font-weight:800;color:#0f2044;margin-bottom:6px;}
+    .pitch-step .step-body{font-size:13.5px;color:#3a4a6b;line-height:1.9;}
+    .pitch-step .step-body em{font-style:normal;color:#0f2044;background:#fff;border:1px solid #dce6fa;border-radius:6px;padding:10px 14px;display:block;margin-top:10px;font-weight:600;line-height:2;}
+    .flow{display:flex;flex-direction:column;align-items:center;gap:0;margin:16px 0;}
+    .flow-box{background:#0f2044;color:#fff;border-radius:10px;padding:14px 32px;text-align:center;font-weight:800;font-size:14px;width:60%;}
+    .flow-box span{display:block;font-size:11px;font-weight:400;opacity:.7;margin-top:3px;}
+    .flow-arrow{font-size:22px;color:#f4b942;margin:4px 0;line-height:1;}
+    .doc-footer{background:#0f2044;color:#8fa3c8;text-align:center;padding:16px 32px;font-size:12px;}
+    .doc-footer strong{color:#f4b942;}
+
+    @media print{
+      body{background:#fff;}
+      .doc{max-width:100%;margin:0;border-radius:0;box-shadow:none;}
+      .print-btn{display:none;}
+      #pdf-overlay{display:none!important;}
+    }
+  </style>
+</head>
+<body>
+<div class="doc" id="main-doc">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-logo">
+      <img src="/grand-pms/rozoz-logo.jpg" alt="ROZOZ"/>
+    </div>
+    <div class="cover-title">ROZOZ SMART SOLUTIONS</div>
+    <div class="cover-h1">التحليل الاستراتيجي الكامل<br/>رأي الشريك التقني</div>
+    <div class="cover-sub">السوق · الفرصة · الخطة · خطاب المستثمر</div>
+    <div class="cover-meta">
+      <div class="cover-chip">📅 يونيو 2026</div>
+      <div class="cover-chip">🇸🇦 السوق السعودي</div>
+      <div class="cover-chip">🔒 وثيقة داخلية</div>
+      <div class="cover-chip">NADA ALBULYHI</div>
+    </div>
+    <button class="print-btn" id="pdf-btn" onclick="generatePDF()">⬇️ تنزيل PDF</button>
+  </div>
+
+  <div class="body">
+
+    <!-- ① التقييم الأولي -->
+    <div class="section">
+      <div class="section-title"><span class="num">١</span>هل يوجد مشروع مثله في الرياض؟</div>
+      <div class="hl gold"><strong>الإجابة المباشرة: لا.</strong> روزوز تجمع ثلاثة أنظمة في منظومة واحدة — وهذا غير موجود محلياً بالفعل.</div>
+      <div class="two-col">
+        <div class="card">
+          <h4>🔍 المنافسون الحاليون</h4>
+          <p>
+            <strong>بيوت / عقار / وصلت</strong> — إعلانات فقط، لا تشغيل<br/>
+            <strong>Ejar (حكومي)</strong> — عقود إيجار فقط<br/>
+            <strong>Opera / Protel (أجنبية)</strong> — باهظة الثمن، معقدة، غير مُعرَّبة للسوق السعودي
+          </p>
+        </div>
+        <div class="card green">
+          <h4>✅ ما تفعله روزوز وحدها</h4>
+          <p>
+            تجمع <strong>البحث</strong> و<strong>الحجز</strong> و<strong>الإدارة التشغيلية</strong> في نظام واحد مترابط — مع ذكاء اصطناعي ودعم ١٣ لغة للزوار الدوليين.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② نقاط القوة والتحديات -->
+    <div class="section">
+      <div class="section-title"><span class="num">٢</span>نقاط القوة والتحديات الحقيقية</div>
+      <div class="two-col">
+        <div class="card green">
+          <h4>✅ نقاط القوة</h4>
+          <p>
+            • التوقيت مثالي — السوق يتضاعف قبل إكسبو 2030<br/>
+            • نموذج اشتراك متكرر = إيراد ثابت ومتنامٍ<br/>
+            • ذكاء اصطناعي + ١٣ لغة = ميزة للزوار الدوليين<br/>
+            • المشروع مبني فعلياً، ليس فكرة على ورق
+          </p>
+        </div>
+        <div class="card red">
+          <h4>⚠️ التحديات الحقيقية</h4>
+          <p>
+            • دورة بيع B2B بطيئة — إقناع شركة بتغيير نظامها يأخذ وقتاً<br/>
+            • Wasalt (خلفها STC) قد تشتد المنافسة منها<br/>
+            • التنفيذ يتطلب فريقاً قوياً من اليوم الأول
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ هل سينجح؟ -->
+    <div class="section">
+      <div class="section-title"><span class="num">٣</span>هل سينجح المشروع؟</div>
+      <div class="conclusion">
+        <h3>🎯 الإجابة: نعم — بثلاثة شروط</h3>
+        <p>
+          <strong>١. الإطلاق سريع</strong> — النافذة مفتوحة الآن قبل أن يدخل منافس بتمويل ضخم.<br/><br/>
+          <strong>٢. أول ١٠ عملاء PMS</strong> — هم المفتاح. يجلبون بيانات حقيقية وسمعة تجلب العشرات بعدهم.<br/><br/>
+          <strong>٣. التركيز على الرياض أولاً</strong> — لا توسع قبل السيطرة على سوق واحد بشكل كامل.
+        </p>
+      </div>
+    </div>
+
+    <!-- ④ لماذا أول ١٠ هم المفتاح -->
+    <div class="section">
+      <div class="section-title"><span class="num">٤</span>لماذا أول ١٠ عملاء PMS هم المفتاح؟</div>
+      <div class="hl dark"><strong>١. يحوّلون روزوز من فكرة إلى واقع</strong><br/>قبلهم تقول "عندي نظام رائع" — بعدهم تقول "١٠ شركات تستخدمه الآن". هذا الفرق يغير كل شيء في أعين المستثمرين والعملاء الجدد.</div>
+      <div class="hl green"><strong>٢. يجلبون بيانات حقيقية تُشغّل المنظومة</strong><br/>كل شركة تدخل وحداتها وحجوزاتها = البوابة تمتلئ = المستهلك يجد محتوى = الدورة تبدأ تدور تلقائياً.</div>
+      <div class="hl gold"><strong>٣. السمعة والتوصية</strong><br/>في السوق السعودي، شركة الإدارة الثانية لن تشترك لأنك قلت "نظام رائع" — ستشترك لأن جارتها تستخدمه وتقول "والله ممتاز". أول ١٠ يجيبون الـ ١٠٠ التالية.</div>
+      <div class="hl"><strong>٤. يكشفون المشاكل قبل التوسع</strong><br/>أي نظام فيه ثغرات لا تكتشفها إلا من الاستخدام الفعلي. هذا يحميك من فضيحة كبرى لو توسعت مبكراً بنظام فيه أخطاء.</div>
+    </div>
+
+    <!-- ⑤ ترتيب الإطلاق -->
+    <div class="section">
+      <div class="section-title"><span class="num">٥</span>الترتيب الصحيح لإطلاق المنظومة</div>
+      <div class="hl gold" style="margin-bottom:20px;"><strong>⚠️ قاعدة أساسية:</strong> لو أطلقت التطبيق قبل PMS، المستخدم يفتحه ويجده فارغاً ويحذفه فوراً. الـ PMS هو الوقود الذي يشغل الاثنين الآخرين.</div>
+      <div class="flow">
+        <div class="flow-box">🏢 نظام الإدارة PMS أولاً<span>الشركات تشترك وتُدخل وحداتها وبياناتها</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-box" style="background:#1a3a6b;">🌐 بوابة الويب تنشط تلقائياً<span>المستهلكون يجدون وحدات حقيقية للبحث والحجز</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-box" style="background:#2355a0;">📱 التطبيق يصبح مفيداً<span>فيه محتوى حقيقي وحجوزات وخريطة مليئة</span></div>
+      </div>
+    </div>
+
+    <!-- ⑥ خطة المراحل -->
+    <div class="section">
+      <div class="section-title"><span class="num">٦</span>خطة المراحل بعد أول ١٠ عملاء</div>
+
+      <div class="pitch-step">
+        <div class="step-num">المرحلة الثانية — الشهر ٣ إلى ٨</div>
+        <div class="step-title">🌱 بناء الشبكة</div>
+        <div class="step-body">
+          • <strong>خصم ٦٠ يوم مجاني</strong> للعملاء الأوائل مقابل أن يُعرِّفوك على شركتين أخريين — يضاعف قاعدتك بدون تكلفة تسويق<br/>
+          • بوابة الحجز تبدأ تشتغل تلقائياً بمجرد إدراج الوحدات = أول إيراد من العمولات<br/>
+          • شراكة مع مكاتب عقارية صغيرة — تعطيهم أداة عرض مجاناً مقابل إدراج وحداتهم
+        </div>
+      </div>
+
+      <div class="pitch-step">
+        <div class="step-num">المرحلة الثالثة — الشهر ٨ إلى ١٨</div>
+        <div class="step-title">💰 الإيراد الحقيقي</div>
+        <div class="step-body">
+          • <strong>باقات مدفوعة للإدراج المميز</strong> — الشركات التي تريد الظهور في الأعلى تدفع<br/>
+          • <strong>تقارير السوق للمستثمرين</strong> — البيانات التي تجمعها من عملائك تصبح منتجاً مدفوعاً<br/>
+          • <strong>باقة الشقق المفروشة</strong> — الإيجار القصير ينمو بجنون قبل إكسبو وهو أعلى هامش ربح
+        </div>
+      </div>
+
+      <div class="pitch-step">
+        <div class="step-num">المرحلة الرابعة — السنة الثانية</div>
+        <div class="step-title">🚀 التوسع</div>
+        <div class="step-body">
+          • <strong>جدة</strong> — نفس النموذج، تبدأ بـ ٥ عملاء PMS فقط<br/>
+          • <strong>تكامل مع Airbnb و Booking.com</strong> — وحدات عملائك تظهر عندهم عبر روزوز<br/>
+          • <strong>وحدة المطاعم والخدمات</strong> — نفس النظام يُطوَّر لإدارة مطاعم الفنادق، يفتح سوقاً جديداً كلياً
+        </div>
+      </div>
+
+      <div class="hl gold"><strong>💡 الفكرة الأذكى:</strong> كل بيانات الحجوزات والأسعار التي يولّدها عملاؤك هي <strong>أصل استراتيجي</strong>. بعد سنتين، روزوز ستمتلك أدق تقرير عن سوق العقارات في الرياض — وهذا وحده يساوي ملايين.</div>
+    </div>
+
+    <!-- ⑦ خطاب المستثمر -->
+    <div class="section">
+      <div class="section-title"><span class="num">٧</span>كيف تُقنع المستثمر؟ — الخطوات السبع</div>
+
+      <div class="pitch-step">
+        <div class="step-num">الخطوة ١ — الخطّاف</div>
+        <div class="step-title">ابدأ بجملة واحدة تُعلِّق انتباهه</div>
+        <div class="step-body">
+          <em>"سوق العقارات السعودي ٥٠٠ مليار دولار، وفيه ٤٠ مليون زائر قادمون لإكسبو 2030 وكأس عالم 2034. ومع ذلك، لا توجد منصة واحدة تجمع البحث والحجز وإدارة العقارات في نظام واحد. روزوز هي هذا النظام."</em>
+        </div>
+      </div>
+
+      <div class="pitch-step">
+        <div class="step-num">الخطوة ٢ — المشكلة</div>
+        <div class="step-title">اشرح له المعاناة اليومية</div>
+        <div class="step-body">
+          <em>"اليوم، شركة تدير ٥٠ شقة تستخدم إكسل للحجوزات، واتساب للتواصل مع النزلاء، وبيوت للإعلان، ونظاماً آخر للمحاسبة. أربعة أنظمة منفصلة، ضياع وقت، وأخطاء يومية."</em>
+        </div>
+      </div>
+
+      <div class="pitch-step">
+        <div class="step-num">الخطوة ٣ — الحل</div>
+        <div class="step-title">اعرض روزوز كبديل واضح</div>
+        <div class="step-body">
+          <em>"روزوز تستبدل الأربعة بمنظومة واحدة: نظام إدارة احترافي للشركة، بوابة ويب للإعلان، وتطبيق ذكي للمستهلك — كل شيء متصل ببعض."</em>
+        </div>
+      </div>
+
+      <div class="pitch-step">
+        <div class="step-num">الخطوة ٤ — الأرقام</div>
+        <div class="step-title">تكلّم بأرقام واضحة</div>
+        <div class="step-body">
+          <em>"نموذج الإيراد بسيط: الشركات تدفع اشتراكاً شهرياً ثابتاً. في السنة الثانية فقط، ٨٠ شركة مشتركة = ٢٠٠ ألف ريال شهرياً ثابتاً حتى لو لم نبع شيئاً جديداً. السنة الثانية تحقق ٢.١ مليون ريال ربح. السنة الثالثة ٧.٥ مليون — وهذا قبل إكسبو بسنة كاملة."</em>
+        </div>
+      </div>
+
+      <div class="pitch-step">
+        <div class="step-num">الخطوة ٥ — لماذا الآن؟</div>
+        <div class="step-title">اشرح أن النافذة مفتوحة اليوم فقط</div>
+        <div class="step-body">
+          <em>"النافذة مفتوحة الآن لأن المنافسين لم يصلوا بعد. Wasalt تركز على الإعلانات فقط. الأنظمة الأجنبية باهظة ولا تفهم السوق السعودي. من يدخل أولاً ويبني قاعدة عملاء قبل إكسبو 2030، يصعب إزاحته بعدها."</em>
+        </div>
+      </div>
+
+      <div class="pitch-step">
+        <div class="step-num">الخطوة ٦ — الإثبات</div>
+        <div class="step-title">اعرض عليه المشروع مباشرة</div>
+        <div class="step-body">
+          <em>"هذا ليس خطة على ورق — النظام مبني ويعمل الآن. هذه الدراسة الكاملة فيها كل الأرقام والمراحل."</em>
+        </div>
+      </div>
+
+      <div class="pitch-step" style="background:linear-gradient(135deg,#fffbea,#fff3cd);border-color:#f4d57a;">
+        <div class="step-num" style="color:#d97706;">الخطوة ٧ — الإغلاق</div>
+        <div class="step-title">اترك له سؤالاً لا يستطيع تجاهله</div>
+        <div class="step-body">
+          <em>"أنت تستثمر اليوم في مرحلة التأسيس بأقل تقييم ممكن. في السنة الثانية حصتك تتضاعف، وقبل كأس العالم قيمة الشركة بين ٢٠٠ إلى ٥٠٠ مليون ريال. السؤال الوحيد: هل تريد أن تكون معنا من البداية، أم تنظر من بعيد وهو يكبر؟"</em>
+        </div>
+      </div>
+
+      <div class="hl dark" style="margin-top:18px;"><strong>⚠️ قاعدة ذهبية:</strong> لا تبدأ بالأرقام — ابدأ بالمشكلة. المستثمر الذكي يشتري الحل، مش الرقم. لما يفهم المشكلة ويقتنع بها، الأرقام تصبح منطقية تلقائياً.</div>
+    </div>
+
+  </div>
+
+  <div class="doc-footer">
+    <strong>روزوز للحلول الذكية</strong> &nbsp;·&nbsp; التحليل الاستراتيجي الكامل &nbsp;·&nbsp; NADA ALBULYHI &nbsp;|&nbsp; يونيو 2026
+  </div>
+</div>
+
+<!-- PDF overlay -->
+<div id="pdf-overlay">
+  <div class="pdf-spinner"></div>
+  <div class="pdf-msg">جاري إنشاء ملف PDF...<small id="pdf-status">جاري تجهيز الصفحات</small></div>
+  <div class="pdf-progress"><div class="pdf-progress-bar" id="pdf-bar"></div></div>
+</div>
+
+<script>
+async function generatePDF() {
+  const btn = document.getElementById('pdf-btn');
+  const overlay = document.getElementById('pdf-overlay');
+  const bar = document.getElementById('pdf-bar');
+  const status = document.getElementById('pdf-status');
+
+  btn.disabled = true;
+  overlay.classList.add('active');
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    const el = document.getElementById('main-doc');
+    status.textContent = 'جاري معالجة المستند...';
+    bar.style.width = '30%';
+
+    const canvas = await html2canvas(el, {
+      scale: 1.8,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 960,
+    });
+
+    bar.style.width = '70%';
+    status.textContent = 'جاري تقسيم الصفحات...';
+
+    const imgW = pageW;
+    const imgH = (canvas.height * imgW) / canvas.width;
+    let yRemaining = imgH;
+    let srcY = 0;
+    let first = true;
+
+    while (yRemaining > 0) {
+      const sliceH = Math.min(pageH, yRemaining);
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = Math.round((sliceH / imgW) * canvas.width);
+      const ctx = sliceCanvas.getContext('2d');
+      ctx.drawImage(canvas, 0, srcY * (canvas.width / imgW), canvas.width, sliceCanvas.height, 0, 0, sliceCanvas.width, sliceCanvas.height);
+      const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.92);
+      if (!first) pdf.addPage();
+      pdf.addImage(sliceData, 'JPEG', 0, 0, imgW, sliceH);
+      yRemaining -= sliceH;
+      srcY += sliceH;
+      first = false;
+    }
+
+    bar.style.width = '100%';
+    status.textContent = 'جاري حفظ الملف...';
+    await new Promise(r => setTimeout(r, 300));
+    pdf.save('روزوز-التحليل-الاستراتيجي-2026.pdf');
+
+  } catch (err) {
+    alert('حدث خطأ أثناء إنشاء PDF. حاول مرة أخرى.');
+  } finally {
+    overlay.classList.remove('active');
+    btn.disabled = false;
+    bar.style.width = '0%';
+  }
+}
+</script>
+</body>
+</html>
