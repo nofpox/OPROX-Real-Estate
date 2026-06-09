@@ -1434,6 +1434,145 @@ export interface OpenaiMessageInput {
   context?: OpenaiMessageInputContext;
 }
 
+export interface Contract {
+  id: number;
+  tenantId?: number;
+  propertyId: number;
+  roomId: number;
+  contractNumber: string;
+  tenantName: string;
+  /** @nullable */
+  tenantPhone?: string | null;
+  /** @nullable */
+  tenantEmail?: string | null;
+  startDate: string;
+  endDate: string;
+  monthlyRent: string;
+  /** @nullable */
+  depositAmount?: string | null;
+  status: string;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface ContractInput {
+  propertyId: number;
+  roomId: number;
+  contractNumber: string;
+  tenantName: string;
+  tenantPhone?: string;
+  tenantEmail?: string;
+  startDate: string;
+  endDate: string;
+  monthlyRent: string;
+  depositAmount?: string;
+  status?: string;
+  notes?: string;
+}
+
+export interface ContractUpdate {
+  propertyId?: number;
+  roomId?: number;
+  contractNumber?: string;
+  tenantName?: string;
+  tenantPhone?: string;
+  tenantEmail?: string;
+  startDate?: string;
+  endDate?: string;
+  monthlyRent?: string;
+  depositAmount?: string;
+  status?: string;
+  notes?: string;
+}
+
+export interface Invoice {
+  id: number;
+  tenantId?: number;
+  /** @nullable */
+  contractId?: number | null;
+  propertyId: number;
+  roomId: number;
+  invoiceNumber: string;
+  tenantName: string;
+  amount: string;
+  dueDate: string;
+  issuedDate: string;
+  status: string;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  paidAt?: string | null;
+  createdAt: string;
+}
+
+export interface InvoiceInput {
+  contractId?: number;
+  propertyId: number;
+  roomId: number;
+  invoiceNumber: string;
+  tenantName: string;
+  amount: string;
+  dueDate: string;
+  issuedDate: string;
+  status?: string;
+  notes?: string;
+}
+
+export interface InvoiceUpdate {
+  contractId?: number;
+  propertyId?: number;
+  roomId?: number;
+  invoiceNumber?: string;
+  tenantName?: string;
+  amount?: string;
+  dueDate?: string;
+  issuedDate?: string;
+  status?: string;
+  notes?: string;
+}
+
+export interface InventoryItem {
+  id: number;
+  tenantId?: number;
+  name: string;
+  category: string;
+  quantity: string;
+  minQuantity: string;
+  unit: string;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  description?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface InventoryItemInput {
+  name: string;
+  category?: string;
+  quantity?: string;
+  minQuantity?: string;
+  unit?: string;
+  location?: string;
+  description?: string;
+}
+
+export interface InventoryItemUpdate {
+  name?: string;
+  category?: string;
+  quantity?: string;
+  minQuantity?: string;
+  unit?: string;
+  location?: string;
+  description?: string;
+}
+
+export interface InventoryAdjust {
+  delta: number;
+  reason?: string;
+}
+
 export type ListBookingsParams = {
 status?: string;
 roomId?: number;
@@ -1649,5 +1788,21 @@ export type UpdatePortalRolePermissions200 = {
 export type RegisterPortalClient200 = {
   status?: string;
   data?: PortalRegistrationResult;
+};
+
+export type ListContractsParams = {
+propertyId?: number;
+status?: string;
+};
+
+export type ListInvoicesParams = {
+propertyId?: number;
+contractId?: number;
+status?: string;
+};
+
+export type ListInventoryParams = {
+category?: string;
+lowStock?: boolean;
 };
 

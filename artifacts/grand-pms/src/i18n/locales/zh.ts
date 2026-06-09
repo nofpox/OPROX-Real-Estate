@@ -17,6 +17,9 @@ const zh: Translations = {
     contentManager: "内容管理",
     websiteSettings: "网站设置",
     partnerPortal: "合伙人门户",
+    contracts: "合同",
+    invoices: "发票",
+    inventory: "库存",
   },
   common: {
     save: "保存", cancel: "取消", delete: "删除", edit: "编辑", add: "添加",

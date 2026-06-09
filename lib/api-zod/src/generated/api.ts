@@ -3251,3 +3251,393 @@ export const SendOpenaiMessageBody = zod.object({
 })
 
 
+/**
+ * @summary List all contracts
+ */
+export const ListContractsQueryParams = zod.object({
+  "propertyId": zod.coerce.number().optional(),
+  "status": zod.coerce.string().optional()
+})
+
+export const ListContractsResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number().optional(),
+  "propertyId": zod.number(),
+  "roomId": zod.number(),
+  "contractNumber": zod.string(),
+  "tenantName": zod.string(),
+  "tenantPhone": zod.string().nullish(),
+  "tenantEmail": zod.string().nullish(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "monthlyRent": zod.string(),
+  "depositAmount": zod.string().nullish(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListContractsResponse = zod.array(ListContractsResponseItem)
+
+
+/**
+ * @summary Create a new contract
+ */
+export const CreateContractBody = zod.object({
+  "propertyId": zod.number(),
+  "roomId": zod.number(),
+  "contractNumber": zod.string(),
+  "tenantName": zod.string(),
+  "tenantPhone": zod.string().optional(),
+  "tenantEmail": zod.string().optional(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "monthlyRent": zod.string(),
+  "depositAmount": zod.string().optional(),
+  "status": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Get a contract by ID
+ */
+export const GetContractParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetContractResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number().optional(),
+  "propertyId": zod.number(),
+  "roomId": zod.number(),
+  "contractNumber": zod.string(),
+  "tenantName": zod.string(),
+  "tenantPhone": zod.string().nullish(),
+  "tenantEmail": zod.string().nullish(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "monthlyRent": zod.string(),
+  "depositAmount": zod.string().nullish(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a contract
+ */
+export const UpdateContractParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateContractBody = zod.object({
+  "propertyId": zod.number().optional(),
+  "roomId": zod.number().optional(),
+  "contractNumber": zod.string().optional(),
+  "tenantName": zod.string().optional(),
+  "tenantPhone": zod.string().optional(),
+  "tenantEmail": zod.string().optional(),
+  "startDate": zod.string().optional(),
+  "endDate": zod.string().optional(),
+  "monthlyRent": zod.string().optional(),
+  "depositAmount": zod.string().optional(),
+  "status": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateContractResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number().optional(),
+  "propertyId": zod.number(),
+  "roomId": zod.number(),
+  "contractNumber": zod.string(),
+  "tenantName": zod.string(),
+  "tenantPhone": zod.string().nullish(),
+  "tenantEmail": zod.string().nullish(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "monthlyRent": zod.string(),
+  "depositAmount": zod.string().nullish(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a contract
+ */
+export const DeleteContractParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List all invoices
+ */
+export const ListInvoicesQueryParams = zod.object({
+  "propertyId": zod.coerce.number().optional(),
+  "contractId": zod.coerce.number().optional(),
+  "status": zod.coerce.string().optional()
+})
+
+export const ListInvoicesResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number().optional(),
+  "contractId": zod.number().nullish(),
+  "propertyId": zod.number(),
+  "roomId": zod.number(),
+  "invoiceNumber": zod.string(),
+  "tenantName": zod.string(),
+  "amount": zod.string(),
+  "dueDate": zod.string(),
+  "issuedDate": zod.string(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "paidAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListInvoicesResponse = zod.array(ListInvoicesResponseItem)
+
+
+/**
+ * @summary Create a new invoice
+ */
+export const CreateInvoiceBody = zod.object({
+  "contractId": zod.number().optional(),
+  "propertyId": zod.number(),
+  "roomId": zod.number(),
+  "invoiceNumber": zod.string(),
+  "tenantName": zod.string(),
+  "amount": zod.string(),
+  "dueDate": zod.string(),
+  "issuedDate": zod.string(),
+  "status": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Get an invoice by ID
+ */
+export const GetInvoiceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetInvoiceResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number().optional(),
+  "contractId": zod.number().nullish(),
+  "propertyId": zod.number(),
+  "roomId": zod.number(),
+  "invoiceNumber": zod.string(),
+  "tenantName": zod.string(),
+  "amount": zod.string(),
+  "dueDate": zod.string(),
+  "issuedDate": zod.string(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "paidAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update an invoice
+ */
+export const UpdateInvoiceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateInvoiceBody = zod.object({
+  "contractId": zod.number().optional(),
+  "propertyId": zod.number().optional(),
+  "roomId": zod.number().optional(),
+  "invoiceNumber": zod.string().optional(),
+  "tenantName": zod.string().optional(),
+  "amount": zod.string().optional(),
+  "dueDate": zod.string().optional(),
+  "issuedDate": zod.string().optional(),
+  "status": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateInvoiceResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number().optional(),
+  "contractId": zod.number().nullish(),
+  "propertyId": zod.number(),
+  "roomId": zod.number(),
+  "invoiceNumber": zod.string(),
+  "tenantName": zod.string(),
+  "amount": zod.string(),
+  "dueDate": zod.string(),
+  "issuedDate": zod.string(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "paidAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete an invoice
+ */
+export const DeleteInvoiceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Mark an invoice as paid
+ */
+export const MarkInvoicePaidParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const MarkInvoicePaidResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number().optional(),
+  "contractId": zod.number().nullish(),
+  "propertyId": zod.number(),
+  "roomId": zod.number(),
+  "invoiceNumber": zod.string(),
+  "tenantName": zod.string(),
+  "amount": zod.string(),
+  "dueDate": zod.string(),
+  "issuedDate": zod.string(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "paidAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary List all inventory items
+ */
+export const ListInventoryQueryParams = zod.object({
+  "category": zod.coerce.string().optional(),
+  "lowStock": zod.coerce.boolean().optional()
+})
+
+export const ListInventoryResponseItem = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number().optional(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "quantity": zod.string(),
+  "minQuantity": zod.string(),
+  "unit": zod.string(),
+  "location": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+export const ListInventoryResponse = zod.array(ListInventoryResponseItem)
+
+
+/**
+ * @summary Create a new inventory item
+ */
+export const CreateInventoryItemBody = zod.object({
+  "name": zod.string(),
+  "category": zod.string().optional(),
+  "quantity": zod.string().optional(),
+  "minQuantity": zod.string().optional(),
+  "unit": zod.string().optional(),
+  "location": zod.string().optional(),
+  "description": zod.string().optional()
+})
+
+
+/**
+ * @summary Get an inventory item
+ */
+export const GetInventoryItemParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetInventoryItemResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number().optional(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "quantity": zod.string(),
+  "minQuantity": zod.string(),
+  "unit": zod.string(),
+  "location": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Update an inventory item
+ */
+export const UpdateInventoryItemParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateInventoryItemBody = zod.object({
+  "name": zod.string().optional(),
+  "category": zod.string().optional(),
+  "quantity": zod.string().optional(),
+  "minQuantity": zod.string().optional(),
+  "unit": zod.string().optional(),
+  "location": zod.string().optional(),
+  "description": zod.string().optional()
+})
+
+export const UpdateInventoryItemResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number().optional(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "quantity": zod.string(),
+  "minQuantity": zod.string(),
+  "unit": zod.string(),
+  "location": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Delete an inventory item
+ */
+export const DeleteInventoryItemParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Adjust inventory quantity (add or subtract)
+ */
+export const AdjustInventoryQuantityParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdjustInventoryQuantityBody = zod.object({
+  "delta": zod.number(),
+  "reason": zod.string().optional()
+})
+
+export const AdjustInventoryQuantityResponse = zod.object({
+  "id": zod.number(),
+  "tenantId": zod.number().optional(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "quantity": zod.string(),
+  "minQuantity": zod.string(),
+  "unit": zod.string(),
+  "location": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+

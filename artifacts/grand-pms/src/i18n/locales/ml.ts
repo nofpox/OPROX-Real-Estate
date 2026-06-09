@@ -17,6 +17,9 @@ const ml: Translations = {
     contentManager: "ഉള്ളടക്ക മാനേജ്മെന്റ്",
     websiteSettings: "വെബ്സൈറ്റ് ക്രമീകരണങ്ങൾ",
     partnerPortal: "പാർട്ണർ പോർട്ടൽ",
+    contracts: "കരാറുകൾ",
+    invoices: "ഇൻവോയ്സുകൾ",
+    inventory: "ഇൻവെന്ററി",
   },
   common: {
     save: "സംരക്ഷിക്കുക", cancel: "റദ്ദാക്കുക", delete: "ഇല്ലാതാക്കുക",

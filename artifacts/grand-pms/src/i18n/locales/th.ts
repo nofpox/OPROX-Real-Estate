@@ -17,6 +17,9 @@ const th: Translations = {
     contentManager: "การจัดการเนื้อหา",
     websiteSettings: "การตั้งค่าเว็บไซต์",
     partnerPortal: "พอร์ทัลพาร์ทเนอร์",
+    contracts: "สัญญา",
+    invoices: "ใบแจ้งหนี้",
+    inventory: "คลังสินค้า",
   },
   common: {
     save: "บันทึก", cancel: "ยกเลิก", delete: "ลบ", edit: "แก้ไข", add: "เพิ่ม",

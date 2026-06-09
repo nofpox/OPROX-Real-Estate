@@ -26,6 +26,9 @@ const ar: Translations = {
     contentManager: "إدارة المحتوى",
     websiteSettings: "إعدادات الموقع",
     partnerPortal: "بوابة الشريك",
+    contracts: "العقود",
+    invoices: "الفواتير",
+    inventory: "المخزون",
   },
   common: {
     save: "حفظ",

@@ -24,6 +24,9 @@ const en = {
     contentManager: "Content Manager",
     websiteSettings: "Website Settings",
     partnerPortal: "Partner Portal",
+    contracts: "Contracts",
+    invoices: "Invoices",
+    inventory: "Inventory",
   },
   common: {
     save: "Save",

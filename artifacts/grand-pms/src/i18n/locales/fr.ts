@@ -17,6 +17,9 @@ const fr: Translations = {
     contentManager: "Gestion du contenu",
     websiteSettings: "Paramètres du site Web",
     partnerPortal: "Portail Partenaire",
+    contracts: "Contrats",
+    invoices: "Factures",
+    inventory: "Inventaire",
   },
   common: {
     save: "Enregistrer", cancel: "Annuler", delete: "Supprimer", edit: "Modifier", add: "Ajouter",

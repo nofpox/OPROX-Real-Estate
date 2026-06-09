@@ -38,7 +38,9 @@ import WorkerWorkOrders from "@/pages/worker-work-orders";
 import WorkerUnitDetail from "@/pages/worker-unit-detail";
 import ContentManager from "@/pages/content-manager";
 import WebsiteSettings from "@/pages/website-settings";
-import { AppAIAgent } from "@/components/AppAIAgent";
+import Contracts from "@/pages/contracts";
+import Invoices from "@/pages/invoices";
+import InventoryPage from "@/pages/inventory";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
@@ -75,6 +77,9 @@ function Router() {
       <Route path="/service-config" component={ServiceConfig} />
       <Route path="/content-manager" component={ContentManager} />
       <Route path="/website-settings" component={WebsiteSettings} />
+      <Route path="/contracts" component={Contracts} />
+      <Route path="/invoices" component={Invoices} />
+      <Route path="/inventory" component={InventoryPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -220,7 +225,6 @@ function App() {
                 </Route>
               </Switch>
             </WouterRouter>
-            <AppAIAgent authUser={authUser} />
           </QueryClientProvider>
         </LanguageProvider>
       </I18nextProvider>

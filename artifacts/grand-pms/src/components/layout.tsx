@@ -6,7 +6,7 @@ import {
   MapPin, InboxIcon, History, Settings, Dumbbell, SlidersHorizontal, ShieldAlert, BarChart2,
   Ticket, MessageCircleQuestion, Settings2, HelpCircle,
   Calendar, Users, DollarSign, Archive, TrendingUp, Monitor, LayoutTemplate,
-  Clock, Eye, LogOut,
+  Clock, Eye, LogOut, FileText, Receipt, Package,
 } from "lucide-react";
 import { SupportDialog } from "@/components/support-dialog";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,6 @@ import { useToast } from "@/hooks/use-toast";
 import { TourOverlay } from "@/components/tour/tour-overlay";
 import { SmartHintBar } from "@/components/tour/smart-hint-bar";
 import { useTour } from "@/components/tour/tour-context";
-import { AppAIAgent } from "@/components/AppAIAgent";
 
 const NAV_ITEMS = [
   { href: "/",               labelKey: "nav.dashboard",      icon: LayoutDashboard, section: "main",       featureKey: null       },
@@ -71,6 +70,9 @@ const NAV_ITEMS = [
   { href: "/support-tickets",    labelKey: "nav.supportTickets",    icon: Ticket,             section: "operations", featureKey: null },
   { href: "/content-manager",   labelKey: "nav.contentManager",   icon: LayoutTemplate,     section: "operations", featureKey: null },
   { href: "/website-settings",  labelKey: "nav.websiteSettings",  icon: Monitor,            section: "operations", featureKey: null },
+  { href: "/contracts",         labelKey: "nav.contracts",         icon: FileText,           section: "operations", featureKey: null },
+  { href: "/invoices",          labelKey: "nav.invoices",          icon: Receipt,            section: "operations", featureKey: null },
+  { href: "/inventory",         labelKey: "nav.inventory",         icon: Package,            section: "operations", featureKey: null },
 ];
 
 /* Role pill colours — solid only, no opacity modifiers */
@@ -527,8 +529,6 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
       {/* Onboarding tour overlay — rendered via portal at document.body */}
       <TourOverlay />
 
-      {/* Proactive AI Agent — floating assistant for all users */}
-      <AppAIAgent authUser={authUser} />
     </div>
   );
 }

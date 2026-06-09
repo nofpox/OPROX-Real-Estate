@@ -17,6 +17,9 @@ const bn: Translations = {
     contentManager: "বিষয়বস্তু ব্যবস্থাপনা",
     websiteSettings: "ওয়েবসাইট সেটিংস",
     partnerPortal: "পার্টনার পোর্টাল",
+    contracts: "চুক্তি",
+    invoices: "চালান",
+    inventory: "ইনভেন্টরি",
   },
   common: {
     save: "সংরক্ষণ করুন", cancel: "বাতিল করুন", delete: "মুছুন",

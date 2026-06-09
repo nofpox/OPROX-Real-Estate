@@ -17,6 +17,9 @@ const ne: Translations = {
     contentManager: "सामग्री व्यवस्थापन",
     websiteSettings: "वेबसाइट सेटिङहरू",
     partnerPortal: "पार्टनर पोर्टल",
+    contracts: "सम्झौताहरू",
+    invoices: "बिलहरू",
+    inventory: "सूची",
   },
   common: {
     save: "सुरक्षित गर्नुहोस्", cancel: "रद्द गर्नुहोस्", delete: "मेट्नुहोस्",

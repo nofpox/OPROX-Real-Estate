@@ -17,6 +17,9 @@ const hi: Translations = {
     contentManager: "सामग्री प्रबंधन",
     websiteSettings: "वेबसाइट सेटिंग्स",
     partnerPortal: "पार्टनर पोर्टल",
+    contracts: "अनुबंध",
+    invoices: "चालान",
+    inventory: "सूची",
   },
   common: {
     save: "सहेजें", cancel: "रद्द करें", delete: "हटाएं", edit: "संपादित करें", add: "जोड़ें",

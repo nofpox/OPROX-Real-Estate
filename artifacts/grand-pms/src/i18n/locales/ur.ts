@@ -17,6 +17,9 @@ const ur: Translations = {
     contentManager: "مواد کا انتظام",
     websiteSettings: "ویب سائٹ کی ترتیبات",
     partnerPortal: "پارٹنر پورٹل",
+    contracts: "معاہدے",
+    invoices: "رسیدیں",
+    inventory: "انوینٹری",
   },
   common: {
     save: "محفوظ کریں", cancel: "منسوخ کریں", delete: "حذف کریں",

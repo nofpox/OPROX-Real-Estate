@@ -42,6 +42,9 @@ import rkzAnalysisRouter from "./rkz-analysis";
 import portalRouter from "./portal";
 import debugRouter from "./debug";
 import aiGovernanceRouter from "./aiGovernance";
+import contractsRouter from "./contracts";
+import invoicesRouter from "./invoices";
+import inventoryRouter from "./inventoryRoute";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
@@ -59,6 +62,7 @@ const SUPERVISOR_PREFIXES = [
   "/users", "/activity-logs", "/staff", "/properties",
   "/bookings", "/stats", "/guests", "/shifts",
   "/maintenance-requests", "/admin/",
+  "/contracts", "/invoices", "/inventory",
 ];
 
 // Paths workers may access even though they are below supervisor tier
@@ -178,6 +182,9 @@ router.use(rkzAnalysisRouter);
 router.use(portalRouter);
 router.use(debugRouter);
 router.use(aiGovernanceRouter);
+router.use(contractsRouter);
+router.use(invoicesRouter);
+router.use(inventoryRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

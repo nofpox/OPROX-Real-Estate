@@ -17,6 +17,9 @@ const tl: Translations = {
     contentManager: "Pamamahala ng Nilalaman",
     websiteSettings: "Mga Setting ng Website",
     partnerPortal: "Partner Portal",
+    contracts: "Mga Kontrata",
+    invoices: "Mga Invoice",
+    inventory: "Imbentaryo",
   },
   common: {
     save: "I-save", cancel: "Kanselahin", delete: "Burahin", edit: "I-edit", add: "Idagdag",

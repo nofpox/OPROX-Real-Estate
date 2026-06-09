@@ -17,6 +17,9 @@ const id: Translations = {
     contentManager: "Manajemen Konten",
     websiteSettings: "Pengaturan Situs Web",
     partnerPortal: "Portal Mitra",
+    contracts: "Kontrak",
+    invoices: "Faktur",
+    inventory: "Inventaris",
   },
   common: {
     save: "Simpan", cancel: "Batal", delete: "Hapus", edit: "Edit", add: "Tambah",

@@ -40,6 +40,12 @@ tags:
     description: Data archiving, health checks, and archive browser (admin only)
   - name: openai
     description: AI chat agents (App agent and Platform agent)
+  - name: contracts
+    description: Lease contract management
+  - name: invoices
+    description: Invoice generation and tracking
+  - name: inventory
+    description: Warehouse inventory management
 paths:
   /settings:
     get:
@@ -2871,6 +2877,309 @@ paths:
           content:
             text/event-stream: {}
 
+  /contracts:
+    get:
+      operationId: listContracts
+      tags: [contracts]
+      summary: List all contracts
+      parameters:
+        - in: query
+          name: propertyId
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Contract" }
+    post:
+      operationId: createContract
+      tags: [contracts]
+      summary: Create a new contract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContractInput" }
+      responses:
+        "201":
+          description: Created contract
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contract" }
+
+  /contracts/{id}:
+    get:
+      operationId: getContract
+      tags: [contracts]
+      summary: Get a contract by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Contract
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contract" }
+        "404":
+          description: Not found
+    patch:
+      operationId: updateContract
+      tags: [contracts]
+      summary: Update a contract
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContractUpdate" }
+      responses:
+        "200":
+          description: Updated contract
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Contract" }
+    delete:
+      operationId: deleteContract
+      tags: [contracts]
+      summary: Delete a contract
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /invoices:
+    get:
+      operationId: listInvoices
+      tags: [invoices]
+      summary: List all invoices
+      parameters:
+        - in: query
+          name: propertyId
+          schema: { type: integer }
+        - in: query
+          name: contractId
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Invoice" }
+    post:
+      operationId: createInvoice
+      tags: [invoices]
+      summary: Create a new invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InvoiceInput" }
+      responses:
+        "201":
+          description: Created invoice
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invoice" }
+
+  /invoices/{id}:
+    get:
+      operationId: getInvoice
+      tags: [invoices]
+      summary: Get an invoice by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Invoice
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invoice" }
+        "404":
+          description: Not found
+    patch:
+      operationId: updateInvoice
+      tags: [invoices]
+      summary: Update an invoice
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InvoiceUpdate" }
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invoice" }
+    delete:
+      operationId: deleteInvoice
+      tags: [invoices]
+      summary: Delete an invoice
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /invoices/{id}/pay:
+    patch:
+      operationId: markInvoicePaid
+      tags: [invoices]
+      summary: Mark an invoice as paid
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invoice" }
+
+  /inventory:
+    get:
+      operationId: listInventory
+      tags: [inventory]
+      summary: List all inventory items
+      parameters:
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: lowStock
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: List of inventory items
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/InventoryItem" }
+    post:
+      operationId: createInventoryItem
+      tags: [inventory]
+      summary: Create a new inventory item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InventoryItemInput" }
+      responses:
+        "201":
+          description: Created item
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InventoryItem" }
+
+  /inventory/{id}:
+    get:
+      operationId: getInventoryItem
+      tags: [inventory]
+      summary: Get an inventory item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Inventory item
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InventoryItem" }
+        "404":
+          description: Not found
+    patch:
+      operationId: updateInventoryItem
+      tags: [inventory]
+      summary: Update an inventory item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InventoryItemUpdate" }
+      responses:
+        "200":
+          description: Updated item
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InventoryItem" }
+    delete:
+      operationId: deleteInventoryItem
+      tags: [inventory]
+      summary: Delete an inventory item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /inventory/{id}/adjust:
+    patch:
+      operationId: adjustInventoryQuantity
+      tags: [inventory]
+      summary: Adjust inventory quantity (add or subtract)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InventoryAdjust" }
+      responses:
+        "200":
+          description: Updated item
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InventoryItem" }
+
 components:
   schemas:
     Settings:
@@ -5144,3 +5453,143 @@ components:
         context:
           type: object
           additionalProperties: true
+
+    Contract:
+      type: object
+      required: [id, propertyId, roomId, contractNumber, tenantName, startDate, endDate, monthlyRent, status, createdAt]
+      properties:
+        id:             { type: integer }
+        tenantId:       { type: integer }
+        propertyId:     { type: integer }
+        roomId:         { type: integer }
+        contractNumber: { type: string }
+        tenantName:     { type: string }
+        tenantPhone:    { type: ["string", "null"] }
+        tenantEmail:    { type: ["string", "null"] }
+        startDate:      { type: string }
+        endDate:        { type: string }
+        monthlyRent:    { type: string }
+        depositAmount:  { type: ["string", "null"] }
+        status:         { type: string }
+        notes:          { type: ["string", "null"] }
+        createdAt:      { type: string }
+    ContractInput:
+      type: object
+      required: [propertyId, roomId, contractNumber, tenantName, startDate, endDate, monthlyRent]
+      properties:
+        propertyId:     { type: integer }
+        roomId:         { type: integer }
+        contractNumber: { type: string }
+        tenantName:     { type: string }
+        tenantPhone:    { type: string }
+        tenantEmail:    { type: string }
+        startDate:      { type: string }
+        endDate:        { type: string }
+        monthlyRent:    { type: string }
+        depositAmount:  { type: string }
+        status:         { type: string }
+        notes:          { type: string }
+    ContractUpdate:
+      type: object
+      properties:
+        propertyId:     { type: integer }
+        roomId:         { type: integer }
+        contractNumber: { type: string }
+        tenantName:     { type: string }
+        tenantPhone:    { type: string }
+        tenantEmail:    { type: string }
+        startDate:      { type: string }
+        endDate:        { type: string }
+        monthlyRent:    { type: string }
+        depositAmount:  { type: string }
+        status:         { type: string }
+        notes:          { type: string }
+
+    Invoice:
+      type: object
+      required: [id, propertyId, roomId, invoiceNumber, tenantName, amount, dueDate, issuedDate, status, createdAt]
+      properties:
+        id:            { type: integer }
+        tenantId:      { type: integer }
+        contractId:    { type: ["integer", "null"] }
+        propertyId:    { type: integer }
+        roomId:        { type: integer }
+        invoiceNumber: { type: string }
+        tenantName:    { type: string }
+        amount:        { type: string }
+        dueDate:       { type: string }
+        issuedDate:    { type: string }
+        status:        { type: string }
+        notes:         { type: ["string", "null"] }
+        paidAt:        { type: ["string", "null"] }
+        createdAt:     { type: string }
+    InvoiceInput:
+      type: object
+      required: [propertyId, roomId, invoiceNumber, tenantName, amount, dueDate, issuedDate]
+      properties:
+        contractId:    { type: integer }
+        propertyId:    { type: integer }
+        roomId:        { type: integer }
+        invoiceNumber: { type: string }
+        tenantName:    { type: string }
+        amount:        { type: string }
+        dueDate:       { type: string }
+        issuedDate:    { type: string }
+        status:        { type: string }
+        notes:         { type: string }
+    InvoiceUpdate:
+      type: object
+      properties:
+        contractId:    { type: integer }
+        propertyId:    { type: integer }
+        roomId:        { type: integer }
+        invoiceNumber: { type: string }
+        tenantName:    { type: string }
+        amount:        { type: string }
+        dueDate:       { type: string }
+        issuedDate:    { type: string }
+        status:        { type: string }
+        notes:         { type: string }
+
+    InventoryItem:
+      type: object
+      required: [id, name, category, quantity, minQuantity, unit, createdAt]
+      properties:
+        id:          { type: integer }
+        tenantId:    { type: integer }
+        name:        { type: string }
+        category:    { type: string }
+        quantity:    { type: string }
+        minQuantity: { type: string }
+        unit:        { type: string }
+        location:    { type: ["string", "null"] }
+        description: { type: ["string", "null"] }
+        createdAt:   { type: string }
+        updatedAt:   { type: string }
+    InventoryItemInput:
+      type: object
+      required: [name]
+      properties:
+        name:        { type: string }
+        category:    { type: string }
+        quantity:    { type: string }
+        minQuantity: { type: string }
+        unit:        { type: string }
+        location:    { type: string }
+        description: { type: string }
+    InventoryItemUpdate:
+      type: object
+      properties:
+        name:        { type: string }
+        category:    { type: string }
+        quantity:    { type: string }
+        minQuantity: { type: string }
+        unit:        { type: string }
+        location:    { type: string }
+        description: { type: string }
+    InventoryAdjust:
+      type: object
+      required: [delta]
+      properties:
+        delta:  { type: number }
+        reason: { type: string }
