@@ -125,6 +125,18 @@ function buildMapHtml(properties: MapProperty[]): string {
   .leaflet-control-zoom a:hover { background: #1e3a5f !important; }
   .leaflet-control-attribution { background: rgba(10,22,40,0.7) !important; color: #64748b !important; font-size: 9px; }
   .leaflet-control-attribution a { color: #D4A843 !important; }
+
+  /* Fix white tile-gap lines on high-DPI / mobile screens */
+  .leaflet-tile-pane { will-change: transform; }
+  .leaflet-tile {
+    border-right: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+    image-rendering: -webkit-optimize-contrast;
+  }
+  .leaflet-tile-container img {
+    width: 256.5px !important;
+    height: 256.5px !important;
+  }
 </style>
 </head>
 <body>
