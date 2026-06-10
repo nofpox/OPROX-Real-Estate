@@ -18,6 +18,24 @@ uri = "file://artifacts/rkz-promo/public/images/pattern.png"
 type = "image"
 title = "Gold geometric pattern"
 
+[[generated]]
+id = "YfHz7ZHwc7edk_opQMkKu"
+uri = "file://artifacts/rkz/assets/images/icon-option-1.png"
+type = "image"
+title = "rozoz-icon-letter-R-gold"
+
+[[generated]]
+id = "diw4dIclOQ_Qd-B_-neNT"
+uri = "file://artifacts/rkz/assets/images/icon-option-2.png"
+type = "image"
+title = "rozoz-icon-house-pin-gold"
+
+[[generated]]
+id = "rzueFy8FMVvpRYpK6Q6Wt"
+uri = "file://artifacts/rkz/assets/images/icon-option-3.png"
+type = "image"
+title = "rozoz-icon-crescent-building"
+
 [[outputs]]
 id = "jCktAW9goz3sn4e0SeBUs"
 uri = "file://artifacts/rkz/qr.png"
