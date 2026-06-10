@@ -263,3 +263,9 @@ id = "jEO_v2vtHhHnd0G_S6AWU"
 uri = "file://rozoz-source.tar.gz"
 type = "unspecified"
 title = "Rozoz — Source Code"
+
+[[outputs]]
+id = "uaZu8Ggg1cveFvRQ78uQn"
+uri = "file://attached_assets/rozoz-qr.png"
+type = "image"
+title = "QR Code — Rozoz على Expo Go"
