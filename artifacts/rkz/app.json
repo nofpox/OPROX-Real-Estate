@@ -4,12 +4,12 @@
     "slug": "rozoz-msrep",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/rozoz-icon.jpg",
     "scheme": "rozoz-msrep",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/images/rozoz-icon.jpg",
       "resizeMode": "contain",
       "backgroundColor": "#0A1628"
     },
@@ -18,10 +18,14 @@
       "bundleIdentifier": "com.rozoz.msrep"
     },
     "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/rozoz-icon.jpg",
+        "backgroundColor": "#0A1628"
+      },
       "package": "com.rozoz.msrep"
     },
     "web": {
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/rozoz-icon.jpg"
     },
     "plugins": [
       [
