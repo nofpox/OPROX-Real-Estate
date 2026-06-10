@@ -113,11 +113,12 @@ function NativeTabLayout() {
   const { t, isAr } = useLocale();
 
   const triggers = [
-    { name: "index",        sf: { default: "map",           selected: "map.fill"             }, label: t.tabs.home       },
-    { name: "add",          sf: { default: "plus.circle",   selected: "plus.circle.fill"     }, label: t.tabs.add        },
-    { name: "listings",     sf: { default: "list.bullet",   selected: "list.bullet.circle.fill" }, label: t.tabs.listings },
+    { name: "index",        sf: { default: "map",                    selected: "map.fill"                    }, label: t.tabs.home       },
+    { name: "explore",      sf: { default: "safari",                 selected: "safari.fill"                 }, label: t.tabs.explore    },
+    { name: "add",          sf: { default: "plus.circle",            selected: "plus.circle.fill"            }, label: t.tabs.add        },
+    { name: "listings",     sf: { default: "list.bullet",            selected: "list.bullet.circle.fill"     }, label: t.tabs.listings   },
     { name: "ai-concierge", sf: { default: "wrench.and.screwdriver", selected: "wrench.and.screwdriver.fill" }, label: t.tabs.myRequests },
-    { name: "settings",     sf: { default: "gearshape",     selected: "gearshape.fill"       }, label: t.tabs.settings   },
+    { name: "settings",     sf: { default: "gearshape",              selected: "gearshape.fill"              }, label: t.tabs.settings   },
   ];
 
   const ordered = isAr ? [...triggers].reverse() : triggers;
@@ -152,6 +153,14 @@ function ClassicTabLayout() {
         isIOS
           ? <SymbolView name="map" tintColor={color} size={24} />
           : <MaterialIcons name="map" size={24} color={color} />,
+    },
+    {
+      name:  "explore",
+      title: t.tabs.explore,
+      icon:  (color: string) =>
+        isIOS
+          ? <SymbolView name="safari" tintColor={color} size={24} />
+          : <MaterialIcons name="explore" size={24} color={color} />,
     },
     {
       name:  "add",
