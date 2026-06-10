@@ -52,9 +52,7 @@ interface LoginResponse {
   user: { id: number; phone: string; name?: string; email?: string; authorized: boolean };
 }
 
-export default function LoginScreen() {
-  if (__DEV__) return <Redirect href="/(tabs)" />;
-
+function LoginForm() {
   const colors  = useColors();
   const insets  = useSafeAreaInsets();
   const { setUser } = useApp();
@@ -570,4 +568,24 @@ export default function LoginScreen() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
+}
+
+/**
+ * Auth guard — wraps LoginForm.
+ * If the user is already logged in (persisted in AsyncStorage), skip login
+ * and welcome screens entirely and go straight to the main tabs.
+ */
+export default function LoginScreen() {
+  const { user, isLoading } = useApp();
+
+  // Dev shortcut
+  if (__DEV__) return <Redirect href="/(tabs)" />;
+
+  // Already authenticated — jump straight to the map
+  if (!isLoading && user) return <Redirect href="/(tabs)" />;
+
+  // Waiting for AsyncStorage to resolve — show nothing (splash covers it)
+  if (isLoading) return null;
+
+  return <LoginForm />;
 }
