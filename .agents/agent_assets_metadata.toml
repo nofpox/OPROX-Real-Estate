@@ -269,3 +269,9 @@ id = "uaZu8Ggg1cveFvRQ78uQn"
 uri = "file://attached_assets/rozoz-qr.png"
 type = "image"
 title = "QR Code — Rozoz على Expo Go"
+
+[[outputs]]
+id = "ksqM0ahSH2MT6X6QhoYza"
+uri = "file://attached_assets/rozoz-business-study.md"
+type = "text"
+title = "دراسة روزوز الشاملة — خريطة الطريق"
