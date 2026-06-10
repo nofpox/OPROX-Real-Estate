@@ -34,6 +34,7 @@ function RootLayoutNav() {
         gestureDirection: "horizontal",
       }}
     >
+      <Stack.Screen name="language-select" options={{ animation: "fade", animationDuration: 300, gestureEnabled: false }} />
       <Stack.Screen name="login"          options={{ animation: "fade", animationDuration: 220 }} />
       <Stack.Screen name="gate"           options={{ animation: "fade", animationDuration: 220, gestureEnabled: false }} />
       <Stack.Screen name="welcome"        options={{ animation: "fade", animationDuration: 220, gestureEnabled: false }} />

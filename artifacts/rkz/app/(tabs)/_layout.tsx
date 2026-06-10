@@ -291,7 +291,14 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
 
 // ── Root layout ───────────────────────────────────────────────────────────────
 export default function TabLayout() {
-  const { user, showRegister } = useApp();
+  const { user, showRegister, isLoading, langChosen } = useApp();
+
+  useEffect(() => {
+    if (!isLoading && langChosen === false) {
+      router.replace("/language-select" as never);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, langChosen]);
 
   const requireAuth = useCallback(
     (action: () => void) => {

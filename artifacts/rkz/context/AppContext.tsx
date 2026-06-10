@@ -176,6 +176,7 @@ interface AppState {
   // Language override
   appLang: "ar" | "en";
   setAppLang: (lang: "ar" | "en") => void;
+  langChosen: boolean | null;
 
   // Progressive registration modal
   registerModalVisible: boolean;
@@ -295,6 +296,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const sys = Localization.getLocales()[0]?.languageCode ?? "ar";
     return sys === "ar" ? "ar" : "en";
   });
+  const [langChosen, setLangChosen] = useState<boolean | null>(null);
 
   const save = useCallback(async (u: User | null, props: Property[]) => {
     try {
@@ -347,7 +349,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (savedLang.status === "fulfilled") {
         const l = savedLang.value;
-        if (l === "ar" || l === "en") setAppLangState(l);
+        if (l === "ar" || l === "en") {
+          setAppLangState(l);
+          setLangChosen(true);
+        } else {
+          setLangChosen(false);
+        }
+      } else {
+        setLangChosen(false);
       }
 
       if (leaseRaw.status === "fulfilled" && leaseRaw.value) {
@@ -396,6 +405,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const setAppLang = useCallback((lang: "ar" | "en") => {
     setAppLangState(lang);
+    setLangChosen(true);
     void AsyncStorage.setItem(LANG_KEY, lang);
   }, []);
 
@@ -679,6 +689,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     refreshFromApi,
     appLang,
     setAppLang,
+    langChosen,
     registerModalVisible,
     showRegister,
     hideRegister,
@@ -697,7 +708,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUser, setAppMode, clearAppMode, setSelectedRole,
     addProperty, updateProperty, deleteProperty, markLeadRead,
     unreadLeadsCount, refreshFromApi,
-    appLang, setAppLang,
+    appLang, setAppLang, langChosen,
     registerModalVisible, showRegister, hideRegister, registerPendingCb,
     tenants, leases, notifications,
     addLease, updateLease, deleteLease, markRentPaid,
