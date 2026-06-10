@@ -161,17 +161,21 @@ interface AppState {
   properties: Property[];
   isLoading: boolean;
   appMode: AppMode;
-  selectedRole: "buyer" | "seller" | null;
+  selectedRole: "buyer" | "seller" | "owner" | null;
   setUser: (user: User | null) => void;
   setAppMode: (mode: "tourist" | "registered") => void;
   clearAppMode: () => void;
-  setSelectedRole: (r: "buyer" | "seller") => void;
+  setSelectedRole: (r: "buyer" | "seller" | "owner") => void;
   addProperty: (property: Omit<Property, "id" | "createdAt" | "leads" | "platforms">) => Promise<Property>;
   updateProperty: (id: string, updates: Partial<Property>) => void;
   deleteProperty: (id: string) => void;
   markLeadRead: (propertyId: string, leadId: string) => void;
   unreadLeadsCount: number;
   refreshFromApi: () => Promise<void>;
+
+  // Language override
+  appLang: "ar" | "en";
+  setAppLang: (lang: "ar" | "en") => void;
 
   // Progressive registration modal
   registerModalVisible: boolean;
@@ -198,12 +202,13 @@ interface AppState {
   leaseAlerts: LeaseAlerts;
 }
 
-const AppContext = createContext<AppState | null>(null);
+export const AppContext = createContext<AppState | null>(null);
 
 const STORAGE_KEY   = "rozoz_state";
 const ROLE_KEY      = "rozoz_user_role";
 const LEASE_KEY     = "rozoz_lease_state";
 const APP_MODE_KEY  = "rozoz_app_mode";
+const LANG_KEY      = "rozoz_lang";
 
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
@@ -280,12 +285,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [appMode, setAppModeState] = useState<AppMode>(null);
-  const [selectedRole, setSelectedRoleState] = useState<"buyer" | "seller" | null>(null);
+  const [selectedRole, setSelectedRoleState] = useState<"buyer" | "seller" | "owner" | null>(null);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [leases, setLeases] = useState<Lease[]>([]);
   const [notifications, setNotifications] = useState<TenantNotification[]>([]);
   const [registerModalVisible, setRegisterModalVisible] = useState(false);
   const [registerPendingCb, setRegisterPendingCb] = useState<(() => void) | null>(null);
+  const [appLang, setAppLangState] = useState<"ar" | "en">(() => {
+    const sys = Localization.getLocales()[0]?.languageCode ?? "ar";
+    return sys === "ar" ? "ar" : "en";
+  });
 
   const save = useCallback(async (u: User | null, props: Property[]) => {
     try {
@@ -307,12 +316,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function boot() {
-      // Read all 4 keys in parallel — ~3× faster than sequential awaits
-      const [raw, savedMode, savedRole, leaseRaw] = await Promise.allSettled([
+      // Read all 5 keys in parallel
+      const [raw, savedMode, savedRole, leaseRaw, savedLang] = await Promise.allSettled([
         AsyncStorage.getItem(STORAGE_KEY),
         AsyncStorage.getItem(APP_MODE_KEY),
         AsyncStorage.getItem(ROLE_KEY),
         AsyncStorage.getItem(LEASE_KEY),
+        AsyncStorage.getItem(LANG_KEY),
       ]);
 
       if (raw.status === "fulfilled" && raw.value) {
@@ -332,7 +342,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (savedRole.status === "fulfilled") {
         const r = savedRole.value;
-        if (r === "buyer" || r === "seller") setSelectedRoleState(r);
+        if (r === "buyer" || r === "seller" || r === "owner") setSelectedRoleState(r);
+      }
+
+      if (savedLang.status === "fulfilled") {
+        const l = savedLang.value;
+        if (l === "ar" || l === "en") setAppLangState(l);
       }
 
       if (leaseRaw.status === "fulfilled" && leaseRaw.value) {
@@ -374,9 +389,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     void AsyncStorage.removeItem(APP_MODE_KEY);
   }, []);
 
-  const setSelectedRole = useCallback((r: "buyer" | "seller") => {
+  const setSelectedRole = useCallback((r: "buyer" | "seller" | "owner") => {
     setSelectedRoleState(r);
     void AsyncStorage.setItem(ROLE_KEY, r);
+  }, []);
+
+  const setAppLang = useCallback((lang: "ar" | "en") => {
+    setAppLangState(lang);
+    void AsyncStorage.setItem(LANG_KEY, lang);
   }, []);
 
   const refreshFromApi = useCallback(async () => {
@@ -657,6 +677,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     markLeadRead,
     unreadLeadsCount,
     refreshFromApi,
+    appLang,
+    setAppLang,
     registerModalVisible,
     showRegister,
     hideRegister,
@@ -675,6 +697,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUser, setAppMode, clearAppMode, setSelectedRole,
     addProperty, updateProperty, deleteProperty, markLeadRead,
     unreadLeadsCount, refreshFromApi,
+    appLang, setAppLang,
     registerModalVisible, showRegister, hideRegister, registerPendingCb,
     tenants, leases, notifications,
     addLease, updateLease, deleteLease, markRentPaid,

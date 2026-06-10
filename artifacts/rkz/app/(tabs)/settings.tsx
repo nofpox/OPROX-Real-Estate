@@ -32,7 +32,7 @@ const PIN_TAP_THRESHOLD = 7;
 export default function SettingsScreen() {
   const colors  = useColors();
   const insets  = useSafeAreaInsets();
-  const { user, setUser, properties } = useApp();
+  const { user, setUser, properties, appLang, setAppLang } = useApp();
   const { config } = useConfig();
   const { t, isAr } = useLocale();
 
@@ -366,6 +366,38 @@ export default function SettingsScreen() {
                 thumbColor="#FFFFFF"
               />
             </View>
+            <View style={S.divider} />
+            {/* Language toggle */}
+            <Pressable
+              style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
+              onPress={() => {
+                const next = appLang === "ar" ? "en" : "ar";
+                setAppLang(next);
+                void Haptics.selectionAsync();
+              }}
+            >
+              <View style={[S.iconBox, { backgroundColor: "#F0FDF4" }]}>
+                <MaterialIcons name="translate" size={20} color="#059669" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={S.rowLabel}>
+                  {isAr ? "اللغة" : "Language"}
+                </Text>
+                <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: colors.mutedForeground, textAlign: isAr ? "right" : "left" }}>
+                  {appLang === "ar" ? "العربية  →  English" : "English  →  العربية"}
+                </Text>
+              </View>
+              <View style={{
+                backgroundColor: appLang === "ar" ? "#059669" : "#2563EB",
+                borderRadius: 20,
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+              }}>
+                <Text style={{ color: "#fff", fontFamily: "Inter_700Bold", fontSize: 13 }}>
+                  {appLang === "ar" ? "AR" : "EN"}
+                </Text>
+              </View>
+            </Pressable>
             <View style={S.divider} />
             <Pressable
               style={({ pressed }) => [S.row, pressed && { opacity: 0.8 }]}
