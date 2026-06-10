@@ -4,7 +4,6 @@ import * as Linking from "expo-linking";
 import React, { useState } from "react";
 import {
   Dimensions,
-  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -15,6 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import TourismMapView, { TourismSpot } from "@/components/TourismMapView";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -24,22 +24,9 @@ const CARD_W = (SCREEN_W - 48) / 2;
 // ── Static tourism data ───────────────────────────────────────────────────────
 type Category = "all" | "cultural" | "events" | "nature" | "entertainment" | "religious";
 
-interface Attraction {
-  id: string;
-  emoji: string;
-  nameAr: string;
-  nameEn: string;
-  cityAr: string;
-  cityEn: string;
-  descAr: string;
-  descEn: string;
-  category: Exclude<Category, "all">;
-  featured?: boolean;
-  mapsUrl: string;
-  websiteUrl?: string;
-}
-
-const ATTRACTIONS: Attraction[] = [
+// ATTRACTIONS satisfy TourismSpot exactly (id, emoji, nameAr, nameEn, cityAr,
+// cityEn, descAr, descEn, category, lat, lng, mapsUrl, featured?)
+const ATTRACTIONS: TourismSpot[] = [
   {
     id: "diriyah",
     emoji: "🏯",
@@ -51,8 +38,8 @@ const ATTRACTIONS: Attraction[] = [
     descEn: "Birthplace of the Saudi state, UNESCO World Heritage Site",
     category: "cultural",
     featured: true,
+    lat: 24.734, lng: 46.571,
     mapsUrl: "https://maps.google.com/?q=Diriyah,Riyadh",
-    websiteUrl: "https://www.diriyah.sa",
   },
   {
     id: "masmak",
@@ -64,6 +51,7 @@ const ATTRACTIONS: Attraction[] = [
     descAr: "قلعة الطين التاريخية في قلب الرياض القديمة",
     descEn: "Historic mud-brick fort in the heart of old Riyadh",
     category: "cultural",
+    lat: 24.686, lng: 46.713,
     mapsUrl: "https://maps.google.com/?q=Al+Masmak+Palace,Riyadh",
   },
   {
@@ -76,8 +64,8 @@ const ATTRACTIONS: Attraction[] = [
     descAr: "8 أجنحة تروي تاريخ الجزيرة العربية عبر العصور",
     descEn: "8 galleries narrating Arabian Peninsula history through the ages",
     category: "cultural",
+    lat: 24.699, lng: 46.713,
     mapsUrl: "https://maps.google.com/?q=Saudi+National+Museum,Riyadh",
-    websiteUrl: "https://www.visitsaudi.com",
   },
   {
     id: "alula",
@@ -90,8 +78,8 @@ const ATTRACTIONS: Attraction[] = [
     descEn: "Valley of Wonders — Hegra, Khaybar & red sand mountains",
     category: "nature",
     featured: true,
+    lat: 26.624, lng: 37.921,
     mapsUrl: "https://maps.google.com/?q=AlUla,Saudi+Arabia",
-    websiteUrl: "https://www.experiencealula.com",
   },
   {
     id: "abha",
@@ -103,6 +91,7 @@ const ATTRACTIONS: Attraction[] = [
     descAr: "سقف المملكة — جبال عسير الخضراء وضباب الصباح",
     descEn: "Kingdom's rooftop — Asir green mountains & morning mist",
     category: "nature",
+    lat: 18.216, lng: 42.505,
     mapsUrl: "https://maps.google.com/?q=Abha,Saudi+Arabia",
   },
   {
@@ -115,6 +104,7 @@ const ATTRACTIONS: Attraction[] = [
     descAr: "أعلى برج في الرياض بجسر سماوي فريد وإطلالة 360°",
     descEn: "Riyadh's tallest tower — unique sky bridge & 360° views",
     category: "entertainment",
+    lat: 24.691, lng: 46.683,
     mapsUrl: "https://maps.google.com/?q=Kingdom+Centre+Tower,Riyadh",
   },
   {
@@ -128,8 +118,8 @@ const ATTRACTIONS: Attraction[] = [
     descEn: "Mega entertainment city — rides, malls & world-class dining",
     category: "entertainment",
     featured: true,
+    lat: 24.803, lng: 46.637,
     mapsUrl: "https://maps.google.com/?q=Boulevard+City+Riyadh",
-    websiteUrl: "https://www.boulevardriyadh.com",
   },
   {
     id: "riyadh-season",
@@ -142,8 +132,8 @@ const ATTRACTIONS: Attraction[] = [
     descEn: "World's largest entertainment season — concerts & mega events",
     category: "events",
     featured: true,
+    lat: 24.787, lng: 46.650,
     mapsUrl: "https://maps.google.com/?q=Riyadh+Season+Boulevard",
-    websiteUrl: "https://www.riyadhseason.sa",
   },
   {
     id: "jeddah-historic",
@@ -155,8 +145,8 @@ const ATTRACTIONS: Attraction[] = [
     descAr: "الحارة العريقة — أبراج مرجانية وأسواق تراثية يونسكو",
     descEn: "Ancient quarter — coral towers & UNESCO heritage souks",
     category: "cultural",
+    lat: 21.487, lng: 39.188,
     mapsUrl: "https://maps.google.com/?q=Al-Balad,Jeddah",
-    websiteUrl: "https://www.visitsaudi.com",
   },
   {
     id: "mecca",
@@ -168,6 +158,7 @@ const ATTRACTIONS: Attraction[] = [
     descAr: "أقدس بقاع الأرض — المسجد الحرام والكعبة المشرفة",
     descEn: "Holiest site on Earth — Grand Mosque & the Kaaba",
     category: "religious",
+    lat: 21.389, lng: 39.857,
     mapsUrl: "https://maps.google.com/?q=Grand+Mosque,Mecca",
   },
   {
@@ -180,6 +171,7 @@ const ATTRACTIONS: Attraction[] = [
     descAr: "المسجد النبوي الشريف وروضة من رياض الجنة",
     descEn: "Prophet's Mosque — one of the most sacred mosques in Islam",
     category: "religious",
+    lat: 24.524, lng: 39.570,
     mapsUrl: "https://maps.google.com/?q=Al-Masjid+an-Nabawi,Medina",
   },
   {
@@ -192,6 +184,7 @@ const ATTRACTIONS: Attraction[] = [
     descAr: "أعمق نقطة غوص وشعاب مرجانية بحر الأقحوان",
     descEn: "Deepest dive site & pristine Red Sea coral reefs",
     category: "nature",
+    lat: 28.383, lng: 36.566,
     mapsUrl: "https://maps.google.com/?q=Tabuk,Saudi+Arabia",
   },
 ];
@@ -209,7 +202,7 @@ const OFFICIAL_LINKS = [
     color: "#16783A",
   },
   {
-    id: "riyadh-season",
+    id: "riyadh-season-link",
     emoji: "🎉",
     nameAr: "موسم الرياض",
     nameEn: "Riyadh Season",
@@ -229,7 +222,7 @@ const OFFICIAL_LINKS = [
     color: "#B45309",
   },
   {
-    id: "alula",
+    id: "alula-link",
     emoji: "🌅",
     nameAr: "تجربة العُلا",
     nameEn: "Experience AlUla",
@@ -249,6 +242,14 @@ const CAT_ICONS: Record<string, React.ComponentProps<typeof MaterialIcons>["name
   religious:     "mosque",
 };
 
+const CAT_COLORS: Record<string, string> = {
+  cultural:      "#60A5FA",
+  events:        "#A78BFA",
+  nature:        "#4ADE80",
+  entertainment: "#FB923C",
+  religious:     "#D4A843",
+};
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function ExploreScreen() {
   const colors  = useColors();
@@ -256,6 +257,7 @@ export default function ExploreScreen() {
   const { t, isAr } = useLocale();
 
   const [activeCategory, setActiveCategory] = useState<Category>("all");
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
 
   const topPad    = insets.top    + (Platform.OS === "web" ? 67 : 0);
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 : 0);
@@ -269,21 +271,122 @@ export default function ExploreScreen() {
     void Linking.openURL(url);
   }
 
-  const s = makeStyles(colors, isAr, topPad, bottomPad);
-  const cats: Category[] = ["all", "cultural", "events", "nature", "entertainment", "religious"];
+  function toggleCategory(cat: Category) {
+    void Haptics.selectionAsync();
+    setActiveCategory(cat);
+  }
 
+  const cats: Category[] = ["all", "cultural", "events", "nature", "entertainment", "religious"];
+  const s = makeStyles(colors, isAr, topPad, bottomPad);
+
+  // ── Map mode ─────────────────────────────────────────────────────────────────
+  if (viewMode === "map") {
+    return (
+      <View style={s.root}>
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+        {/* Full-screen map */}
+        <TourismMapView spots={filtered} isAr={isAr} />
+
+        {/* ── Floating header ─────────────────────────────────────────────────── */}
+        <View style={[s.floatHeader, { top: topPad + 10 }]} pointerEvents="box-none">
+          <View style={s.floatHeaderInner} pointerEvents="auto">
+            <View style={s.floatTitleWrap}>
+              <Text style={s.floatTitle}>{t.explore.title}</Text>
+              <Text style={s.floatSub}>{filtered.length} {isAr ? "مكان" : "places"}</Text>
+            </View>
+            <Pressable
+              style={({ pressed }) => [s.viewToggle, pressed && { opacity: 0.75 }]}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setViewMode("list");
+              }}
+            >
+              <MaterialIcons name="list" size={18} color={colors.gold} />
+              <Text style={s.viewToggleText}>{isAr ? "قائمة" : "List"}</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* ── Floating category pills ─────────────────────────────────────────── */}
+        <View style={[s.floatPills, { top: topPad + 68 }]} pointerEvents="box-none">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pointerEvents="auto"
+            contentContainerStyle={[s.pillsScroll, isAr && { flexDirection: "row-reverse" }]}
+          >
+            {cats.map((cat) => {
+              const active = cat === activeCategory;
+              const catColor = cat === "all" ? colors.gold : (CAT_COLORS[cat] ?? colors.gold);
+              return (
+                <Pressable
+                  key={cat}
+                  onPress={() => toggleCategory(cat)}
+                  style={[
+                    s.floatPill,
+                    active && { backgroundColor: catColor, borderColor: catColor },
+                  ]}
+                >
+                  <MaterialIcons
+                    name={CAT_ICONS[cat]}
+                    size={13}
+                    color={active ? "#0A1628" : catColor}
+                  />
+                  <Text style={[s.floatPillText, active && s.floatPillTextActive, { color: active ? "#0A1628" : catColor }]}>
+                    {t.explore.categories[cat as keyof typeof t.explore.categories]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* ── Floating legend ─────────────────────────────────────────────────── */}
+        <View
+          style={[s.floatLegend, { bottom: bottomPad + 24 }]}
+          pointerEvents="none"
+        >
+          {(["cultural", "nature", "events", "entertainment", "religious"] as const).map((cat) => (
+            <View key={cat} style={s.legendItem}>
+              <View style={[s.legendDot, { backgroundColor: CAT_COLORS[cat] }]} />
+              <Text style={s.legendText}>
+                {t.explore.categories[cat as keyof typeof t.explore.categories]}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
+  // ── List mode ─────────────────────────────────────────────────────────────────
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor={colors.navy} />
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <View style={s.header}>
-        <Text style={[s.headerTitle, isAr && { textAlign: "right" }]}>
-          {t.explore.title}
-        </Text>
-        <Text style={[s.headerSub, isAr && { textAlign: "right" }]}>
-          {t.explore.subtitle}
-        </Text>
+        <View style={[s.headerRow, isAr && { flexDirection: "row-reverse" }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={[s.headerTitle, isAr && { textAlign: "right" }]}>
+              {t.explore.title}
+            </Text>
+            <Text style={[s.headerSub, isAr && { textAlign: "right" }]}>
+              {t.explore.subtitle}
+            </Text>
+          </View>
+          <Pressable
+            style={({ pressed }) => [s.viewToggle, pressed && { opacity: 0.75 }]}
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setViewMode("map");
+            }}
+          >
+            <MaterialIcons name="map" size={18} color={colors.gold} />
+            <Text style={s.viewToggleText}>{isAr ? "خريطة" : "Map"}</Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* ── Category pills ──────────────────────────────────────────────────── */}
@@ -298,10 +401,7 @@ export default function ExploreScreen() {
             return (
               <Pressable
                 key={cat}
-                onPress={() => {
-                  void Haptics.selectionAsync();
-                  setActiveCategory(cat);
-                }}
+                onPress={() => toggleCategory(cat)}
                 style={[s.pill, active && s.pillActive]}
               >
                 <MaterialIcons
@@ -328,7 +428,7 @@ export default function ExploreScreen() {
           style={({ pressed }) => [s.visitBanner, pressed && { opacity: 0.88 }]}
           onPress={() => openLink("https://www.visitsaudi.com")}
         >
-          <View style={s.visitBannerLeft}>
+          <View style={[s.visitBannerLeft, isAr && { flexDirection: "row-reverse" }]}>
             <Text style={s.visitEmoji}>🇸🇦</Text>
             <View style={s.visitTextWrap}>
               <Text style={[s.visitTitle, isAr && { textAlign: "right" }]}>
@@ -351,22 +451,18 @@ export default function ExploreScreen() {
             <Pressable
               key={place.id}
               style={({ pressed }) => [s.card, pressed && { opacity: 0.85 }]}
-              onPress={() => openLink(place.websiteUrl ?? place.mapsUrl)}
+              onPress={() => openLink(place.mapsUrl)}
             >
               {place.featured && (
                 <View style={s.featuredBadge}>
-                  <Text style={s.featuredText}>
-                    {isAr ? t.explore.featured : t.explore.featured}
-                  </Text>
+                  <Text style={s.featuredText}>{t.explore.featured}</Text>
                 </View>
               )}
 
-              {/* Emoji hero */}
               <View style={s.cardEmoji}>
                 <Text style={s.cardEmojiText}>{place.emoji}</Text>
               </View>
 
-              {/* Info */}
               <Text
                 style={[s.cardName, isAr && { textAlign: "right" }]}
                 numberOfLines={2}
@@ -388,7 +484,6 @@ export default function ExploreScreen() {
                 {isAr ? place.descAr : place.descEn}
               </Text>
 
-              {/* Actions */}
               <View style={[s.cardActions, isAr && { flexDirection: "row-reverse" }]}>
                 <Pressable
                   style={s.cardActionBtn}
@@ -397,16 +492,6 @@ export default function ExploreScreen() {
                 >
                   <MaterialIcons name="map" size={13} color={colors.gold} />
                   <Text style={s.cardActionText}>{t.explore.openMaps}</Text>
-                </Pressable>
-                <Pressable
-                  style={s.cardActionBtnSecondary}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    openLink(place.websiteUrl ?? place.mapsUrl);
-                  }}
-                  hitSlop={6}
-                >
-                  <MaterialIcons name="open-in-new" size={13} color={colors.mutedForeground} />
                 </Pressable>
               </View>
             </Pressable>
@@ -422,7 +507,7 @@ export default function ExploreScreen() {
             {t.explore.officialAppsDesc}
           </Text>
 
-          <View style={s.officialGrid}>
+          <View style={[s.officialGrid, isAr && { flexDirection: "row-reverse" }]}>
             {OFFICIAL_LINKS.map((link) => (
               <Pressable
                 key={link.id}
@@ -456,20 +541,24 @@ export default function ExploreScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 function makeStyles(
   colors: ReturnType<typeof useColors>,
-  isAr: boolean,
+  _isAr: boolean,
   topPad: number,
-  bottomPad: number,
+  _bottomPad: number,
 ) {
-  void bottomPad;
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.background },
 
-    // Header
+    // ── Header (list mode) ─────────────────────────────────────────────────
     header: {
       backgroundColor:   colors.navy,
       paddingTop:        topPad + 14,
       paddingBottom:     18,
       paddingHorizontal: 20,
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems:    "center",
+      gap:           12,
     },
     headerTitle: {
       color:      "#FFFFFF",
@@ -483,7 +572,25 @@ function makeStyles(
       marginTop:  4,
     },
 
-    // Category pills
+    // ── View toggle button ─────────────────────────────────────────────────
+    viewToggle: {
+      flexDirection:     "row",
+      alignItems:        "center",
+      gap:               5,
+      backgroundColor:   colors.gold + "18",
+      borderWidth:       1,
+      borderColor:       colors.gold + "50",
+      borderRadius:      20,
+      paddingHorizontal: 12,
+      paddingVertical:   7,
+    },
+    viewToggleText: {
+      color:      colors.gold,
+      fontSize:   12,
+      fontFamily: "Inter_700Bold",
+    },
+
+    // ── Category pills (list mode) ─────────────────────────────────────────
     pillsWrap: {
       backgroundColor: colors.navy,
       paddingBottom:   14,
@@ -517,31 +624,31 @@ function makeStyles(
       fontFamily: "Inter_700Bold",
     },
 
-    // Scroll
+    // ── Scroll content ─────────────────────────────────────────────────────
     scrollContent: {
       paddingHorizontal: 16,
       paddingTop:        16,
     },
 
-    // Visit Saudi banner
+    // ── Visit Saudi banner ─────────────────────────────────────────────────
     visitBanner: {
       backgroundColor:   colors.navy,
       borderRadius:      16,
       padding:           16,
       marginBottom:      20,
-      flexDirection:     isAr ? "row-reverse" : "row",
+      flexDirection:     "row",
       alignItems:        "center",
       justifyContent:    "space-between",
       borderWidth:       1,
       borderColor:       colors.gold + "40",
     },
     visitBannerLeft: {
-      flexDirection: isAr ? "row-reverse" : "row",
+      flexDirection: "row",
       alignItems:    "center",
       gap:           12,
       flex:          1,
     },
-    visitEmoji: { fontSize: 32 },
+    visitEmoji:    { fontSize: 32 },
     visitTextWrap: { flex: 1 },
     visitTitle: {
       color:      colors.gold,
@@ -570,12 +677,12 @@ function makeStyles(
       fontFamily: "Inter_700Bold",
     },
 
-    // Attraction grid
+    // ── Attraction grid ────────────────────────────────────────────────────
     grid: {
-      flexDirection:  "row",
-      flexWrap:       "wrap",
-      gap:            12,
-      marginBottom:   24,
+      flexDirection: "row",
+      flexWrap:      "wrap",
+      gap:           12,
+      marginBottom:  24,
     },
     card: {
       width:           CARD_W,
@@ -659,18 +766,8 @@ function makeStyles(
       fontSize:   10,
       fontFamily: "Inter_600SemiBold",
     },
-    cardActionBtnSecondary: {
-      width:           30,
-      height:          30,
-      borderRadius:    8,
-      backgroundColor: "rgba(255,255,255,0.06)",
-      borderWidth:     1,
-      borderColor:     colors.border,
-      alignItems:      "center",
-      justifyContent:  "center",
-    },
 
-    // Official apps section
+    // ── Official apps section ──────────────────────────────────────────────
     officialSection: { marginBottom: 8 },
     officialTitle: {
       color:        "#FFFFFF",
@@ -685,7 +782,7 @@ function makeStyles(
       marginBottom: 14,
     },
     officialGrid: {
-      flexDirection: isAr ? "row-reverse" : "row",
+      flexDirection: "row",
       flexWrap:      "wrap",
       gap:           10,
     },
@@ -730,6 +827,93 @@ function makeStyles(
       color:      colors.gold,
       fontSize:   11,
       fontFamily: "Inter_600SemiBold",
+    },
+
+    // ── Floating map-mode overlays ─────────────────────────────────────────
+    floatHeader: {
+      position:          "absolute",
+      left:              16,
+      right:             16,
+      zIndex:            10,
+    },
+    floatHeaderInner: {
+      flexDirection:     "row",
+      alignItems:        "center",
+      justifyContent:    "space-between",
+      backgroundColor:   "rgba(10,22,40,0.82)",
+      borderRadius:      16,
+      paddingHorizontal: 14,
+      paddingVertical:   10,
+      borderWidth:       1,
+      borderColor:       "rgba(212,168,67,0.25)",
+      gap:               10,
+    },
+    floatTitleWrap: { flex: 1 },
+    floatTitle: {
+      color:      "#FFFFFF",
+      fontSize:   16,
+      fontFamily: "Inter_700Bold",
+    },
+    floatSub: {
+      color:      colors.mutedForeground,
+      fontSize:   11,
+      fontFamily: "Inter_400Regular",
+      marginTop:  1,
+    },
+
+    floatPills: {
+      position: "absolute",
+      left:     0,
+      right:    0,
+      zIndex:   10,
+    },
+    floatPill: {
+      flexDirection:     "row",
+      alignItems:        "center",
+      gap:               5,
+      paddingHorizontal: 12,
+      paddingVertical:   7,
+      borderRadius:      20,
+      backgroundColor:   "rgba(10,22,40,0.80)",
+      borderWidth:       1,
+      borderColor:       "rgba(255,255,255,0.18)",
+    },
+    floatPillText: {
+      fontSize:   12,
+      fontFamily: "Inter_500Medium",
+    },
+    floatPillTextActive: {
+      fontFamily: "Inter_700Bold",
+    },
+
+    floatLegend: {
+      position:          "absolute",
+      left:              16,
+      flexDirection:     "row",
+      flexWrap:          "wrap",
+      gap:               6,
+      backgroundColor:   "rgba(10,22,40,0.75)",
+      borderRadius:      12,
+      paddingHorizontal: 10,
+      paddingVertical:   6,
+      borderWidth:       1,
+      borderColor:       "rgba(255,255,255,0.10)",
+      maxWidth:          SCREEN_W - 32,
+    },
+    legendItem: {
+      flexDirection: "row",
+      alignItems:    "center",
+      gap:           4,
+    },
+    legendDot: {
+      width:        8,
+      height:       8,
+      borderRadius: 4,
+    },
+    legendText: {
+      color:      "rgba(255,255,255,0.75)",
+      fontSize:   10,
+      fontFamily: "Inter_400Regular",
     },
   });
 }
