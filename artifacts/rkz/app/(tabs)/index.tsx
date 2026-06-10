@@ -14,6 +14,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -179,8 +180,10 @@ function PropertyCard({
 
 // ── Main Screen ───────────────────────────────────────────────────────────
 export default function DiscoveryMapScreen() {
-  const colors = useColors();
-  const insets = useSafeAreaInsets();
+  const colors      = useColors();
+  const insets      = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const isDark      = colorScheme !== "light";
   const { t, isAr } = useLocale();
   const { config } = useConfig();
   const { setUser } = useApp();
@@ -334,7 +337,7 @@ export default function DiscoveryMapScreen() {
       <View style={s.container}>
         {/* ── Map fills entire screen ──────────────────────────────────────── */}
         <View style={StyleSheet.absoluteFill}>
-          <HeatmapMapView properties={filtered as MapProperty[]} isAr={isAr} />
+          <HeatmapMapView properties={filtered as MapProperty[]} isAr={isAr} isDark={isDark} />
         </View>
 
         {/* ── Floating glass header ────────────────────────────────────────── */}

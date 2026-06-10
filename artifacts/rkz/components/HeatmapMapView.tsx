@@ -69,13 +69,25 @@ export type HeatMetric = "occupancy" | "transactions";
 interface Props {
   properties: MapProperty[];
   isAr?: boolean;
+  isDark?: boolean;
 }
 
 // ── HTML generator ─────────────────────────────────────────────────────────
-function buildMapHtml(properties: MapProperty[]): string {
+function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
   const coordsJson = JSON.stringify(DISTRICT_COORDS);
   const cityJson   = JSON.stringify(CITY_COORDS);
   const dataJson   = JSON.stringify(properties);
+
+  const tileUrl = isDark
+    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+  const bgColor = isDark ? "#0a1628" : "#f8fafc";
+  const zoomBg  = isDark ? "#0f2040" : "#ffffff";
+  const zoomClr = isDark ? "#D4A843" : "#0A1628";
+  const zoomBdr = isDark ? "#1e3a5f" : "#e2e8f0";
+  const zoomHov = isDark ? "#1e3a5f" : "#f1f5f9";
+  const attrBg  = isDark ? "rgba(10,22,40,0.7)" : "rgba(255,255,255,0.85)";
+  const attrClr = isDark ? "#64748b" : "#94a3b8";
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -84,7 +96,7 @@ function buildMapHtml(properties: MapProperty[]): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-  html, body { height: 100%; margin: 0; padding: 0; background: #0a1628; }
+  html, body { height: 100%; margin: 0; padding: 0; background: ${bgColor}; }
   #map { height: 100%; width: 100%; }
 
   /* ── Price pill markers ────────────────────────────────────────────────── */
@@ -127,9 +139,9 @@ function buildMapHtml(properties: MapProperty[]): string {
   .pop-lbl   { font-size: 10px; color: #94a3b8; margin-top: 2px; }
 
   /* ── Controls ────────────────────────────────────────────────────────────── */
-  .leaflet-control-zoom a { background: #0f2040 !important; color: #D4A843 !important; border-color: #1e3a5f !important; }
-  .leaflet-control-zoom a:hover { background: #1e3a5f !important; }
-  .leaflet-control-attribution { background: rgba(10,22,40,0.7) !important; color: #64748b !important; font-size: 9px; }
+  .leaflet-control-zoom a { background: ${zoomBg} !important; color: ${zoomClr} !important; border-color: ${zoomBdr} !important; }
+  .leaflet-control-zoom a:hover { background: ${zoomHov} !important; }
+  .leaflet-control-attribution { background: ${attrBg} !important; color: ${attrClr} !important; font-size: 9px; }
   .leaflet-control-attribution a { color: #D4A843 !important; }
 </style>
 </head>
@@ -175,7 +187,7 @@ function buildMapHtml(properties: MapProperty[]): string {
     zoomControl: true, attributionControl: true,
   });
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('${tileUrl}', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd', maxZoom: 18,
   }).addTo(map);
@@ -219,17 +231,17 @@ function buildMapHtml(properties: MapProperty[]): string {
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
-export default function HeatmapMapView({ properties, isAr }: Props) {
+export default function HeatmapMapView({ properties, isAr, isDark = true }: Props) {
   const colors  = useColors();
   const webRef  = useRef<WebView>(null);
   const htmlRef = useRef<string>("");
 
-  const propsKey = properties.map((p) => p.id).join(",");
+  const propsKey = properties.map((p) => p.id).join(",") + "|" + (isDark ? "d" : "l");
   const prevKey  = useRef(propsKey);
 
   if (htmlRef.current === "" || prevKey.current !== propsKey) {
     prevKey.current = propsKey;
-    htmlRef.current = buildMapHtml(properties);
+    htmlRef.current = buildMapHtml(properties, isDark);
   }
 
   if (properties.length === 0) {

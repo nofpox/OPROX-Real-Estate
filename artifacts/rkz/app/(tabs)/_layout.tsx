@@ -236,23 +236,33 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
         tabBarShowLabel: false,
         tabBarItemStyle: { flex: 1, justifyContent: "center", alignItems: "center" },
         tabBarStyle: {
-          position: "absolute",
-          backgroundColor: isIOS ? "transparent" : colors.background,
-          borderTopWidth: isWeb ? 1 : 0,
-          borderTopColor: colors.border,
-          elevation: 0,
-          height: isWeb ? 84 : 64,
+          position:        "absolute",
+          backgroundColor: "transparent",
+          borderTopWidth:  0,
+          elevation:       0,
+          height:          isWeb ? 84 : 64,
         },
         tabBarBackground: () =>
           isIOS ? (
             <BlurView
-              intensity={100}
+              intensity={90}
               tint={isDark ? "dark" : "light"}
               style={StyleSheet.absoluteFill}
             />
-          ) : isWeb ? (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
-          ) : null,
+          ) : (
+            <View style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: isDark
+                  ? "rgba(8, 16, 34, 0.88)"
+                  : "rgba(255,255,255,0.90)",
+                borderTopWidth: 1,
+                borderTopColor: isDark
+                  ? "rgba(255,255,255,0.08)"
+                  : "rgba(0,0,0,0.07)",
+              },
+            ]} />
+          ),
       }}
     >
       {ordered.map((tab) => (
