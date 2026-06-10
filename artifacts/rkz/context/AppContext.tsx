@@ -173,6 +173,11 @@ interface AppState {
   unreadLeadsCount: number;
   refreshFromApi: () => Promise<void>;
 
+  // Progressive registration modal
+  registerModalVisible: boolean;
+  showRegister: (onSuccess?: () => void) => void;
+  hideRegister: () => void;
+
   // Lease & Tenant Management
   tenants: Tenant[];
   leases: Lease[];
@@ -279,6 +284,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [leases, setLeases] = useState<Lease[]>([]);
   const [notifications, setNotifications] = useState<TenantNotification[]>([]);
+  const [registerModalVisible, setRegisterModalVisible] = useState(false);
+  const [registerPendingCb, setRegisterPendingCb] = useState<(() => void) | null>(null);
 
   const save = useCallback(async (u: User | null, props: Property[]) => {
     try {
@@ -374,6 +381,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const refreshFromApi = useCallback(async () => {
     // Standalone mode — no remote refresh
+  }, []);
+
+  const showRegister = useCallback((onSuccess?: () => void) => {
+    setRegisterPendingCb(onSuccess ? () => onSuccess : null);
+    setRegisterModalVisible(true);
+  }, []);
+
+  const hideRegister = useCallback(() => {
+    setRegisterModalVisible(false);
+    setRegisterPendingCb(null);
   }, []);
 
   const addProperty = useCallback(
@@ -640,6 +657,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     markLeadRead,
     unreadLeadsCount,
     refreshFromApi,
+    registerModalVisible,
+    showRegister,
+    hideRegister,
     tenants,
     leases,
     notifications,
@@ -648,11 +668,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     deleteLease,
     markRentPaid,
     leaseAlerts,
-  }), [ // eslint-disable-line react-hooks/exhaustive-deps
+    _registerPendingCb: registerPendingCb,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }) as any, [ // eslint-disable-line react-hooks/exhaustive-deps
     user, properties, isLoading, appMode, selectedRole,
     setUser, setAppMode, clearAppMode, setSelectedRole,
     addProperty, updateProperty, deleteProperty, markLeadRead,
     unreadLeadsCount, refreshFromApi,
+    registerModalVisible, showRegister, hideRegister, registerPendingCb,
     tenants, leases, notifications,
     addLease, updateLease, deleteLease, markRentPaid,
     leaseAlerts,
