@@ -192,7 +192,7 @@ export default function DiscoveryMapScreen() {
 
   const [activeType,   setActiveType]   = useState("all");
   const [refreshing,   setRefreshing]   = useState(false);
-  const [viewMode,     setViewMode]     = useState<"cards" | "heatmap">("cards");
+  const [viewMode,     setViewMode]     = useState<"cards" | "heatmap">("heatmap");
 
   // Load pre-selected filter from entry gate (set by role selection or previous session)
   useEffect(() => {
@@ -254,139 +254,159 @@ export default function DiscoveryMapScreen() {
 
   const s = makeStyles(colors, isAr, topPad, bottomPad);
 
+  // ── Shared header/filter rows used in both modes ────────────────────────
+  const headerRow = (
+    <View style={[s.headerRow, isAr && { flexDirection: "row-reverse" }]}>
+      <Pressable style={s.logoutBtn} onPress={handleLogout} hitSlop={10}>
+        <MaterialIcons name="logout" size={18} color="rgba(255,255,255,0.80)" />
+        <Text style={s.logoutBtnText}>{isAr ? "خروج" : "Sign out"}</Text>
+      </Pressable>
+      <View style={{ flex: 1 }}>
+        <Text style={[s.headerTitle, isAr && { textAlign: "right" }]}>
+          {isAr ? "استكشف العقارات" : "Discover Properties"}
+        </Text>
+        <View style={[s.locationRow, isAr && { flexDirection: "row-reverse" }]}>
+          <MaterialIcons name="location-on" size={14} color={colors.gold} />
+          <Text style={s.locationText}>{isAr ? "المملكة العربية السعودية" : "Saudi Arabia"}</Text>
+        </View>
+      </View>
+      <View style={s.countBadge}>
+        <Text style={s.countText}>{filtered.length}</Text>
+        <Text style={s.countLabel}>{isAr ? "عقار" : "listings"}</Text>
+      </View>
+    </View>
+  );
+
+  const filterPills = (glass: boolean) => (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={[s.filterScroll, isAr && { flexDirection: "row-reverse" }]}
+    >
+      <Pressable
+        onPress={() => saveFilter("all")}
+        style={[s.pill, glass && s.glassPill, activeType === "all" && s.pillActive]}
+      >
+        <Text style={[s.pillText, activeType === "all" && s.pillTextActive]}>
+          {isAr ? "الكل" : "All"}
+        </Text>
+      </Pressable>
+      {config.propertyTypes.map((pt) => {
+        const isActive = activeType === pt.id;
+        return (
+          <Pressable
+            key={pt.id}
+            onPress={() => saveFilter(pt.id)}
+            style={[s.pill, glass && s.glassPill, isActive && s.pillActive]}
+          >
+            <MaterialIcons
+              name={TYPE_ICON[pt.id] ?? "home"}
+              size={14}
+              color={isActive ? "#0A1628" : colors.mutedForeground}
+            />
+            <Text style={[s.pillText, isActive && s.pillTextActive]}>
+              {isAr ? pt.labelAr : pt.labelEn}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+
+  if (viewMode === "heatmap") {
+    return (
+      <View style={s.container}>
+        {/* ── Map fills entire screen ──────────────────────────────────────── */}
+        <View style={StyleSheet.absoluteFill}>
+          <HeatmapMapView properties={filtered as MapProperty[]} isAr={isAr} />
+        </View>
+
+        {/* ── Floating glass header ────────────────────────────────────────── */}
+        <View style={[s.glassHeader, { paddingTop: topPad + 12 }]}>
+          {headerRow}
+        </View>
+
+        {/* ── Floating glass filter pills ──────────────────────────────────── */}
+        <View style={s.glassFilterWrap}>
+          {filterPills(true)}
+        </View>
+
+        {/* ── Floating "قائمة" button — bottom left ────────────────────────── */}
+        <Pressable
+          style={[s.glassListBtn, { bottom: bottomPad + 16 }]}
+          onPress={() => { void Haptics.selectionAsync(); setViewMode("cards"); }}
+        >
+          <MaterialIcons name="grid-view" size={18} color={colors.gold} />
+          <Text style={s.glassListBtnText}>{isAr ? "قائمة" : "List"}</Text>
+        </Pressable>
+
+        {/* ── Floating count chip — bottom right ───────────────────────────── */}
+        <View style={[s.glassCountChip, { bottom: bottomPad + 16 }]}>
+          <MaterialIcons name="touch-app" size={12} color="rgba(255,255,255,0.5)" />
+          <Text style={s.glassCountText}>
+            {isAr
+              ? `${filtered.length} عقار — اضغط للتفاصيل`
+              : `${filtered.length} listings — tap to view`}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={s.container}>
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <View style={s.header}>
-        <View style={[s.headerRow, isAr && { flexDirection: "row-reverse" }]}>
-          {/* Logout button — left side (RTL: right side) */}
-          <Pressable style={s.logoutBtn} onPress={handleLogout} hitSlop={10}>
-            <MaterialIcons name="logout" size={18} color="rgba(255,255,255,0.80)" />
-            <Text style={s.logoutBtnText}>{isAr ? "خروج" : "Sign out"}</Text>
-          </Pressable>
-
-          <View style={{ flex: 1 }}>
-            <Text style={[s.headerTitle, isAr && { textAlign: "right" }]}>
-              {isAr ? "استكشف العقارات" : "Discover Properties"}
-            </Text>
-            <View style={[s.locationRow, isAr && { flexDirection: "row-reverse" }]}>
-              <MaterialIcons name="location-on" size={14} color={colors.gold} />
-              <Text style={s.locationText}>{isAr ? "المملكة العربية السعودية" : "Saudi Arabia"}</Text>
-            </View>
-          </View>
-          <View style={s.countBadge}>
-            <Text style={s.countText}>{filtered.length}</Text>
-            <Text style={s.countLabel}>{isAr ? "عقار" : "listings"}</Text>
-          </View>
-        </View>
-      </View>
+      <View style={s.header}>{headerRow}</View>
 
       {/* ── Type Filter Pills ─────────────────────────────────────────────── */}
-      <View style={s.filterWrap}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[
-            s.filterScroll,
-            isAr && { flexDirection: "row-reverse" },
-          ]}
-        >
-          <Pressable
-            onPress={() => saveFilter("all")}
-            style={[s.pill, activeType === "all" && s.pillActive]}
-          >
-            <Text style={[s.pillText, activeType === "all" && s.pillTextActive]}>
-              {isAr ? "الكل" : "All"}
-            </Text>
-          </Pressable>
-          {config.propertyTypes.map((pt) => {
-            const isActive = activeType === pt.id;
-            return (
-              <Pressable
-                key={pt.id}
-                onPress={() => saveFilter(pt.id)}
-                style={[s.pill, isActive && s.pillActive]}
-              >
-                <MaterialIcons
-                  name={TYPE_ICON[pt.id] ?? "home"}
-                  size={14}
-                  color={isActive ? "#0A1628" : colors.mutedForeground}
-                />
-                <Text style={[s.pillText, isActive && s.pillTextActive]}>
-                  {isAr ? pt.labelAr : pt.labelEn}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
+      <View style={s.filterWrap}>{filterPills(false)}</View>
 
-      {/* ── View Toggle: Cards / Heatmap ──────────────────────────────────── */}
+      {/* ── View Toggle ───────────────────────────────────────────────────── */}
       <View style={[s.toggleBar, isAr && { flexDirection: "row-reverse" }]}>
         <Pressable
           onPress={() => { void Haptics.selectionAsync(); setViewMode("cards"); }}
-          style={[s.toggleSeg, viewMode === "cards" && s.toggleSegActive]}
+          style={[s.toggleSeg, s.toggleSegActive]}
         >
-          <MaterialIcons name="grid-view" size={16} color={viewMode === "cards" ? "#0A1628" : colors.mutedForeground} />
-          <Text style={[s.toggleText, viewMode === "cards" && s.toggleTextActive]}>{t.heatmap.cardsView}</Text>
+          <MaterialIcons name="grid-view" size={16} color="#0A1628" />
+          <Text style={[s.toggleText, s.toggleTextActive]}>{t.heatmap.cardsView}</Text>
         </Pressable>
         <Pressable
           onPress={() => { void Haptics.selectionAsync(); setViewMode("heatmap"); }}
-          style={[s.toggleSeg, viewMode === "heatmap" && s.toggleSegActive]}
+          style={s.toggleSeg}
         >
-          <MaterialIcons name="map" size={16} color={viewMode === "heatmap" ? "#0A1628" : colors.mutedForeground} />
-          <Text style={[s.toggleText, viewMode === "heatmap" && s.toggleTextActive]}>{isAr ? "الخريطة" : "Map"}</Text>
+          <MaterialIcons name="map" size={16} color={colors.mutedForeground} />
+          <Text style={s.toggleText}>{isAr ? "الخريطة" : "Map"}</Text>
         </Pressable>
       </View>
 
-      {viewMode === "heatmap" ? (
-        /* ── Property Price Map ───────────────────────────────────────────── */
-        <View style={{ flex: 1 }}>
-          {/* Hint bar */}
-          <View style={[s.metricBar, isAr && { flexDirection: "row-reverse" }]}>
-            <MaterialIcons name="touch-app" size={14} color={colors.mutedForeground} />
-            <Text style={s.metricHintText}>
-              {isAr ? "اضغط على السعر لعرض تفاصيل العقار" : "Tap a price to see property details"}
-            </Text>
-            <View style={s.metricHint}>
-              <View style={[s.legendDot, { backgroundColor: "#22c55e" }]} />
-              <Text style={s.metricHintText}>{isAr ? "متاح" : "Available"}</Text>
-              <View style={[s.legendDot, { backgroundColor: "#D4A843", marginStart: 8 }]} />
-              <Text style={s.metricHintText}>{isAr ? "مميز" : "Featured"}</Text>
-            </View>
+      {/* ── Property Grid ─────────────────────────────────────────────────── */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={s.gridContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />
+        }
+      >
+        {filtered.length === 0 ? (
+          <View style={s.empty}>
+            <MaterialIcons name="search-off" size={48} color={colors.gold + "40"} />
+            <Text style={s.emptyText}>{isAr ? "لا توجد عقارات في هذه الفئة" : "No listings in this category"}</Text>
           </View>
-          <HeatmapMapView properties={filtered as MapProperty[]} isAr={isAr} />
-        </View>
-      ) : (
-        /* ── Property Grid ─────────────────────────────────────────────────── */
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={s.gridContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />
-          }
-        >
-          {filtered.length === 0 ? (
-            <View style={s.empty}>
-              <MaterialIcons name="search-off" size={48} color={colors.gold + "40"} />
-              <Text style={s.emptyText}>{isAr ? "لا توجد عقارات في هذه الفئة" : "No listings in this category"}</Text>
-            </View>
-          ) : (
-            <View style={s.grid}>
-              {filtered.map((listing) => (
-                <PropertyCard
-                  key={listing.id}
-                  listing={listing}
-                  onRequest={handleRequest}
-                  s={s}
-                  colors={colors}
-                />
-              ))}
-            </View>
-          )}
-        </ScrollView>
-      )}
+        ) : (
+          <View style={s.grid}>
+            {filtered.map((listing) => (
+              <PropertyCard
+                key={listing.id}
+                listing={listing}
+                onRequest={handleRequest}
+                s={s}
+                colors={colors}
+              />
+            ))}
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -401,6 +421,72 @@ function makeStyles(
 
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
+
+    // ── Glass overlays (map mode) ──────────────────────────────────────────
+    glassHeader: {
+      position:          "absolute",
+      top:               0,
+      left:              0,
+      right:             0,
+      backgroundColor:   "rgba(8, 16, 34, 0.78)",
+      borderBottomWidth: 1,
+      borderBottomColor: "rgba(255,255,255,0.10)",
+      paddingHorizontal: 18,
+      paddingBottom:     14,
+      zIndex:            10,
+    },
+    glassFilterWrap: {
+      position:        "absolute",
+      left:            0,
+      right:           0,
+      top:             topPad + 80,
+      backgroundColor: "rgba(8, 16, 34, 0.70)",
+      borderBottomWidth: 1,
+      borderBottomColor: "rgba(255,255,255,0.08)",
+      zIndex:          9,
+    },
+    glassPill: {
+      backgroundColor: "rgba(255,255,255,0.10)",
+      borderColor:     "rgba(255,255,255,0.18)",
+    },
+    glassListBtn: {
+      position:          "absolute",
+      left:              16,
+      flexDirection:     "row",
+      alignItems:        "center",
+      gap:               6,
+      backgroundColor:   "rgba(8, 16, 34, 0.82)",
+      borderWidth:       1,
+      borderColor:       colors.gold + "55",
+      borderRadius:      22,
+      paddingHorizontal: 16,
+      paddingVertical:   10,
+      zIndex:            10,
+    },
+    glassListBtnText: {
+      color:      colors.gold,
+      fontSize:   13,
+      fontFamily: "Inter_700Bold",
+    },
+    glassCountChip: {
+      position:          "absolute",
+      right:             16,
+      flexDirection:     "row",
+      alignItems:        "center",
+      gap:               5,
+      backgroundColor:   "rgba(8, 16, 34, 0.75)",
+      borderWidth:       1,
+      borderColor:       "rgba(255,255,255,0.10)",
+      borderRadius:      20,
+      paddingHorizontal: 12,
+      paddingVertical:   8,
+      zIndex:            10,
+    },
+    glassCountText: {
+      color:      "rgba(255,255,255,0.65)",
+      fontSize:   11,
+      fontFamily: "Inter_400Regular",
+    },
 
     // ── Header ────────────────────────────────────────────────────────────
     header: {
