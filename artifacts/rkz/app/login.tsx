@@ -576,16 +576,22 @@ function LoginForm() {
  * and welcome screens entirely and go straight to the main tabs.
  */
 export default function LoginScreen() {
-  const { user, isLoading } = useApp();
+  const { user, isLoading, appMode } = useApp();
 
   // Dev shortcut
   if (__DEV__) return <Redirect href="/(tabs)" />;
 
-  // Already authenticated — jump straight to the map
-  if (!isLoading && user) return <Redirect href="/(tabs)" />;
-
-  // Waiting for AsyncStorage to resolve — show nothing (splash covers it)
+  // Still loading
   if (isLoading) return null;
+
+  // No mode chosen yet → show the tourist/real-estate gate
+  if (!appMode) return <Redirect href="/gate" />;
+
+  // Tourist chose guest mode → skip login
+  if (appMode === "tourist") return <Redirect href="/(tabs)/explore" />;
+
+  // Already authenticated → go to tabs
+  if (user) return <Redirect href="/(tabs)" />;
 
   return <LoginForm />;
 }

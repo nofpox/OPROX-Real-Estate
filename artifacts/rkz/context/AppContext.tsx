@@ -153,12 +153,17 @@ export function daysUntil(dateStr: string): number {
   return Math.round((target - today) / 86_400_000);
 }
 
+export type AppMode = "tourist" | "registered" | null;
+
 interface AppState {
   user: User | null;
   properties: Property[];
   isLoading: boolean;
+  appMode: AppMode;
   selectedRole: "buyer" | "seller" | null;
   setUser: (user: User | null) => void;
+  setAppMode: (mode: "tourist" | "registered") => void;
+  clearAppMode: () => void;
   setSelectedRole: (r: "buyer" | "seller") => void;
   addProperty: (property: Omit<Property, "id" | "createdAt" | "leads" | "platforms">) => Promise<Property>;
   updateProperty: (id: string, updates: Partial<Property>) => void;
@@ -189,9 +194,10 @@ interface AppState {
 
 const AppContext = createContext<AppState | null>(null);
 
-const STORAGE_KEY = "rkz_state";
-const ROLE_KEY    = "rkz_user_role";
-const LEASE_KEY   = "rkz_lease_state";
+const STORAGE_KEY   = "rkz_state";
+const ROLE_KEY      = "rkz_user_role";
+const LEASE_KEY     = "rkz_lease_state";
+const APP_MODE_KEY  = "rkz_app_mode";
 
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
@@ -267,6 +273,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [appMode, setAppModeState] = useState<AppMode>(null);
   const [selectedRole, setSelectedRoleState] = useState<"buyer" | "seller" | null>(null);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [leases, setLeases] = useState<Lease[]>([]);
@@ -309,6 +316,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setProperties(SEED_PROPERTIES);
       }
       try {
+        const savedMode = await AsyncStorage.getItem(APP_MODE_KEY);
+        if (savedMode === "tourist" || savedMode === "registered") setAppModeState(savedMode);
+      } catch {}
+      try {
         const savedRole = await AsyncStorage.getItem(ROLE_KEY);
         if (savedRole === "buyer" || savedRole === "seller") setSelectedRoleState(savedRole);
       } catch {}
@@ -340,6 +351,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     },
     [save]
   );
+
+  const setAppMode = useCallback((mode: "tourist" | "registered") => {
+    setAppModeState(mode);
+    void AsyncStorage.setItem(APP_MODE_KEY, mode);
+  }, []);
+
+  const clearAppMode = useCallback(() => {
+    setAppModeState(null);
+    void AsyncStorage.removeItem(APP_MODE_KEY);
+  }, []);
 
   const setSelectedRole = useCallback((r: "buyer" | "seller") => {
     setSelectedRoleState(r);
@@ -604,8 +625,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         user,
         properties,
         isLoading,
+        appMode,
         selectedRole,
         setUser,
+        setAppMode,
+        clearAppMode,
         setSelectedRole,
         addProperty,
         updateProperty,

@@ -243,9 +243,10 @@ function ClassicTabLayout() {
 
 // ── Root layout ───────────────────────────────────────────────────────────────
 export default function TabLayout() {
-  const { user } = useApp();
+  const { user, appMode } = useApp();
 
-  if (!user) {
+  // Allow tourist (guest) access without login
+  if (!user && appMode !== "tourist") {
     return <Redirect href="/login" />;
   }
 
