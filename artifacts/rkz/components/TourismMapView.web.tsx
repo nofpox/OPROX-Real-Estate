@@ -174,7 +174,7 @@ export default function TourismMapView({ spots, isAr = false }: Props) {
     const container = containerRef.current;
     if (!container) return;
     const iframe = document.createElement("iframe");
-    iframe.style.cssText = "width:100%;height:100%;border:none;display:block;";
+    iframe.style.cssText = "position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;border:none;display:block;";
     iframe.srcdoc = htmlRef.current;
     while (container.firstChild) container.removeChild(container.firstChild);
     container.appendChild(iframe);
@@ -195,7 +195,7 @@ export default function TourismMapView({ spots, isAr = false }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0a1628" },
+  container: { flex: 1, position: "relative", backgroundColor: "#0a1628" },
   empty:     { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
   emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
 });
