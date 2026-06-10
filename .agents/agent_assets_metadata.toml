@@ -275,3 +275,9 @@ id = "ksqM0ahSH2MT6X6QhoYza"
 uri = "file://attached_assets/rozoz-business-study.md"
 type = "text"
 title = "دراسة روزوز الشاملة — خريطة الطريق"
+
+[[outputs]]
+id = "wMbGd-KhWiqAZMAxHWWRF"
+uri = "file://attached_assets/rozoz-business-study.pdf"
+type = "pdf"
+title = "دراسة روزوز الشاملة — PDF"

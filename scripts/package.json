@@ -9,11 +9,15 @@
     "generate-locale": "tsx ./src/generate-locale.ts",
     "migrate-tenants": "tsx ./src/migrate-tenants.ts",
     "load-test": "tsx ./src/load-test.ts",
+    "generate-pdf": "tsx ./src/generate-pdf.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@workspace/db": "workspace:*",
-    "drizzle-orm": "catalog:"
+    "drizzle-orm": "catalog:",
+    "marked": "^18.0.5",
+    "pdfkit": "^0.19.0",
+    "puppeteer": "^25.1.0"
   },
   "devDependencies": {
     "@types/node": "catalog:",
