@@ -13,7 +13,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 
-const LOGO = require("@/assets/images/rozoz-logo.png");
+const LOGO = require("@/assets/images/rozoz-logo-eagle.png");
 const { width } = Dimensions.get("window");
 
 const BG_DARK = "#0A0E1A";

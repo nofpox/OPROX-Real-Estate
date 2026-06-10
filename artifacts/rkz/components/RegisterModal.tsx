@@ -22,7 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { useLocale } from "@/hooks/useLocale";
 
-const LOGO = require("@/assets/images/rozoz-logo.png");
+const LOGO = require("@/assets/images/rozoz-logo-eagle.png");
 const { width } = Dimensions.get("window");
 
 const NAVY   = "#0A1628";

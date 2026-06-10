@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { useLocale } from "@/hooks/useLocale";
 
-const LOGO = require("@/assets/images/rozoz-logo.png");
+const LOGO = require("@/assets/images/rozoz-logo-eagle.png");
 const { width } = Dimensions.get("window");
 const LOGO_W = Math.min(width * 0.52, 220);
 const LOGO_H = Math.round(LOGO_W / 2.6);
