@@ -222,16 +222,12 @@ function buildMapHtml(properties: MapProperty[]): string {
 </html>`;
 }
 
-const MAP_HEIGHT = 420;
-
 // ── Component ───────────────────────────────────────────────────────────────
 export default function HeatmapMapView({ properties, isAr }: Props) {
   const colors = useColors();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const containerRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const iframeRef    = useRef<any>(null);
   const htmlRef      = useRef<string>("");
 
   const propsKey    = properties.map((p) => p.id).join(",");
@@ -247,12 +243,11 @@ export default function HeatmapMapView({ properties, isAr }: Props) {
     if (!container) return;
 
     const iframe = document.createElement("iframe");
-    iframe.style.cssText = `width:100%;height:${MAP_HEIGHT}px;border:none;display:block;`;
+    iframe.style.cssText = "position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;border:none;display:block;";
     iframe.srcdoc = htmlRef.current;
 
     while (container.firstChild) container.removeChild(container.firstChild);
     container.appendChild(iframe);
-    iframeRef.current = iframe;
 
     return () => {
       try { container.removeChild(iframe); } catch { /* already removed */ }
@@ -273,7 +268,7 @@ export default function HeatmapMapView({ properties, isAr }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { height: MAP_HEIGHT, backgroundColor: "#0a1628" },
-  empty:     { height: MAP_HEIGHT, alignItems: "center", justifyContent: "center", padding: 32 },
+  container: { flex: 1, position: "relative", backgroundColor: "#0a1628" },
+  empty:     { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
   emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
 });
