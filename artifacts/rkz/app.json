@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "عقارات rozoz",
+    "name": "روزوز",
     "slug": "rozoz-msrep",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -35,14 +35,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Rozoz MSREP needs access to your photos to add property images.",
-          "cameraPermission": "Rozoz MSREP needs your camera to take property photos."
+          "photosPermission": "روزوز تحتاج للوصول إلى صورك لإضافة صور العقارات.",
+          "cameraPermission": "روزوز تحتاج الكاميرا لالتقاط صور العقارات."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Rozoz MSREP uses your location to auto-fill the property address."
+          "locationWhenInUsePermission": "روزوز تستخدم موقعك لتعبئة عنوان العقار تلقائياً."
         }
       ]
     ],
