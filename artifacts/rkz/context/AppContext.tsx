@@ -195,10 +195,10 @@ interface AppState {
 
 const AppContext = createContext<AppState | null>(null);
 
-const STORAGE_KEY   = "rkz_state";
-const ROLE_KEY      = "rkz_user_role";
-const LEASE_KEY     = "rkz_lease_state";
-const APP_MODE_KEY  = "rkz_app_mode";
+const STORAGE_KEY   = "rozoz_state";
+const ROLE_KEY      = "rozoz_user_role";
+const LEASE_KEY     = "rozoz_lease_state";
+const APP_MODE_KEY  = "rozoz_app_mode";
 
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);

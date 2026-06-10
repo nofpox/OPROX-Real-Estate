@@ -25,8 +25,8 @@ import { useLocale } from "@/hooks/useLocale";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const ROZOZ_WHATSAPP = "https://wa.me/966500000000";
-const SERVICE_REQUESTS_KEY = "rkz_service_requests";
-const DELEGATION_KEY       = "rkz_delegation_status";
+const SERVICE_REQUESTS_KEY = "rozoz_service_requests";
+const DELEGATION_KEY       = "rozoz_delegation_status";
 
 interface ServiceProvider {
   id: number;

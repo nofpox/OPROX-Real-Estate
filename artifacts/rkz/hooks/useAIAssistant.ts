@@ -18,7 +18,7 @@ export interface Message {
 }
 
 // ── Admin event logging ───────────────────────────────────────────────────────
-export const ADMIN_EVENTS_KEY = "rkz_admin_events";
+export const ADMIN_EVENTS_KEY = "rozoz_admin_events";
 
 export interface AdminEvent {
   id: string;

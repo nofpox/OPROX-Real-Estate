@@ -128,8 +128,8 @@ const ConfigContext = createContext<ConfigContextValue>({
   updateConfig: async () => {},
 });
 
-const CACHE_KEY = "rkz_app_config_v3";
-const PIN_KEY = "rkz_admin_pin";
+const CACHE_KEY = "rozoz_app_config_v3";
+const PIN_KEY = "rozoz_admin_pin";
 const DEFAULT_PIN = "0000"; // master override — always grants access
 
 function deepMerge(base: AppConfig, patch: Partial<AppConfig>): AppConfig {

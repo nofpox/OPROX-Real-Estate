@@ -26,8 +26,8 @@ import { useConfig } from "@/context/DynamicConfig";
 import { useApp } from "@/context/AppContext";
 import HeatmapMapView, { MapProperty } from "@/components/HeatmapMapView";
 
-const NEGOTIATION_KEY      = "rkz_negotiation_requests";
-const DISCOVERY_FILTER_KEY = "rkz_discovery_filter";
+const NEGOTIATION_KEY      = "rozoz_negotiation_requests";
+const DISCOVERY_FILTER_KEY = "rozoz_discovery_filter";
 const TEST_WHATSAPP        = "https://wa.me/966551234567"; // رقم تجريبي للاختبار
 
 const { width: SCREEN_W } = Dimensions.get("window");

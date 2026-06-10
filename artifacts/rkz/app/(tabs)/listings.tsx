@@ -74,7 +74,7 @@ export default function ListingsScreen() {
       const r = await fetch("/realestate-api/preview/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label: propertyTitle, portal: "rkz" }),
+        body: JSON.stringify({ label: propertyTitle, portal: "rozoz" }),
       });
       if (!r.ok) throw new Error("server error");
       const data = (await r.json()) as { link: { token: string } };

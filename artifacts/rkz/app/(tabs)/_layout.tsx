@@ -21,7 +21,7 @@ import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
-const DISCOVERY_FILTER_KEY = "rkz_discovery_filter";
+const DISCOVERY_FILTER_KEY = "rozoz_discovery_filter";
 
 // ── Role Gate (full-screen modal shown once until user picks a role) ──────────
 function RoleGate() {

@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/rozoz-msrep/"
-title = "Rozoz MSREP"
+title = "Rozoz"
 version = "1.0.0"
 id = "artifacts/rkz"
 router = "expo-domain"
