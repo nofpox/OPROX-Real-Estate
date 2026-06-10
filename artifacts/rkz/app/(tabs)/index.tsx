@@ -6,6 +6,7 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Linking,
   Platform,
   Pressable,
   RefreshControl,
@@ -25,8 +26,9 @@ import { useConfig } from "@/context/DynamicConfig";
 import { useApp } from "@/context/AppContext";
 import HeatmapMapView, { MapProperty } from "@/components/HeatmapMapView";
 
-const NEGOTIATION_KEY    = "rkz_negotiation_requests";
+const NEGOTIATION_KEY      = "rkz_negotiation_requests";
 const DISCOVERY_FILTER_KEY = "rkz_discovery_filter";
+const TEST_WHATSAPP        = "https://wa.me/966551234567"; // رقم تجريبي للاختبار
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -156,6 +158,18 @@ function PropertyCard({
         >
           <MaterialIcons name="handshake" size={15} color="#0A1628" />
           <Text style={s.reqBtnText}>طلب تفاوض</Text>
+        </Pressable>
+
+        {/* WhatsApp CTA */}
+        <Pressable
+          onPress={() => {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            void Linking.openURL(TEST_WHATSAPP);
+          }}
+          style={({ pressed }) => [s.waBtn, pressed && { opacity: 0.8 }]}
+        >
+          <MaterialIcons name="chat" size={14} color="#25D366" />
+          <Text style={s.waBtnText}>واتساب</Text>
         </Pressable>
       </View>
     </Animated.View>
@@ -739,6 +753,20 @@ function makeStyles(
       paddingVertical: 9,
     },
     reqBtnText: { fontSize: 12, fontFamily: "Inter_700Bold", color: "#0A1628" },
+
+    waBtn: {
+      flexDirection:   "row",
+      alignItems:      "center",
+      justifyContent:  "center",
+      gap:             5,
+      backgroundColor: "#25D36618",
+      borderWidth:     1,
+      borderColor:     "#25D36650",
+      borderRadius:    10,
+      paddingVertical: 7,
+      marginTop:       6,
+    },
+    waBtnText: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#25D366" },
 
     // ── Empty ──────────────────────────────────────────────────────────────
     empty: {
