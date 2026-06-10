@@ -3,53 +3,129 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>روزوز — كيف تُقنع المستثمر؟ الخطوات السبع</title>
+  <title>روزوز — حقيبة المستثمر الكاملة</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:'Cairo',Tahoma,sans-serif;background:#e8edf4;color:#1a1a2e;direction:rtl;font-size:15px;}
     .doc{max-width:900px;margin:32px auto;background:#fff;border-radius:14px;box-shadow:0 6px 40px rgba(0,0,0,0.13);overflow:hidden;}
-    .cover{background:linear-gradient(145deg,#020a16 0%,#0a1a38 50%,#0f2044 100%);color:#fff;padding:56px 52px 48px;position:relative;overflow:hidden;}
+
+    /* COVER */
+    .cover{background:linear-gradient(145deg,#020a16 0%,#0a1a38 45%,#0f2044 100%);color:#fff;padding:56px 52px 48px;position:relative;overflow:hidden;}
+    .cover::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(244,185,66,0.08) 0%,transparent 70%);border-radius:50%;}
     .cover::after{content:'';position:absolute;bottom:0;left:0;right:0;height:7px;background:linear-gradient(90deg,#006c35,#00843d,#006c35,#f4b942,#f4b942,#006c35);}
     .cover-logo{text-align:center;margin-bottom:20px;}
     .cover-logo img{height:80px;border-radius:8px;}
-    .cover-title{font-size:13px;font-weight:700;letter-spacing:3px;color:#f4b942;text-align:center;margin-bottom:8px;}
-    .cover-h1{font-size:32px;font-weight:900;color:#fff;text-align:center;line-height:1.4;margin-bottom:8px;}
-    .cover-sub{font-size:14px;color:#b8cce8;text-align:center;margin-bottom:28px;}
-    .cover-meta{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;}
-    .cover-chip{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#c8daf0;font-size:12px;font-weight:600;padding:6px 14px;border-radius:18px;}
-    .body{padding:48px 52px;}
-    .section-title{font-size:20px;font-weight:900;color:#0f2044;margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid #e8eefc;display:flex;align-items:center;gap:10px;}
-    .section-title .num{background:#0f2044;color:#f4b942;font-size:12px;font-weight:800;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .hl.dark{border-right:5px solid #0f2044;background:linear-gradient(135deg,#f0f4fc,#e8eef8);border-radius:8px;padding:16px 20px;margin-bottom:14px;line-height:2;color:#2a3a5e;font-size:14px;}
+    .cover-badge{display:inline-block;background:rgba(244,185,66,0.15);border:1px solid rgba(244,185,66,0.4);color:#f4b942;font-size:11px;font-weight:700;letter-spacing:2px;padding:4px 16px;border-radius:20px;margin-bottom:14px;}
+    .cover-title-wrap{text-align:center;margin-bottom:24px;}
+    .cover-h1{font-size:30px;font-weight:900;color:#fff;text-align:center;line-height:1.4;margin-bottom:8px;}
+    .cover-sub{font-size:13px;color:#b8cce8;text-align:center;line-height:1.8;}
+    .cover-meta{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+    .cover-chip{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#c8daf0;font-size:12px;font-weight:600;padding:5px 14px;border-radius:18px;}
+
+    /* BODY */
+    .body{padding:44px 48px;}
+
+    /* SECTION HEADERS */
+    .sec-hd{background:linear-gradient(135deg,#0f2044,#1a3a6b);color:#fff;padding:14px 22px;border-radius:10px;margin:32px 0 18px;display:flex;align-items:center;gap:12px;}
+    .sec-hd .icon{font-size:22px;}
+    .sec-hd h2{font-size:16px;font-weight:800;flex:1;}
+    .sec-hd .tag{background:rgba(244,185,66,0.2);color:#f4b942;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:0.5px;}
+
+    /* PITCH STEPS */
     .pitch-step{background:#f8faff;border:1px solid #dce6fa;border-radius:10px;padding:18px 22px;margin-bottom:12px;}
     .pitch-step .step-num{font-size:11px;font-weight:800;color:#2355a0;letter-spacing:1px;margin-bottom:4px;}
     .pitch-step .step-title{font-size:15px;font-weight:800;color:#0f2044;margin-bottom:6px;}
     .pitch-step .step-body{font-size:13.5px;color:#3a4a6b;line-height:1.9;}
-    .pitch-step .step-body em{font-style:normal;color:#0f2044;background:#fff;border:1px solid #dce6fa;border-radius:6px;padding:10px 14px;display:block;margin-top:10px;font-weight:600;line-height:2;}
+    .pitch-step .step-body em{font-style:normal;color:#0f2044;background:#fff;border:1px solid #dce6fa;border-radius:6px;padding:10px 14px;display:block;margin-top:8px;font-weight:600;line-height:2;}
+    .pitch-step.gold{background:linear-gradient(135deg,#fffbea,#fff3cd);border-color:#f4d57a;}
+
+    /* HIGHLIGHT BOXES */
+    .hl{border-right:4px solid #3b82f6;background:linear-gradient(135deg,#f0f6ff,#e8f0fe);border-radius:8px;padding:14px 18px;margin-bottom:12px;font-size:14px;line-height:1.9;color:#2a3a5e;}
+    .hl.gold{border-right-color:#f4b942;background:linear-gradient(135deg,#fffbea,#fff3cd);}
+    .hl.green{border-right-color:#059669;background:linear-gradient(135deg,#f0fdf8,#ecfdf5);color:#065f46;}
+    .hl.red{border-right-color:#dc2626;background:linear-gradient(135deg,#fef2f2,#fee2e2);color:#7f1d1d;}
+    .hl.dark{border-right-color:#0f2044;background:linear-gradient(135deg,#f0f4fc,#e8eef8);}
+
+    /* FUND USE TABLE */
+    table.inv-table{width:100%;border-collapse:collapse;font-size:13.5px;margin-bottom:16px;}
+    table.inv-table th{background:#0f2044;color:#f4b942;padding:10px 14px;text-align:right;font-weight:700;}
+    table.inv-table td{padding:10px 14px;border-bottom:1px solid #e8eefc;color:#2a3a5e;vertical-align:top;}
+    table.inv-table tr:last-child td{border-bottom:none;}
+    table.inv-table tr:nth-child(even) td{background:#f8faff;}
+    table.inv-table .total-row td{background:#0f2044;color:#fff;font-weight:800;}
+    table.inv-table .total-row td strong{color:#f4b942;}
+    .bar-wrap{background:#e2e8f0;border-radius:10px;height:8px;margin-top:4px;}
+    .bar{height:8px;border-radius:10px;background:linear-gradient(90deg,#2355a0,#3b82f6);}
+
+    /* Q&A */
+    .qa-item{border:1px solid #dce6fa;border-radius:10px;overflow:hidden;margin-bottom:12px;}
+    .qa-q{background:#0f2044;color:#fff;padding:12px 18px;font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:10px;}
+    .qa-q .badge{background:#f4b942;color:#0f2044;font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;flex-shrink:0;}
+    .qa-a{background:#f8faff;padding:12px 18px;font-size:13.5px;color:#2a3a5e;line-height:1.9;}
+
+    /* EXIT STRATEGY */
+    .exit-card{border:1px solid #dce6fa;border-radius:10px;padding:16px 20px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start;}
+    .exit-icon{font-size:28px;flex-shrink:0;margin-top:2px;}
+    .exit-body h4{font-size:14px;font-weight:800;color:#0f2044;margin-bottom:4px;}
+    .exit-body p{font-size:13px;color:#4a5878;line-height:1.8;}
+
+    /* CHECKLIST */
+    .check-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .check-item{background:#f8faff;border:1px solid #dce6fa;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:13px;color:#2a3a5e;}
+    .check-item .box{width:18px;height:18px;border:2px solid #2355a0;border-radius:4px;flex-shrink:0;}
+
+    /* VALUATION TIMELINE */
+    .val-timeline{display:flex;gap:0;margin:14px 0;overflow-x:auto;}
+    .val-step{flex:1;text-align:center;min-width:110px;}
+    .val-step .yr{font-size:11px;font-weight:800;color:#2355a0;margin-bottom:4px;}
+    .val-step .val{font-size:15px;font-weight:900;color:#0f2044;margin-bottom:4px;}
+    .val-step .dot-row{display:flex;align-items:center;}
+    .val-step .dot-row .dot{width:14px;height:14px;background:#2355a0;border-radius:50%;flex-shrink:0;margin:0 auto;}
+    .val-step .dot-row .line{flex:1;height:2px;background:#dce6fa;}
+    .val-step:last-child .dot-row .line.right{display:none;}
+    .val-step:first-child .dot-row .line.left{display:none;}
+    .val-step .lbl{font-size:11px;color:#6b7a9a;margin-top:4px;line-height:1.5;}
+
+    /* FOOTER */
     .doc-footer{background:#0f2044;color:#8fa3c8;text-align:center;padding:16px 32px;font-size:12px;}
     .doc-footer strong{color:#f4b942;}
+
     @media print{body{background:#fff;}.doc{max-width:100%;margin:0;border-radius:0;box-shadow:none;}}
   </style>
 </head>
 <body>
 <div class="doc">
+
+  <!-- ════════ COVER ════════ -->
   <div class="cover">
     <div class="cover-logo"><img src="/grand-pms/rozoz-logo.jpg" alt="ROZOZ"/></div>
-    <div class="cover-title">ROZOZ SMART SOLUTIONS</div>
-    <div class="cover-h1">كيف تُقنع المستثمر؟<br/>الخطوات السبع</div>
-    <div class="cover-sub">خطاب الإقناع الاحترافي — خطوة بخطوة</div>
+    <div class="cover-title-wrap">
+      <div class="cover-badge">INVESTOR PACKET — حقيبة المستثمر</div>
+      <div class="cover-h1">كيف تُقنع المستثمر؟<br/>الدليل الكامل</div>
+      <div class="cover-sub">الخطوات السبع · طلب الاستثمار · أسئلة المستثمرين وإجاباتها<br/>استراتيجية الخروج · قائمة التحقق قبل اللقاء</div>
+    </div>
     <div class="cover-meta">
       <div class="cover-chip">📅 يونيو 2026</div>
-      <div class="cover-chip">🇸🇦 السوق السعودي</div>
-      <div class="cover-chip">🔒 وثيقة داخلية</div>
       <div class="cover-chip">NADA ALBULYHI</div>
       <div class="cover-chip">محلل أعمال | نظم المعلومات</div>
+      <div class="cover-chip">Business Analyst | IS</div>
+      <div class="cover-chip">🔒 وثيقة داخلية سرية</div>
     </div>
   </div>
 
   <div class="body">
-    <div class="section-title"><span class="num">٧</span>كيف تُقنع المستثمر؟ — الخطوات السبع</div>
+
+    <!-- ════════ ١ — الخطوات السبع ════════ -->
+    <div class="sec-hd">
+      <span class="icon">🎯</span>
+      <h2>الخطوات السبع — نص الإقناع الكامل</h2>
+      <span class="tag">اتبعها بالترتيب</span>
+    </div>
+
+    <div class="hl dark" style="margin-bottom:18px;">
+      <strong>⚠️ القاعدة الذهبية:</strong> لا تبدأ بالأرقام — ابدأ بالمشكلة. المستثمر الذكي يشتري <em>الحل</em>، ليس الرقم. لما يفهم المشكلة ويقتنع بها، الأرقام تصبح منطقية تلقائياً.
+    </div>
 
     <div class="pitch-step">
       <div class="step-num">الخطوة ١ — الخطّاف</div>
@@ -63,7 +139,7 @@
       <div class="step-num">الخطوة ٢ — المشكلة</div>
       <div class="step-title">اشرح له المعاناة اليومية</div>
       <div class="step-body">
-        <em>"اليوم، شركة تدير ٥٠ شقة تستخدم إكسل للحجوزات، واتساب للتواصل مع النزلاء، وبيوت للإعلان، ونظاماً آخر للمحاسبة. أربعة أنظمة منفصلة، ضياع وقت، وأخطاء يومية."</em>
+        <em>"اليوم، شركة تدير ٥٠ شقة تستخدم إكسل للحجوزات، واتساب للتواصل مع النزلاء، وبيوت للإعلان، ونظاماً آخر للمحاسبة. أربعة أنظمة منفصلة، ضياع وقت، وأخطاء يومية — وهذا يكلّفهم عملاء وأموال."</em>
       </div>
     </div>
 
@@ -71,15 +147,15 @@
       <div class="step-num">الخطوة ٣ — الحل</div>
       <div class="step-title">اعرض روزوز كبديل واضح</div>
       <div class="step-body">
-        <em>"روزوز تستبدل الأربعة بمنظومة واحدة: نظام إدارة احترافي للشركة، بوابة ويب للإعلان، وتطبيق ذكي للمستهلك — كل شيء متصل ببعض."</em>
+        <em>"روزوز تستبدل الأربعة بمنظومة واحدة: نظام إدارة احترافي للشركة، بوابة ويب للإعلان للمستهلك، وتطبيق ذكي بالذكاء الاصطناعي — كل شيء متصل في لحظة واحدة."</em>
       </div>
     </div>
 
     <div class="pitch-step">
       <div class="step-num">الخطوة ٤ — الأرقام</div>
-      <div class="step-title">تكلّم بأرقام واضحة</div>
+      <div class="step-title">تكلّم بأرقام واضحة وموثوقة</div>
       <div class="step-body">
-        <em>"نموذج الإيراد بسيط ومتراكم: الشركات تدفع اشتراكاً شهرياً ثابتاً. في السنة الثانية فقط، ٨٠ شركة مشتركة = ٢٠٠ ألف ريال شهرياً ثابتاً حتى لو لم نبع شيئاً جديداً.<br/><br/>السنة الأولى خسارة مُخطَّطة — نستثمر في التأسيس والتسويق. السنة الثانية <strong>٢.٥ مليون ريال ربح تشغيلي صافٍ</strong>. السنة الثالثة <strong>٧ مليون</strong> — السنة الرابعة <strong>١٢ مليون</strong> — السنة الخامسة <strong>٢٠ مليون</strong>.<br/><br/>المحفزات وراء هذا النمو المتسارع: <strong>إكسبو 2030</strong> (٤٠ مليون زائر)، <strong>كأس العالم 2034</strong> (٥+ مليون زائر)، وإنجازات مشاريع رؤية 2030 الكبرى — كل واحدة منها موجة طلب مستقلة على الإقامة والإدارة العقارية."</em>
+        <em>"نموذج الإيراد بسيط ومتراكم: الشركات تدفع اشتراكاً شهرياً ثابتاً. في السنة الثانية فقط، ٨٠ شركة مشتركة = ٢٠٠ ألف ريال شهرياً ثابتاً حتى لو لم نبع شيئاً جديداً.<br/><br/>السنة الأولى خسارة مُخطَّطة — نستثمر في البناء والتسويق. السنة الثانية <strong>٢.٥ مليون ريال ربح تشغيلي صافٍ</strong>. السنة الثالثة <strong>٧ مليون</strong>. السنة الرابعة <strong>١٢ مليون</strong>. السنة الخامسة <strong>٢٠ مليون</strong> قبيل كأس العالم.<br/><br/>المحفزات: <strong>إكسبو 2030</strong> (٤٠M زائر) + <strong>رؤية 2030</strong> + <strong>كأس العالم 2034</strong> — ثلاث موجات طلب تُضاعف الإيراد."</em>
       </div>
     </div>
 
@@ -87,7 +163,7 @@
       <div class="step-num">الخطوة ٥ — لماذا الآن؟</div>
       <div class="step-title">اشرح أن النافذة مفتوحة اليوم فقط</div>
       <div class="step-body">
-        <em>"النافذة مفتوحة الآن لأن المنافسين لم يصلوا بعد. Wasalt تركز على الإعلانات فقط. الأنظمة الأجنبية باهظة ولا تفهم السوق السعودي. من يدخل أولاً ويبني قاعدة عملاء قبل إكسبو 2030، يصعب إزاحته بعدها."</em>
+        <em>"النافذة مفتوحة الآن لأن المنافسين لم يصلوا بعد. Wasalt تركز على الإعلانات فقط. الأنظمة الأجنبية باهظة ولا تفهم السوق السعودي. من يدخل أولاً ويبني قاعدة عملاء قبل إكسبو 2030، يصعب إزاحته بعدها — هذا ما حدث مع Airbnb وUber في أسواقهم."</em>
       </div>
     </div>
 
@@ -95,23 +171,251 @@
       <div class="step-num">الخطوة ٦ — الإثبات</div>
       <div class="step-title">اعرض عليه المشروع مباشرة</div>
       <div class="step-body">
-        <em>"هذا ليس خطة على ورق — النظام مبني ويعمل الآن. هذه الدراسة الكاملة فيها كل الأرقام والمراحل."</em>
+        <em>"هذا ليس خطة على ورق — النظام مبني ويعمل الآن. يمكنك رؤية نظام الإدارة والتطبيق والبوابة في هذه اللحظة. الدراسة الكاملة فيها كل الأرقام والمراحل والتفاصيل التقنية."</em>
       </div>
     </div>
 
-    <div class="pitch-step" style="background:linear-gradient(135deg,#fffbea,#fff3cd);border-color:#f4d57a;">
+    <div class="pitch-step gold">
       <div class="step-num" style="color:#d97706;">الخطوة ٧ — الإغلاق</div>
       <div class="step-title">اترك له سؤالاً لا يستطيع تجاهله</div>
       <div class="step-body">
-        <em>"أنت تستثمر اليوم في مرحلة التأسيس بأقل تقييم ممكن. الأرباح التشغيلية الصافية المتصاعدة ترفع تقييم الشركة حتى يصل إلى <strong>٢٠٠ مليون ريال</strong> — والهدف العمل بكل قوة لكسر حاجز <strong>٤٠٠ مليون قبل بداية كأس العالم 2034</strong>. السؤال الوحيد: هل تريد أن تكون معنا من البداية، أم تنظر من بعيد وهو يكبر؟"</em>
+        <em>"أنت تستثمر اليوم في مرحلة التأسيس بأقل تقييم ممكن. الأرباح التشغيلية الصافية المتصاعدة ترفع تقييم الشركة حتى يصل إلى <strong>٢٠٠ مليون ريال</strong> — والهدف الاستراتيجي كسر حاجز <strong>٤٠٠ مليون قبل بداية كأس العالم 2034</strong>.<br/><br/>السؤال الوحيد: هل تريد أن تكون معنا من البداية، أم تنظر من بعيد وهو يكبر؟"</em>
       </div>
     </div>
 
-    <div class="hl dark" style="margin-top:18px;"><strong>⚠️ قاعدة ذهبية:</strong> لا تبدأ بالأرقام — ابدأ بالمشكلة. المستثمر الذكي يشتري الحل، مش الرقم. لما يفهم المشكلة ويقتنع بها، الأرقام تصبح منطقية تلقائياً.</div>
+    <!-- ════════ ٢ — طلب الاستثمار ════════ -->
+    <div class="sec-hd">
+      <span class="icon">💰</span>
+      <h2>طلب الاستثمار — ماذا نحتاج وكيف نستخدمه؟</h2>
+      <span class="tag">شفافية كاملة</span>
+    </div>
+
+    <div class="hl gold" style="margin-bottom:16px;">
+      <strong>🎯 رأس المال التأسيسي المطلوب: ١,٠٠٠,٠٠٠ – ١,٥٠٠,٠٠٠ ريال سعودي</strong><br/>
+      هذا المبلغ يُغطي كامل تكاليف التأسيس والتشغيل حتى تصبح الشركة مكتفية ذاتياً من إيراداتها في السنة الثانية. الاستثمار مُجزَّأ على بنود واضحة ومُحاسَبة.
+    </div>
+
+    <table class="inv-table">
+      <thead><tr><th>البند</th><th>التفاصيل</th><th>المبلغ (ريال)</th><th>النسبة</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>التسويق والإعلانات — السنة الأولى</strong></td>
+          <td>إعلانات ممولة، سوشيال ميديا، لوحات، فعاليات، علاقات عامة، إطلاق رسمي</td>
+          <td>٣٠٠,٠٠٠ – ٥٠٠,٠٠٠</td>
+          <td>
+            <div>~٣٣٪</div>
+            <div class="bar-wrap"><div class="bar" style="width:33%"></div></div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>رواتب الفريق (أول ١٢ شهر)</strong></td>
+          <td>١٢ موظف — مدير عام، CTO، مطورون، تسويق، مبيعات، دعم عملاء</td>
+          <td>٣٥٠,٠٠٠ – ٥٠٠,٠٠٠</td>
+          <td>
+            <div>~٣٣٪</div>
+            <div class="bar-wrap"><div class="bar" style="width:33%"></div></div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>المكتب والتجهيزات</strong></td>
+          <td>إيجار مكتب احترافي بموقع مميز، ديكور، أجهزة، شبكات، قرطاسية</td>
+          <td>١٥٠,٠٠٠ – ٢٠٠,٠٠٠</td>
+          <td>
+            <div>~١٥٪</div>
+            <div class="bar-wrap"><div class="bar" style="width:15%"></div></div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>تطوير المنصة والتطبيق</strong></td>
+          <td>برمجة إضافية، UI/UX، QA، تكامل APIs، تطوير الذكاء الاصطناعي</td>
+          <td>٨٠,٠٠٠ – ١٢٠,٠٠٠</td>
+          <td>
+            <div>~١٠٪</div>
+            <div class="bar-wrap"><div class="bar" style="width:10%"></div></div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>التسجيل القانوني والتراخيص</strong></td>
+          <td>سجل تجاري، تراخيص، تأمينات، محامٍ، حماية ملكية فكرية</td>
+          <td>٣٠,٠٠٠ – ٦٠,٠٠٠</td>
+          <td>
+            <div>~٤٪</div>
+            <div class="bar-wrap"><div class="bar" style="width:4%"></div></div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>البنية التحتية السحابية</strong></td>
+          <td>AWS / Google Cloud، APIs، استضافة، أمن المعلومات</td>
+          <td>٣٠,٠٠٠ – ٥٠,٠٠٠</td>
+          <td>
+            <div>~٤٪</div>
+            <div class="bar-wrap"><div class="bar" style="width:4%"></div></div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>احتياطي الطوارئ</strong></td>
+          <td>نفقات غير متوقعة، تعديلات السوق، فرص مفاجئة</td>
+          <td>٦٠,٠٠٠ – ١٢٠,٠٠٠</td>
+          <td>
+            <div>~٨٪</div>
+            <div class="bar-wrap"><div class="bar" style="width:8%"></div></div>
+          </td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="2"><strong>إجمالي رأس المال التأسيسي</strong></td>
+          <td><strong>١,٠٠٠,٠٠٠ – ١,٥٠٠,٠٠٠ ريال</strong></td>
+          <td><strong style="color:#f4b942;">١٠٠٪</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="hl green">
+      <strong>🔄 متى يسترد المستثمر أمواله؟</strong><br/>
+      ابتداءً من الشهر السابع تبدأ الإيرادات. في السنة الثانية يحقق المشروع <strong>٢.٥ مليون ريال ربح تشغيلي صافٍ</strong> — وهو ما يُتيح توزيع الأرباح أو إعادة الاستثمار في التوسع. نقطة التعادل الكاملة (استرداد رأس المال) تُتوقع بحلول <strong>نهاية السنة الثانية</strong>.
+    </div>
+
+    <div class="hl">
+      <strong>📋 هيكل الحصص — قابل للتفاوض:</strong><br/>
+      حصة المستثمر تُحدَّد بالتفاوض بناءً على حجم الاستثمار والمرحلة. المبدأ الموجِّه: نقدّر كل مستثمر يؤمن بالمشروع في مرحلته المبكرة، ونُعطي حصة عادلة تتناسب مع الدخول المبكر والمخاطرة المحسوبة. <strong>المستثمر الذي يدخل الآن يحصل على أفضل سعر في تاريخ الشركة.</strong>
+    </div>
+
+    <!-- ════════ ٣ — أسئلة المستثمرين ════════ -->
+    <div class="sec-hd">
+      <span class="icon">❓</span>
+      <h2>أسئلة المستثمرين الشائعة — وإجاباتها الجاهزة</h2>
+      <span class="tag">استعدّ لكل سؤال</span>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-q"><span class="badge">سؤال</span>ما الذي يميّز روزوز عن المنافسين الموجودين؟</div>
+      <div class="qa-a">المنافسون (بيوت، عقار، Wasalt) هم منصات <strong>إعلانات فقط</strong> — يعرض الشخص العقار ثم يُكمل الصفقة خارج المنصة. روزوز تُغلق الحلقة بالكامل: البحث ← الحجز ← الإدارة التشغيلية ← المحاسبة — كل ذلك في منظومة واحدة. لا يوجد في السوق السعودي اليوم نظام يجمع B2C + B2B بهذه المرونة مع دعم ١٣ لغة وذكاء اصطناعي حقيقي.</div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-q"><span class="badge">سؤال</span>لماذا لا تأتي شركة أجنبية وتفعل نفس الشيء؟</div>
+      <div class="qa-a">الأنظمة الأجنبية (Cloudbeds، Guesty، Yardi) <strong>جربت السوق السعودي وفشلت</strong> — تكاليفها مرتفعة جداً (٢٠–٥٠ ألف دولار/سنة)، لا تدعم العربية بالكامل، ولا تفهم أنظمة الملكية والإيجار السعودية. روزوز مبنية من الداخل للسوق السعودي تحديداً — هذا ليس ميزة، هذا هو <strong>الخندق الدفاعي</strong>.</div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-q"><span class="badge">سؤال</span>كيف ستحصلون على أول ١٠٠ عميل؟</div>
+      <div class="qa-a">الخطة واضحة وقابلة للتنفيذ فوراً: <strong>أولاً</strong> — التعاقد المسبق مع ١٠–٢٠ مكتب عقاري بإدراج مجاني ٦٠ يوماً قبل الإطلاق. <strong>ثانياً</strong> — شراكة مع شركات إدارة الشقق المفروشة (أعلى طلب قبل إكسبو). <strong>ثالثاً</strong> — كمبيين ممول على لينكدإن وإنستغرام يستهدف مديري العقارات مباشرة. <strong>رابعاً</strong> — التسعير التنافسي في المرحلة الأولى يجعل القرار سهلاً.</div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-q"><span class="badge">سؤال</span>ما خطتكم إذا تأخر إكسبو 2030 أو تغيرت الظروف؟</div>
+      <div class="qa-a">إكسبو 2030 ليس الرهان الوحيد — روزوز تنمو بمحفزات <strong>داخلية</strong> قبل أي فعالية: نموذج الاشتراك المتكرر يعني أن ٨٠ شركة مشتركة = ٢٠٠ ألف ريال شهرياً <em>ثابتاً بغض النظر عن أي حدث</em>. وموسم الرياض يستقطب ١٤ مليون زائر سنوياً — وهذا وحده يُغني كمحفز. إكسبو هو المضاعِف، ليس الأساس.</div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-q"><span class="badge">سؤال</span>هل النظام جاهز فعلاً أم لا يزال فكرة؟</div>
+      <div class="qa-a">النظام <strong>مبني ويعمل الآن</strong> — نظام الإدارة (PMS) يعمل، التطبيق الجوّال يعمل، البوابة تعمل. يمكنك رؤيتها مباشرة في هذه اللحظة. ما نحتاجه الآن هو <strong>رأس المال للتسويق والتوسع</strong> — التقنية جاهزة.</div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-q"><span class="badge">سؤال</span>ماذا يحدث إذا لم تُحقق الأهداف المالية؟</div>
+      <div class="qa-a">توقعاتنا <strong>محافظة ومبنية على افتراضات واقعية</strong>: السنة الثانية تعتمد على ٨٠ شركة مشتركة فقط — وهذا رقم حذر جداً لسوق فيه الآلاف من شركات الإدارة. حتى لو تحقق <strong>٥٠٪ فقط</strong> من التوقعات، يبقى المشروع رابحاً في السنة الثانية. نموذج الاشتراك يوفر إيراداً <strong>متوقعاً ومتراكماً</strong> — وليس إيرادات متذبذبة.</div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-q"><span class="badge">سؤال</span>من هو الفريق وما خبرتهم؟</div>
+      <div class="qa-a">الفريق المؤسس جمع بين خبرة <strong>تحليل الأعمال والأنظمة</strong> وفهم عميق لسوق العقارات السعودي. المشروع مبني فعلياً — وهذا أقوى دليل على كفاءة الفريق. خطة التوظيف للسنة الأولى تشمل مدير عام + CTO + فريق تقني ومبيعات وتسويق متكامل (١٢ موظف بمواصفات محددة في الدراسة).</div>
+    </div>
+
+    <!-- ════════ ٤ — مسار التقييم والخروج ════════ -->
+    <div class="sec-hd">
+      <span class="icon">📈</span>
+      <h2>مسار التقييم والخروج — عائد المستثمر</h2>
+      <span class="tag">خريطة واضحة</span>
+    </div>
+
+    <div class="hl dark" style="margin-bottom:16px;">
+      <strong>معادلة التقييم:</strong> الأرباح التشغيلية الصافية × معامل قطاع التقنية العقارية = التقييم السوقي. في السنة الخامسة: <strong>٢٠ مليون ريال ربح صافٍ</strong> يرفع التقييم التقديري إلى <strong>٢٠٠ مليون ريال</strong>. الهدف الاستراتيجي: كسر حاجز <strong>٤٠٠ مليون قبل كأس العالم 2034</strong>.
+    </div>
+
+    <!-- Valuation timeline -->
+    <div class="val-timeline">
+      <div class="val-step">
+        <div class="yr">2026</div>
+        <div class="val">التأسيس</div>
+        <div class="dot-row"><div class="line left"></div><div class="dot"></div><div class="line right"></div></div>
+        <div class="lbl">دخول بأقل تقييم</div>
+      </div>
+      <div class="val-step">
+        <div class="yr">2027–28</div>
+        <div class="val" style="color:#2355a0;">٥٠–١٠٠M</div>
+        <div class="dot-row"><div class="line left"></div><div class="dot" style="background:#2355a0;"></div><div class="line right"></div></div>
+        <div class="lbl">ربح ٢.٥M–٧M</div>
+      </div>
+      <div class="val-step">
+        <div class="yr">2029–31</div>
+        <div class="val" style="color:#059669;">١٠٠–٢٠٠M</div>
+        <div class="dot-row"><div class="line left"></div><div class="dot" style="background:#059669;"></div><div class="line right"></div></div>
+        <div class="lbl">ربح ١٢M+<br/>إكسبو 2030</div>
+      </div>
+      <div class="val-step">
+        <div class="yr">2032–33</div>
+        <div class="val" style="color:#d97706;">٢٠٠–٤٠٠M</div>
+        <div class="dot-row"><div class="line left"></div><div class="dot" style="background:#d97706;"></div><div class="line right"></div></div>
+        <div class="lbl">ربح ٢٠M<br/>هدف ٤٠٠M</div>
+      </div>
+      <div class="val-step">
+        <div class="yr">2034</div>
+        <div class="val" style="color:#dc2626;">٤٠٠M+</div>
+        <div class="dot-row"><div class="line left"></div><div class="dot" style="background:#dc2626;"></div><div class="line right"></div></div>
+        <div class="lbl">كأس العالم<br/>ذروة التقييم</div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;">
+      <div class="exit-card">
+        <div class="exit-icon">🏛️</div>
+        <div class="exit-body">
+          <h4>مسار الخروج ١ — الطرح العام (IPO) في تداول</h4>
+          <p>تحويل روزوز إلى شركة مساهمة سعودية وطرحها في السوق المالي (تداول). هذا المسار مدعوم بتوجهات رؤية 2030 لتطوير سوق رأس المال وتشجيع طرح شركات التقنية المحلية. التوقيت الأمثل: بعد تحقيق إيرادات ثابتة وقاعدة عملاء ضخمة — أي بين 2030 و2032.</p>
+        </div>
+      </div>
+      <div class="exit-card" style="background:#f0fdf8;border-color:#a7f3d0;">
+        <div class="exit-icon">🤝</div>
+        <div class="exit-body">
+          <h4>مسار الخروج ٢ — الاستحواذ الاستراتيجي</h4>
+          <p>الاستحواذ من صندوق استثمار كبير (مثل صندوق الاستثمارات العامة وشركاته)، أو من مجموعة عقارية كبرى (دار العركان، أعيان، صفوة) تريد الاستحواذ على تقنية جاهزة وقاعدة عملاء ضخمة بدلاً من بنائها من الصفر. هذا المسار يُتوقع أن يتحقق بين 2029 و2033.</p>
+        </div>
+      </div>
+      <div class="exit-card" style="background:#fffbea;border-color:#fde68a;">
+        <div class="exit-icon">💸</div>
+        <div class="exit-body">
+          <h4>مسار الخروج ٣ — توزيع الأرباح السنوي</h4>
+          <p>لمن لا يريد الانتظار حتى الخروج الكامل — ابتداءً من السنة الثانية يمكن توزيع نسبة من الأرباح التشغيلية الصافية سنوياً. في السنة الخامسة (٢٠ مليون ريال ربح) يمكن توزيع جزء كبير. هذا يُعطي المستثمر عائداً <strong>نقدياً مستمراً</strong> بالإضافة لارتفاع قيمة حصته.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ ٥ — قائمة التحقق ════════ -->
+    <div class="sec-hd">
+      <span class="icon">✅</span>
+      <h2>قائمة التحقق — قبل لقاء المستثمر</h2>
+      <span class="tag">افعل هذا قبل الاجتماع</span>
+    </div>
+
+    <div class="check-grid">
+      <div class="check-item"><div class="box"></div>راجعت الأرقام وحفظت النقاط الرئيسية الخمس</div>
+      <div class="check-item"><div class="box"></div>جهّزت عرضاً حياً للنظام على الجوال أو اللابتوب</div>
+      <div class="check-item"><div class="box"></div>طبعت أو شاركت الملف الكامل أو رابطه إلكترونياً</div>
+      <div class="check-item"><div class="box"></div>عرفت ما يهتم به هذا المستثمر تحديداً (عقارات؟ تقنية؟ دخل ثابت؟)</div>
+      <div class="check-item"><div class="box"></div>حضّرت ردوداً على أسئلة Q&A في هذه الوثيقة</div>
+      <div class="check-item"><div class="box"></div>جهّزت مقترح الحصة والمبلغ المطلوب بوضوح</div>
+      <div class="check-item"><div class="box"></div>ذاكرت الخطوات السبع وتدرّبت على قول كل خطوة بطلاقة</div>
+      <div class="check-item"><div class="box"></div>لديك خطوة تالية واضحة (اتفاق مبدئي؟ لقاء ثانٍ؟ NDA؟)</div>
+    </div>
+
+    <div class="hl green" style="margin-top:18px;">
+      <strong>💡 نصيحة أخيرة:</strong> المستثمر يستثمر في <strong>الشخص أولاً</strong>، ثم في الفكرة. ثقتك بنفسك وإجابتك الواضحة والصادقة على أصعب الأسئلة تساوي أكثر من أي شريحة عرض. <strong>كن واثقاً، لا متحمساً بشكل مبالغ فيه.</strong>
+    </div>
+
   </div>
 
   <div class="doc-footer">
-    <strong>روزوز للحلول الذكية</strong> &nbsp;·&nbsp; خطاب المستثمر &nbsp;·&nbsp; NADA ALBULYHI &nbsp;|&nbsp; يونيو 2026
+    <strong>روزوز للحلول الذكية</strong> &nbsp;·&nbsp; حقيبة المستثمر الكاملة &nbsp;·&nbsp; NADA ALBULYHI &nbsp;|&nbsp; يونيو 2026 &nbsp;·&nbsp; 🔒 وثيقة داخلية سرية
   </div>
 </div>
 </body>
