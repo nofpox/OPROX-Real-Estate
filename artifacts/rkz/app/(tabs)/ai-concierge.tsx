@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
+import AnimatedScreen from "@/components/AnimatedScreen";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const ROZOZ_WHATSAPP = "https://wa.me/966500000000";
@@ -276,6 +277,7 @@ export default function ServicesScreen() {
   const s = styles(colors, isAr, topPad, bottomPad);
 
   return (
+    <AnimatedScreen>
     <View style={s.root}>
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <View style={s.header}>
@@ -418,6 +420,7 @@ export default function ServicesScreen() {
         onSuccess={handleDelegationSuccess}
       />
     </View>
+    </AnimatedScreen>
   );
 }
 

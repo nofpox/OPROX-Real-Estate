@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import TourismMapView, { TourismSpot } from "@/components/TourismMapView";
+import AnimatedScreen from "@/components/AnimatedScreen";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -363,6 +364,7 @@ export default function ExploreScreen() {
 
   // ── List mode ─────────────────────────────────────────────────────────────────
   return (
+    <AnimatedScreen>
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor={colors.navy} />
 
@@ -536,6 +538,7 @@ export default function ExploreScreen() {
         <View style={{ height: bottomPad + 16 }} />
       </ScrollView>
     </View>
+    </AnimatedScreen>
   );
 }
 

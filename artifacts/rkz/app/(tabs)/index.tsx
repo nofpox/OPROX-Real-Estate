@@ -25,6 +25,7 @@ import { useLocale } from "@/hooks/useLocale";
 import { useConfig } from "@/context/DynamicConfig";
 import { useApp } from "@/context/AppContext";
 import HeatmapMapView, { MapProperty } from "@/components/HeatmapMapView";
+import AnimatedScreen from "@/components/AnimatedScreen";
 
 const NEGOTIATION_KEY      = "rozoz_negotiation_requests";
 const DISCOVERY_FILTER_KEY = "rozoz_discovery_filter";
@@ -369,6 +370,7 @@ export default function DiscoveryMapScreen() {
   }
 
   return (
+    <AnimatedScreen>
     <View style={s.container}>
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <View style={s.header}>{headerRow}</View>
@@ -423,6 +425,7 @@ export default function DiscoveryMapScreen() {
         )}
       </ScrollView>
     </View>
+    </AnimatedScreen>
   );
 }
 

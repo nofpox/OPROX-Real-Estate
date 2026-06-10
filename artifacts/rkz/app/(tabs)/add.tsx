@@ -26,6 +26,7 @@ import {
 import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
+import AnimatedScreen from "@/components/AnimatedScreen";
 
 type Step = "form" | "publishing" | "done";
 
@@ -766,6 +767,7 @@ export default function AddPropertyScreen() {
   const showBedrooms = ["villa", "apartment", "floor", "compound", "palace"].includes(propType);
 
   return (
+    <AnimatedScreen>
     <View style={S.container}>
       <View style={S.header} />
 
@@ -1089,5 +1091,6 @@ export default function AddPropertyScreen() {
         </Pressable>
       </Modal>
     </View>
+    </AnimatedScreen>
   );
 }

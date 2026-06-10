@@ -5,13 +5,22 @@ import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   Platform,
   StyleSheet,
   View,
   useColorScheme,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withSpring,
+  withTiming,
+  interpolate,
+  Extrapolation,
+} from "react-native-reanimated";
 
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
@@ -19,8 +28,112 @@ import { useLocale } from "@/hooks/useLocale";
 import RegisterModal from "@/components/RegisterModal";
 
 const DISCOVERY_FILTER_KEY = "rozoz_discovery_filter";
-
 const RESTRICTED_TABS = ["add", "listings", "ai-concierge"];
+
+// ── Animated tab icon — spring bounce + scale on focus ────────────────────────
+function AnimatedTabIcon({
+  focused,
+  children,
+}: {
+  focused: boolean;
+  children: React.ReactNode;
+}) {
+  const scale   = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    if (focused) {
+      scale.value = withSequence(
+        withSpring(1.28, { damping: 5, stiffness: 280, mass: 0.6 }),
+        withSpring(1,    { damping: 8, stiffness: 200 }),
+      );
+    } else {
+      scale.value = withTiming(1, { duration: 180 });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focused]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity:   opacity.value,
+  }));
+
+  return <Animated.View style={animStyle}>{children}</Animated.View>;
+}
+
+// ── Animated tab label — fade + slide up on focus ─────────────────────────────
+function AnimatedTabLabel({
+  focused,
+  label,
+  color,
+}: {
+  focused: boolean;
+  label: string;
+  color: string;
+}) {
+  const translateY = useSharedValue(focused ? 0 : 3);
+  const opacityV   = useSharedValue(focused ? 1 : 0.55);
+
+  useEffect(() => {
+    translateY.value = withSpring(focused ? 0 : 3, { damping: 12, stiffness: 200 });
+    opacityV.value   = withTiming(focused ? 1 : 0.55, { duration: 200 });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focused]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    opacity:   opacityV.value,
+  }));
+
+  return (
+    <Animated.Text
+      style={[
+        animStyle,
+        {
+          fontSize:   10,
+          fontFamily: focused ? "Inter_700Bold" : "Inter_400Regular",
+          color,
+          marginTop:  2,
+        },
+      ]}
+      numberOfLines={1}
+    >
+      {label}
+    </Animated.Text>
+  );
+}
+
+// ── Active indicator dot under focused tab ────────────────────────────────────
+function ActiveDot({ focused, color }: { focused: boolean; color: string }) {
+  const scale   = useSharedValue(0);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    scale.value   = withSpring(focused ? 1 : 0, { damping: 10, stiffness: 300 });
+    opacity.value = withTiming(focused ? 1 : 0, { duration: 180 });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focused]);
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity:   opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          width:        4,
+          height:       4,
+          borderRadius: 2,
+          backgroundColor: color,
+          marginTop: 3,
+        },
+      ]}
+    />
+  );
+}
 
 // ── Native (iOS Liquid Glass) tab layout ──────────────────────────────────────
 function NativeTabLayout({ requireAuth }: { requireAuth: (action: () => void) => void }) {
@@ -120,14 +233,15 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
         tabBarActiveTintColor:   colors.gold,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarHideOnKeyboard: true,
-        tabBarItemStyle: { flex: 1 },
+        tabBarShowLabel: false,
+        tabBarItemStyle: { flex: 1, justifyContent: "center", alignItems: "center" },
         tabBarStyle: {
           position: "absolute",
           backgroundColor: isIOS ? "transparent" : colors.background,
           borderTopWidth: isWeb ? 1 : 0,
           borderTopColor: colors.border,
           elevation: 0,
-          ...(isWeb ? { height: 84 } : {}),
+          height: isWeb ? 84 : 64,
         },
         tabBarBackground: () =>
           isIOS ? (
@@ -147,7 +261,19 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
           name={tab.name}
           options={{
             title: tab.title,
-            tabBarIcon: ({ color }) => tab.icon(color),
+            tabBarIcon: ({ color, focused }) => (
+              <View style={s.tabItem}>
+                <AnimatedTabIcon focused={focused}>
+                  {tab.icon(color)}
+                </AnimatedTabIcon>
+                <AnimatedTabLabel
+                  focused={focused}
+                  label={tab.title}
+                  color={color}
+                />
+                <ActiveDot focused={focused} color={colors.gold} />
+              </View>
+            ),
           }}
           listeners={{
             tabPress: (e) => {
@@ -186,6 +312,19 @@ export default function TabLayout() {
   );
 }
 
+const s = StyleSheet.create({
+  tabItem: {
+    alignItems:     "center",
+    justifyContent: "center",
+    paddingTop:     4,
+    gap:            1,
+  },
+});
+
 // keep AsyncStorage available for future DISCOVERY_FILTER_KEY usage
 void AsyncStorage;
 void DISCOVERY_FILTER_KEY;
+
+// silence unused Reanimated import warning
+void interpolate;
+void Extrapolation;

@@ -24,15 +24,24 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
-    <Stack initialRouteName="(tabs)" screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="login" />
-      <Stack.Screen name="gate" options={{ animation: "fade", gestureEnabled: false }} />
-      <Stack.Screen name="welcome" options={{ animation: "fade", gestureEnabled: false }} />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="admin-dashboard" options={{ headerShown: false, presentation: "card" }} />
-      <Stack.Screen name="admin" options={{ headerShown: false, presentation: "card" }} />
-      <Stack.Screen name="investor-portal" options={{ headerShown: false, presentation: "modal" }} />
-      <Stack.Screen name="leases" options={{ headerShown: false, presentation: "card" }} />
+    <Stack
+      initialRouteName="(tabs)"
+      screenOptions={{
+        headerShown: false,
+        animation: "slide_from_right",
+        animationDuration: 260,
+        gestureEnabled: true,
+        gestureDirection: "horizontal",
+      }}
+    >
+      <Stack.Screen name="login"          options={{ animation: "fade", animationDuration: 220 }} />
+      <Stack.Screen name="gate"           options={{ animation: "fade", animationDuration: 220, gestureEnabled: false }} />
+      <Stack.Screen name="welcome"        options={{ animation: "fade", animationDuration: 220, gestureEnabled: false }} />
+      <Stack.Screen name="(tabs)"         options={{ animation: "none" }} />
+      <Stack.Screen name="admin-dashboard" options={{ presentation: "card",  animation: "slide_from_right" }} />
+      <Stack.Screen name="admin"          options={{ presentation: "card",  animation: "slide_from_right" }} />
+      <Stack.Screen name="investor-portal" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
+      <Stack.Screen name="leases"         options={{ presentation: "card",  animation: "slide_from_right" }} />
     </Stack>
   );
 }

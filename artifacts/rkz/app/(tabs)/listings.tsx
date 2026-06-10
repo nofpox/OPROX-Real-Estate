@@ -23,6 +23,7 @@ import {
 } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
+import AnimatedScreen from "@/components/AnimatedScreen";
 
 type Filter = "all" | "published" | "publishing" | "failed";
 
@@ -635,6 +636,7 @@ export default function ListingsScreen() {
   }
 
   return (
+    <AnimatedScreen>
     <View style={S.container}>
       <View style={S.header}>
         <View style={[S.headerTopRow, isAr && { flexDirection: "row-reverse" }]}>
@@ -687,5 +689,6 @@ export default function ListingsScreen() {
         />
       )}
     </View>
+    </AnimatedScreen>
   );
 }

@@ -23,6 +23,7 @@ import { useConfig } from "@/context/DynamicConfig";
 import { useColors } from "@/hooks/useColors";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useLocale } from "@/hooks/useLocale";
+import AnimatedScreen from "@/components/AnimatedScreen";
 
 // Admin PIN (hidden gate — 4 digits)
 const ADMIN_PIN = "0786";
@@ -231,6 +232,7 @@ export default function SettingsScreen() {
   });
 
   return (
+    <AnimatedScreen>
     <View style={S.container}>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <View style={S.header}>
@@ -572,5 +574,6 @@ export default function SettingsScreen() {
         </Pressable>
       </Modal>
     </View>
+    </AnimatedScreen>
   );
 }
