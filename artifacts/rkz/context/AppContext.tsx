@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import * as Localization from "expo-localization";
@@ -299,39 +300,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function boot() {
-      try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
+      // Read all 4 keys in parallel — ~3× faster than sequential awaits
+      const [raw, savedMode, savedRole, leaseRaw] = await Promise.allSettled([
+        AsyncStorage.getItem(STORAGE_KEY),
+        AsyncStorage.getItem(APP_MODE_KEY),
+        AsyncStorage.getItem(ROLE_KEY),
+        AsyncStorage.getItem(LEASE_KEY),
+      ]);
+
+      if (raw.status === "fulfilled" && raw.value) {
+        try {
+          const parsed = JSON.parse(raw.value);
           if (parsed.user) setUserState(parsed.user);
-          if (parsed.properties?.length) {
-            setProperties(parsed.properties);
-          } else {
-            setProperties(SEED_PROPERTIES);
-          }
-        } else {
-          setProperties(SEED_PROPERTIES);
-        }
-      } catch {
+          setProperties(parsed.properties?.length ? parsed.properties : SEED_PROPERTIES);
+        } catch { setProperties(SEED_PROPERTIES); }
+      } else {
         setProperties(SEED_PROPERTIES);
       }
-      try {
-        const savedMode = await AsyncStorage.getItem(APP_MODE_KEY);
-        if (savedMode === "tourist" || savedMode === "registered") setAppModeState(savedMode);
-      } catch {}
-      try {
-        const savedRole = await AsyncStorage.getItem(ROLE_KEY);
-        if (savedRole === "buyer" || savedRole === "seller") setSelectedRoleState(savedRole);
-      } catch {}
-      try {
-        const leaseRaw = await AsyncStorage.getItem(LEASE_KEY);
-        if (leaseRaw) {
-          const parsed = JSON.parse(leaseRaw);
-          if (Array.isArray(parsed.tenants)) setTenants(parsed.tenants);
-          if (Array.isArray(parsed.leases)) setLeases(parsed.leases);
+
+      if (savedMode.status === "fulfilled") {
+        const m = savedMode.value;
+        if (m === "tourist" || m === "registered") setAppModeState(m);
+      }
+
+      if (savedRole.status === "fulfilled") {
+        const r = savedRole.value;
+        if (r === "buyer" || r === "seller") setSelectedRoleState(r);
+      }
+
+      if (leaseRaw.status === "fulfilled" && leaseRaw.value) {
+        try {
+          const parsed = JSON.parse(leaseRaw.value);
+          if (Array.isArray(parsed.tenants))       setTenants(parsed.tenants);
+          if (Array.isArray(parsed.leases))        setLeases(parsed.leases);
           if (Array.isArray(parsed.notifications)) setNotifications(parsed.notifications);
-        }
-      } catch {}
+        } catch {}
+      }
+
       setIsLoading(false);
     }
     void boot();
@@ -601,7 +606,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [leases, tenants, isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const leaseAlerts: LeaseAlerts = {
+  const leaseAlerts = useMemo<LeaseAlerts>(() => ({
     dueSoon: leases.filter((l) => {
       if (l.status !== "active") return false;
       const d = daysUntil(l.nextDueDate);
@@ -612,41 +617,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const d = daysUntil(l.endDate);
       return d >= 0 && d <= EXPIRY_WINDOW_DAYS;
     }),
-  };
+  }), [leases]);
 
-  const unreadLeadsCount = properties.reduce(
-    (acc, p) => acc + p.leads.filter((l) => !l.read).length,
-    0
+  const unreadLeadsCount = useMemo(
+    () => properties.reduce((acc, p) => acc + p.leads.filter((l) => !l.read).length, 0),
+    [properties],
   );
 
+  const ctxValue = useMemo<AppState>(() => ({
+    user,
+    properties,
+    isLoading,
+    appMode,
+    selectedRole,
+    setUser,
+    setAppMode,
+    clearAppMode,
+    setSelectedRole,
+    addProperty,
+    updateProperty,
+    deleteProperty,
+    markLeadRead,
+    unreadLeadsCount,
+    refreshFromApi,
+    tenants,
+    leases,
+    notifications,
+    addLease,
+    updateLease,
+    deleteLease,
+    markRentPaid,
+    leaseAlerts,
+  }), [ // eslint-disable-line react-hooks/exhaustive-deps
+    user, properties, isLoading, appMode, selectedRole,
+    setUser, setAppMode, clearAppMode, setSelectedRole,
+    addProperty, updateProperty, deleteProperty, markLeadRead,
+    unreadLeadsCount, refreshFromApi,
+    tenants, leases, notifications,
+    addLease, updateLease, deleteLease, markRentPaid,
+    leaseAlerts,
+  ]);
+
   return (
-    <AppContext.Provider
-      value={{
-        user,
-        properties,
-        isLoading,
-        appMode,
-        selectedRole,
-        setUser,
-        setAppMode,
-        clearAppMode,
-        setSelectedRole,
-        addProperty,
-        updateProperty,
-        deleteProperty,
-        markLeadRead,
-        unreadLeadsCount,
-        refreshFromApi,
-        tenants,
-        leases,
-        notifications,
-        addLease,
-        updateLease,
-        deleteLease,
-        markRentPaid,
-        leaseAlerts,
-      }}
-    >
+    <AppContext.Provider value={ctxValue}>
       {children}
     </AppContext.Provider>
   );

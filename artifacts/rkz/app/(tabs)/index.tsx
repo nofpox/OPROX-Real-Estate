@@ -1,7 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -248,11 +248,12 @@ export default function DiscoveryMapScreen() {
     );
   }, []);
 
-  const filtered = activeType === "all"
-    ? ALL_LISTINGS
-    : ALL_LISTINGS.filter((l) => l.type === activeType);
+  const filtered = useMemo(
+    () => activeType === "all" ? ALL_LISTINGS : ALL_LISTINGS.filter((l) => l.type === activeType),
+    [activeType],
+  );
 
-  const s = makeStyles(colors, isAr, topPad, bottomPad);
+  const s = useMemo(() => makeStyles(colors, isAr, topPad, bottomPad), [colors, isAr, topPad, bottomPad]);
 
   // ── Shared header/filter rows used in both modes ────────────────────────
   const headerRow = (

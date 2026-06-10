@@ -1,7 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Linking from "expo-linking";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Dimensions,
   Platform,
@@ -262,9 +262,10 @@ export default function ExploreScreen() {
   const topPad    = insets.top    + (Platform.OS === "web" ? 67 : 0);
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 : 0);
 
-  const filtered = activeCategory === "all"
-    ? ATTRACTIONS
-    : ATTRACTIONS.filter((a) => a.category === activeCategory);
+  const filtered = useMemo(
+    () => activeCategory === "all" ? ATTRACTIONS : ATTRACTIONS.filter((a) => a.category === activeCategory),
+    [activeCategory],
+  );
 
   function openLink(url: string) {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -277,7 +278,7 @@ export default function ExploreScreen() {
   }
 
   const cats: Category[] = ["all", "cultural", "events", "nature", "entertainment", "religious"];
-  const s = makeStyles(colors, isAr, topPad, bottomPad);
+  const s = useMemo(() => makeStyles(colors, isAr, topPad, bottomPad), [colors, isAr, topPad, bottomPad]);
 
   // ── Map mode ─────────────────────────────────────────────────────────────────
   if (viewMode === "map") {
