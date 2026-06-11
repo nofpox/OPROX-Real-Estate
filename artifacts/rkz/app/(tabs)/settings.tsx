@@ -88,7 +88,7 @@ export default function SettingsScreen() {
   }
 
   const topPad    = insets.top + (Platform.OS === "web" ? 67 : 0);
-  const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84) + 16;
+  const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 + 84 : 84) + 36;
 
   function handleLogout() {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

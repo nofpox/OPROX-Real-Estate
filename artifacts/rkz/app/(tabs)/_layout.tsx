@@ -138,19 +138,21 @@ function ActiveDot({ focused, color }: { focused: boolean; color: string }) {
 }
 
 // ── Native (iOS Liquid Glass) tab layout ──────────────────────────────────────
-function NativeTabLayout({ requireAuth }: { requireAuth: (action: () => void) => void }) {
+function NativeTabLayout({ requireAuth: _requireAuth }: { requireAuth: (action: () => void) => void }) {
   const { t, isAr } = useLocale();
+  const { user, selectedRole } = useApp();
+  const canSeeSettings = !!user && selectedRole !== "buyer";
 
-  const triggers = [
+  const allTriggers = [
     { name: "index",        sf: { default: "map",                    selected: "map.fill"                    }, label: t.tabs.home       },
     { name: "explore",      sf: { default: "safari",                 selected: "safari.fill"                 }, label: t.tabs.explore    },
     { name: "add",          sf: { default: "plus.circle",            selected: "plus.circle.fill"            }, label: t.tabs.add        },
     { name: "listings",     sf: { default: "list.bullet",            selected: "list.bullet.circle.fill"     }, label: t.tabs.listings   },
     { name: "ai-concierge", sf: { default: "wrench.and.screwdriver", selected: "wrench.and.screwdriver.fill" }, label: t.tabs.myRequests },
-    { name: "settings",     sf: { default: "gearshape",              selected: "gearshape.fill"              }, label: t.tabs.settings   },
+    ...(canSeeSettings ? [{ name: "settings", sf: { default: "gearshape", selected: "gearshape.fill" }, label: t.tabs.settings }] : []),
   ];
 
-  const ordered = isAr ? [...triggers].reverse() : triggers;
+  const ordered = isAr ? [...allTriggers].reverse() : allTriggers;
 
   return (
     <NativeTabs>
@@ -170,9 +172,11 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
   const colors      = useColors();
   const colorScheme = useColorScheme();
   const { t, isAr } = useLocale();
+  const { user, selectedRole } = useApp();
   const isDark = colorScheme === "dark";
   const isIOS  = Platform.OS === "ios";
   const isWeb  = Platform.OS === "web";
+  const canSeeSettings = !!user && selectedRole !== "buyer";
 
   const tabDefs = [
     {
@@ -256,36 +260,40 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
           ),
       }}
     >
-      {ordered.map((tab) => (
-        <Tabs.Screen
-          key={tab.name}
-          name={tab.name}
-          options={{
-            title: tab.title,
-            tabBarIcon: ({ color, focused }) => (
-              <View style={s.tabItem}>
-                <AnimatedTabIcon focused={focused}>
-                  {tab.icon(color)}
-                </AnimatedTabIcon>
-                <AnimatedTabLabel
-                  focused={focused}
-                  label={tab.title}
-                  color={color}
-                />
-                <ActiveDot focused={focused} color={colors.gold} />
-              </View>
-            ),
-          }}
-          listeners={{
-            tabPress: (e) => {
-              if (RESTRICTED_TABS.includes(tab.name)) {
-                e.preventDefault();
-                requireAuth(() => router.navigate(`/(tabs)/${tab.name}` as never));
-              }
-            },
-          }}
-        />
-      ))}
+      {ordered.map((tab) => {
+        const isHidden = tab.name === "settings" && !canSeeSettings;
+        return (
+          <Tabs.Screen
+            key={tab.name}
+            name={tab.name}
+            options={{
+              title: tab.title,
+              href: isHidden ? null : undefined,
+              tabBarIcon: ({ color, focused }) => (
+                <View style={s.tabItem}>
+                  <AnimatedTabIcon focused={focused}>
+                    {tab.icon(color)}
+                  </AnimatedTabIcon>
+                  <AnimatedTabLabel
+                    focused={focused}
+                    label={tab.title}
+                    color={color}
+                  />
+                  <ActiveDot focused={focused} color={colors.gold} />
+                </View>
+              ),
+            }}
+            listeners={{
+              tabPress: (e) => {
+                if (RESTRICTED_TABS.includes(tab.name)) {
+                  e.preventDefault();
+                  requireAuth(() => router.navigate(`/(tabs)/${tab.name}` as never));
+                }
+              },
+            }}
+          />
+        );
+      })}
     </Tabs>
   );
 }
