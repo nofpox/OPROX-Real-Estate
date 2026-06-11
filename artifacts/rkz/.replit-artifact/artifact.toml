@@ -11,7 +11,7 @@ version = "1.0.0"
 
 [[services]]
 ensurePreviewReachable = "/status"
-name = "Rozoz"
+name = "expo"
 paths = [ "/rozoz-msrep/", "/rozoz-msrep" ]
 localPort = 26232
 
