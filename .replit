@@ -53,23 +53,15 @@ externalPort = 8099
 
 [[ports]]
 localPort = 14320
-externalPort = 3001
-
-[[ports]]
-localPort = 19855
 externalPort = 80
 
 [[ports]]
-localPort = 21694
-externalPort = 3002
-
-[[ports]]
-localPort = 26232
+localPort = 19855
 externalPort = 3000
 
 [[ports]]
-localPort = 26233
-externalPort = 4200
+localPort = 26232
+externalPort = 3001
 
 [userenv]
 
