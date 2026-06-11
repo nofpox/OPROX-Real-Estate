@@ -19,9 +19,18 @@ const PRIVACY_URL = "https://rozoz.com/privacy";
 export default function ConsentScreen() {
   const { acceptConsent, langChosen } = useApp();
   const [checked, setChecked] = useState(false);
+  const [error, setError]     = useState("");
+
+  function toggleCheck() {
+    setChecked(v => !v);
+    setError("");
+  }
 
   function handleAccept() {
-    if (!checked) return;
+    if (!checked) {
+      setError("يجب الموافقة على الشروط أولاً");
+      return;
+    }
     acceptConsent();
     if (langChosen === false) {
       router.replace("/language-select" as never);
@@ -45,7 +54,7 @@ export default function ConsentScreen() {
         <View style={s.spacer} />
 
         {/* Checkbox row */}
-        <Pressable style={s.checkRow} onPress={() => setChecked(v => !v)}>
+        <Pressable style={s.checkRow} onPress={toggleCheck}>
           <View style={[s.checkbox, checked && s.checkboxChecked]}>
             {checked && <Text style={s.checkmark}>✓</Text>}
           </View>
@@ -53,6 +62,13 @@ export default function ConsentScreen() {
             أوافق على الشروط والأحكام وسياسة الخصوصية
           </Text>
         </Pressable>
+
+        {/* Inline error */}
+        {error ? (
+          <View style={s.errorRow}>
+            <Text style={s.errorText}>{error}</Text>
+          </View>
+        ) : null}
 
         {/* Links */}
         <View style={s.linksRow}>
@@ -67,12 +83,11 @@ export default function ConsentScreen() {
 
         <View style={s.spacer} />
 
-        {/* Accept button */}
+        {/* Accept button — always pressable; validated inside handleAccept */}
         <TouchableOpacity
           style={[s.btn, !checked && s.btnDisabled]}
           onPress={handleAccept}
-          activeOpacity={0.85}
-          disabled={!checked}
+          activeOpacity={checked ? 0.85 : 1}
         >
           <Text style={[s.btnText, !checked && s.btnTextDisabled]}>
             موافق ومتابعة
@@ -95,7 +110,6 @@ const s = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 32,
     paddingBottom: 40,
-    direction: I18nManager.isRTL ? "rtl" : "ltr",
   },
 
   logoWrap: {
@@ -128,7 +142,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     alignSelf: "stretch",
     gap: 12,
-    marginBottom: 18,
+    marginBottom: 10,
   },
   checkbox: {
     width: 24,
@@ -157,6 +171,18 @@ const s = StyleSheet.create({
     textAlign: "right",
     writingDirection: "rtl",
     lineHeight: 22,
+  },
+
+  errorRow: {
+    alignSelf: "stretch",
+    alignItems: "flex-end",
+    marginBottom: 10,
+  },
+  errorText: {
+    fontSize: 13,
+    color: "#DC2626",
+    textAlign: "right",
+    writingDirection: "rtl",
   },
 
   linksRow: {
