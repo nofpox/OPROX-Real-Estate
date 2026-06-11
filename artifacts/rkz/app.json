@@ -1,31 +1,31 @@
 {
   "expo": {
-    "name": "Rozoz",
+    "name": "روزوز",
     "slug": "rozoz-msrep",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/rozoz-logo-eagle.png",
+    "icon": "./assets/images/rozoz-icon.png",
     "scheme": "rozoz-msrep",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/rozoz-logo-eagle.png",
+      "image": "./assets/images/rozoz-splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A1628"
+      "backgroundColor": "#0A1A2F"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.rozoz.msrep"
+      "bundleIdentifier": "com.rozoz.app"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/rozoz-logo-eagle.png",
-        "backgroundColor": "#0A1628"
+        "foregroundImage": "./assets/images/rozoz-icon.png",
+        "backgroundColor": "#0A1A2F"
       },
-      "package": "com.rozoz.msrep"
+      "package": "com.rozoz.app"
     },
     "web": {
-      "favicon": "./assets/images/rozoz-logo-eagle.png"
+      "favicon": "./assets/images/rozoz-icon.png"
     },
     "plugins": [
       [

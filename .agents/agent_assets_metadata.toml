@@ -281,3 +281,15 @@ id = "wMbGd-KhWiqAZMAxHWWRF"
 uri = "file://attached_assets/rozoz-business-study.pdf"
 type = "pdf"
 title = "دراسة روزوز الشاملة — PDF"
+
+[[outputs]]
+id = "ZfkL4RcbvB7acouLwAZw6"
+uri = "file://artifacts/rkz/assets/images/rozoz-icon.png"
+type = "image"
+title = "أيقونة روزوز – 1024×1024 شفاف"
+
+[[outputs]]
+id = "vCCnPdR0fPSlkA0I9tKPj"
+uri = "file://artifacts/rkz/assets/images/rozoz-splash.png"
+type = "image"
+title = "شاشة الافتتاح – 2048×2732"
