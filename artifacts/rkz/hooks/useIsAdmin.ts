@@ -12,9 +12,6 @@ import { ADMIN_PHONES } from "@/constants/adminConfig";
 export function useIsAdmin(): boolean {
   const { user } = useApp();
 
-  // Dev mode skips the login screen entirely — treat as admin for testing
-  if (__DEV__) return true;
-
   if (!user?.phone) return false;
   return ADMIN_PHONES.includes(user.phone);
 }
