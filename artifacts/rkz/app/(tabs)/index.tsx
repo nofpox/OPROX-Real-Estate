@@ -190,7 +190,7 @@ export default function DiscoveryMapScreen() {
 
   const handleLogout = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const doLogout = () => { setUser(null); router.replace("/login"); };
+    const doLogout = () => { setUser(null); router.replace("/(tabs)" as never); };
     if (Platform.OS === "web") {
       const ok = typeof window !== "undefined" ? window.confirm("هل تريد تسجيل الخروج؟") : true;
       if (ok) doLogout();

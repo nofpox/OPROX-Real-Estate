@@ -25,9 +25,11 @@ import Animated, {
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
-import RegisterModal from "@/components/RegisterModal";
 
 const DISCOVERY_FILTER_KEY = "rozoz_discovery_filter";
+
+// Reset each time the JS module is loaded (= each fresh app open / page load).
+let sessionWelcomeShown = false;
 const RESTRICTED_TABS = ["add", "listings", "ai-concierge"];
 
 // ── Animated tab icon — spring bounce + scale on focus ────────────────────────
@@ -301,26 +303,35 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
 
 // ── Root layout ───────────────────────────────────────────────────────────────
 export default function TabLayout() {
-  const { user, showRegister, isLoading, langChosen } = useApp();
+  const { user, isLoading, langChosen } = useApp();
 
   useEffect(() => {
-    if (!isLoading && langChosen === false) {
+    if (isLoading) return;
+
+    if (langChosen === false) {
       router.replace("/language-select" as never);
+      return;
+    }
+
+    // Returning registered user: show welcome once per session then go to tabs.
+    if (user && !sessionWelcomeShown) {
+      sessionWelcomeShown = true;
+      router.replace("/welcome" as never);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, langChosen]);
+  }, [isLoading, langChosen, user]);
 
   const requireAuth = useCallback(
     (action: () => void) => {
       if (user) { action(); return; }
-      showRegister(action);
+      // Navigate to the full-screen login/register flow.
+      router.push("/login" as never);
     },
-    [user, showRegister],
+    [user],
   );
 
   return (
     <>
-      <RegisterModal />
       {isLiquidGlassAvailable()
         ? <NativeTabLayout requireAuth={requireAuth} />
         : <ClassicTabLayout requireAuth={requireAuth} />

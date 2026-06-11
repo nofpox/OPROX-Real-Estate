@@ -270,6 +270,16 @@ function LoginForm() {
       marginTop:      12,
       opacity:        0.4,
     },
+    closeBtn: {
+      position:        "absolute",
+      right:           20,
+      zIndex:          10,
+      padding:         8,
+      borderRadius:    20,
+      backgroundColor: "rgba(255,255,255,0.08)",
+      borderWidth:     1,
+      borderColor:     "rgba(255,255,255,0.12)",
+    },
 
     // ── Phone / OTP ──────────────────────────────────────────────────────────
     innerScroll: {
@@ -387,6 +397,21 @@ function LoginForm() {
   if (step === "welcome") {
     return (
       <View style={S.container}>
+        {/* ── Close / back button — lets guests cancel without registering */}
+        <Pressable
+          style={[
+            S.closeBtn,
+            { top: safeTop + (Platform.OS === "web" ? 12 : 8) },
+          ]}
+          onPress={() => {
+            if (router.canGoBack()) router.back();
+            else router.replace("/(tabs)" as never);
+          }}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <Ionicons name="close" size={22} color="rgba(255,255,255,0.55)" />
+        </Pressable>
+
         {/* ── Fixed header: top 25% of screen ─────────────────────────── */}
         <View style={S.header}>
           <Image source={RKAZ_LOGO} style={S.logoImage} />
