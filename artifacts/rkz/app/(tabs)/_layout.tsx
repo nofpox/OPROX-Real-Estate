@@ -180,48 +180,48 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
       title: t.tabs.home,
       icon:  (color: string) =>
         isIOS
-          ? <SymbolView name="map" tintColor={color} size={24} />
-          : <MaterialIcons name="map" size={24} color={color} />,
+          ? <SymbolView name="map" tintColor={color} size={28} />
+          : <MaterialIcons name="map" size={28} color={color} />,
     },
     {
       name:  "explore",
       title: t.tabs.explore,
       icon:  (color: string) =>
         isIOS
-          ? <SymbolView name="safari" tintColor={color} size={24} />
-          : <MaterialIcons name="explore" size={24} color={color} />,
+          ? <SymbolView name="safari" tintColor={color} size={28} />
+          : <MaterialIcons name="explore" size={28} color={color} />,
     },
     {
       name:  "add",
       title: t.tabs.add,
       icon:  (color: string) =>
         isIOS
-          ? <SymbolView name="plus.circle" tintColor={color} size={24} />
-          : <MaterialIcons name="add-circle-outline" size={24} color={color} />,
+          ? <SymbolView name="plus.circle" tintColor={color} size={28} />
+          : <MaterialIcons name="add-circle-outline" size={28} color={color} />,
     },
     {
       name:  "listings",
       title: t.tabs.listings,
       icon:  (color: string) =>
         isIOS
-          ? <SymbolView name="list.bullet" tintColor={color} size={24} />
-          : <MaterialIcons name="list" size={24} color={color} />,
+          ? <SymbolView name="list.bullet" tintColor={color} size={28} />
+          : <MaterialIcons name="list" size={28} color={color} />,
     },
     {
       name:  "ai-concierge",
       title: t.tabs.myRequests,
       icon:  (color: string) =>
         isIOS
-          ? <SymbolView name="wrench.and.screwdriver" tintColor={color} size={24} />
-          : <MaterialIcons name="build-circle" size={24} color={color} />,
+          ? <SymbolView name="wrench.and.screwdriver" tintColor={color} size={28} />
+          : <MaterialIcons name="build-circle" size={28} color={color} />,
     },
     {
       name:  "settings",
       title: t.tabs.settings,
       icon:  (color: string) =>
         isIOS
-          ? <SymbolView name="gearshape" tintColor={color} size={24} />
-          : <MaterialIcons name="settings" size={24} color={color} />,
+          ? <SymbolView name="gearshape" tintColor={color} size={28} />
+          : <MaterialIcons name="settings" size={28} color={color} />,
     },
   ];
 
@@ -233,7 +233,7 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
         headerShown: false,
         lazy: false,
         tabBarActiveTintColor:   colors.gold,
-        tabBarInactiveTintColor: colors.mutedForeground,
+        tabBarInactiveTintColor: isDark ? "rgba(255,255,255,0.70)" : "rgba(0,0,0,0.55)",
         tabBarHideOnKeyboard: true,
         tabBarShowLabel: false,
         tabBarItemStyle: { flex: 1, justifyContent: "center", alignItems: "center" },
@@ -242,7 +242,7 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
           backgroundColor: "transparent",
           borderTopWidth:  0,
           elevation:       0,
-          height:          isWeb ? 84 : 64,
+          height:          isWeb ? 90 : 72,
         },
         tabBarBackground: () =>
           isIOS ? (
@@ -344,8 +344,8 @@ const s = StyleSheet.create({
   tabItem: {
     alignItems:     "center",
     justifyContent: "center",
-    paddingTop:     4,
-    gap:            1,
+    paddingTop:     6,
+    gap:            3,
   },
 });
 

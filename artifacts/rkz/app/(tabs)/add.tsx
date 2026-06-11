@@ -30,15 +30,6 @@ import AnimatedScreen from "@/components/AnimatedScreen";
 
 type Step = "form" | "publishing" | "done";
 
-interface PriceSuggestion {
-  min: number;
-  max: number;
-  suggested: number;
-  note?: string;
-  confidence?: "high" | "medium" | "low";
-  insights?: string[];
-}
-
 export default function AddPropertyScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -62,8 +53,6 @@ export default function AddPropertyScreen() {
   const [step, setStep] = useState<Step>("form");
 
   const [locationLoading, setLocationLoading] = useState(false);
-  const [priceSuggesting, setPriceSuggesting] = useState(false);
-  const [priceSuggestion, setPriceSuggestion] = useState<PriceSuggestion | null>(null);
   const [descGenerating, setDescGenerating] = useState(false);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -123,46 +112,6 @@ export default function AddPropertyScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {}
     setLocationLoading(false);
-  }
-
-  async function suggestPrice() {
-    if (!city) return;
-    Keyboard.dismiss();
-    setPriceSuggesting(true);
-    setPriceSuggestion(null);
-    await new Promise((r) => setTimeout(r, 700));
-    const BASE: Record<string, number> = {
-      villa: 2_600_000, apartment: 650_000, land: 900_000,
-      commercial: 1_800_000, compound: 4_200_000, floor: 750_000,
-      warehouse: 1_100_000, farm: 1_400_000, rest_house: 980_000, palace: 7_500_000,
-    };
-    const CITY_MULT: Record<string, number> = {
-      "الرياض": 1.0, "جدة": 0.95, "الدمام": 0.82, "مكة المكرمة": 1.1,
-      "المدينة المنورة": 0.88, Riyadh: 1.0, Jeddah: 0.95,
-    };
-    const base = BASE[propType] ?? 900_000;
-    const cityMult = CITY_MULT[city] ?? 0.9;
-    const areaMult = area ? Math.max(0.6, Math.min(1.8, parseFloat(area) / 300)) : 1;
-    const suggested = Math.round(base * cityMult * areaMult / 10_000) * 10_000;
-    const result: PriceSuggestion = {
-      suggested,
-      min: Math.round(suggested * 0.88),
-      max: Math.round(suggested * 1.14),
-      confidence: Math.random() > 0.4 ? "high" : "medium",
-      insights: isAr
-        ? ["التسعير بناءً على بيانات السوق المحلي", "المقارنة مع 12 عقاراً مشابهاً في المنطقة"]
-        : ["Pricing based on local market data", "Compared with 12 similar properties nearby"],
-    };
-    setPriceSuggestion(result);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setPriceSuggesting(false);
-  }
-
-  function applySuggestedPrice() {
-    if (!priceSuggestion) return;
-    setPrice(String(priceSuggestion.suggested));
-    setPriceSuggestion(null);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   }
 
   async function generateDescription() {
@@ -313,51 +262,6 @@ export default function AddPropertyScreen() {
       borderColor: colors.navy + "25",
     },
     aiBtnText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.navy },
-    suggestionCard: {
-      marginTop: 10,
-      backgroundColor: colors.goldLight,
-      borderRadius: 12,
-      padding: 14,
-      gap: 8,
-    },
-    suggestionHeader: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
-    suggestionTitle: {
-      fontSize: 13,
-      fontFamily: "Inter_600SemiBold",
-      color: colors.navy,
-      textAlign: isAr ? "right" : "left",
-    },
-    suggestionPrice: {
-      fontSize: 22,
-      fontFamily: "Inter_700Bold",
-      color: colors.navy,
-      textAlign: isAr ? "right" : "left",
-    },
-    suggestionRange: {
-      fontSize: 12,
-      fontFamily: "Inter_400Regular",
-      color: colors.navyLight + "BB",
-      textAlign: isAr ? "right" : "left",
-    },
-    suggestionNote: {
-      fontSize: 12,
-      fontFamily: "Inter_400Regular",
-      color: colors.navyLight,
-      lineHeight: 18,
-      textAlign: isAr ? "right" : "left",
-    },
-    applyBtn: {
-      backgroundColor: colors.gold,
-      borderRadius: 8,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      alignSelf: isAr ? "flex-end" : "flex-start",
-    },
-    applyBtnText: { fontSize: 13, fontFamily: "Inter_700Bold", color: colors.navy },
     locationRow: { flexDirection: "row", gap: 8 },
     inputBox: {
       flex: 1,
@@ -750,7 +654,6 @@ export default function AddPropertyScreen() {
             setPhotos([]);
             setDescription("");
             setPropType(config.propertyTypes[0]?.id ?? "villa");
-            setPriceSuggestion(null);
             setSelectedPlatforms(new Set(config.platforms.filter((p) => p.enabled).map((p) => p.id)));
             progressAnim.setValue(0);
             setPublishedPlatforms([]);
@@ -819,7 +722,7 @@ export default function AddPropertyScreen() {
                   propType === pt.id && S.typePillActive,
                   pressed && { opacity: 0.8 },
                 ]}
-                onPress={() => { setPropType(pt.id); setPriceSuggestion(null); Haptics.selectionAsync(); }}
+                onPress={() => { setPropType(pt.id); Haptics.selectionAsync(); }}
               >
                 <Text style={[S.typePillText, propType === pt.id && S.typePillTextActive]}>
                   {isAr ? pt.labelAr : pt.labelEn}
@@ -840,7 +743,7 @@ export default function AddPropertyScreen() {
             <TextInput
               style={S.priceInput}
               value={price}
-              onChangeText={(v) => { setPrice(v); setPriceSuggestion(null); }}
+              onChangeText={(v) => { setPrice(v); }}
               placeholder="0"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="numeric"
@@ -849,42 +752,6 @@ export default function AddPropertyScreen() {
             <Text style={S.priceCurrency}>{t.add.currency}</Text>
           </View>
 
-          <Pressable
-            style={({ pressed }) => [S.aiBtn, pressed && { opacity: 0.75 }, (priceSuggesting || !city) && { opacity: 0.45 }]}
-            onPress={suggestPrice}
-            disabled={priceSuggesting || !city}
-          >
-            {priceSuggesting ? (
-              <ActivityIndicator size="small" color={colors.navy} />
-            ) : (
-              <Text style={{ fontSize: 14 }}>✨</Text>
-            )}
-            <Text style={S.aiBtnText}>{priceSuggesting ? t.add.aiPriceLoading : t.add.aiPriceBtn}</Text>
-          </Pressable>
-
-          {priceSuggestion && (
-            <View style={S.suggestionCard}>
-              <View style={S.suggestionHeader}>
-                <Text style={S.suggestionTitle}>{t.add.suggestionTitle}</Text>
-                <Pressable onPress={() => setPriceSuggestion(null)}>
-                  <MaterialIcons name="close" size={18} color={colors.navyLight} />
-                </Pressable>
-              </View>
-              <Text style={S.suggestionPrice}>
-                {priceSuggestion.suggested.toLocaleString(priceLocale)} {t.add.currency}
-              </Text>
-              <Text style={S.suggestionRange}>
-                {t.add.suggestionRange} {priceSuggestion.min.toLocaleString(priceLocale)} —{" "}
-                {priceSuggestion.max.toLocaleString(priceLocale)} {t.add.currency}
-              </Text>
-              {!!priceSuggestion.note && (
-                <Text style={S.suggestionNote}>{priceSuggestion.note}</Text>
-              )}
-              <Pressable style={({ pressed }) => [S.applyBtn, pressed && { opacity: 0.8 }]} onPress={applySuggestedPrice}>
-                <Text style={S.applyBtnText}>{t.add.applySuggestion}</Text>
-              </Pressable>
-            </View>
-          )}
         </View>
 
         {/* Location + Auto-Geocoding */}
