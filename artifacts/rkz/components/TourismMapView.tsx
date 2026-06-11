@@ -115,8 +115,9 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
 
   var map = L.map('map', {
     center: [23.8, 44.8], zoom: 5,
-    zoomControl: true, attributionControl: true,
+    zoomControl: false, attributionControl: true,
   });
+  L.control.zoom({ position: 'topright' }).addTo(map);
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',

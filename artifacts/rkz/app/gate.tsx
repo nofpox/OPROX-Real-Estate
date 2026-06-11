@@ -61,7 +61,11 @@ export default function GateScreen() {
   function choose(role: "buyer" | "seller" | "owner") {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectedRole(role);
-    router.replace("/(tabs)");
+    if (role === "buyer") {
+      router.replace("/(tabs)/explore" as never);
+    } else {
+      router.replace("/(tabs)");
+    }
   }
 
   return (

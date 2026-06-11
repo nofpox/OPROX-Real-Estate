@@ -184,7 +184,7 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
     center: [23.8, 44.8], zoom: 5,
     zoomControl: false, attributionControl: true,
   });
-  L.control.zoom({ position: 'bottomleft' }).addTo(map);
+  L.control.zoom({ position: 'topright' }).addTo(map);
 
   L.tileLayer('${tileUrl}', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',

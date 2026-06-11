@@ -311,7 +311,7 @@ export default function ExploreScreen() {
         </View>
 
         {/* ── Floating category pills ─────────────────────────────────────────── */}
-        <View style={[s.floatPills, { top: topPad + 68 }]} pointerEvents="box-none">
+        <View style={[s.floatPills, { top: topPad + 80 }]} pointerEvents="box-none">
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
