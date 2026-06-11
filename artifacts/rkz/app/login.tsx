@@ -191,7 +191,7 @@ function LoginForm() {
     // Content zone
     content: {
       paddingHorizontal: 28,
-      paddingBottom:     safeBottom + 16,
+      paddingBottom:     safeBottom + 100,
     },
     headline: {
       fontSize:    isAr ? 18 : 16,

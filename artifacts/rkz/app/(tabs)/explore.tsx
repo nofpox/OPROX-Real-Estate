@@ -346,7 +346,7 @@ export default function ExploreScreen() {
 
         {/* ── Floating legend ─────────────────────────────────────────────────── */}
         <View
-          style={[s.floatLegend, { bottom: bottomPad + 24 }]}
+          style={[s.floatLegend, { bottom: bottomPad + 88 }]}
           pointerEvents="none"
         >
           {(["cultural", "nature", "events", "entertainment", "religious"] as const).map((cat) => (
