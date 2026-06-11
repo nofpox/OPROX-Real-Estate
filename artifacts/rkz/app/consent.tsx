@@ -13,7 +13,7 @@ import {
 import { useApp } from "@/context/AppContext";
 
 export default function ConsentScreen() {
-  const { acceptConsent, langChosen, user } = useApp();
+  const { acceptConsent, user } = useApp();
   const [checked, setChecked] = useState(false);
   const [error, setError]     = useState("");
 
@@ -28,11 +28,8 @@ export default function ConsentScreen() {
       return;
     }
     acceptConsent(user?.phone ?? null);
-    if (langChosen === false) {
-      router.replace("/language-select" as never);
-    } else {
-      router.replace("/(tabs)" as never);
-    }
+    // Always send to welcome after consent — they just completed Nafath login.
+    router.replace("/welcome" as never);
   }
 
   return (

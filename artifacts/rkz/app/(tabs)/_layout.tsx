@@ -308,18 +308,19 @@ export default function TabLayout() {
   useEffect(() => {
     if (isLoading) return;
 
-    if (consentGiven === false) {
-      router.replace("/consent" as never);
-      return;
-    }
-
     if (langChosen === false) {
       router.replace("/language-select" as never);
       return;
     }
 
-    // Returning registered user: show welcome once per session then go to tabs.
-    if (user && !sessionWelcomeShown) {
+    // Consent gate: only for authenticated users (guests browse freely).
+    if (user && consentGiven === false) {
+      router.replace("/consent" as never);
+      return;
+    }
+
+    // Returning registered user: show welcome once per session (only after consent).
+    if (user && consentGiven !== false && !sessionWelcomeShown) {
       sessionWelcomeShown = true;
       router.replace("/welcome" as never);
     }

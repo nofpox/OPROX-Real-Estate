@@ -55,7 +55,7 @@ interface LoginResponse {
 function LoginForm() {
   const colors  = useColors();
   const insets  = useSafeAreaInsets();
-  const { setUser } = useApp();
+  const { setUser, consentGiven } = useApp();
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const { t, isAr } = useLocale();
   const { config } = useConfig();
@@ -132,8 +132,13 @@ function LoginForm() {
     setUser({ phone: fullPhone, email: email.trim() || undefined, authorized: true });
     setLoading(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    router.replace("/welcome" as any);
+    // Show consent if not yet accepted, otherwise go to welcome.
+    if (!consentGiven) {
+      router.replace("/consent" as never);
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      router.replace("/welcome" as any);
+    }
   }
 
   // ── Spacing tokens (responsive) ──────────────────────────────────────────

@@ -25,6 +25,7 @@ import UserManagement from "@/pages/user-management";
 import AuditLog from "@/pages/audit-log";
 import AdminSettings from "@/pages/admin-settings";
 import Login from "@/pages/login";
+import { ConsentScreen, isEulaAccepted } from "@/components/ConsentScreen";
 import ForcePasswordChange from "@/pages/force-password-change";
 import SuperAdmin from "@/pages/super-admin";
 import SecurityDashboard from "@/pages/security-dashboard";
@@ -119,6 +120,7 @@ function App() {
   });
 
   const [showWelcome, setShowWelcome] = useState(false);
+  const [eulaAccepted, setEulaAccepted] = useState(() => isEulaAccepted());
 
   // Exchange a one-time preview_token from the URL for a real guest session
   useEffect(() => {
@@ -181,6 +183,16 @@ function App() {
           </QueryClientProvider>
         </LanguageProvider>
       </I18nextProvider>
+    );
+  }
+
+  // Consent gate — show once after login, before welcome/dashboard.
+  if (authUser && !eulaAccepted && authUser.role !== "preview_guest") {
+    return (
+      <ConsentScreen
+        userId={authUser.id}
+        onAccept={() => setEulaAccepted(true)}
+      />
     );
   }
 
