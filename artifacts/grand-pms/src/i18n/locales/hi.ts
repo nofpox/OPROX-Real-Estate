@@ -221,7 +221,7 @@ const hi: Translations = {
     title: "रखरखाव", subtitle: "वर्क ऑर्डर, मरम्मत और रखरखाव ट्रैकिंग।",
     newWorkOrder: "नया वर्क ऑर्डर", saveWorkOrder: "वर्क ऑर्डर सहेजें",
     createWorkOrder: "वर्क ऑर्डर बनाएं", allStatuses: "सभी स्थितियाँ",
-    allPriorities: "सभी प्राथमिकताएँ", noWorkOrders: "फ़िल्टर से कोई वर्क ऑर्डर नहीं मिला।",
+    allPriorities: "सभी प्राथमिकताएँ", noWorkOrders: "फ़िल्टर से कोई वर्क ऑर्डर नहीं मिला।", overdue: "अतिदेय",
     deleteConfirm: "यह वर्क ऑर्डर हटाएं?", updateSuccess: "स्थिति सफलतापूर्वक अपडेट हुई",
     updateFailed: "अपडेट विफल", deleteSuccess: "वर्क ऑर्डर हटाया गया",
     deleteFailed: "हटाने में विफल", createSuccess: "वर्क ऑर्डर सफलतापूर्वक बनाया गया",

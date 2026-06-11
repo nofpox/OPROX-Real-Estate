@@ -4,20 +4,21 @@ import {
   useDeleteWorkOrder, useListProperties, useListRooms,
 } from "@/lib/local-hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Trash2, Plus, Clock, CheckCircle2, Wrench, AlertCircle } from "lucide-react";
+import {
+  Trash2, Plus, Clock, CheckCircle2, Wrench, AlertCircle,
+  User, CalendarDays, Building2, ChevronRight, PauseCircle,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
@@ -41,43 +42,161 @@ function parseDescription(desc: string | null | undefined): { text: string; phot
   return { text: desc.slice(0, idx).trim(), photo: desc.slice(idx + PHOTO_MARKER.length).trim() };
 }
 
-const PriorityBadge = ({ priority }: { priority: string }) => {
-  const { t } = useTranslation();
-  switch (priority) {
-    case "urgent": return <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border-0 dark:bg-red-900/30 dark:text-red-400">{t("priority.urgent")}</Badge>;
-    case "high": return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 border-0 dark:bg-orange-900/30 dark:text-orange-400">{t("priority.high")}</Badge>;
-    case "medium": return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-0 dark:bg-amber-900/30 dark:text-amber-400">{t("priority.medium")}</Badge>;
-    case "low": return <Badge className="bg-slate-100 text-slate-800 hover:bg-slate-100 border-0 dark:bg-slate-800 dark:text-slate-400">{t("priority.low")}</Badge>;
-    default: return <Badge variant="outline">{priority}</Badge>;
-  }
+const PRIORITY_CONFIG: Record<string, { label: string; bar: string; badge: string }> = {
+  urgent: { label: "priority.urgent", bar: "bg-red-500", badge: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400" },
+  high:   { label: "priority.high",   bar: "bg-orange-500", badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400" },
+  medium: { label: "priority.medium", bar: "bg-amber-400",  badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" },
+  low:    { label: "priority.low",    bar: "bg-slate-300",  badge: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400" },
 };
 
-const StatusBadge = ({ status }: { status: string }) => {
-  const { t } = useTranslation();
-  switch (status) {
-    case "pending": return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-0 dark:bg-blue-900/30 dark:text-blue-400">{t("status.pending")}</Badge>;
-    case "in-progress": return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-0 dark:bg-amber-900/30 dark:text-amber-400">{t("status.in-progress")}</Badge>;
-    case "on-hold": return <Badge className="bg-slate-100 text-slate-800 hover:bg-slate-100 border-0 dark:bg-slate-800 dark:text-slate-400">{t("status.on-hold")}</Badge>;
-    case "completed": return <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-0 dark:bg-green-900/30 dark:text-green-400">{t("status.completed")}</Badge>;
-    default: return <Badge variant="outline">{status}</Badge>;
-  }
+const COLUMN_CONFIG = [
+  { status: "pending",     icon: AlertCircle,   label: "maintenance.kpi.pending",    header: "bg-blue-50 dark:bg-blue-950/30",    accent: "border-blue-400",  count: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+  { status: "in-progress", icon: Clock,         label: "maintenance.kpi.inProgress", header: "bg-amber-50 dark:bg-amber-950/30",  accent: "border-amber-400", count: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
+  { status: "on-hold",     icon: PauseCircle,   label: "maintenance.kpi.onHold",     header: "bg-slate-50 dark:bg-slate-900/40",  accent: "border-slate-400", count: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
+  { status: "completed",   icon: CheckCircle2,  label: "maintenance.kpi.completed",  header: "bg-green-50 dark:bg-green-950/30",  accent: "border-green-400", count: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
+];
+
+const STATUS_NEXT: Record<string, string> = {
+  pending: "in-progress",
+  "in-progress": "completed",
+  "on-hold": "in-progress",
+  completed: "pending",
 };
+
+type WorkOrder = {
+  id: number;
+  title: string;
+  description?: string | null;
+  priority: string;
+  status: string;
+  assignedTo?: string | null;
+  dueDate?: string | null;
+  propertyName?: string | null;
+  unitName?: string | null;
+};
+
+function WorkOrderCard({
+  wo, onStatusChange, onDelete, onPhotoClick, isUpdating,
+}: {
+  wo: WorkOrder;
+  onStatusChange: (id: number, status: string) => void;
+  onDelete: (id: number) => void;
+  onPhotoClick: (url: string) => void;
+  isUpdating: boolean;
+}) {
+  const { t } = useTranslation();
+  const pCfg = PRIORITY_CONFIG[wo.priority] ?? PRIORITY_CONFIG.low;
+  const parsed = parseDescription(wo.description);
+  const isOverdue =
+    wo.dueDate &&
+    wo.dueDate < new Date().toISOString().split("T")[0] &&
+    wo.status !== "completed";
+  const nextStatus = STATUS_NEXT[wo.status];
+
+  return (
+    <div className="group bg-background rounded-xl border border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      <div className={`h-1.5 w-full ${pCfg.bar}`} />
+      <div className="p-4 space-y-3">
+        <div className="flex items-start justify-between gap-2">
+          <span className="font-semibold text-sm leading-snug flex-1">{wo.title}</span>
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${pCfg.badge}`}>
+            {t(pCfg.label)}
+          </span>
+        </div>
+
+        {parsed.text && (
+          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{parsed.text}</p>
+        )}
+
+        {parsed.photo && (
+          <button type="button" onClick={() => onPhotoClick(parsed.photo!)} className="w-full">
+            <img
+              src={parsed.photo}
+              alt="Attached"
+              className="w-full h-24 object-cover rounded-lg border border-border hover:opacity-80 transition-opacity"
+            />
+          </button>
+        )}
+
+        <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Building2 className="h-3 w-3 shrink-0" />
+            <span className="truncate">{wo.propertyName}{wo.unitName ? ` • ${wo.unitName}` : ""}</span>
+          </div>
+          {wo.assignedTo && (
+            <div className="flex items-center gap-1.5">
+              <User className="h-3 w-3 shrink-0" />
+              <span className="truncate">{wo.assignedTo}</span>
+            </div>
+          )}
+          {wo.dueDate && (
+            <div className={`flex items-center gap-1.5 ${isOverdue ? "text-red-500 font-medium" : ""}`}>
+              <CalendarDays className="h-3 w-3 shrink-0" />
+              <span>{new Date(wo.dueDate + "T00:00:00").toLocaleDateString()}</span>
+              {isOverdue && <span className="text-red-500 font-semibold">{t("maintenance.overdue")}</span>}
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between pt-1 border-t border-border/40">
+          {wo.status !== "completed" ? (
+            <button
+              type="button"
+              disabled={isUpdating}
+              onClick={() => onStatusChange(wo.id, nextStatus)}
+              className="flex items-center gap-1 text-xs text-primary font-medium hover:underline disabled:opacity-50"
+            >
+              {nextStatus === "in-progress" ? t("status.in-progress") : t("status.completed")}
+              <ChevronRight className="h-3 w-3" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={isUpdating}
+              onClick={() => onStatusChange(wo.id, "pending")}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+            >
+              {t("status.pending")}
+              <ChevronRight className="h-3 w-3" />
+            </button>
+          )}
+
+          <Select value={wo.status} onValueChange={(val) => onStatusChange(wo.id, val)}>
+            <SelectTrigger className="h-6 w-[110px] text-[11px] border-dashed bg-muted/30 px-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pending">{t("status.pending")}</SelectItem>
+              <SelectItem value="in-progress">{t("status.in-progress")}</SelectItem>
+              <SelectItem value="on-hold">{t("status.on-hold")}</SelectItem>
+              <SelectItem value="completed">{t("status.completed")}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <button
+            type="button"
+            onClick={() => onDelete(wo.id)}
+            className="text-destructive/50 hover:text-destructive transition-colors p-1"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Maintenance() {
   const { t } = useTranslation();
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [photoDialog, setPhotoDialog] = useState<string | null>(null);
 
   const searchParams: Record<string, any> = {};
   if (selectedProperty !== "all") searchParams.propertyId = parseInt(selectedProperty);
-  if (statusFilter !== "all") searchParams.status = statusFilter;
-  if (priorityFilter !== "all") searchParams.priority = priorityFilter;
 
-  const { data: workOrders, isLoading: isWorkOrdersLoading } = useListWorkOrders(searchParams);
-  const { data: allWorkOrders } = useListWorkOrders(selectedProperty !== "all" ? { propertyId: parseInt(selectedProperty) } : {});
+  const { data: workOrders, isLoading } = useListWorkOrders(searchParams);
   const { data: properties } = useListProperties();
   const { data: rooms } = useListRooms();
 
@@ -100,7 +219,7 @@ export default function Maintenance() {
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: getListWorkOrdersQueryKey(searchParams) });
-    queryClient.invalidateQueries({ queryKey: getListWorkOrdersQueryKey(selectedProperty !== "all" ? { propertyId: parseInt(selectedProperty) } : {}) });
+    queryClient.invalidateQueries({ queryKey: getListWorkOrdersQueryKey({}) });
   };
 
   const handleStatusChange = (id: number, newStatus: string) => {
@@ -127,26 +246,24 @@ export default function Maintenance() {
     });
   };
 
-  const onOpenChange = (open: boolean) => {
-    setIsDialogOpen(open);
-    if (open && selectedProperty !== "all") form.setValue("propertyId", parseInt(selectedProperty));
-  };
+  const filtered = (workOrders ?? []).filter(
+    (wo) => priorityFilter === "all" || wo.priority === priorityFilter
+  );
 
-  const statsData = {
-    pending: allWorkOrders?.filter((w) => w.status === "pending").length || 0,
-    inProgress: allWorkOrders?.filter((w) => w.status === "in-progress").length || 0,
-    onHold: allWorkOrders?.filter((w) => w.status === "on-hold").length || 0,
-    completed: allWorkOrders?.filter((w) => w.status === "completed").length || 0,
-  };
+  const byStatus = (status: string) => filtered.filter((wo) => wo.status === status);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-full">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-serif font-bold tracking-tight text-foreground">{t("maintenance.title")}</h1>
           <p className="text-muted-foreground mt-1">{t("maintenance.subtitle")}</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={onOpenChange}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (open && selectedProperty !== "all") form.setValue("propertyId", parseInt(selectedProperty));
+        }}>
           <DialogTrigger asChild>
             <Button className="font-semibold shadow-sm">
               <Plus className="me-2 h-4 w-4" />
@@ -255,151 +372,79 @@ export default function Maintenance() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        {[
-          { icon: AlertCircle, label: t("maintenance.kpi.pending"), value: statsData.pending, color: "" },
-          { icon: Clock, label: t("maintenance.kpi.inProgress"), value: statsData.inProgress, color: "text-amber-600 dark:text-amber-500" },
-          { icon: Wrench, label: t("maintenance.kpi.onHold"), value: statsData.onHold, color: "" },
-          { icon: CheckCircle2, label: t("maintenance.kpi.completed"), value: statsData.completed, color: "text-green-600 dark:text-green-500" },
-        ].map(({ icon: Icon, label, value, color }) => (
-          <Card key={label} className="shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                <Icon className="h-4 w-4" />
-                <p className="text-sm font-medium">{label}</p>
-              </div>
-              <h2 className={`text-3xl font-bold ${color}`}>{value}</h2>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+          <SelectTrigger className="w-[200px] bg-background shadow-sm">
+            <SelectValue placeholder={t("common.allProperties")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("common.allProperties")}</SelectItem>
+            {properties?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+          <SelectTrigger className="w-[160px] bg-background shadow-sm">
+            <SelectValue placeholder={t("maintenance.allPriorities")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("maintenance.allPriorities")}</SelectItem>
+            <SelectItem value="urgent">{t("priority.urgent")}</SelectItem>
+            <SelectItem value="high">{t("priority.high")}</SelectItem>
+            <SelectItem value="medium">{t("priority.medium")}</SelectItem>
+            <SelectItem value="low">{t("priority.low")}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <Card className="shadow-sm border-border/50">
-        <CardHeader className="p-4 border-b border-border/50 bg-muted/20">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Select value={selectedProperty} onValueChange={setSelectedProperty}>
-              <SelectTrigger className="w-full sm:w-[220px] bg-background">
-                <SelectValue placeholder={t("common.allProperties")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("common.allProperties")}</SelectItem>
-                {properties?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[160px] bg-background">
-                <SelectValue placeholder={t("maintenance.allStatuses")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("maintenance.allStatuses")}</SelectItem>
-                <SelectItem value="pending">{t("status.pending")}</SelectItem>
-                <SelectItem value="in-progress">{t("status.in-progress")}</SelectItem>
-                <SelectItem value="on-hold">{t("status.on-hold")}</SelectItem>
-                <SelectItem value="completed">{t("status.completed")}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-full sm:w-[160px] bg-background">
-                <SelectValue placeholder={t("maintenance.allPriorities")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("maintenance.allPriorities")}</SelectItem>
-                <SelectItem value="urgent">{t("priority.urgent")}</SelectItem>
-                <SelectItem value="high">{t("priority.high")}</SelectItem>
-                <SelectItem value="medium">{t("priority.medium")}</SelectItem>
-                <SelectItem value="low">{t("priority.low")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead>{t("maintenance.columns.priority")}</TableHead>
-                <TableHead className="w-[28%]">{t("maintenance.columns.issue")}</TableHead>
-                <TableHead>{t("maintenance.columns.assignedTo")}</TableHead>
-                <TableHead>{t("maintenance.columns.dueDate")}</TableHead>
-                <TableHead>{t("maintenance.columns.status")}</TableHead>
-                <TableHead className="text-end">{t("maintenance.columns.actions")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isWorkOrdersLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-3/4 mb-1" /><Skeleton className="h-3 w-1/2" /></TableCell>
-                    {[24, 24, 16, 20].map((w, j) => <TableCell key={j}><Skeleton className={`h-4 w-${w}`} /></TableCell>)}
-                    <TableCell><Skeleton className="h-8 w-8 ms-auto" /></TableCell>
-                  </TableRow>
-                ))
-              ) : workOrders?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">{t("maintenance.noWorkOrders")}</TableCell>
-                </TableRow>
-              ) : (
-                workOrders?.map((wo) => {
-                  const isOverdue = wo.dueDate && wo.dueDate < new Date().toISOString().split("T")[0] && wo.status !== "completed";
-                  const parsed = parseDescription(wo.description);
-                  return (
-                    <TableRow key={wo.id}>
-                      <TableCell><PriorityBadge priority={wo.priority} /></TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <span className="font-medium">{wo.title}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {wo.propertyName}{wo.unitName ? ` • ${wo.unitName}` : ` • ${t("maintenance.fields.propertyWide")}`}
-                          </span>
-                          {parsed.text && <span className="text-xs text-muted-foreground italic line-clamp-2">{parsed.text}</span>}
-                          {parsed.photo && (
-                            <button type="button" onClick={() => setPhotoDialog(parsed.photo)} className="mt-1 self-start">
-                              <img
-                                src={parsed.photo}
-                                alt="Attached photo"
-                                className="h-14 w-20 object-cover rounded-md border border-border hover:opacity-80 transition-opacity cursor-pointer"
-                              />
-                            </button>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {wo.assignedTo || <span className="text-muted-foreground italic">{t("tasks.unassigned")}</span>}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {wo.dueDate ? (
-                          <span className={isOverdue ? "text-red-500 font-medium" : ""}>
-                            {new Date(wo.dueDate + "T00:00:00").toLocaleDateString()}
-                          </span>
-                        ) : <span className="text-muted-foreground">-</span>}
-                      </TableCell>
-                      <TableCell><StatusBadge status={wo.status} /></TableCell>
-                      <TableCell className="text-end">
-                        <div className="flex items-center justify-end gap-2">
-                          <Select value={wo.status} onValueChange={(val) => handleStatusChange(wo.id, val)}>
-                            <SelectTrigger className="w-[130px] h-8 text-xs border-dashed bg-muted/30">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">{t("status.pending")}</SelectItem>
-                              <SelectItem value="in-progress">{t("status.in-progress")}</SelectItem>
-                              <SelectItem value="on-hold">{t("status.on-hold")}</SelectItem>
-                              <SelectItem value="completed">{t("status.completed")}</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(wo.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Kanban Board */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {COLUMN_CONFIG.map(({ status, icon: Icon, label, header, accent, count }) => {
+          const cards = byStatus(status);
+          return (
+            <div key={status} className={`rounded-xl border-t-4 ${accent} bg-card shadow-sm overflow-hidden`}>
+              {/* Column header */}
+              <div className={`${header} px-4 py-3 flex items-center justify-between`}>
+                <div className="flex items-center gap-2">
+                  <Icon className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-semibold text-sm">{t(label)}</span>
+                </div>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${count}`}>
+                  {isLoading ? "—" : cards.length}
+                </span>
+              </div>
+
+              {/* Cards */}
+              <div className="p-3 space-y-3 min-h-[200px]">
+                {isLoading ? (
+                  Array.from({ length: 2 }).map((_, i) => (
+                    <div key={i} className="bg-background rounded-xl border border-border/60 p-4 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <Skeleton className="h-3 w-2/3" />
+                    </div>
+                  ))
+                ) : cards.length === 0 ? (
+                  <div className="flex items-center justify-center h-24 text-sm text-muted-foreground/60 italic">
+                    {t("maintenance.noWorkOrders")}
+                  </div>
+                ) : (
+                  cards.map((wo) => (
+                    <WorkOrderCard
+                      key={wo.id}
+                      wo={wo}
+                      onStatusChange={handleStatusChange}
+                      onDelete={handleDelete}
+                      onPhotoClick={setPhotoDialog}
+                      isUpdating={updateWorkOrder.isPending}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {/* Photo lightbox */}
       <Dialog open={!!photoDialog} onOpenChange={(open) => !open && setPhotoDialog(null)}>

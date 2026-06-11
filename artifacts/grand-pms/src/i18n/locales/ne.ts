@@ -222,7 +222,7 @@ const ne: Translations = {
     title: "मर्मत", subtitle: "कार्य आदेश, मर्मत र ट्र्याकिङ।",
     newWorkOrder: "नयाँ कार्य आदेश", saveWorkOrder: "कार्य आदेश सुरक्षित गर्नुहोस्",
     createWorkOrder: "कार्य आदेश बनाउनुहोस्", allStatuses: "सबै स्थितिहरू",
-    allPriorities: "सबै प्राथमिकताहरू", noWorkOrders: "फिल्टरमा कुनै कार्य आदेश भेटिएन।",
+    allPriorities: "सबै प्राथमिकताहरू", noWorkOrders: "फिल्टरमा कुनै कार्य आदेश भेटिएन।", overdue: "ढिलो",
     deleteConfirm: "यो कार्य आदेश मेट्नुहोस्?", updateSuccess: "स्थिति सफलतापूर्वक अपडेट भयो",
     updateFailed: "अपडेट असफल", deleteSuccess: "कार्य आदेश मेटियो",
     deleteFailed: "मेट्न असफल", createSuccess: "कार्य आदेश सफलतापूर्वक बनाइयो",

@@ -222,7 +222,7 @@ const ml: Translations = {
     title: "അറ്റകുറ്റപ്പണി", subtitle: "വർക്ക് ഓർഡറുകൾ, അറ്റകുറ്റം, ട്രാക്കിംഗ്.",
     newWorkOrder: "പുതിയ വർക്ക് ഓർഡർ", saveWorkOrder: "വർക്ക് ഓർഡർ സംരക്ഷിക്കുക",
     createWorkOrder: "വർക്ക് ഓർഡർ നിർമ്മിക്കുക", allStatuses: "എല്ലാ സ്ഥിതികളും",
-    allPriorities: "എല്ലാ മുൻഗണനകളും", noWorkOrders: "ഫിൽറ്ററിൽ വർക്ക് ഓർഡർ കണ്ടെത്തിയില്ല.",
+    allPriorities: "എല്ലാ മുൻഗണനകളും", noWorkOrders: "ഫിൽറ്ററിൽ വർക്ക് ഓർഡർ കണ്ടെത്തിയില്ല.", overdue: "കാലഹരണം",
     deleteConfirm: "ഈ വർക്ക് ഓർഡർ മായ്ക്കണോ?", updateSuccess: "സ്ഥിതി വിജയകരമായി അപ്ഡേറ്റ് ചെയ്തു",
     updateFailed: "അപ്ഡേറ്റ് പരാജയം", deleteSuccess: "വർക്ക് ഓർഡർ മായ്ച്ചു",
     deleteFailed: "മായ്ക്കൽ പരാജയം", createSuccess: "വർക്ക് ഓർഡർ വിജയകരമായി നിർമ്മിച്ചു",

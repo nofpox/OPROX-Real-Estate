@@ -222,7 +222,7 @@ const pt: Translations = {
     title: "Manutenção", subtitle: "Ordens de serviço, reparos e acompanhamento de manutenção.",
     newWorkOrder: "Nova Ordem de Serviço", saveWorkOrder: "Salvar Ordem de Serviço",
     createWorkOrder: "Criar Ordem de Serviço", allStatuses: "Todos os Status",
-    allPriorities: "Todas as Prioridades", noWorkOrders: "Nenhuma ordem de serviço encontrada.",
+    allPriorities: "Todas as Prioridades", noWorkOrders: "Nenhuma ordem de serviço encontrada.", overdue: "Atrasado",
     deleteConfirm: "Excluir esta ordem de serviço?", updateSuccess: "Status atualizado",
     updateFailed: "Falha ao atualizar", deleteSuccess: "Ordem de serviço excluída",
     deleteFailed: "Falha ao excluir", createSuccess: "Ordem de serviço criada",

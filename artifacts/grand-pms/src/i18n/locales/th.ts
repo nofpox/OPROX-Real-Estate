@@ -222,7 +222,7 @@ const th: Translations = {
     title: "การบำรุงรักษา", subtitle: "ใบสั่งงาน การซ่อมแซม และการติดตามการบำรุงรักษา",
     newWorkOrder: "ใบสั่งงานใหม่", saveWorkOrder: "บันทึกใบสั่งงาน",
     createWorkOrder: "สร้างใบสั่งงาน", allStatuses: "สถานะทั้งหมด",
-    allPriorities: "ความสำคัญทั้งหมด", noWorkOrders: "ไม่พบใบสั่งงานที่ตรงกับตัวกรอง",
+    allPriorities: "ความสำคัญทั้งหมด", noWorkOrders: "ไม่พบใบสั่งงานที่ตรงกับตัวกรอง", overdue: "เกินกำหนด",
     deleteConfirm: "ลบใบสั่งงานนี้?", updateSuccess: "อัปเดตสถานะสำเร็จ",
     updateFailed: "ไม่สามารถอัปเดตได้", deleteSuccess: "ลบใบสั่งงานแล้ว",
     deleteFailed: "ไม่สามารถลบได้", createSuccess: "สร้างใบสั่งงานสำเร็จ",

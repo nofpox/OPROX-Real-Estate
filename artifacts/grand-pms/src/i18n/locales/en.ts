@@ -579,6 +579,7 @@ const en = {
     allPriorities: "All Priorities",
     noWorkOrders: "No work orders found matching the filters.",
     deleteConfirm: "Are you sure you want to delete this work order?",
+    overdue: "Overdue",
     updateSuccess: "Status updated successfully",
     updateFailed: "Failed to update status",
     deleteSuccess: "Work order deleted",

@@ -222,7 +222,7 @@ const fr: Translations = {
     title: "Maintenance", subtitle: "Bons de travail, réparations et suivi de la maintenance.",
     newWorkOrder: "Nouveau bon de travail", saveWorkOrder: "Enregistrer le bon de travail",
     createWorkOrder: "Créer un bon de travail", allStatuses: "Tous les statuts",
-    allPriorities: "Toutes les priorités", noWorkOrders: "Aucun bon de travail correspondant.",
+    allPriorities: "Toutes les priorités", noWorkOrders: "Aucun bon de travail correspondant.", overdue: "En retard",
     deleteConfirm: "Supprimer ce bon de travail ?", updateSuccess: "Statut mis à jour",
     updateFailed: "Échec de la mise à jour", deleteSuccess: "Bon de travail supprimé",
     deleteFailed: "Échec de la suppression", createSuccess: "Bon de travail créé",

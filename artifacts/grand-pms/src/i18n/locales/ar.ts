@@ -581,6 +581,7 @@ const ar: Translations = {
     allPriorities: "جميع الأولويات",
     noWorkOrders: "لا توجد أوامر صيانة تطابق معايير البحث.",
     deleteConfirm: "هل تريد حذف أمر الصيانة هذا؟",
+    overdue: "متأخر",
     updateSuccess: "تم تحديث الحالة بنجاح",
     updateFailed: "تعذّر تحديث الحالة",
     deleteSuccess: "تم حذف أمر الصيانة",

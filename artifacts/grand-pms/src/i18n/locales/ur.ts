@@ -222,7 +222,7 @@ const ur: Translations = {
     title: "دیکھ بھال", subtitle: "ورک آرڈر، مرمت اور دیکھ بھال ٹریکنگ۔",
     newWorkOrder: "نیا ورک آرڈر", saveWorkOrder: "ورک آرڈر محفوظ کریں",
     createWorkOrder: "ورک آرڈر بنائیں", allStatuses: "تمام حیثیتیں",
-    allPriorities: "تمام ترجیحات", noWorkOrders: "فلٹر سے کوئی ورک آرڈر نہیں ملا۔",
+    allPriorities: "تمام ترجیحات", noWorkOrders: "فلٹر سے کوئی ورک آرڈر نہیں ملا۔", overdue: "تاخیر",
     deleteConfirm: "یہ ورک آرڈر حذف کریں؟", updateSuccess: "حیثیت کامیابی سے اپ ڈیٹ ہوئی",
     updateFailed: "اپ ڈیٹ ناکام", deleteSuccess: "ورک آرڈر حذف ہوا",
     deleteFailed: "حذف ناکام", createSuccess: "ورک آرڈر کامیابی سے بنایا گیا",

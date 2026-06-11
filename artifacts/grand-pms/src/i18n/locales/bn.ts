@@ -222,7 +222,7 @@ const bn: Translations = {
     title: "রক্ষণাবেক্ষণ", subtitle: "কাজের আদেশ, মেরামত এবং রক্ষণাবেক্ষণ ট্র্যাকিং।",
     newWorkOrder: "নতুন কাজের আদেশ", saveWorkOrder: "কাজের আদেশ সংরক্ষণ",
     createWorkOrder: "কাজের আদেশ তৈরি", allStatuses: "সকল অবস্থা",
-    allPriorities: "সকল অগ্রাধিকার", noWorkOrders: "ফিল্টারে কোনো কাজের আদেশ মেলেনি।",
+    allPriorities: "সকল অগ্রাধিকার", noWorkOrders: "ফিল্টারে কোনো কাজের আদেশ মেলেনি।", overdue: "বিলম্বিত",
     deleteConfirm: "এই কাজের আদেশ মুছবেন?", updateSuccess: "অবস্থা সফলভাবে আপডেট হয়েছে",
     updateFailed: "আপডেট ব্যর্থ", deleteSuccess: "কাজের আদেশ মুছে গেছে",
     deleteFailed: "মুছতে ব্যর্থ", createSuccess: "কাজের আদেশ সফলভাবে তৈরি হয়েছে",

@@ -224,7 +224,7 @@ const tl: Translations = {
     title: "Pagpapanatili", subtitle: "Mga work order, pagkukumpuni, at pagsubaybay sa pagpapanatili.",
     newWorkOrder: "Bagong Work Order", saveWorkOrder: "I-save ang Work Order",
     createWorkOrder: "Lumikha ng Work Order", allStatuses: "Lahat ng Katayuan",
-    allPriorities: "Lahat ng Priyoridad", noWorkOrders: "Walang work order na tumutugma.",
+    allPriorities: "Lahat ng Priyoridad", noWorkOrders: "Walang work order na tumutugma.", overdue: "Huli na",
     deleteConfirm: "Burahin ang work order na ito?", updateSuccess: "Matagumpay na na-update ang katayuan",
     updateFailed: "Nabigo ang pag-update", deleteSuccess: "Nabura ang work order",
     deleteFailed: "Nabigo ang pagbura", createSuccess: "Matagumpay na nilikha ang work order",

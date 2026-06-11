@@ -222,7 +222,7 @@ const zh: Translations = {
     title: "维护", subtitle: "工单、维修和维护跟踪。",
     newWorkOrder: "新建工单", saveWorkOrder: "保存工单",
     createWorkOrder: "创建工单", allStatuses: "所有状态",
-    allPriorities: "所有优先级", noWorkOrders: "未找到匹配的工单。",
+    allPriorities: "所有优先级", noWorkOrders: "未找到匹配的工单。", overdue: "已逾期",
     deleteConfirm: "删除此工单？", updateSuccess: "状态已更新",
     updateFailed: "更新失败", deleteSuccess: "工单已删除",
     deleteFailed: "删除失败", createSuccess: "工单创建成功",

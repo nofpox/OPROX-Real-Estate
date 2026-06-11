@@ -222,7 +222,7 @@ const id: Translations = {
     title: "Pemeliharaan", subtitle: "Pesanan kerja, perbaikan, dan pelacakan pemeliharaan.",
     newWorkOrder: "Pesanan Kerja Baru", saveWorkOrder: "Simpan Pesanan Kerja",
     createWorkOrder: "Buat Pesanan Kerja", allStatuses: "Semua Status",
-    allPriorities: "Semua Prioritas", noWorkOrders: "Tidak ada pesanan kerja yang cocok.",
+    allPriorities: "Semua Prioritas", noWorkOrders: "Tidak ada pesanan kerja yang cocok.", overdue: "Terlambat",
     deleteConfirm: "Hapus pesanan kerja ini?", updateSuccess: "Status diperbarui",
     updateFailed: "Gagal memperbarui", deleteSuccess: "Pesanan kerja dihapus",
     deleteFailed: "Gagal menghapus", createSuccess: "Pesanan kerja dibuat",
