@@ -13,7 +13,7 @@ import {
 import { useApp } from "@/context/AppContext";
 
 export default function ConsentScreen() {
-  const { acceptConsent, langChosen } = useApp();
+  const { acceptConsent, langChosen, user } = useApp();
   const [checked, setChecked] = useState(false);
   const [error, setError]     = useState("");
 
@@ -27,7 +27,7 @@ export default function ConsentScreen() {
       setError("يجب الموافقة على الشروط أولاً");
       return;
     }
-    acceptConsent();
+    acceptConsent(user?.phone ?? null);
     if (langChosen === false) {
       router.replace("/language-select" as never);
     } else {

@@ -175,7 +175,7 @@ interface AppState {
 
   // Terms & Privacy consent
   consentGiven: boolean | null;
-  acceptConsent: () => void;
+  acceptConsent: (userId: string | null) => void;
 
   // Language override
   appLang: "ar" | "en";
@@ -366,8 +366,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setLangChosen(false);
       }
 
-      if (savedConsent.status === "fulfilled" && savedConsent.value === "1") {
-        setConsentGiven(true);
+      if (savedConsent.status === "fulfilled" && savedConsent.value) {
+        try {
+          const c = JSON.parse(savedConsent.value) as Record<string, unknown>;
+          if (c.eula_version === "v1.0" && c.eula_accepted_at) {
+            setConsentGiven(true);
+          } else {
+            setConsentGiven(false);
+          }
+        } catch {
+          setConsentGiven(false);
+        }
       } else {
         setConsentGiven(false);
       }
@@ -422,9 +431,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     void AsyncStorage.setItem(LANG_KEY, lang);
   }, []);
 
-  const acceptConsent = useCallback(() => {
+  const acceptConsent = useCallback((userId: string | null) => {
     setConsentGiven(true);
-    void AsyncStorage.setItem(CONSENT_KEY, "1");
+    void AsyncStorage.setItem(CONSENT_KEY, JSON.stringify({
+      user_id:          userId,
+      eula_accepted_at: new Date().toISOString(),
+      eula_version:     "v1.0",
+    }));
   }, []);
 
   const refreshFromApi = useCallback(async () => {
