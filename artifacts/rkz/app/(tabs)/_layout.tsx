@@ -303,10 +303,15 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
 
 // ── Root layout ───────────────────────────────────────────────────────────────
 export default function TabLayout() {
-  const { user, isLoading, langChosen } = useApp();
+  const { user, isLoading, langChosen, consentGiven } = useApp();
 
   useEffect(() => {
     if (isLoading) return;
+
+    if (consentGiven === false) {
+      router.replace("/consent" as never);
+      return;
+    }
 
     if (langChosen === false) {
       router.replace("/language-select" as never);
@@ -319,7 +324,7 @@ export default function TabLayout() {
       router.replace("/welcome" as never);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, langChosen, user]);
+  }, [isLoading, consentGiven, langChosen, user]);
 
   const requireAuth = useCallback(
     (action: () => void) => {

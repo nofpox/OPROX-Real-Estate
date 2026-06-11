@@ -173,6 +173,10 @@ interface AppState {
   unreadLeadsCount: number;
   refreshFromApi: () => Promise<void>;
 
+  // Terms & Privacy consent
+  consentGiven: boolean | null;
+  acceptConsent: () => void;
+
   // Language override
   appLang: "ar" | "en";
   setAppLang: (lang: "ar" | "en") => void;
@@ -210,6 +214,7 @@ const ROLE_KEY      = "rozoz_user_role";
 const LEASE_KEY     = "rozoz_lease_state";
 const APP_MODE_KEY  = "rozoz_app_mode";
 const LANG_KEY      = "rozoz_lang";
+const CONSENT_KEY   = "rozoz_consent";
 
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
@@ -297,6 +302,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return sys === "ar" ? "ar" : "en";
   });
   const [langChosen, setLangChosen] = useState<boolean | null>(null);
+  const [consentGiven, setConsentGiven] = useState<boolean | null>(null);
 
   const save = useCallback(async (u: User | null, props: Property[]) => {
     try {
@@ -318,13 +324,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function boot() {
-      // Read all 5 keys in parallel
-      const [raw, savedMode, savedRole, leaseRaw, savedLang] = await Promise.allSettled([
+      // Read all 6 keys in parallel
+      const [raw, savedMode, savedRole, leaseRaw, savedLang, savedConsent] = await Promise.allSettled([
         AsyncStorage.getItem(STORAGE_KEY),
         AsyncStorage.getItem(APP_MODE_KEY),
         AsyncStorage.getItem(ROLE_KEY),
         AsyncStorage.getItem(LEASE_KEY),
         AsyncStorage.getItem(LANG_KEY),
+        AsyncStorage.getItem(CONSENT_KEY),
       ]);
 
       if (raw.status === "fulfilled" && raw.value) {
@@ -357,6 +364,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         setLangChosen(false);
+      }
+
+      if (savedConsent.status === "fulfilled" && savedConsent.value === "1") {
+        setConsentGiven(true);
+      } else {
+        setConsentGiven(false);
       }
 
       if (leaseRaw.status === "fulfilled" && leaseRaw.value) {
@@ -407,6 +420,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setAppLangState(lang);
     setLangChosen(true);
     void AsyncStorage.setItem(LANG_KEY, lang);
+  }, []);
+
+  const acceptConsent = useCallback(() => {
+    setConsentGiven(true);
+    void AsyncStorage.setItem(CONSENT_KEY, "1");
   }, []);
 
   const refreshFromApi = useCallback(async () => {
@@ -690,6 +708,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     appLang,
     setAppLang,
     langChosen,
+    consentGiven,
+    acceptConsent,
     registerModalVisible,
     showRegister,
     hideRegister,
@@ -708,7 +728,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUser, setAppMode, clearAppMode, setSelectedRole,
     addProperty, updateProperty, deleteProperty, markLeadRead,
     unreadLeadsCount, refreshFromApi,
-    appLang, setAppLang, langChosen,
+    appLang, setAppLang, langChosen, consentGiven, acceptConsent,
     registerModalVisible, showRegister, hideRegister, registerPendingCb,
     tenants, leases, notifications,
     addLease, updateLease, deleteLease, markRentPaid,
