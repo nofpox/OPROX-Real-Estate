@@ -10,7 +10,7 @@ kind = "web"
   version = "1.0.0"
 
   [[services]]
-  name = "web"
+  name = "Rozoz Portal"
   paths = [ "/realestate/" ]
   localPort = 19855
 
@@ -29,4 +29,3 @@ kind = "web"
   [services.env]
   PORT = "19855"
   BASE_PATH = "/realestate/"
-  

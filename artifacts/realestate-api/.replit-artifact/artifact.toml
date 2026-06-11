@@ -1,12 +1,12 @@
 kind = "api"
 previewPath = "/realestate-api"
-title = "Real Estate API"
+title = "Rozoz Portal API"
 version = "1.0.0"
 id = "artifacts/realestate-api"
 
 [[services]]
 localPort = 8099
-name = "Real Estate API"
+name = "Rozoz Portal API"
 paths = ["/realestate-api"]
 
 [services.development]

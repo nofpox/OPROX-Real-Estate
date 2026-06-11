@@ -10,7 +10,7 @@ name = "react-vite"
 version = "1.0.0"
 
 [[services]]
-name = "web"
+name = "Rozoz PMS"
 paths = [ "/grand-pms/", "/grand-pms" ]
 localPort = 14320
 
@@ -21,6 +21,10 @@ run = "pnpm --filter @workspace/rozoz-pms run dev"
 build = [ "pnpm", "--filter", "@workspace/rozoz-pms", "run", "build" ]
 publicDir = "artifacts/grand-pms/dist/public"
 serve = "static"
+
+[services.production.buildEnv]
+BASE_PATH = "/grand-pms/"
+NODE_ENV = "production"
 
 [[services.production.rewrites]]
 from = "/*"
