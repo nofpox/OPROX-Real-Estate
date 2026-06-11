@@ -78,16 +78,14 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
   const cityJson   = JSON.stringify(CITY_COORDS);
   const dataJson   = JSON.stringify(properties);
 
-  const tileUrl = isDark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
-  const bgColor = isDark ? "#0a1628" : "#f8fafc";
-  const zoomBg  = isDark ? "#0f2040" : "#ffffff";
-  const zoomClr = isDark ? "#D4A843" : "#0A1628";
-  const zoomBdr = isDark ? "#1e3a5f" : "#e2e8f0";
-  const zoomHov = isDark ? "#1e3a5f" : "#f1f5f9";
-  const attrBg  = isDark ? "rgba(10,22,40,0.7)" : "rgba(255,255,255,0.85)";
-  const attrClr = isDark ? "#64748b" : "#94a3b8";
+  const tileUrl = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+  const bgColor = "#f0f4f8";
+  const zoomBg  = "#ffffff";
+  const zoomClr = "#0A1628";
+  const zoomBdr = "#e2e8f0";
+  const zoomHov = "#f1f5f9";
+  const attrBg  = "rgba(255,255,255,0.85)";
+  const attrClr = "#94a3b8";
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -275,7 +273,7 @@ export default function HeatmapMapView({ properties, isAr, isDark = true }: Prop
 }
 
 const styles = StyleSheet.create({
-  webview: { flex: 1, backgroundColor: "#0a1628" },
+  webview: { flex: 1, backgroundColor: "#f0f4f8" },
   empty: {
     flex: 1,
     alignItems: "center",
