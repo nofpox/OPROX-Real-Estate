@@ -121,8 +121,7 @@ function buildMapHtml(properties: MapProperty[]): string {
   .pop-val   { font-size: 16px; font-weight: 700; color: #D4A843; }
   .pop-lbl   { font-size: 10px; color: #94a3b8; margin-top: 2px; }
 
-  .leaflet-control-zoom a { background: #0f2040 !important; color: #D4A843 !important; border-color: #1e3a5f !important; }
-  .leaflet-control-zoom a:hover { background: #1e3a5f !important; }
+  .leaflet-control-zoom { display: none !important; }
   .leaflet-control-attribution { background: rgba(10,22,40,0.7) !important; color: #64748b !important; font-size: 9px; }
   .leaflet-control-attribution a { color: #D4A843 !important; }
 

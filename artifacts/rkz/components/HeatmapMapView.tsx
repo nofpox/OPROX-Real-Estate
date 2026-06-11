@@ -137,8 +137,7 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
   .pop-lbl   { font-size: 10px; color: #94a3b8; margin-top: 2px; }
 
   /* ── Controls ────────────────────────────────────────────────────────────── */
-  .leaflet-control-zoom a { background: ${zoomBg} !important; color: ${zoomClr} !important; border-color: ${zoomBdr} !important; }
-  .leaflet-control-zoom a:hover { background: ${zoomHov} !important; }
+  .leaflet-control-zoom { display: none !important; }
   .leaflet-control-attribution { background: ${attrBg} !important; color: ${attrClr} !important; font-size: 9px; }
   .leaflet-control-attribution a { color: #D4A843 !important; }
 </style>
@@ -184,7 +183,6 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
     center: [23.8, 44.8], zoom: 5,
     zoomControl: false, attributionControl: true,
   });
-  L.control.zoom({ position: 'topright' }).addTo(map);
 
   L.tileLayer('${tileUrl}', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',

@@ -52,7 +52,6 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
 <style>
   html, body { height: 100%; margin: 0; padding: 0; background: #0a1628; }
   #map { height: 100%; width: 100%; }
-  .leaflet-bottom.leaflet-right { bottom: 120px !important; }
 
   .spot-icon { overflow: visible !important; background: none !important; border: none !important; }
   .spot-pin {
@@ -96,8 +95,7 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   .pop-btn:hover { background: #c99a36; }
 
   /* Controls */
-  .leaflet-control-zoom a { background: #0f2040 !important; color: #D4A843 !important; border-color: #1e3a5f !important; }
-  .leaflet-control-zoom a:hover { background: #1e3a5f !important; }
+  .leaflet-control-zoom { display: none !important; }
   .leaflet-control-attribution { background: rgba(10,22,40,0.7) !important; color: #64748b !important; font-size: 9px; }
   .leaflet-control-attribution a { color: #D4A843 !important; }
   .leaflet-tile-pane { will-change: transform; }
@@ -118,7 +116,6 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
     center: [23.8, 44.8], zoom: 5,
     zoomControl: false, attributionControl: true,
   });
-  L.control.zoom({ position: 'bottomright' }).addTo(map);
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
