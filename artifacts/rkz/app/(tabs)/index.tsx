@@ -202,8 +202,10 @@ export default function DiscoveryMapScreen() {
     ]);
   };
 
-  const topPad    = insets.top    + (Platform.OS === "web" ? 67  : 0);
-  const bottomPad = insets.bottom + (Platform.OS === "web" ? 34  : 100);
+  const topPad      = insets.top    + (Platform.OS === "web" ? 67  : 0);
+  const TAB_H       = Platform.OS === "web" ? 84 : 64;
+  const bottomPad   = insets.bottom + TAB_H + 20;
+  const windowH     = Dimensions.get("window").height;
 
   // Build type filter list from config (matches DynamicConfig propertyTypes)
   const filterTypes = ["all", ...config.propertyTypes.map((pt) => pt.id)];
@@ -334,7 +336,7 @@ export default function DiscoveryMapScreen() {
 
   if (viewMode === "heatmap") {
     return (
-      <View style={s.container}>
+      <View style={[s.container, Platform.OS === "web" && { height: windowH }]}>
         {/* ── Map fills entire screen ──────────────────────────────────────── */}
         <View style={StyleSheet.absoluteFill}>
           <HeatmapMapView properties={filtered as MapProperty[]} isAr={isAr} isDark={isDark} />

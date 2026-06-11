@@ -254,11 +254,11 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
               StyleSheet.absoluteFill,
               {
                 backgroundColor: isDark
-                  ? "rgba(8, 16, 34, 0.88)"
-                  : "rgba(255,255,255,0.90)",
+                  ? "rgba(8, 16, 34, 0.72)"
+                  : "rgba(248,250,252,0.80)",
                 borderTopWidth: 1,
                 borderTopColor: isDark
-                  ? "rgba(255,255,255,0.08)"
+                  ? "rgba(212,168,67,0.15)"
                   : "rgba(0,0,0,0.07)",
               },
             ]} />
