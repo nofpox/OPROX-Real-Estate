@@ -1,4 +1,3 @@
-import { Linking } from "react-native";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -12,9 +11,6 @@ import {
 } from "react-native";
 
 import { useApp } from "@/context/AppContext";
-
-const TERMS_URL   = "https://rozoz.com/terms";
-const PRIVACY_URL = "https://rozoz.com/privacy";
 
 export default function ConsentScreen() {
   const { acceptConsent, langChosen } = useApp();
@@ -72,11 +68,11 @@ export default function ConsentScreen() {
 
         {/* Links */}
         <View style={s.linksRow}>
-          <TouchableOpacity onPress={() => void Linking.openURL(TERMS_URL)}>
+          <TouchableOpacity onPress={() => router.push("/terms" as never)}>
             <Text style={s.link}>الشروط والأحكام</Text>
           </TouchableOpacity>
           <Text style={s.linkSep}>·</Text>
-          <TouchableOpacity onPress={() => void Linking.openURL(PRIVACY_URL)}>
+          <TouchableOpacity onPress={() => router.push("/privacy" as never)}>
             <Text style={s.link}>سياسة الخصوصية</Text>
           </TouchableOpacity>
         </View>

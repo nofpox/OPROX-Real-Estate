@@ -36,6 +36,8 @@ function RootLayoutNav() {
     >
       <Stack.Screen name="consent"         options={{ animation: "fade", animationDuration: 300, gestureEnabled: false }} />
       <Stack.Screen name="language-select" options={{ animation: "fade", animationDuration: 300, gestureEnabled: false }} />
+      <Stack.Screen name="terms"          options={{ animation: "slide_from_left", gestureEnabled: false }} />
+      <Stack.Screen name="privacy"        options={{ animation: "slide_from_left", gestureEnabled: false }} />
       <Stack.Screen name="login"          options={{ animation: "fade", animationDuration: 220 }} />
       <Stack.Screen name="gate"           options={{ animation: "fade", animationDuration: 220, gestureEnabled: false }} />
       <Stack.Screen name="welcome"        options={{ animation: "fade", animationDuration: 220, gestureEnabled: false }} />
