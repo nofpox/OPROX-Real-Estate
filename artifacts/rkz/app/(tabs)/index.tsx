@@ -308,7 +308,7 @@ export default function DiscoveryMapScreen() {
         onPress={() => saveFilter("all")}
         style={[s.pill, glass && s.glassPill, activeType === "all" && s.pillActive]}
       >
-        <Text style={[s.pillText, activeType === "all" && s.pillTextActive]}>
+        <Text style={[s.pillText, glass && s.glassPillText, activeType === "all" && s.pillTextActive]}>
           {isAr ? "الكل" : "All"}
         </Text>
       </Pressable>
@@ -323,9 +323,9 @@ export default function DiscoveryMapScreen() {
             <MaterialIcons
               name={TYPE_ICON[pt.id] ?? "home"}
               size={14}
-              color={isActive ? "#0A1628" : colors.mutedForeground}
+              color={isActive ? "#0A1628" : (glass ? "rgba(255,255,255,0.85)" : colors.mutedForeground)}
             />
-            <Text style={[s.pillText, isActive && s.pillTextActive]}>
+            <Text style={[s.pillText, glass && s.glassPillText, isActive && s.pillTextActive]}>
               {isAr ? pt.labelAr : pt.labelEn}
             </Text>
           </Pressable>
@@ -462,15 +462,18 @@ function makeStyles(
       position:        "absolute",
       left:            0,
       right:           0,
-      top:             topPad + 80,
-      backgroundColor: "rgba(8, 16, 34, 0.70)",
+      top:             topPad + 96,
+      backgroundColor: "rgba(8, 16, 34, 0.72)",
       borderBottomWidth: 1,
-      borderBottomColor: "rgba(255,255,255,0.08)",
+      borderBottomColor: "rgba(255,255,255,0.10)",
       zIndex:          9,
     },
     glassPill: {
-      backgroundColor: "rgba(255,255,255,0.10)",
-      borderColor:     "rgba(255,255,255,0.18)",
+      backgroundColor: "rgba(255,255,255,0.12)",
+      borderColor:     "rgba(255,255,255,0.22)",
+    },
+    glassPillText: {
+      color: "rgba(255,255,255,0.90)",
     },
     glassListBtn: {
       position:          "absolute",

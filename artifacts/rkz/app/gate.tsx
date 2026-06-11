@@ -1,11 +1,10 @@
-import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { Redirect, router } from "expo-router";
-import React from "react";
+import { router } from "expo-router";
+import React, { useRef } from "react";
 import {
+  Animated,
   Dimensions,
   Image,
-  Platform,
   Pressable,
   StatusBar,
   StyleSheet,
@@ -15,19 +14,90 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useApp } from "@/context/AppContext";
-import { useLocale } from "@/hooks/useLocale";
 
-const LOGO = require("@/assets/images/rozoz-logo-eagle.png");
+const LOGO  = require("@/assets/images/rozoz-logo-eagle.png");
+const NAVY  = "#0A1628";
+const GOLD  = "#C9A84C";
+const WHITE = "#F5F0E8";
 const { width } = Dimensions.get("window");
 const LOGO_W = Math.min(width * 0.52, 220);
 const LOGO_H = Math.round(LOGO_W / 2.6);
 
-const NAVY  = "#0A1628";
-const GOLD  = "#C9A84C";
-const WHITE = "#F5F0E8";
+const ROLES = [
+  {
+    id:   "buyer"  as const,
+    icon: "🗺️",
+    ar:   "سائح / زائر",
+    sub:  "أستكشف العقارات المتاحة",
+  },
+  {
+    id:   "owner"  as const,
+    icon: "🏠",
+    ar:   "مستأجر",
+    sub:  "أبحث عن وحدة للإيجار",
+  },
+  {
+    id:   "seller" as const,
+    icon: "🏢",
+    ar:   "مالك / مستثمر",
+    sub:  "أريد نشر أو إدارة عقاراتي",
+  },
+];
 
 export default function GateScreen() {
-  return <Redirect href="/(tabs)" />;
+  const insets = useSafeAreaInsets();
+  const { setSelectedRole } = useApp();
+
+  const fadeAnim  = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(24)).current;
+
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim,  { toValue: 1, duration: 420, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 420, useNativeDriver: true }),
+    ]).start();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function choose(role: "buyer" | "seller" | "owner") {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSelectedRole(role);
+    router.replace("/(tabs)");
+  }
+
+  return (
+    <View style={[s.root, { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 24 }]}>
+      <StatusBar barStyle="light-content" backgroundColor={NAVY} />
+
+      {/* Logo */}
+      <Animated.View style={{ opacity: fadeAnim, alignItems: "center", marginBottom: 8 }}>
+        <Image source={LOGO} style={{ width: LOGO_W, height: LOGO_H }} resizeMode="contain" />
+      </Animated.View>
+
+      {/* Heading */}
+      <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], alignItems: "center", marginBottom: 32 }}>
+        <Text style={s.prompt}>كيف تريد الاستفادة؟</Text>
+        <Text style={s.sub}>اختر ما يناسب وضعك للمتابعة</Text>
+      </Animated.View>
+
+      {/* Role cards */}
+      <Animated.View style={[s.cards, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        {ROLES.map((r) => (
+          <Pressable
+            key={r.id}
+            style={({ pressed }) => [s.card, pressed && s.cardPressed]}
+            onPress={() => choose(r.id)}
+          >
+            <Text style={s.cardIcon}>{r.icon}</Text>
+            <View style={s.cardText}>
+              <Text style={s.cardTitle}>{r.ar}</Text>
+              <Text style={s.cardSub}>{r.sub}</Text>
+            </View>
+            <Text style={s.arrow}>‹</Text>
+          </Pressable>
+        ))}
+      </Animated.View>
+    </View>
+  );
 }
 
 const s = StyleSheet.create({
@@ -36,94 +106,69 @@ const s = StyleSheet.create({
     backgroundColor: NAVY,
     alignItems:      "center",
     justifyContent:  "center",
-    paddingHorizontal: 22,
-  },
-
-  logoWrap: {
-    alignItems:   "center",
-    marginBottom: 40,
-  },
-  tagline: {
-    color:       "rgba(245,240,232,0.40)",
-    fontSize:    12,
-    fontFamily:  "Inter_400Regular",
-    marginTop:   8,
-    textAlign:   "center",
-    letterSpacing: 0.3,
+    paddingHorizontal: 24,
   },
 
   prompt: {
-    color:        WHITE,
-    fontSize:     22,
-    fontFamily:   "Inter_700Bold",
-    textAlign:    "center",
-    marginBottom: 8,
+    color:         WHITE,
+    fontSize:      24,
+    fontFamily:    "Inter_700Bold",
+    textAlign:     "center",
+    marginBottom:  8,
   },
-  promptSub: {
-    color:        "rgba(245,240,232,0.45)",
-    fontSize:     13,
-    fontFamily:   "Inter_400Regular",
-    textAlign:    "center",
-    marginBottom: 36,
+  sub: {
+    color:      "rgba(245,240,232,0.50)",
+    fontSize:   13,
+    fontFamily: "Inter_400Regular",
+    textAlign:  "center",
   },
 
   cards: {
-    flexDirection: "row",
-    gap:           14,
-    width:         "100%",
-    marginBottom:  28,
+    width:  "100%",
+    maxWidth: 400,
+    gap:    14,
   },
+
   card: {
-    flex:              1,
-    backgroundColor:   "rgba(255,255,255,0.05)",
-    borderWidth:       1.5,
-    borderColor:       "rgba(255,255,255,0.10)",
-    borderRadius:      20,
-    alignItems:        "center",
-    paddingVertical:   24,
-    paddingHorizontal: 14,
-    gap:               10,
+    flexDirection:   "row",
+    alignItems:      "center",
+    gap:             14,
+    backgroundColor: "rgba(201,168,76,0.08)",
+    borderWidth:     1,
+    borderColor:     "rgba(201,168,76,0.28)",
+    borderRadius:    18,
+    paddingHorizontal: 20,
+    paddingVertical:   18,
   },
   cardPressed: {
-    backgroundColor: "rgba(255,255,255,0.10)",
+    backgroundColor: "rgba(201,168,76,0.18)",
     borderColor:     GOLD,
   },
-  iconCircle: {
-    width:          68,
-    height:         68,
-    borderRadius:   18,
-    alignItems:     "center",
-    justifyContent: "center",
-    marginBottom:   4,
+
+  cardIcon: {
+    fontSize: 28,
+    width:    40,
+    textAlign: "center",
   },
+  cardText: { flex: 1 },
   cardTitle: {
     color:      WHITE,
     fontSize:   16,
     fontFamily: "Inter_700Bold",
-    textAlign:  "center",
+    textAlign:  "right",
+    marginBottom: 3,
   },
-  cardDesc: {
+  cardSub: {
     color:      "rgba(245,240,232,0.50)",
     fontSize:   12,
     fontFamily: "Inter_400Regular",
-    textAlign:  "center",
-    lineHeight: 18,
-  },
-  cardTag: {
-    flexDirection: "row",
-    alignItems:    "center",
-    gap:           4,
-    marginTop:     4,
-  },
-  cardTagText: {
-    fontSize:   11,
-    fontFamily: "Inter_500Medium",
+    textAlign:  "right",
   },
 
-  footer: {
-    color:      "rgba(245,240,232,0.25)",
-    fontSize:   11,
-    fontFamily: "Inter_400Regular",
-    textAlign:  "center",
+  arrow: {
+    color:    GOLD,
+    fontSize: 22,
+    lineHeight: 24,
+    fontFamily: "Inter_700Bold",
   },
 });

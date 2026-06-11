@@ -82,8 +82,10 @@ export default function WelcomeScreen() {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const TAB_H = 80;
+
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingBottom: TAB_H }]}>
       <StatusBar barStyle="light-content" backgroundColor={BG_DARK} />
 
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: bgOpacity }]}>

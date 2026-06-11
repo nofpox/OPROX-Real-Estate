@@ -67,7 +67,7 @@ export default function LanguageSelectScreen() {
   function choose(lang: "ar" | "en") {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setAppLang(lang);
-    router.replace("/(tabs)");
+    router.replace("/gate");
   }
 
   const topPad = insets.top + (Platform.OS === "web" ? 20 : 0);
