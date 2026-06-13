@@ -4,7 +4,6 @@ import { Tabs, router } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import { MaterialIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useCallback, useEffect } from "react";
 import {
   Platform,
@@ -20,15 +19,11 @@ import Animated, {
   withSequence,
   withSpring,
   withTiming,
-  interpolate,
-  Extrapolation,
 } from "react-native-reanimated";
 
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
-
-const DISCOVERY_FILTER_KEY = "rozoz_discovery_filter";
 
 let sessionWelcomeShown = false;
 const RESTRICTED_TABS = ["add", "listings", "ai-concierge"];
@@ -398,7 +393,3 @@ const tb = StyleSheet.create({
   },
 });
 
-void AsyncStorage;
-void DISCOVERY_FILTER_KEY;
-void interpolate;
-void Extrapolation;
