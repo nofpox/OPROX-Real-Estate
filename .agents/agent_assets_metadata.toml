@@ -269,3 +269,9 @@ id = "uRRtyv-eZmDneHGxhve92"
 uri = "file://exports/rozoz-studies.zip"
 type = "unspecified"
 title = "الدراسات الثلاث — rozoz-studies.zip"
+
+[[outputs]]
+id = "VtDmT3g6JJ5ax-qmJ2DUp"
+uri = "file://artifacts/realestate-portal/public/rozoz-studies.zip"
+type = "unspecified"
+title = "الدراسات الثلاث — rozoz-studies.zip"
