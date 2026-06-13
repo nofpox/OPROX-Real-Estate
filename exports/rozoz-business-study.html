@@ -543,10 +543,22 @@
       .page { box-shadow: none !important; border-radius: 0 !important; margin: 0 !important; max-width: 100% !important; }
       .footer { position: fixed; bottom: 0; width: 100%; }
       @page { size: A4; margin: 10mm; }
+      .print-btn { display: none !important; }
     }
+  .print-btn {
+    position: fixed; bottom: 28px; left: 28px; z-index: 9999;
+    background: linear-gradient(135deg,#0f2044,#2355a0);
+    color: #fff; border: none; border-radius: 50px;
+    padding: 14px 28px; font-size: 16px; font-weight: 700;
+    cursor: pointer; box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+    font-family: 'Cairo', sans-serif; direction: rtl;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .print-btn:hover { background: linear-gradient(135deg,#1a3a6b,#3366cc); transform: scale(1.04); }
   </style>
 </head>
 <body>
+<button class="print-btn" onclick="window.print()">🖨️ حفظ كـ PDF</button>
 <div class="page">
 
   <!-- COVER -->
