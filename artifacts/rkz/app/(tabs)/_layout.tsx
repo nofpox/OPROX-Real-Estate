@@ -255,12 +255,12 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
         }}
       >
         {ordered.map((tab) => {
-          // In tourist mode: hide all tabs except explore from the bar.
-          // Use tabBarButton:()=>null instead of href:null so the router
-          // can still navigate to these screens without crashing.
+          // In tourist mode: hide all non-explore tabs visually via
+          // tabBarButton (keeps route accessible, no crash).
           const hideFromBar = isTourist && tab.name !== "explore";
-          // Settings is fully inaccessible when not permitted.
-          const hideCompletely = tab.name === "settings" && !canSeeSettings;
+          // Settings is fully inaccessible only in non-tourist mode when
+          // the user role can't see it. Never combine with hideFromBar.
+          const hideCompletely = !isTourist && tab.name === "settings" && !canSeeSettings;
 
           return (
             <Tabs.Screen
