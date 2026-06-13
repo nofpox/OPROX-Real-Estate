@@ -33,7 +33,7 @@ const PIN_TAP_THRESHOLD = 7;
 export default function SettingsScreen() {
   const colors  = useColors();
   const insets  = useSafeAreaInsets();
-  const { user, setUser, properties, appLang, setAppLang } = useApp();
+  const { user, setUser, properties, appLang, setAppLang, clearAppMode } = useApp();
   const { config } = useConfig();
   const { t, isAr } = useLocale();
 
@@ -92,7 +92,11 @@ export default function SettingsScreen() {
 
   function handleLogout() {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const doLogout = () => { setUser(null); router.replace("/(tabs)" as never); };
+    const doLogout = () => {
+      setUser(null);
+      clearAppMode();
+      router.replace("/mode-select" as never);
+    };
     // RN-Web's Alert.alert ignores custom buttons / onPress, so logout would
     // appear unresponsive on web. Use window.confirm there, native Alert elsewhere.
     if (Platform.OS === "web") {

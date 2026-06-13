@@ -186,11 +186,15 @@ export default function DiscoveryMapScreen() {
   const isDark      = colorScheme !== "light";
   const { t, isAr } = useLocale();
   const { config } = useConfig();
-  const { setUser } = useApp();
+  const { setUser, clearAppMode } = useApp();
 
   const handleLogout = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const doLogout = () => { setUser(null); router.replace("/(tabs)" as never); };
+    const doLogout = () => {
+      setUser(null);
+      clearAppMode();
+      router.replace("/mode-select" as never);
+    };
     if (Platform.OS === "web") {
       const ok = typeof window !== "undefined" ? window.confirm("هل تريد تسجيل الخروج؟") : true;
       if (ok) doLogout();

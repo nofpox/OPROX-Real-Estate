@@ -344,10 +344,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setProperties(SEED_PROPERTIES);
       }
 
-      if (savedMode.status === "fulfilled") {
-        const m = savedMode.value;
-        if (m === "tourist" || m === "registered") setAppModeState(m);
-      }
+      // appMode is intentionally session-only — not restored from storage.
+      // Every fresh app launch starts with null → mode-select is shown.
 
       if (savedRole.status === "fulfilled") {
         const r = savedRole.value;
@@ -412,12 +410,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const setAppMode = useCallback((mode: "tourist" | "registered") => {
     setAppModeState(mode);
-    void AsyncStorage.setItem(APP_MODE_KEY, mode);
   }, []);
 
   const clearAppMode = useCallback(() => {
     setAppModeState(null);
-    void AsyncStorage.removeItem(APP_MODE_KEY);
   }, []);
 
   const setSelectedRole = useCallback((r: "buyer" | "seller" | "owner") => {
