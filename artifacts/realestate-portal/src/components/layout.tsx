@@ -204,11 +204,22 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </ul>
         </div>
 
-        {/* Legal bar — copyright only, no nav links */}
+        {/* Legal bar — copyright + legal links */}
         <div className="border-t border-primary-foreground/10">
-          <div className="container mx-auto px-4 py-4 text-center text-xs text-primary-foreground/40">
-            © {new Date().getFullYear()} {isRtl ? branding.companyNameAr : branding.companyNameEn}.{' '}
-            {isRtl ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
+          <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-primary-foreground/40">
+            <span>
+              © {new Date().getFullYear()} {isRtl ? branding.companyNameAr : branding.companyNameEn}.{' '}
+              {isRtl ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
+            </span>
+            <div className="flex items-center gap-4">
+              <Link href="/privacy" className="hover:text-secondary transition-colors">
+                {isRtl ? 'سياسة الخصوصية' : 'Privacy Policy'}
+              </Link>
+              <span className="opacity-40">·</span>
+              <Link href="/terms" className="hover:text-secondary transition-colors">
+                {isRtl ? 'الشروط والأحكام' : 'Terms & Conditions'}
+              </Link>
+            </div>
           </div>
         </div>
       </footer>

@@ -24,6 +24,8 @@ import { About } from "@/pages/about";
 import { PortalRegister } from "@/pages/portal-register";
 import { BuyerDashboard } from "@/pages/buyer-dashboard";
 import { PreviewToken } from "@/pages/preview-token";
+import { Privacy } from "@/pages/privacy";
+import { Terms } from "@/pages/terms";
 import { ScreenGuard } from "@/components/ScreenGuard";
 
 const queryClient = new QueryClient({
@@ -57,6 +59,9 @@ function Router() {
       <Route path="/portal/dashboard" component={PortalDashboard} />
       {/* Secure temporary preview links (public, no auth) */}
       <Route path="/preview/:token" component={PreviewToken} />
+      {/* Legal pages */}
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
       <Route component={NotFound} />
     </Switch>
   );

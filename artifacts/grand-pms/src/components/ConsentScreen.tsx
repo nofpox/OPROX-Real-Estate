@@ -1,41 +1,71 @@
 import { useState } from "react";
-import { ExternalLink } from "lucide-react";
 
 const EULA_KEY     = "gms_eula";
 const EULA_VERSION = "v1.0";
 
-const SECTIONS = [
+const TERMS_SECTIONS = [
   {
-    title: "١. الموافقة على الشروط",
-    body: 'بمجرد قيام المستخدم بالتسجيل في تطبيق "رزوز الرقمية" واستخدامه، فإن ذلك يعد موافقة صريحة منه على جميع بنود هذه الشروط والأحكام. وفي حال عدم الموافقة، يجب على المستخدم الامتناع عن استخدام التطبيق.',
+    num: "١ · 1",
+    ar: "الموافقة على الشروط",
+    en: "Acceptance of Terms",
+    body: "بمجرد قيام المستخدم بالتسجيل في منصة \"رزوز\" واستخدامها، فإن ذلك يعد موافقة صريحة على جميع بنود هذه الشروط. By registering and using ROZOZ, the user expressly agrees to all these Terms.",
   },
   {
-    title: "٢. طبيعة الخدمة",
-    body: "يوفر التطبيق منصة إلكترونية لإدارة وتوثيق العقود الإيجارية وإرسال التنبيهات المتعلقة بالدفع. تؤكد الشركة بأنها تعمل كوسيط تقني فقط، ولا تتحمل أي مسؤولية قانونية أو تعاقدية تنشأ بين المؤجر والمستأجر أو البائع والمشتري.",
+    num: "٢ · 2",
+    ar: "طبيعة الخدمة",
+    en: "Nature of Service",
+    body: "توفر رزوز منصة إلكترونية لإدارة العقارات وتوثيق العقود وإرسال التنبيهات. تعمل الشركة كوسيط تقني فقط. ROZOZ provides an electronic platform for property management and lease documentation. The company acts as a technology intermediary only.",
   },
   {
-    title: "٣. إنشاء الحساب والالتزامات",
-    body: "يلتزم المستخدم بتقديم بيانات صحيحة وكاملة عند التسجيل عبر نفاذ أو رقم الجوال. يتحمل المستخدم المسؤولية الكاملة عن سرية بيانات الدخول الخاصة به. يحظر إنشاء أكثر من حساب واحد لنفس المستخدم.",
+    num: "٣ · 3",
+    ar: "إنشاء الحساب والالتزامات",
+    en: "Account Creation & Obligations",
+    body: "يلتزم المستخدم بتقديم بيانات صحيحة وكاملة. يتحمل المسؤولية الكاملة عن سرية بيانات الدخول. يحظر إنشاء أكثر من حساب واحد. The user must provide accurate data and is fully responsible for the confidentiality of their login credentials.",
   },
   {
-    title: "٤. استخدام التطبيق المحظور",
-    body: "يلتزم المستخدم بعدم استخدام التطبيق لأي أغراض مخالفة للأنظمة واللوائح المعمول بها في المملكة العربية السعودية. كما يحظر القيام بأي محاولات للوصول غير المصرح به أو اختراق الأنظمة أو سرقة بيانات المستخدمين الآخرين. تحتفظ الشركة بحق إيقاف أو إنهاء الحساب فوراً في حال المخالفة.",
+    num: "٤ · 4",
+    ar: "الاستخدام المحظور",
+    en: "Prohibited Use",
+    body: "يحظر استخدام المنصة لأي أغراض مخالفة للأنظمة السعودية، أو محاولات الاختراق أو الوصول غير المصرح به. Use of the platform for any purpose contrary to Saudi regulations, hacking attempts, or unauthorised access is strictly prohibited.",
   },
   {
-    title: "٥. الرسوم والاشتراكات",
-    body: "في حال توفر خدمات مدفوعة، فإن الدفع يتم مقدماً وبطرق إلكترونية معتمدة. تحتفظ الشركة بحق تعديل الرسوم والأسعار في أي وقت، على أن لا يسري التعديل على الاشتراكات المدفوعة مسبقاً إلا بعد انتهاء مدتها.",
+    num: "٥ · 5",
+    ar: "حقوق الملكية الفكرية",
+    en: "Intellectual Property",
+    body: "جميع حقوق المنصة من تصميم وشفرة وشعار ومحتوى ملك حصري للشركة. يحظر نسخها دون إذن خطي. All rights to the platform's design, code, logo and content are the exclusive property of the company.",
   },
   {
-    title: "٦. حقوق الملكية الفكرية",
-    body: 'جميع الحقوق المتعلقة بتطبيق "رزوز الرقمية" من تصميم وشفرة برمجية وشعار ومحتوى هي ملك حصري للشركة. يحظر نسخ أو إعادة توزيع أو تعديل أي جزء من التطبيق دون الحصول على موافقة خطية مسبقة.',
+    num: "٦ · 6",
+    ar: "إخلاء المسؤولية",
+    en: "Disclaimer",
+    body: "لا تقدم الشركة ضمانات صريحة أو ضمنية بخصوص توفر المنصة أو خلوها من الأخطاء. The company provides no express or implied warranties as to platform availability or freedom from errors.",
+  },
+];
+
+const PRIVACY_SECTIONS = [
+  {
+    num: "١ · 1",
+    ar: "البيانات التي نجمعها",
+    en: "Data We Collect",
+    body: "رقم الجوال، الاسم، البريد الإلكتروني (اختياري)، بيانات الإعلانات، سجلات النشاط لتحسين الخدمة. Mobile number, name, email (optional), listing data, and activity logs to improve the service.",
   },
   {
-    title: "٧. إنهاء وإيقاف الحساب",
-    body: "يحق للمستخدم طلب إغلاق حسابه في أي وقت من خلال الإعدادات. كما يحق للشركة إيقاف أو إنهاء حساب المستخدم دون إشعار مسبق ودون أي تعويض في حال ثبوت مخالفته لهذه الشروط.",
+    num: "٢ · 2",
+    ar: "كيف نستخدم بياناتك",
+    en: "How We Use Your Data",
+    body: "تشغيل الخدمات، إدارة الحساب، عرض الإعلانات للمستخدمين المناسبين، إرسال الإشعارات. Operating services, managing accounts, displaying listings to relevant users, sending notifications.",
   },
   {
-    title: "٨. إخلاء المسؤولية",
-    body: "تبذل الشركة قصارى جهدها لضمان استمرارية عمل التطبيق دون انقطاع، إلا أنها لا تقدم أي ضمانات صريحة أو ضمنية بخصوص توفره أو خلوه من الأخطاء. لا تتحمل الشركة المسؤولية عن أي أضرار مباشرة أو غير مباشرة ناتجة عن استخدام التطبيق.",
+    num: "٣ · 3",
+    ar: "مشاركة البيانات",
+    en: "Data Sharing",
+    body: "لا نبيع بياناتك لأي طرف ثالث. قد نشارك بيانات مجهولة الهوية لأغراض تحسين الخدمة فقط. We do not sell your data. We may share anonymised data with technology partners for improvement purposes only.",
+  },
+  {
+    num: "٤ · 4",
+    ar: "أمان البيانات وحقوقك",
+    en: "Data Security & Your Rights",
+    body: "نستخدم تشفير SSL/TLS. يحق لك الاطلاع على بياناتك أو تصحيحها أو طلب حذفها في أي وقت. We use SSL/TLS encryption. You have the right to access, correct or delete your data at any time.",
   },
 ];
 
@@ -46,13 +76,14 @@ export function ConsentScreen({
   userId: number | string;
   onAccept: () => void;
 }) {
-  const [checked, setChecked] = useState(false);
-  const [error, setError]     = useState("");
-  const [termsOpen, setTermsOpen] = useState(false);
+  const [checked, setChecked]       = useState(false);
+  const [error, setError]           = useState("");
+  const [termsOpen, setTermsOpen]   = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   function handleAccept() {
     if (!checked) {
-      setError("يجب الموافقة على الشروط والأحكام أولاً");
+      setError("يجب الموافقة على الشروط والأحكام أولاً · You must agree to the Terms first");
       return;
     }
     const record = {
@@ -65,8 +96,8 @@ export function ConsentScreen({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0A1628] p-4" dir="rtl">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[#0A1628] p-4">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
 
         {/* Header */}
         <div className="bg-[#0A1628] px-8 py-8 text-center">
@@ -74,46 +105,67 @@ export function ConsentScreen({
             <span className="text-3xl">🏠</span>
           </div>
           <h1 className="text-white font-bold text-xl">أهلاً في رزوز الرقمية</h1>
-          <p className="text-white/50 text-sm mt-1">يرجى مراجعة الشروط قبل المتابعة</p>
+          <p className="text-[#C9A84C] text-sm mt-0.5 tracking-wide">Welcome to ROZOZ</p>
+          <p className="text-white/50 text-xs mt-2">يرجى مراجعة الشروط قبل المتابعة · Please review the terms before continuing</p>
         </div>
 
         {/* Body */}
-        <div className="px-8 py-6 space-y-5">
+        <div className="px-8 py-6 space-y-4">
 
           {/* Terms accordion */}
           <div className="border border-gray-200 rounded-xl overflow-hidden">
             <button
               onClick={() => setTermsOpen(v => !v)}
-              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors text-sm font-semibold text-gray-700"
+              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
             >
-              <span>الشروط والأحكام كاملة</span>
+              <span className="text-xs text-gray-500">Terms &amp; Conditions</span>
+              <span className="font-semibold text-sm text-gray-700">الشروط والأحكام</span>
               <span className="text-gray-400 text-xs">{termsOpen ? "▲" : "▼"}</span>
             </button>
             {termsOpen && (
-              <div className="px-4 py-4 space-y-4 max-h-64 overflow-y-auto">
-                {SECTIONS.map(s => (
-                  <div key={s.title}>
-                    <p className="font-semibold text-gray-800 text-sm mb-1">{s.title}</p>
-                    <p className="text-gray-600 text-sm leading-6">{s.body}</p>
+              <div className="px-4 py-4 space-y-4 max-h-64 overflow-y-auto bg-gray-50/50" dir="rtl">
+                {TERMS_SECTIONS.map(s => (
+                  <div key={s.num} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-bold bg-[#0A1628] text-[#C9A84C] rounded px-1.5 py-0.5">{s.num}</span>
+                      <span className="font-semibold text-gray-800 text-sm">{s.ar}</span>
+                      <span className="text-gray-400 text-xs">· {s.en}</span>
+                    </div>
+                    <p className="text-gray-600 text-xs leading-5">{s.body}</p>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Privacy link */}
-          <a
-            href="https://rozoz.com/privacy"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 text-[#2563EB] text-sm hover:underline"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            سياسة الخصوصية
-          </a>
+          {/* Privacy accordion */}
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setPrivacyOpen(v => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <span className="text-xs text-gray-500">Privacy Policy</span>
+              <span className="font-semibold text-sm text-gray-700">سياسة الخصوصية</span>
+              <span className="text-gray-400 text-xs">{privacyOpen ? "▲" : "▼"}</span>
+            </button>
+            {privacyOpen && (
+              <div className="px-4 py-4 space-y-4 max-h-64 overflow-y-auto bg-gray-50/50" dir="rtl">
+                {PRIVACY_SECTIONS.map(s => (
+                  <div key={s.num} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-bold bg-[#0A1628] text-[#C9A84C] rounded px-1.5 py-0.5">{s.num}</span>
+                      <span className="font-semibold text-gray-800 text-sm">{s.ar}</span>
+                      <span className="text-gray-400 text-xs">· {s.en}</span>
+                    </div>
+                    <p className="text-gray-600 text-xs leading-5">{s.body}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Checkbox */}
-          <label className="flex items-start gap-3 cursor-pointer select-none">
+          <label className="flex items-start gap-3 cursor-pointer select-none pt-1" dir="rtl">
             <div
               onClick={() => { setChecked(v => !v); setError(""); }}
               className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors cursor-pointer ${
@@ -130,12 +182,13 @@ export function ConsentScreen({
             </div>
             <span className="text-gray-700 text-sm leading-6">
               أوافق على الشروط والأحكام وسياسة الخصوصية لمنصة رزوز الرقمية
+              <span className="block text-gray-400 text-xs mt-0.5">I agree to the Terms &amp; Conditions and Privacy Policy of ROZOZ</span>
             </span>
           </label>
 
-          {/* Inline error */}
+          {/* Error */}
           {error && (
-            <p className="text-red-600 text-xs">{error}</p>
+            <p className="text-red-600 text-xs text-center">{error}</p>
           )}
 
           {/* Accept button */}
@@ -147,7 +200,8 @@ export function ConsentScreen({
                 : "bg-gray-100 text-gray-400 cursor-default"
             }`}
           >
-            موافق ومتابعة
+            <span className="block">موافق ومتابعة</span>
+            <span className="block text-xs opacity-70 font-normal mt-0.5">Agree &amp; Continue</span>
           </button>
 
         </div>
