@@ -5,7 +5,7 @@
 // Users whose phone matches any entry here get the full Admin Dashboard.
 // ─────────────────────────────────────────────────────────────────────────────
 export const ADMIN_PHONES: string[] = [
-  // "0501234567",   ← uncomment and replace with your phone number
+  "0555976444",
 ];
 
 // DynamicConfig master override PIN — always bypasses the secondary PIN gate
