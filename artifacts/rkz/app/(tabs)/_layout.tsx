@@ -96,7 +96,9 @@ function ActiveDot({ focused, color }: { focused: boolean; color: string }) {
   }));
 
   return (
-    <Animated.View style={[style, { width: 4, height: 4, borderRadius: 2, backgroundColor: color, marginTop: 3 }]} />
+    <Animated.View
+      style={[style, { width: 4, height: 4, borderRadius: 2, backgroundColor: color, marginTop: 3 }]}
+    />
   );
 }
 
@@ -114,14 +116,15 @@ function TouristExitButton() {
   return (
     <Pressable
       onPress={handleExit}
-      style={({ pressed }) => [
+      style={[
         tb.exitBtn,
-        { backgroundColor: isDark ? "rgba(30,18,18,0.95)" : "rgba(255,245,245,0.95)" },
-        pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] },
+        { backgroundColor: isDark ? "rgba(28,12,12,0.96)" : "rgba(255,244,244,0.96)" },
       ]}
     >
-      <MaterialIcons name="logout" size={18} color="#FF4D4D" />
-      <Text style={[tb.exitText, { color: isDark ? "#FF6B6B" : "#D93030" }]}>خروج</Text>
+      <MaterialIcons name="logout" size={17} color="#FF4D4D" />
+      <Text style={[tb.exitText, { color: isDark ? "#FF6B6B" : "#CC2222" }]}>
+        خروج
+      </Text>
     </Pressable>
   );
 }
@@ -134,8 +137,8 @@ function NativeTabLayout({ requireAuth: _requireAuth }: { requireAuth: (action: 
   const canSeeSettings = !!user && selectedRole !== "buyer" && !isTourist;
 
   const allTriggers = [
-    ...(!isTourist ? [{ name: "index",    sf: { default: "map", selected: "map.fill" }, label: t.tabs.home }] : []),
-    { name: "explore", sf: { default: "safari", selected: "safari.fill" }, label: t.tabs.explore },
+    { name: "index",    sf: { default: "map",    selected: "map.fill"    }, label: t.tabs.home    },
+    { name: "explore",  sf: { default: "safari",  selected: "safari.fill"  }, label: t.tabs.explore },
     ...(!isTourist ? [
       { name: "add",          sf: { default: "plus.circle",            selected: "plus.circle.fill"            }, label: t.tabs.add        },
       { name: "listings",     sf: { default: "list.bullet",            selected: "list.bullet.circle.fill"     }, label: t.tabs.listings   },
@@ -221,8 +224,6 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
 
   const ordered = isAr ? [...tabDefs].reverse() : tabDefs;
 
-  const TAB_H = isWeb ? 90 : 72;
-
   return (
     <>
       <Tabs
@@ -239,7 +240,7 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
             backgroundColor: "transparent",
             borderTopWidth:  0,
             elevation:       0,
-            height: isTourist ? TAB_H : TAB_H,
+            height:          isWeb ? 90 : 72,
           },
           tabBarBackground: () =>
             isIOS ? (
@@ -254,9 +255,12 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
         }}
       >
         {ordered.map((tab) => {
-          const isTouristHidden  = isTourist && tab.name !== "explore";
-          const isSettingsHidden = tab.name === "settings" && !canSeeSettings;
-          const isHidden = isTouristHidden || isSettingsHidden;
+          // In tourist mode: hide all tabs except explore from the bar.
+          // Use tabBarButton:()=>null instead of href:null so the router
+          // can still navigate to these screens without crashing.
+          const hideFromBar = isTourist && tab.name !== "explore";
+          // Settings is fully inaccessible when not permitted.
+          const hideCompletely = tab.name === "settings" && !canSeeSettings;
 
           return (
             <Tabs.Screen
@@ -264,7 +268,10 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
               name={tab.name}
               options={{
                 title: tab.title,
-                href: isHidden ? null : undefined,
+                href: hideCompletely ? null : undefined,
+                // Returning null from tabBarButton removes the item from the
+                // visible bar without blocking the route.
+                tabBarButton: hideFromBar ? () => null : undefined,
                 tabBarIcon: ({ color, focused }) => (
                   <View style={s.tabItem}>
                     <AnimatedTabIcon focused={focused}>
@@ -277,6 +284,12 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
               }}
               listeners={{
                 tabPress: (e) => {
+                  // Block tourist users from navigating away from explore.
+                  if (isTourist && tab.name !== "explore") {
+                    e.preventDefault();
+                    return;
+                  }
+                  // Require auth for restricted tabs.
                   if (!isTourist && RESTRICTED_TABS.includes(tab.name)) {
                     e.preventDefault();
                     requireAuth(() => router.navigate(`/(tabs)/${tab.name}` as never));
@@ -306,13 +319,19 @@ export default function TabLayout() {
       return;
     }
 
+    // No mode chosen → show mode selection
     if (appMode === null) {
       router.replace("/mode-select" as never);
       return;
     }
 
-    if (appMode === "tourist") return;
+    // Tourist: always land on explore tab (prevents default index crash)
+    if (appMode === "tourist") {
+      router.replace("/(tabs)/explore" as never);
+      return;
+    }
 
+    // Registered flow
     if (user && consentGiven === false) {
       router.replace("/consent" as never);
       return;
@@ -355,28 +374,27 @@ const s = StyleSheet.create({
 
 const tb = StyleSheet.create({
   exitBtn: {
-    position:    "absolute",
-    bottom:      90,
-    right:       20,
+    position: "absolute",
+    bottom:   96,
+    right:    18,
     flexDirection: "row",
-    alignItems:  "center",
-    gap:         6,
-    paddingVertical:   9,
-    paddingHorizontal: 16,
-    borderRadius: 22,
-    borderWidth:  1.5,
-    borderColor:  "rgba(255,77,77,0.35)",
-    shadowColor:  "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
-    elevation:    5,
-    zIndex:       999,
+    alignItems:    "center",
+    gap:           5,
+    paddingVertical:   8,
+    paddingHorizontal: 14,
+    borderRadius:  20,
+    borderWidth:   1.5,
+    borderColor:   "rgba(255,77,77,0.3)",
+    shadowColor:   "#000",
+    shadowOffset:  { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius:  5,
+    elevation:     6,
+    zIndex:        999,
   },
   exitText: {
     fontSize:   13,
     fontFamily: "Inter_600SemiBold",
-    letterSpacing: 0.3,
   },
 });
 
