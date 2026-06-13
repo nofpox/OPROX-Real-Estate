@@ -257,3 +257,9 @@ id = "vCCnPdR0fPSlkA0I9tKPj"
 uri = "file://artifacts/rkz/assets/images/rozoz-splash.png"
 type = "image"
 title = "شاشة الافتتاح – 2048×2732"
+
+[[outputs]]
+id = "HykN3oqTaYs98KqLXGcpf"
+uri = "file://exports/rozoz-studies.tar.gz"
+type = "unspecified"
+title = "الدراسات الثلاث — روزوز"
