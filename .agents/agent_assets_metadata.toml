@@ -24,18 +24,6 @@ uri = "file://artifacts/rkz/assets/images/icon-option-1.png"
 type = "image"
 title = "rozoz-icon-letter-R-gold"
 
-[[generated]]
-id = "diw4dIclOQ_Qd-B_-neNT"
-uri = "file://artifacts/rkz/assets/images/icon-option-2.png"
-type = "image"
-title = "rozoz-icon-house-pin-gold"
-
-[[generated]]
-id = "rzueFy8FMVvpRYpK6Q6Wt"
-uri = "file://artifacts/rkz/assets/images/icon-option-3.png"
-type = "image"
-title = "rozoz-icon-crescent-building"
-
 [[outputs]]
 id = "jCktAW9goz3sn4e0SeBUs"
 uri = "file://artifacts/rkz/qr.png"
@@ -227,30 +215,6 @@ id = "nBGGnZAV305RTd7essUCK"
 uri = "file://attached_assets/generated_audio/saudi_option3_qanun.mp3"
 type = "audio"
 title = "خيار 3 — قانون وأوركسترا (رؤية 2030)"
-
-[[outputs]]
-id = "4lNmVxGu8dY_QQH7abm8z"
-uri = "file://attached_assets/generated_audio/rozoz_wind_intro.mp3"
-type = "audio"
-title = "صوت الريح — مقدمة الفيلم"
-
-[[outputs]]
-id = "dppJSAdww8RPd2NwD3Qwl"
-uri = "file://attached_assets/generated_audio/voice_test_george.mp3"
-type = "audio"
-title = "صوت 1 — George (دافئ، راوي)"
-
-[[outputs]]
-id = "0cRLZW5VS7oqOgWoFX1WD"
-uri = "file://attached_assets/generated_audio/voice_test_daniel.mp3"
-type = "audio"
-title = "صوت 2 — Daniel (مذيع هادئ)"
-
-[[outputs]]
-id = "SvZHLqfmHvhpBwtCtB11C"
-uri = "file://attached_assets/generated_audio/voice_test_bill.mp3"
-type = "audio"
-title = "صوت 3 — Bill (حكيم، ناضج)"
 
 [[outputs]]
 id = "R2DVBL_tDoNFs0tuKcQZh"
