@@ -263,3 +263,9 @@ id = "HykN3oqTaYs98KqLXGcpf"
 uri = "file://exports/rozoz-studies.tar.gz"
 type = "unspecified"
 title = "الدراسات الثلاث المحدَّثة — روزوز"
+
+[[outputs]]
+id = "uRRtyv-eZmDneHGxhve92"
+uri = "file://exports/rozoz-studies.zip"
+type = "unspecified"
+title = "الدراسات الثلاث — rozoz-studies.zip"
