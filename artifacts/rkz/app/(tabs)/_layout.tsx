@@ -8,7 +8,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useCallback, useEffect } from "react";
 import {
   Platform,
+  Pressable,
   StyleSheet,
+  Text,
   View,
   useColorScheme,
 } from "react-native";
@@ -137,19 +139,89 @@ function ActiveDot({ focused, color }: { focused: boolean; color: string }) {
   );
 }
 
+// ── Tourist bottom bar (only explore + exit) ──────────────────────────────────
+function TouristBar() {
+  const { clearAppMode } = useApp();
+  const colors      = useColors();
+  const colorScheme = useColorScheme();
+  const isDark      = colorScheme === "dark";
+  const isIOS       = Platform.OS === "ios";
+
+  const handleExit = () => {
+    clearAppMode();
+    router.replace("/mode-select" as never);
+  };
+
+  return (
+    <View style={tb.wrap}>
+      {isIOS ? (
+        <BlurView
+          intensity={85}
+          tint={isDark ? "dark" : "light"}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: isDark ? "rgba(12,18,30,0.94)" : "rgba(255,255,255,0.94)" },
+          ]}
+        />
+      )}
+
+      {/* top border */}
+      <View style={[tb.topLine, { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }]} />
+
+      <View style={tb.row}>
+        {/* Explore */}
+        <Pressable
+          onPress={() => router.navigate("/(tabs)/explore" as never)}
+          style={tb.btn}
+        >
+          {isIOS
+            ? <SymbolView name="safari.fill" tintColor={colors.gold} size={28} />
+            : <MaterialIcons name="explore" size={28} color={colors.gold} />
+          }
+          <Text style={[tb.label, { color: colors.gold, fontFamily: "Inter_700Bold" }]}>
+            استكشف
+          </Text>
+          <View style={[tb.dot, { backgroundColor: colors.gold }]} />
+        </Pressable>
+
+        {/* Divider */}
+        <View style={[tb.divider, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }]} />
+
+        {/* Exit */}
+        <Pressable onPress={handleExit} style={tb.btn}>
+          {isIOS
+            ? <SymbolView name="xmark.circle" tintColor="#FF4D4D" size={28} />
+            : <MaterialIcons name="logout" size={28} color="#FF4D4D" />
+          }
+          <Text style={[tb.label, { color: "#FF4D4D", fontFamily: "Inter_500Medium" }]}>
+            خروج
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 // ── Native (iOS Liquid Glass) tab layout ──────────────────────────────────────
 function NativeTabLayout({ requireAuth: _requireAuth }: { requireAuth: (action: () => void) => void }) {
   const { t, isAr } = useLocale();
-  const { user, selectedRole } = useApp();
-  const canSeeSettings = !!user && selectedRole !== "buyer";
+  const { user, selectedRole, appMode } = useApp();
+  const isTourist = appMode === "tourist";
+  const canSeeSettings = !!user && selectedRole !== "buyer" && !isTourist;
 
   const allTriggers = [
     { name: "index",        sf: { default: "map",                    selected: "map.fill"                    }, label: t.tabs.home       },
     { name: "explore",      sf: { default: "safari",                 selected: "safari.fill"                 }, label: t.tabs.explore    },
-    { name: "add",          sf: { default: "plus.circle",            selected: "plus.circle.fill"            }, label: t.tabs.add        },
-    { name: "listings",     sf: { default: "list.bullet",            selected: "list.bullet.circle.fill"     }, label: t.tabs.listings   },
-    { name: "ai-concierge", sf: { default: "wrench.and.screwdriver", selected: "wrench.and.screwdriver.fill" }, label: t.tabs.myRequests },
-    ...(canSeeSettings ? [{ name: "settings", sf: { default: "gearshape", selected: "gearshape.fill" }, label: t.tabs.settings }] : []),
+    ...(!isTourist ? [
+      { name: "add",          sf: { default: "plus.circle",            selected: "plus.circle.fill"            }, label: t.tabs.add        },
+      { name: "listings",     sf: { default: "list.bullet",            selected: "list.bullet.circle.fill"     }, label: t.tabs.listings   },
+      { name: "ai-concierge", sf: { default: "wrench.and.screwdriver", selected: "wrench.and.screwdriver.fill" }, label: t.tabs.myRequests },
+      ...(canSeeSettings ? [{ name: "settings", sf: { default: "gearshape", selected: "gearshape.fill" }, label: t.tabs.settings }] : []),
+    ] : []),
   ];
 
   const ordered = isAr ? [...allTriggers].reverse() : allTriggers;
@@ -172,11 +244,12 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
   const colors      = useColors();
   const colorScheme = useColorScheme();
   const { t, isAr } = useLocale();
-  const { user, selectedRole } = useApp();
+  const { user, selectedRole, appMode } = useApp();
   const isDark = colorScheme === "dark";
   const isIOS  = Platform.OS === "ios";
   const isWeb  = Platform.OS === "web";
-  const canSeeSettings = !!user && selectedRole !== "buyer";
+  const isTourist = appMode === "tourist";
+  const canSeeSettings = !!user && selectedRole !== "buyer" && !isTourist;
 
   const tabDefs = [
     {
@@ -232,75 +305,85 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
   const ordered = isAr ? [...tabDefs].reverse() : tabDefs;
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        lazy: false,
-        tabBarActiveTintColor:   colors.gold,
-        tabBarInactiveTintColor: isDark ? "rgba(255,255,255,0.70)" : "rgba(0,0,0,0.55)",
-        tabBarHideOnKeyboard: true,
-        tabBarShowLabel: false,
-        tabBarItemStyle: { flex: 1, justifyContent: "center", alignItems: "center" },
-        tabBarStyle: {
-          position:        "absolute",
-          backgroundColor: "transparent",
-          borderTopWidth:  0,
-          elevation:       0,
-          height:          isWeb ? 90 : 72,
-        },
-        tabBarBackground: () =>
-          isIOS ? (
-            <BlurView
-              intensity={90}
-              tint={isDark ? "dark" : "light"}
-              style={StyleSheet.absoluteFill}
-            />
-          ) : (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: "transparent" }]} />
-          ),
-      }}
-    >
-      {ordered.map((tab) => {
-        const isHidden = tab.name === "settings" && !canSeeSettings;
-        return (
-          <Tabs.Screen
-            key={tab.name}
-            name={tab.name}
-            options={{
-              title: tab.title,
-              href: isHidden ? null : undefined,
-              tabBarIcon: ({ color, focused }) => (
-                <View style={s.tabItem}>
-                  <AnimatedTabIcon focused={focused}>
-                    {tab.icon(color)}
-                  </AnimatedTabIcon>
-                  <AnimatedTabLabel
-                    focused={focused}
-                    label={tab.title}
-                    color={color}
-                  />
-                  <ActiveDot focused={focused} color={colors.gold} />
-                </View>
-              ),
-            }}
-            listeners={{
-              tabPress: (e) => {
-                if (RESTRICTED_TABS.includes(tab.name)) {
-                  e.preventDefault();
-                  requireAuth(() => router.navigate(`/(tabs)/${tab.name}` as never));
-                }
+    <>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          lazy: false,
+          tabBarActiveTintColor:   colors.gold,
+          tabBarInactiveTintColor: isDark ? "rgba(255,255,255,0.70)" : "rgba(0,0,0,0.55)",
+          tabBarHideOnKeyboard: true,
+          tabBarShowLabel: false,
+          tabBarItemStyle: { flex: 1, justifyContent: "center", alignItems: "center" },
+          tabBarStyle: isTourist
+            ? { display: "none" }
+            : {
+                position:        "absolute",
+                backgroundColor: "transparent",
+                borderTopWidth:  0,
+                elevation:       0,
+                height:          isWeb ? 90 : 72,
               },
-            }}
-          />
-        );
-      })}
-    </Tabs>
+          tabBarBackground: () =>
+            isIOS ? (
+              <BlurView
+                intensity={90}
+                tint={isDark ? "dark" : "light"}
+                style={StyleSheet.absoluteFill}
+              />
+            ) : (
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: "transparent" }]} />
+            ),
+        }}
+      >
+        {ordered.map((tab) => {
+          const isTouristHidden   = isTourist && tab.name !== "explore";
+          const isSettingsHidden  = tab.name === "settings" && !canSeeSettings;
+          const isHidden = isTouristHidden || isSettingsHidden;
+
+          return (
+            <Tabs.Screen
+              key={tab.name}
+              name={tab.name}
+              options={{
+                title: tab.title,
+                href: isHidden ? null : undefined,
+                tabBarIcon: ({ color, focused }) => (
+                  <View style={s.tabItem}>
+                    <AnimatedTabIcon focused={focused}>
+                      {tab.icon(color)}
+                    </AnimatedTabIcon>
+                    <AnimatedTabLabel
+                      focused={focused}
+                      label={tab.title}
+                      color={color}
+                    />
+                    <ActiveDot focused={focused} color={colors.gold} />
+                  </View>
+                ),
+              }}
+              listeners={{
+                tabPress: (e) => {
+                  if (!isTourist && RESTRICTED_TABS.includes(tab.name)) {
+                    e.preventDefault();
+                    requireAuth(() => router.navigate(`/(tabs)/${tab.name}` as never));
+                  }
+                },
+              }}
+            />
+          );
+        })}
+      </Tabs>
+
+      {/* Tourist-only bottom bar */}
+      {isTourist && <TouristBar />}
+    </>
   );
 }
 
 // ── Root layout ───────────────────────────────────────────────────────────────
 export default function TabLayout() {
-  const { user, isLoading, langChosen, consentGiven } = useApp();
+  const { user, isLoading, langChosen, consentGiven, appMode } = useApp();
 
   useEffect(() => {
     if (isLoading) return;
@@ -310,24 +393,31 @@ export default function TabLayout() {
       return;
     }
 
-    // Consent gate: only for authenticated users (guests browse freely).
+    // No mode chosen yet → show mode selection screen
+    if (appMode === null) {
+      router.replace("/mode-select" as never);
+      return;
+    }
+
+    // Tourist: no further redirects needed
+    if (appMode === "tourist") return;
+
+    // Registered users: consent + welcome flow
     if (user && consentGiven === false) {
       router.replace("/consent" as never);
       return;
     }
 
-    // Returning registered user: show welcome once per session (only after consent).
     if (user && consentGiven !== false && !sessionWelcomeShown) {
       sessionWelcomeShown = true;
       router.replace("/welcome" as never);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, consentGiven, langChosen, user]);
+  }, [isLoading, consentGiven, langChosen, user, appMode]);
 
   const requireAuth = useCallback(
     (action: () => void) => {
       if (user) { action(); return; }
-      // Navigate to the full-screen login/register flow.
       router.push("/login" as never);
     },
     [user],
@@ -343,12 +433,53 @@ export default function TabLayout() {
   );
 }
 
+// ── Styles ────────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
   tabItem: {
     alignItems:     "center",
     justifyContent: "center",
     paddingTop:     6,
     gap:            3,
+  },
+});
+
+const tb = StyleSheet.create({
+  wrap: {
+    position: "absolute",
+    bottom:   0,
+    left:     0,
+    right:    0,
+    height:   80,
+    overflow: "hidden",
+  },
+  topLine: { height: StyleSheet.hairlineWidth },
+  row: {
+    flex:           1,
+    flexDirection:  "row",
+    alignItems:     "center",
+    justifyContent: "space-evenly",
+  },
+  btn: {
+    flex:           1,
+    alignItems:     "center",
+    justifyContent: "center",
+    gap:            4,
+    paddingTop:     10,
+    paddingBottom:  20,
+  },
+  label: {
+    fontSize:  11,
+    marginTop: 2,
+    letterSpacing: 0.3,
+  },
+  dot: {
+    width: 4, height: 4, borderRadius: 2,
+    marginTop: 2,
+  },
+  divider: {
+    width: StyleSheet.hairlineWidth,
+    height: 36,
+    alignSelf: "center",
   },
 });
 

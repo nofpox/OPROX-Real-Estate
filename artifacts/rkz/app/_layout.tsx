@@ -39,6 +39,7 @@ function RootLayoutNav() {
       <Stack.Screen name="privacy"        options={{ animation: "slide_from_left", gestureEnabled: false }} />
       <Stack.Screen name="login"          options={{ animation: "fade", animationDuration: 220 }} />
       <Stack.Screen name="gate"           options={{ animation: "fade", animationDuration: 220, gestureEnabled: false }} />
+      <Stack.Screen name="mode-select"   options={{ animation: "fade", animationDuration: 350, gestureEnabled: false }} />
       <Stack.Screen name="welcome"        options={{ animation: "fade", animationDuration: 220, gestureEnabled: false }} />
       <Stack.Screen name="(tabs)"         options={{ animation: "none" }} />
       <Stack.Screen name="admin-dashboard" options={{ presentation: "card",  animation: "slide_from_right" }} />
