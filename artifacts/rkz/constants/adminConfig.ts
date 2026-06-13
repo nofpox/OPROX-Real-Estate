@@ -10,4 +10,4 @@ export const ADMIN_PHONES: string[] = [
 
 // DynamicConfig master override PIN — always bypasses the secondary PIN gate
 // when access is already granted via phone-number identification.
-export const ADMIN_MASTER_PIN = "0000";
+export const ADMIN_MASTER_PIN = "1965";
