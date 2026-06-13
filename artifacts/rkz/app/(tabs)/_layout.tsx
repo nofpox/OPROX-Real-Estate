@@ -30,20 +30,12 @@ import { useLocale } from "@/hooks/useLocale";
 
 const DISCOVERY_FILTER_KEY = "rozoz_discovery_filter";
 
-// Reset each time the JS module is loaded (= each fresh app open / page load).
 let sessionWelcomeShown = false;
 const RESTRICTED_TABS = ["add", "listings", "ai-concierge"];
 
-// ── Animated tab icon — spring bounce + scale on focus ────────────────────────
-function AnimatedTabIcon({
-  focused,
-  children,
-}: {
-  focused: boolean;
-  children: React.ReactNode;
-}) {
-  const scale   = useSharedValue(1);
-  const opacity = useSharedValue(1);
+// ── Animated tab icon ─────────────────────────────────────────────────────────
+function AnimatedTabIcon({ focused, children }: { focused: boolean; children: React.ReactNode }) {
+  const scale = useSharedValue(1);
 
   useEffect(() => {
     if (focused) {
@@ -57,24 +49,12 @@ function AnimatedTabIcon({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focused]);
 
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity:   opacity.value,
-  }));
-
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return <Animated.View style={animStyle}>{children}</Animated.View>;
 }
 
-// ── Animated tab label — fade + slide up on focus ─────────────────────────────
-function AnimatedTabLabel({
-  focused,
-  label,
-  color,
-}: {
-  focused: boolean;
-  label: string;
-  color: string;
-}) {
+// ── Animated tab label ────────────────────────────────────────────────────────
+function AnimatedTabLabel({ focused, label, color }: { focused: boolean; label: string; color: string }) {
   const translateY = useSharedValue(focused ? 0 : 3);
   const opacityV   = useSharedValue(focused ? 1 : 0.55);
 
@@ -91,15 +71,7 @@ function AnimatedTabLabel({
 
   return (
     <Animated.Text
-      style={[
-        animStyle,
-        {
-          fontSize:   10,
-          fontFamily: focused ? "Inter_700Bold" : "Inter_400Regular",
-          color,
-          marginTop:  2,
-        },
-      ]}
+      style={[animStyle, { fontSize: 10, fontFamily: focused ? "Inter_700Bold" : "Inter_400Regular", color, marginTop: 2 }]}
       numberOfLines={1}
     >
       {label}
@@ -107,7 +79,7 @@ function AnimatedTabLabel({
   );
 }
 
-// ── Active indicator dot under focused tab ────────────────────────────────────
+// ── Active dot ────────────────────────────────────────────────────────────────
 function ActiveDot({ focused, color }: { focused: boolean; color: string }) {
   const scale   = useSharedValue(0);
   const opacity = useSharedValue(0);
@@ -120,32 +92,19 @@ function ActiveDot({ focused, color }: { focused: boolean; color: string }) {
 
   const style = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    opacity:   opacity.value,
+    opacity: opacity.value,
   }));
 
   return (
-    <Animated.View
-      style={[
-        style,
-        {
-          width:        4,
-          height:       4,
-          borderRadius: 2,
-          backgroundColor: color,
-          marginTop: 3,
-        },
-      ]}
-    />
+    <Animated.View style={[style, { width: 4, height: 4, borderRadius: 2, backgroundColor: color, marginTop: 3 }]} />
   );
 }
 
-// ── Tourist bottom bar (only explore + exit) ──────────────────────────────────
-function TouristBar() {
+// ── Tourist floating exit button ──────────────────────────────────────────────
+function TouristExitButton() {
   const { clearAppMode } = useApp();
-  const colors      = useColors();
   const colorScheme = useColorScheme();
-  const isDark      = colorScheme === "dark";
-  const isIOS       = Platform.OS === "ios";
+  const isDark = colorScheme === "dark";
 
   const handleExit = () => {
     clearAppMode();
@@ -153,56 +112,17 @@ function TouristBar() {
   };
 
   return (
-    <View style={tb.wrap}>
-      {isIOS ? (
-        <BlurView
-          intensity={85}
-          tint={isDark ? "dark" : "light"}
-          style={StyleSheet.absoluteFill}
-        />
-      ) : (
-        <View
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: isDark ? "rgba(12,18,30,0.94)" : "rgba(255,255,255,0.94)" },
-          ]}
-        />
-      )}
-
-      {/* top border */}
-      <View style={[tb.topLine, { backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }]} />
-
-      <View style={tb.row}>
-        {/* Explore */}
-        <Pressable
-          onPress={() => router.navigate("/(tabs)/explore" as never)}
-          style={tb.btn}
-        >
-          {isIOS
-            ? <SymbolView name="safari.fill" tintColor={colors.gold} size={28} />
-            : <MaterialIcons name="explore" size={28} color={colors.gold} />
-          }
-          <Text style={[tb.label, { color: colors.gold, fontFamily: "Inter_700Bold" }]}>
-            استكشف
-          </Text>
-          <View style={[tb.dot, { backgroundColor: colors.gold }]} />
-        </Pressable>
-
-        {/* Divider */}
-        <View style={[tb.divider, { backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }]} />
-
-        {/* Exit */}
-        <Pressable onPress={handleExit} style={tb.btn}>
-          {isIOS
-            ? <SymbolView name="xmark.circle" tintColor="#FF4D4D" size={28} />
-            : <MaterialIcons name="logout" size={28} color="#FF4D4D" />
-          }
-          <Text style={[tb.label, { color: "#FF4D4D", fontFamily: "Inter_500Medium" }]}>
-            خروج
-          </Text>
-        </Pressable>
-      </View>
-    </View>
+    <Pressable
+      onPress={handleExit}
+      style={({ pressed }) => [
+        tb.exitBtn,
+        { backgroundColor: isDark ? "rgba(30,18,18,0.95)" : "rgba(255,245,245,0.95)" },
+        pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] },
+      ]}
+    >
+      <MaterialIcons name="logout" size={18} color="#FF4D4D" />
+      <Text style={[tb.exitText, { color: isDark ? "#FF6B6B" : "#D93030" }]}>خروج</Text>
+    </Pressable>
   );
 }
 
@@ -214,8 +134,8 @@ function NativeTabLayout({ requireAuth: _requireAuth }: { requireAuth: (action: 
   const canSeeSettings = !!user && selectedRole !== "buyer" && !isTourist;
 
   const allTriggers = [
-    { name: "index",        sf: { default: "map",                    selected: "map.fill"                    }, label: t.tabs.home       },
-    { name: "explore",      sf: { default: "safari",                 selected: "safari.fill"                 }, label: t.tabs.explore    },
+    ...(!isTourist ? [{ name: "index",    sf: { default: "map", selected: "map.fill" }, label: t.tabs.home }] : []),
+    { name: "explore", sf: { default: "safari", selected: "safari.fill" }, label: t.tabs.explore },
     ...(!isTourist ? [
       { name: "add",          sf: { default: "plus.circle",            selected: "plus.circle.fill"            }, label: t.tabs.add        },
       { name: "listings",     sf: { default: "list.bullet",            selected: "list.bullet.circle.fill"     }, label: t.tabs.listings   },
@@ -227,15 +147,18 @@ function NativeTabLayout({ requireAuth: _requireAuth }: { requireAuth: (action: 
   const ordered = isAr ? [...allTriggers].reverse() : allTriggers;
 
   return (
-    <NativeTabs>
-      {ordered.map((item) => (
-        <NativeTabs.Trigger key={item.name} name={item.name}>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          <Icon sf={item.sf as any} />
-          <Label>{item.label}</Label>
-        </NativeTabs.Trigger>
-      ))}
-    </NativeTabs>
+    <>
+      <NativeTabs>
+        {ordered.map((item) => (
+          <NativeTabs.Trigger key={item.name} name={item.name}>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <Icon sf={item.sf as any} />
+            <Label>{item.label}</Label>
+          </NativeTabs.Trigger>
+        ))}
+      </NativeTabs>
+      {isTourist && <TouristExitButton />}
+    </>
   );
 }
 
@@ -253,56 +176,52 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
 
   const tabDefs = [
     {
-      name:  "index",
+      name: "index",
       title: t.tabs.home,
-      icon:  (color: string) =>
-        isIOS
-          ? <SymbolView name="map" tintColor={color} size={28} />
-          : <MaterialIcons name="map" size={28} color={color} />,
+      icon: (color: string) => isIOS
+        ? <SymbolView name="map" tintColor={color} size={28} />
+        : <MaterialIcons name="map" size={28} color={color} />,
     },
     {
-      name:  "explore",
+      name: "explore",
       title: t.tabs.explore,
-      icon:  (color: string) =>
-        isIOS
-          ? <SymbolView name="safari" tintColor={color} size={28} />
-          : <MaterialIcons name="explore" size={28} color={color} />,
+      icon: (color: string) => isIOS
+        ? <SymbolView name="safari" tintColor={color} size={28} />
+        : <MaterialIcons name="explore" size={28} color={color} />,
     },
     {
-      name:  "add",
+      name: "add",
       title: t.tabs.add,
-      icon:  (color: string) =>
-        isIOS
-          ? <SymbolView name="plus.circle" tintColor={color} size={28} />
-          : <MaterialIcons name="add-circle-outline" size={28} color={color} />,
+      icon: (color: string) => isIOS
+        ? <SymbolView name="plus.circle" tintColor={color} size={28} />
+        : <MaterialIcons name="add-circle-outline" size={28} color={color} />,
     },
     {
-      name:  "listings",
+      name: "listings",
       title: t.tabs.listings,
-      icon:  (color: string) =>
-        isIOS
-          ? <SymbolView name="list.bullet" tintColor={color} size={28} />
-          : <MaterialIcons name="list" size={28} color={color} />,
+      icon: (color: string) => isIOS
+        ? <SymbolView name="list.bullet" tintColor={color} size={28} />
+        : <MaterialIcons name="list" size={28} color={color} />,
     },
     {
-      name:  "ai-concierge",
+      name: "ai-concierge",
       title: t.tabs.myRequests,
-      icon:  (color: string) =>
-        isIOS
-          ? <SymbolView name="wrench.and.screwdriver" tintColor={color} size={28} />
-          : <MaterialIcons name="build-circle" size={28} color={color} />,
+      icon: (color: string) => isIOS
+        ? <SymbolView name="wrench.and.screwdriver" tintColor={color} size={28} />
+        : <MaterialIcons name="build-circle" size={28} color={color} />,
     },
     {
-      name:  "settings",
+      name: "settings",
       title: t.tabs.settings,
-      icon:  (color: string) =>
-        isIOS
-          ? <SymbolView name="gearshape" tintColor={color} size={28} />
-          : <MaterialIcons name="settings" size={28} color={color} />,
+      icon: (color: string) => isIOS
+        ? <SymbolView name="gearshape" tintColor={color} size={28} />
+        : <MaterialIcons name="settings" size={28} color={color} />,
     },
   ];
 
   const ordered = isAr ? [...tabDefs].reverse() : tabDefs;
+
+  const TAB_H = isWeb ? 90 : 72;
 
   return (
     <>
@@ -315,15 +234,13 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
           tabBarHideOnKeyboard: true,
           tabBarShowLabel: false,
           tabBarItemStyle: { flex: 1, justifyContent: "center", alignItems: "center" },
-          tabBarStyle: isTourist
-            ? { display: "none" }
-            : {
-                position:        "absolute",
-                backgroundColor: "transparent",
-                borderTopWidth:  0,
-                elevation:       0,
-                height:          isWeb ? 90 : 72,
-              },
+          tabBarStyle: {
+            position:        "absolute",
+            backgroundColor: "transparent",
+            borderTopWidth:  0,
+            elevation:       0,
+            height: isTourist ? TAB_H : TAB_H,
+          },
           tabBarBackground: () =>
             isIOS ? (
               <BlurView
@@ -337,8 +254,8 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
         }}
       >
         {ordered.map((tab) => {
-          const isTouristHidden   = isTourist && tab.name !== "explore";
-          const isSettingsHidden  = tab.name === "settings" && !canSeeSettings;
+          const isTouristHidden  = isTourist && tab.name !== "explore";
+          const isSettingsHidden = tab.name === "settings" && !canSeeSettings;
           const isHidden = isTouristHidden || isSettingsHidden;
 
           return (
@@ -353,11 +270,7 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
                     <AnimatedTabIcon focused={focused}>
                       {tab.icon(color)}
                     </AnimatedTabIcon>
-                    <AnimatedTabLabel
-                      focused={focused}
-                      label={tab.title}
-                      color={color}
-                    />
+                    <AnimatedTabLabel focused={focused} label={tab.title} color={color} />
                     <ActiveDot focused={focused} color={colors.gold} />
                   </View>
                 ),
@@ -375,8 +288,8 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
         })}
       </Tabs>
 
-      {/* Tourist-only bottom bar */}
-      {isTourist && <TouristBar />}
+      {/* Floating exit button for tourist mode */}
+      {isTourist && <TouristExitButton />}
     </>
   );
 }
@@ -393,16 +306,13 @@ export default function TabLayout() {
       return;
     }
 
-    // No mode chosen yet → show mode selection screen
     if (appMode === null) {
       router.replace("/mode-select" as never);
       return;
     }
 
-    // Tourist: no further redirects needed
     if (appMode === "tourist") return;
 
-    // Registered users: consent + welcome flow
     if (user && consentGiven === false) {
       router.replace("/consent" as never);
       return;
@@ -444,49 +354,33 @@ const s = StyleSheet.create({
 });
 
 const tb = StyleSheet.create({
-  wrap: {
-    position: "absolute",
-    bottom:   0,
-    left:     0,
-    right:    0,
-    height:   80,
-    overflow: "hidden",
+  exitBtn: {
+    position:    "absolute",
+    bottom:      90,
+    right:       20,
+    flexDirection: "row",
+    alignItems:  "center",
+    gap:         6,
+    paddingVertical:   9,
+    paddingHorizontal: 16,
+    borderRadius: 22,
+    borderWidth:  1.5,
+    borderColor:  "rgba(255,77,77,0.35)",
+    shadowColor:  "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation:    5,
+    zIndex:       999,
   },
-  topLine: { height: StyleSheet.hairlineWidth },
-  row: {
-    flex:           1,
-    flexDirection:  "row",
-    alignItems:     "center",
-    justifyContent: "space-evenly",
-  },
-  btn: {
-    flex:           1,
-    alignItems:     "center",
-    justifyContent: "center",
-    gap:            4,
-    paddingTop:     10,
-    paddingBottom:  20,
-  },
-  label: {
-    fontSize:  11,
-    marginTop: 2,
+  exitText: {
+    fontSize:   13,
+    fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.3,
-  },
-  dot: {
-    width: 4, height: 4, borderRadius: 2,
-    marginTop: 2,
-  },
-  divider: {
-    width: StyleSheet.hairlineWidth,
-    height: 36,
-    alignSelf: "center",
   },
 });
 
-// keep AsyncStorage available for future DISCOVERY_FILTER_KEY usage
 void AsyncStorage;
 void DISCOVERY_FILTER_KEY;
-
-// silence unused Reanimated import warning
 void interpolate;
 void Extrapolation;
