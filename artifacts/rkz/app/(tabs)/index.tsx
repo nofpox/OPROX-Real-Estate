@@ -365,15 +365,6 @@ export default function DiscoveryMapScreen() {
           <Text style={s.glassListBtnText}>{isAr ? "قائمة" : "List"}</Text>
         </Pressable>
 
-        {/* ── Floating count chip — bottom right ───────────────────────────── */}
-        <View style={[s.glassCountChip, { bottom: bottomPad + 16 }]}>
-          <MaterialIcons name="touch-app" size={12} color="rgba(255,255,255,0.5)" />
-          <Text style={s.glassCountText}>
-            {isAr
-              ? `${filtered.length} عقار — اضغط للتفاصيل`
-              : `${filtered.length} listings — tap to view`}
-          </Text>
-        </View>
       </View>
     );
   }
