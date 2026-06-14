@@ -187,19 +187,7 @@ const ATTRACTIONS: TourismSpot[] = [
 
 const CATS: Category[] = ["all", "religious", "entertainment", "nature", "events", "cultural"];
 
-// ── Official Saudi tourism links ────────────────────────────────────────────
-const SAUDI_LINKS = [
-  { icon: "🌐", labelAr: "الروح السعودية",   labelEn: "Visit Saudi",       url: "https://www.visitsaudi.com" },
-  { icon: "🎪", labelAr: "هيئة الترفيه",     labelEn: "Entertainment",     url: "https://www.gea.gov.sa" },
-  { icon: "✈️", labelAr: "هيئة السياحة",     labelEn: "Tourism Authority", url: "https://sta.gov.sa" },
-  { icon: "🏟️", labelAr: "موسم الرياض",      labelEn: "Riyadh Season",     url: "https://www.riyadhseason.sa" },
-  { icon: "🏯", labelAr: "الدرعية",          labelEn: "Diriyah",           url: "https://www.diriyah.sa" },
-  { icon: "🌄", labelAr: "العُلا",           labelEn: "AlUla",             url: "https://www.experiencealula.com" },
-  { icon: "🌊", labelAr: "البحر الأحمر",     labelEn: "Red Sea",           url: "https://www.theredsea.sa" },
-  { icon: "🏙️", labelAr: "نيوم",            labelEn: "NEOM",              url: "https://www.neom.com" },
-  { icon: "🎭", labelAr: "موسم جدة",         labelEn: "Jeddah Season",     url: "https://www.jeddahseason.sa" },
-  { icon: "🌿", labelAr: "مشروع قديّة",      labelEn: "Qiddiya",           url: "https://www.qiddiya.com" },
-];
+const VISIT_SAUDI_URL = "https://www.visitsaudi.com";
 
 // ── Component ──────────────────────────────────────────────────────────────
 export default function ExploreScreen() {
@@ -294,35 +282,23 @@ export default function ExploreScreen() {
         </ScrollView>
       </View>
 
-      {/* ── الروح السعودية — Official links bar ─────────────────────────── */}
+      {/* ── روح السعودية — Single button ──────────────────────────────────── */}
       <View style={[s.linksBar, { bottom: bottomPad + 8 }]} pointerEvents="box-none">
-        {/* Label */}
-        <View style={s.linksLabelWrap}>
-          <Text style={s.linksLabel}>{isAr ? "🇸🇦 الروح السعودية" : "🇸🇦 Saudi Links"}</Text>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
+        <Pressable
           pointerEvents="auto"
-          contentContainerStyle={[s.linksScroll, isAr && { flexDirection: "row-reverse" }]}
+          onPress={() => {
+            void Haptics.selectionAsync();
+            void Linking.openURL(VISIT_SAUDI_URL);
+          }}
+          style={({ pressed }) => [s.visitBtn, pressed && { opacity: 0.75 }]}
         >
-          {SAUDI_LINKS.map((link) => (
-            <Pressable
-              key={link.url}
-              onPress={() => {
-                void Haptics.selectionAsync();
-                void Linking.openURL(link.url);
-              }}
-              style={({ pressed }) => [s.linkChip, pressed && { opacity: 0.7 }]}
-            >
-              <Text style={s.linkIcon}>{link.icon}</Text>
-              <Text style={s.linkLabel} numberOfLines={1}>
-                {isAr ? link.labelAr : link.labelEn}
-              </Text>
-              <MaterialIcons name="open-in-new" size={9} color="rgba(201,168,76,0.7)" />
-            </Pressable>
-          ))}
-        </ScrollView>
+          <Text style={s.visitFlag}>🇸🇦</Text>
+          <View style={s.visitTextWrap}>
+            <Text style={s.visitTitle}>{isAr ? "روح السعودية" : "Spirit of Saudi"}</Text>
+            <Text style={s.visitSub}>{isAr ? "البوابة السياحية الرسمية" : "Official Tourism Portal"}</Text>
+          </View>
+          <MaterialIcons name="open-in-new" size={16} color="#C9A84C" />
+        </Pressable>
       </View>
     </View>
   );
@@ -417,52 +393,41 @@ function makeStyles(topPad: number, _bottomPad: number) {
       fontFamily: "Inter_400Regular",
     },
 
-    // ── الروح السعودية links bar ──────────────────────────────────────────
+    // ── روح السعودية button ───────────────────────────────────────────────
     linksBar: {
       position:        "absolute",
-      left:            0,
-      right:           0,
-      backgroundColor: "rgba(8,16,34,0.88)",
-      borderTopWidth:  1,
-      borderTopColor:  "rgba(201,168,76,0.25)",
+      left:            12,
+      right:           12,
+      backgroundColor: "rgba(8,16,34,0.92)",
+      borderWidth:     1,
+      borderColor:     "rgba(201,168,76,0.40)",
+      borderRadius:    16,
       zIndex:          10,
+      overflow:        "hidden",
     },
-    linksLabelWrap: {
-      paddingHorizontal: 14,
-      paddingTop:        8,
-      paddingBottom:     4,
-    },
-    linksLabel: {
-      color:      "#C9A84C",
-      fontSize:   11,
-      fontFamily: "Inter_700Bold",
-      letterSpacing: 0.5,
-    },
-    linksScroll: {
-      paddingHorizontal: 12,
-      paddingBottom:     10,
-      gap:               8,
-      flexDirection:     "row",
-    },
-    linkChip: {
+    visitBtn: {
       flexDirection:     "row",
       alignItems:        "center",
-      gap:               5,
-      paddingHorizontal: 10,
-      paddingVertical:   6,
-      borderRadius:      16,
-      borderWidth:       1,
-      borderColor:       "rgba(201,168,76,0.30)",
-      backgroundColor:   "rgba(201,168,76,0.08)",
+      gap:               12,
+      paddingHorizontal: 18,
+      paddingVertical:   14,
     },
-    linkIcon: {
-      fontSize: 13,
+    visitFlag: {
+      fontSize: 28,
     },
-    linkLabel: {
-      color:      "#F5F0E8",
+    visitTextWrap: {
+      flex: 1,
+    },
+    visitTitle: {
+      color:      "#C9A84C",
+      fontSize:   15,
+      fontFamily: "Inter_700Bold",
+    },
+    visitSub: {
+      color:      "rgba(255,255,255,0.50)",
       fontSize:   11,
       fontFamily: "Inter_400Regular",
-      maxWidth:   90,
+      marginTop:  2,
     },
   });
 }
