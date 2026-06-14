@@ -218,7 +218,7 @@ export default function ExploreScreen() {
 
 function makeStyles(topPad: number, _bottomPad: number) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#0a1628" },
+    root: { flex: 1, backgroundColor: "#0f2040" },
 
     header: {
       position:          "absolute",

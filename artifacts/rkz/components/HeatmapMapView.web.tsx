@@ -81,7 +81,7 @@ function buildMapHtml(properties: MapProperty[]): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-  html, body { height: 100%; margin: 0; padding: 0; background: #0a1628; }
+  html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
   #map { height: 100%; width: 100%; }
 
   .price-icon { overflow: visible !important; background: none !important; border: none !important; }
@@ -102,7 +102,7 @@ function buildMapHtml(properties: MapProperty[]): string {
   }
   .price-pill:hover { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 5px 18px rgba(0,0,0,0.8); }
   .price-green { background: #22c55e; color: #fff;    border: 1.5px solid #16a34a; }
-  .price-gold  { background: #D4A843; color: #0A1628; border: 1.5px solid #b8902e; }
+  .price-gold  { background: #D4A843; color: #0F2040; border: 1.5px solid #b8902e; }
 
   .lf-popup .leaflet-popup-content-wrapper {
     background: #0f2040; border: 1.5px solid #D4A843; border-radius: 14px;
@@ -113,7 +113,7 @@ function buildMapHtml(properties: MapProperty[]): string {
   .lf-popup .leaflet-popup-content { margin: 14px 16px; min-width: 180px; }
   .pop-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-direction: row-reverse; }
   .pop-type  { font-size: 11px; background: rgba(212,168,67,0.2); color: #D4A843; padding: 2px 8px; border-radius: 10px; }
-  .pop-badge { font-size: 10px; background: #D4A843; color: #0A1628; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+  .pop-badge { font-size: 10px; background: #D4A843; color: #0F2040; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
   .pop-title { font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 2px; text-align: right; }
   .pop-city  { font-size: 11px; color: #94a3b8; margin-bottom: 10px; text-align: right; }
   .pop-row   { display: flex; gap: 8px; flex-direction: row-reverse; justify-content: flex-end; }
@@ -267,7 +267,7 @@ export default function HeatmapMapView({ properties, isAr }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, position: "relative", backgroundColor: "#0a1628" },
+  container: { flex: 1, position: "relative", backgroundColor: "#0f2040" },
   empty:     { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
   emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
 });

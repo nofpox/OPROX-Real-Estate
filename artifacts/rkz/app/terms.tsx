@@ -11,7 +11,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 
 const GOLD = "#C9A84C";
-const NAVY = "#0A1628";
+const NAVY = "#0F2040";
 const GRAY = "#6B7280";
 const LIGHT = "#F9FAFB";
 

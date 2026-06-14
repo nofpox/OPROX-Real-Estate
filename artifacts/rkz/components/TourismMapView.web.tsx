@@ -41,7 +41,7 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
-  html,body,#map{height:100%;width:100%;background:#0a1628;}
+  html,body,#map{height:100%;width:100%;background:#0f2040;}
 
   /* ── Filter bar ── */
   #filter-bar{
@@ -133,7 +133,7 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   .pop-rating.dim{color:#64748b;}
   .pop-btn{
     display:flex;align-items:center;justify-content:center;gap:5px;
-    background:#D4A843;color:#0A1628;font-weight:700;font-size:11px;
+    background:#D4A843;color:#0F2040;font-weight:700;font-size:11px;
     padding:7px 12px;border-radius:9px;text-decoration:none;width:100%;cursor:pointer;
   }
   .pop-btn:hover{background:#c99a36;}
@@ -399,5 +399,5 @@ export default function TourismMapView({ spots = [], isAr = false }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, position: "relative", backgroundColor: "#0a1628" },
+  container: { flex: 1, position: "relative", backgroundColor: "#0f2040" },
 });

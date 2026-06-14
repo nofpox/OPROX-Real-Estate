@@ -30,7 +30,7 @@ import { useLocale } from "@/hooks/useLocale";
 // Preset Themes
 // ─────────────────────────────────────────────────────────────────────────────
 const PRESETS = [
-  { id: "navygold", nameAr: "البحري الذهبي", nameEn: "Navy & Gold", primary: "#D4A843", navy: "#0A1628", bg: "#F5F7FA" },
+  { id: "navygold", nameAr: "البحري الذهبي", nameEn: "Navy & Gold", primary: "#D4A843", navy: "#0F2040", bg: "#F5F7FA" },
   { id: "emerald",  nameAr: "زمرد الخليج",   nameEn: "Gulf Emerald", primary: "#10B981", navy: "#064E3B", bg: "#ECFDF5" },
   { id: "purple",   nameAr: "البنفسجي الملكي", nameEn: "Royal Purple", primary: "#7C3AED", navy: "#2D1B69", bg: "#F5F3FF" },
   { id: "crimson",  nameAr: "أحمر النخبة",   nameEn: "Elite Red",    primary: "#DC2626", navy: "#1C1917", bg: "#FFF1F2" },
@@ -309,7 +309,7 @@ function PinGate({ onUnlock }: { onUnlock: (pin: string) => void }) {
           disabled={loading || pin.length < 4 || lockedMin !== null}
         >
           {loading ? (
-            <ActivityIndicator color="#0A1628" size="small" />
+            <ActivityIndicator color="#0F2040" size="small" />
           ) : (
             <Text style={pinStyles.submitText}>{t.admin.pinBtn}</Text>
           )}
@@ -1308,10 +1308,10 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
             ]}
           >
             {saving ? (
-              <ActivityIndicator color="#0A1628" size="small" />
+              <ActivityIndicator color="#0F2040" size="small" />
             ) : (
               <>
-                <MaterialIcons name="save" size={18} color="#0A1628" />
+                <MaterialIcons name="save" size={18} color="#0F2040" />
                 <Text style={styles.saveBtnText}>{t.admin.saveBtn}</Text>
               </>
             )}
@@ -1544,7 +1544,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
-  saveBtnText: { fontSize: 16, fontFamily: "Inter_700Bold", color: "#0A1628" },
+  saveBtnText: { fontSize: 16, fontFamily: "Inter_700Bold", color: "#0F2040" },
   discardBtn: { alignItems: "center", paddingVertical: 12 },
   discardText: { fontSize: 14, fontFamily: "Inter_500Medium", color: "#6B7280" },
 
@@ -1704,7 +1704,7 @@ const styles = StyleSheet.create({
 const pinStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0A1628",
+    backgroundColor: "#0F2040",
     paddingHorizontal: 28,
   },
   backBtn: {
@@ -1781,6 +1781,6 @@ const pinStyles = StyleSheet.create({
   submitText: {
     fontSize: 16,
     fontFamily: "Inter_700Bold",
-    color: "#0A1628",
+    color: "#0F2040",
   },
 });

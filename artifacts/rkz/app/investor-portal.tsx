@@ -155,9 +155,9 @@ export default function OwnerHubScreen() {
           onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push("/leases"); }}
           style={({ pressed }) => [s.primaryCta, { backgroundColor: colors.gold }, pressed && { opacity: 0.88 }]}
         >
-          <MaterialIcons name="menu-book" size={20} color="#0A1628" />
+          <MaterialIcons name="menu-book" size={20} color="#0F2040" />
           <Text style={s.primaryCtaText}>{isAr ? "دفتر المالك — إدارة الوحدات والعقود" : "Landlord Notebook — Manage Units & Leases"}</Text>
-          <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={20} color="#0A1628" />
+          <MaterialIcons name={isAr ? "chevron-left" : "chevron-right"} size={20} color="#0F2040" />
         </Pressable>
 
         <Pressable
@@ -247,7 +247,7 @@ function styles(
       justifyContent: "space-between",
       borderRadius: 16, padding: 18,
     },
-    primaryCtaText: { flex: 1, fontSize: 15, fontFamily: "Inter_700Bold", color: "#0A1628", marginHorizontal: 10 },
+    primaryCtaText: { flex: 1, fontSize: 15, fontFamily: "Inter_700Bold", color: "#0F2040", marginHorizontal: 10 },
     secondaryCta: {
       flexDirection: isAr ? "row-reverse" : "row", alignItems: "center",
       justifyContent: "center", gap: 10,

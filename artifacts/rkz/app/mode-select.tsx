@@ -178,7 +178,7 @@ const s = StyleSheet.create({
 
   cardText: { flex: 1 },
   cardTitle: {
-    color: "#0A1628",
+    color: "#0F2040",
     fontSize: 15,
     fontFamily: "Inter_700Bold",
     textAlign: "right",

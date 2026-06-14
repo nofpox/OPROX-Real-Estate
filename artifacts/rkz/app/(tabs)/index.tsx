@@ -158,7 +158,7 @@ function PropertyCard({
           onPress={() => onRequest(listing)}
           style={({ pressed }) => [s.reqBtn, pressed && { opacity: 0.85 }]}
         >
-          <MaterialIcons name="handshake" size={15} color="#0A1628" />
+          <MaterialIcons name="handshake" size={15} color="#0F2040" />
           <Text style={s.reqBtnText}>طلب تفاوض</Text>
         </Pressable>
 
@@ -327,7 +327,7 @@ export default function DiscoveryMapScreen() {
             <MaterialIcons
               name={TYPE_ICON[pt.id] ?? "home"}
               size={14}
-              color={isActive ? "#0A1628" : (glass ? "rgba(255,255,255,0.85)" : colors.mutedForeground)}
+              color={isActive ? "#0F2040" : (glass ? "rgba(255,255,255,0.85)" : colors.mutedForeground)}
             />
             <Text style={[s.pillText, glass && s.glassPillText, isActive && s.pillTextActive]}>
               {isAr ? pt.labelAr : pt.labelEn}
@@ -384,7 +384,7 @@ export default function DiscoveryMapScreen() {
           onPress={() => { void Haptics.selectionAsync(); setViewMode("cards"); }}
           style={[s.toggleSeg, s.toggleSegActive]}
         >
-          <MaterialIcons name="grid-view" size={16} color="#0A1628" />
+          <MaterialIcons name="grid-view" size={16} color="#0F2040" />
           <Text style={[s.toggleText, s.toggleTextActive]}>{t.heatmap.cardsView}</Text>
         </Pressable>
         <Pressable
@@ -602,7 +602,7 @@ function makeStyles(
       fontFamily: "Inter_600SemiBold",
       color:      colors.mutedForeground,
     },
-    pillTextActive: { color: "#0A1628" },
+    pillTextActive: { color: "#0F2040" },
 
     // ── View Toggle ─────────────────────────────────────────────────────────
     toggleBar: {
@@ -627,7 +627,7 @@ function makeStyles(
     },
     toggleSegActive: { backgroundColor: colors.gold, borderColor: colors.gold },
     toggleText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
-    toggleTextActive: { color: "#0A1628" },
+    toggleTextActive: { color: "#0F2040" },
 
     // ── Heatmap metric bar (sits above the WebView map) ─────────────────────
     metricBar: {
@@ -653,7 +653,7 @@ function makeStyles(
     },
     metricPillActive:     { backgroundColor: colors.gold, borderColor: colors.gold },
     metricPillText:       { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
-    metricPillTextActive: { color: "#0A1628" },
+    metricPillTextActive: { color: "#0F2040" },
     metricHint:     { flex: 1, flexDirection: "row", alignItems: "center", gap: 4, justifyContent: "flex-end" },
     metricHintText: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
     legendDot:      { width: 8, height: 8, borderRadius: 4 },
@@ -697,7 +697,7 @@ function makeStyles(
       paddingHorizontal: 7,
       paddingVertical:   2,
     },
-    badgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#0A1628" },
+    badgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#0F2040" },
 
     cardBody: { padding: 12 },
 
@@ -758,7 +758,7 @@ function makeStyles(
       borderRadius:    10,
       paddingVertical: 9,
     },
-    reqBtnText: { fontSize: 12, fontFamily: "Inter_700Bold", color: "#0A1628" },
+    reqBtnText: { fontSize: 12, fontFamily: "Inter_700Bold", color: "#0F2040" },
 
     waBtn: {
       flexDirection:   "row",

@@ -25,7 +25,7 @@ import { useLocale } from "@/hooks/useLocale";
 const LOGO = require("@/assets/images/rozoz-logo-eagle.png");
 const { width } = Dimensions.get("window");
 
-const NAVY   = "#0A1628";
+const NAVY   = "#0F2040";
 const GOLD   = "#C9A84C";
 const BLUE   = "#2563EB";
 const TEAL   = "#0D9488";

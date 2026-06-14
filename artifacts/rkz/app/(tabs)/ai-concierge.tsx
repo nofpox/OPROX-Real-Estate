@@ -143,7 +143,7 @@ function DelegationModal({ visible, onClose, colors, isAr, phone, onSuccess }: D
                   : "By agreeing, you authorize Rozoz to contact service companies on your behalf and coordinate maintenance. You can revoke this authorization anytime from Settings."}
               </Text>
               <Pressable style={({ pressed }) => [s.primaryBtn, pressed && { opacity: 0.85 }]} onPress={handleAgree}>
-                <MaterialIcons name="check" size={18} color="#0A1628" />
+                <MaterialIcons name="check" size={18} color="#0F2040" />
                 <Text style={s.primaryBtnText}>{isAr ? "أوافق — أرسل رمز التأكيد" : "Agree — Send Confirmation Code"}</Text>
               </Pressable>
               <Pressable style={({ pressed }) => [s.cancelBtn, pressed && { opacity: 0.7 }]} onPress={onClose}>
@@ -567,7 +567,7 @@ function dlgStyles(colors: ReturnType<typeof useColors>, isAr: boolean) {
       backgroundColor: colors.gold, borderRadius: 14,
       paddingVertical: 16, paddingHorizontal: 24, width: "100%", marginBottom: 10,
     },
-    primaryBtnText: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#0A1628" },
+    primaryBtnText: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#0F2040" },
     cancelBtn:  { paddingVertical: 12 },
     cancelText: { fontSize: 14, fontFamily: "Inter_500Medium", color: "#64748B" },
     successBox: { alignItems: "center", paddingVertical: 20, gap: 12 },

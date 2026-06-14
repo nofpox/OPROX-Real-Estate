@@ -81,7 +81,7 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
   const tileUrl = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
   const bgColor = "#f0f4f8";
   const zoomBg  = "#ffffff";
-  const zoomClr = "#0A1628";
+  const zoomClr = "#0F2040";
   const zoomBdr = "#e2e8f0";
   const zoomHov = "#f1f5f9";
   const attrBg  = "rgba(255,255,255,0.85)";
@@ -116,7 +116,7 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
   }
   .price-pill:hover { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 5px 18px rgba(0,0,0,0.8); }
   .price-green { background: #22c55e; color: #fff;    border: 1.5px solid #16a34a; }
-  .price-gold  { background: #D4A843; color: #0A1628; border: 1.5px solid #b8902e; }
+  .price-gold  { background: #D4A843; color: #0F2040; border: 1.5px solid #b8902e; }
 
   /* ── Popup ──────────────────────────────────────────────────────────────── */
   .lf-popup .leaflet-popup-content-wrapper {
@@ -128,7 +128,7 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
   .lf-popup .leaflet-popup-content { margin: 14px 16px; min-width: 180px; }
   .pop-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-direction: row-reverse; }
   .pop-type  { font-size: 11px; background: rgba(212,168,67,0.2); color: #D4A843; padding: 2px 8px; border-radius: 10px; }
-  .pop-badge { font-size: 10px; background: #D4A843; color: #0A1628; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+  .pop-badge { font-size: 10px; background: #D4A843; color: #0F2040; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
   .pop-title { font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 2px; text-align: right; }
   .pop-city  { font-size: 11px; color: #94a3b8; margin-bottom: 10px; text-align: right; }
   .pop-row   { display: flex; gap: 8px; flex-direction: row-reverse; justify-content: flex-end; }

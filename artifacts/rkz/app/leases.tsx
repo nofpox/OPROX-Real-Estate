@@ -227,7 +227,7 @@ export default function LeasesScreen() {
             style={s.addBtn}
             hitSlop={8}
           >
-            <MaterialIcons name="add" size={22} color="#0A1628" />
+            <MaterialIcons name="add" size={22} color="#0F2040" />
           </Pressable>
         </View>
       </View>
@@ -371,7 +371,7 @@ export default function LeasesScreen() {
                       style={({ pressed }) => [s.paidBtn, pressed && { opacity: 0.85 }]}
                       onPress={() => handleMarkPaid(lease)}
                     >
-                      <MaterialIcons name="check" size={16} color="#0A1628" />
+                      <MaterialIcons name="check" size={16} color="#0F2040" />
                       <Text style={s.paidBtnText}>{tl.markPaid}</Text>
                     </Pressable>
                     {lease.contractImageUri && (
@@ -784,7 +784,7 @@ function makeStyles(colors: ReturnType<typeof useColors>, isAr: boolean, topPad:
       borderRadius: 10,
       paddingVertical: 10,
     },
-    paidBtnText: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#0A1628" },
+    paidBtnText: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#0F2040" },
     iconActionBtn: {
       width: 40,
       height: 40,
@@ -880,7 +880,7 @@ function makeStyles(colors: ReturnType<typeof useColors>, isAr: boolean, topPad:
     },
     chipActive: { backgroundColor: colors.gold, borderColor: colors.gold },
     chipText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
-    chipTextActive: { color: "#0A1628" },
+    chipTextActive: { color: "#0F2040" },
 
     scanBtn: {
       flexDirection: isAr ? "row-reverse" : "row",

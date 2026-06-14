@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
   },
   ctaBtnText: {
-    color: "#0A1628",
+    color: "#0F2040",
     fontSize: 16,
     fontFamily: "Inter_700Bold",
     letterSpacing: 0.5,

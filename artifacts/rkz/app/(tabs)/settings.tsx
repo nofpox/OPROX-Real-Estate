@@ -230,7 +230,7 @@ export default function SettingsScreen() {
       marginTop: 16, width: "100%", height: 50, borderRadius: 13,
       backgroundColor: colors.gold, alignItems: "center", justifyContent: "center",
     },
-    pinSubmitText: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#0A1628" },
+    pinSubmitText: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#0F2040" },
     pinCancel: { marginTop: 12 },
     pinCancelText: { fontSize: 14, fontFamily: "Inter_500Medium", color: colors.mutedForeground },
   });
@@ -412,7 +412,7 @@ export default function SettingsScreen() {
                 if (Platform.OS === "web") {
                   await WebBrowser.openBrowserAsync(
                     "https://property-dashboard-nofabark.replit.app/realestate/contact",
-                    { presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET, toolbarColor: "#0A1628", controlsColor: "#D4A843" }
+                    { presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET, toolbarColor: "#0F2040", controlsColor: "#D4A843" }
                   );
                 } else {
                   Alert.alert(
@@ -427,7 +427,7 @@ export default function SettingsScreen() {
                         text: isAr ? "زيارة صفحة المساعدة" : "Visit Help Page",
                         onPress: () => void WebBrowser.openBrowserAsync(
                           "https://property-dashboard-nofabark.replit.app/realestate/contact",
-                          { toolbarColor: "#0A1628", controlsColor: "#D4A843" }
+                          { toolbarColor: "#0F2040", controlsColor: "#D4A843" }
                         ),
                       },
                       { text: isAr ? "إلغاء" : "Cancel", style: "cancel" },
@@ -455,7 +455,7 @@ export default function SettingsScreen() {
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 await WebBrowser.openBrowserAsync(
                   "https://property-dashboard-nofabark.replit.app/realestate/",
-                  { presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET, toolbarColor: "#0A1628", controlsColor: "#D4A843" }
+                  { presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET, toolbarColor: "#0F2040", controlsColor: "#D4A843" }
                 );
               }}
             >

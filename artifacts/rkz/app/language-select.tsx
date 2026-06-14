@@ -21,7 +21,7 @@ const { width } = Dimensions.get("window");
 const LOGO_W = Math.min(width * 0.55, 220);
 const LOGO_H = Math.round(LOGO_W / 2.6);
 
-const NAVY  = "#0A1628";
+const NAVY  = "#0F2040";
 const GOLD  = "#C9A84C";
 const WHITE = "#F5F0E8";
 

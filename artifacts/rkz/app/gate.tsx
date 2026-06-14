@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 
 const LOGO  = require("@/assets/images/rozoz-logo-eagle.png");
-const NAVY  = "#0A1628";
+const NAVY  = "#0F2040";
 const GOLD  = "#C9A84C";
 const WHITE = "#F5F0E8";
 const { width } = Dimensions.get("window");

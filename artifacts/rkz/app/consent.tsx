@@ -15,7 +15,7 @@ import { useApp } from "@/context/AppContext";
 
 const LOGO = require("@/assets/images/rozoz-logo-eagle.png");
 const GOLD  = "#C9A84C";
-const NAVY  = "#0A1628";
+const NAVY  = "#0F2040";
 const GREEN = "#16A34A";
 
 export default function ConsentScreen() {
