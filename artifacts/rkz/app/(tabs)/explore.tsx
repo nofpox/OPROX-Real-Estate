@@ -218,7 +218,6 @@ export default function ExploreScreen() {
           ))}
 
           <TouchableOpacity
-            pointerEvents="auto"
             style={s.fab}
             onPress={toggleFab}
             activeOpacity={0.85}
