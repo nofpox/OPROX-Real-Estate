@@ -30,20 +30,21 @@ function buildMapHtml(isAr: boolean): string {
 
   /* ── Filter bar ─────────────────────────────────────────── */
   #filter-bar{
-    position:absolute;top:12px;left:12px;z-index:1000;
-    display:flex;flex-direction:column;gap:6px;
+    position:absolute;top:74px;left:10px;z-index:1000;
+    display:flex;flex-direction:column;gap:5px;
   }
   .fbtn{
     display:flex;align-items:center;justify-content:center;
-    padding:6px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.25);
-    background:rgba(10,22,40,0.88);color:#e2e8f0;font-size:12px;
+    padding:4px 11px;border-radius:14px;border:1px solid rgba(255,255,255,0.20);
+    background:rgba(10,22,40,0.82);color:#cbd5e1;font-size:11px;
     font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;
     font-weight:600;cursor:pointer;white-space:nowrap;
-    transition:background 0.15s,border-color 0.15s;
+    transition:background 0.12s,border-color 0.12s;
     -webkit-tap-highlight-color:transparent;user-select:none;
+    min-width:64px;
   }
-  .fbtn.active{ background:#0F3460;border-color:#C9A84C;color:#C9A84C; }
-  .fbtn:active{ opacity:0.75; }
+  .fbtn.active{ background:rgba(15,52,96,0.92);border-color:#C9A84C;color:#C9A84C; }
+  .fbtn:active{ opacity:0.72; }
 
   /* ── Legend ─────────────────────────────────────────────── */
   #legend{

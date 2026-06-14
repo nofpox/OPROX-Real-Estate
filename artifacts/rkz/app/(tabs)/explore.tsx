@@ -48,6 +48,21 @@ export default function ExploreScreen() {
               {isAr ? "بيانات مباشرة — فنادق · مطاعم · كافيهات" : "Live data — Hotels · Restaurants · Cafes"}
             </Text>
           </View>
+          {/* Busyness legend */}
+          <View style={[s.legend, isAr && { flexDirection: "row-reverse" }]}>
+            <View style={s.legendItem}>
+              <View style={[s.legendDot, { backgroundColor: "#22c55e" }]} />
+              <Text style={s.legendTxt}>{isAr ? "رايق" : "Quiet"}</Text>
+            </View>
+            <View style={s.legendItem}>
+              <View style={[s.legendDot, { backgroundColor: "#eab308" }]} />
+              <Text style={s.legendTxt}>{isAr ? "وسط" : "Mod"}</Text>
+            </View>
+            <View style={s.legendItem}>
+              <View style={[s.legendDot, { backgroundColor: "#ef4444" }]} />
+              <Text style={s.legendTxt}>{isAr ? "زحمة" : "Busy"}</Text>
+            </View>
+          </View>
         </View>
       </View>
 
@@ -106,36 +121,55 @@ function makeStyles(topPad: number, _bottomPad: number) {
       fontFamily: "Inter_400Regular",
     },
 
+    legend: {
+      flexDirection: "row",
+      gap:           8,
+      alignItems:    "center",
+    },
+    legendItem: {
+      flexDirection: "row",
+      alignItems:    "center",
+      gap:           3,
+    },
+    legendDot: {
+      width:        6,
+      height:       6,
+      borderRadius: 3,
+    },
+    legendTxt: {
+      color:      "rgba(255,255,255,0.55)",
+      fontSize:   10,
+      fontFamily: "Inter_400Regular",
+    },
+
     linksBar: {
       position:        "absolute",
-      left:            12,
-      right:           12,
-      backgroundColor: "rgba(8,16,34,0.92)",
+      alignSelf:       "center",
+      backgroundColor: "rgba(8,16,34,0.88)",
       borderWidth:     1,
-      borderColor:     "rgba(201,168,76,0.40)",
-      borderRadius:    16,
+      borderColor:     "rgba(201,168,76,0.35)",
+      borderRadius:    24,
       zIndex:          10,
       overflow:        "hidden",
     },
     visitBtn: {
       flexDirection:     "row",
       alignItems:        "center",
-      gap:               12,
-      paddingHorizontal: 18,
-      paddingVertical:   14,
+      gap:               8,
+      paddingHorizontal: 14,
+      paddingVertical:   8,
     },
-    visitFlag:     { fontSize: 28 },
-    visitTextWrap: { flex: 1 },
+    visitFlag:     { fontSize: 18 },
+    visitTextWrap: { flexShrink: 1 },
     visitTitle: {
       color:      "#C9A84C",
-      fontSize:   15,
+      fontSize:   13,
       fontFamily: "Inter_700Bold",
     },
     visitSub: {
-      color:      "rgba(255,255,255,0.50)",
-      fontSize:   11,
+      color:      "rgba(255,255,255,0.45)",
+      fontSize:   10,
       fontFamily: "Inter_400Regular",
-      marginTop:  2,
     },
   });
 }

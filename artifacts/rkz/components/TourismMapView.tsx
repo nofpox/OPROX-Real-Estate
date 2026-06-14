@@ -30,19 +30,20 @@ function buildMapHtml(isAr: boolean): string {
   html,body,#map{height:100%;width:100%;background:#0a1628;}
 
   #filter-bar{
-    position:absolute;top:12px;left:12px;z-index:1000;
-    display:flex;flex-direction:column;gap:6px;
+    position:absolute;top:74px;left:10px;z-index:1000;
+    display:flex;flex-direction:column;gap:5px;
   }
   .fbtn{
     display:flex;align-items:center;justify-content:center;
-    padding:7px 16px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.25);
-    background:rgba(10,22,40,0.88);color:#e2e8f0;font-size:13px;
+    padding:5px 12px;border-radius:14px;border:1px solid rgba(255,255,255,0.20);
+    background:rgba(10,22,40,0.82);color:#cbd5e1;font-size:12px;
     font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;
     font-weight:600;cursor:pointer;white-space:nowrap;
     -webkit-tap-highlight-color:transparent;user-select:none;
+    min-width:66px;
   }
-  .fbtn.active{background:#0F3460;border-color:#C9A84C;color:#C9A84C;}
-  .fbtn:active{opacity:0.75;}
+  .fbtn.active{background:rgba(15,52,96,0.92);border-color:#C9A84C;color:#C9A84C;}
+  .fbtn:active{opacity:0.72;}
 
   #legend{
     position:absolute;bottom:36px;left:12px;z-index:1000;
