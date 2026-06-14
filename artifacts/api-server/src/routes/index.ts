@@ -46,6 +46,7 @@ import contractsRouter from "./contracts";
 import invoicesRouter from "./invoices";
 import inventoryRouter from "./inventoryRoute";
 import analyticsRouter from "./analytics";
+import poiRouter from "./poi";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
@@ -187,6 +188,7 @@ router.use(contractsRouter);
 router.use(invoicesRouter);
 router.use(inventoryRouter);
 router.use(analyticsRouter);
+router.use(poiRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do
