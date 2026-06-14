@@ -30,11 +30,14 @@ function resolveType(tags: Record<string, string>): string {
 // ── POST /poi/import — fetch from Overpass and bulk-insert ────────────────────
 router.post("/poi/import", async (req, res) => {
   try {
-    const ovpRes = await fetch("https://overpass-api.de/api/interpreter", {
+    const ovpRes = await fetch("https://maps.mail.ru/osm/tools/overpass/api/interpreter", {
       method:  "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent":   "Mozilla/5.0 (compatible; ROZOZ/1.0)",
+      },
       body:    `data=${encodeURIComponent(OVERPASS_QUERY)}`,
-      signal:  AbortSignal.timeout(70_000),
+      signal:  AbortSignal.timeout(75_000),
     });
 
     if (!ovpRes.ok) {
