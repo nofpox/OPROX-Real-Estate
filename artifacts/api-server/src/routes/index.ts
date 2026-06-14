@@ -48,6 +48,7 @@ import inventoryRouter from "./inventoryRoute";
 import analyticsRouter from "./analytics";
 import poiRouter from "./poi";
 import mapViewRouter from "./mapView";
+import tileProxyRouter from "./tileProxy";
 import { auditLogMiddleware } from "../middleware/auditLog.js";
 
 const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
@@ -55,7 +56,7 @@ const TIER_LEVEL: Record<"admin" | "supervisor" | "worker", number> = {
 };
 
 // /portal/ routes manage their own session auth via requireAuth (async cookie reader)
-const PUBLIC_PREFIXES = ["/auth/", "/health", "/unit-requests", "/unit-info/", "/service-categories", "/rkz/", "/portal/", "/debug/", "/preview/authenticate", "/poi/import", "/poi/stats", "/poi", "/map-view"];
+const PUBLIC_PREFIXES = ["/auth/", "/health", "/unit-requests", "/unit-info/", "/service-categories", "/rkz/", "/portal/", "/debug/", "/preview/authenticate", "/poi/import", "/poi/stats", "/poi", "/map-view", "/tiles/"];
 
 const SUPER_ADMIN_PREFIXES = ["/super-admin/"];
 
@@ -191,6 +192,7 @@ router.use(inventoryRouter);
 router.use(analyticsRouter);
 router.use(poiRouter);
 router.use(mapViewRouter);
+router.use(tileProxyRouter);
 
 // Populate the kill-switch cache from DB on startup.
 // Runs asynchronously; any request that arrives before it finishes will do

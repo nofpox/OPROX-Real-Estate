@@ -293,9 +293,11 @@ ${leafletJs}
     zoomControl:false,attributionControl:true,
     tap:true,tapTolerance:15
   });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  /* Use server-side tile proxy so Android WebView doesn't need direct OSM access */
+  var tileBase = window.location.origin + '/api/tiles';
+  L.tileLayer(tileBase + '/{z}/{x}/{y}.png',{
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-    subdomains:'abc',maxZoom:19
+    maxZoom:19
   }).addTo(map);
 
   var tourismLayer=L.layerGroup().addTo(map);
