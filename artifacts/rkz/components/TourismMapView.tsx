@@ -42,7 +42,7 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   html,body,#map{height:100%;width:100%;background:#0a1628;}
 
   #filter-bar{
-    position:absolute;top:96px;left:10px;z-index:1000;
+    position:absolute;top:115px;left:10px;z-index:1000;
     display:flex;flex-direction:column;gap:5px;
   }
   .fbtn{
@@ -56,7 +56,7 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   .fbtn:active{opacity:.72;}
 
   #legend{
-    position:absolute;bottom:38px;left:10px;z-index:1000;
+    position:absolute;bottom:52px;left:10px;z-index:1000;
     background:rgba(10,22,40,0.88);border:1px solid rgba(255,255,255,0.14);
     border-radius:10px;padding:7px 11px;
     font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;
@@ -135,8 +135,9 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   }
   .pop-no-phone{font-size:10px;color:#475569;text-align:center;padding:3px 0;}
 
-  .leaflet-control-zoom{display:none!important;}
-  .leaflet-control-attribution{background:rgba(10,22,40,.7)!important;color:#475569!important;font-size:9px!important;}
+  .leaflet-control-container > *{display:none!important;}
+  .leaflet-control-container .leaflet-bottom.leaflet-right{display:block!important;}
+  .leaflet-control-attribution{background:rgba(10,22,40,.7)!important;color:#475569!important;font-size:9px!important;display:block!important;}
   .leaflet-control-attribution a{color:#C9A84C!important;}
   .leaflet-tile-pane{will-change:transform;}
   .leaflet-tile-container img{width:256.5px!important;height:256.5px!important;}
@@ -318,7 +319,6 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   function addOvpMarker(type,el){
     if(!el.lat||!el.lon)return;
     var tags=el.tags||{};
-    if(!ovpName(tags))return;
     L.circleMarker([el.lat,el.lon],{
       radius:6.5,fillColor:OVP_CLR[type],color:'#fff',weight:1.5,opacity:1,fillOpacity:.88
     })

@@ -195,7 +195,7 @@ export default function ExploreScreen() {
       </View>
 
       {/* ── روح السعودية ─────────────────────────────────────────────────── */}
-      <View style={[s.linksBar, { bottom: bottomPad + 8 }]} pointerEvents="box-none">
+      <View style={[s.linksBar, { bottom: bottomPad + 50 }]} pointerEvents="box-none">
         <Pressable
           pointerEvents="auto"
           onPress={() => {
