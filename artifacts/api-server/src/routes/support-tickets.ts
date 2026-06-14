@@ -3,6 +3,7 @@ import { db, supportTicketsTable, usersTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import { insertSupportTicketSchema, updateSupportTicketSchema } from "@workspace/db";
 import { actorFromRequest, getRoleTier } from "./activityLogs";
+import { trackEvent } from "../middleware/trackEvent.js";
 
 const router = Router();
 
@@ -32,6 +33,7 @@ router.post("/support-tickets", async (req, res) => {
   }
 
   const [ticket] = await db.insert(supportTicketsTable).values(parsed.data).returning();
+  void trackEvent(req, "new_ticket_created");
   res.status(201).json(formatTicket(ticket));
 });
 

@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import { logActivity } from "./activityLogs.js";
 import { logger } from "../lib/logger.js";
+import { trackEvent } from "../middleware/trackEvent.js";
 import {
   checkLoginAllowed,
   recordFailedAttempt,
@@ -623,6 +624,7 @@ router.post("/auth/login", async (req, res) => {
   };
   await sessions.set(sessionId, sessionUser);
   logActivity({ actorId: user.id, actorName: user.displayName, actorRole: user.role, tenantId: resolvedTenantId ?? undefined, action: "auth.login", entityType: "user", entityId: user.id, entityLabel: user.username });
+  void trackEvent(req, "admin_login");
   res.setHeader("Set-Cookie", `pms_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`);
   res.json(sessionUser);
 });

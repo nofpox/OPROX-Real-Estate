@@ -4,6 +4,7 @@ import { eq, and, sql } from "drizzle-orm";
 import { insertPropertySchema, updatePropertySchema } from "@workspace/db";
 import { logActivity, actorFromRequest } from "./activityLogs.js";
 import { portalCache, TTL, propertiesCacheKey } from "../utils/cache.js";
+import { trackEvent } from "../middleware/trackEvent.js";
 
 const router = Router();
 
@@ -53,6 +54,7 @@ router.post("/properties", async (req, res) => {
   portalCache.invalidatePrefix("props:");
   const actor = actorFromRequest(req);
   logActivity({ ...actor, tenantId, action: "property.created", entityType: "property", entityId: prop.id, entityLabel: prop.name, propertyId: prop.id });
+  void trackEvent(req, "property_added");
   res.status(201).json(formatProperty(prop, 0));
 });
 
