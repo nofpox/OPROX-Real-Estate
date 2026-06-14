@@ -7,7 +7,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Linking } from "react-native";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import {
   Dimensions,
   Platform,
@@ -20,6 +20,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import TourismMapView, { TourismSpot } from "@/components/TourismMapView";
+import { logAdminEvent } from "@/hooks/useAIAssistant";
 import { useLocale } from "@/hooks/useLocale";
 
 const { height: SCREEN_H } = Dimensions.get("window");
@@ -152,6 +153,16 @@ const ATTRACTIONS: TourismSpot[] = [
 export default function ExploreScreen() {
   const insets       = useSafeAreaInsets();
   const { t, isAr } = useLocale();
+  const openTs       = useRef<number>(0);
+
+  useEffect(() => {
+    openTs.current = Date.now();
+    void logAdminEvent("map_open", "tourist_map_open");
+    return () => {
+      const secs = Math.round((Date.now() - openTs.current) / 1000);
+      void logAdminEvent("map_close", `tourist_map_close | duration_sec:${secs}`);
+    };
+  }, []);
 
   const topPad    = insets.top    + (Platform.OS === "web" ? 67 : 0);
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 : 0);

@@ -14,6 +14,7 @@ import {
 } from "react-native";
 
 import { useApp } from "@/context/AppContext";
+import { logAdminEvent } from "@/hooks/useAIAssistant";
 
 const LOGO  = require("@/assets/images/rozoz-logo-eagle.png");
 const { width } = Dimensions.get("window");
@@ -39,11 +40,13 @@ export default function ModeSelectScreen() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const goRegistered = () => {
+    void logAdminEvent("property_section", "user_enter_property | button:property_section");
     setAppMode("registered");
     router.replace("/(tabs)" as never);
   };
 
   const goTourist = () => {
+    void logAdminEvent("tourism_section", "user_enter_tourism | button:tourism_section");
     setAppMode("tourist");
     router.replace("/(tabs)/explore" as never);
   };

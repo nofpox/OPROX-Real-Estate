@@ -24,6 +24,10 @@ const EVENT_TYPE_COLORS: Record<AdminEvent["type"], string> = {
   partner_contact:   "#2563EB",
   security_alert:    "#DC2626",
   pending_search:    "#D97706",
+  property_section:  "#0369A1",
+  tourism_section:   "#D4A843",
+  map_open:          "#16A34A",
+  map_close:         "#64748B",
 };
 
 const EVENT_TYPE_ICONS: Record<AdminEvent["type"], React.ComponentProps<typeof MaterialIcons>["name"]> = {
@@ -31,6 +35,10 @@ const EVENT_TYPE_ICONS: Record<AdminEvent["type"], React.ComponentProps<typeof M
   partner_contact:   "people",
   security_alert:    "security",
   pending_search:    "search",
+  property_section:  "apartment",
+  tourism_section:   "explore",
+  map_open:          "map",
+  map_close:         "close",
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

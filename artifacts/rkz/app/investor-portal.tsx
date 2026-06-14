@@ -1,8 +1,9 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Platform,
   Pressable,
@@ -14,16 +15,65 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DUE_WINDOW_DAYS, daysUntil, useApp } from "@/context/AppContext";
+import { ADMIN_EVENTS_KEY, AdminEvent } from "@/hooks/useAIAssistant";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
 const ROZOZ_WHATSAPP = "https://wa.me/966500000000";
+
+interface AnalyticsStats {
+  propertyToday: number;
+  tourismToday:  number;
+  avgMapSec:     number;
+}
+
+function computeAnalytics(events: AdminEvent[]): AnalyticsStats {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const ts = todayStart.getTime();
+
+  const propertyToday = events.filter(
+    e => e.type === "property_section" && e.timestamp >= ts
+  ).length;
+
+  const tourismToday = events.filter(
+    e => e.type === "tourism_section" && e.timestamp >= ts
+  ).length;
+
+  const closeDurations = events
+    .filter(e => e.type === "map_close")
+    .map(e => {
+      const m = e.description.match(/duration_sec:(\d+)/);
+      return m ? parseInt(m[1], 10) : null;
+    })
+    .filter((n): n is number => n !== null);
+
+  const avgMapSec = closeDurations.length
+    ? Math.round(closeDurations.reduce((a, b) => a + b, 0) / closeDurations.length)
+    : 0;
+
+  return { propertyToday, tourismToday, avgMapSec };
+}
 
 export default function OwnerHubScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { isAr } = useLocale();
   const { leases, tenants } = useApp();
+
+  const [analytics, setAnalytics] = useState<AnalyticsStats>({
+    propertyToday: 0, tourismToday: 0, avgMapSec: 0,
+  });
+
+  useEffect(() => {
+    AsyncStorage.getItem(ADMIN_EVENTS_KEY).then(raw => {
+      if (!raw) return;
+      try {
+        const evs = JSON.parse(raw) as AdminEvent[];
+        setAnalytics(computeAnalytics(evs));
+      } catch { /* ignore */ }
+    });
+  }, []);
 
   const topPad    = insets.top    + (Platform.OS === "web" ? 67 : 0);
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 : 100);
@@ -60,6 +110,39 @@ export default function OwnerHubScreen() {
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>{isAr ? "لوحة المالك" : "Owner Hub"}</Text>
           <Text style={s.headerSub}>{isAr ? "نظرة عامة على أملاكك وإيجاراتك" : "Overview of your properties & leases"}</Text>
+        </View>
+      </View>
+
+      {/* ── Usage Analytics ────────────────────────────────────────────────── */}
+      <View style={s.analyticsSec}>
+        <View style={[s.analyticsHeader, isAr && { flexDirection: "row-reverse" }]}>
+          <MaterialIcons name="bar-chart" size={18} color={colors.gold} />
+          <Text style={[s.analyticsTitle, isAr && { textAlign: "right" }]}>
+            {isAr ? "تحليلات الاستخدام — اليوم" : "Usage Analytics — Today"}
+          </Text>
+        </View>
+        <View style={[s.analyticsRow, isAr && { flexDirection: "row-reverse" }]}>
+          <View style={[s.aCard, { backgroundColor: "#EFF6FF" }]}>
+            <MaterialIcons name="apartment" size={22} color="#2563EB" />
+            <Text style={[s.aValue, { color: "#2563EB" }]}>{analytics.propertyToday}</Text>
+            <Text style={s.aLabel}>{isAr ? "دخول عقار" : "Property Visits"}</Text>
+          </View>
+          <View style={[s.aCard, { backgroundColor: "rgba(212,168,67,0.12)" }]}>
+            <MaterialIcons name="explore" size={22} color={colors.gold} />
+            <Text style={[s.aValue, { color: colors.gold }]}>{analytics.tourismToday}</Text>
+            <Text style={s.aLabel}>{isAr ? "دخول سياحة" : "Tourism Visits"}</Text>
+          </View>
+          <View style={[s.aCard, { backgroundColor: "#F0FDF4" }]}>
+            <MaterialIcons name="timer" size={22} color="#16A34A" />
+            <Text style={[s.aValue, { color: "#16A34A" }]}>
+              {analytics.avgMapSec > 0
+                ? analytics.avgMapSec >= 60
+                  ? `${Math.floor(analytics.avgMapSec / 60)}د${analytics.avgMapSec % 60 > 0 ? `${analytics.avgMapSec % 60}ث` : ""}`
+                  : `${analytics.avgMapSec}ث`
+                : "—"}
+            </Text>
+            <Text style={s.aLabel}>{isAr ? "متوسط الخريطة" : "Avg Map Time"}</Text>
+          </View>
         </View>
       </View>
 
@@ -240,6 +323,28 @@ function styles(
     emptyIcon: { width: 90, height: 90, borderRadius: 22, alignItems: "center", justifyContent: "center" },
     emptyTitle: { fontSize: 18, fontFamily: "Inter_700Bold", color: colors.foreground, textAlign: "center" },
     emptySub:   { fontSize: 14, fontFamily: "Inter_400Regular", color: "#64748B", textAlign: "center", lineHeight: 20 },
+
+    analyticsSec: {
+      paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4,
+    },
+    analyticsHeader: {
+      flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10,
+    },
+    analyticsTitle: {
+      fontSize: 15, fontFamily: "Inter_700Bold", color: colors.foreground,
+    },
+    analyticsRow: {
+      flexDirection: "row", gap: 10,
+    },
+    aCard: {
+      flex: 1, alignItems: "center", borderRadius: 14, padding: 12, gap: 4,
+    },
+    aValue: {
+      fontSize: 22, fontFamily: "Inter_700Bold",
+    },
+    aLabel: {
+      fontSize: 10, fontFamily: "Inter_500Medium", color: "#64748B", textAlign: "center",
+    },
 
     ctaSection: { paddingHorizontal: 16, paddingTop: 8, gap: 12 },
     primaryCta: {

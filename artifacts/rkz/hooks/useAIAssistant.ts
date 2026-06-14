@@ -22,7 +22,15 @@ export const ADMIN_EVENTS_KEY = "rozoz_admin_events";
 
 export interface AdminEvent {
   id: string;
-  type: "valuation_request" | "partner_contact" | "security_alert" | "pending_search";
+  type:
+    | "valuation_request"
+    | "partner_contact"
+    | "security_alert"
+    | "pending_search"
+    | "property_section"
+    | "tourism_section"
+    | "map_open"
+    | "map_close";
   description: string;
   timestamp: number;
 }
