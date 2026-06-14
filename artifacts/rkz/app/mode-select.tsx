@@ -83,8 +83,8 @@ export default function ModeSelectScreen() {
             <MaterialIcons name="vpn-key" size={28} color={BG} />
           </View>
           <View style={s.cardText}>
-            <Text style={s.cardTitle}>مستثمر / مستأجر / بائع</Text>
-            <Text style={s.cardSub}>Investor · Tenant · Seller</Text>
+            <Text style={s.cardTitle}>بحث أجار / بيع / إدارة</Text>
+            <Text style={s.cardSub}>Rent · Sale · Management</Text>
           </View>
           <MaterialIcons
             name={Platform.OS === "ios" ? "chevron-left" : "chevron-left"}
