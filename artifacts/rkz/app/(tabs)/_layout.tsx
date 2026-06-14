@@ -230,7 +230,7 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
           tabBarHideOnKeyboard: true,
           tabBarShowLabel: false,
           tabBarItemStyle: { flex: 1, justifyContent: "center", alignItems: "center" },
-          tabBarStyle: {
+          tabBarStyle: isTourist ? { display: "none" } : {
             position:        "absolute",
             backgroundColor: "transparent",
             borderTopWidth:  0,
