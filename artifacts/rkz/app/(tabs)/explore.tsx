@@ -1,14 +1,16 @@
 /**
  * استكشف — Combined map:
  *  - 12 tourist/heritage spots (emoji pins + busyness rings)
- *  - Live hotels/restaurants/cafes from Overpass API
- * Filter inside map: الكل | سياحة | فنادق | مطاعم | كافيهات
+ *  - Live POI from /api/poi within 20 km of user location (circle markers)
+ * Filter bar: الكل | سياحة | فنادق | مطاعم | كافيهات | تاريخي | مناطق
  */
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as Location from "expo-location";
 import { Linking } from "react-native";
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   Platform,
   Pressable,
@@ -19,12 +21,15 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import TourismMapView, { TourismSpot } from "@/components/TourismMapView";
+import TourismMapView, { PoiPlace, TourismSpot } from "@/components/TourismMapView";
 import { logAdminEvent } from "@/hooks/useAIAssistant";
 import { useLocale } from "@/hooks/useLocale";
+import { getApiBase } from "@/utils/getApiBase";
 
 const { height: SCREEN_H } = Dimensions.get("window");
-const VISIT_SAUDI_URL = "https://www.visitsaudi.com";
+const VISIT_SAUDI_URL      = "https://www.visitsaudi.com";
+const DEFAULT_LAT          = 24.7136;   // الرياض — fallback إذا رفض المستخدم الموقع
+const DEFAULT_LNG          = 46.6753;
 
 // ── 12 curated tourist & heritage spots ────────────────────────────────────
 const ATTRACTIONS: TourismSpot[] = [
@@ -150,14 +155,60 @@ const ATTRACTIONS: TourismSpot[] = [
   },
 ];
 
+async function fetchPoiNearby(lat: number, lng: number): Promise<PoiPlace[]> {
+  const base = getApiBase();
+  const url  = `${base}/api/poi?lat=${lat}&lng=${lng}&radius_km=20&limit=500`;
+  const res  = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json() as { places?: PoiPlace[] };
+  return data.places ?? [];
+}
+
 export default function ExploreScreen() {
   const insets       = useSafeAreaInsets();
   const { t, isAr } = useLocale();
   const openTs       = useRef<number>(0);
 
+  const [userLat,    setUserLat]    = useState<number | undefined>(undefined);
+  const [userLng,    setUserLng]    = useState<number | undefined>(undefined);
+  const [poiPlaces,  setPoiPlaces]  = useState<PoiPlace[]>([]);
+  const [poiLoading, setPoiLoading] = useState(true);
+
   useEffect(() => {
     openTs.current = Date.now();
     void logAdminEvent("map_open", "tourist_map_open");
+
+    void (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        let lat = DEFAULT_LAT;
+        let lng = DEFAULT_LNG;
+
+        if (status === "granted") {
+          const loc = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          lat = loc.coords.latitude;
+          lng = loc.coords.longitude;
+        }
+
+        setUserLat(lat);
+        setUserLng(lng);
+        const places = await fetchPoiNearby(lat, lng);
+        setPoiPlaces(places);
+      } catch {
+        // Use Riyadh as fallback silently
+        setUserLat(DEFAULT_LAT);
+        setUserLng(DEFAULT_LNG);
+        try {
+          const places = await fetchPoiNearby(DEFAULT_LAT, DEFAULT_LNG);
+          setPoiPlaces(places);
+        } catch { /* ignore */ }
+      } finally {
+        setPoiLoading(false);
+      }
+    })();
+
     return () => {
       const secs = Math.round((Date.now() - openTs.current) / 1000);
       void logAdminEvent("map_close", `tourist_map_close | duration_sec:${secs}`);
@@ -169,23 +220,36 @@ export default function ExploreScreen() {
 
   const s = useMemo(() => makeStyles(topPad, bottomPad), [topPad, bottomPad]);
 
+  const subLabel = poiLoading
+    ? (isAr ? "جاري تحديد موقعك…" : "Locating you…")
+    : isAr
+      ? `${ATTRACTIONS.length} مكان + ${poiPlaces.length} قريب منك`
+      : `${ATTRACTIONS.length} spots + ${poiPlaces.length} nearby`;
+
   return (
     <View style={[s.root, Platform.OS === "web" && { height: SCREEN_H }]}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-      {/* ── Combined map: tourist spots + Overpass data ───────────────────── */}
-      <TourismMapView spots={ATTRACTIONS} isAr={isAr} />
+      {/* ── Combined map ──────────────────────────────────────────────────── */}
+      <TourismMapView
+        spots={ATTRACTIONS}
+        isAr={isAr}
+        poiPlaces={poiPlaces}
+        userLat={userLat}
+        userLng={userLng}
+      />
 
-      {/* ── Floating glass header ────────────────────────────────────────── */}
+      {/* ── Floating glass header ─────────────────────────────────────────── */}
       <View style={[s.header, { paddingTop: topPad + 12 }]} pointerEvents="box-none">
         <View style={s.headerInner} pointerEvents="auto">
           <View style={[s.titleWrap, isAr && { alignItems: "flex-end" }]}>
             <Text style={s.title}>{t.explore.title}</Text>
-            <Text style={s.sub}>
-              {isAr
-                ? `${ATTRACTIONS.length} مكان + فنادق ومطاعم`
-                : `${ATTRACTIONS.length} spots + Hotels & Restaurants`}
-            </Text>
+            <View style={s.subRow}>
+              {poiLoading && (
+                <ActivityIndicator size="small" color="#C9A84C" style={s.spinner} />
+              )}
+              <Text style={s.sub}>{subLabel}</Text>
+            </View>
           </View>
           {/* Busyness legend */}
           <View style={[s.legend, isAr && { flexDirection: "row-reverse" }]}>
@@ -205,7 +269,7 @@ export default function ExploreScreen() {
         </View>
       </View>
 
-      {/* ── روح السعودية ─────────────────────────────────────────────────── */}
+      {/* ── روح السعودية ──────────────────────────────────────────────────── */}
       <View style={[s.linksBar, { bottom: bottomPad + 50 }]} pointerEvents="box-none">
         <Pressable
           pointerEvents="auto"
@@ -254,6 +318,12 @@ function makeStyles(topPad: number, _bottomPad: number) {
       fontSize:   17,
       fontFamily: "Inter_700Bold",
     },
+    subRow: {
+      flexDirection: "row",
+      alignItems:    "center",
+      gap:           5,
+    },
+    spinner: { width: 12, height: 12 },
     sub: {
       color:      "rgba(255,255,255,0.48)",
       fontSize:   10,
@@ -280,7 +350,7 @@ function makeStyles(topPad: number, _bottomPad: number) {
       fontFamily: "Inter_400Regular",
     },
 
-    // ── روح السعودية — compact pill ────────────────────────────────────────
+    // ── روح السعودية — compact pill ─────────────────────────────────────────
     linksBar: {
       position:        "absolute",
       alignSelf:       "center",

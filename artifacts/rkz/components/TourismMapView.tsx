@@ -1,7 +1,7 @@
 /**
  * TourismMapView — NATIVE (WebView variant)
  * Metro auto-selects TourismMapView.web.tsx on web builds.
- * Combines static tourist spots (emoji pins) + live Overpass API data.
+ * Combines static tourist spots (emoji pins) + POI from /api/poi (injected as JSON).
  */
 import React, { useRef } from "react";
 import { StyleSheet } from "react-native";
@@ -24,12 +24,39 @@ export interface TourismSpot {
   rating?: number;
 }
 
-interface Props { spots?: TourismSpot[]; isAr?: boolean; }
+export interface PoiPlace {
+  osmId: number;
+  type: string;
+  nameAr: string | null;
+  nameEn: string | null;
+  lat: number;
+  lng: number;
+  tags: Record<string, string>;
+}
 
-function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
+interface Props {
+  spots?:     TourismSpot[];
+  isAr?:      boolean;
+  poiPlaces?: PoiPlace[];
+  userLat?:   number;
+  userLng?:   number;
+}
+
+function buildMapHtml(
+  spots:     TourismSpot[],
+  isAr:      boolean,
+  poiPlaces: PoiPlace[],
+  userLat?:  number,
+  userLng?:  number,
+): string {
   const spotsJson = JSON.stringify(spots);
+  const poiJson   = JSON.stringify(poiPlaces);
   const IS_AR     = isAr ? "true" : "false";
   const dir       = isAr ? "rtl" : "ltr";
+  const ulat      = userLat != null ? String(userLat) : "null";
+  const ulng      = userLng != null ? String(userLng) : "null";
+  const mapCenter = userLat != null ? `[${userLat},${userLng}]` : "[23.8,44.8]";
+  const mapZoom   = userLat != null ? "12" : "5";
 
   return `<!DOCTYPE html>
 <html lang="${isAr ? "ar" : "en"}" dir="${dir}">
@@ -42,21 +69,21 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   html,body,#map{height:100%;width:100%;background:#0f2040;}
 
   #filter-bar{
-    position:absolute;top:115px;left:10px;z-index:1000;
+    position:absolute;top:115px;${isAr ? "right" : "left"}:10px;z-index:1000;
     display:flex;flex-direction:column;gap:5px;
   }
   .fbtn{
     padding:5px 12px;border-radius:13px;border:1px solid rgba(255,255,255,0.22);
     background:rgba(10,22,40,0.84);color:#cbd5e1;font-size:12px;
     font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;font-weight:600;
-    cursor:pointer;white-space:nowrap;min-width:70px;text-align:center;
+    cursor:pointer;white-space:nowrap;min-width:72px;text-align:center;
     -webkit-tap-highlight-color:transparent;user-select:none;
   }
   .fbtn.active{background:rgba(15,52,96,0.95);border-color:#C9A84C;color:#C9A84C;}
   .fbtn:active{opacity:.72;}
 
   #legend{
-    position:absolute;bottom:52px;left:10px;z-index:1000;
+    position:absolute;bottom:52px;${isAr ? "right" : "left"}:10px;z-index:1000;
     background:rgba(10,22,40,0.88);border:1px solid rgba(255,255,255,0.14);
     border-radius:10px;padding:7px 11px;
     font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;
@@ -65,16 +92,6 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   .l-row:last-child{margin-bottom:0;}
   .ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
   .l-lbl{font-size:11px;color:#e2e8f0;font-weight:600;}
-
-  #loading{
-    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    z-index:2000;background:rgba(10,22,40,0.93);border:1px solid rgba(201,168,76,.38);
-    border-radius:14px;padding:16px 24px;text-align:center;pointer-events:none;
-    font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;
-  }
-  #loading .spin{font-size:22px;display:block;margin-bottom:7px;animation:spin 1.2s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  #loading .ltxt{font-size:12px;color:#C9A84C;font-weight:700;}
 
   .spot-icon{overflow:visible!important;background:none!important;border:none!important;}
   .spot-wrap{display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%);cursor:pointer;}
@@ -107,7 +124,6 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   .lf-popup .leaflet-popup-tip-container{display:none;}
   .lf-popup .leaflet-popup-content{margin:14px;min-width:190px;max-width:255px;}
   .lf-popup .leaflet-popup-close-button{color:#94a3b8!important;top:8px;${isAr ? "left:8px;right:auto!important;" : "right:8px;"}font-size:20px;}
-  .pop-emoji{font-size:26px;margin-bottom:5px;display:block;}
   .pop-type{font-size:10px;font-weight:800;margin-bottom:5px;letter-spacing:.4px;}
   .pop-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;line-height:1.4;}
   .pop-city{font-size:11px;color:#D4A843;margin-bottom:3px;}
@@ -122,7 +138,6 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   .pop-bar-track{height:4px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;}
   .pop-bar-fill{height:100%;border-radius:3px;}
   .pop-addr{font-size:11px;color:rgba(241,245,249,.52);margin-bottom:9px;line-height:1.5;}
-  .pop-rating-dim{font-size:11px;color:#64748b;margin-bottom:4px;}
   .pop-btn{
     display:flex;align-items:center;justify-content:center;gap:5px;
     background:#D4A843;color:#0F2040;font-weight:700;font-size:11px;
@@ -149,20 +164,20 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
 <div id="filter-bar">
   <button class="fbtn" onclick="setFilter(this,'tourism')">${isAr ? "سياحة" : "Tourism"}</button>
   <button class="fbtn" onclick="setFilter(this,'hotel')">${isAr ? "فنادق" : "Hotels"}</button>
-  <button class="fbtn" onclick="setFilter(this,'rest')">${isAr ? "مطاعم" : "Restaurants"}</button>
+  <button class="fbtn" onclick="setFilter(this,'rest')">${isAr ? "مطاعم" : "Rest."}</button>
   <button class="fbtn" onclick="setFilter(this,'cafe')">${isAr ? "كافيهات" : "Cafes"}</button>
+  <button class="fbtn" onclick="setFilter(this,'historic')">${isAr ? "تاريخي" : "Historic"}</button>
+  <button class="fbtn" onclick="setFilter(this,'attraction')">${isAr ? "مناطق" : "Spots"}</button>
 </div>
 
 <div id="legend">
+  <div class="l-row"><span class="ldot" style="background:#6366F1;border:1.5px solid #fff"></span><span class="l-lbl">${isAr ? "موقعك" : "You"}</span></div>
   <div class="l-row"><span class="ldot" style="background:#D4A843"></span><span class="l-lbl">${isAr ? "سياحة" : "Tourism"}</span></div>
   <div class="l-row"><span class="ldot" style="background:#3B82F6"></span><span class="l-lbl">${isAr ? "فندق" : "Hotel"}</span></div>
   <div class="l-row"><span class="ldot" style="background:#EF4444"></span><span class="l-lbl">${isAr ? "مطعم" : "Restaurant"}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#78350F"></span><span class="l-lbl">${isAr ? "كافيه" : "Cafe"}</span></div>
-</div>
-
-<div id="loading">
-  <span class="spin">⏳</span>
-  <div class="ltxt">${isAr ? "جاري تحميل الفنادق والمطاعم…" : "Loading hotels & restaurants…"}</div>
+  <div class="l-row"><span class="ldot" style="background:#92400E"></span><span class="l-lbl">${isAr ? "كافيه" : "Cafe"}</span></div>
+  <div class="l-row"><span class="ldot" style="background:#D97706"></span><span class="l-lbl">${isAr ? "تاريخي" : "Historic"}</span></div>
+  <div class="l-row"><span class="ldot" style="background:#16A34A"></span><span class="l-lbl">${isAr ? "مناطق" : "Spots"}</span></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -170,6 +185,9 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
 (function(){
   var IS_AR=${IS_AR};
   var SPOTS=${spotsJson};
+  var POI_PLACES=${poiJson};
+  var USER_LAT=${ulat};
+  var USER_LNG=${ulng};
 
   var PAT={
     cultural     :[[8,11,55],[11,14,45],[14,17,70],[17,21,78],[21,23,42]],
@@ -198,27 +216,30 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   function stars(r){if(!r)return'';var f=Math.floor(r),h=(r-f)>=.5?1:0;return'★'.repeat(f)+(h?'½':'')+('☆'.repeat(5-f-h));}
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-  var map=L.map('map',{center:[23.8,44.8],zoom:5,zoomControl:false,attributionControl:true});
+  var map=L.map('map',{center:${mapCenter},zoom:${mapZoom},zoomControl:false,attributionControl:true});
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
     attribution:'&copy;<a href="https://www.openstreetmap.org/copyright">OSM</a>&copy;<a href="https://carto.com">CARTO</a>',
     subdomains:'abcd',maxZoom:19
   }).addTo(map);
 
+  var ALL_KEYS=['tourism','hotel','rest','cafe','historic','attraction'];
   var layers={
-    tourism:L.layerGroup().addTo(map),
-    hotel:  L.layerGroup().addTo(map),
-    rest:   L.layerGroup().addTo(map),
-    cafe:   L.layerGroup().addTo(map)
+    tourism:   L.layerGroup().addTo(map),
+    hotel:     L.layerGroup().addTo(map),
+    rest:      L.layerGroup().addTo(map),
+    cafe:      L.layerGroup().addTo(map),
+    historic:  L.layerGroup().addTo(map),
+    attraction:L.layerGroup().addTo(map)
   };
 
   window.setFilter=function(btn,type){
     var wasActive=btn.classList.contains('active');
     document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});
     if(wasActive){
-      ['tourism','hotel','rest','cafe'].forEach(function(t){map.addLayer(layers[t]);});
+      ALL_KEYS.forEach(function(t){map.addLayer(layers[t]);});
     }else{
       btn.classList.add('active');
-      ['tourism','hotel','rest','cafe'].forEach(function(t){
+      ALL_KEYS.forEach(function(t){
         if(t===type)map.addLayer(layers[t]);else map.removeLayer(layers[t]);
       });
     }
@@ -256,7 +277,6 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
       ?'<div class="pop-stars-row"><span class="pop-stars">'+stars(s.rating)+'</span>'+
         '<span class="pop-rating-num">'+s.rating.toFixed(1)+'</span></div>':'';
     return(
-      '<span class="pop-emoji">'+s.emoji+'</span>'+
       '<span class="pop-type" style="color:'+clr+'">'+esc(catL)+'</span>'+
       '<div class="pop-name">'+esc(name)+'</div>'+
       '<div class="pop-city">📍 '+esc(city)+'</div>'+
@@ -283,69 +303,54 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   }
   renderTourismSpots();
 
-  var OVP_CLR={hotel:'#3B82F6',rest:'#EF4444',cafe:'#78350F'};
-  var OVP_AR ={hotel:'فندق',rest:'مطعم',cafe:'كافيه'};
-  var OVP_EN ={hotel:'Hotel',rest:'Restaurant',cafe:'Café'};
+  /* ── POI from /api/poi (pre-fetched, injected as JSON) ── */
+  var POI_CFG={
+    restaurant:{clr:'#EF4444',emoji:'🍽️',arName:'مطعم',    enName:'Restaurant',layer:'rest'},
+    hotel:     {clr:'#3B82F6',emoji:'🏨',arName:'فندق',    enName:'Hotel',     layer:'hotel'},
+    cafe:      {clr:'#92400E',emoji:'☕', arName:'كافيه',   enName:'Café',      layer:'cafe'},
+    historic:  {clr:'#D97706',emoji:'🏛️',arName:'تاريخي',  enName:'Historic',  layer:'historic'},
+    attraction:{clr:'#16A34A',emoji:'🎯',arName:'منطقة سياحية',enName:'Attraction',layer:'attraction'}
+  };
 
-  function ovpName(tags){return IS_AR?(tags['name:ar']||tags.name||''):(tags['name:en']||tags.name||'');}
-  function ovpAddr(tags){
-    if(tags['addr:full'])return tags['addr:full'];
-    var p=[];
-    if(tags['addr:city'])p.push(tags['addr:city']);
-    if(tags['addr:street'])p.push(tags['addr:street']);
-    if(!p.length&&tags.city)p.push(tags.city);
-    return p.join(' — ')||(IS_AR?'العنوان غير متاح':'Address N/A');
+  function renderPoi(){
+    ['hotel','rest','cafe','historic','attraction'].forEach(function(k){layers[k].clearLayers();});
+    POI_PLACES.forEach(function(p){
+      var cfg=POI_CFG[p.type];
+      if(!cfg)return;
+      var name=IS_AR?(p.nameAr||p.nameEn||''):(p.nameEn||p.nameAr||'');
+      if(!name)name=IS_AR?'اسم غير متاح':'N/A';
+      var tags=p.tags||{};
+      var phone=tags.phone||tags['contact:phone']||tags['contact:mobile']||'';
+      var addr=tags['addr:full']||'';
+      if(!addr){var ap=[];if(tags['addr:city'])ap.push(tags['addr:city']);if(tags['addr:street'])ap.push(tags['addr:street']);addr=ap.join(' — ');}
+
+      var h='<div class="pop-type" style="color:'+cfg.clr+'">'+cfg.emoji+' '+(IS_AR?cfg.arName:cfg.enName)+'</div>';
+      h+='<div class="pop-name">'+esc(name)+'</div>';
+      if(addr)h+='<div class="pop-addr">📍 '+esc(addr)+'</div>';
+      if(phone){
+        h+='<a class="pop-call" href="tel:'+phone.replace(/[\\s\\-()]/g,'')+'">📞 '+(IS_AR?'اتصال':'Call')+'</a>';
+      }else{
+        h+='<div class="pop-no-phone">'+(IS_AR?'لا يوجد هاتف':'No phone')+'</div>';
+      }
+
+      L.circleMarker([p.lat,p.lng],{
+        radius:6,fillColor:cfg.clr,color:'#fff',weight:1.5,opacity:1,fillOpacity:.88
+      })
+      .bindPopup(h,{className:'lf-popup',maxWidth:265,closeButton:true})
+      .addTo(layers[cfg.layer]);
+    });
   }
-  function ovpPhone(tags){return tags.phone||tags['contact:phone']||tags['contact:mobile']||'';}
-  function ovpRating(tags){return tags.stars||tags['stars:official']||tags.rating||'';}
-  function esc2(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  renderPoi();
 
-  function makeOvpPopup(type,tags){
-    var color=OVP_CLR[type];
-    var typeName=IS_AR?OVP_AR[type]:OVP_EN[type];
-    var name=ovpName(tags)||(IS_AR?'اسم غير متاح':'Name N/A');
-    var addr=ovpAddr(tags);
-    var phone=ovpPhone(tags);
-    var rating=ovpRating(tags);
-    var h='<div class="pop-type" style="color:'+color+'">'+esc2(typeName)+'</div>';
-    h+='<div class="pop-name">'+esc2(name)+'</div>';
-    h+=rating
-      ?'<div class="pop-stars-row"><span class="pop-stars">'+stars(Number(rating))+'</span><span class="pop-rating-num">'+esc2(String(rating))+'</span></div>'
-      :'<div class="pop-rating-dim">'+(IS_AR?'لا يوجد تقييم':'No rating')+'</div>';
-    h+='<div class="pop-addr">📍 '+esc2(addr)+'</div>';
-    h+=phone
-      ?'<a class="pop-call" href="tel:'+phone.replace(/[\\s\\-()]/g,'')+'">📞 '+(IS_AR?'اتصال':'Call')+'</a>'
-      :'<div class="pop-no-phone">'+(IS_AR?'لا يوجد هاتف':'No phone')+'</div>';
-    return h;
-  }
-
-  function addOvpMarker(type,el){
-    if(!el.lat||!el.lon)return;
-    var tags=el.tags||{};
-    L.circleMarker([el.lat,el.lon],{
-      radius:6.5,fillColor:OVP_CLR[type],color:'#fff',weight:1.5,opacity:1,fillOpacity:.88
+  /* ── User location pin ── */
+  if(USER_LAT&&USER_LNG){
+    L.circleMarker([USER_LAT,USER_LNG],{
+      radius:10,fillColor:'#6366F1',color:'#fff',weight:2.5,opacity:1,fillOpacity:.95
     })
-    .bindPopup(makeOvpPopup(type,tags),{className:'lf-popup',maxWidth:265,closeButton:true})
-    .addTo(layers[type]);
+    .bindPopup('<div class="pop-name">'+(IS_AR?'📍 موقعك الحالي':'📍 Your Location')+'</div>',
+      {className:'lf-popup'})
+    .addTo(map);
   }
-
-  var BBOX='(15,34,32.5,56)';
-  var OVP_URL='https://overpass-api.de/api/interpreter';
-  var pending=3;
-  function done(){if(--pending<=0){var ld=document.getElementById('loading');if(ld)ld.style.display='none';}}
-
-  function fetchOvp(type,q){
-    fetch(OVP_URL,{method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:'data='+encodeURIComponent(q)
-    })
-    .then(function(r){return r.json();})
-    .then(function(d){(d.elements||[]).forEach(function(el){addOvpMarker(type,el);});done();})
-    .catch(function(){done();});
-  }
-  fetchOvp('hotel','[out:json][timeout:30];node["tourism"="hotel"]'+BBOX+';out 200;');
-  fetchOvp('rest', '[out:json][timeout:30];node["amenity"="restaurant"]'+BBOX+';out 200;');
-  fetchOvp('cafe', '[out:json][timeout:30];node["amenity"="cafe"]'+BBOX+';out 200;');
 
   setInterval(renderTourismSpots,15*60*1000);
 })();
@@ -354,15 +359,28 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
 </html>`;
 }
 
-export default function TourismMapView({ spots = [], isAr = false }: Props) {
+export default function TourismMapView({
+  spots     = [],
+  isAr      = false,
+  poiPlaces = [],
+  userLat,
+  userLng,
+}: Props) {
   const webRef  = useRef<WebView>(null);
   const htmlRef = useRef<string>("");
   const keyRef  = useRef("");
 
-  const key = spots.map((s) => s.id).join(",") + (isAr ? "_ar" : "_en");
+  const key = [
+    spots.map((s) => s.id).join(","),
+    isAr ? "ar" : "en",
+    poiPlaces.length,
+    userLat ?? "x",
+    userLng ?? "x",
+  ].join("|");
+
   if (htmlRef.current === "" || keyRef.current !== key) {
     keyRef.current  = key;
-    htmlRef.current = buildMapHtml(spots, isAr);
+    htmlRef.current = buildMapHtml(spots, isAr, poiPlaces, userLat, userLng);
   }
 
   return (
