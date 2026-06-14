@@ -4,14 +4,14 @@
     "slug": "rozoz-msrep",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/rozoz-icon.png",
+    "icon": "./assets/images/rozoz-icon-transparent.png",
     "scheme": "rozoz-msrep",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/rozoz-splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A1A2F"
+      "backgroundColor": "#0F2040"
     },
     "ios": {
       "supportsTablet": false,
@@ -19,8 +19,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/rozoz-icon.png",
-        "backgroundColor": "#0A1A2F"
+        "foregroundImage": "./assets/images/rozoz-icon-transparent.png",
+        "backgroundColor": "#0F2040"
       },
       "package": "com.rozoz.app"
     },
