@@ -46,7 +46,7 @@ export default function TourismMapView({
   const [error,   setError]   = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
-  const mapUri = `${apiBase}/api/map-view?lat=${userLat.toFixed(5)}&lng=${userLng.toFixed(5)}&isAr=${isAr ? "1" : "0"}&tabs=${hasTabs ? "1" : "0"}`;
+  const mapUri = `${apiBase}/api/map-view?lat=${userLat.toFixed(5)}&lng=${userLng.toFixed(5)}&isAr=${isAr ? "1" : "0"}&tabs=${hasTabs ? "1" : "0"}&base=${encodeURIComponent(apiBase)}`;
 
   useEffect(() => {
     abortRef.current?.abort();
@@ -100,15 +100,14 @@ export default function TourismMapView({
   return (
     <WebView
       key={mapUri}
-      /* baseUrl lets /api/poi?… inside the HTML resolve to the API server */
-      source={{ html, baseUrl: apiBase }}
+      /* No baseUrl — matches HeatmapMapView which works correctly on Android.
+         POI fetch calls use absolute URLs (API_BASE injected into HTML by server). */
+      source={{ html }}
       style={styles.webview}
       originWhitelist={["*"]}
       javaScriptEnabled
       domStorageEnabled
       mixedContentMode="always"
-      allowUniversalAccessFromFileURLs
-      allowFileAccessFromFileURLs
       bounces={false}
       scrollEnabled={false}
       showsHorizontalScrollIndicator={false}

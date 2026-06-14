@@ -40,7 +40,7 @@ const SPOTS_JSON = JSON.stringify([
   { id:"tabuk",          emoji:"🏜️", nameAr:"تبوك وخُريبة",           nameEn:"Tabuk & Khuraibah",     cityAr:"تبوك",           cityEn:"Tabuk",   descAr:"أعمق نقطة غوص وشعاب مرجانية",                  descEn:"Deepest dive site & pristine Red Sea coral reefs",             category:"nature",        featured:false, lat:28.383, lng:36.566, mapsUrl:"https://maps.google.com/?q=Tabuk,Saudi+Arabia",         rating:4.6 },
 ]);
 
-function buildHtml(isAr: boolean, lat: number, lng: number, hasTabs: boolean): string {
+function buildHtml(isAr: boolean, lat: number, lng: number, hasTabs: boolean, apiBase: string): string {
   const dir = isAr ? "rtl" : "ltr";
 
   return `<!DOCTYPE html>
@@ -54,7 +54,7 @@ ${leafletCss}
 
 /* ── App styles ────────────────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{width:100%;height:100%;overflow:hidden;background:#0f2040;}
+html,body{width:100%;height:100vh;overflow:hidden;background:#0f2040;}
 #map{position:absolute;top:0;left:0;right:0;bottom:0;}
 
 /* Filter bar */
@@ -259,6 +259,7 @@ ${leafletJs}
   var SPOTS    = ${SPOTS_JSON};
   var USER_LAT = ${lat};
   var USER_LNG = ${lng};
+  var API_BASE = ${JSON.stringify(apiBase)};
 
   var PAT={
     cultural:     [[8,11,55],[11,14,45],[14,17,70],[17,21,78],[21,23,42]],
@@ -293,11 +294,13 @@ ${leafletJs}
     zoomControl:false,attributionControl:true,
     tap:true,tapTolerance:15
   });
-  /* Carto dark tiles — same provider used by the real estate map, works on Android */
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  /* Carto voyager tiles — same style+provider as HeatmapMapView (proven to load on Android) */
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com">CARTO</a>',
     subdomains:'abcd',maxZoom:19
   }).addTo(map);
+  /* Force Leaflet to recalculate map size after WebView fully paints */
+  setTimeout(function(){map.invalidateSize();},400);
 
   var tourismLayer=L.layerGroup().addTo(map);
   var poiLayer    =L.layerGroup().addTo(map);
@@ -422,7 +425,7 @@ ${leafletJs}
   }
 
   function loadPoi(type){
-    var url='/api/poi?lat='+USER_LAT+'&lng='+USER_LNG+'&radius_km=20&limit=300';
+    var url=API_BASE+'/api/poi?lat='+USER_LAT+'&lng='+USER_LNG+'&radius_km=20&limit=300';
     if(type)url+='&type='+type;
     showStatus(IS_AR?'جاري التحميل…':'Loading…');
     fetch(url)
@@ -485,10 +488,13 @@ router.get("/map-view", (req, res) => {
   const lng     = parseFloat((req.query.lng  as string) || "46.6753");
   const isAr    = req.query.isAr === "1" || req.query.isAr === "true";
   const hasTabs = req.query.tabs === "1";
+  /* apiBase is sent by the client (TourismMapView) so the embedded HTML can
+     make absolute fetch() calls to /api/poi regardless of WebView origin */
+  const apiBase = (req.query.base as string) || `${req.protocol}://${req.get("host")}`;
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
-  res.send(buildHtml(isAr, isNaN(lat) ? 24.7136 : lat, isNaN(lng) ? 46.6753 : lng, hasTabs));
+  res.send(buildHtml(isAr, isNaN(lat) ? 24.7136 : lat, isNaN(lng) ? 46.6753 : lng, hasTabs, apiBase));
 });
 
 export default router;
