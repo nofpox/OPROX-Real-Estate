@@ -40,7 +40,7 @@ const SPOTS_JSON = JSON.stringify([
   { id:"tabuk",          emoji:"🏜️", nameAr:"تبوك وخُريبة",           nameEn:"Tabuk & Khuraibah",     cityAr:"تبوك",           cityEn:"Tabuk",   descAr:"أعمق نقطة غوص وشعاب مرجانية",                  descEn:"Deepest dive site & pristine Red Sea coral reefs",             category:"nature",        featured:false, lat:28.383, lng:36.566, mapsUrl:"https://maps.google.com/?q=Tabuk,Saudi+Arabia",         rating:4.6 },
 ]);
 
-function buildHtml(isAr: boolean, lat: number, lng: number): string {
+function buildHtml(isAr: boolean, lat: number, lng: number, hasTabs: boolean): string {
   const dir = isAr ? "rtl" : "ltr";
 
   return `<!DOCTYPE html>
@@ -101,7 +101,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0f2040;}
 /* Legend */
 #legend{
   position:absolute;
-  bottom:52px;
+  bottom:${hasTabs ? 110 : 60}px;
   ${isAr ? "left:12px;" : "right:12px;"}
   z-index:1000;
   background:rgba(8,18,36,0.9);
@@ -481,13 +481,14 @@ ${leafletJs}
 }
 
 router.get("/map-view", (req, res) => {
-  const lat  = parseFloat((req.query.lat  as string) || "24.7136");
-  const lng  = parseFloat((req.query.lng  as string) || "46.6753");
-  const isAr = req.query.isAr === "1" || req.query.isAr === "true";
+  const lat     = parseFloat((req.query.lat  as string) || "24.7136");
+  const lng     = parseFloat((req.query.lng  as string) || "46.6753");
+  const isAr    = req.query.isAr === "1" || req.query.isAr === "true";
+  const hasTabs = req.query.tabs === "1";
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
-  res.send(buildHtml(isAr, isNaN(lat) ? 24.7136 : lat, isNaN(lng) ? 46.6753 : lng));
+  res.send(buildHtml(isAr, isNaN(lat) ? 24.7136 : lat, isNaN(lng) ? 46.6753 : lng, hasTabs));
 });
 
 export default router;

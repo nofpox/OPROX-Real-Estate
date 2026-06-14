@@ -176,10 +176,11 @@ export default function ExploreScreen() {
           apiBase={apiBase}
           userLat={userLat}
           userLng={userLng}
+          hasTabs={!isTourist}
         />
 
-        {/* روح السعودية pill — centered, above bottom edge */}
-        <View style={[s.linksBar, { bottom: bottomPad + 14 }]} pointerEvents="box-none">
+        {/* روح السعودية pill — centered, above bottom edge + tab bar */}
+        <View style={[s.linksBar, { bottom: bottomPad + (isTourist ? 72 : 104) }]} pointerEvents="box-none">
           <Pressable
             pointerEvents="auto"
             onPress={() => { void Haptics.selectionAsync(); void Linking.openURL(VISIT_SAUDI_URL); }}
@@ -196,7 +197,7 @@ export default function ExploreScreen() {
 
         {/* 🚕 FAB — always bottom RIGHT */}
         <View
-          style={[s.fabWrap, { bottom: bottomPad + (isTourist ? 18 : 90), right: 18 }]}
+          style={[s.fabWrap, { bottom: bottomPad + (isTourist ? 136 : 164), right: 18 }]}
           pointerEvents="box-none"
         >
           {subButtons.map(({ ride, translateY, opacity, scale }) => (

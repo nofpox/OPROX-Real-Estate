@@ -17,11 +17,12 @@ export interface TourismSpot {
 }
 
 interface Props {
-  spots?:   TourismSpot[];   /* kept for web shim compatibility */
-  isAr?:    boolean;
-  apiBase?: string;
-  userLat?: number;
-  userLng?: number;
+  spots?:    TourismSpot[];   /* kept for web shim compatibility */
+  isAr?:     boolean;
+  apiBase?:  string;
+  userLat?:  number;
+  userLng?:  number;
+  hasTabs?:  boolean;         /* true when bottom tab bar is visible (non-tourist mode) */
 }
 
 const DEFAULT_LAT = 24.7136;
@@ -32,8 +33,9 @@ export default function TourismMapView({
   apiBase = "",
   userLat = DEFAULT_LAT,
   userLng = DEFAULT_LNG,
+  hasTabs = false,
 }: Props) {
-  const mapUri = `${apiBase}/api/map-view?lat=${userLat.toFixed(5)}&lng=${userLng.toFixed(5)}&isAr=${isAr ? "1" : "0"}`;
+  const mapUri = `${apiBase}/api/map-view?lat=${userLat.toFixed(5)}&lng=${userLng.toFixed(5)}&isAr=${isAr ? "1" : "0"}&tabs=${hasTabs ? "1" : "0"}`;
 
   function handleMessage(event: WebViewMessageEvent) {
     try {
