@@ -38,3 +38,4 @@ export * from "./invoices";
 export * from "./inventoryItems";
 export * from "./analytics";
 export * from "./poiPlaces";
+export * from "./apartments";

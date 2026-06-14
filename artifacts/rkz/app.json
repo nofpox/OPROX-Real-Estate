@@ -15,14 +15,18 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.rozoz.app"
+      "bundleIdentifier": "com.rozoz.app",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": ["uber", "bolt", "careem"]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/rozoz-icon.png",
         "backgroundColor": "#0F2040"
       },
-      "package": "com.rozoz.app"
+      "package": "com.rozoz.app",
+      "intentFilters": []
     },
     "web": {
       "favicon": "./assets/images/rozoz-icon.png"

@@ -1,11 +1,13 @@
 /**
- * TourismMapView — NATIVE (WebView variant)
- * Filter buttons inside the WebView fetch /api/poi directly when clicked.
- * Metro auto-selects TourismMapView.web.tsx on web builds.
+ * TourismMapView — NATIVE (WebView)
+ * Filter buttons inside the WebView call /api/poi directly.
+ * type=apartment pulls from the `apartments` table (price_per_night, phone).
+ * Apartment popups have Uber / Bolt / Careem ride buttons that postMessage
+ * to React Native, which calls Linking.openURL().
  */
 import React from "react";
-import { StyleSheet } from "react-native";
-import { WebView } from "react-native-webview";
+import { Linking, StyleSheet } from "react-native";
+import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
 export interface TourismSpot {
   id: string;
@@ -27,7 +29,7 @@ export interface TourismSpot {
 interface Props {
   spots?:   TourismSpot[];
   isAr?:    boolean;
-  apiBase?: string;   // "" for web, "https://xxx" for native
+  apiBase?: string;
   userLat?: number;
   userLng?: number;
 }
@@ -66,6 +68,7 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
   -webkit-tap-highlight-color:transparent;user-select:none;
 }
 .fbtn.active{background:rgba(15,52,96,0.95);border-color:#C9A84C;color:#C9A84C;}
+.fbtn.active-apt{background:rgba(55,20,100,0.95);border-color:#A855F7;color:#A855F7;}
 .fbtn:active{opacity:.72;}
 
 #legend{
@@ -81,8 +84,7 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
 
 #status-bar{
   position:absolute;top:72px;left:0;right:0;z-index:1001;
-  display:none;align-items:center;justify-content:center;
-  pointer-events:none;
+  display:none;align-items:center;justify-content:center;pointer-events:none;
 }
 #status-pill{
   background:rgba(10,22,40,0.92);border:1px solid rgba(201,168,76,.4);
@@ -91,6 +93,7 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
   font-size:12px;color:#C9A84C;font-weight:600;
 }
 
+/* ── Curated spots (emoji pins) ── */
 .spot-icon{overflow:visible!important;background:none!important;border:none!important;}
 .spot-wrap{display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%);cursor:pointer;}
 .spot-pin{
@@ -114,6 +117,7 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
 }
 .star-lbl.dim{color:#94a3b8;border-color:rgba(148,163,184,.2);}
 
+/* ── Popups ── */
 .lf-popup .leaflet-popup-content-wrapper{
   background:#0f2040;border:1.5px solid #C9A84C;border-radius:14px;
   box-shadow:0 8px 26px rgba(0,0,0,.65);color:#f1f5f9;padding:0;
@@ -123,7 +127,7 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
 .lf-popup .leaflet-popup-content{margin:14px;min-width:190px;max-width:255px;}
 .lf-popup .leaflet-popup-close-button{color:#94a3b8!important;top:8px;${isAr ? "left:8px;right:auto!important;" : "right:8px;"}font-size:20px;}
 .pop-type{font-size:10px;font-weight:800;margin-bottom:5px;letter-spacing:.4px;}
-.pop-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;line-height:1.4;}
+.pop-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.4;}
 .pop-city{font-size:11px;color:#D4A843;margin-bottom:3px;}
 .pop-desc{font-size:11px;color:rgba(241,245,249,.58);line-height:1.55;margin-bottom:8px;}
 .pop-stars-row{display:flex;align-items:center;gap:5px;margin-bottom:8px;}
@@ -144,15 +148,28 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
 .pop-call{
   display:flex;align-items:center;justify-content:center;gap:5px;
   background:#16a34a;color:#fff;font-weight:700;font-size:11px;
-  padding:7px 12px;border-radius:9px;text-decoration:none;width:100%;
+  padding:7px 12px;border-radius:9px;text-decoration:none;width:100%;margin-bottom:7px;
 }
-.pop-no-phone{font-size:10px;color:#475569;text-align:center;padding:3px 0;}
+.pop-no-phone{font-size:10px;color:#475569;text-align:center;padding:3px 0 5px;}
+
+/* ── Apartment-specific popup ── */
+.apt-price{font-size:14px;font-weight:800;color:#C9A84C;margin:4px 0 6px;}
+.ride-btns{display:flex;gap:5px;margin-top:8px;}
+.ride-btn{
+  flex:1;padding:8px 4px;border-radius:9px;font-size:11px;font-weight:700;
+  text-align:center;cursor:pointer;border:none;
+  font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+.ride-btn:active{opacity:.72;}
+.ride-uber  {background:#000000;color:#fff;}
+.ride-bolt  {background:#34D399;color:#000;}
+.ride-careem{background:#00B140;color:#fff;}
 
 .leaflet-control-container>*{display:none!important;}
 .leaflet-control-container .leaflet-bottom.leaflet-right{display:block!important;}
 .leaflet-control-attribution{background:rgba(10,22,40,.7)!important;color:#475569!important;font-size:9px!important;display:block!important;}
 .leaflet-control-attribution a{color:#C9A84C!important;}
-.leaflet-tile-pane{will-change:transform;}
 .leaflet-tile-container img{width:256.5px!important;height:256.5px!important;}
 </style>
 </head>
@@ -161,20 +178,22 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
 <div id="status-bar"><div id="status-pill"></div></div>
 
 <div id="filter-bar">
-  <button class="fbtn active" onclick="filterAll(this)">${isAr ? "الكل" : "All"}</button>
-  <button class="fbtn" onclick="filterPoi(this,'attraction')">${isAr ? "سياحة" : "Tourism"}</button>
-  <button class="fbtn" onclick="filterPoi(this,'hotel')">${isAr ? "فنادق" : "Hotels"}</button>
-  <button class="fbtn" onclick="filterPoi(this,'restaurant')">${isAr ? "مطاعم" : "Rest."}</button>
-  <button class="fbtn" onclick="filterPoi(this,'cafe')">${isAr ? "كافيهات" : "Cafes"}</button>
+  <button class="fbtn active" id="btn-all"        onclick="filterAll(this)"                >${isAr ? "الكل"    : "All"      }</button>
+  <button class="fbtn"        id="btn-attraction"  onclick="filterPoi(this,'attraction')"   >${isAr ? "سياحة"  : "Tourism"  }</button>
+  <button class="fbtn"        id="btn-hotel"       onclick="filterPoi(this,'hotel')"        >${isAr ? "فنادق"  : "Hotels"   }</button>
+  <button class="fbtn"        id="btn-restaurant"  onclick="filterPoi(this,'restaurant')"   >${isAr ? "مطاعم"  : "Rest."    }</button>
+  <button class="fbtn"        id="btn-cafe"        onclick="filterPoi(this,'cafe')"         >${isAr ? "كافيهات": "Cafes"    }</button>
+  <button class="fbtn"        id="btn-apartment"   onclick="filterApt(this)"                >${isAr ? "🏠 شقق" : "🏠 Apts"  }</button>
 </div>
 
 <div id="legend">
-  <div class="l-row"><span class="ldot" style="background:#6366F1;border:1.5px solid #fff"></span><span class="l-lbl">${isAr ? "موقعك" : "You"}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#D4A843"></span><span class="l-lbl">${isAr ? "أماكن مميزة" : "Highlights"}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#16A34A"></span><span class="l-lbl">${isAr ? "سياحة" : "Tourism"}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#3B82F6"></span><span class="l-lbl">${isAr ? "فندق" : "Hotel"}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#EF4444"></span><span class="l-lbl">${isAr ? "مطعم" : "Restaurant"}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#92400E"></span><span class="l-lbl">${isAr ? "كافيه" : "Cafe"}</span></div>
+  <div class="l-row"><span class="ldot" style="background:#6366F1;border:1.5px solid #fff"></span><span class="l-lbl">${isAr ? "موقعك"   : "You"}</span></div>
+  <div class="l-row"><span class="ldot" style="background:#D4A843"></span><span class="l-lbl">${isAr ? "أماكن"   : "Spots"     }</span></div>
+  <div class="l-row"><span class="ldot" style="background:#16A34A"></span><span class="l-lbl">${isAr ? "سياحة"  : "Tourism"   }</span></div>
+  <div class="l-row"><span class="ldot" style="background:#3B82F6"></span><span class="l-lbl">${isAr ? "فندق"   : "Hotel"     }</span></div>
+  <div class="l-row"><span class="ldot" style="background:#EF4444"></span><span class="l-lbl">${isAr ? "مطعم"   : "Restaurant"}</span></div>
+  <div class="l-row"><span class="ldot" style="background:#92400E"></span><span class="l-lbl">${isAr ? "كافيه"  : "Cafe"      }</span></div>
+  <div class="l-row"><span class="ldot" style="background:#A855F7"></span><span class="l-lbl">${isAr ? "شقق"    : "Apt."      }</span></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -214,24 +233,22 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
   function stars(r){var f=Math.floor(r),h=(r-f)>=.5?1:0;return'★'.repeat(f)+(h?'½':'')+('☆'.repeat(5-f-h));}
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-  /* ── Map ── */
+  /* ── Map init ── */
   var map=L.map('map',{center:[USER_LAT,USER_LNG],zoom:12,zoomControl:false,attributionControl:true});
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
     attribution:'&copy;<a href="https://www.openstreetmap.org/copyright">OSM</a>&copy;<a href="https://carto.com">CARTO</a>',
     subdomains:'abcd',maxZoom:19
   }).addTo(map);
 
-  /* ── Layers ── */
   var tourismLayer = L.layerGroup().addTo(map);
   var poiLayer     = L.layerGroup().addTo(map);
-  var youLayer     = L.layerGroup().addTo(map);
 
   /* ── User pin ── */
   L.circleMarker([USER_LAT,USER_LNG],{
     radius:10,fillColor:'#6366F1',color:'#fff',weight:2.5,opacity:1,fillOpacity:.95
   })
   .bindPopup('<div class="pop-name">'+(IS_AR?'📍 موقعك الحالي':'📍 Your Location')+'</div>',{className:'lf-popup'})
-  .addTo(youLayer);
+  .addTo(map);
 
   /* ── Curated tourist spots ── */
   var CAT_CLR={cultural:'#60A5FA',events:'#A78BFA',nature:'#4ADE80',entertainment:'#FB923C',religious:'#D4A843'};
@@ -246,7 +263,6 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
       className:'spot-icon',iconSize:[0,0],iconAnchor:[0,0]
     });
   }
-
   function makeTourismPopup(s,pct){
     var info=busyInfo(pct);var clr=CAT_CLR[s.category]||'#D4A843';
     var catL=IS_AR?(CAT_AR[s.category]||s.category):(CAT_EN[s.category]||s.category);
@@ -256,11 +272,10 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
       '<div class="pop-name">'+esc(IS_AR?s.nameAr:s.nameEn)+'</div>'+
       '<div class="pop-city">📍 '+esc(IS_AR?s.cityAr:s.cityEn)+'</div>'+stH+
       '<div class="pop-desc">'+esc(IS_AR?s.descAr:s.descEn)+'</div>'+
-      '<div class="pop-busy"><div class="pop-busy-row"><span class="pop-busy-title">'+(IS_AR?'الزحمة الحين':'Busyness now')+'</span>'+
-      '<span class="pop-busy-val" style="color:'+info.clr+'">'+info.dot+' '+info.lbl+(pct!==null?' ('+pct+'%)':'')+'</span></div>'+barH+'</div>'+
+      '<div class="pop-busy"><div class="pop-busy-row"><span class="pop-busy-title">'+(IS_AR?'الزحمة':'Busyness')+'</span>'+
+      '<span class="pop-busy-val" style="color:'+info.clr+'">'+info.dot+' '+info.lbl+'</span></div>'+barH+'</div>'+
       '<a class="pop-btn" href="'+s.mapsUrl+'" target="_blank">🗺️ '+(IS_AR?'افتح الخريطة':'Open Maps')+'</a>';
   }
-
   function renderTourism(){
     tourismLayer.clearLayers();
     SPOTS.forEach(function(s){
@@ -273,7 +288,7 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
   renderTourism();
   setInterval(renderTourism,15*60*1000);
 
-  /* ── POI fetch from /api/poi ── */
+  /* ── POI config (restaurant / hotel / cafe / attraction / historic) ── */
   var POI_CFG={
     attraction:{clr:'#16A34A',emoji:'🎯',arName:'سياحي',   enName:'Tourism'},
     hotel:     {clr:'#3B82F6',emoji:'🏨',arName:'فندق',    enName:'Hotel'},
@@ -282,6 +297,68 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
     historic:  {clr:'#D97706',emoji:'🏛️',arName:'تاريخي', enName:'Historic'},
   };
 
+  /* ── Apartment data store — keyed by "apt_ID" for ride buttons ── */
+  var APTS = {};
+
+  /* ── Open ride app — postMessage to RN or window.open for web ── */
+  window.openRide = function(app, apId) {
+    var d = APTS[apId];
+    if (!d) return;
+    var urls = {
+      uber:   'uber://?action=setPickup&pickup=my_location&dropoff[latitude]='+d.lat+'&dropoff[longitude]='+d.lng+'&dropoff[nickname]='+encodeURIComponent(d.name),
+      bolt:   'bolt://?pickup=my_location&dropoff_lat='+d.lat+'&dropoff_lon='+d.lng,
+      careem: 'careem://booking/pickup/current/dropoff/'+d.lat+'/'+d.lng,
+    };
+    var url = urls[app];
+    if (!url) return;
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({type:'openUrl', url:url}));
+    } else {
+      window.open(url, '_system');
+    }
+  };
+
+  /* ── Build apartment popup ── */
+  function makeAptPopup(p) {
+    var name  = p.nameAr || p.nameEn || '—';
+    var tags  = p.tags || {};
+    var price = tags.price_per_night ? 'SAR ' + Number(tags.price_per_night).toLocaleString('en') + (IS_AR ? ' / ليلة' : ' / night') : '';
+    var phone = tags.phone || '';
+    var apId  = 'apt_' + p.osmId;
+    APTS[apId] = {lat: p.lat, lng: p.lng, name: name};
+
+    var h = '<span class="pop-type" style="color:#A855F7">🏠 '+(IS_AR?'شقة مفروشة':'Furnished Apt.')+'</span>';
+    h += '<div class="pop-name">'+esc(name)+'</div>';
+    if (price) h += '<div class="apt-price">💰 '+price+'</div>';
+    if (phone) {
+      h += '<a class="pop-call" href="tel:'+phone.replace(/\\s/g,'')+'">📞 '+(IS_AR?'اتصال':'Call')+'</a>';
+    } else {
+      h += '<div class="pop-no-phone">'+(IS_AR?'لا يوجد هاتف':'No phone')+'</div>';
+    }
+    h += '<div class="ride-btns">';
+    h += '<button class="ride-btn ride-uber"   onclick="openRide(\'uber\',\''+apId+'\')">🚗 '+(IS_AR?'أوبر':'Uber')+'</button>';
+    h += '<button class="ride-btn ride-bolt"   onclick="openRide(\'bolt\',\''+apId+'\')">⚡ '+(IS_AR?'بولت':'Bolt')+'</button>';
+    h += '<button class="ride-btn ride-careem" onclick="openRide(\'careem\',\''+apId+'\')">🟢 '+(IS_AR?'كريم':'Careem')+'</button>';
+    h += '</div>';
+    return h;
+  }
+
+  /* ── Build generic POI popup ── */
+  function makePOIPopup(p, cfg) {
+    var name=IS_AR?(p.nameAr||p.nameEn||''):(p.nameEn||p.nameAr||'');
+    if(!name)name=IS_AR?'اسم غير متاح':'N/A';
+    var tags=p.tags||{};
+    var phone=tags.phone||tags['contact:phone']||tags['contact:mobile']||'';
+    var addr=tags['addr:full']||'';
+    if(!addr){var ap=[];if(tags['addr:city'])ap.push(tags['addr:city']);if(tags['addr:street'])ap.push(tags['addr:street']);addr=ap.join(' — ');}
+    var h='<div class="pop-type" style="color:'+cfg.clr+'">'+cfg.emoji+' '+(IS_AR?cfg.arName:cfg.enName)+'</div>';
+    h+='<div class="pop-name">'+esc(name)+'</div>';
+    if(addr)h+='<div class="pop-addr">📍 '+esc(addr)+'</div>';
+    h+=phone?'<a class="pop-call" href="tel:'+phone.replace(/\\s\\-\\(\\)/g,'')+'">📞 '+(IS_AR?'اتصال':'Call')+'</a>':'<div class="pop-no-phone">'+(IS_AR?'لا يوجد هاتف':'No phone')+'</div>';
+    return h;
+  }
+
+  /* ── Status bar helper ── */
   function showStatus(msg){
     var bar=document.getElementById('status-bar');
     var pill=document.getElementById('status-pill');
@@ -289,7 +366,8 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
     else{bar.style.display='none';}
   }
 
-  function loadPoi(type){
+  /* ── Fetch POI from API ── */
+  function loadPoi(type) {
     var url=API_BASE+'/api/poi?lat='+USER_LAT+'&lng='+USER_LNG+'&radius_km=20&limit=300';
     if(type)url+='&type='+type;
     showStatus(IS_AR?'جاري التحميل…':'Loading…');
@@ -297,44 +375,45 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
       .then(function(r){return r.json();})
       .then(function(data){
         poiLayer.clearLayers();
+        Object.keys(APTS).forEach(function(k){delete APTS[k];});
         var places=data.places||[];
         places.forEach(function(p){
-          var cfg=POI_CFG[p.type];
-          if(!cfg)return;
-          var name=IS_AR?(p.nameAr||p.nameEn||''):(p.nameEn||p.nameAr||'');
-          if(!name)name=IS_AR?'اسم غير متاح':'N/A';
-          var tags=p.tags||{};
-          var phone=tags.phone||tags['contact:phone']||tags['contact:mobile']||'';
-          var addr=tags['addr:full']||'';
-          if(!addr){var ap=[];if(tags['addr:city'])ap.push(tags['addr:city']);if(tags['addr:street'])ap.push(tags['addr:street']);addr=ap.join(' — ');}
-          var h='<div class="pop-type" style="color:'+cfg.clr+'">'+cfg.emoji+' '+(IS_AR?cfg.arName:cfg.enName)+'</div>';
-          h+='<div class="pop-name">'+esc(name)+'</div>';
-          if(addr)h+='<div class="pop-addr">📍 '+esc(addr)+'</div>';
-          h+=phone?'<a class="pop-call" href="tel:'+phone.replace(/[\\s\\-()]/g,'')+'">📞 '+(IS_AR?'اتصال':'Call')+'</a>':'<div class="pop-no-phone">'+(IS_AR?'لا يوجد هاتف':'No phone')+'</div>';
+          if(!p.lat||!p.lng)return;
+          var html, clr;
+          if(p.type==='apartment'){
+            html=makeAptPopup(p);
+            clr='#A855F7';
+          } else {
+            var cfg=POI_CFG[p.type];
+            if(!cfg)return;
+            html=makePOIPopup(p,cfg);
+            clr=cfg.clr;
+          }
           L.circleMarker([p.lat,p.lng],{
-            radius:7,fillColor:cfg.clr,color:'#fff',weight:1.5,opacity:1,fillOpacity:.88
-          }).bindPopup(h,{className:'lf-popup',maxWidth:265,closeButton:true}).addTo(poiLayer);
+            radius:7,fillColor:clr,color:'#fff',weight:1.5,opacity:1,fillOpacity:.88
+          }).bindPopup(html,{className:'lf-popup',maxWidth:270,closeButton:true}).addTo(poiLayer);
         });
         var cnt=places.length;
         showStatus(IS_AR?cnt+' نتيجة':cnt+' results');
-        setTimeout(function(){showStatus(null);},2000);
+        setTimeout(function(){showStatus(null);},2200);
       })
-      .catch(function(){showStatus(IS_AR?'خطأ في التحميل':'Load error');setTimeout(function(){showStatus(null);},2000);});
+      .catch(function(){showStatus(IS_AR?'خطأ':'Error');setTimeout(function(){showStatus(null);},2200);});
   }
 
   /* ── Filter callbacks ── */
-  window.filterPoi=function(btn,type){
-    document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    map.addLayer(tourismLayer);
-    loadPoi(type);
-  };
+  function clearActive(){document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active','active-apt');});}
 
   window.filterAll=function(btn){
-    document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    map.addLayer(tourismLayer);
-    loadPoi(null);
+    clearActive();btn.classList.add('active');
+    map.addLayer(tourismLayer);loadPoi(null);
+  };
+  window.filterPoi=function(btn,type){
+    clearActive();btn.classList.add('active');
+    map.addLayer(tourismLayer);loadPoi(type);
+  };
+  window.filterApt=function(btn){
+    clearActive();btn.classList.add('active-apt');
+    map.removeLayer(tourismLayer);loadPoi('apartment');
   };
 
   /* ── Auto-load all POI on startup ── */
@@ -355,8 +434,18 @@ export default function TourismMapView({
   userLat = DEFAULT_LAT,
   userLng = DEFAULT_LNG,
 }: Props) {
-  const html    = buildMapHtml(spots, isAr, apiBase, userLat, userLng);
-  const mapKey  = `${isAr ? "ar" : "en"}|${userLat}|${userLng}|${apiBase}`;
+  const html   = buildMapHtml(spots, isAr, apiBase, userLat, userLng);
+  const mapKey = `${isAr ? "ar" : "en"}|${userLat}|${userLng}|${apiBase}`;
+
+  /* Forward deep-link URLs from WebView to the OS */
+  function handleMessage(event: WebViewMessageEvent) {
+    try {
+      const msg = JSON.parse(event.nativeEvent.data) as { type: string; url: string };
+      if (msg.type === "openUrl" && msg.url) {
+        void Linking.openURL(msg.url).catch(() => {});
+      }
+    } catch { /* ignore parse errors */ }
+  }
 
   return (
     <WebView
@@ -371,6 +460,7 @@ export default function TourismMapView({
       scrollEnabled={false}
       showsHorizontalScrollIndicator={false}
       showsVerticalScrollIndicator={false}
+      onMessage={handleMessage}
     />
   );
 }
