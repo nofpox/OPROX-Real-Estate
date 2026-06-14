@@ -36,3 +36,4 @@ export * from "./aiAuditLog";
 export * from "./contracts";
 export * from "./invoices";
 export * from "./inventoryItems";
+export * from "./analytics";
