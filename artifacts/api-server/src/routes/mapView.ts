@@ -14,15 +14,8 @@ import { Router } from "express";
 
 const router = Router();
 
-/* ── Load Leaflet assets once at startup ──────────────────────────────────── */
-let leafletJs  = "";
-let leafletCss = "";
-try {
-  leafletJs  = readFileSync(resolve(process.cwd(), "assets/leaflet.js"),  "utf8");
-  leafletCss = readFileSync(resolve(process.cwd(), "assets/leaflet.css"), "utf8");
-} catch (e) {
-  // If files are missing fall back gracefully (map won't render, but server won't crash)
-}
+/* Leaflet is loaded from CDN (same approach as HeatmapMapView which is proven to work).
+   Using inline embed caused Android WebView to blank tiles due to 186KB loadData() issues. */
 
 /* ── Static spots data ────────────────────────────────────────────────────── */
 const SPOTS_JSON = JSON.stringify([
@@ -48,10 +41,8 @@ function buildHtml(isAr: boolean, lat: number, lng: number, hasTabs: boolean, ap
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-/* ── Leaflet CSS (embedded — no CDN) ───────────────────────────────────────── */
-${leafletCss}
-
 /* ── App styles ────────────────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{width:100%;height:100vh;overflow:hidden;background:#0f2040;}
@@ -248,10 +239,8 @@ html,body{width:100%;height:100vh;overflow:hidden;background:#0f2040;}
   <div class="l-row"><span class="ldot" style="background:#A855F7"></span><span class="l-lbl">${isAr ? "شقق"   : "Apt."   }</span></div>
 </div>
 
-<!-- Leaflet JS (embedded — no CDN) -->
-<script>
-${leafletJs}
-</script>
+<!-- Leaflet JS from CDN — same as HeatmapMapView (proven to load on Android WebView) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 (function(){
