@@ -275,3 +275,9 @@ id = "VtDmT3g6JJ5ax-qmJ2DUp"
 uri = "file://artifacts/realestate-portal/public/rozoz-studies.zip"
 type = "unspecified"
 title = "الدراسات الثلاث — rozoz-studies.zip"
+
+[[outputs]]
+id = "KKyhMRgGtIpr874fNYW-p"
+uri = "file://دراسات-رزوز-الثلاث.zip"
+type = "unspecified"
+title = "دراسات رزوز الثلاث — دراسة الجدوى · دراسة المنصة · دراسة الأعمال"
