@@ -68,7 +68,6 @@ export default function ModeSelectScreen() {
         {/* Title */}
         <View style={s.titleWrap}>
           <Text style={s.welcome}>مرحبًا بك في ROZOZ</Text>
-          <Text style={s.subtitle}>تستكشف ولا تعرض؟</Text>
         </View>
 
         {/* Registered card */}
@@ -107,8 +106,8 @@ export default function ModeSelectScreen() {
             <MaterialIcons name="camera-alt" size={28} color={GOLD} />
           </View>
           <View style={s.cardText}>
-            <Text style={s.cardTitleLight}>أنا سائح</Text>
-            <Text style={s.cardSubLight}>Tourist · Explorer</Text>
+            <Text style={s.cardTitleLight}>سائح / سياحة</Text>
+            <Text style={s.cardSubLight}>Tourist · Tourism</Text>
           </View>
           <MaterialIcons name="chevron-left" size={22} color="rgba(201,168,76,0.6)" />
         </Pressable>
