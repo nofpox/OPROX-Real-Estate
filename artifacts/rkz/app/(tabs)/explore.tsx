@@ -56,7 +56,8 @@ const RIDES = [
 export default function ExploreScreen() {
   const insets              = useSafeAreaInsets();
   const { t, isAr }         = useLocale();
-  const { clearAppMode }    = useApp();
+  const { clearAppMode, appMode } = useApp();
+  const isTourist = appMode === "tourist";
   const openTs              = useRef<number>(0);
 
   const [userLat,  setUserLat]  = useState(DEFAULT_LAT);
@@ -195,7 +196,7 @@ export default function ExploreScreen() {
 
         {/* 🚕 FAB — always bottom RIGHT */}
         <View
-          style={[s.fabWrap, { bottom: bottomPad + 18, right: 18 }]}
+          style={[s.fabWrap, { bottom: bottomPad + (isTourist ? 18 : 90), right: 18 }]}
           pointerEvents="box-none"
         >
           {subButtons.map(({ ride, translateY, opacity, scale }) => (

@@ -293,11 +293,10 @@ ${leafletJs}
     zoomControl:false,attributionControl:true,
     tap:true,tapTolerance:15
   });
-  /* Use server-side tile proxy so Android WebView doesn't need direct OSM access */
-  var tileBase = window.location.origin + '/api/tiles';
-  L.tileLayer(tileBase + '/{z}/{x}/{y}.png',{
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-    maxZoom:19
+  /* Carto dark tiles — same provider used by the real estate map, works on Android */
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com">CARTO</a>',
+    subdomains:'abcd',maxZoom:19
   }).addTo(map);
 
   var tourismLayer=L.layerGroup().addTo(map);
