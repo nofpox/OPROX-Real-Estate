@@ -347,6 +347,11 @@ export default function TabLayout() {
     [user],
   );
 
+  // Block render until we know where to go — prevents flash of wrong screen
+  if (isLoading || langChosen === false || appMode === null) {
+    return null;
+  }
+
   return (
     <>
       {isLiquidGlassAvailable()
