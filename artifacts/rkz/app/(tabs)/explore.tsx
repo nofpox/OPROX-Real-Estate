@@ -1,8 +1,7 @@
 /**
  * استكشف — Combined map:
  *  - 12 tourist/heritage spots (emoji pins + busyness rings)
- *  - Live POI from /api/poi within 20 km of user location (circle markers)
- * Filter bar: الكل | سياحة | فنادق | مطاعم | كافيهات | تاريخي | مناطق
+ *  - POI from /api/poi — filter buttons inside the WebView trigger fetch on click
  */
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -21,17 +20,16 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import TourismMapView, { PoiPlace, TourismSpot } from "@/components/TourismMapView";
+import TourismMapView, { TourismSpot } from "@/components/TourismMapView";
 import { logAdminEvent } from "@/hooks/useAIAssistant";
 import { useLocale } from "@/hooks/useLocale";
 import { getApiBase } from "@/utils/getApiBase";
 
 const { height: SCREEN_H } = Dimensions.get("window");
 const VISIT_SAUDI_URL      = "https://www.visitsaudi.com";
-const DEFAULT_LAT          = 24.7136;   // الرياض — fallback إذا رفض المستخدم الموقع
+const DEFAULT_LAT          = 24.7136;
 const DEFAULT_LNG          = 46.6753;
 
-// ── 12 curated tourist & heritage spots ────────────────────────────────────
 const ATTRACTIONS: TourismSpot[] = [
   {
     id: "diriyah", emoji: "🏯",
@@ -155,24 +153,15 @@ const ATTRACTIONS: TourismSpot[] = [
   },
 ];
 
-async function fetchPoiNearby(lat: number, lng: number): Promise<PoiPlace[]> {
-  const base = getApiBase();
-  const url  = `${base}/api/poi?lat=${lat}&lng=${lng}&radius_km=20&limit=500`;
-  const res  = await fetch(url);
-  if (!res.ok) return [];
-  const data = await res.json() as { places?: PoiPlace[] };
-  return data.places ?? [];
-}
-
 export default function ExploreScreen() {
   const insets       = useSafeAreaInsets();
   const { t, isAr } = useLocale();
   const openTs       = useRef<number>(0);
 
-  const [userLat,    setUserLat]    = useState<number | undefined>(undefined);
-  const [userLng,    setUserLng]    = useState<number | undefined>(undefined);
-  const [poiPlaces,  setPoiPlaces]  = useState<PoiPlace[]>([]);
-  const [poiLoading, setPoiLoading] = useState(true);
+  const [userLat,    setUserLat]    = useState(DEFAULT_LAT);
+  const [userLng,    setUserLng]    = useState(DEFAULT_LNG);
+  const [locating,   setLocating]   = useState(true);
+  const apiBase = getApiBase();
 
   useEffect(() => {
     openTs.current = Date.now();
@@ -181,31 +170,15 @@ export default function ExploreScreen() {
     void (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        let lat = DEFAULT_LAT;
-        let lng = DEFAULT_LNG;
-
         if (status === "granted") {
           const loc = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced,
           });
-          lat = loc.coords.latitude;
-          lng = loc.coords.longitude;
+          setUserLat(loc.coords.latitude);
+          setUserLng(loc.coords.longitude);
         }
-
-        setUserLat(lat);
-        setUserLng(lng);
-        const places = await fetchPoiNearby(lat, lng);
-        setPoiPlaces(places);
-      } catch {
-        // Use Riyadh as fallback silently
-        setUserLat(DEFAULT_LAT);
-        setUserLng(DEFAULT_LNG);
-        try {
-          const places = await fetchPoiNearby(DEFAULT_LAT, DEFAULT_LNG);
-          setPoiPlaces(places);
-        } catch { /* ignore */ }
-      } finally {
-        setPoiLoading(false);
+      } catch { /* stay on default */ } finally {
+        setLocating(false);
       }
     })();
 
@@ -217,24 +190,16 @@ export default function ExploreScreen() {
 
   const topPad    = insets.top    + (Platform.OS === "web" ? 67 : 0);
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 : 0);
-
   const s = useMemo(() => makeStyles(topPad, bottomPad), [topPad, bottomPad]);
-
-  const subLabel = poiLoading
-    ? (isAr ? "جاري تحديد موقعك…" : "Locating you…")
-    : isAr
-      ? `${ATTRACTIONS.length} مكان + ${poiPlaces.length} قريب منك`
-      : `${ATTRACTIONS.length} spots + ${poiPlaces.length} nearby`;
 
   return (
     <View style={[s.root, Platform.OS === "web" && { height: SCREEN_H }]}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-      {/* ── Combined map ──────────────────────────────────────────────────── */}
       <TourismMapView
         spots={ATTRACTIONS}
         isAr={isAr}
-        poiPlaces={poiPlaces}
+        apiBase={apiBase}
         userLat={userLat}
         userLng={userLng}
       />
@@ -245,10 +210,16 @@ export default function ExploreScreen() {
           <View style={[s.titleWrap, isAr && { alignItems: "flex-end" }]}>
             <Text style={s.title}>{t.explore.title}</Text>
             <View style={s.subRow}>
-              {poiLoading && (
+              {locating && (
                 <ActivityIndicator size="small" color="#C9A84C" style={s.spinner} />
               )}
-              <Text style={s.sub}>{subLabel}</Text>
+              <Text style={s.sub}>
+                {locating
+                  ? (isAr ? "جاري تحديد موقعك…" : "Locating you…")
+                  : (isAr
+                    ? `${ATTRACTIONS.length} مكان + نتائج قريبة من موقعك`
+                    : `${ATTRACTIONS.length} spots + nearby results`)}
+              </Text>
             </View>
           </View>
           {/* Busyness legend */}
@@ -269,7 +240,7 @@ export default function ExploreScreen() {
         </View>
       </View>
 
-      {/* ── روح السعودية ──────────────────────────────────────────────────── */}
+      {/* ── روح السعودية pill ─────────────────────────────────────────────── */}
       <View style={[s.linksBar, { bottom: bottomPad + 50 }]} pointerEvents="box-none">
         <Pressable
           pointerEvents="auto"
@@ -294,7 +265,6 @@ export default function ExploreScreen() {
 function makeStyles(topPad: number, _bottomPad: number) {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: "#0f2040" },
-
     header: {
       position:          "absolute",
       top:               0,
@@ -307,50 +277,17 @@ function makeStyles(topPad: number, _bottomPad: number) {
       paddingBottom:     10,
       zIndex:            10,
     },
-    headerInner: {
-      flexDirection:  "row",
-      alignItems:     "center",
-      justifyContent: "space-between",
-    },
-    titleWrap: { gap: 2 },
-    title: {
-      color:      "#FFFFFF",
-      fontSize:   17,
-      fontFamily: "Inter_700Bold",
-    },
-    subRow: {
-      flexDirection: "row",
-      alignItems:    "center",
-      gap:           5,
-    },
-    spinner: { width: 12, height: 12 },
-    sub: {
-      color:      "rgba(255,255,255,0.48)",
-      fontSize:   10,
-      fontFamily: "Inter_400Regular",
-    },
-    legend: {
-      flexDirection: "row",
-      gap:           8,
-      alignItems:    "center",
-    },
-    legendItem: {
-      flexDirection: "row",
-      alignItems:    "center",
-      gap:           3,
-    },
-    legendDot: {
-      width:        6,
-      height:       6,
-      borderRadius: 3,
-    },
-    legendTxt: {
-      color:      "rgba(255,255,255,0.52)",
-      fontSize:   10,
-      fontFamily: "Inter_400Regular",
-    },
+    headerInner: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+    titleWrap:   { gap: 2 },
+    title:       { color: "#FFFFFF", fontSize: 17, fontFamily: "Inter_700Bold" },
+    subRow:      { flexDirection: "row", alignItems: "center", gap: 5 },
+    spinner:     { width: 12, height: 12 },
+    sub:         { color: "rgba(255,255,255,0.48)", fontSize: 10, fontFamily: "Inter_400Regular" },
+    legend:      { flexDirection: "row", gap: 8, alignItems: "center" },
+    legendItem:  { flexDirection: "row", alignItems: "center", gap: 3 },
+    legendDot:   { width: 6, height: 6, borderRadius: 3 },
+    legendTxt:   { color: "rgba(255,255,255,0.52)", fontSize: 10, fontFamily: "Inter_400Regular" },
 
-    // ── روح السعودية — compact pill ─────────────────────────────────────────
     linksBar: {
       position:        "absolute",
       alignSelf:       "center",
@@ -370,15 +307,7 @@ function makeStyles(topPad: number, _bottomPad: number) {
     },
     visitFlag:     { fontSize: 17 },
     visitTextWrap: { flexShrink: 1 },
-    visitTitle: {
-      color:      "#C9A84C",
-      fontSize:   12,
-      fontFamily: "Inter_700Bold",
-    },
-    visitSub: {
-      color:      "rgba(255,255,255,0.42)",
-      fontSize:   9,
-      fontFamily: "Inter_400Regular",
-    },
+    visitTitle:    { color: "#C9A84C", fontSize: 12, fontFamily: "Inter_700Bold" },
+    visitSub:      { color: "rgba(255,255,255,0.42)", fontSize: 9, fontFamily: "Inter_400Regular" },
   });
 }
