@@ -1,21 +1,21 @@
 /**
- * استكشف — Full explore screen
+ * استكشف — Map explore screen (tourist mode)
  *
- * Layout:
- *   ┌─────────────────────────────┐
- *   │  Glass header (flow, fixed) │  ← NOT absolute — WebView starts below it
- *   ├─────────────────────────────┤
- *   │  TourismMapView (flex:1)    │
- *   │   ┌─ filter bar inside HTML ┘
- *   │   └─ (top:10px)
- *   │                             │
- *   │  [روح السعودية pill]        │  ← absolute over map
- *   │                    [🚕 FAB] │  ← absolute over map
- *   └─────────────────────────────┘
+ * Layout (top → bottom, no overlap):
+ *   ┌────────────────────────────────────────────┐
+ *   │  Header: title + legend (flow, not abs.)   │
+ *   │  [        زر خروج — centered        ]      │
+ *   ├────────────────────────────────────────────┤
+ *   │  TourismMapView (flex:1)                   │
+ *   │   └── filter bar inside HTML at top:10px   │
+ *   │                             [🚕 FAB right] │
+ *   │   [  روح السعودية pill  ]                  │
+ *   └────────────────────────────────────────────┘
  */
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
+import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -33,31 +33,31 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import TourismMapView, { TourismSpot } from "@/components/TourismMapView";
+import { useApp } from "@/context/AppContext";
 import { logAdminEvent } from "@/hooks/useAIAssistant";
 import { useLocale } from "@/hooks/useLocale";
 import { getApiBase } from "@/utils/getApiBase";
 
 const { height: SCREEN_H } = Dimensions.get("window");
-const VISIT_SAUDI_URL      = "https://www.visitsaudi.com";
-const DEFAULT_LAT          = 24.7136;
-const DEFAULT_LNG          = 46.6753;
+const VISIT_SAUDI_URL = "https://www.visitsaudi.com";
+const DEFAULT_LAT     = 24.7136;
+const DEFAULT_LNG     = 46.6753;
+const SPOTS_COUNT     = 12;
 
-/* Only used for the count label — server handles the actual data */
-const ATTRACTIONS_COUNT = 12;
-
-/* Kept as TourismSpot[] type so TourismMapView prop stays compatible */
-const ATTRACTIONS: TourismSpot[] = [];
+/* Kept for type compatibility — actual data lives in the API server */
+const EMPTY_SPOTS: TourismSpot[] = [];
 
 const RIDES = [
-  { key: "uber",   labelAr: "أوبر",  labelEn: "Uber",   scheme: "uber://",   bg: "#000000", fg: "#FFFFFF", emoji: "🚗" },
-  { key: "bolt",   labelAr: "بولت",  labelEn: "Bolt",   scheme: "bolt://",   bg: "#34D399", fg: "#000000", emoji: "⚡" },
-  { key: "careem", labelAr: "كريم",  labelEn: "Careem", scheme: "careem://", bg: "#00B140", fg: "#FFFFFF", emoji: "🟢" },
+  { key: "uber",   labelAr: "أوبر",  labelEn: "Uber",   scheme: "uber://",   bg: "#000000", emoji: "🚗" },
+  { key: "bolt",   labelAr: "بولت",  labelEn: "Bolt",   scheme: "bolt://",   bg: "#34D399", emoji: "⚡" },
+  { key: "careem", labelAr: "كريم",  labelEn: "Careem", scheme: "careem://", bg: "#00B140", emoji: "🟢" },
 ] as const;
 
 export default function ExploreScreen() {
-  const insets       = useSafeAreaInsets();
-  const { t, isAr } = useLocale();
-  const openTs       = useRef<number>(0);
+  const insets              = useSafeAreaInsets();
+  const { t, isAr }         = useLocale();
+  const { clearAppMode }    = useApp();
+  const openTs              = useRef<number>(0);
 
   const [userLat,  setUserLat]  = useState(DEFAULT_LAT);
   const [userLng,  setUserLng]  = useState(DEFAULT_LNG);
@@ -79,6 +79,11 @@ export default function ExploreScreen() {
     setFabOpen(false);
     Animated.timing(fabAnim, { toValue: 0, duration: 180, useNativeDriver: true }).start();
     void Linking.openURL(scheme).catch(() => {});
+  }
+
+  function handleExit() {
+    clearAppMode();
+    router.replace("/mode-select" as never);
   }
 
   useEffect(() => {
@@ -122,8 +127,10 @@ export default function ExploreScreen() {
     <View style={[s.root, Platform.OS === "web" && { height: SCREEN_H }]}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-      {/* ── Glass header — IN FLOW (not absolute) ─────────────────────────── */}
+      {/* ── Header (IN FLOW — WebView starts below this) ──────────────────── */}
       <View style={[s.header, { paddingTop: topPad + 10 }]}>
+
+        {/* Title row */}
         <View style={s.headerInner}>
           <View style={[s.titleWrap, isAr && { alignItems: "flex-end" }]}>
             <Text style={s.title}>{t.explore.title}</Text>
@@ -132,9 +139,7 @@ export default function ExploreScreen() {
               <Text style={s.sub}>
                 {locating
                   ? (isAr ? "جاري تحديد موقعك…" : "Locating you…")
-                  : (isAr
-                    ? `${ATTRACTIONS_COUNT} مكان + قريب منك`
-                    : `${ATTRACTIONS_COUNT} spots + nearby`)}
+                  : (isAr ? `${SPOTS_COUNT} مكان + قريب منك` : `${SPOTS_COUNT} spots + nearby`)}
               </Text>
             </View>
           </View>
@@ -147,25 +152,33 @@ export default function ExploreScreen() {
             ))}
           </View>
         </View>
+
+        {/* ── زر خروج — centered below title row ─────────────────────────── */}
+        <View style={s.exitRow}>
+          <Pressable
+            onPress={handleExit}
+            style={({ pressed }) => [s.exitBtn, pressed && { opacity: 0.75 }]}
+          >
+            <MaterialIcons name="logout" size={15} color="#FF4D4D" />
+            <Text style={s.exitText}>{isAr ? "خروج" : "Exit"}</Text>
+          </Pressable>
+        </View>
+
       </View>
 
-      {/* ── Map container — fills remaining space ─────────────────────────── */}
+      {/* ── Map container ─────────────────────────────────────────────────── */}
       <View style={s.mapWrap}>
 
-        {/* The WebView loads /api/map-view — starts at top of this container */}
         <TourismMapView
-          spots={ATTRACTIONS}
+          spots={EMPTY_SPOTS}
           isAr={isAr}
           apiBase={apiBase}
           userLat={userLat}
           userLng={userLng}
         />
 
-        {/* ── روح السعودية pill ─────────────────────────────────────────── */}
-        <View
-          style={[s.linksBar, { bottom: bottomPad + 14 }]}
-          pointerEvents="box-none"
-        >
+        {/* روح السعودية pill — centered, above bottom edge */}
+        <View style={[s.linksBar, { bottom: bottomPad + 14 }]} pointerEvents="box-none">
           <Pressable
             pointerEvents="auto"
             onPress={() => { void Haptics.selectionAsync(); void Linking.openURL(VISIT_SAUDI_URL); }}
@@ -180,9 +193,9 @@ export default function ExploreScreen() {
           </Pressable>
         </View>
 
-        {/* ── 🚕 FAB ────────────────────────────────────────────────────── */}
+        {/* 🚕 FAB — always bottom RIGHT */}
         <View
-          style={[s.fabWrap, { bottom: bottomPad + 16, [isAr ? "left" : "right"]: 16 }]}
+          style={[s.fabWrap, { bottom: bottomPad + 18, right: 18 }]}
           pointerEvents="box-none"
         >
           {subButtons.map(({ ride, translateY, opacity, scale }) => (
@@ -191,33 +204,16 @@ export default function ExploreScreen() {
               style={[s.fabSubWrap, { transform: [{ translateY }, { scale }], opacity }]}
               pointerEvents={fabOpen ? "auto" : "none"}
             >
-              {isAr ? (
-                <>
-                  <TouchableOpacity
-                    style={[s.fabSub, { backgroundColor: ride.bg }]}
-                    onPress={() => openRide(ride.scheme)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={s.fabSubEmoji}>{ride.emoji}</Text>
-                  </TouchableOpacity>
-                  <View style={s.fabSubLabel}>
-                    <Text style={s.fabSubLabelTxt}>{ride.labelAr}</Text>
-                  </View>
-                </>
-              ) : (
-                <>
-                  <View style={s.fabSubLabel}>
-                    <Text style={s.fabSubLabelTxt}>{ride.labelEn}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={[s.fabSub, { backgroundColor: ride.bg }]}
-                    onPress={() => openRide(ride.scheme)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={s.fabSubEmoji}>{ride.emoji}</Text>
-                  </TouchableOpacity>
-                </>
-              )}
+              <View style={s.fabSubLabel}>
+                <Text style={s.fabSubLabelTxt}>{isAr ? ride.labelAr : ride.labelEn}</Text>
+              </View>
+              <TouchableOpacity
+                style={[s.fabSub, { backgroundColor: ride.bg }]}
+                onPress={() => openRide(ride.scheme)}
+                activeOpacity={0.8}
+              >
+                <Text style={s.fabSubEmoji}>{ride.emoji}</Text>
+              </TouchableOpacity>
             </Animated.View>
           ))}
 
@@ -245,32 +241,64 @@ function makeStyles() {
   return StyleSheet.create({
     root:   { flex: 1, backgroundColor: "#0f2040", flexDirection: "column" },
 
-    /* Header — part of flow, NOT absolute */
+    /* Header — flow element, NOT absolute */
     header: {
-      backgroundColor: "rgba(8,16,34,0.95)",
-      borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.09)",
-      paddingHorizontal: 16, paddingBottom: 10,
+      backgroundColor: "rgba(8,16,34,0.97)",
+      borderBottomWidth: 1,
+      borderBottomColor: "rgba(255,255,255,0.09)",
+      paddingHorizontal: 16,
+      paddingBottom: 8,
       flexShrink: 0,
     },
-    headerInner: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-    titleWrap:   { gap: 2 },
-    title:       { color: "#FFFFFF", fontSize: 17, fontFamily: "Inter_700Bold" },
-    subRow:      { flexDirection: "row", alignItems: "center", gap: 5 },
-    spinner:     { width: 12, height: 12 },
-    sub:         { color: "rgba(255,255,255,0.48)", fontSize: 10, fontFamily: "Inter_400Regular" },
-    legend:      { flexDirection: "row", gap: 8, alignItems: "center" },
-    legendItem:  { flexDirection: "row", alignItems: "center", gap: 3 },
-    legendDot:   { width: 6, height: 6, borderRadius: 3 },
-    legendTxt:   { color: "rgba(255,255,255,0.52)", fontSize: 10, fontFamily: "Inter_400Regular" },
+    headerInner: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    titleWrap: { gap: 2 },
+    title:     { color: "#FFFFFF", fontSize: 17, fontFamily: "Inter_700Bold" },
+    subRow:    { flexDirection: "row", alignItems: "center", gap: 5 },
+    spinner:   { width: 12, height: 12 },
+    sub:       { color: "rgba(255,255,255,0.48)", fontSize: 10, fontFamily: "Inter_400Regular" },
+    legend:    { flexDirection: "row", gap: 8, alignItems: "center" },
+    legendItem:{ flexDirection: "row", alignItems: "center", gap: 3 },
+    legendDot: { width: 6, height: 6, borderRadius: 3 },
+    legendTxt: { color: "rgba(255,255,255,0.52)", fontSize: 10, fontFamily: "Inter_400Regular" },
+
+    /* Exit button row — centered */
+    exitRow: {
+      alignItems: "center",
+      marginTop: 8,
+    },
+    exitBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      paddingVertical: 6,
+      paddingHorizontal: 18,
+      borderRadius: 20,
+      borderWidth: 1.5,
+      borderColor: "rgba(255,77,77,0.35)",
+      backgroundColor: "rgba(28,8,8,0.85)",
+    },
+    exitText: {
+      color: "#FF6B6B",
+      fontSize: 13,
+      fontFamily: "Inter_600SemiBold",
+    },
 
     /* Map container */
     mapWrap: { flex: 1, position: "relative", overflow: "hidden" },
 
     /* روح السعودية pill */
     linksBar: {
-      position: "absolute", alignSelf: "center", zIndex: 10,
+      position: "absolute",
+      alignSelf: "center",
+      zIndex: 10,
       backgroundColor: "rgba(8,16,34,0.88)",
-      borderWidth: 1, borderColor: "rgba(201,168,76,0.35)", borderRadius: 22,
+      borderWidth: 1,
+      borderColor: "rgba(201,168,76,0.35)",
+      borderRadius: 22,
     },
     visitBtn:      { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 7 },
     visitFlag:     { fontSize: 17 },
@@ -279,28 +307,54 @@ function makeStyles() {
     visitSub:      { color: "rgba(255,255,255,0.42)", fontSize: 9, fontFamily: "Inter_400Regular" },
 
     /* FAB */
-    fabWrap: { position: "absolute", zIndex: 20, alignItems: "flex-end" },
-    fab: {
-      width: 52, height: 52, borderRadius: 26,
-      backgroundColor: "#0F2040",
-      borderWidth: 1.5, borderColor: "#C9A84C",
-      alignItems: "center", justifyContent: "center",
-      shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.5, shadowRadius: 8, elevation: 8,
+    fabWrap: {
+      position: "absolute",
+      zIndex: 20,
+      alignItems: "flex-end",
     },
-    fabEmoji:       { fontSize: 24 },
-    fabSubWrap:     { position: "absolute", bottom: 0, flexDirection: "row", alignItems: "center", gap: 8 },
-    fabSubLabel:    {
+    fab: {
+      width: 54,
+      height: 54,
+      borderRadius: 27,
+      backgroundColor: "#0F2040",
+      borderWidth: 1.5,
+      borderColor: "#C9A84C",
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.5,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    fabEmoji: { fontSize: 24 },
+    fabSubWrap: {
+      position: "absolute",
+      bottom: 0,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    fabSubLabel: {
       backgroundColor: "rgba(8,16,34,0.92)",
-      borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4,
-      borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
+      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.12)",
     },
     fabSubLabelTxt: { color: "#fff", fontSize: 12, fontFamily: "Inter_600SemiBold" },
     fabSub: {
-      width: 46, height: 46, borderRadius: 23,
-      alignItems: "center", justifyContent: "center",
-      shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.4, shadowRadius: 6, elevation: 6,
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.4,
+      shadowRadius: 6,
+      elevation: 6,
     },
     fabSubEmoji: { fontSize: 20 },
   });

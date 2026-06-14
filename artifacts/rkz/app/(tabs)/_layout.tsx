@@ -155,7 +155,6 @@ function NativeTabLayout({ requireAuth: _requireAuth }: { requireAuth: (action: 
           </NativeTabs.Trigger>
         ))}
       </NativeTabs>
-      {isTourist && <TouristExitButton />}
     </>
   );
 }
@@ -296,8 +295,6 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
         })}
       </Tabs>
 
-      {/* Floating exit button for tourist mode */}
-      {isTourist && <TouristExitButton />}
     </>
   );
 }
