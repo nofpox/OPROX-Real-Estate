@@ -147,7 +147,6 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
 <div id="map"></div>
 
 <div id="filter-bar">
-  <button class="fbtn active" onclick="setFilter(this,'all')">${isAr ? "الكل" : "All"}</button>
   <button class="fbtn" onclick="setFilter(this,'tourism')">${isAr ? "سياحة" : "Tourism"}</button>
   <button class="fbtn" onclick="setFilter(this,'hotel')">${isAr ? "فنادق" : "Hotels"}</button>
   <button class="fbtn" onclick="setFilter(this,'rest')">${isAr ? "مطاعم" : "Restaurants"}</button>
@@ -213,12 +212,16 @@ function buildMapHtml(spots: TourismSpot[], isAr: boolean): string {
   };
 
   window.setFilter=function(btn,type){
+    var wasActive=btn.classList.contains('active');
     document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    ['tourism','hotel','rest','cafe'].forEach(function(t){
-      if(type==='all'||type===t)map.addLayer(layers[t]);
-      else map.removeLayer(layers[t]);
-    });
+    if(wasActive){
+      ['tourism','hotel','rest','cafe'].forEach(function(t){map.addLayer(layers[t]);});
+    }else{
+      btn.classList.add('active');
+      ['tourism','hotel','rest','cafe'].forEach(function(t){
+        if(t===type)map.addLayer(layers[t]);else map.removeLayer(layers[t]);
+      });
+    }
   };
 
   var CAT_CLR={cultural:'#60A5FA',events:'#A78BFA',nature:'#4ADE80',entertainment:'#FB923C',religious:'#D4A843'};
