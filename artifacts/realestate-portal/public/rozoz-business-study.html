@@ -361,12 +361,19 @@
 
     /* ─── BUDGET TABLE ─── */
     .budget-total {
-      background: #0F3460;
-      color: #C8A951;
+      background: #C8A951 !important;
+      color: #0F3460 !important;
       font-weight: 900;
       font-size: 15px;
+      -webkit-tap-highlight-color: transparent;
     }
-    .budget-total td { color: #C8A951 !important; }
+    .budget-total td {
+      color: #0F3460 !important;
+      background: #C8A951 !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .budget-total td strong { color: #0F3460 !important; }
+    .budget-total td small  { color: #4a3000 !important; }
 
     /* ─── KPI GRID ─── */
     .kpi-grid {
@@ -460,6 +467,9 @@
       border-radius: 14px;
       padding: 28px;
       margin-bottom: 28px;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
     }
     .org-chart h4 {
       color: #C8A951;
