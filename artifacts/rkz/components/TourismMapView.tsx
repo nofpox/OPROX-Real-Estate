@@ -78,18 +78,18 @@ function buildHtml(opts: {
   const { isAr, lat, lng, hasTabs, apiBase, initialZoom, showTourismSpots, filterBarTopPx } = opts;
   const dir           = isAr ? "rtl" : "ltr";
   const spotsJson     = JSON.stringify(SPOTS);
-  const legendBottom  = hasTabs ? 112 : 62;
   const filterInset   = isAr ? "right:8px;left:18px" : "left:8px;right:18px";
 
   /* POI colours */
-  const POI_COLORS: Record<string, string> = {
+  const CATEGORY_COLORS = {
+    all:        "#64748B",
     attraction: "#16A34A",
     hotel:      "#3B82F6",
     restaurant: "#EF4444",
-    cafe:       "#92400E",
+    cafe:       "#F59E0B",
     apartment:  "#A855F7",
   };
-  const poiColorsJson = JSON.stringify(POI_COLORS);
+  const catColorsJson = JSON.stringify(CATEGORY_COLORS);
 
   return `<!DOCTYPE html>
 <html lang="${isAr ? "ar" : "en"}" dir="${dir}">
@@ -122,29 +122,24 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
   flex-shrink: 0; padding: 5px 10px; border-radius: 18px;
   background: rgba(8,18,36,0.82); color: #cbd5e1;
   font-size: 12px; font-family: -apple-system, sans-serif; font-weight: 700;
-  border: 1.5px solid rgba(255,255,255,0.22); cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.22); cursor: pointer;
   white-space: nowrap; -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s;
 }
-.fbtn.active     { background: rgba(15,52,96,0.95); border-color: #C9A84C; color: #C9A84C; }
-.fbtn.active-apt { background: rgba(60,20,110,0.95); border-color: #A855F7; color: #A855F7; }
-
-#legend {
-  position: absolute; bottom: ${legendBottom}px;
-  ${isAr ? "left: 12px;" : "right: 12px;"}
-  z-index: 1000; background: rgba(8,18,36,0.82);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px; padding: 7px 11px;
-  font-family: -apple-system, sans-serif;
-}
-.l-row { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; direction: ltr; }
-.l-row:last-child { margin-bottom: 0; }
-.ldot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.l-lbl { font-size: 10px; color: #e2e8f0; font-weight: 600; }
 
 .spot-icon { overflow: visible !important; background: none !important; border: none !important; }
-.spot-wrap { display: flex; flex-direction: column; align-items: center; transform: translate(-50%,-50%); }
+.spot-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  transform: translate(-50%,-50%); position: relative;
+}
+.spot-ring {
+  position: absolute; width: 30px; height: 30px; border-radius: 50%;
+  border: 3px solid #C9A84C; background: rgba(0,0,0,0.28);
+  top: -2px; left: 50%; transform: translateX(-50%);
+  pointer-events: none;
+}
 .spot-pin {
-  font-size: 22px; line-height: 1;
+  font-size: 22px; line-height: 1; position: relative; z-index: 1;
   filter: drop-shadow(0 3px 6px rgba(0,0,0,0.7));
 }
 
@@ -176,41 +171,59 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
 <div id="err-box"></div>
 <div id="map"></div>
 <div id="filter-bar">
-  <button class="fbtn active" id="btn-all"  onclick="doFilter('all',        this)">🌍 ${isAr ? "الكل"     : "All"    }</button>
-  <button class="fbtn"        id="btn-att"  onclick="doFilter('attraction', this)">🏛 ${isAr ? "سياحة"   : "Tourism"}</button>
-  <button class="fbtn"        id="btn-hot"  onclick="doFilter('hotel',      this)">🏨 ${isAr ? "فنادق"   : "Hotels" }</button>
-  <button class="fbtn"        id="btn-rest" onclick="doFilter('restaurant', this)">🍽 ${isAr ? "مطاعم"   : "Rest."  }</button>
-  <button class="fbtn"        id="btn-cafe" onclick="doFilter('cafe',       this)">☕ ${isAr ? "كافيهات" : "Cafes"  }</button>
-  <button class="fbtn"        id="btn-apt"  onclick="doFilter('apartment',  this)">🏠 ${isAr ? "شقق"     : "Apts"   }</button>
-</div>
-<div id="legend">
-  <div class="l-row"><span class="ldot" style="background:#6366F1"></span><span class="l-lbl">${isAr ? "موقعك" : "You"}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#C9A84C"></span><span class="l-lbl">${isAr ? "أماكن" : "Spots"}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#16A34A"></span><span class="l-lbl">${isAr ? "سياحة" : "Tourism"}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#3B82F6"></span><span class="l-lbl">${isAr ? "فندق" : "Hotel"}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#EF4444"></span><span class="l-lbl">${isAr ? "مطعم" : "Rest."}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#92400E"></span><span class="l-lbl">${isAr ? "كافيه" : "Cafe"}</span></div>
-  <div class="l-row"><span class="ldot" style="background:#A855F7"></span><span class="l-lbl">${isAr ? "شقق" : "Apt."}</span></div>
+  <button class="fbtn" id="btn-all"  onclick="doFilter('all',        this)">🌍 ${isAr ? "الكل"     : "All"    }</button>
+  <button class="fbtn" id="btn-att"  onclick="doFilter('attraction', this)">🏛 ${isAr ? "سياحة"   : "Tourism"}</button>
+  <button class="fbtn" id="btn-hot"  onclick="doFilter('hotel',      this)">🏨 ${isAr ? "فنادق"   : "Hotels" }</button>
+  <button class="fbtn" id="btn-rest" onclick="doFilter('restaurant', this)">🍽 ${isAr ? "مطاعم"   : "Rest."  }</button>
+  <button class="fbtn" id="btn-cafe" onclick="doFilter('cafe',       this)">☕ ${isAr ? "كافيهات" : "Cafes"  }</button>
+  <button class="fbtn" id="btn-apt"  onclick="doFilter('apartment',  this)">🏠 ${isAr ? "شقق"     : "Apts"   }</button>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
-  var IS_AR           = ${isAr ? "true" : "false"};
-  var USER_LAT        = ${lat};
-  var USER_LNG        = ${lng};
-  var INIT_ZOOM       = ${initialZoom};
-  var SHOW_SPOTS      = ${showTourismSpots ? "true" : "false"};
-  var API_BASE        = "${apiBase}";
-  var POI_COLORS      = ${poiColorsJson};
-  var SPOTS           = ${spotsJson};
+  var IS_AR      = ${isAr ? "true" : "false"};
+  var USER_LAT   = ${lat};
+  var USER_LNG   = ${lng};
+  var INIT_ZOOM  = ${initialZoom};
+  var SHOW_SPOTS = ${showTourismSpots ? "true" : "false"};
+  var API_BASE   = "${apiBase}";
+  var SPOTS      = ${spotsJson};
+
+  /* category → color map */
+  var CAT_COLORS = ${catColorsJson};
+  /* button id map */
+  var BTN_IDS = {
+    all: 'btn-all', attraction: 'btn-att', hotel: 'btn-hot',
+    restaurant: 'btn-rest', cafe: 'btn-cafe', apartment: 'btn-apt'
+  };
+
+  /* colour each button with its category colour (inactive = dark bg + colored border+text) */
+  function styleButtons(activeType) {
+    Object.keys(CAT_COLORS).forEach(function (cat) {
+      var b = document.getElementById(BTN_IDS[cat]);
+      if (!b) return;
+      var clr = CAT_COLORS[cat];
+      if (cat === activeType) {
+        b.style.background   = clr;
+        b.style.color        = '#fff';
+        b.style.borderColor  = clr;
+      } else {
+        b.style.background   = 'rgba(8,18,36,0.82)';
+        b.style.color        = clr;
+        b.style.borderColor  = clr;
+      }
+    });
+  }
 
   var errBox = document.getElementById('err-box');
   function showErr(msg) {
     if (errBox) { errBox.style.display = 'block'; errBox.textContent = msg; }
   }
 
-  /* ── Map init (same pattern as HeatmapMapView) ── */
   var map, tourismLayer, poiLayer;
+  var poiMarkers   = [];
+  var currentColor = CAT_COLORS['all'];
+
   try {
     map = L.map('map', {
       center: [USER_LAT, USER_LNG],
@@ -228,7 +241,6 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
     tourismLayer = L.layerGroup().addTo(map);
     poiLayer     = L.layerGroup().addTo(map);
 
-    /* User location marker */
     L.circleMarker([USER_LAT, USER_LNG], {
       radius: 9, fillColor: '#6366F1', color: '#fff',
       weight: 2.5, opacity: 1, fillOpacity: 0.95,
@@ -244,7 +256,7 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
   if (SHOW_SPOTS) {
     SPOTS.forEach(function (s) {
       var icon = L.divIcon({
-        html: '<div class="spot-wrap"><span class="spot-pin">' + s.emoji + '</span></div>',
+        html: '<div class="spot-wrap"><div class="spot-ring"></div><span class="spot-pin">' + s.emoji + '</span></div>',
         className: 'spot-icon',
         iconSize: [0, 0],
         iconAnchor: [0, 0],
@@ -261,60 +273,65 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
   }
 
   /* ── POI from API ── */
-  var currentType = null;
-
   function loadPoi(type) {
     if (!poiLayer) return;
-    currentType = type;
     var url = API_BASE + '/api/poi?lat=' + USER_LAT + '&lng=' + USER_LNG + '&radius_km=20&limit=200';
     if (type && type !== 'all') url += '&type=' + type;
     fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (data) {
         poiLayer.clearLayers();
+        poiMarkers = [];
         var places = data.places || [];
         places.forEach(function (p) {
           if (!p.lat || !p.lng) return;
-          var clr = POI_COLORS[p.type] || '#94a3b8';
           var name = IS_AR ? (p.nameAr || p.nameEn || '') : (p.nameEn || p.nameAr || '');
           if (!name) name = IS_AR ? 'بدون اسم' : 'Unknown';
-          L.circleMarker([p.lat, p.lng], {
-            radius: 7, fillColor: clr, color: '#fff',
+          var m = L.circleMarker([p.lat, p.lng], {
+            radius: 7, fillColor: currentColor, color: '#fff',
             weight: 1.5, opacity: 1, fillOpacity: 0.88,
-          }).bindPopup('<div class="pop-name">' + name + '</div>', { className: 'lf-popup' })
-            .addTo(poiLayer);
+          }).bindPopup('<div class="pop-name">' + name + '</div>', { className: 'lf-popup' });
+          m.addTo(poiLayer);
+          poiMarkers.push(m);
         });
       })
-      .catch(function () { /* network unavailable — map still works */ });
+      .catch(function () {});
   }
 
-  loadPoi(null);
-
   /* ── Filter buttons ── */
-  window.doFilter = function (type, btn) {
-    document.querySelectorAll('.fbtn').forEach(function (b) {
-      b.classList.remove('active', 'active-apt');
+  window.doFilter = function (type, _btn) {
+    currentColor = CAT_COLORS[type] || CAT_COLORS['all'];
+    styleButtons(type);
+
+    /* update existing POI markers instantly */
+    poiMarkers.forEach(function (m) { m.setStyle({ fillColor: currentColor }); });
+
+    /* update tourism spot rings */
+    document.querySelectorAll('.spot-ring').forEach(function (el) {
+      el.style.borderColor = currentColor;
     });
-    if (type === 'apartment') {
-      btn.classList.add('active-apt');
-    } else {
-      btn.classList.add('active');
-    }
+
+    /* show/hide tourism layer */
     if (SHOW_SPOTS) {
       if (type === 'apartment') {
         map.removeLayer(tourismLayer);
       } else {
-        map.addLayer(tourismLayer);
+        if (!map.hasLayer(tourismLayer)) map.addLayer(tourismLayer);
       }
     }
+
     loadPoi(type === 'all' ? null : type);
   };
 
-  /* ── Allow parent to reposition filter bar via injectJavaScript ── */
+  /* ── Allow parent to reposition filter bar ── */
   window.setFilterBarTop = function (px) {
     var fb = document.getElementById('filter-bar');
     if (fb) fb.style.top = px + 'px';
   };
+
+  /* initialise button colours */
+  styleButtons('all');
+  loadPoi(null);
 
 })();
 </script>
