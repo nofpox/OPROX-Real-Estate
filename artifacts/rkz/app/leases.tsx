@@ -212,7 +212,8 @@ export default function LeasesScreen() {
       <View style={s.header}>
         <View style={[s.headerRow, isAr && { flexDirection: "row-reverse" }]}>
           <Pressable onPress={() => router.back()} style={s.backBtn} hitSlop={12}>
-            <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={22} color="#FFFFFF" />
+            <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={20} color="#FFFFFF" />
+            <Text style={s.backBtnText}>{isAr ? "رجوع" : "Back"}</Text>
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={[s.headerTitle, isAr && { textAlign: "right" }]}>{tl.title}</Text>
@@ -660,13 +661,11 @@ function makeStyles(colors: ReturnType<typeof useColors>, isAr: boolean, topPad:
     },
     headerRow: { flexDirection: "row", alignItems: "center", gap: 12 },
     backBtn: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
+      flexDirection: "row", alignItems: "center", gap: 4,
       backgroundColor: "rgba(255,255,255,0.08)",
-      alignItems: "center",
-      justifyContent: "center",
+      paddingHorizontal: 10, paddingVertical: 6, borderRadius: 19,
     },
+    backBtnText: { color: "#FFFFFF", fontSize: 12, fontFamily: "Inter_600SemiBold" },
     headerTitle: { color: "#FFFFFF", fontSize: 20, fontFamily: "Inter_700Bold" },
     headerSub: { color: "rgba(255,255,255,0.55)", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
     addBtn: {

@@ -344,7 +344,12 @@ export default function DiscoveryMapScreen() {
       <View style={[s.container, Platform.OS === "web" && { height: windowH }]}>
         {/* ── Map fills entire screen ──────────────────────────────────────── */}
         <View style={StyleSheet.absoluteFill}>
-          <HeatmapMapView properties={filtered as MapProperty[]} isAr={isAr} isDark={isDark} />
+          <HeatmapMapView
+            properties={filtered as MapProperty[]}
+            isAr={isAr}
+            isDark={isDark}
+            onOpenCards={() => { void Haptics.selectionAsync(); setViewMode("cards"); }}
+          />
         </View>
 
         {/* ── Floating glass header ────────────────────────────────────────── */}

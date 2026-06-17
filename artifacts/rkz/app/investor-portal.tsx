@@ -105,7 +105,8 @@ export default function OwnerHubScreen() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <View style={s.header}>
         <Pressable onPress={() => router.back()} style={s.backBtn} hitSlop={12}>
-          <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={22} color="#FFFFFF" />
+          <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={20} color="#FFFFFF" />
+          <Text style={s.backBtnText}>{isAr ? "رجوع" : "Back"}</Text>
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>{isAr ? "لوحة المالك" : "Owner Hub"}</Text>
@@ -285,7 +286,8 @@ function styles(
       alignItems:        "center",
       gap:               12,
     },
-    backBtn:     { padding: 4 },
+    backBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.10)", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 18 },
+    backBtnText: { color: "#FFFFFF", fontSize: 12, fontFamily: "Inter_600SemiBold" },
     headerTitle: { color: "#FFFFFF", fontSize: 22, fontFamily: "Inter_700Bold" },
     headerSub:   { color: "rgba(255,255,255,0.5)", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 3 },
 

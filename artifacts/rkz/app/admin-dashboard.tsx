@@ -87,7 +87,8 @@ export default function AdminDashboardScreen() {
             style={S.backBtn}
             hitSlop={10}
           >
-            <MaterialIcons name={isAr ? "chevron-right" : "chevron-left"} size={24} color="#FFFFFF" />
+            <MaterialIcons name={isAr ? "chevron-right" : "chevron-left"} size={20} color="#FFFFFF" />
+            <Text style={S.backBtnText}>{isAr ? "رجوع" : "Back"}</Text>
           </Pressable>
 
           <View style={S.headerCenter}>
@@ -369,10 +370,11 @@ function makeStyles(colors: ReturnType<typeof useColors>, isAr: boolean) {
       marginBottom: 14,
     },
     backBtn: {
-      width: 36, height: 36, borderRadius: 18,
-      backgroundColor: "rgba(255,255,255,0.1)",
-      alignItems: "center", justifyContent: "center",
+      flexDirection: "row", alignItems: "center", gap: 4,
+      backgroundColor: "rgba(255,255,255,0.10)",
+      paddingHorizontal: 10, paddingVertical: 6, borderRadius: 18,
     },
+    backBtnText: { color: "#FFFFFF", fontSize: 12, fontFamily: "Inter_600SemiBold" },
     headerCenter: { flex: 1, alignItems: "center" },
     headerTitle: {
       color: "#FFFFFF", fontSize: 16, fontFamily: "Inter_700Bold",

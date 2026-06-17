@@ -467,7 +467,8 @@ export default function MapDiscoveryScreen() {
       <View style={[styles.header, { paddingTop: topPad + 10 }]}>
         <View style={[styles.headerRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
           <Pressable style={styles.backBtn} onPress={() => router.back()} hitSlop={10}>
-            <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={20} color="#FFF" />
+            <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={18} color="#FFF" />
+            <Text style={styles.backBtnText}>{isAr ? "رجوع" : "Back"}</Text>
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={[styles.headerTitle, { textAlign: isAr ? "right" : "left" }]}>
@@ -597,7 +598,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: "#192540", zIndex: 10,
   },
   headerRow:    { alignItems: "center", gap: 10, marginBottom: 10 },
-  backBtn:      { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center" },
+  backBtn:      { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.08)", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 18 },
+  backBtnText:  { color: "#FFFFFF", fontSize: 12, fontFamily: "Inter_600SemiBold" },
   headerTitle:  { color: "#FFFFFF", fontSize: 17, fontFamily: "Inter_700Bold" },
   headerSub:    { color: "rgba(255,255,255,0.4)", fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 1 },
   modeBadge:    { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(201,168,76,0.1)", borderRadius: 10, paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1, borderColor: "rgba(201,168,76,0.25)" },

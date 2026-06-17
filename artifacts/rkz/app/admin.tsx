@@ -599,7 +599,8 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
       <View style={[styles.panelHeader, { backgroundColor: colors.navy, paddingTop: topPad + 12 }]}>
         <View style={[styles.panelHeaderInner, isAr && { flexDirection: "row-reverse" }]}>
           <Pressable onPress={handleDiscard} style={styles.backPress}>
-            <MaterialIcons name={isAr ? "chevron-right" : "chevron-left"} size={24} color="#FFFFFF" />
+            <MaterialIcons name={isAr ? "chevron-right" : "chevron-left"} size={20} color="#FFFFFF" />
+            <Text style={styles.backPressText}>{isAr ? "رجوع" : "Back"}</Text>
           </Pressable>
           <View style={{ flex: 1, alignItems: "center" }}>
             <Text style={styles.panelTitle}>{t.admin.title}</Text>
@@ -1373,7 +1374,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-  backPress: { width: 40, alignItems: "flex-start" },
+  backPress: { flexDirection: "row", alignItems: "center", gap: 4 },
+  backPressText: { color: "#FFFFFF", fontSize: 12, fontFamily: "Inter_600SemiBold" },
   panelTitle: { color: "#FFFFFF", fontSize: 17, fontFamily: "Inter_700Bold" },
   panelSubtitle: { color: "rgba(255,255,255,0.5)", fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
   previewBar: {

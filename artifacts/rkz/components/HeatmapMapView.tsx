@@ -10,7 +10,7 @@
  */
 import React, { useRef } from "react";
 import { StyleSheet, View, Text } from "react-native";
-import { WebView } from "react-native-webview";
+import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
 import { useColors } from "@/hooks/useColors";
 
@@ -70,6 +70,7 @@ interface Props {
   properties: MapProperty[];
   isAr?: boolean;
   isDark?: boolean;
+  onOpenCards?: () => void;
 }
 
 // ── HTML generator ─────────────────────────────────────────────────────────
@@ -135,6 +136,14 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
   .pop-item  { text-align: center; min-width: 52px; }
   .pop-val   { font-size: 16px; font-weight: 700; color: #D4A843; }
   .pop-lbl   { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+  .pop-nav-btn {
+    display: block; width: 100%; margin-top: 12px;
+    background: #D4A843; color: #0F2040; font-weight: 700;
+    font-size: 12px; padding: 8px 12px; border-radius: 9px;
+    border: none; cursor: pointer; text-align: center;
+    font-family: -apple-system, sans-serif; direction: rtl;
+  }
+  .pop-nav-btn:active { opacity: 0.8; }
 
   /* ── Controls ────────────────────────────────────────────────────────────── */
   .leaflet-control-zoom { display: none !important; }
@@ -189,6 +198,12 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
     subdomains: 'abcd', maxZoom: 18,
   }).addTo(map);
 
+  function openCards(id) {
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'openCards', id: id }));
+    }
+  }
+
   features.forEach(function(p) {
     var isGold     = p.price >= 5000000 || !!p.badge;
     var cls        = isGold ? 'price-gold' : 'price-green';
@@ -215,7 +230,8 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
         '<div class="pop-item"><div class="pop-val">' + priceLabel + '</div><div class="pop-lbl">السعر</div></div>' +
         '<div class="pop-item"><div class="pop-val">' + p.area.toLocaleString() + '</div><div class="pop-lbl">م²</div></div>' +
         bedroomHtml +
-      '</div>';
+      '</div>' +
+      '<button class="pop-nav-btn" onclick="openCards(\'' + p.id + '\')">عرض في القائمة ←</button>';
 
     L.marker([p.lat, p.lng], { icon: icon })
       .bindPopup(popupHtml, { className: 'lf-popup', maxWidth: 260, closeButton: true })
@@ -228,10 +244,17 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
-export default function HeatmapMapView({ properties, isAr, isDark = true }: Props) {
+export default function HeatmapMapView({ properties, isAr, isDark = true, onOpenCards }: Props) {
   const colors  = useColors();
   const webRef  = useRef<WebView>(null);
   const htmlRef = useRef<string>("");
+
+  function handleMessage(event: WebViewMessageEvent) {
+    try {
+      const msg = JSON.parse(event.nativeEvent.data) as { type: string };
+      if (msg.type === "openCards") onOpenCards?.();
+    } catch { /* ignore malformed messages */ }
+  }
 
   const propsKey = properties.map((p) => p.id).join(",") + "|" + (isDark ? "d" : "l");
   const prevKey  = useRef(propsKey);
@@ -264,6 +287,7 @@ export default function HeatmapMapView({ properties, isAr, isDark = true }: Prop
       scrollEnabled={false}
       showsHorizontalScrollIndicator={false}
       showsVerticalScrollIndicator={false}
+      onMessage={handleMessage}
       onError={(e) =>
         console.warn("PropertyMapView error:", e.nativeEvent.description)
       }
