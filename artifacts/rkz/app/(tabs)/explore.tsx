@@ -20,7 +20,6 @@ import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   LayoutChangeEvent,
   Linking,
   Platform,
@@ -28,7 +27,6 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -62,9 +60,6 @@ export default function ExploreScreen() {
   const [userLng,  setUserLng]  = useState(DEFAULT_LNG);
   const [locating, setLocating] = useState(true);
 
-  const [fabOpen, setFabOpen] = useState(false);
-  const fabAnim = useRef(new Animated.Value(0)).current;
-
   /* ── Ref to WebView for filter-bar repositioning ── */
   const mapRef = useRef<TourismMapHandle>(null);
 
@@ -79,16 +74,8 @@ export default function ExploreScreen() {
     mapRef.current?.injectJavaScript(`window.setFilterBarTop(${h}); true;`);
   }
 
-  function toggleFab() {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const toValue = fabOpen ? 0 : 1;
-    Animated.spring(fabAnim, { toValue, useNativeDriver: true, friction: 6, tension: 80 }).start();
-    setFabOpen(v => !v);
-  }
-
   function openRide(scheme: string) {
-    setFabOpen(false);
-    Animated.timing(fabAnim, { toValue: 0, duration: 180, useNativeDriver: true }).start();
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     void Linking.openURL(scheme).catch(() => {});
   }
 
@@ -136,16 +123,6 @@ export default function ExploreScreen() {
     ["#eab308", isAr ? "وسط"  : "Mod"],
     ["#ef4444", isAr ? "زحمة" : "Busy"],
   ];
-
-  const subButtons = RIDES.map((ride, i) => {
-    const translateY = fabAnim.interpolate({
-      inputRange:  [0, 1],
-      outputRange: [0, -(62 * (i + 1))],
-    });
-    const opacity = fabAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0, 1] });
-    const scale   = fabAnim.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] });
-    return { ride, translateY, opacity, scale };
-  });
 
   return (
     <View style={s.root}>
@@ -209,54 +186,45 @@ export default function ExploreScreen() {
         </View>
       </LinearGradient>
 
-      {/* ── روح السعودية pill — both modes ───────────────────────────────────── */}
-      <Pressable
-        style={[
-          s.linksBar,
-          { bottom: bottomPad + (isTourist ? 72 : 100) },
-        ]}
-        onPress={() => { void Haptics.selectionAsync(); void Linking.openURL(VISIT_SAUDI_URL); }}
+      {/* ── Bottom bar — taxi row + visit Saudi ──────────────────────────────── */}
+      <LinearGradient
+        colors={["rgba(8,16,34,0.00)", "rgba(8,16,34,0.85)", "rgba(8,16,34,0.97)"]}
+        style={[s.bottomBar, { paddingBottom: bottomPad + 12 }]}
       >
-        <View style={s.visitBtn}>
+        {/* Taxi row */}
+        <View style={s.taxiRow}>
+          <Text style={[s.taxiLabel, isAr && { textAlign: "right" }]}>
+            {isAr ? "اطلب تاكسي" : "Book a ride"}
+          </Text>
+          <View style={[s.taxiBtns, isAr && { flexDirection: "row-reverse" }]}>
+            {RIDES.map((ride) => (
+              <Pressable
+                key={ride.key}
+                style={({ pressed }) => [s.taxiBtn, { backgroundColor: ride.bg, opacity: pressed ? 0.8 : 1 }]}
+                onPress={() => openRide(ride.scheme)}
+              >
+                <Text style={s.taxiBtnEmoji}>{ride.emoji}</Text>
+                <Text style={[s.taxiBtnText, { color: ride.bg === "#000000" ? "#fff" : "#0F2040" }]}>
+                  {isAr ? ride.labelAr : ride.labelEn}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {/* Visit Saudi full-width button */}
+        <Pressable
+          style={({ pressed }) => [s.visitBtn, pressed && { opacity: 0.85 }]}
+          onPress={() => { void Haptics.selectionAsync(); void Linking.openURL(VISIT_SAUDI_URL); }}
+        >
           <Text style={s.visitFlag}>🇸🇦</Text>
           <View style={s.visitTextWrap}>
             <Text style={s.visitTitle}>{isAr ? "روح السعودية" : "Spirit of Saudi"}</Text>
             <Text style={s.visitSub}>{isAr ? "البوابة السياحية الرسمية" : "Official Tourism Portal"}</Text>
           </View>
-          <MaterialIcons name="open-in-new" size={14} color="#C9A84C" />
-        </View>
-      </Pressable>
-
-      {/* ── 🚕 FAB — absolute bottom right ───────────────────────────────────── */}
-      <View style={[s.fabWrap, { bottom: bottomPad + (isTourist ? 130 : 160), right: 18 }]}>
-        {subButtons.map(({ ride, translateY, opacity, scale }) => (
-          <Animated.View
-            key={ride.key}
-            style={[s.fabSubWrap, { transform: [{ translateY }, { scale }], opacity }]}
-            pointerEvents={fabOpen ? "auto" : "none"}
-          >
-            <View style={s.fabSubLabel}>
-              <Text style={s.fabSubLabelTxt}>{isAr ? ride.labelAr : ride.labelEn}</Text>
-            </View>
-            <TouchableOpacity
-              style={[s.fabSub, { backgroundColor: ride.bg }]}
-              onPress={() => openRide(ride.scheme)}
-              activeOpacity={0.8}
-            >
-              <Text style={s.fabSubEmoji}>{ride.emoji}</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        ))}
-
-        <TouchableOpacity style={s.fab} onPress={toggleFab} activeOpacity={0.85}>
-          <Animated.Text style={[
-            s.fabEmoji,
-            { transform: [{ rotate: fabAnim.interpolate({ inputRange:[0,1], outputRange:["0deg","45deg"] }) }] },
-          ]}>
-            🚕
-          </Animated.Text>
-        </TouchableOpacity>
-      </View>
+          <MaterialIcons name="open-in-new" size={16} color="#C9A84C" />
+        </Pressable>
+      </LinearGradient>
 
     </View>
   );
@@ -326,49 +294,59 @@ function makeStyles() {
     },
     exitText: { color: "#FF6B6B", fontSize: 10, fontFamily: "Inter_600SemiBold" },
 
-    /* ── روح السعودية pill — both modes ── */
-    linksBar: {
-      position:        "absolute",
-      alignSelf:       "center",
-      zIndex:          10,
-      backgroundColor: "rgba(8,16,34,0.82)",
-      borderWidth:     1,
-      borderColor:     "rgba(201,168,76,0.35)",
-      borderRadius:    18,
+    /* ── Bottom bar — taxi + visit Saudi ── */
+    bottomBar: {
+      position:          "absolute",
+      bottom:            0,
+      left:              0,
+      right:             0,
+      zIndex:            10,
+      paddingHorizontal: 16,
+      paddingTop:        24,
+      gap:               10,
     },
-    visitBtn:      { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5 },
-    visitFlag:     { fontSize: 13 },
-    visitTextWrap: { flexShrink: 1 },
-    visitTitle:    { color: "#C9A84C", fontSize: 10, fontFamily: "Inter_700Bold" },
-    visitSub:      { color: "rgba(255,255,255,0.42)", fontSize: 8, fontFamily: "Inter_400Regular" },
+    taxiRow: { gap: 6 },
+    taxiLabel: {
+      color:      "rgba(255,255,255,0.55)",
+      fontSize:   11,
+      fontFamily: "Inter_600SemiBold",
+      marginBottom: 4,
+    },
+    taxiBtns: { flexDirection: "row", gap: 10 },
+    taxiBtn: {
+      flex:              1,
+      flexDirection:     "row",
+      alignItems:        "center",
+      justifyContent:    "center",
+      gap:               6,
+      paddingVertical:   11,
+      borderRadius:      14,
+      shadowColor:       "#000",
+      shadowOffset:      { width: 0, height: 2 },
+      shadowOpacity:     0.35,
+      shadowRadius:      5,
+      elevation:         5,
+    },
+    taxiBtnEmoji: { fontSize: 16 },
+    taxiBtnText:  { fontSize: 13, fontFamily: "Inter_700Bold" },
 
-    /* ── FAB ── */
-    fabWrap: { position: "absolute", zIndex: 20, alignItems: "flex-end" },
-    fab: {
-      width: 54, height: 54, borderRadius: 27,
-      backgroundColor: "#0F2040",
-      borderWidth: 1.5, borderColor: "#C9A84C",
-      alignItems: "center", justifyContent: "center",
-      shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.5, shadowRadius: 8, elevation: 8,
+    visitBtn: {
+      flexDirection:     "row",
+      alignItems:        "center",
+      gap:               10,
+      backgroundColor:   "#1B6E35",
+      borderRadius:      14,
+      paddingVertical:   13,
+      paddingHorizontal: 16,
+      shadowColor:       "#000",
+      shadowOffset:      { width: 0, height: 2 },
+      shadowOpacity:     0.35,
+      shadowRadius:      6,
+      elevation:         5,
     },
-    fabEmoji: { fontSize: 24 },
-    fabSubWrap: {
-      position: "absolute", bottom: 0,
-      flexDirection: "row", alignItems: "center", gap: 8,
-    },
-    fabSubLabel: {
-      backgroundColor: "rgba(8,16,34,0.88)", borderRadius: 8,
-      paddingHorizontal: 8, paddingVertical: 4,
-      borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
-    },
-    fabSubLabelTxt: { color: "#fff", fontSize: 12, fontFamily: "Inter_600SemiBold" },
-    fabSub: {
-      width: 46, height: 46, borderRadius: 23,
-      alignItems: "center", justifyContent: "center",
-      shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.4, shadowRadius: 6, elevation: 6,
-    },
-    fabSubEmoji: { fontSize: 20 },
+    visitFlag:     { fontSize: 20 },
+    visitTextWrap: { flex: 1 },
+    visitTitle:    { color: "#FFFFFF", fontSize: 13, fontFamily: "Inter_700Bold" },
+    visitSub:      { color: "rgba(255,255,255,0.60)", fontSize: 10, fontFamily: "Inter_400Regular", marginTop: 1 },
   });
 }
