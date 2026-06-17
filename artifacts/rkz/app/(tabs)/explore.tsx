@@ -14,6 +14,7 @@
  */
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -168,8 +169,9 @@ export default function ExploreScreen() {
         />
       </View>
 
-      {/* ── Floating header — fully transparent, text readable via shadow ──── */}
-      <View
+      {/* ── Floating header — gradient scrim for readability ──── */}
+      <LinearGradient
+        colors={["rgba(8,16,34,0.88)", "rgba(8,16,34,0.60)", "rgba(8,16,34,0.00)"]}
         style={[s.header, { paddingTop: topPad + 10 }]}
         onLayout={handleHeaderLayout}
       >
@@ -205,7 +207,7 @@ export default function ExploreScreen() {
           )}
 
         </View>
-      </View>
+      </LinearGradient>
 
       {/* ── روح السعودية pill — both modes ───────────────────────────────────── */}
       <Pressable

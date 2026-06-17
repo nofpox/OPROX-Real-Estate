@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -347,9 +348,12 @@ export default function DiscoveryMapScreen() {
         </View>
 
         {/* ── Floating glass header ────────────────────────────────────────── */}
-        <View style={[s.glassHeader, { paddingTop: topPad + 12 }]}>
+        <LinearGradient
+          colors={["rgba(8,16,34,0.88)", "rgba(8,16,34,0.60)", "rgba(8,16,34,0.00)"]}
+          style={[s.glassHeader, { paddingTop: topPad + 12 }]}
+        >
           {headerRow}
-        </View>
+        </LinearGradient>
 
         {/* ── Floating glass filter pills ──────────────────────────────────── */}
         <View style={s.glassFilterWrap}>
