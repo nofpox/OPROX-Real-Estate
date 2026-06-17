@@ -14,7 +14,7 @@
  *
  * PARENT MUST use StyleSheet.absoluteFill — no overflow:"hidden".
  */
-import React, { useRef } from "react";
+import React, { forwardRef, useImperativeHandle, useRef } from "react";
 import { Linking, StyleSheet } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
@@ -41,6 +41,11 @@ interface Props {
   hasTabs?:          boolean;
   initialZoom?:      number;
   showTourismSpots?: boolean;
+  filterBarTopPx?:   number;
+}
+
+export interface TourismMapHandle {
+  injectJavaScript: (js: string) => void;
 }
 
 /* ── Static 12 Saudi landmarks ───────────────────────────────────────────── */
@@ -68,12 +73,12 @@ function buildHtml(opts: {
   apiBase: string;
   initialZoom: number;
   showTourismSpots: boolean;
+  filterBarTopPx: number;
 }): string {
-  const { isAr, lat, lng, hasTabs, apiBase, initialZoom, showTourismSpots } = opts;
+  const { isAr, lat, lng, hasTabs, apiBase, initialZoom, showTourismSpots, filterBarTopPx } = opts;
   const dir           = isAr ? "rtl" : "ltr";
   const spotsJson     = JSON.stringify(SPOTS);
   const legendBottom  = hasTabs ? 112 : 62;
-  const filterAlign   = isAr ? "flex-end" : "flex-start";
   const filterInset   = isAr ? "right:8px;left:18px" : "left:8px;right:18px";
 
   /* POI colours */
@@ -106,27 +111,27 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
 }
 
 #filter-bar {
-  position: absolute; top: 12px; ${filterInset};
+  position: absolute; top: ${filterBarTopPx}px; ${filterInset};
   z-index: 1000; display: flex; flex-direction: row;
-  justify-content: ${filterAlign};
   gap: 7px; overflow-x: auto; scrollbar-width: none;
   -webkit-overflow-scrolling: touch; flex-wrap: nowrap;
+  padding: 6px 0;
 }
 #filter-bar::-webkit-scrollbar { display: none; }
 .fbtn {
-  flex-shrink: 0; padding: 7px 14px; border-radius: 20px;
-  background: rgba(8,18,36,0.90); color: #cbd5e1;
+  flex-shrink: 0; padding: 7px 13px; border-radius: 20px;
+  background: rgba(8,18,36,0.82); color: #cbd5e1;
   font-size: 13px; font-family: -apple-system, sans-serif; font-weight: 700;
   border: 1.5px solid rgba(255,255,255,0.22); cursor: pointer;
   white-space: nowrap; -webkit-tap-highlight-color: transparent;
 }
-.fbtn.active { background: rgba(15,52,96,0.95); border-color: #C9A84C; color: #C9A84C; }
+.fbtn.active     { background: rgba(15,52,96,0.95); border-color: #C9A84C; color: #C9A84C; }
 .fbtn.active-apt { background: rgba(60,20,110,0.95); border-color: #A855F7; color: #A855F7; }
 
 #legend {
   position: absolute; bottom: ${legendBottom}px;
   ${isAr ? "left: 12px;" : "right: 12px;"}
-  z-index: 1000; background: rgba(8,18,36,0.90);
+  z-index: 1000; background: rgba(8,18,36,0.82);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 10px; padding: 7px 11px;
   font-family: -apple-system, sans-serif;
@@ -305,6 +310,12 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
     loadPoi(type === 'all' ? null : type);
   };
 
+  /* ── Allow parent to reposition filter bar via injectJavaScript ── */
+  window.setFilterBarTop = function (px) {
+    var fb = document.getElementById('filter-bar');
+    if (fb) fb.style.top = px + 'px';
+  };
+
 })();
 </script>
 </body>
@@ -315,7 +326,7 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
 const DEFAULT_LAT = 24.7136;
 const DEFAULT_LNG = 46.6753;
 
-export default function TourismMapView({
+const TourismMapView = forwardRef<TourismMapHandle, Props>(function TourismMapView({
   isAr             = false,
   apiBase          = "",
   userLat          = DEFAULT_LAT,
@@ -323,16 +334,25 @@ export default function TourismMapView({
   hasTabs          = false,
   initialZoom      = 6,
   showTourismSpots = true,
-}: Props) {
+  filterBarTopPx   = 100,
+}, ref) {
+  const webViewRef = useRef<WebView>(null);
+
+  useImperativeHandle(ref, () => ({
+    injectJavaScript: (js: string) => {
+      webViewRef.current?.injectJavaScript(js);
+    },
+  }));
+
   const htmlRef = useRef("");
   const prevKey = useRef("");
-  const key     = `${userLat.toFixed(4)}_${userLng.toFixed(4)}_${String(isAr)}_${String(hasTabs)}_${initialZoom}_${String(showTourismSpots)}`;
+  const key     = `${userLat.toFixed(4)}_${userLng.toFixed(4)}_${String(isAr)}_${String(hasTabs)}_${initialZoom}_${String(showTourismSpots)}_${filterBarTopPx}`;
 
   if (!htmlRef.current || prevKey.current !== key) {
     prevKey.current = key;
     htmlRef.current = buildHtml({
       isAr, lat: userLat, lng: userLng,
-      hasTabs, apiBase, initialZoom, showTourismSpots,
+      hasTabs, apiBase, initialZoom, showTourismSpots, filterBarTopPx,
     });
   }
 
@@ -347,6 +367,7 @@ export default function TourismMapView({
 
   return (
     <WebView
+      ref={webViewRef}
       source={{ html: htmlRef.current }}
       style={styles.webview}
       originWhitelist={["*"]}
@@ -360,7 +381,9 @@ export default function TourismMapView({
       onMessage={handleMessage}
     />
   );
-}
+});
+
+export default TourismMapView;
 
 const styles = StyleSheet.create({
   webview: { flex: 1, backgroundColor: "#0f2040" },

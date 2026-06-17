@@ -20,6 +20,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  LayoutChangeEvent,
   Linking,
   Platform,
   Pressable,
@@ -31,7 +32,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import TourismMapView from "@/components/TourismMapView";
+import TourismMapView, { type TourismMapHandle } from "@/components/TourismMapView";
 import { useApp } from "@/context/AppContext";
 import { logAdminEvent } from "@/hooks/useAIAssistant";
 import { useLocale } from "@/hooks/useLocale";
@@ -62,6 +63,20 @@ export default function ExploreScreen() {
 
   const [fabOpen, setFabOpen] = useState(false);
   const fabAnim = useRef(new Animated.Value(0)).current;
+
+  /* ── Ref to WebView for filter-bar repositioning ── */
+  const mapRef = useRef<TourismMapHandle>(null);
+
+  const topPad    = insets.top    + (Platform.OS === "web" ? 67 : 0);
+  const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 : 0);
+
+  /* Initial estimate for filter bar top (corrected by onLayout below) */
+  const filterBarInitialTop = topPad + (isTourist ? 90 : 58);
+
+  function handleHeaderLayout(e: LayoutChangeEvent) {
+    const h = Math.round(e.nativeEvent.layout.height);
+    mapRef.current?.injectJavaScript(`window.setFilterBarTop(${h}); true;`);
+  }
 
   function toggleFab() {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -105,8 +120,6 @@ export default function ExploreScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const topPad    = insets.top    + (Platform.OS === "web" ? 67 : 0);
-  const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 : 0);
   const s = useMemo(() => makeStyles(), []);
 
   const title = isAr ? "استكشف السعودية" : "Explore Saudi Arabia";
@@ -143,6 +156,7 @@ export default function ExploreScreen() {
           HeatmapMapView uses this exact pattern and tiles work perfectly.    */}
       <View style={StyleSheet.absoluteFill}>
         <TourismMapView
+          ref={mapRef}
           isAr={isAr}
           apiBase={apiBase}
           userLat={userLat}
@@ -150,12 +164,15 @@ export default function ExploreScreen() {
           hasTabs={!isTourist}
           initialZoom={isTourist ? 6 : 12}
           showTourismSpots={isTourist}
+          filterBarTopPx={filterBarInitialTop}
         />
       </View>
 
       {/* ── Floating glass header — position:absolute, zIndex:10 ─────────────── */}
-      <View style={[s.header, { paddingTop: topPad + 10 }]}>
-
+      <View
+        style={[s.header, { paddingTop: topPad + 10 }]}
+        onLayout={handleHeaderLayout}
+      >
         <View style={[s.headerInner, isAr && { flexDirection: "row-reverse" }]}>
           <View style={[s.titleWrap, isAr && { alignItems: "flex-end" }]}>
             <Text style={s.title}>{title}</Text>
@@ -188,28 +205,28 @@ export default function ExploreScreen() {
             </Pressable>
           </View>
         )}
-
       </View>
 
-      {/* ── روح السعودية pill — tourist only, absolute bottom-center ──────────── */}
-      {isTourist && (
-        <Pressable
-          style={[s.linksBar, { bottom: bottomPad + 72 }]}
-          onPress={() => { void Haptics.selectionAsync(); void Linking.openURL(VISIT_SAUDI_URL); }}
-        >
-          <View style={s.visitBtn}>
-            <Text style={s.visitFlag}>🇸🇦</Text>
-            <View style={s.visitTextWrap}>
-              <Text style={s.visitTitle}>{isAr ? "روح السعودية" : "Spirit of Saudi"}</Text>
-              <Text style={s.visitSub}>{isAr ? "البوابة السياحية الرسمية" : "Official Tourism Portal"}</Text>
-            </View>
-            <MaterialIcons name="open-in-new" size={14} color="#C9A84C" />
+      {/* ── روح السعودية pill — both modes ───────────────────────────────────── */}
+      <Pressable
+        style={[
+          s.linksBar,
+          { bottom: bottomPad + (isTourist ? 72 : 100) },
+        ]}
+        onPress={() => { void Haptics.selectionAsync(); void Linking.openURL(VISIT_SAUDI_URL); }}
+      >
+        <View style={s.visitBtn}>
+          <Text style={s.visitFlag}>🇸🇦</Text>
+          <View style={s.visitTextWrap}>
+            <Text style={s.visitTitle}>{isAr ? "روح السعودية" : "Spirit of Saudi"}</Text>
+            <Text style={s.visitSub}>{isAr ? "البوابة السياحية الرسمية" : "Official Tourism Portal"}</Text>
           </View>
-        </Pressable>
-      )}
+          <MaterialIcons name="open-in-new" size={14} color="#C9A84C" />
+        </View>
+      </Pressable>
 
       {/* ── 🚕 FAB — absolute bottom right ───────────────────────────────────── */}
-      <View style={[s.fabWrap, { bottom: bottomPad + (isTourist ? 130 : 88), right: 18 }]}>
+      <View style={[s.fabWrap, { bottom: bottomPad + (isTourist ? 130 : 160), right: 18 }]}>
         {subButtons.map(({ ride, translateY, opacity, scale }) => (
           <Animated.View
             key={ride.key}
@@ -247,15 +264,15 @@ function makeStyles() {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: "#0f2040" },
 
-    /* ── Glass header — floats above map ── */
+    /* ── Glass header — floats above map, more transparent ── */
     header: {
       position:          "absolute",
       top:               0,
       left:              0,
       right:             0,
-      backgroundColor:   "rgba(8,16,34,0.78)",
+      backgroundColor:   "rgba(8,16,34,0.52)",
       borderBottomWidth: 1,
-      borderBottomColor: "rgba(255,255,255,0.12)",
+      borderBottomColor: "rgba(255,255,255,0.10)",
       paddingHorizontal: 16,
       paddingBottom:     10,
       zIndex:            10,
@@ -269,11 +286,11 @@ function makeStyles() {
     title:     { color: "#FFFFFF", fontSize: 17, fontFamily: "Inter_700Bold" },
     subRow:    { flexDirection: "row", alignItems: "center", gap: 5 },
     spinner:   { width: 12, height: 12 },
-    sub:       { color: "rgba(255,255,255,0.48)", fontSize: 10, fontFamily: "Inter_400Regular" },
+    sub:       { color: "rgba(255,255,255,0.55)", fontSize: 10, fontFamily: "Inter_400Regular" },
     legend:    { flexDirection: "row", gap: 8, alignItems: "center" },
     legendItem:{ flexDirection: "row", alignItems: "center", gap: 3 },
     legendDot: { width: 6, height: 6, borderRadius: 3 },
-    legendTxt: { color: "rgba(255,255,255,0.52)", fontSize: 10, fontFamily: "Inter_400Regular" },
+    legendTxt: { color: "rgba(255,255,255,0.55)", fontSize: 10, fontFamily: "Inter_400Regular" },
 
     exitRow: { alignItems: "center", marginTop: 8 },
     exitBtn: {
@@ -281,16 +298,16 @@ function makeStyles() {
       paddingVertical: 6, paddingHorizontal: 18,
       borderRadius: 20, borderWidth: 1.5,
       borderColor: "rgba(255,77,77,0.35)",
-      backgroundColor: "rgba(28,8,8,0.85)",
+      backgroundColor: "rgba(28,8,8,0.80)",
     },
     exitText: { color: "#FF6B6B", fontSize: 13, fontFamily: "Inter_600SemiBold" },
 
-    /* ── روح السعودية pill ── */
+    /* ── روح السعودية pill — both modes ── */
     linksBar: {
       position:        "absolute",
       alignSelf:       "center",
       zIndex:          10,
-      backgroundColor: "rgba(8,16,34,0.88)",
+      backgroundColor: "rgba(8,16,34,0.82)",
       borderWidth:     1,
       borderColor:     "rgba(201,168,76,0.35)",
       borderRadius:    22,
@@ -317,7 +334,7 @@ function makeStyles() {
       flexDirection: "row", alignItems: "center", gap: 8,
     },
     fabSubLabel: {
-      backgroundColor: "rgba(8,16,34,0.92)", borderRadius: 8,
+      backgroundColor: "rgba(8,16,34,0.88)", borderRadius: 8,
       paddingHorizontal: 8, paddingVertical: 4,
       borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
     },
