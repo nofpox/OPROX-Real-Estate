@@ -197,20 +197,19 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
     restaurant: 'btn-rest', cafe: 'btn-cafe', apartment: 'btn-apt'
   };
 
-  /* colour each button with its category colour (inactive = dark bg + colored border+text) */
+  /* colour buttons with app primary colors (gold/navy) */
   function styleButtons(activeType) {
     Object.keys(CAT_COLORS).forEach(function (cat) {
       var b = document.getElementById(BTN_IDS[cat]);
       if (!b) return;
-      var clr = CAT_COLORS[cat];
       if (cat === activeType) {
-        b.style.background   = clr;
-        b.style.color        = '#fff';
-        b.style.borderColor  = clr;
+        b.style.background  = 'rgba(201,168,76,0.88)';
+        b.style.color       = '#0F2040';
+        b.style.borderColor = '#C9A84C';
       } else {
-        b.style.background   = 'rgba(8,18,36,0.82)';
-        b.style.color        = clr;
-        b.style.borderColor  = clr;
+        b.style.background  = 'rgba(15,32,64,0.52)';
+        b.style.color       = 'rgba(201,168,76,0.85)';
+        b.style.borderColor = 'rgba(201,168,76,0.55)';
       }
     });
   }

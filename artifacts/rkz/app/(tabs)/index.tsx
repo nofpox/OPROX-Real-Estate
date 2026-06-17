@@ -460,11 +460,11 @@ function makeStyles(
       zIndex:          9,
     },
     glassPill: {
-      backgroundColor: "rgba(8,18,36,0.88)",
-      borderColor:     "rgba(255,255,255,0.25)",
+      backgroundColor: "rgba(15,32,64,0.52)",
+      borderColor:     "rgba(201,168,76,0.55)",
     },
     glassPillText: {
-      color: "#FFFFFF",
+      color: "rgba(201,168,76,0.90)",
     },
     glassListBtn: {
       position:          "absolute",
