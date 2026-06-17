@@ -168,12 +168,14 @@ export default function ExploreScreen() {
         />
       </View>
 
-      {/* ── Floating glass header — position:absolute, zIndex:10 ─────────────── */}
+      {/* ── Floating header — fully transparent, text readable via shadow ──── */}
       <View
         style={[s.header, { paddingTop: topPad + 10 }]}
         onLayout={handleHeaderLayout}
       >
         <View style={[s.headerInner, isAr && { flexDirection: "row-reverse" }]}>
+
+          {/* Title + subtitle */}
           <View style={[s.titleWrap, isAr && { alignItems: "flex-end" }]}>
             <Text style={s.title}>{title}</Text>
             <View style={[s.subRow, isAr && { flexDirection: "row-reverse" }]}>
@@ -182,20 +184,8 @@ export default function ExploreScreen() {
             </View>
           </View>
 
-          {/* Busyness legend */}
-          <View style={[s.legend, isAr && { flexDirection: "row-reverse" }]}>
-            {legendItems.map(([c, l]) => (
-              <View key={l} style={s.legendItem}>
-                <View style={[s.legendDot, { backgroundColor: c }]} />
-                <Text style={s.legendTxt}>{l}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Exit button — tourist only */}
-        {isTourist && (
-          <View style={s.exitRow}>
+          {/* Right side: exit button (tourist) OR busyness legend (registered) */}
+          {isTourist ? (
             <Pressable
               onPress={handleExit}
               style={({ pressed }) => [s.exitBtn, pressed && { opacity: 0.75 }]}
@@ -203,8 +193,18 @@ export default function ExploreScreen() {
               <MaterialIcons name="logout" size={15} color="#FF4D4D" />
               <Text style={s.exitText}>{isAr ? "خروج" : "Exit"}</Text>
             </Pressable>
-          </View>
-        )}
+          ) : (
+            <View style={[s.legend, isAr && { flexDirection: "row-reverse" }]}>
+              {legendItems.map(([c, l]) => (
+                <View key={l} style={s.legendItem}>
+                  <View style={[s.legendDot, { backgroundColor: c }]} />
+                  <Text style={s.legendTxt}>{l}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+        </View>
       </View>
 
       {/* ── روح السعودية pill — both modes ───────────────────────────────────── */}
@@ -281,22 +281,46 @@ function makeStyles() {
       justifyContent: "space-between",
     },
     titleWrap: { flex: 1, gap: 2 },
-    title:     { color: "#FFFFFF", fontSize: 17, fontFamily: "Inter_700Bold" },
-    subRow:    { flexDirection: "row", alignItems: "center", gap: 5 },
-    spinner:   { width: 12, height: 12 },
-    sub:       { color: "rgba(255,255,255,0.55)", fontSize: 10, fontFamily: "Inter_400Regular" },
-    legend:    { flexDirection: "row", gap: 8, alignItems: "center" },
+    title: {
+      color:            "#FFFFFF",
+      fontSize:         17,
+      fontFamily:       "Inter_700Bold",
+      textShadowColor:  "rgba(0,0,0,0.90)",
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 6,
+    },
+    subRow:  { flexDirection: "row", alignItems: "center", gap: 5 },
+    spinner: { width: 12, height: 12 },
+    sub: {
+      color:            "#FFFFFF",
+      fontSize:         10,
+      fontFamily:       "Inter_400Regular",
+      textShadowColor:  "rgba(0,0,0,0.90)",
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 4,
+    },
+    legend:    { flexDirection: "row", gap: 6, alignItems: "center" },
     legendItem:{ flexDirection: "row", alignItems: "center", gap: 3 },
-    legendDot: { width: 6, height: 6, borderRadius: 3 },
-    legendTxt: { color: "rgba(255,255,255,0.55)", fontSize: 10, fontFamily: "Inter_400Regular" },
+    legendDot: { width: 9, height: 9, borderRadius: 5 },
+    legendTxt: {
+      color:            "#FFFFFF",
+      fontSize:         11,
+      fontFamily:       "Inter_600SemiBold",
+      textShadowColor:  "rgba(0,0,0,0.90)",
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 4,
+    },
 
-    exitRow: { alignItems: "center", marginTop: 8 },
     exitBtn: {
-      flexDirection: "row", alignItems: "center", gap: 5,
-      paddingVertical: 6, paddingHorizontal: 18,
-      borderRadius: 20, borderWidth: 1.5,
-      borderColor: "rgba(255,77,77,0.35)",
-      backgroundColor: "rgba(28,8,8,0.80)",
+      flexDirection:     "row",
+      alignItems:        "center",
+      gap:               5,
+      paddingVertical:   7,
+      paddingHorizontal: 14,
+      borderRadius:      20,
+      borderWidth:       1.5,
+      borderColor:       "rgba(255,77,77,0.50)",
+      backgroundColor:   "rgba(28,8,8,0.85)",
     },
     exitText: { color: "#FF6B6B", fontSize: 13, fontFamily: "Inter_600SemiBold" },
 
