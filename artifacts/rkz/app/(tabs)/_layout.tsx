@@ -99,32 +99,33 @@ function ActiveDot({ focused, color }: { focused: boolean; color: string }) {
 // ── Native (iOS Liquid Glass) tab layout ──────────────────────────────────────
 function NativeTabLayout({ requireAuth: _requireAuth }: { requireAuth: (action: () => void) => void }) {
   const { t, isAr } = useLocale();
-  const { user, selectedRole } = useApp();
-  const canSeeSettings = !!user && selectedRole !== "buyer";
+  const { user, selectedRole, appMode } = useApp();
+  const isTourist      = appMode === "tourist";
+  const canSeeSettings = !!user && selectedRole !== "buyer" && !isTourist;
 
   const allTriggers = [
-    { name: "index",        sf: { default: "map",                    selected: "map.fill"                    }, label: t.tabs.home       },
-    { name: "explore",      sf: { default: "safari",                  selected: "safari.fill"                  }, label: t.tabs.explore    },
-    { name: "add",          sf: { default: "plus.circle",             selected: "plus.circle.fill"             }, label: t.tabs.add        },
-    { name: "listings",     sf: { default: "list.bullet",             selected: "list.bullet.circle.fill"      }, label: t.tabs.listings   },
-    { name: "ai-concierge", sf: { default: "wrench.and.screwdriver",  selected: "wrench.and.screwdriver.fill"  }, label: t.tabs.myRequests },
-    ...(canSeeSettings ? [{ name: "settings", sf: { default: "gearshape", selected: "gearshape.fill" }, label: t.tabs.settings }] : []),
+    { name: "index",    sf: { default: "map",    selected: "map.fill"    }, label: t.tabs.home    },
+    { name: "explore",  sf: { default: "safari",  selected: "safari.fill"  }, label: t.tabs.explore },
+    ...(!isTourist ? [
+      { name: "add",          sf: { default: "plus.circle",            selected: "plus.circle.fill"            }, label: t.tabs.add        },
+      { name: "listings",     sf: { default: "list.bullet",            selected: "list.bullet.circle.fill"     }, label: t.tabs.listings   },
+      { name: "ai-concierge", sf: { default: "wrench.and.screwdriver", selected: "wrench.and.screwdriver.fill" }, label: t.tabs.myRequests },
+      ...(canSeeSettings ? [{ name: "settings", sf: { default: "gearshape", selected: "gearshape.fill" }, label: t.tabs.settings }] : []),
+    ] : []),
   ];
 
   const ordered = isAr ? [...allTriggers].reverse() : allTriggers;
 
   return (
-    <>
-      <NativeTabs>
-        {ordered.map((item) => (
-          <NativeTabs.Trigger key={item.name} name={item.name}>
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            <Icon sf={item.sf as any} />
-            <Label>{item.label}</Label>
-          </NativeTabs.Trigger>
-        ))}
-      </NativeTabs>
-    </>
+    <NativeTabs>
+      {ordered.map((item) => (
+        <NativeTabs.Trigger key={item.name} name={item.name}>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Icon sf={item.sf as any} />
+          <Label>{item.label}</Label>
+        </NativeTabs.Trigger>
+      ))}
+    </NativeTabs>
   );
 }
 
@@ -133,11 +134,12 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
   const colors      = useColors();
   const colorScheme = useColorScheme();
   const { t, isAr } = useLocale();
-  const { user, selectedRole } = useApp();
-  const isDark = colorScheme === "dark";
-  const isIOS  = Platform.OS === "ios";
-  const isWeb  = Platform.OS === "web";
-  const canSeeSettings = !!user && selectedRole !== "buyer";
+  const { user, selectedRole, appMode } = useApp();
+  const isDark    = colorScheme === "dark";
+  const isIOS     = Platform.OS === "ios";
+  const isWeb     = Platform.OS === "web";
+  const isTourist = appMode === "tourist";
+  const canSeeSettings = !!user && selectedRole !== "buyer" && !isTourist;
 
   const tabDefs = [
     {
@@ -187,68 +189,77 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
   const ordered = isAr ? [...tabDefs].reverse() : tabDefs;
 
   return (
-    <>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          lazy: false,
-          tabBarActiveTintColor:   colors.gold,
-          tabBarInactiveTintColor: isDark ? "rgba(255,255,255,0.70)" : "rgba(0,0,0,0.55)",
-          tabBarHideOnKeyboard: true,
-          tabBarShowLabel: false,
-          tabBarItemStyle: { flex: 1, justifyContent: "center", alignItems: "center" },
-          tabBarStyle: {
-            position:        "absolute",
-            backgroundColor: "transparent",
-            borderTopWidth:  0,
-            elevation:       0,
-            height:          isWeb ? 90 : 72,
-          },
-          tabBarBackground: () =>
-            isIOS ? (
-              <BlurView
-                intensity={90}
-                tint={isDark ? "dark" : "light"}
-                style={StyleSheet.absoluteFill}
-              />
-            ) : (
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: "transparent" }]} />
-            ),
-        }}
-      >
-        {ordered.map((tab) => {
-          const hideCompletely = tab.name === "settings" && !canSeeSettings;
-
-          return (
-            <Tabs.Screen
-              key={tab.name}
-              name={tab.name}
-              options={{
-                title: tab.title,
-                href: hideCompletely ? null : undefined,
-                tabBarIcon: ({ color, focused }) => (
-                  <View style={s.tabItem}>
-                    <AnimatedTabIcon focused={focused}>
-                      {tab.icon(color)}
-                    </AnimatedTabIcon>
-                    <AnimatedTabLabel focused={focused} label={tab.title} color={color} />
-                    <ActiveDot focused={focused} color={colors.gold} />
-                  </View>
-                ),
-              }}
-              listeners={{
-                tabPress: (e) => {
-                  if (RESTRICTED_TABS.includes(tab.name)) {
-                    e.preventDefault();
-                    requireAuth(() => router.navigate(`/(tabs)/${tab.name}` as never));
-                  }
-                },
-              }}
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        lazy: false,
+        tabBarActiveTintColor:   colors.gold,
+        tabBarInactiveTintColor: isDark ? "rgba(255,255,255,0.70)" : "rgba(0,0,0,0.55)",
+        tabBarHideOnKeyboard: true,
+        tabBarShowLabel: false,
+        tabBarItemStyle: { flex: 1, justifyContent: "center", alignItems: "center" },
+        // Tourist: hide the bar entirely — explore is full-screen
+        tabBarStyle: isTourist ? { display: "none" } : {
+          position:        "absolute",
+          backgroundColor: "transparent",
+          borderTopWidth:  0,
+          elevation:       0,
+          height:          isWeb ? 90 : 72,
+        },
+        tabBarBackground: () =>
+          isIOS ? (
+            <BlurView
+              intensity={90}
+              tint={isDark ? "dark" : "light"}
+              style={StyleSheet.absoluteFill}
             />
-          );
-        })}
-      </Tabs>
-    </>
+          ) : (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: "transparent" }]} />
+          ),
+      }}
+    >
+      {ordered.map((tab) => {
+        // Tourist: only the explore tab stays in the bar
+        const hideFromBar    = isTourist && tab.name !== "explore";
+        // Settings: hidden when user role/mode doesn't allow it
+        const hideCompletely = !isTourist && tab.name === "settings" && !canSeeSettings;
+
+        return (
+          <Tabs.Screen
+            key={tab.name}
+            name={tab.name}
+            options={{
+              title: tab.title,
+              href:  hideCompletely ? null : undefined,
+              tabBarButton: hideFromBar ? () => null : undefined,
+              tabBarIcon: ({ color, focused }) => (
+                <View style={s.tabItem}>
+                  <AnimatedTabIcon focused={focused}>
+                    {tab.icon(color)}
+                  </AnimatedTabIcon>
+                  <AnimatedTabLabel focused={focused} label={tab.title} color={color} />
+                  <ActiveDot focused={focused} color={colors.gold} />
+                </View>
+              ),
+            }}
+            listeners={{
+              tabPress: (e) => {
+                // Tourist: block navigation away from explore
+                if (isTourist && tab.name !== "explore") {
+                  e.preventDefault();
+                  return;
+                }
+                // Registered: require auth for restricted tabs
+                if (!isTourist && RESTRICTED_TABS.includes(tab.name)) {
+                  e.preventDefault();
+                  requireAuth(() => router.navigate(`/(tabs)/${tab.name}` as never));
+                }
+              },
+            }}
+          />
+        );
+      })}
+    </Tabs>
   );
 }
 
@@ -264,13 +275,19 @@ export default function TabLayout() {
       return;
     }
 
-    // No mode chosen → show mode selection
+    // No mode chosen → mode selection screen
     if (appMode === null) {
       router.replace("/mode-select" as never);
       return;
     }
 
-    // Registered flow
+    // Tourist: always land on explore (full-screen map)
+    if (appMode === "tourist") {
+      router.replace("/(tabs)/explore" as never);
+      return;
+    }
+
+    // Registered flow: consent → welcome
     if (user && consentGiven === false) {
       router.replace("/consent" as never);
       return;
@@ -291,19 +308,13 @@ export default function TabLayout() {
     [user],
   );
 
-  // Block render until we know where to go — prevents flash of wrong screen
   if (isLoading || langChosen === false || appMode === null) {
     return null;
   }
 
-  return (
-    <>
-      {isLiquidGlassAvailable()
-        ? <NativeTabLayout requireAuth={requireAuth} />
-        : <ClassicTabLayout requireAuth={requireAuth} />
-      }
-    </>
-  );
+  return isLiquidGlassAvailable()
+    ? <NativeTabLayout requireAuth={requireAuth} />
+    : <ClassicTabLayout requireAuth={requireAuth} />;
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────

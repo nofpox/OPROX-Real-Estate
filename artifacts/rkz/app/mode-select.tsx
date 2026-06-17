@@ -21,8 +21,9 @@ const { width } = Dimensions.get("window");
 const LOGO_W = Math.min(width * 0.60, 240);
 const LOGO_H = Math.round(LOGO_W / 2.5);
 
-const BG   = "#0A0E1A";
-const GOLD = "#C9A84C";
+const BG    = "#0A0E1A";
+const GOLD  = "#C9A84C";
+const WHITE = "#F5F0E8";
 const MUTED = "rgba(245,240,232,0.58)";
 
 export default function ModeSelectScreen() {
@@ -42,6 +43,12 @@ export default function ModeSelectScreen() {
     void logAdminEvent("property_section", "user_enter_property | button:property_section");
     setAppMode("registered");
     router.replace("/(tabs)" as never);
+  };
+
+  const goTourist = () => {
+    void logAdminEvent("tourism_section", "user_enter_tourism | button:tourism_section");
+    setAppMode("tourist");
+    router.replace("/(tabs)/explore" as never);
   };
 
   return (
@@ -69,11 +76,7 @@ export default function ModeSelectScreen() {
         {/* Registered card */}
         <Pressable
           onPress={goRegistered}
-          style={({ pressed }) => [
-            s.card,
-            s.cardGold,
-            pressed && s.pressed,
-          ]}
+          style={({ pressed }) => [s.card, s.cardGold, pressed && s.pressed]}
         >
           <View style={s.iconWrapDark}>
             <MaterialIcons name="vpn-key" size={28} color={BG} />
@@ -87,6 +90,21 @@ export default function ModeSelectScreen() {
             size={22}
             color="rgba(10,14,26,0.5)"
           />
+        </Pressable>
+
+        {/* Tourist card */}
+        <Pressable
+          onPress={goTourist}
+          style={({ pressed }) => [s.card, s.cardDark, pressed && s.pressed]}
+        >
+          <View style={s.iconWrapGold}>
+            <MaterialIcons name="camera-alt" size={28} color={GOLD} />
+          </View>
+          <View style={s.cardText}>
+            <Text style={s.cardTitleLight}>سائح / سياحة</Text>
+            <Text style={s.cardSubLight}>Tourist · Tourism</Text>
+          </View>
+          <MaterialIcons name="chevron-left" size={22} color="rgba(201,168,76,0.6)" />
         </Pressable>
       </Animated.View>
     </View>
@@ -126,11 +144,23 @@ const s = StyleSheet.create({
     gap: 14,
   },
   cardGold: { backgroundColor: GOLD },
+  cardDark: {
+    backgroundColor: "rgba(255,255,255,0.07)",
+    borderWidth: 1.5,
+    borderColor: "rgba(201,168,76,0.3)",
+  },
   pressed: { opacity: 0.83 },
 
   iconWrapDark: {
     width: 48, height: 48, borderRadius: 13,
     backgroundColor: "rgba(10,14,26,0.2)",
+    alignItems: "center", justifyContent: "center",
+    flexShrink: 0,
+  },
+  iconWrapGold: {
+    width: 48, height: 48, borderRadius: 13,
+    backgroundColor: "rgba(201,168,76,0.12)",
+    borderWidth: 1.5, borderColor: "rgba(201,168,76,0.3)",
     alignItems: "center", justifyContent: "center",
     flexShrink: 0,
   },
@@ -144,6 +174,19 @@ const s = StyleSheet.create({
   },
   cardSub: {
     color: "rgba(10,14,26,0.55)",
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    textAlign: "right",
+    marginTop: 3,
+  },
+  cardTitleLight: {
+    color: WHITE,
+    fontSize: 15,
+    fontFamily: "Inter_700Bold",
+    textAlign: "right",
+  },
+  cardSubLight: {
+    color: MUTED,
     fontSize: 11,
     fontFamily: "Inter_400Regular",
     textAlign: "right",
