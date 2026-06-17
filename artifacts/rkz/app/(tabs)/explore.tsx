@@ -72,7 +72,7 @@ export default function ExploreScreen() {
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 : 0);
 
   /* Initial estimate for filter bar top (corrected by onLayout below) */
-  const filterBarInitialTop = topPad + (isTourist ? 90 : 58);
+  const filterBarInitialTop = topPad + (isTourist ? 90 : 76);
 
   function handleHeaderLayout(e: LayoutChangeEvent) {
     const h = Math.round(e.nativeEvent.layout.height);
@@ -316,15 +316,15 @@ function makeStyles() {
     exitBtn: {
       flexDirection:     "row",
       alignItems:        "center",
-      gap:               5,
-      paddingVertical:   7,
-      paddingHorizontal: 14,
-      borderRadius:      20,
+      gap:               4,
+      paddingVertical:   4,
+      paddingHorizontal: 9,
+      borderRadius:      14,
       borderWidth:       1.5,
       borderColor:       "rgba(255,77,77,0.50)",
       backgroundColor:   "rgba(28,8,8,0.85)",
     },
-    exitText: { color: "#FF6B6B", fontSize: 13, fontFamily: "Inter_600SemiBold" },
+    exitText: { color: "#FF6B6B", fontSize: 10, fontFamily: "Inter_600SemiBold" },
 
     /* ── روح السعودية pill — both modes ── */
     linksBar: {
@@ -334,13 +334,13 @@ function makeStyles() {
       backgroundColor: "rgba(8,16,34,0.82)",
       borderWidth:     1,
       borderColor:     "rgba(201,168,76,0.35)",
-      borderRadius:    22,
+      borderRadius:    18,
     },
-    visitBtn:      { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 7 },
-    visitFlag:     { fontSize: 17 },
+    visitBtn:      { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5 },
+    visitFlag:     { fontSize: 13 },
     visitTextWrap: { flexShrink: 1 },
-    visitTitle:    { color: "#C9A84C", fontSize: 12, fontFamily: "Inter_700Bold" },
-    visitSub:      { color: "rgba(255,255,255,0.42)", fontSize: 9, fontFamily: "Inter_400Regular" },
+    visitTitle:    { color: "#C9A84C", fontSize: 10, fontFamily: "Inter_700Bold" },
+    visitSub:      { color: "rgba(255,255,255,0.42)", fontSize: 8, fontFamily: "Inter_400Regular" },
 
     /* ── FAB ── */
     fabWrap: { position: "absolute", zIndex: 20, alignItems: "flex-end" },

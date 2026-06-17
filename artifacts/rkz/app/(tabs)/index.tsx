@@ -328,7 +328,7 @@ export default function DiscoveryMapScreen() {
             <MaterialIcons
               name={TYPE_ICON[pt.id] ?? "home"}
               size={14}
-              color={isActive ? "#0F2040" : (glass ? "rgba(255,255,255,0.85)" : colors.mutedForeground)}
+              color={isActive ? "#0F2040" : (glass ? "#FFFFFF" : colors.mutedForeground)}
             />
             <Text style={[s.pillText, glass && s.glassPillText, isActive && s.pillTextActive]}>
               {isAr ? pt.labelAr : pt.labelEn}
@@ -464,11 +464,11 @@ function makeStyles(
       zIndex:          9,
     },
     glassPill: {
-      backgroundColor: "rgba(15,32,64,0.52)",
-      borderColor:     "rgba(201,168,76,0.55)",
+      backgroundColor: "rgba(15,32,64,0.72)",
+      borderColor:     "rgba(201,168,76,0.65)",
     },
     glassPillText: {
-      color: "rgba(201,168,76,0.90)",
+      color: "#FFFFFF",
     },
     glassListBtn: {
       position:          "absolute",
