@@ -171,12 +171,12 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
 <div id="err-box"></div>
 <div id="map"></div>
 <div id="filter-bar">
-  <button class="fbtn active" id="btn-all"  onclick="doFilter('all',  this)">${isAr ? "الكل"     : "All"    }</button>
-  <button class="fbtn"        id="btn-att"  onclick="doFilter('attraction', this)">${isAr ? "سياحة"   : "Tourism"}</button>
-  <button class="fbtn"        id="btn-hot"  onclick="doFilter('hotel', this)">${isAr ? "فنادق"   : "Hotels" }</button>
-  <button class="fbtn"        id="btn-rest" onclick="doFilter('restaurant', this)">${isAr ? "مطاعم"   : "Rest."  }</button>
-  <button class="fbtn"        id="btn-cafe" onclick="doFilter('cafe', this)">${isAr ? "كافيهات" : "Cafes"  }</button>
-  <button class="fbtn"        id="btn-apt"  onclick="doFilter('apartment', this)">${isAr ? "شقق" : "Apts"}</button>
+  <button class="fbtn active" id="btn-all"  onclick="doFilter('all',        this)">🌍 ${isAr ? "الكل"     : "All"    }</button>
+  <button class="fbtn"        id="btn-att"  onclick="doFilter('attraction', this)">🏛 ${isAr ? "سياحة"   : "Tourism"}</button>
+  <button class="fbtn"        id="btn-hot"  onclick="doFilter('hotel',      this)">🏨 ${isAr ? "فنادق"   : "Hotels" }</button>
+  <button class="fbtn"        id="btn-rest" onclick="doFilter('restaurant', this)">🍽 ${isAr ? "مطاعم"   : "Rest."  }</button>
+  <button class="fbtn"        id="btn-cafe" onclick="doFilter('cafe',       this)">☕ ${isAr ? "كافيهات" : "Cafes"  }</button>
+  <button class="fbtn"        id="btn-apt"  onclick="doFilter('apartment',  this)">🏠 ${isAr ? "شقق"     : "Apts"   }</button>
 </div>
 <div id="legend">
   <div class="l-row"><span class="ldot" style="background:#6366F1"></span><span class="l-lbl">${isAr ? "موقعك" : "You"}</span></div>

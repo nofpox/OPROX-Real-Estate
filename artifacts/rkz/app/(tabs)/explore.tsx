@@ -109,9 +109,7 @@ export default function ExploreScreen() {
   const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 : 0);
   const s = useMemo(() => makeStyles(), []);
 
-  const title = isTourist
-    ? (isAr ? "استكشف السعودية"              : "Explore Saudi Arabia")
-    : (isAr ? "استكشف الحي"                  : "Explore Neighborhood");
+  const title = isAr ? "استكشف السعودية" : "Explore Saudi Arabia";
 
   const subtitle = locating
     ? (isAr ? "جاري تحديد موقعك…" : "Locating you…")
@@ -255,9 +253,9 @@ function makeStyles() {
       top:               0,
       left:              0,
       right:             0,
-      backgroundColor:   "rgba(8,16,34,0.92)",
+      backgroundColor:   "rgba(8,16,34,0.78)",
       borderBottomWidth: 1,
-      borderBottomColor: "rgba(255,255,255,0.09)",
+      borderBottomColor: "rgba(255,255,255,0.12)",
       paddingHorizontal: 16,
       paddingBottom:     10,
       zIndex:            10,
