@@ -1,0 +1,95 @@
+import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class HomeScreen extends StatefulWidget {
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String selectedCategory = 'الكل';
+
+  // دالة فتح الرابط - للتاكسي + روح السعودية
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ما قدرنا نفتح الرابط')),
+      );
+    }
+  }
+
+  // دالة زر الفلترة
+  Widget filterButton(String text, String category, Color color) {
+    bool isSelected = selectedCategory == category;
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected? color : Colors.grey[300],
+        foregroundColor: isSelected? Colors.white : Colors.black,
+      ),
+      onPressed: () {
+        setState(() { // اهم شي عشان تتحدث الخريطة
+          selectedCategory = category;
+        });
+      },
+      child: Text(text),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          // 1. أزرار الفلترة - بتغير الدبابيس بالخريطة
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              filterButton('الكل', 'الكل', Colors.blue),
+              filterButton('مطاعم', 'مطاعم', Colors.red),
+              filterButton('فنادق', 'فنادق', Colors.green),
+              filterButton('كافيهات', 'كافيهات', Colors.brown),
+            ],
+          ),
+
+          // 2. الخريطة - فلتر الدبابيس حسب الزر المختار
+          Expanded(
+            child: GoogleMap(
+              // حط ماركراتك هنا
+              markers: allPlaces.where((place) {
+                if (selectedCategory == 'الكل') return true;
+                return place['category'] == selectedCategory;
+              }).map((place) => Marker(
+                markerId: MarkerId(place['id'].toString()),
+                position: LatLng(place['lat'], place['lng']),
+                infoWindow: InfoWindow(title: place['name']),
+              )).toSet(),
+            ),
+          ),
+
+          // 3. أزرار التاكسي - تفتح التطبيق/الموقع
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(onPressed: () => _launchURL('https://ridemycareem.com'), child: Text('كريم')),
+              ElevatedButton(onPressed: () => _launchURL('https://bolt.eu'), child: Text('بولت')),
+              ElevatedButton(onPressed: () => _launchURL('https://m.uber.com'), child: Text('أوبر')),
+            ],
+          ),
+
+          // 4. زر روح السعودية الرسمي
+          Padding(
+            padding: EdgeInsets.all(10),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: Size(double.infinity, 50)),
+              onPressed: () => _launchURL('https://www.visitsaudi.com/ar'),
+              child: Text('روح السعودية - الحجوزات الرسمية'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
