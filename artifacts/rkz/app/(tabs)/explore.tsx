@@ -163,7 +163,7 @@ export default function ExploreScreen() {
           userLng={userLng}
           hasTabs={!isTourist}
           initialZoom={isTourist ? 6 : 12}
-          showTourismSpots={isTourist}
+          showTourismSpots={true}
           filterBarTopPx={filterBarInitialTop}
         />
       </View>
@@ -264,15 +264,13 @@ function makeStyles() {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: "#0f2040" },
 
-    /* ── Glass header — floats above map, more transparent ── */
+    /* ── Glass header — fully transparent, text floats above map ── */
     header: {
       position:          "absolute",
       top:               0,
       left:              0,
       right:             0,
-      backgroundColor:   "rgba(8,16,34,0.52)",
-      borderBottomWidth: 1,
-      borderBottomColor: "rgba(255,255,255,0.10)",
+      backgroundColor:   "transparent",
       paddingHorizontal: 16,
       paddingBottom:     10,
       zIndex:            10,

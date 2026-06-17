@@ -119,9 +119,9 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
 }
 #filter-bar::-webkit-scrollbar { display: none; }
 .fbtn {
-  flex-shrink: 0; padding: 7px 13px; border-radius: 20px;
+  flex-shrink: 0; padding: 5px 10px; border-radius: 18px;
   background: rgba(8,18,36,0.82); color: #cbd5e1;
-  font-size: 13px; font-family: -apple-system, sans-serif; font-weight: 700;
+  font-size: 12px; font-family: -apple-system, sans-serif; font-weight: 700;
   border: 1.5px solid rgba(255,255,255,0.22); cursor: pointer;
   white-space: nowrap; -webkit-tap-highlight-color: transparent;
 }
