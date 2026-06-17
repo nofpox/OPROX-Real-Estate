@@ -7,7 +7,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import React, { useCallback, useEffect } from "react";
 import {
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -97,49 +96,19 @@ function ActiveDot({ focused, color }: { focused: boolean; color: string }) {
   );
 }
 
-// ── Tourist floating exit button ──────────────────────────────────────────────
-function TouristExitButton() {
-  const { clearAppMode } = useApp();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-
-  const handleExit = () => {
-    clearAppMode();
-    router.replace("/mode-select" as never);
-  };
-
-  return (
-    <Pressable
-      onPress={handleExit}
-      style={[
-        tb.exitBtn,
-        { backgroundColor: isDark ? "rgba(28,12,12,0.96)" : "rgba(255,244,244,0.96)" },
-      ]}
-    >
-      <MaterialIcons name="logout" size={17} color="#FF4D4D" />
-      <Text style={[tb.exitText, { color: isDark ? "#FF6B6B" : "#CC2222" }]}>
-        خروج
-      </Text>
-    </Pressable>
-  );
-}
-
 // ── Native (iOS Liquid Glass) tab layout ──────────────────────────────────────
 function NativeTabLayout({ requireAuth: _requireAuth }: { requireAuth: (action: () => void) => void }) {
   const { t, isAr } = useLocale();
-  const { user, selectedRole, appMode } = useApp();
-  const isTourist = appMode === "tourist";
-  const canSeeSettings = !!user && selectedRole !== "buyer" && !isTourist;
+  const { user, selectedRole } = useApp();
+  const canSeeSettings = !!user && selectedRole !== "buyer";
 
   const allTriggers = [
-    { name: "index",    sf: { default: "map",    selected: "map.fill"    }, label: t.tabs.home    },
-    { name: "explore",  sf: { default: "safari",  selected: "safari.fill"  }, label: t.tabs.explore },
-    ...(!isTourist ? [
-      { name: "add",          sf: { default: "plus.circle",            selected: "plus.circle.fill"            }, label: t.tabs.add        },
-      { name: "listings",     sf: { default: "list.bullet",            selected: "list.bullet.circle.fill"     }, label: t.tabs.listings   },
-      { name: "ai-concierge", sf: { default: "wrench.and.screwdriver", selected: "wrench.and.screwdriver.fill" }, label: t.tabs.myRequests },
-      ...(canSeeSettings ? [{ name: "settings", sf: { default: "gearshape", selected: "gearshape.fill" }, label: t.tabs.settings }] : []),
-    ] : []),
+    { name: "index",        sf: { default: "map",                    selected: "map.fill"                    }, label: t.tabs.home       },
+    { name: "explore",      sf: { default: "safari",                  selected: "safari.fill"                  }, label: t.tabs.explore    },
+    { name: "add",          sf: { default: "plus.circle",             selected: "plus.circle.fill"             }, label: t.tabs.add        },
+    { name: "listings",     sf: { default: "list.bullet",             selected: "list.bullet.circle.fill"      }, label: t.tabs.listings   },
+    { name: "ai-concierge", sf: { default: "wrench.and.screwdriver",  selected: "wrench.and.screwdriver.fill"  }, label: t.tabs.myRequests },
+    ...(canSeeSettings ? [{ name: "settings", sf: { default: "gearshape", selected: "gearshape.fill" }, label: t.tabs.settings }] : []),
   ];
 
   const ordered = isAr ? [...allTriggers].reverse() : allTriggers;
@@ -164,12 +133,11 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
   const colors      = useColors();
   const colorScheme = useColorScheme();
   const { t, isAr } = useLocale();
-  const { user, selectedRole, appMode } = useApp();
+  const { user, selectedRole } = useApp();
   const isDark = colorScheme === "dark";
   const isIOS  = Platform.OS === "ios";
   const isWeb  = Platform.OS === "web";
-  const isTourist = appMode === "tourist";
-  const canSeeSettings = !!user && selectedRole !== "buyer" && !isTourist;
+  const canSeeSettings = !!user && selectedRole !== "buyer";
 
   const tabDefs = [
     {
@@ -229,7 +197,7 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
           tabBarHideOnKeyboard: true,
           tabBarShowLabel: false,
           tabBarItemStyle: { flex: 1, justifyContent: "center", alignItems: "center" },
-          tabBarStyle: isTourist ? { display: "none" } : {
+          tabBarStyle: {
             position:        "absolute",
             backgroundColor: "transparent",
             borderTopWidth:  0,
@@ -249,12 +217,7 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
         }}
       >
         {ordered.map((tab) => {
-          // In tourist mode: hide all non-explore tabs visually via
-          // tabBarButton (keeps route accessible, no crash).
-          const hideFromBar = isTourist && tab.name !== "explore";
-          // Settings is fully inaccessible only in non-tourist mode when
-          // the user role can't see it. Never combine with hideFromBar.
-          const hideCompletely = !isTourist && tab.name === "settings" && !canSeeSettings;
+          const hideCompletely = tab.name === "settings" && !canSeeSettings;
 
           return (
             <Tabs.Screen
@@ -263,9 +226,6 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
               options={{
                 title: tab.title,
                 href: hideCompletely ? null : undefined,
-                // Returning null from tabBarButton removes the item from the
-                // visible bar without blocking the route.
-                tabBarButton: hideFromBar ? () => null : undefined,
                 tabBarIcon: ({ color, focused }) => (
                   <View style={s.tabItem}>
                     <AnimatedTabIcon focused={focused}>
@@ -278,13 +238,7 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
               }}
               listeners={{
                 tabPress: (e) => {
-                  // Block tourist users from navigating away from explore.
-                  if (isTourist && tab.name !== "explore") {
-                    e.preventDefault();
-                    return;
-                  }
-                  // Require auth for restricted tabs.
-                  if (!isTourist && RESTRICTED_TABS.includes(tab.name)) {
+                  if (RESTRICTED_TABS.includes(tab.name)) {
                     e.preventDefault();
                     requireAuth(() => router.navigate(`/(tabs)/${tab.name}` as never));
                   }
@@ -294,7 +248,6 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
           );
         })}
       </Tabs>
-
     </>
   );
 }
@@ -314,12 +267,6 @@ export default function TabLayout() {
     // No mode chosen → show mode selection
     if (appMode === null) {
       router.replace("/mode-select" as never);
-      return;
-    }
-
-    // Tourist: always land on explore tab (prevents default index crash)
-    if (appMode === "tourist") {
-      router.replace("/(tabs)/explore" as never);
       return;
     }
 
@@ -368,30 +315,3 @@ const s = StyleSheet.create({
     gap:            3,
   },
 });
-
-const tb = StyleSheet.create({
-  exitBtn: {
-    position: "absolute",
-    bottom:   96,
-    right:    18,
-    flexDirection: "row",
-    alignItems:    "center",
-    gap:           5,
-    paddingVertical:   8,
-    paddingHorizontal: 14,
-    borderRadius:  20,
-    borderWidth:   1.5,
-    borderColor:   "rgba(255,77,77,0.3)",
-    shadowColor:   "#000",
-    shadowOffset:  { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius:  5,
-    elevation:     6,
-    zIndex:        999,
-  },
-  exitText: {
-    fontSize:   13,
-    fontFamily: "Inter_600SemiBold",
-  },
-});
-
