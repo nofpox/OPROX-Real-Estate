@@ -323,10 +323,6 @@ export default function DiscoveryMapScreen() {
           <Text style={s.locationText}>{isAr ? "المملكة العربية السعودية" : "Saudi Arabia"}</Text>
         </View>
       </View>
-      <View style={[s.countBadge, glass && s.countBadgeGlass]}>
-        <Text style={s.countText}>{filtered.length}</Text>
-        <Text style={s.countLabel}>{isAr ? "عقار" : "listings"}</Text>
-      </View>
     </View>
   );
 
@@ -412,10 +408,6 @@ export default function DiscoveryMapScreen() {
           <Text style={s.glassListBtnText}>{isAr ? "قائمة" : "List"}</Text>
         </Pressable>
 
-        {/* ── Count chip — bottom right ── */}
-        <View style={[s.glassCountChip, { bottom: bottomPad + 16 }]} pointerEvents="none">
-          <Text style={s.glassCountText}>{filtered.length} {isAr ? "عقار" : "listings"}</Text>
-        </View>
 
         {/* ── Property detail card (appears when marker tapped) ── */}
         {selectedListing && (
