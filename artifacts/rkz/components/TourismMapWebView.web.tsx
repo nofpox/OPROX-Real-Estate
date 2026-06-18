@@ -77,8 +77,9 @@ var OVERPASS_Q={
   apartment:'node["tourism"="apartment"]',
   serviced:'node["tourism"="serviced_apartment"]'
 };
-var MIN_ZOOM=11;
-var sM={},dM={},selId=null,curFilter='all',fetchTimer=null;
+var MIN_ZOOM=13;
+var CACHE_GRID=0.04;
+var sM={},dM={},bboxCache={},selId=null,curFilter='all',fetchTimer=null;
 
 var map=L.map('map',{center:[23.8859,45.0792],zoom:5,zoomControl:false,attributionControl:false});
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(map);
@@ -106,17 +107,16 @@ function clearSM(){Object.values(sM).forEach(function(p){map.removeLayer(p.m);ma
 function addDM(id,type,name,city,lat,lng){
   var key='d'+id;if(dM[key])return;
   var color=COLORS[type]||'#888';
-  var m=L.marker([lat,lng],{icon:mkIcon(color,24)});
-  var lb=L.marker([lat,lng],{icon:mkLbl(name),interactive:false,zIndexOffset:-1});
+  var m=L.marker([lat,lng],{icon:mkIcon(color,22)});
   m.on('click',function(e){
     L.DomEvent.stopPropagation(e);clearSel();selId=key;
     var el=m.getElement();if(el)el.querySelector('.cd').classList.add('sel');
     map.panTo([lat,lng],{animate:true,duration:0.5});
     post({type:'select',id:key,spotType:type,nameAr:name,city:city,desc:'',lat:lat,lng:lng});
   });
-  m.addTo(map);lb.addTo(map);dM[key]={m:m,l:lb};
+  m.addTo(map);dM[key]={m:m};
 }
-function clearDM(){Object.values(dM).forEach(function(p){map.removeLayer(p.m);map.removeLayer(p.l);});dM={};}
+function clearDM(){Object.values(dM).forEach(function(p){map.removeLayer(p.m);});dM={};}
 
 function osmType(tags){
   if(tags.amenity==='restaurant')return 'restaurant';
@@ -131,6 +131,21 @@ function osmType(tags){
 var loader=document.getElementById('loader');
 var zoomhint=document.getElementById('zoomhint');
 
+function roundedBbox(){
+  var b=map.getBounds(),r=CACHE_GRID;
+  return [
+    (Math.floor(b.getSouth()/r)*r).toFixed(2),
+    (Math.floor(b.getWest()/r)*r).toFixed(2),
+    (Math.ceil(b.getNorth()/r)*r).toFixed(2),
+    (Math.ceil(b.getEast()/r)*r).toFixed(2)
+  ];
+}
+
+function renderCached(items){
+  clearDM();
+  items.forEach(function(el){addDM(el.id,el.type,el.name,el.city,el.lat,el.lng);});
+}
+
 function fetchDynamic(){
   var needDyn=(curFilter==='all'||DYNAMIC_TYPES.indexOf(curFilter)>=0);
   if(!needDyn){clearDM();return;}
@@ -138,16 +153,18 @@ function fetchDynamic(){
     clearDM();zoomhint.style.display='block';return;
   }
   zoomhint.style.display='none';
-  var b=map.getBounds();
-  var bbox=b.getSouth().toFixed(4)+','+b.getWest().toFixed(4)+','+b.getNorth().toFixed(4)+','+b.getEast().toFixed(4);
+  var rb=roundedBbox();
+  var cacheKey=rb.join(',')+':'+curFilter;
+  if(bboxCache[cacheKey]){renderCached(bboxCache[cacheKey]);return;}
+  var bbox=rb[0]+','+rb[1]+','+rb[2]+','+rb[3];
   var types=(curFilter==='all')?DYNAMIC_TYPES:[curFilter];
-  var ql='[out:json][timeout:20];('+types.map(function(t){return OVERPASS_Q[t]+'('+bbox+');';}).join('')+');out body 300;';
+  var ql='[out:json][timeout:15];('+types.map(function(t){return OVERPASS_Q[t]+'('+bbox+');';}).join('')+');out body 150;';
   loader.style.display='block';
   post({type:'loading',value:true});
   fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:ql})
     .then(function(r){return r.json();})
     .then(function(d){
-      clearDM();
+      var items=[];
       d.elements.forEach(function(el){
         if(!el.lat||!el.lon)return;
         var name=(el.tags['name:ar']||el.tags.name||'').trim();
@@ -155,15 +172,17 @@ function fetchDynamic(){
         var t=osmType(el.tags);if(!t)return;
         if(curFilter!=='all'&&t!==curFilter)return;
         var city=el.tags['addr:city']||el.tags['addr:suburb']||'';
-        addDM(el.id,t,name,city,el.lat,el.lon);
+        items.push({id:el.id,type:t,name:name,city:city,lat:el.lat,lng:el.lon});
       });
+      bboxCache[cacheKey]=items;
+      renderCached(items);
       loader.style.display='none';
       post({type:'loading',value:false});
     })
     .catch(function(){loader.style.display='none';post({type:'loading',value:false});});
 }
 
-function scheduleFetch(){clearTimeout(fetchTimer);fetchTimer=setTimeout(fetchDynamic,900);}
+function scheduleFetch(){clearTimeout(fetchTimer);fetchTimer=setTimeout(fetchDynamic,1200);}
 
 function applyFilter(typeId){
   curFilter=typeId;clearSel();clearSM();
