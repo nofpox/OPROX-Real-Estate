@@ -2,7 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   Alert,
   Linking,
@@ -17,7 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useApp } from "@/context/AppContext";
-import TourismMapWebView, { type TouristSpot } from "@/components/TourismMapWebView";
+import TourismMapWebView, { type TouristSpot, type SelectedSpotData } from "@/components/TourismMapWebView";
 
 // ── Saudi tourist spots ──────────────────────────────────────────────────────
 // Coordinates verified via OpenStreetMap Nominatim geocoding
@@ -114,27 +114,18 @@ export default function TourismMapScreen() {
   const insets            = useSafeAreaInsets();
   const { clearAppMode }  = useApp();
 
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
-  const [selectedId,   setSelectedId]   = useState<string | null>(null);
-  const [userCoords,   setUserCoords]   = useState<{ lat: number; lng: number } | null>(null);
-  const [locLoading,   setLocLoading]   = useState(false);
-
-  const filtered = useMemo(
-    () => activeFilter === "all" ? SPOTS : SPOTS.filter((s) => s.type === activeFilter),
-    [activeFilter],
-  );
-
-  const selectedSpot = useMemo(
-    () => selectedId ? SPOTS.find((s) => s.id === selectedId) ?? null : null,
-    [selectedId],
-  );
+  const [activeFilter,  setActiveFilter]  = useState<FilterType>("all");
+  const [selectedSpot,  setSelectedSpot]  = useState<SelectedSpotData | null>(null);
+  const [isMapLoading,  setIsMapLoading]  = useState(false);
+  const [userCoords,    setUserCoords]    = useState<{ lat: number; lng: number } | null>(null);
+  const [locLoading,    setLocLoading]    = useState(false);
 
   const handleBack = useCallback(() => {
     clearAppMode();
     router.replace("/mode-select" as never);
   }, [clearAppMode]);
 
-  const handleNavigate = useCallback((spot: TouristSpot) => {
+  const handleNavigate = useCallback((spot: SelectedSpotData) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const label = encodeURIComponent(spot.nameAr);
     const url = Platform.select({
@@ -158,7 +149,7 @@ export default function TourismMapScreen() {
   const handleFilter = useCallback((f: FilterType) => {
     void Haptics.selectionAsync();
     setActiveFilter(f);
-    setSelectedId(null);
+    setSelectedSpot(null);
   }, []);
 
   const handleLocate = useCallback(async () => {
@@ -180,7 +171,7 @@ export default function TourismMapScreen() {
     }
   }, [locLoading]);
 
-  const spotColor = selectedSpot ? SPOT_COLOR[selectedSpot.type] : GOLD;
+  const spotColor = selectedSpot ? (SPOT_COLOR[selectedSpot.type] ?? GOLD) : GOLD;
 
   return (
     <View style={[s.root, { backgroundColor: BG }]}>
@@ -188,12 +179,21 @@ export default function TourismMapScreen() {
 
       {/* Leaflet map fills whole screen */}
       <TourismMapWebView
-        spots={filtered}
+        spots={SPOTS}
         activeFilter={activeFilter}
-        onSelect={(id) => { setSelectedId(id); void Haptics.selectionAsync(); }}
-        onDeselect={() => setSelectedId(null)}
+        onSelect={(spot) => { setSelectedSpot(spot); void Haptics.selectionAsync(); }}
+        onDeselect={() => setSelectedSpot(null)}
+        onLoadingChange={setIsMapLoading}
         centerCoords={userCoords ?? undefined}
       />
+
+      {/* Map loading badge */}
+      {isMapLoading && (
+        <View style={s.loadBadge} pointerEvents="none">
+          <MaterialIcons name="sync" size={13} color="#fff" />
+          <Text style={s.loadBadgeText}>جارٍ تحميل الأماكن…</Text>
+        </View>
+      )}
 
       {/* ── Top header overlay ── */}
       <View style={[s.header, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
@@ -249,7 +249,7 @@ export default function TourismMapScreen() {
       {/* ── Spot detail card ── */}
       {selectedSpot && (
         <View style={[s.card, { bottom: insets.bottom + 16, borderColor: spotColor }]}>
-          <Pressable style={s.closeBtn} onPress={() => setSelectedId(null)} hitSlop={12}>
+          <Pressable style={s.closeBtn} onPress={() => setSelectedSpot(null)} hitSlop={12}>
             <MaterialIcons name="close" size={17} color="#94a3b8" />
           </Pressable>
 
@@ -454,5 +454,25 @@ const s = StyleSheet.create({
     color:      "#fff",
     fontSize:   14,
     fontFamily: "Inter_700Bold",
+  },
+
+  // ── Loading badge ─────────────────────────────────────────────────────────
+  loadBadge: {
+    position:        "absolute",
+    bottom:          80,
+    alignSelf:       "center",
+    flexDirection:   "row",
+    alignItems:      "center",
+    gap:             5,
+    backgroundColor: "rgba(10,14,26,0.88)",
+    borderRadius:    16,
+    paddingHorizontal: 12,
+    paddingVertical:   7,
+    zIndex:          25,
+  },
+  loadBadgeText: {
+    color:      "rgba(255,255,255,0.85)",
+    fontSize:   12,
+    fontFamily: "Inter_600SemiBold",
   },
 });
