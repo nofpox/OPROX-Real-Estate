@@ -10,7 +10,7 @@ import {
   Pressable,
   Platform,
 } from "react-native";
-import MapView, { Marker, Callout, PROVIDER_DEFAULT } from "react-native-maps";
+import MapView, { Marker, Callout, UrlTile, PROVIDER_DEFAULT } from "react-native-maps";
 
 import { useColors } from "@/hooks/useColors";
 
@@ -202,13 +202,20 @@ export default function HeatmapMapView({ properties, isAr: _isAr, isDark: _isDar
       showsMyLocationButton={false}
       showsCompass={false}
       toolbarEnabled={false}
-      mapType="standard"
+      mapType="none"
     >
+      {/* CARTO Voyager tiles — same style as TourismMapView */}
+      <UrlTile
+        urlTemplate="https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
+        maximumZ={19}
+        flipY={false}
+        zIndex={-1}
+      />
+
       {features.map((p) => (
         <Marker
           key={p.id}
           coordinate={{ latitude: p.lat, longitude: p.lng }}
-          tracksViewChanges={false}
         >
           <PricePill price={p.price} badge={p.badge} />
           <PropertyCallout property={p} onOpenCards={onOpenCards} />
