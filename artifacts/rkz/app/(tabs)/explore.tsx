@@ -262,7 +262,7 @@ export default function ExploreScreen() {
         onPress={() => {
           void Haptics.selectionAsync();
           mapRef.current?.injectJavaScript(
-            `if(typeof map!=='undefined'){map.setView([${userLat},${userLng}],14);}true;`
+            `if(window.__lmap){window.__lmap.setView([${userLat},${userLng}],14);}true;`
           );
         }}
         android_ripple={{ color: "rgba(255,255,255,0.2)", radius: 23, borderless: true }}

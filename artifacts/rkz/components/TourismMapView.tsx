@@ -231,6 +231,7 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
       zoomControl: false,
       attributionControl: true,
     });
+    window.__lmap = map; /* expose for injectJavaScript from React Native */
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -306,6 +307,12 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
   function loadPoi(type) {
     if (!poiLayer || !map) return;
     currentType = type;
+    /* Overpass can't handle huge bounding boxes — require zoom ≥ 10 */
+    if (map.getZoom() < 10) {
+      poiLayer.clearLayers();
+      poiMarkers = [];
+      return;
+    }
     var query = buildQuery(type, map.getBounds());
     fetch(OVERPASS, {
       method: 'POST',
