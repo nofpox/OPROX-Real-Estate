@@ -198,11 +198,11 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
     subdomains: 'abcd', maxZoom: 18,
   }).addTo(map);
 
-  function openCards(id) {
+  window.openCards = function(id) {
     if (window.ReactNativeWebView) {
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'openCards', id: id }));
     }
-  }
+  };
 
   features.forEach(function(p) {
     var isGold     = p.price >= 5000000 || !!p.badge;
@@ -277,7 +277,7 @@ export default function HeatmapMapView({ properties, isAr, isDark = true, onOpen
   return (
     <WebView
       ref={webRef}
-      source={{ html: htmlRef.current }}
+      source={{ html: htmlRef.current, baseUrl: "https://unpkg.com" }}
       style={styles.webview}
       originWhitelist={["*"]}
       javaScriptEnabled
