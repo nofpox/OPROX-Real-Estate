@@ -210,6 +210,10 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
     subdomains: 'abcd', maxZoom: 18,
   }).addTo(map);
 
+  /* Force Leaflet to recalculate dimensions after WebView layout settles */
+  setTimeout(function() { try { map.invalidateSize(true); } catch(_){} }, 150);
+  setTimeout(function() { try { map.invalidateSize(true); } catch(_){} }, 600);
+
   features.forEach(function(p) {
     var isGold     = p.price >= 5000000 || !!p.badge;
     var cls        = isGold ? 'price-gold' : 'price-green';
