@@ -81,6 +81,7 @@ const FILTERS: { id: FilterType; labelAr: string; icon: React.ComponentProps<typ
   { id:"cafe",          labelAr:"كافيهات",    icon:"local-cafe",      color:"#ec4899" },
   { id:"mall",          labelAr:"مولات",      icon:"local-mall",      color:"#6366f1" },
   { id:"apartment",     labelAr:"شقق مفروشة", icon:"apartment",       color:"#14b8a6" },
+  { id:"serviced",      labelAr:"شقق مخدومة", icon:"king-bed",        color:"#f43f5e" },
 ];
 
 const SPOT_TYPE_LABEL: Record<TouristSpot["type"], string> = {
@@ -93,6 +94,7 @@ const SPOT_TYPE_LABEL: Record<TouristSpot["type"], string> = {
   cafe:          "كافيه",
   mall:          "مول",
   apartment:     "شقق مفروشة",
+  serviced:      "شقق مخدومة",
 };
 
 const SPOT_COLOR: Record<TouristSpot["type"], string> = {
@@ -105,6 +107,7 @@ const SPOT_COLOR: Record<TouristSpot["type"], string> = {
   cafe:          "#ec4899",
   mall:          "#6366f1",
   apartment:     "#14b8a6",
+  serviced:      "#f43f5e",
 };
 
 const BG   = "#0A0E1A";

@@ -10,7 +10,7 @@ import WebView, { type WebViewMessageEvent } from "react-native-webview";
 
 export interface TouristSpot {
   id:     string;
-  type:   "mosque" | "heritage" | "nature" | "entertainment" | "hotel" | "restaurant" | "cafe" | "mall" | "apartment";
+  type:   "mosque" | "heritage" | "nature" | "entertainment" | "hotel" | "restaurant" | "cafe" | "mall" | "apartment" | "serviced";
   nameAr: string;
   city:   string;
   lat:    number;
@@ -38,6 +38,7 @@ const CATEGORY_COLOR: Record<TouristSpot["type"], string> = {
   cafe:          "#ec4899",
   mall:          "#6366f1",
   apartment:     "#14b8a6",
+  serviced:      "#f43f5e",
 };
 
 function buildHTML(spots: TouristSpot[]): string {
@@ -70,13 +71,14 @@ html,body,#map{width:100%;height:100%;overflow:hidden}
 var ALL=${data};
 var COLORS=${colors};
 var STATIC_TYPES=['mosque','heritage','nature','entertainment','hotel'];
-var DYNAMIC_TYPES=['restaurant','cafe','mall','hotel','apartment'];
+var DYNAMIC_TYPES=['restaurant','cafe','mall','hotel','apartment','serviced'];
 var OVERPASS_Q={
   restaurant:'node["amenity"="restaurant"]',
   cafe:'node["amenity"="cafe"]',
   mall:'node["shop"="mall"]',
   hotel:'node["tourism"="hotel"]',
-  apartment:'node["tourism"="apartment"]'
+  apartment:'node["tourism"="apartment"]',
+  serviced:'node["tourism"="serviced_apartment"]'
 };
 var MIN_ZOOM=11;
 var sM={},dM={},selId=null,curFilter='all',fetchTimer=null;
@@ -124,6 +126,7 @@ function osmType(tags){
   if(tags.amenity==='cafe'||tags.amenity==='coffee_shop')return 'cafe';
   if(tags.shop==='mall'||tags.building==='mall')return 'mall';
   if(tags.tourism==='hotel')return 'hotel';
+  if(tags.tourism==='serviced_apartment')return 'serviced';
   if(tags.tourism==='apartment'||tags.tourism==='guest_house')return 'apartment';
   return null;
 }
