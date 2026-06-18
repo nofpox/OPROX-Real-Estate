@@ -99,19 +99,30 @@ function applyFilter(typeId){
 }
 applyFilter('all');
 map.on('click',function(){if(selId){var el=document.getElementById('pb_'+selId);if(el)el.classList.remove('sel');}selId=null;post({type:'deselect'});});
-window.addEventListener('message',function(e){try{var d=JSON.parse(e.data);if(d.type==='filter')applyFilter(d.value);}catch(e){}});
+window.addEventListener('message',function(e){
+  try{
+    var d=JSON.parse(e.data);
+    if(d.type==='filter')applyFilter(d.value);
+    if(d.type==='locate'){
+      map.setView([d.lat,d.lng],15);
+      if(window._locDot)window._locDot.remove();
+      window._locDot=L.circleMarker([d.lat,d.lng],{radius:9,color:'#fff',weight:2,fillColor:'#3b82f6',fillOpacity:1}).addTo(map);
+    }
+  }catch(e){}
+});
 <\/script>
 </body></html>`;
 }
 
 interface Props {
-  listings:    MapListing[];
-  activeFilter: string;
-  onSelect:    (id: string) => void;
-  onDeselect:  () => void;
+  listings:      MapListing[];
+  activeFilter:  string;
+  onSelect:      (id: string) => void;
+  onDeselect:    () => void;
+  centerCoords?: { lat: number; lng: number };
 }
 
-export default function PropertyMapWebView({ listings, activeFilter, onSelect, onDeselect }: Props) {
+export default function PropertyMapWebView({ listings, activeFilter, onSelect, onDeselect, centerCoords }: Props) {
   const iframeRef  = useRef<HTMLIFrameElement>(null);
   const enriched   = resolveCoords(listings);
   const html       = buildHTML(enriched);
@@ -125,6 +136,14 @@ export default function PropertyMapWebView({ listings, activeFilter, onSelect, o
       JSON.stringify({ type: "filter", value: activeFilter }), "*"
     );
   }, [activeFilter]);
+
+  // Pan to user location when centerCoords changes
+  useEffect(() => {
+    if (!centerCoords) return;
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ type: "locate", lat: centerCoords.lat, lng: centerCoords.lng }), "*"
+    );
+  }, [centerCoords]);
 
   // Listen for messages from iframe
   useEffect(() => {

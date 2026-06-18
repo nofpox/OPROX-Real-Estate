@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
+import * as Location from "expo-location";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -214,6 +215,8 @@ export default function DiscoveryMapScreen() {
   const [refreshing,   setRefreshing]   = useState(false);
   const [viewMode,     setViewMode]     = useState<"map" | "list">("map");
   const [selectedId,   setSelectedId]   = useState<string | null>(null);
+  const [userCoords,   setUserCoords]   = useState<{ lat: number; lng: number } | null>(null);
+  const [locLoading,   setLocLoading]   = useState(false);
 
   // Load pre-selected filter from entry gate (set by role selection or previous session)
   useEffect(() => {
@@ -232,6 +235,29 @@ export default function DiscoveryMapScreen() {
     await new Promise((r) => setTimeout(r, 600));
     setRefreshing(false);
   }, []);
+
+  const handleLocate = useCallback(async () => {
+    if (locLoading) return;
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setLocLoading(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          isAr ? "الإذن مرفوض" : "Permission denied",
+          isAr ? "يرجى السماح بالوصول للموقع من الإعدادات" : "Please allow location access in settings.",
+          [{ text: isAr ? "حسناً" : "OK" }],
+        );
+        return;
+      }
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+    } catch {
+      Alert.alert(isAr ? "تعذّر تحديد الموقع" : "Location unavailable", "");
+    } finally {
+      setLocLoading(false);
+    }
+  }, [locLoading, isAr]);
 
   const handleRequest = useCallback(async (listing: Listing) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -352,6 +378,7 @@ export default function DiscoveryMapScreen() {
           activeFilter={activeType}
           onSelect={(id) => { setSelectedId(id); void Haptics.selectionAsync(); }}
           onDeselect={() => setSelectedId(null)}
+          centerCoords={userCoords ?? undefined}
         />
 
         {/* ── Floating header (gradient fade) ── */}
@@ -364,6 +391,17 @@ export default function DiscoveryMapScreen() {
         <View style={s.glassFilterWrap} pointerEvents="box-none">
           {filterPills(true)}
         </View>
+
+        {/* ── "موقعي" location button — bottom left above قائمة ── */}
+        <Pressable
+          style={[s.locBtn, { bottom: bottomPad + 68 }]}
+          onPress={() => { void handleLocate(); }}
+          hitSlop={8}
+        >
+          {locLoading
+            ? <MaterialIcons name="sync" size={20} color="#3b82f6" />
+            : <MaterialIcons name="my-location" size={20} color={userCoords ? "#3b82f6" : "rgba(255,255,255,0.80)"} />}
+        </Pressable>
 
         {/* ── "قائمة" button — bottom left ── */}
         <Pressable
@@ -850,6 +888,26 @@ function makeStyles(
       fontFamily: "Inter_500Medium",
       color:      "#94A3B8",
       textAlign:  "center",
+    },
+
+    // ── "موقعي" location button ──────────────────────────────────────────────
+    locBtn: {
+      position:        "absolute",
+      left:            16,
+      width:           42,
+      height:          42,
+      borderRadius:    21,
+      backgroundColor: "rgba(8,14,30,0.80)",
+      borderWidth:     1.5,
+      borderColor:     "rgba(255,255,255,0.18)",
+      alignItems:      "center",
+      justifyContent:  "center",
+      zIndex:          12,
+      ...Platform.select({
+        android: { elevation: 6 },
+        ios:     { shadowColor: "#000", shadowOpacity: 0.30, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
+        default: {},
+      }),
     },
 
     // ── Map mode — glass header overlay ────────────────────────────────────

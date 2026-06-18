@@ -186,25 +186,37 @@ window.addEventListener('message',function(e){onMsg(e.data);});
 
 // ── Component ──────────────────────────────────────────────────────────────
 interface Props {
-  listings:    MapListing[];
+  listings:     MapListing[];
   activeFilter: string;
-  onSelect:    (id: string) => void;
-  onDeselect:  () => void;
+  onSelect:     (id: string) => void;
+  onDeselect:   () => void;
+  centerCoords?: { lat: number; lng: number };
 }
 
-export default function PropertyMapWebView({ listings, activeFilter, onSelect, onDeselect }: Props) {
+export default function PropertyMapWebView({ listings, activeFilter, onSelect, onDeselect, centerCoords }: Props) {
   const wvRef     = useRef<WebView>(null);
   const enriched  = resolveCoords(listings);
   const html      = buildHTML(enriched);
 
   // Send filter update to Leaflet JS whenever activeFilter changes
-  // (after initial load – the first render already has 'all' set in JS)
   const prevFilter = useRef<string>("all");
   useEffect(() => {
     if (prevFilter.current === activeFilter) return;
     prevFilter.current = activeFilter;
     wvRef.current?.injectJavaScript(`applyFilter(${JSON.stringify(activeFilter)});true;`);
   }, [activeFilter]);
+
+  // Pan to user location when centerCoords changes
+  useEffect(() => {
+    if (!centerCoords) return;
+    const { lat, lng } = centerCoords;
+    wvRef.current?.injectJavaScript(`
+      map.setView([${lat},${lng}],15);
+      if(window._locDot)window._locDot.remove();
+      window._locDot=L.circleMarker([${lat},${lng}],{radius:9,color:'#fff',weight:2,fillColor:'#3b82f6',fillOpacity:1}).addTo(map);
+      true;
+    `);
+  }, [centerCoords]);
 
   function handleMessage(e: WebViewMessageEvent) {
     try {
