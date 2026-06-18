@@ -273,51 +273,88 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
     });
   }
 
-  /* ── POI — React Native fetches Overpass, injects results via __renderPoi ── */
+  /* ── POI via Overpass — XMLHttpRequest (reliable in Android WebView) ── */
+  var OVERPASS    = 'https://overpass-api.de/api/interpreter';
   var currentType = null;
   var poiTimer    = null;
+  var xhrPoi      = null;
 
-  /* Called by React Native after it fetches Overpass results */
-  window.__renderPoi = function (elements, color) {
+  function buildQuery(type, bounds) {
+    var s = bounds.getSouth(), w = bounds.getWest(),
+        n = bounds.getNorth(), e = bounds.getEast();
+    var bb = '(' + s + ',' + w + ',' + n + ',' + e + ')';
+    var q = '[out:json][timeout:25];(';
+    if (!type || type === 'all') {
+      q += 'node["amenity"="restaurant"]' + bb + ';';
+      q += 'node["amenity"~"cafe|coffee_shop"]' + bb + ';';
+      q += 'node["tourism"~"hotel|motel|resort"]' + bb + ';';
+      q += 'node["tourism"="attraction"]' + bb + ';';
+    } else if (type === 'restaurant') {
+      q += 'node["amenity"="restaurant"]' + bb + ';';
+    } else if (type === 'cafe') {
+      q += 'node["amenity"~"cafe|coffee_shop"]' + bb + ';';
+    } else if (type === 'hotel') {
+      q += 'node["tourism"~"hotel|motel|resort"]' + bb + ';';
+    } else if (type === 'attraction') {
+      q += 'node["tourism"="attraction"]' + bb + ';';
+      q += 'node["historic"]' + bb + ';';
+    } else if (type === 'apartment') {
+      q += 'node["tourism"~"apartment|guest_house|hostel"]' + bb + ';';
+    }
+    return q + ');out 100;';
+  }
+
+  function renderElements(elements, fillColor) {
     if (!poiLayer) return;
     poiLayer.clearLayers();
     poiMarkers = [];
-    var fillColor = color || currentColor;
     (elements || []).forEach(function (el) {
       var lat = el.lat;
       var lng = el.lon;
       if (!lat || !lng) return;
       var tags = el.tags || {};
-      var name = (IS_AR ? (tags['name:ar'] || tags.name) : (tags['name:en'] || tags.name)) || (IS_AR ? 'بدون اسم' : 'Unknown');
+      var name = (IS_AR ? (tags['name:ar'] || tags.name) : (tags['name:en'] || tags.name))
+                 || (IS_AR ? 'بدون اسم' : 'Unknown');
       var m = L.circleMarker([lat, lng], {
-        radius: 7, fillColor: fillColor, color: '#fff',
+        radius: 7, fillColor: fillColor || currentColor, color: '#fff',
         weight: 1.5, opacity: 1, fillOpacity: 0.9,
       }).bindPopup('<div class="pop-name">' + name + '</div>', { className: 'lf-popup' });
       m.addTo(poiLayer);
       poiMarkers.push(m);
     });
-  };
+  }
 
-  /* Ask React Native to fetch POI for current viewport */
-  function requestPoi(type) {
-    if (!map || !window.ReactNativeWebView) return;
+  /* window.__renderPoi: also callable from React Native injectJavaScript */
+  window.__renderPoi = function (elements, color) { renderElements(elements, color); };
+
+  function loadPoi(type) {
+    if (!poiLayer || !map) return;
     currentType = type;
-    var b = map.getBounds();
-    window.ReactNativeWebView.postMessage(JSON.stringify({
-      type:     'poi',
-      category: type,
-      zoom:     map.getZoom(),
-      south:    b.getSouth(),
-      west:     b.getWest(),
-      north:    b.getNorth(),
-      east:     b.getEast(),
-    }));
+    if (map.getZoom() < 9) { renderElements([]); return; }
+
+    /* abort previous in-flight request */
+    if (xhrPoi) { try { xhrPoi.abort(); } catch(e) {} xhrPoi = null; }
+
+    var query = buildQuery(type, map.getBounds());
+    var xhr = new XMLHttpRequest();
+    xhrPoi = xhr;
+    xhr.open('POST', OVERPASS, true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.timeout = 30000;
+    xhr.onload = function () {
+      if (xhr !== xhrPoi) return;
+      xhrPoi = null;
+      try { renderElements(JSON.parse(xhr.responseText).elements || []); } catch(e) {}
+    };
+    xhr.onerror   = function () { xhrPoi = null; };
+    xhr.ontimeout = function () { xhrPoi = null; };
+    xhr.send('data=' + encodeURIComponent(query));
   }
 
   /* re-query 700ms after map stops moving */
   map.on('moveend', function () {
     clearTimeout(poiTimer);
-    poiTimer = setTimeout(function () { requestPoi(currentType); }, 700);
+    poiTimer = setTimeout(function () { loadPoi(currentType); }, 700);
   });
 
   /* ── Filter buttons ── */
@@ -342,7 +379,7 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
       }
     }
 
-    requestPoi(type === 'all' ? null : type);
+    loadPoi(type === 'all' ? null : type);
   };
 
   /* ── Allow parent to reposition filter bar ── */
@@ -351,9 +388,9 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
     if (fb) fb.style.top = px + 'px';
   };
 
-  /* initialise button colours — POI loads when React Native sends first message */
+  /* initialise */
   styleButtons('all');
-  setTimeout(function () { requestPoi(null); }, 800);
+  loadPoi(null);
 
 })();
 </script>

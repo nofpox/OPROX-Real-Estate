@@ -4,7 +4,7 @@
  * Tap "عرض في القائمة" → onOpenCards().
  */
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -99,10 +99,16 @@ interface Props {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
+// Use Arabic-Indic numerals so the full string is pure RTL with no LTR bidi
+// run — this prevents Android Marker bitmap from mis-measuring mixed text.
+const AR_DIGITS = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+function toArNum(n: number): string {
+  return String(Math.round(n)).replace(/[0-9]/g, d => AR_DIGITS[parseInt(d)]);
+}
 function fmtPrice(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + " مليون";
-  if (n >= 1_000)     return Math.round(n / 1_000) + " ألف";
-  return n.toString();
+  if (n >= 1_000_000) return toArNum(n / 1_000_000) + " مليون";
+  if (n >= 1_000)     return toArNum(n / 1_000) + " ألف";
+  return toArNum(n);
 }
 
 function resolveCoords(properties: MapProperty[]): Feature[] {
@@ -199,9 +205,16 @@ function PropertyCard({
 export default function HeatmapMapView({ properties, onOpenCards, bottomPad = 20 }: Props) {
   const colors   = useColors();
   const mapRef   = useRef<MapView>(null);
-  const [selected, setSelected]   = useState<Feature | null>(null);
-  const [userCoord, setUserCoord] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [selected, setSelected]       = useState<Feature | null>(null);
+  const [userCoord, setUserCoord]     = useState<{ latitude: number; longitude: number } | null>(null);
+  const [markersReady, setMarkersReady] = useState(false);
   const features = resolveCoords(properties);
+
+  // tracksViewChanges=true while fonts load, then freeze bitmap for perf/stability
+  useEffect(() => {
+    const t = setTimeout(() => setMarkersReady(true), 800);
+    return () => clearTimeout(t);
+  }, []);
 
   function handleLocate() {
     if (!userCoord) return;
@@ -259,6 +272,7 @@ export default function HeatmapMapView({ properties, onOpenCards, bottomPad = 20
             key={p.id}
             coordinate={{ latitude: p.lat, longitude: p.lng }}
             anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={!markersReady}
             onPress={(e) => {
               e.stopPropagation?.();
               setSelected(p);
