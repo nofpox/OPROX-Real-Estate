@@ -272,35 +272,41 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
     });
   }
 
-  /* ── POI via Overpass API (OpenStreetMap) ── */
-  var OVERPASS = 'https://overpass-api.de/api/interpreter';
-  var RADIUS   = 4000;
+  /* ── POI via Overpass API — bbox follows visible map area ── */
+  var OVERPASS    = 'https://overpass-api.de/api/interpreter';
+  var currentType = null;
+  var poiTimer    = null;
 
-  function buildQuery(type) {
-    var base = '[out:json][timeout:20];(';
+  function buildQuery(type, bounds) {
+    /* Overpass bbox order: south,west,north,east */
+    var s = bounds.getSouth(), w = bounds.getWest(),
+        n = bounds.getNorth(), e = bounds.getEast();
+    var bb = '(' + s + ',' + w + ',' + n + ',' + e + ')';
+    var base = '[out:json][timeout:25];(';
     if (!type || type === 'all') {
-      base += 'node["amenity"="restaurant"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
-      base += 'node["amenity"="cafe"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
-      base += 'node["tourism"="hotel"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
-      base += 'node["tourism"="attraction"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+      base += 'node["amenity"="restaurant"]' + bb + ';';
+      base += 'node["amenity"~"cafe|coffee_shop"]' + bb + ';';
+      base += 'node["tourism"~"hotel|motel|resort"]' + bb + ';';
+      base += 'node["tourism"="attraction"]' + bb + ';';
     } else if (type === 'restaurant') {
-      base += 'node["amenity"="restaurant"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+      base += 'node["amenity"="restaurant"]' + bb + ';';
     } else if (type === 'cafe') {
-      base += 'node["amenity"~"cafe|coffee_shop"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+      base += 'node["amenity"~"cafe|coffee_shop"]' + bb + ';';
     } else if (type === 'hotel') {
-      base += 'node["tourism"~"hotel|motel|resort"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+      base += 'node["tourism"~"hotel|motel|resort"]' + bb + ';';
     } else if (type === 'attraction') {
-      base += 'node["tourism"="attraction"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
-      base += 'node["historic"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+      base += 'node["tourism"="attraction"]' + bb + ';';
+      base += 'node["historic"]' + bb + ';';
     } else if (type === 'apartment') {
-      base += 'node["tourism"~"apartment|guest_house|hostel"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+      base += 'node["tourism"~"apartment|guest_house|hostel"]' + bb + ';';
     }
-    return base + ');out 60;';
+    return base + ');out 100;';
   }
 
   function loadPoi(type) {
-    if (!poiLayer) return;
-    var query = buildQuery(type);
+    if (!poiLayer || !map) return;
+    currentType = type;
+    var query = buildQuery(type, map.getBounds());
     fetch(OVERPASS, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -325,8 +331,14 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
           poiMarkers.push(m);
         });
       })
-      .catch(function (e) { showErr('Overpass: ' + (e.message || 'error')); });
+      .catch(function () {});
   }
+
+  /* re-query 700ms after map stops moving */
+  map.on('moveend', function () {
+    clearTimeout(poiTimer);
+    poiTimer = setTimeout(function () { loadPoi(currentType); }, 700);
+  });
 
   /* ── Filter buttons ── */
   window.doFilter = function (type, _btn) {
