@@ -45,9 +45,30 @@ const DEFAULT_LNG     = 46.6753;
 const SPOTS_COUNT     = 12;
 
 const RIDES = [
-  { key: "uber",   labelAr: "أوبر",  labelEn: "Uber",   scheme: "uber://",   bg: "#000000", emoji: "🚗" },
-  { key: "bolt",   labelAr: "بولت",  labelEn: "Bolt",   scheme: "bolt://",   bg: "#34D399", emoji: "⚡" },
-  { key: "careem", labelAr: "كريم",  labelEn: "Careem", scheme: "careem://", bg: "#00B140", emoji: "🟢" },
+  {
+    key: "uber",
+    labelAr: "أوبر", labelEn: "Uber",
+    bg: "#000000", emoji: "🚗",
+    appScheme: (lat: number, lng: number) =>
+      `uber://?action=setPickup&pickup[latitude]=${lat}&pickup[longitude]=${lng}`,
+    webUrl: (lat: number, lng: number) =>
+      `https://m.uber.com/ul/?action=setPickup&pickup[latitude]=${lat}&pickup[longitude]=${lng}`,
+  },
+  {
+    key: "bolt",
+    labelAr: "بولت", labelEn: "Bolt",
+    bg: "#34D399", emoji: "⚡",
+    appScheme: (_lat: number, _lng: number) => `bolt://`,
+    webUrl: (_lat: number, _lng: number) => `https://app.bolt.eu/`,
+  },
+  {
+    key: "careem",
+    labelAr: "كريم", labelEn: "Careem",
+    bg: "#00B140", emoji: "🟢",
+    appScheme: (lat: number, lng: number) =>
+      `careem://route?startLat=${lat}&startLng=${lng}`,
+    webUrl: (_lat: number, _lng: number) => `https://www.careem.com/`,
+  },
 ] as const;
 
 export default function ExploreScreen() {
@@ -86,10 +107,18 @@ export default function ExploreScreen() {
     setFabOpen(v => !v);
   }
 
-  function openRide(scheme: string) {
+  function openRide(ride: typeof RIDES[number]) {
     setFabOpen(false);
     Animated.timing(fabAnim, { toValue: 0, duration: 180, useNativeDriver: true }).start();
-    void Linking.openURL(scheme).catch(() => {});
+    const appUrl = ride.appScheme(userLat, userLng);
+    const webUrl = ride.webUrl(userLat, userLng);
+    void Linking.canOpenURL(appUrl).then((can) => {
+      void Linking.openURL(can ? appUrl : webUrl).catch(() => {
+        void Linking.openURL(webUrl).catch(() => {});
+      });
+    }).catch(() => {
+      void Linking.openURL(webUrl).catch(() => {});
+    });
   }
 
   function handleExit() {
@@ -240,7 +269,7 @@ export default function ExploreScreen() {
             </View>
             <TouchableOpacity
               style={[s.fabSub, { backgroundColor: ride.bg }]}
-              onPress={() => openRide(ride.scheme)}
+              onPress={() => openRide(ride)}
               activeOpacity={0.8}
             >
               <Text style={s.fabSubEmoji}>{ride.emoji}</Text>
