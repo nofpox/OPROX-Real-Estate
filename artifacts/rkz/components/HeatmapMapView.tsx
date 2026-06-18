@@ -112,17 +112,21 @@ function resolveCoords(properties: MapProperty[]): Feature[] {
 }
 
 // ── Price pill (marker view) ───────────────────────────────────────────────
+// Wrapped in a transparent buffer view — prevents Android Marker from
+// clipping the pill's border/shadow at the edges.
 function PricePill({ price, badge, selected }: { price: number; badge?: string; selected: boolean }) {
   const isGold = price >= 5_000_000 || !!badge;
   return (
-    <View style={[
-      s.pill,
-      isGold ? s.pillGold : s.pillGreen,
-      selected && s.pillSelected,
-    ]}>
-      <Text style={[s.pillText, isGold ? s.pillTextDark : s.pillTextWhite]}>
-        {fmtPrice(price)}
-      </Text>
+    <View style={s.pillBuffer}>
+      <View style={[
+        s.pill,
+        isGold ? s.pillGold : s.pillGreen,
+        selected && s.pillSelected,
+      ]}>
+        <Text style={[s.pillText, isGold ? s.pillTextDark : s.pillTextWhite]} numberOfLines={1}>
+          {fmtPrice(price)}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -271,6 +275,10 @@ const s = StyleSheet.create({
   emptyTxt: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
 
   // ── Price pill marker ──────────────────────────────────────────────────
+  pillBuffer: {
+    padding: 10,
+    backgroundColor: "transparent",
+  },
   pill: {
     paddingHorizontal: 12,
     paddingVertical:    5,
