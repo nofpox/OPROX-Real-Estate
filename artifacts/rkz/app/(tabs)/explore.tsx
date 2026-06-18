@@ -256,6 +256,20 @@ export default function ExploreScreen() {
         </View>
       </Pressable>
 
+      {/* ── 📍 My Location — bottom-left ────────────────────────────────────── */}
+      <Pressable
+        style={[s.locateBtn, { bottom: bottomPad + (isTourist ? 145 : 175), left: 18 }]}
+        onPress={() => {
+          void Haptics.selectionAsync();
+          mapRef.current?.injectJavaScript(
+            `if(typeof map!=='undefined'){map.setView([${userLat},${userLng}],14);}true;`
+          );
+        }}
+        android_ripple={{ color: "rgba(255,255,255,0.2)", radius: 23, borderless: true }}
+      >
+        <MaterialIcons name="my-location" size={22} color="#C9A84C" />
+      </Pressable>
+
       {/* ── 🚕 FAB — absolute bottom right ───────────────────────────────────── */}
       <View style={[s.fabWrap, { bottom: bottomPad + (isTourist ? 130 : 160), right: 18 }]}>
         {subButtons.map(({ ride, translateY, opacity, scale }) => (
@@ -370,6 +384,24 @@ function makeStyles() {
     visitTextWrap: { flexShrink: 1 },
     visitTitle:    { color: "#C9A84C", fontSize: 10, fontFamily: "Inter_700Bold" },
     visitSub:      { color: "rgba(255,255,255,0.42)", fontSize: 8, fontFamily: "Inter_400Regular" },
+
+    /* ── My Location button ── */
+    locateBtn: {
+      position:        "absolute",
+      zIndex:          15,
+      width:           46,
+      height:          46,
+      borderRadius:    23,
+      backgroundColor: "rgba(8,16,34,0.85)",
+      borderWidth:     1.5,
+      borderColor:     "rgba(201,168,76,0.45)",
+      alignItems:      "center",
+      justifyContent:  "center",
+      ...Platform.select({
+        android: { elevation: 6 },
+        ios:     { shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
+      }),
+    },
 
     /* ── FAB ── */
     fabWrap: { position: "absolute", zIndex: 20, alignItems: "flex-end" },

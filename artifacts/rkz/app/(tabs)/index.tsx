@@ -348,6 +348,7 @@ export default function DiscoveryMapScreen() {
             properties={filtered as MapProperty[]}
             isAr={isAr}
             isDark={isDark}
+            bottomPad={bottomPad}
             onOpenCards={() => { void Haptics.selectionAsync(); setViewMode("cards"); }}
           />
         </View>

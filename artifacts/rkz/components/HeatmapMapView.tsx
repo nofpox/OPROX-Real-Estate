@@ -3,6 +3,7 @@
  * Tap a marker → property card appears at bottom.
  * Tap "عرض في القائمة" → onOpenCards().
  */
+import { MaterialIcons } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import {
   StyleSheet,
@@ -11,7 +12,12 @@ import {
   Pressable,
   Platform,
 } from "react-native";
-import MapView, { Marker, UrlTile, PROVIDER_DEFAULT } from "react-native-maps";
+import MapView, {
+  Marker,
+  UrlTile,
+  PROVIDER_DEFAULT,
+  type UserLocationChangeEvent,
+} from "react-native-maps";
 
 import { useColors } from "@/hooks/useColors";
 
@@ -89,6 +95,7 @@ interface Props {
   isAr?:        boolean;
   isDark?:      boolean;
   onOpenCards?: () => void;
+  bottomPad?:   number;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -189,11 +196,25 @@ function PropertyCard({
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
-export default function HeatmapMapView({ properties, onOpenCards }: Props) {
+export default function HeatmapMapView({ properties, onOpenCards, bottomPad = 20 }: Props) {
   const colors   = useColors();
   const mapRef   = useRef<MapView>(null);
-  const [selected, setSelected] = useState<Feature | null>(null);
+  const [selected, setSelected]   = useState<Feature | null>(null);
+  const [userCoord, setUserCoord] = useState<{ latitude: number; longitude: number } | null>(null);
   const features = resolveCoords(properties);
+
+  function handleLocate() {
+    if (!userCoord) return;
+    mapRef.current?.animateToRegion(
+      { latitude: userCoord.latitude, longitude: userCoord.longitude, latitudeDelta: 0.04, longitudeDelta: 0.04 },
+      700,
+    );
+  }
+
+  function onUserLocationChange(e: UserLocationChangeEvent) {
+    const c = e.nativeEvent.coordinate;
+    if (c) setUserCoord({ latitude: c.latitude, longitude: c.longitude });
+  }
 
   if (properties.length === 0) {
     return (
@@ -217,12 +238,13 @@ export default function HeatmapMapView({ properties, onOpenCards }: Props) {
           latitudeDelta:  12,
           longitudeDelta: 12,
         }}
-        showsUserLocation={false}
+        showsUserLocation={true}
         showsMyLocationButton={false}
         showsCompass={false}
         toolbarEnabled={false}
         mapType="none"
         onPress={() => setSelected(null)}
+        onUserLocationChange={onUserLocationChange}
       >
         {/* CARTO Voyager tiles — same style as TourismMapView */}
         <UrlTile
@@ -247,6 +269,19 @@ export default function HeatmapMapView({ properties, onOpenCards }: Props) {
         ))}
       </MapView>
 
+      {/* ── My Location button — bottom-left ── */}
+      <Pressable
+        style={[s.locateBtn, { bottom: bottomPad + 82, left: 18 }]}
+        onPress={handleLocate}
+        android_ripple={{ color: "rgba(255,255,255,0.2)", radius: 24, borderless: true }}
+      >
+        <MaterialIcons
+          name={userCoord ? "my-location" : "location-searching"}
+          size={22}
+          color={userCoord ? "#C9A84C" : "rgba(255,255,255,0.5)"}
+        />
+      </Pressable>
+
       {/* Property detail card — appears when a marker is tapped */}
       {selected && (
         <View style={s.cardWrap} pointerEvents="box-none">
@@ -269,6 +304,24 @@ const WHITE = "#ffffff";
 const s = StyleSheet.create({
   empty: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
   emptyTxt: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
+
+  // ── My Location button ─────────────────────────────────────────────────
+  locateBtn: {
+    position:        "absolute",
+    zIndex:          15,
+    width:           46,
+    height:          46,
+    borderRadius:    23,
+    backgroundColor: "rgba(8,16,34,0.85)",
+    borderWidth:     1.5,
+    borderColor:     "rgba(201,168,76,0.45)",
+    alignItems:      "center",
+    justifyContent:  "center",
+    ...Platform.select({
+      android: { elevation: 6 },
+      ios:     { shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
+    }),
+  },
 
   // ── Price pill marker ──────────────────────────────────────────────────
   pillBuffer: {
