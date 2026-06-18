@@ -95,8 +95,8 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-  html, body { height: 100%; margin: 0; padding: 0; background: ${bgColor}; }
-  #map { height: 100%; width: 100%; }
+  html, body { margin: 0; padding: 0; background: ${bgColor}; overflow: hidden; }
+  #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 
   /* ── Price pill markers ────────────────────────────────────────────────── */
   .price-icon { overflow: visible !important; background: none !important; border: none !important; }
