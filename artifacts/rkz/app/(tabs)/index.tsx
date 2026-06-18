@@ -1,7 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -15,7 +14,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -26,7 +24,6 @@ import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 import { useConfig } from "@/context/DynamicConfig";
 import { useApp } from "@/context/AppContext";
-import HeatmapMapView, { MapProperty } from "@/components/HeatmapMapView";
 import AnimatedScreen from "@/components/AnimatedScreen";
 
 const NEGOTIATION_KEY      = "rozoz_negotiation_requests";
@@ -183,8 +180,6 @@ function PropertyCard({
 export default function DiscoveryMapScreen() {
   const colors      = useColors();
   const insets      = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark      = colorScheme !== "light";
   const { t, isAr } = useLocale();
   const { config } = useConfig();
   const { setUser, clearAppMode } = useApp();
@@ -210,14 +205,12 @@ export default function DiscoveryMapScreen() {
   const topPad      = insets.top    + (Platform.OS === "web" ? 67  : 0);
   const TAB_H       = Platform.OS === "web" ? 84 : 64;
   const bottomPad   = insets.bottom + TAB_H + 20;
-  const windowH     = Dimensions.get("window").height;
 
   // Build type filter list from config (matches DynamicConfig propertyTypes)
   const filterTypes = ["all", ...config.propertyTypes.map((pt) => pt.id)];
 
   const [activeType,   setActiveType]   = useState("all");
   const [refreshing,   setRefreshing]   = useState(false);
-  const [viewMode,     setViewMode]     = useState<"cards" | "heatmap">("heatmap");
 
   // Load pre-selected filter from entry gate (set by role selection or previous session)
   useEffect(() => {
@@ -339,46 +332,6 @@ export default function DiscoveryMapScreen() {
     </ScrollView>
   );
 
-  if (viewMode === "heatmap") {
-    return (
-      <View style={[s.container, Platform.OS === "web" && { height: windowH }]}>
-        {/* ── Map fills entire screen ──────────────────────────────────────── */}
-        <View style={StyleSheet.absoluteFill}>
-          <HeatmapMapView
-            properties={filtered as MapProperty[]}
-            isAr={isAr}
-            isDark={isDark}
-            bottomPad={bottomPad}
-            onOpenCards={() => { void Haptics.selectionAsync(); setViewMode("cards"); }}
-          />
-        </View>
-
-        {/* ── Floating glass header ────────────────────────────────────────── */}
-        <LinearGradient
-          colors={["rgba(8,16,34,0.88)", "rgba(8,16,34,0.60)", "rgba(8,16,34,0.00)"]}
-          style={[s.glassHeader, { paddingTop: topPad + 12 }]}
-        >
-          {headerRow}
-        </LinearGradient>
-
-        {/* ── Floating glass filter pills ──────────────────────────────────── */}
-        <View style={s.glassFilterWrap}>
-          {filterPills(true)}
-        </View>
-
-        {/* ── Floating "قائمة" button — bottom left ────────────────────────── */}
-        <Pressable
-          style={[s.glassListBtn, { bottom: bottomPad + 16 }]}
-          onPress={() => { void Haptics.selectionAsync(); setViewMode("cards"); }}
-        >
-          <MaterialIcons name="grid-view" size={18} color={colors.gold} />
-          <Text style={s.glassListBtnText}>{isAr ? "قائمة" : "List"}</Text>
-        </Pressable>
-
-      </View>
-    );
-  }
-
   return (
     <AnimatedScreen>
     <View style={s.container}>
@@ -387,24 +340,6 @@ export default function DiscoveryMapScreen() {
 
       {/* ── Type Filter Pills ─────────────────────────────────────────────── */}
       <View style={s.filterWrap}>{filterPills(false)}</View>
-
-      {/* ── View Toggle ───────────────────────────────────────────────────── */}
-      <View style={[s.toggleBar, isAr && { flexDirection: "row-reverse" }]}>
-        <Pressable
-          onPress={() => { void Haptics.selectionAsync(); setViewMode("cards"); }}
-          style={[s.toggleSeg, s.toggleSegActive]}
-        >
-          <MaterialIcons name="grid-view" size={16} color="#0F2040" />
-          <Text style={[s.toggleText, s.toggleTextActive]}>{t.heatmap.cardsView}</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => { void Haptics.selectionAsync(); setViewMode("heatmap"); }}
-          style={s.toggleSeg}
-        >
-          <MaterialIcons name="map" size={16} color={colors.mutedForeground} />
-          <Text style={s.toggleText}>{isAr ? "الخريطة" : "Map"}</Text>
-        </Pressable>
-      </View>
 
       {/* ── Property Grid ─────────────────────────────────────────────────── */}
       <ScrollView

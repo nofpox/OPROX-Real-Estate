@@ -99,19 +99,15 @@ function ActiveDot({ focused, color }: { focused: boolean; color: string }) {
 // ── Native (iOS Liquid Glass) tab layout ──────────────────────────────────────
 function NativeTabLayout({ requireAuth: _requireAuth }: { requireAuth: (action: () => void) => void }) {
   const { t, isAr } = useLocale();
-  const { user, selectedRole, appMode } = useApp();
-  const isTourist      = appMode === "tourist";
-  const canSeeSettings = !!user && selectedRole !== "buyer" && !isTourist;
+  const { user, selectedRole } = useApp();
+  const canSeeSettings = !!user && selectedRole !== "buyer";
 
   const allTriggers = [
-    { name: "index",    sf: { default: "map",    selected: "map.fill"    }, label: t.tabs.home    },
-    { name: "explore",  sf: { default: "safari",  selected: "safari.fill"  }, label: t.tabs.explore },
-    ...(!isTourist ? [
-      { name: "add",          sf: { default: "plus.circle",            selected: "plus.circle.fill"            }, label: t.tabs.add        },
-      { name: "listings",     sf: { default: "list.bullet",            selected: "list.bullet.circle.fill"     }, label: t.tabs.listings   },
-      { name: "ai-concierge", sf: { default: "wrench.and.screwdriver", selected: "wrench.and.screwdriver.fill" }, label: t.tabs.myRequests },
-      ...(canSeeSettings ? [{ name: "settings", sf: { default: "gearshape", selected: "gearshape.fill" }, label: t.tabs.settings }] : []),
-    ] : []),
+    { name: "index",        sf: { default: "house",                  selected: "house.fill"                  }, label: t.tabs.home       },
+    { name: "add",          sf: { default: "plus.circle",            selected: "plus.circle.fill"            }, label: t.tabs.add        },
+    { name: "listings",     sf: { default: "list.bullet",            selected: "list.bullet.circle.fill"     }, label: t.tabs.listings   },
+    { name: "ai-concierge", sf: { default: "wrench.and.screwdriver", selected: "wrench.and.screwdriver.fill" }, label: t.tabs.myRequests },
+    ...(canSeeSettings ? [{ name: "settings", sf: { default: "gearshape", selected: "gearshape.fill" }, label: t.tabs.settings }] : []),
   ];
 
   const ordered = isAr ? [...allTriggers].reverse() : allTriggers;
@@ -134,27 +130,19 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
   const colors      = useColors();
   const colorScheme = useColorScheme();
   const { t, isAr } = useLocale();
-  const { user, selectedRole, appMode } = useApp();
+  const { user, selectedRole } = useApp();
   const isDark    = colorScheme === "dark";
   const isIOS     = Platform.OS === "ios";
   const isWeb     = Platform.OS === "web";
-  const isTourist = appMode === "tourist";
-  const canSeeSettings = !!user && selectedRole !== "buyer" && !isTourist;
+  const canSeeSettings = !!user && selectedRole !== "buyer";
 
   const tabDefs = [
     {
       name: "index",
       title: t.tabs.home,
       icon: (color: string) => isIOS
-        ? <SymbolView name="map" tintColor={color} size={28} />
-        : <MaterialIcons name="map" size={28} color={color} />,
-    },
-    {
-      name: "explore",
-      title: t.tabs.explore,
-      icon: (color: string) => isIOS
-        ? <SymbolView name="safari" tintColor={color} size={28} />
-        : <MaterialIcons name="explore" size={28} color={color} />,
+        ? <SymbolView name="house" tintColor={color} size={28} />
+        : <MaterialIcons name="home" size={28} color={color} />,
     },
     {
       name: "add",
@@ -198,8 +186,7 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
         tabBarHideOnKeyboard: true,
         tabBarShowLabel: false,
         tabBarItemStyle: { flex: 1, justifyContent: "center", alignItems: "center" },
-        // Tourist: hide the bar entirely — explore is full-screen
-        tabBarStyle: isTourist ? { display: "none" } : {
+        tabBarStyle: {
           position:        "absolute",
           backgroundColor: "transparent",
           borderTopWidth:  0,
@@ -219,10 +206,7 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
       }}
     >
       {ordered.map((tab) => {
-        // Tourist: only the explore tab stays in the bar
-        const hideFromBar    = isTourist && tab.name !== "explore";
-        // Settings: hidden when user role/mode doesn't allow it
-        const hideCompletely = !isTourist && tab.name === "settings" && !canSeeSettings;
+        const hideCompletely = tab.name === "settings" && !canSeeSettings;
 
         return (
           <Tabs.Screen
@@ -231,7 +215,6 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
             options={{
               title: tab.title,
               href:  hideCompletely ? null : undefined,
-              tabBarButton: hideFromBar ? () => null : undefined,
               tabBarIcon: ({ color, focused }) => (
                 <View style={s.tabItem}>
                   <AnimatedTabIcon focused={focused}>
@@ -244,13 +227,7 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
             }}
             listeners={{
               tabPress: (e) => {
-                // Tourist: block navigation away from explore
-                if (isTourist && tab.name !== "explore") {
-                  e.preventDefault();
-                  return;
-                }
-                // Registered: require auth for restricted tabs
-                if (!isTourist && RESTRICTED_TABS.includes(tab.name)) {
+                if (RESTRICTED_TABS.includes(tab.name)) {
                   e.preventDefault();
                   requireAuth(() => router.navigate(`/(tabs)/${tab.name}` as never));
                 }
@@ -259,6 +236,8 @@ function ClassicTabLayout({ requireAuth }: { requireAuth: (action: () => void) =
           />
         );
       })}
+      {/* Keep explore file routable but hidden from tab bar */}
+      <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
   );
 }
@@ -278,12 +257,6 @@ export default function TabLayout() {
     // No mode chosen → mode selection screen
     if (appMode === null) {
       router.replace("/mode-select" as never);
-      return;
-    }
-
-    // Tourist: always land on explore (full-screen map)
-    if (appMode === "tourist") {
-      router.replace("/(tabs)/explore" as never);
       return;
     }
 

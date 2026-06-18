@@ -5,7 +5,6 @@ import {
   Animated,
   Dimensions,
   Image,
-  Platform,
   Pressable,
   StatusBar,
   StyleSheet,
@@ -45,12 +44,6 @@ export default function ModeSelectScreen() {
     router.replace("/(tabs)" as never);
   };
 
-  const goTourist = () => {
-    void logAdminEvent("tourism_section", "user_enter_tourism | button:tourism_section");
-    setAppMode("tourist");
-    router.replace("/(tabs)/explore" as never);
-  };
-
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor={BG} />
@@ -71,40 +64,22 @@ export default function ModeSelectScreen() {
         {/* Title */}
         <View style={s.titleWrap}>
           <Text style={s.welcome}>مرحبًا بك في ROZOZ</Text>
+          <Text style={s.subtitle}>منصة العقارات السعودية</Text>
         </View>
 
-        {/* Registered card */}
+        {/* Enter App card */}
         <Pressable
           onPress={goRegistered}
           style={({ pressed }) => [s.card, s.cardGold, pressed && s.pressed]}
         >
           <View style={s.iconWrapDark}>
-            <MaterialIcons name="vpn-key" size={28} color={BG} />
+            <MaterialIcons name="domain" size={28} color={BG} />
           </View>
           <View style={s.cardText}>
-            <Text style={s.cardTitle}>بحث أجار / بيع / إدارة</Text>
-            <Text style={s.cardSub}>Rent · Sale · Management</Text>
+            <Text style={s.cardTitle}>بحث · إيجار · بيع · إدارة</Text>
+            <Text style={s.cardSub}>Search · Rent · Sale · Manage</Text>
           </View>
-          <MaterialIcons
-            name={Platform.OS === "ios" ? "chevron-left" : "chevron-left"}
-            size={22}
-            color="rgba(10,14,26,0.5)"
-          />
-        </Pressable>
-
-        {/* Tourist card */}
-        <Pressable
-          onPress={goTourist}
-          style={({ pressed }) => [s.card, s.cardDark, pressed && s.pressed]}
-        >
-          <View style={s.iconWrapGold}>
-            <MaterialIcons name="camera-alt" size={28} color={GOLD} />
-          </View>
-          <View style={s.cardText}>
-            <Text style={s.cardTitleLight}>سائح / سياحة</Text>
-            <Text style={s.cardSubLight}>Tourist · Tourism</Text>
-          </View>
-          <MaterialIcons name="chevron-left" size={22} color="rgba(201,168,76,0.6)" />
+          <MaterialIcons name="chevron-left" size={22} color="rgba(10,14,26,0.5)" />
         </Pressable>
       </Animated.View>
     </View>
@@ -132,6 +107,12 @@ const s = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     textAlign: "center",
     letterSpacing: 0.4,
+  },
+  subtitle: {
+    color: MUTED,
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    textAlign: "center",
   },
 
   card: {
