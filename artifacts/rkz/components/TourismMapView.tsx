@@ -273,78 +273,51 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
     });
   }
 
-  /* ── POI via Overpass API — bbox follows visible map area ── */
-  var OVERPASS    = 'https://overpass-api.de/api/interpreter';
+  /* ── POI — React Native fetches Overpass, injects results via __renderPoi ── */
   var currentType = null;
   var poiTimer    = null;
 
-  function buildQuery(type, bounds) {
-    /* Overpass bbox order: south,west,north,east */
-    var s = bounds.getSouth(), w = bounds.getWest(),
-        n = bounds.getNorth(), e = bounds.getEast();
-    var bb = '(' + s + ',' + w + ',' + n + ',' + e + ')';
-    var base = '[out:json][timeout:25];(';
-    if (!type || type === 'all') {
-      base += 'node["amenity"="restaurant"]' + bb + ';';
-      base += 'node["amenity"~"cafe|coffee_shop"]' + bb + ';';
-      base += 'node["tourism"~"hotel|motel|resort"]' + bb + ';';
-      base += 'node["tourism"="attraction"]' + bb + ';';
-    } else if (type === 'restaurant') {
-      base += 'node["amenity"="restaurant"]' + bb + ';';
-    } else if (type === 'cafe') {
-      base += 'node["amenity"~"cafe|coffee_shop"]' + bb + ';';
-    } else if (type === 'hotel') {
-      base += 'node["tourism"~"hotel|motel|resort"]' + bb + ';';
-    } else if (type === 'attraction') {
-      base += 'node["tourism"="attraction"]' + bb + ';';
-      base += 'node["historic"]' + bb + ';';
-    } else if (type === 'apartment') {
-      base += 'node["tourism"~"apartment|guest_house|hostel"]' + bb + ';';
-    }
-    return base + ');out 100;';
-  }
+  /* Called by React Native after it fetches Overpass results */
+  window.__renderPoi = function (elements, color) {
+    if (!poiLayer) return;
+    poiLayer.clearLayers();
+    poiMarkers = [];
+    var fillColor = color || currentColor;
+    (elements || []).forEach(function (el) {
+      var lat = el.lat;
+      var lng = el.lon;
+      if (!lat || !lng) return;
+      var tags = el.tags || {};
+      var name = (IS_AR ? (tags['name:ar'] || tags.name) : (tags['name:en'] || tags.name)) || (IS_AR ? 'بدون اسم' : 'Unknown');
+      var m = L.circleMarker([lat, lng], {
+        radius: 7, fillColor: fillColor, color: '#fff',
+        weight: 1.5, opacity: 1, fillOpacity: 0.9,
+      }).bindPopup('<div class="pop-name">' + name + '</div>', { className: 'lf-popup' });
+      m.addTo(poiLayer);
+      poiMarkers.push(m);
+    });
+  };
 
-  function loadPoi(type) {
-    if (!poiLayer || !map) return;
+  /* Ask React Native to fetch POI for current viewport */
+  function requestPoi(type) {
+    if (!map || !window.ReactNativeWebView) return;
     currentType = type;
-    /* Overpass can't handle huge bounding boxes — require zoom ≥ 10 */
-    if (map.getZoom() < 10) {
-      poiLayer.clearLayers();
-      poiMarkers = [];
-      return;
-    }
-    var query = buildQuery(type, map.getBounds());
-    fetch(OVERPASS, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'data=' + encodeURIComponent(query),
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        poiLayer.clearLayers();
-        poiMarkers = [];
-        var elements = data.elements || [];
-        elements.forEach(function (el) {
-          var lat = el.lat || (el.center && el.center.lat);
-          var lng = el.lon || (el.center && el.center.lon);
-          if (!lat || !lng) return;
-          var tags = el.tags || {};
-          var name = (IS_AR ? (tags['name:ar'] || tags.name) : (tags['name:en'] || tags.name)) || (IS_AR ? 'بدون اسم' : 'Unknown');
-          var m = L.circleMarker([lat, lng], {
-            radius: 7, fillColor: currentColor, color: '#fff',
-            weight: 1.5, opacity: 1, fillOpacity: 0.9,
-          }).bindPopup('<div class="pop-name">' + name + '</div>', { className: 'lf-popup' });
-          m.addTo(poiLayer);
-          poiMarkers.push(m);
-        });
-      })
-      .catch(function () {});
+    var b = map.getBounds();
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type:     'poi',
+      category: type,
+      zoom:     map.getZoom(),
+      south:    b.getSouth(),
+      west:     b.getWest(),
+      north:    b.getNorth(),
+      east:     b.getEast(),
+    }));
   }
 
   /* re-query 700ms after map stops moving */
   map.on('moveend', function () {
     clearTimeout(poiTimer);
-    poiTimer = setTimeout(function () { loadPoi(currentType); }, 700);
+    poiTimer = setTimeout(function () { requestPoi(currentType); }, 700);
   });
 
   /* ── Filter buttons ── */
@@ -369,7 +342,7 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
       }
     }
 
-    loadPoi(type === 'all' ? null : type);
+    requestPoi(type === 'all' ? null : type);
   };
 
   /* ── Allow parent to reposition filter bar ── */
@@ -378,9 +351,9 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
     if (fb) fb.style.top = px + 'px';
   };
 
-  /* initialise button colours */
+  /* initialise button colours — POI loads when React Native sends first message */
   styleButtons('all');
-  loadPoi(null);
+  setTimeout(function () { requestPoi(null); }, 800);
 
 })();
 </script>
@@ -422,11 +395,72 @@ const TourismMapView = forwardRef<TourismMapHandle, Props>(function TourismMapVi
     });
   }
 
+  const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+
+  function buildOverpassQuery(
+    category: string | null,
+    south: number, west: number, north: number, east: number,
+  ): string {
+    const bb = `(${south},${west},${north},${east})`;
+    let q = "[out:json][timeout:25];(";
+    if (!category || category === "all") {
+      q += `node["amenity"="restaurant"]${bb};`;
+      q += `node["amenity"~"cafe|coffee_shop"]${bb};`;
+      q += `node["tourism"~"hotel|motel|resort"]${bb};`;
+      q += `node["tourism"="attraction"]${bb};`;
+    } else if (category === "restaurant") {
+      q += `node["amenity"="restaurant"]${bb};`;
+    } else if (category === "cafe") {
+      q += `node["amenity"~"cafe|coffee_shop"]${bb};`;
+    } else if (category === "hotel") {
+      q += `node["tourism"~"hotel|motel|resort"]${bb};`;
+    } else if (category === "attraction") {
+      q += `node["tourism"="attraction"]${bb};`;
+      q += `node["historic"]${bb};`;
+    } else if (category === "apartment") {
+      q += `node["tourism"~"apartment|guest_house|hostel"]${bb};`;
+    }
+    return q + ");out 100;";
+  }
+
   function handleMessage(event: WebViewMessageEvent) {
     try {
-      const msg = JSON.parse(event.nativeEvent.data) as { type: string; url: string };
-      if (msg.type === "openUrl" && msg.url) {
-        void Linking.openURL(msg.url).catch(() => {});
+      const raw = JSON.parse(event.nativeEvent.data) as {
+        type: string;
+        url?: string;
+        category?: string | null;
+        zoom?: number;
+        south?: number; west?: number; north?: number; east?: number;
+      };
+
+      if (raw.type === "openUrl" && raw.url) {
+        void Linking.openURL(raw.url).catch(() => {});
+
+      } else if (raw.type === "poi") {
+        const zoom = raw.zoom ?? 0;
+        /* require zoom ≥ 9 to avoid huge bounding boxes */
+        if (zoom < 9) {
+          webViewRef.current?.injectJavaScript("window.__renderPoi([]);true;");
+          return;
+        }
+        const query = buildOverpassQuery(
+          raw.category ?? null,
+          raw.south ?? 0, raw.west ?? 0, raw.north ?? 0, raw.east ?? 0,
+        );
+        void fetch(OVERPASS_URL, {
+          method:  "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body:    "data=" + encodeURIComponent(query),
+        })
+          .then(r => r.json() as Promise<{ elements?: unknown[] }>)
+          .then(data => {
+            const elements = data.elements ?? [];
+            const js = `window.__renderPoi(${JSON.stringify(elements)});true;`;
+            webViewRef.current?.injectJavaScript(js);
+          })
+          .catch(() => {
+            webViewRef.current?.injectJavaScript("window.__renderPoi([]);true;");
+          });
       }
     } catch { /* ignore non-JSON messages */ }
   }

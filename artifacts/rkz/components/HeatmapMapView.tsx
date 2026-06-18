@@ -324,23 +324,30 @@ const s = StyleSheet.create({
   },
 
   // ── Price pill marker ──────────────────────────────────────────────────
+  // Buffer prevents Android Marker from clipping pill edges.
+  // Pill uses no alignment constraints so Text width is unconstrained.
+  // writingDirection:'ltr' on Text avoids bidi mis-measurement of mixed
+  // Arabic + numerals (e.g. "590 ألف") on Android Marker bitmaps.
   pillBuffer: {
-    padding: 14,
+    padding:         18,
     backgroundColor: "transparent",
   },
   pill: {
-    minWidth:          110,
-    paddingHorizontal: 14,
-    paddingVertical:    6,
+    paddingHorizontal: 16,
+    paddingVertical:    7,
     borderRadius:      14,
     borderWidth:        2,
-    alignItems:        "center",
-    justifyContent:    "center",
   },
   pillGreen:    { backgroundColor: "#22c55e", borderColor: "#16a34a" },
   pillGold:     { backgroundColor: GOLD,      borderColor: "#b8902e" },
   pillSelected: { borderColor: WHITE, borderWidth: 3 },
-  pillText:     { fontSize: 13, fontWeight: "700", fontFamily: "Inter_700Bold", textAlign: "center" },
+  pillText: {
+    fontSize:         13,
+    fontWeight:       "700",
+    fontFamily:       "Inter_700Bold",
+    writingDirection: "ltr",
+    includeFontPadding: false,
+  },
   pillTextWhite: { color: WHITE },
   pillTextDark:  { color: NAVY },
 
