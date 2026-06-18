@@ -25,6 +25,7 @@ import { useLocale } from "@/hooks/useLocale";
 import { useConfig } from "@/context/DynamicConfig";
 import { useApp } from "@/context/AppContext";
 import AnimatedScreen from "@/components/AnimatedScreen";
+import PropertyMapWebView from "@/components/PropertyMapWebView";
 
 const NEGOTIATION_KEY      = "rozoz_negotiation_requests";
 const DISCOVERY_FILTER_KEY = "rozoz_discovery_filter";
@@ -211,6 +212,8 @@ export default function DiscoveryMapScreen() {
 
   const [activeType,   setActiveType]   = useState("all");
   const [refreshing,   setRefreshing]   = useState(false);
+  const [viewMode,     setViewMode]     = useState<"map" | "list">("map");
+  const [selectedId,   setSelectedId]   = useState<string | null>(null);
 
   // Load pre-selected filter from entry gate (set by role selection or previous session)
   useEffect(() => {
@@ -271,12 +274,17 @@ export default function DiscoveryMapScreen() {
     [activeType],
   );
 
+  const selectedListing = useMemo(
+    () => selectedId ? ALL_LISTINGS.find((l) => l.id === selectedId) ?? null : null,
+    [selectedId],
+  );
+
   const s = useMemo(() => makeStyles(colors, isAr, topPad, bottomPad), [colors, isAr, topPad, bottomPad]);
 
-  // ── Shared header/filter rows used in both modes ────────────────────────
-  const headerRow = (
+  // ── Header row ────────────────────────────────────────────────────────────
+  const headerRow = (glass: boolean) => (
     <View style={[s.headerRow, isAr && { flexDirection: "row-reverse" }]}>
-      <Pressable style={s.logoutBtn} onPress={handleLogout} hitSlop={10}>
+      <Pressable style={[s.logoutBtn, glass && s.logoutBtnGlass]} onPress={handleLogout} hitSlop={10}>
         <MaterialIcons name="logout" size={18} color="rgba(255,255,255,0.80)" />
         <Text style={s.logoutBtnText}>{isAr ? "خروج" : "Sign out"}</Text>
       </Pressable>
@@ -289,13 +297,14 @@ export default function DiscoveryMapScreen() {
           <Text style={s.locationText}>{isAr ? "المملكة العربية السعودية" : "Saudi Arabia"}</Text>
         </View>
       </View>
-      <View style={s.countBadge}>
+      <View style={[s.countBadge, glass && s.countBadgeGlass]}>
         <Text style={s.countText}>{filtered.length}</Text>
         <Text style={s.countLabel}>{isAr ? "عقار" : "listings"}</Text>
       </View>
     </View>
   );
 
+  // ── Filter pills ─────────────────────────────────────────────────────────
   const filterPills = (glass: boolean) => (
     <ScrollView
       horizontal
@@ -332,14 +341,116 @@ export default function DiscoveryMapScreen() {
     </ScrollView>
   );
 
+  // ── MAP VIEW ──────────────────────────────────────────────────────────────
+  if (viewMode === "map") {
+    return (
+      <View style={[s.container, { position: "relative" }]}>
+
+        {/* Leaflet map fills the screen */}
+        <PropertyMapWebView
+          listings={filtered}
+          activeFilter={activeType}
+          onSelect={(id) => { setSelectedId(id); void Haptics.selectionAsync(); }}
+          onDeselect={() => setSelectedId(null)}
+        />
+
+        {/* ── Floating header (gradient fade) ── */}
+        <View style={[s.glassHeader, { paddingTop: topPad + 10 }]} pointerEvents="box-none">
+          <View style={s.glassHeaderBg} />
+          {headerRow(true)}
+        </View>
+
+        {/* ── Filter pills overlay ── */}
+        <View style={s.glassFilterWrap} pointerEvents="box-none">
+          {filterPills(true)}
+        </View>
+
+        {/* ── "قائمة" button — bottom left ── */}
+        <Pressable
+          style={[s.glassListBtn, { bottom: bottomPad + 16 }]}
+          onPress={() => { void Haptics.selectionAsync(); setViewMode("list"); setSelectedId(null); }}
+        >
+          <MaterialIcons name="view-list" size={18} color={colors.gold} />
+          <Text style={s.glassListBtnText}>{isAr ? "قائمة" : "List"}</Text>
+        </Pressable>
+
+        {/* ── Count chip — bottom right ── */}
+        <View style={[s.glassCountChip, { bottom: bottomPad + 16 }]} pointerEvents="none">
+          <Text style={s.glassCountText}>{filtered.length} {isAr ? "عقار" : "listings"}</Text>
+        </View>
+
+        {/* ── Property detail card (appears when marker tapped) ── */}
+        {selectedListing && (
+          <View style={[s.detailCard, { bottom: bottomPad + 20 }]}>
+            <Pressable style={s.closeBtn} onPress={() => setSelectedId(null)} hitSlop={12}>
+              <MaterialIcons name="close" size={18} color="#94a3b8" />
+            </Pressable>
+            <View style={[s.detailHeader, isAr && { flexDirection: "row-reverse" }]}>
+              <View style={s.detailTypeChip}>
+                <Text style={s.detailTypeText}>{TYPE_LABELS[selectedListing.type] ?? selectedListing.type}</Text>
+              </View>
+              {selectedListing.badge ? (
+                <View style={s.detailBadge}><Text style={s.detailBadgeText}>{selectedListing.badge}</Text></View>
+              ) : null}
+            </View>
+            <Text style={[s.detailTitle, isAr && { textAlign: "right" }]}>
+              {TYPE_LABELS[selectedListing.type] ?? selectedListing.type} {selectedListing.district}
+            </Text>
+            <Text style={[s.detailCity, isAr && { textAlign: "right" }]}>
+              {selectedListing.city} — {selectedListing.district}
+            </Text>
+            <View style={[s.detailStats, isAr && { flexDirection: "row-reverse" }]}>
+              <View style={s.detailStatItem}>
+                <Text style={s.detailStatVal}>{fmtPrice(selectedListing.price)}</Text>
+                <Text style={s.detailStatLbl}>ريال</Text>
+              </View>
+              <View style={s.detailDivider} />
+              <View style={s.detailStatItem}>
+                <Text style={s.detailStatVal}>{selectedListing.area.toLocaleString()}</Text>
+                <Text style={s.detailStatLbl}>م²</Text>
+              </View>
+              {selectedListing.bedrooms ? (
+                <>
+                  <View style={s.detailDivider} />
+                  <View style={s.detailStatItem}>
+                    <Text style={s.detailStatVal}>{selectedListing.bedrooms}</Text>
+                    <Text style={s.detailStatLbl}>غرف</Text>
+                  </View>
+                </>
+              ) : null}
+            </View>
+            <Pressable
+              style={s.detailCta}
+              onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setViewMode("list"); setSelectedId(null); }}
+            >
+              <Text style={s.detailCtaText}>{isAr ? "عرض في القائمة ←" : "View in List →"}</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  // ── LIST VIEW ─────────────────────────────────────────────────────────────
   return (
     <AnimatedScreen>
     <View style={s.container}>
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <View style={s.header}>{headerRow}</View>
+      <View style={s.header}>{headerRow(false)}</View>
 
       {/* ── Type Filter Pills ─────────────────────────────────────────────── */}
       <View style={s.filterWrap}>{filterPills(false)}</View>
+
+      {/* ── Map toggle button ─────────────────────────────────────────────── */}
+      <View style={[s.mapToggleBar, isAr && { flexDirection: "row-reverse" }]}>
+        <Pressable
+          style={s.mapToggleBtn}
+          onPress={() => { void Haptics.selectionAsync(); setViewMode("map"); }}
+        >
+          <MaterialIcons name="map" size={16} color={colors.gold} />
+          <Text style={s.mapToggleText}>{isAr ? "الخريطة" : "Map view"}</Text>
+        </Pressable>
+      </View>
 
       {/* ── Property Grid ─────────────────────────────────────────────────── */}
       <ScrollView
@@ -739,6 +850,121 @@ function makeStyles(
       fontFamily: "Inter_500Medium",
       color:      "#94A3B8",
       textAlign:  "center",
+    },
+
+    // ── Map mode — glass header overlay ────────────────────────────────────
+    glassHeaderBg: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(8,14,30,0.72)",
+    },
+    logoutBtnGlass: {
+      backgroundColor: "rgba(8,16,34,0.70)",
+      borderColor:     "rgba(255,255,255,0.18)",
+    },
+    countBadgeGlass: {
+      backgroundColor: "rgba(8,16,34,0.70)",
+      borderColor:     colors.gold + "55",
+    },
+
+    // ── Map mode — property detail card ────────────────────────────────────
+    detailCard: {
+      position:        "absolute",
+      left:            14,
+      right:           14,
+      backgroundColor: "#0F2040",
+      borderRadius:    18,
+      padding:         18,
+      borderWidth:     1.5,
+      borderColor:     colors.gold,
+      zIndex:          20,
+      ...Platform.select({
+        android: { elevation: 14 },
+        ios:     { shadowColor: "#000", shadowOpacity: 0.55, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } },
+        default: {},
+      }),
+    },
+    closeBtn: {
+      position:        "absolute",
+      top:             12,
+      left:            14,
+      zIndex:          30,
+      width:           30,
+      height:          30,
+      alignItems:      "center",
+      justifyContent:  "center",
+    },
+    detailHeader: {
+      flexDirection:  "row",
+      alignItems:     "center",
+      gap:            6,
+      marginBottom:   6,
+    },
+    detailTypeChip: {
+      backgroundColor: colors.gold + "22",
+      borderRadius:    8,
+      paddingHorizontal: 8,
+      paddingVertical:   3,
+    },
+    detailTypeText: { fontSize: 11, fontFamily: "Inter_700Bold", color: colors.gold },
+    detailBadge: {
+      backgroundColor: colors.gold,
+      borderRadius:    8,
+      paddingHorizontal: 7,
+      paddingVertical:   2,
+    },
+    detailBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#0F2040" },
+    detailTitle: {
+      fontSize:   15,
+      fontFamily: "Inter_700Bold",
+      color:      "#FFFFFF",
+      marginBottom: 2,
+    },
+    detailCity: {
+      fontSize:   11,
+      fontFamily: "Inter_400Regular",
+      color:      "#94A3B8",
+      marginBottom: 12,
+    },
+    detailStats: {
+      flexDirection: "row",
+      alignItems:    "center",
+      marginBottom:  14,
+    },
+    detailStatItem:  { flex: 1, alignItems: "center" },
+    detailDivider:   { width: 1, height: 28, backgroundColor: "rgba(255,255,255,0.12)" },
+    detailStatVal:   { fontSize: 17, fontFamily: "Inter_700Bold", color: colors.gold },
+    detailStatLbl:   { fontSize: 10, fontFamily: "Inter_400Regular", color: "#94A3B8", marginTop: 2 },
+    detailCta: {
+      backgroundColor: colors.gold,
+      borderRadius:    10,
+      paddingVertical: 10,
+      alignItems:      "center",
+    },
+    detailCtaText: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#0F2040" },
+
+    // ── List mode — map toggle bar ──────────────────────────────────────────
+    mapToggleBar: {
+      flexDirection:     "row",
+      paddingHorizontal: 16,
+      paddingTop:        10,
+      paddingBottom:     4,
+      backgroundColor:   colors.background,
+    },
+    mapToggleBtn: {
+      flexDirection:     "row",
+      alignItems:        "center",
+      gap:               6,
+      backgroundColor:   colors.card,
+      borderWidth:       1,
+      borderColor:       colors.gold + "55",
+      borderRadius:      20,
+      paddingHorizontal: 14,
+      paddingVertical:   7,
+    },
+    mapToggleText: {
+      fontSize:   12,
+      fontFamily: "Inter_600SemiBold",
+      color:      colors.gold,
     },
   });
 }
