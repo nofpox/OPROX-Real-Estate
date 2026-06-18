@@ -260,6 +260,12 @@ export default function TabLayout() {
       return;
     }
 
+    // Tourist flow: skip auth, go straight to tourism map
+    if (appMode === "tourist") {
+      router.replace("/tourism-map" as never);
+      return;
+    }
+
     // Registered flow: consent → welcome
     if (user && consentGiven === false) {
       router.replace("/consent" as never);

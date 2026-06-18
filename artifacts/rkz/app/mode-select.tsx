@@ -44,6 +44,12 @@ export default function ModeSelectScreen() {
     router.replace("/(tabs)" as never);
   };
 
+  const goTourism = () => {
+    void logAdminEvent("tourism_section", "user_enter_tourism | button:tourism_section");
+    setAppMode("tourist");
+    router.replace("/tourism-map" as never);
+  };
+
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor={BG} />
@@ -64,10 +70,10 @@ export default function ModeSelectScreen() {
         {/* Title */}
         <View style={s.titleWrap}>
           <Text style={s.welcome}>مرحبًا بك في ROZOZ</Text>
-          <Text style={s.subtitle}>منصة العقارات السعودية</Text>
+          <Text style={s.subtitle}>اختر وجهتك</Text>
         </View>
 
-        {/* Enter App card */}
+        {/* Real-estate card — gold */}
         <Pressable
           onPress={goRegistered}
           style={({ pressed }) => [s.card, s.cardGold, pressed && s.pressed]}
@@ -76,10 +82,25 @@ export default function ModeSelectScreen() {
             <MaterialIcons name="domain" size={28} color={BG} />
           </View>
           <View style={s.cardText}>
-            <Text style={s.cardTitle}>بحث · إيجار · بيع · إدارة</Text>
-            <Text style={s.cardSub}>Search · Rent · Sale · Manage</Text>
+            <Text style={s.cardTitle}>العقارات</Text>
+            <Text style={s.cardSub}>بحث · إيجار · بيع · إدارة</Text>
           </View>
           <MaterialIcons name="chevron-left" size={22} color="rgba(10,14,26,0.5)" />
+        </Pressable>
+
+        {/* Tourism card — dark bordered */}
+        <Pressable
+          onPress={goTourism}
+          style={({ pressed }) => [s.card, s.cardDark, pressed && s.pressed]}
+        >
+          <View style={s.iconWrapGold}>
+            <MaterialIcons name="explore" size={28} color={GOLD} />
+          </View>
+          <View style={s.cardText}>
+            <Text style={s.cardTitleLight}>السياحة في المملكة</Text>
+            <Text style={s.cardSubLight}>استكشف المعالم والوجهات السياحية</Text>
+          </View>
+          <MaterialIcons name="chevron-left" size={22} color={GOLD} />
         </Pressable>
       </Animated.View>
     </View>
