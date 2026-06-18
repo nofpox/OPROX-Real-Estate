@@ -10,7 +10,7 @@ import WebView, { type WebViewMessageEvent } from "react-native-webview";
 
 export interface TouristSpot {
   id:    string;
-  type:  "mosque" | "heritage" | "nature" | "entertainment" | "hotel";
+  type:  "mosque" | "heritage" | "nature" | "entertainment" | "hotel" | "restaurant" | "cafe" | "mall" | "apartment";
   nameAr: string;
   city:   string;
   lat:    number;
@@ -24,6 +24,10 @@ const CATEGORY_COLOR: Record<TouristSpot["type"], string> = {
   nature:        "#06b6d4",
   entertainment: "#8b5cf6",
   hotel:         "#3b82f6",
+  restaurant:    "#f97316",
+  cafe:          "#ec4899",
+  mall:          "#6366f1",
+  apartment:     "#14b8a6",
 };
 
 function buildHTML(spots: TouristSpot[]): string {
