@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -94,6 +95,27 @@ export default function TourismMapScreen() {
     clearAppMode();
     router.replace("/mode-select" as never);
   }, [clearAppMode]);
+
+  const handleNavigate = useCallback((spot: TouristSpot) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const label = encodeURIComponent(spot.nameAr);
+    const url = Platform.select({
+      ios:     `maps://maps.apple.com/?daddr=${spot.lat},${spot.lng}&dirflg=d`,
+      android: `google.navigation:q=${spot.lat},${spot.lng}&mode=d`,
+      default: `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lng}&destination_place_name=${label}`,
+    }) as string;
+    Linking.canOpenURL(url).then((can) => {
+      if (can) {
+        void Linking.openURL(url);
+      } else {
+        const web = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lng}&destination_place_name=${label}`;
+        void Linking.openURL(web);
+      }
+    }).catch(() => {
+      const web = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lng}&destination_place_name=${label}`;
+      void Linking.openURL(web);
+    });
+  }, []);
 
   const handleFilter = useCallback((f: FilterType) => {
     void Haptics.selectionAsync();
@@ -204,6 +226,14 @@ export default function TourismMapScreen() {
 
           <Text style={[s.spotName, { color: spotColor }]}>{selectedSpot.nameAr}</Text>
           <Text style={s.spotDesc}>{selectedSpot.desc}</Text>
+
+          <Pressable
+            style={({ pressed }) => [s.navBtn, { backgroundColor: spotColor, opacity: pressed ? 0.82 : 1 }]}
+            onPress={() => handleNavigate(selectedSpot)}
+          >
+            <MaterialIcons name="navigation" size={16} color="#fff" />
+            <Text style={s.navBtnText}>افتح في الخريطة</Text>
+          </Pressable>
         </View>
       )}
     </View>
@@ -371,5 +401,20 @@ const s = StyleSheet.create({
     color:      "rgba(255,255,255,0.65)",
     textAlign:  "right",
     lineHeight: 20,
+    marginBottom: 12,
+  },
+  navBtn: {
+    flexDirection:     "row",
+    alignItems:        "center",
+    justifyContent:    "center",
+    gap:               6,
+    borderRadius:      12,
+    paddingVertical:   11,
+    paddingHorizontal: 16,
+  },
+  navBtnText: {
+    color:      "#fff",
+    fontSize:   14,
+    fontFamily: "Inter_700Bold",
   },
 });
