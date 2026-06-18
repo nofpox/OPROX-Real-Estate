@@ -272,30 +272,60 @@ html, body { height: 100%; margin: 0; padding: 0; background: #0f2040; }
     });
   }
 
-  /* ── POI from API ── */
+  /* ── POI via Overpass API (OpenStreetMap) ── */
+  var OVERPASS = 'https://overpass-api.de/api/interpreter';
+  var RADIUS   = 4000;
+
+  function buildQuery(type) {
+    var base = '[out:json][timeout:20];(';
+    if (!type || type === 'all') {
+      base += 'node["amenity"="restaurant"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+      base += 'node["amenity"="cafe"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+      base += 'node["tourism"="hotel"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+      base += 'node["tourism"="attraction"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+    } else if (type === 'restaurant') {
+      base += 'node["amenity"="restaurant"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+    } else if (type === 'cafe') {
+      base += 'node["amenity"~"cafe|coffee_shop"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+    } else if (type === 'hotel') {
+      base += 'node["tourism"~"hotel|motel|resort"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+    } else if (type === 'attraction') {
+      base += 'node["tourism"="attraction"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+      base += 'node["historic"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+    } else if (type === 'apartment') {
+      base += 'node["tourism"~"apartment|guest_house|hostel"](around:' + RADIUS + ',' + USER_LAT + ',' + USER_LNG + ');';
+    }
+    return base + ');out 60;';
+  }
+
   function loadPoi(type) {
     if (!poiLayer) return;
-    var url = API_BASE + '/api/poi?lat=' + USER_LAT + '&lng=' + USER_LNG + '&radius_km=20&limit=200';
-    if (type && type !== 'all') url += '&type=' + type;
-    fetch(url)
+    var query = buildQuery(type);
+    fetch(OVERPASS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(query),
+    })
       .then(function (r) { return r.json(); })
       .then(function (data) {
         poiLayer.clearLayers();
         poiMarkers = [];
-        var places = data.places || [];
-        places.forEach(function (p) {
-          if (!p.lat || !p.lng) return;
-          var name = IS_AR ? (p.nameAr || p.nameEn || '') : (p.nameEn || p.nameAr || '');
-          if (!name) name = IS_AR ? 'بدون اسم' : 'Unknown';
-          var m = L.circleMarker([p.lat, p.lng], {
+        var elements = data.elements || [];
+        elements.forEach(function (el) {
+          var lat = el.lat || (el.center && el.center.lat);
+          var lng = el.lon || (el.center && el.center.lon);
+          if (!lat || !lng) return;
+          var tags = el.tags || {};
+          var name = (IS_AR ? (tags['name:ar'] || tags.name) : (tags['name:en'] || tags.name)) || (IS_AR ? 'بدون اسم' : 'Unknown');
+          var m = L.circleMarker([lat, lng], {
             radius: 7, fillColor: currentColor, color: '#fff',
-            weight: 1.5, opacity: 1, fillOpacity: 0.88,
+            weight: 1.5, opacity: 1, fillOpacity: 0.9,
           }).bindPopup('<div class="pop-name">' + name + '</div>', { className: 'lf-popup' });
           m.addTo(poiLayer);
           poiMarkers.push(m);
         });
       })
-      .catch(function () {});
+      .catch(function (e) { showErr('Overpass: ' + (e.message || 'error')); });
   }
 
   /* ── Filter buttons ── */
