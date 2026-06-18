@@ -118,12 +118,8 @@ function PricePill({ price, badge, selected }: { price: number; badge?: string; 
   const isGold = price >= 5_000_000 || !!badge;
   return (
     <View style={s.pillBuffer}>
-      <View style={[
-        s.pill,
-        isGold ? s.pillGold : s.pillGreen,
-        selected && s.pillSelected,
-      ]}>
-        <Text style={[s.pillText, isGold ? s.pillTextDark : s.pillTextWhite]} numberOfLines={1}>
+      <View style={[s.pill, isGold ? s.pillGold : s.pillGreen, selected && s.pillSelected]}>
+        <Text style={[s.pillText, isGold ? s.pillTextDark : s.pillTextWhite]}>
           {fmtPrice(price)}
         </Text>
       </View>
@@ -276,21 +272,19 @@ const s = StyleSheet.create({
 
   // ── Price pill marker ──────────────────────────────────────────────────
   pillBuffer: {
-    padding: 10,
+    padding: 14,
     backgroundColor: "transparent",
   },
   pill: {
     paddingHorizontal: 12,
     paddingVertical:    5,
     borderRadius:      20,
-    ...Platform.select({
-      android: { elevation: 6 },
-      ios:     { shadowColor: "#000", shadowOpacity: 0.4, shadowRadius: 5, shadowOffset: { width: 0, height: 2 } },
-    }),
+    /* No elevation/shadow — Android clips Marker bitmaps at view bounds */
+    borderWidth: 2,
   },
-  pillGreen:    { backgroundColor: "#22c55e", borderWidth: 1.5, borderColor: "#16a34a" },
-  pillGold:     { backgroundColor: GOLD,      borderWidth: 1.5, borderColor: "#b8902e" },
-  pillSelected: { borderWidth: 2.5, borderColor: WHITE, transform: [{ scale: 1.12 }] },
+  pillGreen:    { backgroundColor: "#22c55e", borderColor: "#16a34a" },
+  pillGold:     { backgroundColor: GOLD,      borderColor: "#b8902e" },
+  pillSelected: { borderColor: WHITE, borderWidth: 3 },
   pillText:     { fontSize: 13, fontWeight: "700", fontFamily: "Inter_700Bold" },
   pillTextWhite: { color: WHITE },
   pillTextDark:  { color: NAVY },
