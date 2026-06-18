@@ -102,6 +102,11 @@ export default function ModeSelectScreen() {
           </View>
           <MaterialIcons name="chevron-left" size={22} color={GOLD} />
         </Pressable>
+
+        {/* Legal disclaimer */}
+        <Text style={s.disclaimer}>
+          إخلاء المسؤولية القانونية: هذا الدليل مخصص لأغراض إرشادية ومعلوماتية فقط، ولا تتحمل الشركة أي مسؤولية تجارية عن الخدمات المقدمة من الأطراف الثالثة.
+        </Text>
       </Animated.View>
     </View>
   );
@@ -193,5 +198,14 @@ const s = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     textAlign: "right",
     marginTop: 3,
+  },
+  disclaimer: {
+    color:      "rgba(255,255,255,0.35)",
+    fontSize:   10,
+    fontFamily: "Inter_400Regular",
+    textAlign:  "center",
+    lineHeight: 16,
+    paddingHorizontal: 8,
+    marginTop:  4,
   },
 });
