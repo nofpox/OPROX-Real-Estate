@@ -2,6 +2,7 @@
  * TourismMapWebView — Leaflet map for tourism mode (native).
  * Circular DivIcon markers, color-coded by category.
  * Filter updates via injectJavaScript (no reload).
+ * Ready-gate: waits for {type:"ready"} before injecting locate/filter.
  */
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
@@ -40,7 +41,6 @@ html,body,#map{width:100%;height:100%;overflow:hidden}
 .leaflet-container{background:#e8ecf0}
 .leaflet-control-attribution{display:none}
 .leaflet-attribution-flag{display:none!important}
-/* category dot marker */
 .cd{
   border-radius:50%;
   border:3px solid rgba(255,255,255,0.9);
@@ -49,7 +49,6 @@ html,body,#map{width:100%;height:100%;overflow:hidden}
   box-shadow:0 2px 8px rgba(0,0,0,0.35);
 }
 .cd.sel{transform:scale(1.35);box-shadow:0 4px 16px rgba(0,0,0,0.55);}
-/* name label */
 .lbl{
   background:rgba(15,32,64,0.88);
   color:#fff;
@@ -133,6 +132,12 @@ function applyFilter(typeId){
   list.forEach(addMarker);
 }
 
+function doLocate(lat,lng){
+  map.setView([lat,lng],13);
+  if(window._locDot)window._locDot.remove();
+  window._locDot=L.circleMarker([lat,lng],{radius:9,color:'#fff',weight:2,fillColor:'#3b82f6',fillOpacity:1}).addTo(map);
+}
+
 applyFilter('all');
 
 map.on('click',function(){
@@ -148,13 +153,12 @@ window.addEventListener('message',function(e){
   try{
     var d=JSON.parse(e.data);
     if(d.type==='filter')applyFilter(d.value);
-    if(d.type==='locate'){
-      map.setView([d.lat,d.lng],12);
-      if(window._locDot)window._locDot.remove();
-      window._locDot=L.circleMarker([d.lat,d.lng],{radius:9,color:'#fff',weight:2,fillColor:'#3b82f6',fillOpacity:1}).addTo(map);
-    }
+    if(d.type==='locate')doLocate(d.lat,d.lng);
   }catch(e){}
 });
+
+/* Signal React-Native that the map is fully ready */
+post({type:'ready'});
 <\/script>
 </body></html>`;
 }
@@ -168,30 +172,46 @@ interface Props {
 }
 
 export default function TourismMapWebView({ spots, activeFilter, onSelect, onDeselect, centerCoords }: Props) {
-  const wvRef      = useRef<WebView>(null);
-  const html       = buildHTML(spots);
-  const prevFilter = useRef("all");
+  const wvRef         = useRef<WebView>(null);
+  const html          = buildHTML(spots);
+  const prevFilter    = useRef("all");
+  const isReady       = useRef(false);
+  const pendingLocate = useRef<{ lat: number; lng: number } | null>(null);
+
+  function injectLocate(lat: number, lng: number) {
+    wvRef.current?.injectJavaScript(`doLocate(${lat},${lng});true;`);
+  }
 
   useEffect(() => {
     if (prevFilter.current === activeFilter) return;
     prevFilter.current = activeFilter;
-    wvRef.current?.injectJavaScript(`applyFilter(${JSON.stringify(activeFilter)});true;`);
+    if (isReady.current) {
+      wvRef.current?.injectJavaScript(`applyFilter(${JSON.stringify(activeFilter)});true;`);
+    }
   }, [activeFilter]);
 
   useEffect(() => {
     if (!centerCoords) return;
-    const { lat, lng } = centerCoords;
-    wvRef.current?.injectJavaScript(`
-      map.setView([${lat},${lng}],13);
-      if(window._locDot)window._locDot.remove();
-      window._locDot=L.circleMarker([${lat},${lng}],{radius:9,color:'#fff',weight:2,fillColor:'#3b82f6',fillOpacity:1}).addTo(map);
-      true;
-    `);
-  }, [centerCoords]);
+    if (isReady.current) {
+      injectLocate(centerCoords.lat, centerCoords.lng);
+    } else {
+      pendingLocate.current = centerCoords;
+    }
+  }, [centerCoords]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleMessage(e: WebViewMessageEvent) {
     try {
       const data = JSON.parse(e.nativeEvent.data) as { type: string; id?: string };
+      if (data.type === "ready") {
+        isReady.current = true;
+        if (pendingLocate.current) {
+          injectLocate(pendingLocate.current.lat, pendingLocate.current.lng);
+          pendingLocate.current = null;
+        }
+        if (prevFilter.current !== "all") {
+          wvRef.current?.injectJavaScript(`applyFilter(${JSON.stringify(prevFilter.current)});true;`);
+        }
+      }
       if (data.type === "select" && data.id) onSelect(data.id);
       if (data.type === "deselect")           onDeselect();
     } catch {}

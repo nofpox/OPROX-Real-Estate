@@ -1,6 +1,7 @@
 /**
  * TourismMapWebView — web shim (Metro picks .web.tsx automatically).
  * Uses <iframe srcdoc> instead of react-native-webview.
+ * Ready-gate: waits for {type:"ready"} from iframe before sending locate/filter.
  */
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
@@ -60,9 +61,12 @@ function addMarker(spot){
   m.addTo(map);label.addTo(map);markers[spot.id]={m:m,l:label};
 }
 function applyFilter(typeId){Object.values(markers).forEach(function(p){map.removeLayer(p.m);map.removeLayer(p.l);});markers={};selId=null;var list=typeId==='all'?ALL:ALL.filter(function(s){return s.type===typeId;});list.forEach(addMarker);}
+function doLocate(lat,lng){map.setView([lat,lng],13);if(window._locDot)window._locDot.remove();window._locDot=L.circleMarker([lat,lng],{radius:9,color:'#fff',weight:2,fillColor:'#3b82f6',fillOpacity:1}).addTo(map);}
 applyFilter('all');
 map.on('click',function(){if(selId&&markers[selId]){var el=markers[selId].m.getElement();if(el)el.querySelector('.cd').classList.remove('sel');}selId=null;post({type:'deselect'});});
-window.addEventListener('message',function(e){try{var d=JSON.parse(e.data);if(d.type==='filter')applyFilter(d.value);if(d.type==='locate'){map.setView([d.lat,d.lng],13);if(window._locDot)window._locDot.remove();window._locDot=L.circleMarker([d.lat,d.lng],{radius:9,color:'#fff',weight:2,fillColor:'#3b82f6',fillOpacity:1}).addTo(map);}}catch(e){}});
+window.addEventListener('message',function(e){try{var d=JSON.parse(e.data);if(d.type==='filter')applyFilter(d.value);if(d.type==='locate')doLocate(d.lat,d.lng);}catch(e){}});
+/* Signal parent that map is ready */
+post({type:'ready'});
 <\/script>
 </body></html>`;
 }
@@ -76,27 +80,49 @@ interface Props {
 }
 
 export default function TourismMapWebView({ spots, activeFilter, onSelect, onDeselect, centerCoords }: Props) {
-  const iframeRef  = useRef<HTMLIFrameElement>(null);
-  const html       = buildHTML(spots);
-  const prevFilter = useRef("all");
+  const iframeRef     = useRef<HTMLIFrameElement>(null);
+  const html          = buildHTML(spots);
+  const prevFilter    = useRef("all");
+  const isReady       = useRef(false);
+  const pendingLocate = useRef<{ lat: number; lng: number } | null>(null);
+
+  function sendLocate(lat: number, lng: number) {
+    iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ type: "locate", lat, lng }), "*");
+  }
 
   useEffect(() => {
     if (prevFilter.current === activeFilter) return;
     prevFilter.current = activeFilter;
-    iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ type: "filter", value: activeFilter }), "*");
+    if (isReady.current) {
+      iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ type: "filter", value: activeFilter }), "*");
+    }
   }, [activeFilter]);
 
   useEffect(() => {
     if (!centerCoords) return;
-    iframeRef.current?.contentWindow?.postMessage(
-      JSON.stringify({ type: "locate", lat: centerCoords.lat, lng: centerCoords.lng }), "*"
-    );
-  }, [centerCoords]);
+    if (isReady.current) {
+      sendLocate(centerCoords.lat, centerCoords.lng);
+    } else {
+      pendingLocate.current = centerCoords;
+    }
+  }, [centerCoords]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     function onMsg(e: MessageEvent) {
       try {
         const data = JSON.parse(e.data as string) as { type: string; id?: string };
+        if (data.type === "ready") {
+          isReady.current = true;
+          if (pendingLocate.current) {
+            sendLocate(pendingLocate.current.lat, pendingLocate.current.lng);
+            pendingLocate.current = null;
+          }
+          if (prevFilter.current !== "all") {
+            iframeRef.current?.contentWindow?.postMessage(
+              JSON.stringify({ type: "filter", value: prevFilter.current }), "*"
+            );
+          }
+        }
         if (data.type === "select" && data.id) onSelect(data.id);
         if (data.type === "deselect")           onDeselect();
       } catch {}
