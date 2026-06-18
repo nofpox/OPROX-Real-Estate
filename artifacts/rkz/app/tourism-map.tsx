@@ -146,13 +146,6 @@ export default function TourismMapScreen() {
             <Text style={s.headerTitle}>السياحة في السعودية</Text>
             <Text style={s.headerSub}>اكتشف المعالم والوجهات</Text>
           </View>
-          <Pressable
-            style={s.loginBtn}
-            onPress={() => { clearAppMode(); router.replace("/login" as never); }}
-          >
-            <Text style={s.loginText}>دخول</Text>
-            <MaterialIcons name="person" size={14} color={BG} />
-          </Pressable>
         </View>
 
         {/* Filter pills */}
