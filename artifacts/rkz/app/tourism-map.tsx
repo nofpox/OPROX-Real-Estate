@@ -19,25 +19,26 @@ import { useApp } from "@/context/AppContext";
 import TourismMapWebView, { type TouristSpot } from "@/components/TourismMapWebView";
 
 // ── Saudi tourist spots ──────────────────────────────────────────────────────
+// Coordinates verified via OpenStreetMap Nominatim geocoding
 const SPOTS: TouristSpot[] = [
-  { id:"t1",  type:"mosque",        nameAr:"المسجد الحرام",          city:"مكة المكرمة",   lat:21.4225, lng:39.8262, desc:"أقدس المساجد في الإسلام، يستقبل ملايين الحجاج سنوياً" },
-  { id:"t2",  type:"mosque",        nameAr:"المسجد النبوي",          city:"المدينة المنورة",lat:24.4672, lng:39.6111, desc:"ثاني أقدس المساجد في الإسلام" },
-  { id:"t3",  type:"mosque",        nameAr:"مسجد قباء",              city:"المدينة المنورة",lat:24.4399, lng:39.6170, desc:"أول مسجد بُني في الإسلام" },
-  { id:"t4",  type:"heritage",      nameAr:"العُلا — مدائن صالح",   city:"العلا",          lat:26.7744, lng:37.9563, desc:"منحوتات صخرية عمرها أكثر من 2000 عام" },
-  { id:"t5",  type:"heritage",      nameAr:"الدرعية — حي الطريف",   city:"الرياض",         lat:24.7386, lng:46.5736, desc:"مهد الدولة السعودية — تراث عالمي يونسكو" },
-  { id:"t6",  type:"heritage",      nameAr:"حصن مسمك",               city:"الرياض",         lat:24.6877, lng:46.7136, desc:"رمز تاريخي لمعركة استرداد الرياض" },
-  { id:"t7",  type:"nature",        nameAr:"وادي دسم",               city:"تبوك",           lat:28.2005, lng:36.9246, desc:"وادٍ بركاني مذهل بصخوره البازلتية السوداء" },
-  { id:"t8",  type:"nature",        nameAr:"عيون الجواء",             city:"الأحساء",        lat:25.3566, lng:49.5866, desc:"ينابيع طبيعية دافئة وسط النخيل" },
-  { id:"t9",  type:"nature",        nameAr:"شعيب الأحساء",           city:"الأحساء",        lat:25.2833, lng:49.6166, desc:"المنطقة الزراعية الأكبر في المملكة" },
-  { id:"t10", type:"nature",        nameAr:"منتزه عسير الوطني",      city:"أبها",           lat:18.2166, lng:42.5250, desc:"جبال خضراء وضباب ومناظر خلابة" },
-  { id:"t11", type:"nature",        nameAr:"جبال الطائف — الشفا",    city:"الطائف",         lat:21.2193, lng:40.3492, desc:"منتجع صيفي محاط بحقول الورد الطائفي" },
-  { id:"t12", type:"entertainment", nameAr:"بوليفارد الرياض سيتي",   city:"الرياض",         lat:24.7721, lng:46.7385, desc:"أضخم وجهة ترفيهية في الرياض" },
-  { id:"t13", type:"entertainment", nameAr:"كيان — جدة",             city:"جدة",            lat:21.5322, lng:39.1756, desc:"مول ترفيهي عملاق على البحر الأحمر" },
-  { id:"t14", type:"entertainment", nameAr:"قرية موسم الرياض",       city:"الرياض",         lat:24.7742, lng:46.7402, desc:"فعاليات وعروض وثقافة طوال العام" },
-  { id:"t15", type:"entertainment", nameAr:"نيوم — ذا لاين",         city:"تبوك",           lat:27.8350, lng:35.5500, desc:"مدينة المستقبل على خليج العقبة" },
-  { id:"t16", type:"hotel",         nameAr:"كورنيش جدة",             city:"جدة",            lat:21.5169, lng:39.1287, desc:"كيلومترات من الواجهة البحرية والفنادق الراقية" },
-  { id:"t17", type:"hotel",         nameAr:"البحر الأحمر — أملج",    city:"تبوك",           lat:25.1017, lng:37.2584, desc:"شعاب مرجانية خلابة وفنادق فاخرة" },
-  { id:"t18", type:"hotel",         nameAr:"فندق ريتز كارلتون الرياض",city:"الرياض",         lat:24.6906, lng:46.6847, desc:"قصر فاخر بتصميم سعودي أصيل" },
+  { id:"t1",  type:"mosque",        nameAr:"المسجد الحرام",           city:"مكة المكرمة",    lat:21.4246, lng:39.8249, desc:"أقدس المساجد في الإسلام، يستقبل ملايين الحجاج سنوياً" },
+  { id:"t2",  type:"mosque",        nameAr:"المسجد النبوي",           city:"المدينة المنورة", lat:24.4687, lng:39.6112, desc:"ثاني أقدس المساجد في الإسلام" },
+  { id:"t3",  type:"mosque",        nameAr:"مسجد قباء",               city:"المدينة المنورة", lat:24.4394, lng:39.6175, desc:"أول مسجد بُني في الإسلام" },
+  { id:"t4",  type:"heritage",      nameAr:"العُلا — مدائن صالح",    city:"العلا",           lat:26.8047, lng:37.9493, desc:"منحوتات صخرية عمرها أكثر من 2000 عام — تراث يونسكو" },
+  { id:"t5",  type:"heritage",      nameAr:"الدرعية — حي الطريف",    city:"الرياض",          lat:24.7347, lng:46.5780, desc:"مهد الدولة السعودية — تراث عالمي يونسكو" },
+  { id:"t6",  type:"heritage",      nameAr:"قلعة المصمك",             city:"الرياض",          lat:24.6312, lng:46.7133, desc:"رمز تاريخي لمعركة استرداد الرياض عام 1902" },
+  { id:"t7",  type:"nature",        nameAr:"وادي دسم",                city:"تبوك",            lat:27.6328, lng:36.5282, desc:"وادٍ بركاني مذهل بصخوره ونقوشه النبطية" },
+  { id:"t8",  type:"nature",        nameAr:"عيون الجواء",              city:"الأحساء",         lat:25.3566, lng:49.5866, desc:"ينابيع طبيعية دافئة وسط النخيل" },
+  { id:"t9",  type:"nature",        nameAr:"واحة الأحساء",             city:"الأحساء",         lat:25.3333, lng:49.6333, desc:"أكبر واحة نخيل في العالم — تراث يونسكو" },
+  { id:"t10", type:"nature",        nameAr:"منتزه عسير الوطني",       city:"أبها",            lat:18.2164, lng:42.5044, desc:"جبال خضراء وضباب ومناظر خلابة" },
+  { id:"t11", type:"nature",        nameAr:"جبال الطائف — الشفا",     city:"الطائف",          lat:21.0694, lng:40.3119, desc:"منتجع صيفي محاط بحقول الورد الطائفي" },
+  { id:"t12", type:"entertainment", nameAr:"بوليفارد الرياض سيتي",    city:"الرياض",          lat:24.7684, lng:46.6045, desc:"أضخم وجهة ترفيهية في الرياض" },
+  { id:"t13", type:"entertainment", nameAr:"Red Sea Mall — جدة",      city:"جدة",             lat:21.6278, lng:39.1113, desc:"مركز ترفيه وتسوق على البحر الأحمر" },
+  { id:"t14", type:"entertainment", nameAr:"إستاد الملك فهد الدولي",  city:"الرياض",          lat:24.7886, lng:46.8391, desc:"أحد أكبر الملاعب في العالم ويستضيف كبرى الفعاليات" },
+  { id:"t15", type:"entertainment", nameAr:"نيوم — ذا لاين",          city:"تبوك",            lat:28.0059, lng:35.2027, desc:"مدينة المستقبل على خليج العقبة" },
+  { id:"t16", type:"hotel",         nameAr:"كورنيش جدة",              city:"جدة",             lat:21.6335, lng:39.1042, desc:"كيلومترات من الواجهة البحرية والفنادق الراقية" },
+  { id:"t17", type:"hotel",         nameAr:"البحر الأحمر — أملج",     city:"تبوك",            lat:25.2340, lng:37.4983, desc:"شعاب مرجانية خلابة وفنادق فاخرة" },
+  { id:"t18", type:"hotel",         nameAr:"فندق ريتز كارلتون الرياض", city:"الرياض",          lat:24.6771, lng:46.6251, desc:"قصر فاخر في حي السفارات بتصميم سعودي أصيل" },
 ];
 
 type FilterType = "all" | TouristSpot["type"];
