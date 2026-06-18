@@ -152,10 +152,14 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
 </style>
 </head>
 <body>
+<div id="err-box" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:rgba(220,38,38,0.92);color:#fff;padding:14px 18px;border-radius:10px;font-family:-apple-system,sans-serif;font-size:12px;max-width:280px;text-align:center;direction:ltr;"></div>
 <div id="map"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
+  var errBox = document.getElementById('err-box');
+  function showErr(msg) { if (errBox) { errBox.style.display = 'block'; errBox.textContent = 'MAP ERR: ' + msg; } }
+
   var DISTRICT_COORDS = ${coordsJson};
   var CITY_COORDS     = ${cityJson};
   var PROPS           = ${dataJson};
@@ -172,6 +176,12 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
     return n.toString();
   }
 
+  window.openCards = function(id) {
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'openCards', id: id }));
+    }
+  };
+
   /* Spiral offset so multiple properties in the same district don't overlap */
   var districtIdx = {};
   var features = PROPS.map(function(p) {
@@ -179,13 +189,15 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
     var idx = districtIdx[key] !== undefined ? districtIdx[key] : 0;
     districtIdx[key] = idx + 1;
     var base = DISTRICT_COORDS[key] || CITY_COORDS[p.city] || [24.7136, 46.6753];
-    var angle = idx * 2.399; /* golden angle in radians */
+    var angle = idx * 2.399;
     var r = idx === 0 ? 0 : 0.014 + Math.floor(idx / 5) * 0.009;
     return Object.assign({}, p, {
       lat: base[0] + Math.cos(angle) * r,
       lng: base[1] + Math.sin(angle) * r,
     });
   });
+
+  try {
 
   /* Init map centred on Saudi Arabia */
   var map = L.map('map', {
@@ -197,12 +209,6 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd', maxZoom: 18,
   }).addTo(map);
-
-  window.openCards = function(id) {
-    if (window.ReactNativeWebView) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'openCards', id: id }));
-    }
-  };
 
   features.forEach(function(p) {
     var isGold     = p.price >= 5000000 || !!p.badge;
@@ -237,6 +243,8 @@ function buildMapHtml(properties: MapProperty[], isDark: boolean): string {
       .bindPopup(popupHtml, { className: 'lf-popup', maxWidth: 260, closeButton: true })
       .addTo(map);
   });
+
+  } catch(e) { showErr(e.message || String(e)); }
 })();
 </script>
 </body>
@@ -277,7 +285,7 @@ export default function HeatmapMapView({ properties, isAr, isDark = true, onOpen
   return (
     <WebView
       ref={webRef}
-      source={{ html: htmlRef.current, baseUrl: "https://unpkg.com" }}
+      source={{ html: htmlRef.current }}
       style={styles.webview}
       originWhitelist={["*"]}
       javaScriptEnabled
