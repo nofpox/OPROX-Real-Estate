@@ -14,6 +14,7 @@ import {
 
 import { useApp } from "@/context/AppContext";
 import { logAdminEvent } from "@/hooks/useAIAssistant";
+import { useLocale } from "@/hooks/useLocale";
 
 const LOGO  = require("@/assets/images/rozoz-logo-eagle.png");
 const { width } = Dimensions.get("window");
@@ -27,6 +28,7 @@ const MUTED = "rgba(245,240,232,0.58)";
 
 export default function ModeSelectScreen() {
   const { setAppMode } = useApp();
+  const { t } = useLocale();
 
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(28)).current;
@@ -104,9 +106,7 @@ export default function ModeSelectScreen() {
         </Pressable>
 
         {/* Legal disclaimer */}
-        <Text style={s.disclaimer}>
-          إخلاء المسؤولية القانونية: هذا الدليل مخصص لأغراض إرشادية ومعلوماتية فقط، ولا تتحمل الشركة أي مسؤولية تجارية عن الخدمات المقدمة من الأطراف الثالثة.
-        </Text>
+        <Text style={s.disclaimer}>{t.explore.tourismDisclaimer}</Text>
       </Animated.View>
     </View>
   );

@@ -50,6 +50,7 @@ export const ar = {
   explore: {
     title: "استكشف السعودية",
     subtitle: "أماكن سياحية وثقافية وفعاليات",
+    tourismDisclaimer: "إخلاء المسؤولية القانونية: هذا الدليل مخصص لأغراض إرشادية ومعلوماتية فقط، ولا تتحمل الشركة أي مسؤولية تجارية عن الخدمات المقدمة من الأطراف الثالثة.",
     visitSaudi: "روح السعودية",
     visitSaudiDesc: "الدليل الرسمي للسياحة في المملكة",
     openApp: "افتح التطبيق",
@@ -502,6 +503,7 @@ export const en: Translations = {
   explore: {
     title: "Explore Saudi",
     subtitle: "Tourist, cultural sites & events",
+    tourismDisclaimer: "Legal Disclaimer: This guide is for informational and directional purposes only. The company bears no commercial liability for services provided by third parties.",
     visitSaudi: "Visit Saudi",
     visitSaudiDesc: "The official Saudi tourism guide",
     openApp: "Open App",
