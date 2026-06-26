@@ -42,6 +42,24 @@ uri = "file://attached_assets/logo_concept_3.png"
 type = "image"
 title = "esteti-in-logo-3"
 
+[[generated]]
+id = "rSa98r0G77IHgbcU8dCPS"
+uri = "file://attached_assets/logo_v2_concept_1.png"
+type = "image"
+title = "esteti-logo-arch"
+
+[[generated]]
+id = "zLSk6chIbyD2IoQvqn1qx"
+uri = "file://attached_assets/logo_v2_concept_2.png"
+type = "image"
+title = "esteti-logo-pillar"
+
+[[generated]]
+id = "C8ZhYiHjEWz0uQvArWUbU"
+uri = "file://attached_assets/logo_v2_concept_3.png"
+type = "image"
+title = "esteti-logo-key-shield"
+
 [[outputs]]
 id = "jCktAW9goz3sn4e0SeBUs"
 uri = "file://artifacts/rkz/qr.png"
@@ -323,3 +341,21 @@ id = "DTso707TmwpcV3iSa0TbN"
 uri = "file://attached_assets/logo_concept_3.png"
 type = "image"
 title = "المقترح 3 — مونوغرام E+I في إطار دائري"
+
+[[outputs]]
+id = "_PbahMF9PTcpCM9tpEDaw"
+uri = "file://attached_assets/logo_v2_concept_1.png"
+type = "image"
+title = "المقترح 1 — قوس معماري ذهبي"
+
+[[outputs]]
+id = "riPPFdqkBPu6rmyBjNz9q"
+uri = "file://attached_assets/logo_v2_concept_2.png"
+type = "image"
+title = "المقترح 2 — حرف E بأعمدة ذهبية"
+
+[[outputs]]
+id = "OjUeBPmkJn_dqZWHMGHfL"
+uri = "file://attached_assets/logo_v2_concept_3.png"
+type = "image"
+title = "المقترح 3 — مفتاح ذهبي مع درع أزرق"
