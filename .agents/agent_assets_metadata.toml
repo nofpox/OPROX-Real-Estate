@@ -24,6 +24,24 @@ uri = "file://artifacts/rkz/assets/images/icon-option-1.png"
 type = "image"
 title = "rozoz-icon-letter-R-gold"
 
+[[generated]]
+id = "iu2h9CJsVVL37cNCXPTOb"
+uri = "file://attached_assets/logo_concept_1.png"
+type = "image"
+title = "esteti-in-logo-1"
+
+[[generated]]
+id = "A_Wmyd2Q0pYQ6xXAt29ei"
+uri = "file://attached_assets/logo_concept_2.png"
+type = "image"
+title = "esteti-in-logo-2"
+
+[[generated]]
+id = "iMwLV13C7MFe15nARKa8H"
+uri = "file://attached_assets/logo_concept_3.png"
+type = "image"
+title = "esteti-in-logo-3"
+
 [[outputs]]
 id = "jCktAW9goz3sn4e0SeBUs"
 uri = "file://artifacts/rkz/qr.png"
@@ -287,3 +305,21 @@ id = "QHK9WZmOqbv5b6doV1rwB"
 uri = "file://دراسات-رزوز-محدثة.zip"
 type = "unspecified"
 title = "دراسات رزوز الثلاث — نسخة محدّثة (بدون نيوم من الشرقية + إصلاح الألوان)"
+
+[[outputs]]
+id = "YxxY5exzeyREHuhqhLpaA"
+uri = "file://attached_assets/logo_concept_1.png"
+type = "image"
+title = "المقترح 1 — حرف E مع مبنى هندسي"
+
+[[outputs]]
+id = "xejClmn7szc40Quq3jVTz"
+uri = "file://attached_assets/logo_concept_2.png"
+type = "image"
+title = "المقترح 2 — تاج من أشكال ماسية"
+
+[[outputs]]
+id = "DTso707TmwpcV3iSa0TbN"
+uri = "file://attached_assets/logo_concept_3.png"
+type = "image"
+title = "المقترح 3 — مونوغرام E+I في إطار دائري"
