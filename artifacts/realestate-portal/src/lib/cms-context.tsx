@@ -110,8 +110,8 @@ export interface SiteContent {
 
 const DEFAULTS: SiteContent = {
   branding: {
-    companyNameEn: "Rozoz Smart Solutions",
-    companyNameAr: "روزوز للحلول الذكية",
+    companyNameEn: "Esteti In Smart Solutions",
+    companyNameAr: "استيتي إن للحلول الذكية",
     taglineEn: "Premium Property Management",
     taglineAr: "إدارة عقارات متميزة",
     logoUrl: "",
@@ -182,14 +182,14 @@ const DEFAULTS: SiteContent = {
   cta: {
     headlineEn: "Ready to Maximise Your Property's Potential?",
     headlineAr: "هل أنت مستعد لتعظيم قيمة عقارك؟",
-    subtitleEn: "Get in touch with our team today and discover how Rozoz can transform your property assets into a performing investment.",
-    subtitleAr: "تواصل مع فريقنا اليوم واكتشف كيف يمكن لروزوز أن يحول أصولك العقارية إلى استثمار مثمر.",
+    subtitleEn: "Get in touch with our team today and discover how Esteti In can transform your property assets into a performing investment.",
+    subtitleAr: "تواصل مع فريقنا اليوم واكتشف كيف يمكن لاستيتي إن أن يحول أصولك العقارية إلى استثمار مثمر.",
     buttonEn: "Contact Us",
     buttonAr: "تواصل معنا",
   },
   about: {
-    titleEn: "About Rozoz Smart Solutions",
-    titleAr: "عن روزوز للحلول الذكية",
+    titleEn: "About Esteti In Smart Solutions",
+    titleAr: "عن استيتي إن للحلول الذكية",
     body: "",
     imageUrl: "",
   },
@@ -198,8 +198,8 @@ const DEFAULTS: SiteContent = {
     pageTitleEn: "Our Managed Portfolio",
     pageTitleAr: "محفظتنا المُدارة",
     subtitleEn: "Explore the properties we manage across Saudi Arabia.",
-    subtitleAr: "استعرض العقارات التي تُديرها روزوز في المملكة العربية السعودية.",
-    metaDescription: "Browse properties for sale, rent, and under professional management by Rozoz Smart Solutions.",
+    subtitleAr: "استعرض العقارات التي تُديرها استيتي إن في المملكة العربية السعودية.",
+    metaDescription: "Browse properties for sale, rent, and under professional management by Esteti In Smart Solutions.",
   },
 };
 

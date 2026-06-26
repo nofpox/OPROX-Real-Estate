@@ -48,10 +48,10 @@ export const About: React.FC = () => {
   return (
     <div className="flex flex-col w-full">
       <Helmet>
-        <title>{isRtl ? `عن روزوز | ${branding.companyNameAr}` : `About | ${branding.companyNameEn}`}</title>
+        <title>{isRtl ? `عن استيتي إن | ${branding.companyNameAr}` : `About | ${branding.companyNameEn}`}</title>
         <meta name="description" content={isRtl
-          ? 'روزوز — شركة إدارة عقارات متخصصة في فنادق ومجمعات سكنية ومرافق مؤسسية بالمملكة العربية السعودية'
-          : 'Rozoz — a specialized property management company for hotels, compounds, and corporate facilities in Saudi Arabia'} />
+          ? 'استيتي إن — شركة إدارة عقارات متخصصة في فنادق ومجمعات سكنية ومرافق مؤسسية بالمملكة العربية السعودية'
+          : 'Esteti In — a specialized property management company for hotels, compounds, and corporate facilities in Saudi Arabia'} />
       </Helmet>
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
@@ -67,8 +67,8 @@ export const About: React.FC = () => {
           </h1>
           <p className="text-white/70 text-lg max-w-2xl leading-relaxed">
             {isRtl
-              ? 'روزوز شركة متخصصة في إدارة الأصول العقارية في المملكة العربية السعودية — فنادق، مجمعات سكنية، ومرافق مؤسسية. نتولى كل شيء حتى يتركّز ملاك العقارات على ما يهمّهم.'
-              : 'Rozoz is a specialized property asset management company in Saudi Arabia — hotels, residential compounds, and corporate facilities. We handle everything so property owners can focus on what matters.'}
+              ? 'استيتي إن شركة متخصصة في إدارة الأصول العقارية في المملكة العربية السعودية — فنادق، مجمعات سكنية، ومرافق مؤسسية. نتولى كل شيء حتى يتركّز ملاك العقارات على ما يهمّهم.'
+              : 'Esteti In is a specialized property asset management company in Saudi Arabia — hotels, residential compounds, and corporate facilities. We handle everything so property owners can focus on what matters.'}
           </p>
         </div>
       </section>
@@ -88,8 +88,8 @@ export const About: React.FC = () => {
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
                 {isRtl
-                  ? 'كثير من ملاك العقارات يمتلكون أصولاً ضخمة لكنهم يفتقرون للوقت والخبرة لإدارتها بكفاءة. روزوز تسد هذه الفجوة — نُدير العقار كاملاً وندفع لك عائداً منتظماً مع تقارير شهرية شفافة.'
-                  : 'Many property owners have significant assets but lack the time or expertise to manage them efficiently. Rozoz fills this gap — we manage the property fully and deliver regular returns with transparent monthly reports.'}
+                  ? 'كثير من ملاك العقارات يمتلكون أصولاً ضخمة لكنهم يفتقرون للوقت والخبرة لإدارتها بكفاءة. استيتي إن تسد هذه الفجوة — نُدير العقار كاملاً وندفع لك عائداً منتظماً مع تقارير شهرية شفافة.'
+                  : 'Many property owners have significant assets but lack the time or expertise to manage them efficiently. Esteti In fills this gap — we manage the property fully and deliver regular returns with transparent monthly reports.'}
               </p>
               <p className="text-muted-foreground leading-relaxed">
                 {isRtl

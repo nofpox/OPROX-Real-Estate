@@ -451,7 +451,7 @@ const ar: Translations = {
     },
     fields: {
       name: "اسم العقار",
-      namePlaceholder: "فندق روزوز الرئيسي",
+      namePlaceholder: "فندق استيتي إن الرئيسي",
       type: "تصنيف العقار",
       selectType: "اختر التصنيف",
       status: "الحالة",
@@ -1188,7 +1188,7 @@ const ar: Translations = {
     systemInfo: {
       title: "معلومات النظام",
       subtitle: "بيانات الشركة المعروضة في جميع أنحاء النظام.",
-      companyName: "اسم الشركة", companyNamePlaceholder: "مثال: مجموعة روزوز للعقارات",
+      companyName: "اسم الشركة", companyNamePlaceholder: "مثال: مجموعة استيتي إن للعقارات",
       contactEmail: "البريد الإلكتروني للتواصل", contactEmailPlaceholder: "مثال: info@rozoz.com",
       contactPhone: "رقم الهاتف", contactPhonePlaceholder: "مثال: +971 50 000 0000",
       contactAddress: "العنوان", contactAddressPlaceholder: "مثال: دبي، الإمارات",

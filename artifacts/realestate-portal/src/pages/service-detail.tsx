@@ -438,8 +438,8 @@ export const ServiceDetail: React.FC = () => {
             </h2>
             <p className="text-primary-foreground/70 mb-8 max-w-lg mx-auto leading-relaxed">
               {isRtl
-                ? 'تواصل مع فريقنا اليوم لمناقشة متطلباتك وتعرّف على كيفية تحقيق روزوز لأهدافك.'
-                : 'Get in touch with our team today to discuss your requirements and see how Rozoz can deliver for you.'}
+                ? 'تواصل مع فريقنا اليوم لمناقشة متطلباتك وتعرّف على كيفية تحقيق استيتي إن لأهدافك.'
+                : 'Get in touch with our team today to discuss your requirements and see how Esteti In can deliver for you.'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild className="bg-secondary text-secondary-foreground hover:bg-secondary/90 h-12 px-8 rounded-full font-semibold">

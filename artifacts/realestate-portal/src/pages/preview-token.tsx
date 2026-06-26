@@ -10,9 +10,9 @@ import { Button } from '@/components/ui/button';
 const BASE = '/realestate-api';
 
 const PORTAL_META: Record<string, { label: string; labelAr: string; path: string }> = {
-  'rkz':       { label: 'Rozoz Real Estate Portal', labelAr: 'بوابة روزوز العقارية',  path: '/realestate/' },
-  'grand-pms': { label: 'Rozoz Dashboard',      labelAr: 'لوحة تحكم روزوز',       path: '/grand-pms/' },
-  'rkz-app':   { label: 'Rozoz Mobile App',         labelAr: 'تطبيق روزوز للجوال',    path: '/rkz/' },
+  'rkz':       { label: 'Esteti In Real Estate Portal', labelAr: 'بوابة استيتي إن العقارية',  path: '/realestate/' },
+  'grand-pms': { label: 'Esteti In Dashboard',      labelAr: 'لوحة تحكم استيتي إن',       path: '/grand-pms/' },
+  'rkz-app':   { label: 'Esteti In Mobile App',         labelAr: 'تطبيق استيتي إن للجوال',    path: '/rkz/' },
 };
 
 type Status = 'loading' | 'disclaimer' | 'entering' | 'expired' | 'revoked' | 'invalid';
@@ -53,7 +53,7 @@ const LEGAL_CLAUSES = [
     color: 'text-purple-600',
     bg: 'bg-purple-50 border-purple-200',
     title: 'حماية الحقوق الفكرية والابتكارية',
-    body: 'جميع المعلومات والتصاميم والبيانات المعروضة هي ملكية فكرية وابتكارية حصرية لشركة روزوز للحلول الذكية. يُحظر إعادة نشرها أو استخدامها لأي غرض.',
+    body: 'جميع المعلومات والتصاميم والبيانات المعروضة هي ملكية فكرية وابتكارية حصرية لشركة استيتي إن للحلول الذكية. يُحظر إعادة نشرها أو استخدامها لأي غرض.',
   },
   {
     icon: AlertTriangle,
@@ -94,7 +94,7 @@ export function PreviewToken() {
     if (!accepted || !token) return;
     setStatus('entering');
     const path = data ? (PORTAL_META[data.portal]?.path ?? '/realestate/') : '/realestate/';
-    // Rozoz PMS handles its own token consumption and creates a guest session.
+    // Esteti In PMS handles its own token consumption and creates a guest session.
     // Pass the raw token in the URL; do NOT pre-consume here.
     if (data?.portal === 'grand-pms') {
       window.location.href = `${path}?preview_token=${encodeURIComponent(token)}`;
@@ -139,7 +139,7 @@ export function PreviewToken() {
     const isRevoked = status === 'revoked';
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4" dir="rtl">
-        <Helmet><title>رابط غير صالح | روزوز</title></Helmet>
+        <Helmet><title>رابط غير صالح | استيتي إن</title></Helmet>
         <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl space-y-4">
           <div className="w-14 h-14 rounded-full bg-red-900/40 flex items-center justify-center mx-auto">
             {isRevoked
@@ -177,7 +177,7 @@ export function PreviewToken() {
   // ── Main disclaimer screen ────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-900 px-4 py-8 flex flex-col items-center justify-center" dir="rtl">
-      <Helmet><title>شروط الوصول المؤقت | روزوز</title></Helmet>
+      <Helmet><title>شروط الوصول المؤقت | استيتي إن</title></Helmet>
 
       <div className="w-full max-w-md space-y-4">
 
@@ -265,7 +265,7 @@ export function PreviewToken() {
         </button>
 
         <p className="text-center text-[10px] text-slate-600">
-          روزوز للحلول الذكية — جميع الحقوق محفوظة © {new Date().getFullYear()}
+          استيتي إن للحلول الذكية — جميع الحقوق محفوظة © {new Date().getFullYear()}
         </p>
       </div>
     </div>

@@ -4,7 +4,7 @@ import React, { useRef } from "react";
 import {
   Animated,
   Dimensions,
-  Image,
+  
   Pressable,
   StatusBar,
   StyleSheet,
@@ -15,13 +15,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useApp } from "@/context/AppContext";
 
-const LOGO  = require("@/assets/images/rozoz-logo-eagle.png");
+
 const NAVY  = "#0F2040";
 const GOLD  = "#C9A84C";
 const WHITE = "#F5F0E8";
 const { width } = Dimensions.get("window");
-const LOGO_W = Math.min(width * 0.52, 220);
-const LOGO_H = Math.round(LOGO_W / 2.6);
 
 const ROLES = [
   {
@@ -72,9 +70,9 @@ export default function GateScreen() {
     <View style={[s.root, { paddingTop: insets.top + 28, paddingBottom: insets.bottom + 24 }]}>
       <StatusBar barStyle="light-content" backgroundColor={NAVY} />
 
-      {/* Logo */}
+      {/* Brand name */}
       <Animated.View style={{ opacity: fadeAnim, alignItems: "center", marginBottom: 8 }}>
-        <Image source={LOGO} style={{ width: LOGO_W, height: LOGO_H }} resizeMode="contain" />
+        <Text style={{ color: GOLD, fontSize: 30, fontWeight: "800", letterSpacing: 3 }}>ESTETI IN</Text>
       </Animated.View>
 
       {/* Heading */}

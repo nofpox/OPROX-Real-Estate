@@ -24,16 +24,11 @@ export default function Login({ onLogin }: LoginProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A1628] p-6 gap-8">
 
-      {/* Official Rozoz Logo */}
-      <div className="flex flex-col items-center gap-4">
-        <img
-          src={`${import.meta.env.BASE_URL}rozoz-logo.png`}
-          alt="Rozoz"
-          className="h-28 w-auto object-contain"
-          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
-        />
+      {/* Brand name */}
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-[#C9A84C] text-3xl font-extrabold tracking-[4px]">ESTETI IN</span>
         <p className="text-xs text-white/40 tracking-[0.25em] uppercase">
-          Smart Solutions · روزوز للحلول الذكية
+          Smart Solutions · استيتي إن للحلول الذكية
         </p>
       </div>
 
@@ -68,11 +63,11 @@ export default function Login({ onLogin }: LoginProps) {
       </button>
 
       <p className="text-white/20 text-[11px] tracking-widest uppercase">
-        Smart Solutions · روزوز للحلول الذكية
+        Smart Solutions · استيتي إن للحلول الذكية
       </p>
 
       <p className="text-white/15 text-[10px] tracking-wide">
-        © {new Date().getFullYear()} جميع الحقوق محفوظة لـ Rozoz
+        © {new Date().getFullYear()} جميع الحقوق محفوظة لـ Esteti In
       </p>
     </div>
   );

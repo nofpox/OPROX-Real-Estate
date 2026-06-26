@@ -8,14 +8,14 @@ const SECTIONS = [
   {
     ar: "الموافقة على الشروط",
     en: "Acceptance of Terms",
-    body_ar: 'بمجرد قيام المستخدم بالتسجيل في منصة "رزوز" واستخدامها، فإن ذلك يعد موافقة صريحة على جميع بنود هذه الشروط والأحكام. وفي حال عدم الموافقة، يجب على المستخدم الامتناع عن استخدام المنصة.',
-    body_en: 'By registering and using the ROZOZ platform, the user expressly agrees to all these Terms & Conditions. If you do not agree, you must refrain from using the platform.',
+    body_ar: 'بمجرد قيام المستخدم بالتسجيل في منصة "استيتي إن" واستخدامها، فإن ذلك يعد موافقة صريحة على جميع بنود هذه الشروط والأحكام. وفي حال عدم الموافقة، يجب على المستخدم الامتناع عن استخدام المنصة.',
+    body_en: 'By registering and using the ESTETI IN platform, the user expressly agrees to all these Terms & Conditions. If you do not agree, you must refrain from using the platform.',
   },
   {
     ar: "طبيعة الخدمة",
     en: "Nature of Service",
-    body_ar: "توفر رزوز منصة إلكترونية لإدارة العقارات وتوثيق العقود الإيجارية وإرسال التنبيهات المتعلقة بالدفع. تعمل الشركة كوسيط تقني فقط ولا تتحمل أي مسؤولية قانونية أو تعاقدية تنشأ بين المؤجر والمستأجر أو البائع والمشتري.",
-    body_en: "ROZOZ provides an electronic platform for property management, lease documentation and payment notifications. The company acts as a technology intermediary only and bears no legal or contractual liability arising between landlord and tenant or seller and buyer.",
+    body_ar: "توفر استيتي إن منصة إلكترونية لإدارة العقارات وتوثيق العقود الإيجارية وإرسال التنبيهات المتعلقة بالدفع. تعمل الشركة كوسيط تقني فقط ولا تتحمل أي مسؤولية قانونية أو تعاقدية تنشأ بين المؤجر والمستأجر أو البائع والمشتري.",
+    body_en: "ESTETI IN provides an electronic platform for property management, lease documentation and payment notifications. The company acts as a technology intermediary only and bears no legal or contractual liability arising between landlord and tenant or seller and buyer.",
   },
   {
     ar: "إنشاء الحساب والالتزامات",
@@ -38,8 +38,8 @@ const SECTIONS = [
   {
     ar: "حقوق الملكية الفكرية",
     en: "Intellectual Property",
-    body_ar: 'جميع الحقوق المتعلقة بمنصة "رزوز" من تصميم وشفرة برمجية وشعار ومحتوى هي ملك حصري للشركة. يحظر نسخ أو إعادة توزيع أو تعديل أي جزء من المنصة دون الحصول على موافقة خطية مسبقة.',
-    body_en: 'All rights relating to the ROZOZ platform — design, code, logo and content — are the exclusive property of the company. Copying, redistributing or modifying any part of the platform without prior written consent is strictly prohibited.',
+    body_ar: 'جميع الحقوق المتعلقة بمنصة "استيتي إن" من تصميم وشفرة برمجية وشعار ومحتوى هي ملك حصري للشركة. يحظر نسخ أو إعادة توزيع أو تعديل أي جزء من المنصة دون الحصول على موافقة خطية مسبقة.',
+    body_en: 'All rights relating to the ESTETI IN platform — design, code, logo and content — are the exclusive property of the company. Copying, redistributing or modifying any part of the platform without prior written consent is strictly prohibited.',
   },
   {
     ar: "إنهاء وإيقاف الحساب",
@@ -63,7 +63,7 @@ export const Terms: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{isRtl ? 'الشروط والأحكام — رزوز' : 'Terms & Conditions — ROZOZ'}</title>
+        <title>{isRtl ? 'الشروط والأحكام — استيتي إن' : 'Terms & Conditions — ESTETI IN'}</title>
       </Helmet>
 
       {/* Hero */}
@@ -71,7 +71,7 @@ export const Terms: React.FC = () => {
         <div className="container mx-auto max-w-3xl text-center">
           <div className="inline-flex items-center gap-2 bg-secondary/20 text-secondary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-            {isRtl ? 'رزوز · ROZOZ' : 'ROZOZ · رزوز'}
+            {isRtl ? 'استيتي إن · ESTETI IN' : 'ESTETI IN · استيتي إن'}
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
             {isRtl ? 'الشروط والأحكام' : 'Terms & Conditions'}

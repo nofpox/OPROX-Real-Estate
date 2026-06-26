@@ -631,7 +631,7 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
             label={t.admin.appNameLabel}
             value={draft.branding.appName}
             onChange={(v) => updateBranding("appName", v)}
-            placeholder="Rozoz"
+            placeholder="Esteti In"
             isAr={isAr}
           />
 
@@ -1179,13 +1179,13 @@ function AdminPanel({ authorizedPin }: { authorizedPin: string }) {
                 label={isAr ? "اسم الشركة (إنجليزي)" : "Company Name (EN)"}
                 value={draftPortal.brandingNameEn}
                 onChange={(v) => setDraftPortal(d => d ? { ...d, brandingNameEn: v } : d)}
-                placeholder="Rozoz Smart Solutions"
+                placeholder="Esteti In Smart Solutions"
               />
               <FieldRow
                 label={isAr ? "اسم الشركة (عربي)" : "Company Name (AR)"}
                 value={draftPortal.brandingNameAr}
                 onChange={(v) => setDraftPortal(d => d ? { ...d, brandingNameAr: v } : d)}
-                placeholder="روزوز للحلول الذكية"
+                placeholder="استيتي إن للحلول الذكية"
                 isAr
               />
               <View style={[styles.divider, { marginVertical: 12 }]} />

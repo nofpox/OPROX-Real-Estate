@@ -19,7 +19,7 @@ const SECTIONS = [
   {
     ar: "مقدمة",
     en: "Introduction",
-    body: "تلتزم منصة رزوز بحماية خصوصية مستخدميها. توضّح هذه السياسة كيفية جمع بياناتك واستخدامها والحفاظ عليها عند استخدام تطبيقنا.\n\nROZOZ is committed to protecting your privacy. This policy explains how we collect, use and safeguard your data when you use our application.",
+    body: "تلتزم منصة استيتي إن بحماية خصوصية مستخدميها. توضّح هذه السياسة كيفية جمع بياناتك واستخدامها والحفاظ عليها عند استخدام تطبيقنا.\n\nESTETI IN is committed to protecting your privacy. This policy explains how we collect, use and safeguard your data when you use our application.",
   },
   {
     ar: "البيانات التي نجمعها",
@@ -49,7 +49,7 @@ const SECTIONS = [
   {
     ar: "التواصل معنا",
     en: "Contact Us",
-    body: "لأي استفسار بخصوص سياسة الخصوصية تواصل معنا عبر التطبيق أو عبر البريد الإلكتروني الرسمي لمنصة رزوز.\n\nFor any privacy-related enquiries contact us through the app or via ROZOZ's official email address.",
+    body: "لأي استفسار بخصوص سياسة الخصوصية تواصل معنا عبر التطبيق أو عبر البريد الإلكتروني الرسمي لمنصة استيتي إن.\n\nFor any privacy-related enquiries contact us through the app or via ESTETI IN's official email address.",
   },
 ];
 
@@ -74,7 +74,7 @@ export default function PrivacyScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={s.badge}>
-          <Text style={s.badgeText}>رزوز · ROZOZ</Text>
+          <Text style={s.badgeText}>استيتي إن · ESTETI IN</Text>
         </View>
         <Text style={s.lastUpdated}>آخر تحديث: يناير 2025 · Last updated: January 2025</Text>
 

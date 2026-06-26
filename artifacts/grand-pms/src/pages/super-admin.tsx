@@ -232,7 +232,7 @@ function TenantFormDialog({
               </div>
               <div className="space-y-1.5">
                 <Label>Logo Sub Word</Label>
-                <Input value={logoSub} placeholder="Rozoz"
+                <Input value={logoSub} placeholder="Esteti In"
                   onChange={(e) => setLogoSub(e.target.value)} />
               </div>
               {!editing && (
@@ -525,11 +525,11 @@ function TenantConfigPanel({ tenant, onClose }: { tenant: Tenant; onClose: () =>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label>Main Word</Label>
-                    <Input value={logoText} onChange={(e) => { setLogoText(e.target.value); setDirty(true); }} placeholder="روزوز" className="font-serif" />
+                    <Input value={logoText} onChange={(e) => { setLogoText(e.target.value); setDirty(true); }} placeholder="استيتي إن" className="font-serif" />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Sub Word</Label>
-                    <Input value={logoSub} onChange={(e) => { setLogoSub(e.target.value); setDirty(true); }} placeholder="Rozoz" />
+                    <Input value={logoSub} onChange={(e) => { setLogoSub(e.target.value); setDirty(true); }} placeholder="Esteti In" />
                   </div>
                 </div>
                 <div className="rounded-lg border border-dashed p-4 space-y-3">
@@ -853,7 +853,7 @@ export default function SuperAdminPage() {
   }
 
   const logoDisplay = logoText || data?.logoText || "Grand";
-  const logoSubDisplay = logoSub || data?.logoSub || "Rozoz";
+  const logoSubDisplay = logoSub || data?.logoSub || "Esteti In";
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -1018,12 +1018,12 @@ export default function SuperAdminPage() {
                     <div className="space-y-1.5">
                       <Label htmlFor="propertyName">Property Name</Label>
                       <Input id="propertyName" value={propertyName}
-                        onChange={(e) => { setPropertyName(e.target.value); setDirty(true); }} placeholder="روزوز للحلول الذكية" />
+                        onChange={(e) => { setPropertyName(e.target.value); setDirty(true); }} placeholder="استيتي إن للحلول الذكية" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
                         <Label>Logo — Main Word</Label>
-                        <Input value={logoText} onChange={(e) => { setLogoText(e.target.value); setDirty(true); }} placeholder="روزوز" className="font-serif" />
+                        <Input value={logoText} onChange={(e) => { setLogoText(e.target.value); setDirty(true); }} placeholder="استيتي إن" className="font-serif" />
                       </div>
                       <div className="space-y-1.5">
                         <Label>Logo — Sub Word</Label>
@@ -1036,7 +1036,7 @@ export default function SuperAdminPage() {
                           ) : (
                             <>
                               <span className="font-serif font-bold text-foreground">{logoText || "Grand"}</span>{" "}
-                              <span className="font-medium text-muted-foreground">{logoSub || "Rozoz"}</span>
+                              <span className="font-medium text-muted-foreground">{logoSub || "Esteti In"}</span>
                             </>
                           )}
                           <span className="text-xs text-muted-foreground">preview</span>
@@ -1059,7 +1059,7 @@ export default function SuperAdminPage() {
                             ) : (
                               <span className="text-xs">
                                 <span className="font-serif font-bold text-foreground">{logoText || "Grand"}</span>
-                                <span className="text-muted-foreground ml-1">{logoSub || "Rozoz"}</span>
+                                <span className="text-muted-foreground ml-1">{logoSub || "Esteti In"}</span>
                               </span>
                             )}
                           </div>

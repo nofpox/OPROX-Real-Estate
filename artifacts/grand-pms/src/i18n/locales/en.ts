@@ -449,7 +449,7 @@ const en = {
     },
     fields: {
       name: "Property Name",
-      namePlaceholder: "Rozoz",
+      namePlaceholder: "Esteti In",
       type: "Property Type",
       selectType: "Select type",
       status: "Status",

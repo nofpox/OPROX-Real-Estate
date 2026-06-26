@@ -463,9 +463,9 @@ export type Tenant = { id: number; slug: string; name: string; status: string; c
 export type CreateTenantInput = Partial<Tenant>;
 
 const LOCAL_PMS_USERS: PmsUser[] = [
-  { id: 1, username: "admin", displayName: "Nada Yousef", email: "admin@rozozpms.com", role: "manager", status: "active", isActive: true, createdAt: new Date().toISOString() },
-  { id: 2, username: "manager", displayName: "Sara Al-Qahtani", email: "manager@rozozpms.com", role: "supervisor", status: "active", isActive: true, createdAt: new Date().toISOString() },
-  { id: 3, username: "worker", displayName: "Khalid Al-Dosari", email: "worker@rozozpms.com", role: "maintenance", status: "active", isActive: true, createdAt: new Date().toISOString() },
+  { id: 1, username: "admin", displayName: "Nada Yousef", email: "admin@estetiин.com", role: "manager", status: "active", isActive: true, createdAt: new Date().toISOString() },
+  { id: 2, username: "manager", displayName: "Sara Al-Qahtani", email: "manager@estetiин.com", role: "supervisor", status: "active", isActive: true, createdAt: new Date().toISOString() },
+  { id: 3, username: "worker", displayName: "Khalid Al-Dosari", email: "worker@estetiин.com", role: "maintenance", status: "active", isActive: true, createdAt: new Date().toISOString() },
 ];
 
 const LOCAL_CUSTOM_ROLES: CustomRole[] = [];
@@ -476,7 +476,7 @@ const LOCAL_SERVICE_CATEGORIES: ServiceCategory[] = [
   { id: 3, slug: "cleaning", label: "Cleaning", icon: "brush", color: "green", isActive: true, responseTimeMin: 30, sortOrder: 3 },
 ];
 const LOCAL_TENANTS: Tenant[] = [
-  { id: 1, slug: "rozozpms", name: "Rozoz", status: "active", createdAt: new Date().toISOString() },
+  { id: 1, slug: "rozozpms", name: "Esteti In", status: "active", createdAt: new Date().toISOString() },
 ];
 
 export function useListUsers(_?: any) {

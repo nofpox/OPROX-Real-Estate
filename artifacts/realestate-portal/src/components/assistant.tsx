@@ -170,7 +170,7 @@ export const SmartAssistant: React.FC = () => {
     setInquiryStep('pick_type');
     setMessages(prev => [
       ...prev,
-      { id: `u-${Date.now()}`, from: 'user', text: T('Looking to partner with Rozoz', 'مهتم بالتعاون مع روزوز') },
+      { id: `u-${Date.now()}`, from: 'user', text: T('Looking to partner with Esteti In', 'مهتم بالتعاون مع استيتي إن') },
     ]);
     botTyping(700);
     pushMsg({
@@ -626,7 +626,7 @@ export const SmartAssistant: React.FC = () => {
       ),
       quickReplies: [
         { label: T('🏠 Find a property', '🏠 أبحث عن عقار'), action: startSearchWizard },
-        { label: T('Looking to partner with Rozoz', 'مهتم بالتعاون مع روزوز'), action: startInquiryWizard },
+        { label: T('Looking to partner with Esteti In', 'مهتم بالتعاون مع استيتي إن'), action: startInquiryWizard },
         { label: T("I'm an existing client", 'أنا عميل حالي'), action: showInvestorFlow },
         { label: T('Contact our team', 'تواصل مع الفريق'), action: showContactFlow },
       ],
@@ -852,7 +852,7 @@ export const SmartAssistant: React.FC = () => {
               {isRtl ? 'المساعد الذكي' : 'Smart Assistant'}
             </p>
             <p className="text-xs text-white/50 leading-tight">
-              {isRtl ? 'روزوز للحلول الذكية' : 'Rozoz Smart Solutions'}
+              {isRtl ? 'استيتي إن للحلول الذكية' : 'Esteti In Smart Solutions'}
             </p>
           </div>
           <button

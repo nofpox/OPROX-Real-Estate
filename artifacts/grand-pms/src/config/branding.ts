@@ -5,10 +5,10 @@
 
 const branding = {
   // The full name displayed as the dashboard hero heading and in the sidebar.
-  propertyName: "روزوز للحلول الذكية",
+  propertyName: "استيتي إن للحلول الذكية",
 
   // Sidebar logo — two-part text: large serif word + smaller sans word.
-  logoText: "روزوز",
+  logoText: "استيتي إن",
   logoSub: "للحلول الذكية",
 } as const;
 

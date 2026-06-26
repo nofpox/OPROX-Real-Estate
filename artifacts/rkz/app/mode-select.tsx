@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 import {
   Animated,
   Dimensions,
-  Image,
+  
   Pressable,
   StatusBar,
   StyleSheet,
@@ -16,10 +16,7 @@ import { useApp } from "@/context/AppContext";
 import { logAdminEvent } from "@/hooks/useAIAssistant";
 import { useLocale } from "@/hooks/useLocale";
 
-const LOGO  = require("@/assets/images/rozoz-logo-eagle.png");
 const { width } = Dimensions.get("window");
-const LOGO_W = Math.min(width * 0.60, 240);
-const LOGO_H = Math.round(LOGO_W / 2.5);
 
 const BG    = "#0A0E1A";
 const GOLD  = "#C9A84C";
@@ -62,16 +59,12 @@ export default function ModeSelectScreen() {
           { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
         ]}
       >
-        {/* Logo */}
-        <Image
-          source={LOGO}
-          style={{ width: LOGO_W, height: LOGO_H }}
-          resizeMode="contain"
-        />
+        {/* Brand name */}
+        <Text style={{ color: GOLD, fontSize: 32, fontWeight: "800", letterSpacing: 3, marginBottom: 4 }}>ESTETI IN</Text>
 
         {/* Title */}
         <View style={s.titleWrap}>
-          <Text style={s.welcome}>مرحبًا بك في ROZOZ</Text>
+          <Text style={s.welcome}>مرحبًا بك في ESTETI IN</Text>
           <Text style={s.subtitle}>اختر وجهتك</Text>
         </View>
 

@@ -52,7 +52,7 @@ const translations = {
     // ── General ─────────────────────────────────────────────────────────────
     'featured.title':   'Featured Properties',
     'services.title':   'Our Operational Services',
-    'footer.description': 'Rozoz Smart Solutions — Focused and precise property management across Saudi Arabia.',
+    'footer.description': 'Esteti In Smart Solutions — Focused and precise property management across Saudi Arabia.',
     'contact.title':    'Get in Touch',
     'search.placeholder': 'Search properties...',
 
@@ -62,15 +62,15 @@ const translations = {
     'cta.operational': 'Inquire for Management',
 
     // ── Listing detail ───────────────────────────────────────────────────────
-    'detail.operationalHeading':       'Under Rozoz Management',
-    'detail.operationalText':          'This property is actively managed by Rozoz Smart Solutions. Our team handles operations, staffing, maintenance, and reporting.',
+    'detail.operationalHeading':       'Under Esteti In Management',
+    'detail.operationalText':          'This property is actively managed by Esteti In Smart Solutions. Our team handles operations, staffing, maintenance, and reporting.',
     'detail.inquiry.saleHeading':      'Purchase Inquiry',
     'detail.inquiry.saleBtn':          'Send Purchase Inquiry',
     'detail.inquiry.rentHeading':      'Rental Inquiry',
     'detail.inquiry.rentBtn':          'Book a Viewing',
     'detail.inquiry.operationalHeading': 'Inquire for Management',
     'detail.inquiry.operationalBtn':   'Send Management Inquiry',
-    'detail.portalPrompt':             'Already a Rozoz client?',
+    'detail.portalPrompt':             'Already a Esteti In client?',
     'detail.portalLink':               'Sign in to your portal →',
 
     // ── Portal auth ──────────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ const translations = {
 
     // ── Portal register ───────────────────────────────────────────────────────
     'portal.registerTitle':           'Create a Client Account',
-    'portal.registerSubtitle':        'Join Rozoz to manage your properties and portfolio',
+    'portal.registerSubtitle':        'Join Esteti In to manage your properties and portfolio',
     'portal.fullName':                'Full name',
     'portal.phone':                   'Phone number',
     'portal.phoneDisclaimer':         'Your phone number is required for service updates only. We value your trust and are committed to protecting your privacy; it is at the heart of our relationship with you.',
@@ -453,7 +453,7 @@ const translations = {
     // ── General ─────────────────────────────────────────────────────────────
     'featured.title':     'عقارات مميزة',
     'services.title':     'خدماتنا التشغيلية',
-    'footer.description': 'روزوز للحلول الذكية — إدارة عقارات بتركيز ودقة في جميع أنحاء المملكة.',
+    'footer.description': 'استيتي إن للحلول الذكية — إدارة عقارات بتركيز ودقة في جميع أنحاء المملكة.',
     'contact.title':      'تواصل معنا',
     'search.placeholder': 'ابحث عن العقارات...',
 
@@ -463,15 +463,15 @@ const translations = {
     'cta.operational': 'استفسار عن الإدارة',
 
     // ── Listing detail ───────────────────────────────────────────────────────
-    'detail.operationalHeading':       'تحت إدارة روزوز',
-    'detail.operationalText':          'يُدار هذا العقار بفعالية من قبل روزوز للحلول الذكية. يتولى فريقنا العمليات، التوظيف، الصيانة، وتقديم التقارير.',
+    'detail.operationalHeading':       'تحت إدارة استيتي إن',
+    'detail.operationalText':          'يُدار هذا العقار بفعالية من قبل استيتي إن للحلول الذكية. يتولى فريقنا العمليات، التوظيف، الصيانة، وتقديم التقارير.',
     'detail.inquiry.saleHeading':      'استفسار شراء',
     'detail.inquiry.saleBtn':          'إرسال استفسار الشراء',
     'detail.inquiry.rentHeading':      'استفسار تأجير',
     'detail.inquiry.rentBtn':          'حجز موعد معاينة',
     'detail.inquiry.operationalHeading': 'استفسار للإدارة',
     'detail.inquiry.operationalBtn':   'إرسال استفسار الإدارة',
-    'detail.portalPrompt':             'هل أنت عميل لروزوز؟',
+    'detail.portalPrompt':             'هل أنت عميل لاستيتي إن؟',
     'detail.portalLink':               'تسجيل الدخول إلى بوابتك ←',
 
     // ── Portal auth ──────────────────────────────────────────────────────────
@@ -503,7 +503,7 @@ const translations = {
 
     // ── Portal register ───────────────────────────────────────────────────────
     'portal.registerTitle':           'إنشاء حساب عميل',
-    'portal.registerSubtitle':        'انضم إلى روزوز لإدارة عقاراتك ومحفظتك',
+    'portal.registerSubtitle':        'انضم إلى استيتي إن لإدارة عقاراتك ومحفظتك',
     'portal.fullName':                'الاسم الكامل',
     'portal.phone':                   'رقم الجوال',
     'portal.phoneDisclaimer':         'رقم الجوال مطلوب لتنبيهات الخدمة فقط؛ نعتز بثقتكم ونلتزم بحماية خصوصية بياناتكم، فهي جوهر علاقتنا بكم.',

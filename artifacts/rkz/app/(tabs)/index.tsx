@@ -198,7 +198,7 @@ export default function DiscoveryMapScreen() {
       if (ok) doLogout();
       return;
     }
-    Alert.alert("تسجيل الخروج", "هل تريد تسجيل الخروج من ROZOZ؟", [
+    Alert.alert("تسجيل الخروج", "هل تريد تسجيل الخروج من ESTETI IN؟", [
       { text: "إلغاء", style: "cancel" },
       { text: "خروج", style: "destructive", onPress: doLogout },
     ]);

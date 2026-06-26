@@ -93,14 +93,12 @@ export function WelcomeScreen({ onComplete }: Props) {
         marginBottom: 28,
         textAlign: "center",
       }}>
-        <div style={{ color: GOLD, fontSize: 11, letterSpacing: "3px", textTransform: "uppercase", marginBottom: 6 }}>
-          Rozoz Smart Solutions
+        <div style={{ color: GOLD, fontSize: 26, fontWeight: 800, letterSpacing: "4px", textTransform: "uppercase" }}>
+          ESTETI IN
         </div>
-        <img
-          src={`${import.meta.env.BASE_URL}rkz-logo.jpg`}
-          alt="Rozoz"
-          style={{ height: 46, width: "auto", objectFit: "contain", margin: "0 auto", display: "block" }}
-        />
+        <div style={{ color: GOLD, fontSize: 11, letterSpacing: "2px", opacity: 0.7, marginTop: 4 }}>
+          Smart Solutions
+        </div>
       </div>
 
       {/* Card */}
@@ -184,7 +182,7 @@ export function WelcomeScreen({ onComplete }: Props) {
         transition: "opacity 0.5s ease, transform 0.5s ease",
       }}>
         <span style={{ color: TEXT_PRI, fontSize: 14, letterSpacing: "0.4px", textAlign: "center" }}>
-          Download the Rozoz app now
+          Download the Esteti In app now
         </span>
         <div style={{ width: 32, height: 1.5, background: GOLD, borderRadius: 1 }} />
       </div>

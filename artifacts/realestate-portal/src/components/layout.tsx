@@ -40,7 +40,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               : <Building className="h-5 w-5 text-secondary" />
             }
             <span className="font-bold text-lg tracking-tight text-primary">
-              {isRtl ? branding.companyNameAr || 'روزوز' : branding.companyNameEn || 'Rozoz'}
+              {isRtl ? branding.companyNameAr || 'استيتي إن' : branding.companyNameEn || 'Esteti In'}
             </span>
           </Link>
 

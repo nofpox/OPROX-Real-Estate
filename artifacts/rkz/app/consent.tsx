@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   I18nManager,
-  Image,
+  
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -13,7 +13,6 @@ import {
 
 import { useApp } from "@/context/AppContext";
 
-const LOGO = require("@/assets/images/rozoz-logo-eagle.png");
 const GOLD  = "#C9A84C";
 const NAVY  = "#0F2040";
 const GREEN = "#16A34A";
@@ -41,17 +40,13 @@ export default function ConsentScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.container}>
 
-        {/* Logo */}
-        <Image
-          source={LOGO}
-          style={s.logo}
-          resizeMode="contain"
-        />
+        {/* Brand name */}
+        <Text style={{ color: GOLD, fontSize: 28, fontWeight: "800", letterSpacing: 3, marginBottom: 8 }}>ESTETI IN</Text>
 
         {/* Heading — Arabic */}
-        <Text style={s.headingAr}>أهلاً في رزوز</Text>
+        <Text style={s.headingAr}>أهلاً في استيتي إن</Text>
         {/* Heading — English */}
-        <Text style={s.headingEn}>Welcome to ROZOZ</Text>
+        <Text style={s.headingEn}>Welcome to ESTETI IN</Text>
 
         <View style={s.divider} />
 

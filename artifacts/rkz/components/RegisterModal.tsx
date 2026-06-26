@@ -5,7 +5,7 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
-  Image,
+  
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -22,7 +22,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { useLocale } from "@/hooks/useLocale";
 
-const LOGO = require("@/assets/images/rozoz-logo-eagle.png");
 const { width } = Dimensions.get("window");
 
 const NAVY   = "#0F2040";
@@ -188,8 +187,6 @@ export default function RegisterModal() {
 
   const safeTop    = insets.top    + (Platform.OS === "web" ? 67 : 0);
   const safeBottom = insets.bottom + (Platform.OS === "web" ? 34 : 0);
-  const LOGO_W = Math.min(width * 0.42, 180);
-  const LOGO_H = Math.round(LOGO_W / 2.6);
 
   return (
     <Modal
@@ -211,7 +208,7 @@ export default function RegisterModal() {
         >
           {/* ── Header ── */}
           <View style={s.header}>
-            <Image source={LOGO} style={{ width: LOGO_W, height: LOGO_H }} resizeMode="contain" />
+            <Text style={{ color: GOLD, fontSize: 24, fontWeight: "800", letterSpacing: 2 }}>ESTETI IN</Text>
             <Pressable style={s.closeBtn} onPress={handleClose} hitSlop={12}>
               <Ionicons name="close" size={22} color="rgba(255,255,255,0.55)" />
             </Pressable>
@@ -357,7 +354,7 @@ export default function RegisterModal() {
           {step === "role" && (
             <View style={s.body}>
               <Text style={s.title}>
-                {isAr ? "كيف تريد الاستخدام؟" : "How will you use Rozoz?"}
+                {isAr ? "كيف تريد الاستخدام؟" : "How will you use Esteti In?"}
               </Text>
               <Text style={s.subtitle}>
                 {isAr

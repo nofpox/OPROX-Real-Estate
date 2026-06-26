@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ROZOZ",
+    "name": "ESTETI IN",
     "slug": "rozoz-msrep",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -43,14 +43,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "روزوز تحتاج للوصول إلى صورك لإضافة صور العقارات.",
-          "cameraPermission": "روزوز تحتاج الكاميرا لالتقاط صور العقارات."
+          "photosPermission": "استيتي إن تحتاج للوصول إلى صورك لإضافة صور العقارات.",
+          "cameraPermission": "استيتي إن تحتاج الكاميرا لالتقاط صور العقارات."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "روزوز تستخدم موقعك لتعبئة عنوان العقار تلقائياً."
+          "locationWhenInUsePermission": "استيتي إن تستخدم موقعك لتعبئة عنوان العقار تلقائياً."
         }
       ]
     ],

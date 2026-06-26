@@ -12,11 +12,11 @@ import { Input } from '@/components/ui/input';
 
 type Step = 'creds' | 'otp';
 
-function RozozLogo({ className = "" }: { className?: string }) {
+function EstetiInLogo({ className = "" }: { className?: string }) {
   return (
     <img
-      src="/realestate/rozoz-logo.png"
-      alt="Rozoz"
+      src="/realestate/esteti-logo.png"
+      alt="Esteti In"
       className={`object-contain ${className}`}
       onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
     />
@@ -93,7 +93,7 @@ export const PortalLogin: React.FC = () => {
     }
   };
 
-  // Guest explore — navigates directly to the public Rozoz portal (view-only by nature)
+  // Guest explore — navigates directly to the public Esteti In portal (view-only by nature)
   const handleGuestExplore = () => {
     window.location.href = '/realestate/';
   };
@@ -112,12 +112,12 @@ export const PortalLogin: React.FC = () => {
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <Helmet>
-        <title>{isRtl ? 'غرفة التحكم | روزوز' : 'Admin Control Room | Rozoz'}</title>
+        <title>{isRtl ? 'غرفة التحكم | استيتي إن' : 'Admin Control Room | Esteti In'}</title>
       </Helmet>
 
       {/* ── Official Brand Mark ─────────────────────────────────────────────── */}
       <div className="mb-10 flex flex-col items-center gap-3">
-        <RozozLogo className="h-24 w-auto" />
+        <EstetiInLogo className="h-24 w-auto" />
         <p className="text-white/40 text-xs tracking-[0.25em] uppercase mt-1">
           {isRtl ? 'الحلول الذكية للعقارات' : 'Smart Real Estate Solutions'}
         </p>
@@ -146,7 +146,7 @@ export const PortalLogin: React.FC = () => {
               <Input
                 value={identifier}
                 onChange={e => setIdentifier(e.target.value)}
-                placeholder="placeholder@rozoz.com"
+                placeholder="placeholder@estetiин.com"
                 type="text"
                 autoComplete="username"
                 autoFocus
@@ -281,7 +281,7 @@ export const PortalLogin: React.FC = () => {
         >
           <Compass className="h-5 w-5 text-secondary shrink-0 group-hover:rotate-12 transition-transform duration-300" />
           <span className="text-secondary font-semibold text-sm tracking-wide text-center leading-snug">
-            استكشف تجربة Rozoz&nbsp;&nbsp;|&nbsp;&nbsp;Explore Rozoz Experience
+            استكشف تجربة Esteti In&nbsp;&nbsp;|&nbsp;&nbsp;Explore Esteti In Experience
           </span>
         </button>
         <p className="text-white/20 text-[10px] text-center mt-2 tracking-wide">
@@ -290,7 +290,7 @@ export const PortalLogin: React.FC = () => {
       </div>
 
       <p className="mt-8 text-xs text-white/20 text-center">
-        © {new Date().getFullYear()} Rozoz Smart Solutions
+        © {new Date().getFullYear()} Esteti In Smart Solutions
       </p>
     </div>
   );

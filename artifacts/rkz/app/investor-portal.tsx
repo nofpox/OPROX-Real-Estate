@@ -19,7 +19,7 @@ import { ADMIN_EVENTS_KEY, AdminEvent } from "@/hooks/useAIAssistant";
 import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
 
-const ROZOZ_WHATSAPP = "https://wa.me/966500000000";
+const ESTETI_WHATSAPP = "https://wa.me/966500000000";
 
 interface AnalyticsStats {
   propertyToday: number;
@@ -245,12 +245,12 @@ export default function OwnerHubScreen() {
         </Pressable>
 
         <Pressable
-          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Linking.openURL(ROZOZ_WHATSAPP); }}
+          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); Linking.openURL(ESTETI_WHATSAPP); }}
           style={({ pressed }) => [s.secondaryCta, { borderColor: "#25D366" }, pressed && { opacity: 0.8 }]}
         >
           <MaterialIcons name="chat" size={20} color="#25D366" />
           <Text style={[s.secondaryCtaText, { color: "#25D366" }]}>
-            {isAr ? "تواصل مع Rozoz عبر واتساب" : "Contact Rozoz via WhatsApp"}
+            {isAr ? "تواصل مع Esteti In عبر واتساب" : "Contact Esteti In via WhatsApp"}
           </Text>
         </Pressable>
 
@@ -258,8 +258,8 @@ export default function OwnerHubScreen() {
           <MaterialIcons name="info-outline" size={16} color="#64748B" />
           <Text style={[s.infoText, isAr && { textAlign: "right" }]}>
             {isAr
-              ? "إذا أردت تفويض Rozoz لإدارة أملاكك كاملاً، تواصل معنا لتوقيع عقد الإدارة."
-              : "To authorize Rozoz to fully manage your properties, contact us to sign a management agreement."}
+              ? "إذا أردت تفويض Esteti In لإدارة أملاكك كاملاً، تواصل معنا لتوقيع عقد الإدارة."
+              : "To authorize Esteti In to fully manage your properties, contact us to sign a management agreement."}
           </Text>
         </View>
       </View>

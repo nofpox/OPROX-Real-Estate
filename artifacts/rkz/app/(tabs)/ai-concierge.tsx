@@ -25,7 +25,7 @@ import { useLocale } from "@/hooks/useLocale";
 import AnimatedScreen from "@/components/AnimatedScreen";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const ROZOZ_WHATSAPP = "https://wa.me/966500000000";
+const ESTETI_WHATSAPP = "https://wa.me/966500000000";
 const SERVICE_REQUESTS_KEY = "rozoz_service_requests";
 const DELEGATION_KEY       = "rozoz_delegation_status";
 
@@ -136,11 +136,11 @@ function DelegationModal({ visible, onClose, colors, isAr, phone, onSuccess }: D
                   <MaterialIcons name="verified-user" size={32} color={colors.gold} />
                 </View>
               </View>
-              <Text style={s.title}>{isAr ? "طلب تفويض Rozoz" : "Authorize Rozoz"}</Text>
+              <Text style={s.title}>{isAr ? "طلب تفويض Esteti In" : "Authorize Esteti In"}</Text>
               <Text style={s.body}>
                 {isAr
-                  ? "بالموافقة، تُفوّض Rozoz للتواصل مع شركات الخدمات نيابةً عنك، وتنسيق الصيانة والإصلاحات. يمكنك إلغاء التفويض في أي وقت من الإعدادات."
-                  : "By agreeing, you authorize Rozoz to contact service companies on your behalf and coordinate maintenance. You can revoke this authorization anytime from Settings."}
+                  ? "بالموافقة، تُفوّض Esteti In للتواصل مع شركات الخدمات نيابةً عنك، وتنسيق الصيانة والإصلاحات. يمكنك إلغاء التفويض في أي وقت من الإعدادات."
+                  : "By agreeing, you authorize Esteti In to contact service companies on your behalf and coordinate maintenance. You can revoke this authorization anytime from Settings."}
               </Text>
               <Pressable style={({ pressed }) => [s.primaryBtn, pressed && { opacity: 0.85 }]} onPress={handleAgree}>
                 <MaterialIcons name="check" size={18} color="#0F2040" />
@@ -188,7 +188,7 @@ function DelegationModal({ visible, onClose, colors, isAr, phone, onSuccess }: D
                 <MaterialIcons name="check-circle" size={40} color="#16A34A" />
               </View>
               <Text style={[s.title, { color: "#16A34A" }]}>{isAr ? "تم التفويض بنجاح!" : "Authorization Confirmed!"}</Text>
-              <Text style={s.body}>{isAr ? "ستتواصل معك Rozoz قريباً." : "Rozoz will contact you shortly."}</Text>
+              <Text style={s.body}>{isAr ? "ستتواصل معك Esteti In قريباً." : "Esteti In will contact you shortly."}</Text>
             </View>
           )}
         </KeyboardAvoidingView>
@@ -248,7 +248,7 @@ export default function ServicesScreen() {
     void saveRequest(req);
   }, [saveRequest]);
 
-  const handleDelegateRozoz = useCallback((provider: ServiceProvider) => {
+  const handleDelegateEstetiIn = useCallback((provider: ServiceProvider) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedProv(provider);
     setShowDlgModal(true);
@@ -271,7 +271,7 @@ export default function ServicesScreen() {
 
   const openWhatsApp = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Linking.openURL(ROZOZ_WHATSAPP);
+    Linking.openURL(ESTETI_WHATSAPP);
   }, []);
 
   const s = styles(colors, isAr, topPad, bottomPad);
@@ -299,7 +299,7 @@ export default function ServicesScreen() {
         <View style={s.delegatedBanner}>
           <MaterialIcons name="verified" size={18} color="#16A34A" />
           <Text style={[s.delegatedText, isAr && { textAlign: "right" }]}>
-            {isAr ? "Rozoz مفوّضة للتواصل مع شركات الخدمة نيابةً عنك" : "Rozoz is authorized to coordinate services on your behalf"}
+            {isAr ? "Esteti In مفوّضة للتواصل مع شركات الخدمة نيابةً عنك" : "Esteti In is authorized to coordinate services on your behalf"}
           </Text>
         </View>
       )}
@@ -332,8 +332,8 @@ export default function ServicesScreen() {
               <MaterialIcons name="info-outline" size={14} color="#64748B" />
               <Text style={[s.sectionNoteText, isAr && { textAlign: "right" }]}>
                 {isAr
-                  ? "يمكنك التواصل مباشرة مع الشركة، أو تفويض Rozoz للتنسيق نيابةً عنك."
-                  : "Contact the company directly, or delegate Rozoz to coordinate on your behalf."}
+                  ? "يمكنك التواصل مباشرة مع الشركة، أو تفويض Esteti In للتنسيق نيابةً عنك."
+                  : "Contact the company directly, or delegate Esteti In to coordinate on your behalf."}
               </Text>
             </View>
           }
@@ -359,7 +359,7 @@ export default function ServicesScreen() {
                   <Text style={s.directBtnText}>{isAr ? "مباشر" : "Direct"}</Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => handleDelegateRozoz(item)}
+                  onPress={() => handleDelegateEstetiIn(item)}
                   style={({ pressed }) => [s.delegateBtn, pressed && { opacity: 0.8 }]}
                 >
                   <MaterialIcons name="handshake" size={14} color={colors.gold} />
@@ -379,7 +379,7 @@ export default function ServicesScreen() {
               </View>
               <Text style={s.emptyTitle}>{isAr ? "لا توجد طلبات بعد" : "No requests yet"}</Text>
               <Text style={s.emptySub}>
-                {isAr ? "تواصل مع شركة أو فوّض Rozoz من دليل الخدمات" : "Contact a company or delegate Rozoz from the directory"}
+                {isAr ? "تواصل مع شركة أو فوّض Esteti In من دليل الخدمات" : "Contact a company or delegate Esteti In from the directory"}
               </Text>
             </View>
           ) : (
@@ -395,7 +395,7 @@ export default function ServicesScreen() {
                 <View style={{ flex: 1, marginHorizontal: 12 }}>
                   <Text style={[s.reqName, isAr && { textAlign: "right" }]}>{req.providerName}</Text>
                   <Text style={[s.reqType, isAr && { textAlign: "right" }]}>
-                    {req.type === "rozoz" ? (isAr ? "عبر Rozoz" : "via Rozoz") : (isAr ? "تواصل مباشر" : "Direct contact")}
+                    {req.type === "rozoz" ? (isAr ? "عبر Esteti In" : "via Esteti In") : (isAr ? "تواصل مباشر" : "Direct contact")}
                   </Text>
                   <Text style={[s.reqDate, isAr && { textAlign: "right" }]}>
                     {new Date(req.ts).toLocaleDateString(isAr ? "ar-SA" : "en-GB")}

@@ -11,7 +11,7 @@ import {
 
 const STAT_ICONS = [Building2, Users, TrendingUp, Award];
 
-const ROZOZ_WHATSAPP = '';
+const ESTETI_WHATSAPP = '';
 
 // ── How-it-works steps ────────────────────────────────────────────────────────
 const STEPS = {
@@ -221,13 +221,13 @@ export const Home: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {(isRtl ? [
-              { quote: 'منذ تسليم الفندق لروزوز، ارتفعت نسبة الإشغال بشكل ملحوظ وأصبحت تقاريرهم الشهرية مرجعاً أعتمد عليه.', name: 'م. عبدالله العمري', role: 'مالك فندق — الرياض' },
+              { quote: 'منذ تسليم الفندق لاستيتي إن، ارتفعت نسبة الإشغال بشكل ملحوظ وأصبحت تقاريرهم الشهرية مرجعاً أعتمد عليه.', name: 'م. عبدالله العمري', role: 'مالك فندق — الرياض' },
               { quote: 'لم أتوقع أن تكون الإدارة بهذا المستوى من الدقة. الفريق محترف وتواصلهم ممتاز في كل وقت.', name: 'المهندس خالد الغامدي', role: 'مالك مجمع سكني — جدة' },
-              { quote: 'روزوز أعادت تنظيم المجمع كاملاً خلال شهرين. المستأجرون أكثر رضا والعائد المالي تحسّن.', name: 'أ. نورة السعيد', role: 'مستثمرة عقارية — الدمام' },
+              { quote: 'استيتي إن أعادت تنظيم المجمع كاملاً خلال شهرين. المستأجرون أكثر رضا والعائد المالي تحسّن.', name: 'أ. نورة السعيد', role: 'مستثمرة عقارية — الدمام' },
             ] : [
-              { quote: 'Since handing our hotel to Rozoz, occupancy has improved significantly and their monthly reports are the reference I rely on.', name: 'Eng. Abdullah Al-Omari', role: 'Hotel Owner — Riyadh' },
+              { quote: 'Since handing our hotel to Esteti In, occupancy has improved significantly and their monthly reports are the reference I rely on.', name: 'Eng. Abdullah Al-Omari', role: 'Hotel Owner — Riyadh' },
               { quote: "I didn't expect management at this level of precision. The team is professional and their communication is excellent at all times.", name: 'Eng. Khalid Al-Ghamdi', role: 'Compound Owner — Jeddah' },
-              { quote: 'Rozoz reorganized the entire compound within two months. Tenants are happier and financial returns improved.', name: 'Noura Al-Saeed', role: 'Real Estate Investor — Dammam' },
+              { quote: 'Esteti In reorganized the entire compound within two months. Tenants are happier and financial returns improved.', name: 'Noura Al-Saeed', role: 'Real Estate Investor — Dammam' },
             ]).map((t, i) => (
               <div key={i} className={`bg-card rounded-2xl border border-border p-6 flex flex-col gap-4 hover:border-secondary/40 hover:shadow-md transition-all duration-300 ${isRtl ? 'text-right' : ''}`}>
                 <div className="flex gap-1">
@@ -323,7 +323,7 @@ export const Home: React.FC = () => {
               : 'Have a quick question? Our team is available on WhatsApp.'}
           </p>
           <a
-            href={ROZOZ_WHATSAPP}
+            href={ESTETI_WHATSAPP}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-[#25D366] text-white px-8 h-11 rounded-full font-semibold text-sm hover:bg-[#22c55e] transition-colors shadow-lg shadow-green-500/20"
