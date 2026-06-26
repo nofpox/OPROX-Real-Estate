@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 import {
   Animated,
   Dimensions,
-  
+  Image,
   Pressable,
   StatusBar,
   StyleSheet,
@@ -16,7 +16,10 @@ import { useApp } from "@/context/AppContext";
 import { logAdminEvent } from "@/hooks/useAIAssistant";
 import { useLocale } from "@/hooks/useLocale";
 
+const LOGO  = require("@/assets/images/esteti-logo.png");
 const { width } = Dimensions.get("window");
+const LOGO_W = Math.min(width * 0.55, 220);
+const LOGO_H = Math.round(LOGO_W * 0.75);
 
 const BG    = "#0A0E1A";
 const GOLD  = "#C9A84C";
@@ -59,8 +62,8 @@ export default function ModeSelectScreen() {
           { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
         ]}
       >
-        {/* Brand name */}
-        <Text style={{ color: GOLD, fontSize: 32, fontWeight: "800", letterSpacing: 3, marginBottom: 4 }}>ESTETI IN</Text>
+        {/* Logo */}
+        <Image source={LOGO} style={{ width: LOGO_W, height: LOGO_H }} resizeMode="contain" />
 
         {/* Title */}
         <View style={s.titleWrap}>

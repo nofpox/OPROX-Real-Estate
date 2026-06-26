@@ -1,8 +1,9 @@
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  Dimensions,
   I18nManager,
-  
+  Image,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -13,6 +14,10 @@ import {
 
 import { useApp } from "@/context/AppContext";
 
+const { width } = Dimensions.get("window");
+const LOGO   = require("@/assets/images/esteti-logo.png");
+const LOGO_W = Math.min(width * 0.50, 200);
+const LOGO_H = Math.round(LOGO_W * 0.75);
 const GOLD  = "#C9A84C";
 const NAVY  = "#0F2040";
 const GREEN = "#16A34A";
@@ -40,8 +45,8 @@ export default function ConsentScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.container}>
 
-        {/* Brand name */}
-        <Text style={{ color: GOLD, fontSize: 28, fontWeight: "800", letterSpacing: 3, marginBottom: 8 }}>ESTETI IN</Text>
+        {/* Logo */}
+        <Image source={LOGO} style={{ width: LOGO_W, height: LOGO_H, marginBottom: 8 }} resizeMode="contain" />
 
         {/* Heading — Arabic */}
         <Text style={s.headingAr}>أهلاً في استيتي إن</Text>

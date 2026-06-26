@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef } from "react";
 import {
   Animated,
   Dimensions,
-  
+  Image,
   Platform,
   Pressable,
   StatusBar,
@@ -16,6 +16,9 @@ import { router } from "expo-router";
 const { width } = Dimensions.get("window");
 
 const BG_DARK = "#0A0E1A";
+const LOGO   = require("@/assets/images/esteti-logo.png");
+const LOGO_W = Math.min(width * 0.60, 240);
+const LOGO_H = Math.round(LOGO_W * 0.75);
 const GOLD = "#C9A84C";
 const TEXT_PRIMARY = "#F5F0E8";
 const TEXT_MUTED = "rgba(245,240,232,0.55)";
@@ -112,7 +115,7 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         {/* Logo */}
         <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }], marginBottom: 36 }}>
-          <Text style={{ color: GOLD, fontSize: 34, fontWeight: "800", letterSpacing: 3 }}>ESTETI IN</Text>
+          <Image source={LOGO} style={{ width: LOGO_W, height: LOGO_H }} resizeMode="contain" />
         </Animated.View>
 
         {/* Tagline + features */}

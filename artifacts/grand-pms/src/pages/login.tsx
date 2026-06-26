@@ -24,9 +24,14 @@ export default function Login({ onLogin }: LoginProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A1628] p-6 gap-8">
 
-      {/* Brand name */}
-      <div className="flex flex-col items-center gap-2">
-        <span className="text-[#C9A84C] text-3xl font-extrabold tracking-[4px]">ESTETI IN</span>
+      {/* Logo */}
+      <div className="flex flex-col items-center gap-3">
+        <img
+          src={`${import.meta.env.BASE_URL}esteti-logo.png`}
+          alt="ESTETI IN"
+          className="h-28 w-auto object-contain"
+          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
         <p className="text-xs text-white/40 tracking-[0.25em] uppercase">
           Smart Solutions · استيتي إن للحلول الذكية
         </p>

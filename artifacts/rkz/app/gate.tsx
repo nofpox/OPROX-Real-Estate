@@ -4,7 +4,7 @@ import React, { useRef } from "react";
 import {
   Animated,
   Dimensions,
-  
+  Image,
   Pressable,
   StatusBar,
   StyleSheet,
@@ -16,10 +16,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 
 
+const { width } = Dimensions.get("window");
+const LOGO   = require("@/assets/images/esteti-logo.png");
+const LOGO_W = Math.min(width * 0.45, 180);
+const LOGO_H = Math.round(LOGO_W * 0.75);
 const NAVY  = "#0F2040";
 const GOLD  = "#C9A84C";
 const WHITE = "#F5F0E8";
-const { width } = Dimensions.get("window");
 
 const ROLES = [
   {
@@ -72,7 +75,7 @@ export default function GateScreen() {
 
       {/* Brand name */}
       <Animated.View style={{ opacity: fadeAnim, alignItems: "center", marginBottom: 8 }}>
-        <Text style={{ color: GOLD, fontSize: 30, fontWeight: "800", letterSpacing: 3 }}>ESTETI IN</Text>
+        <Image source={LOGO} style={{ width: LOGO_W, height: LOGO_H }} resizeMode="contain" />
       </Animated.View>
 
       {/* Heading */}

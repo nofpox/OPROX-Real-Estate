@@ -93,12 +93,12 @@ export function WelcomeScreen({ onComplete }: Props) {
         marginBottom: 28,
         textAlign: "center",
       }}>
-        <div style={{ color: GOLD, fontSize: 26, fontWeight: 800, letterSpacing: "4px", textTransform: "uppercase" }}>
-          ESTETI IN
-        </div>
-        <div style={{ color: GOLD, fontSize: 11, letterSpacing: "2px", opacity: 0.7, marginTop: 4 }}>
-          Smart Solutions
-        </div>
+        <img
+          src={`${typeof import.meta !== "undefined" ? import.meta.env.BASE_URL : "/grand-pms/"}esteti-logo.png`}
+          alt="ESTETI IN"
+          style={{ height: 80, width: "auto", objectFit: "contain", margin: "0 auto", display: "block" }}
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
       </div>
 
       {/* Card */}
