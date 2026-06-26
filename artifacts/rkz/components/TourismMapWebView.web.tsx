@@ -1,6 +1,8 @@
 /**
- * TourismMapWebView — web shim (Metro picks .web.tsx).
- * Same dynamic Overpass API logic as native version.
+ * TourismMapWebView — WEB
+ * Uses an iframe pointing to lwmap.html (same-origin static file in public/).
+ * Same-origin iframes can load Leaflet from CDN without null-origin restrictions.
+ * Spots sent on iframe onLoad; filter/locate sent after iframe signals 'ready'.
  */
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
@@ -38,178 +40,13 @@ const CATEGORY_COLOR: Record<TouristSpot["type"], string> = {
   serviced:      "#f43f5e",
 };
 
-function buildHTML(spots: TouristSpot[]): string {
-  const data   = JSON.stringify(spots);
-  const colors = JSON.stringify(CATEGORY_COLOR);
-  return `<!DOCTYPE html>
-<html dir="rtl">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""><\/script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body,#map{width:100%;height:100%;overflow:hidden}
-.leaflet-container{background:#e8ecf0}
-.leaflet-control-attribution,.leaflet-attribution-flag{display:none!important}
-.cd{border-radius:50%;border:3px solid rgba(255,255,255,0.9);cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 2px 8px rgba(0,0,0,0.35);}
-.cd.sel{transform:scale(1.35);box-shadow:0 4px 16px rgba(0,0,0,0.55);}
-.lbl{background:rgba(15,32,64,0.88);color:#fff;font-size:11px;font-weight:700;padding:3px 7px;border-radius:8px;white-space:nowrap;pointer-events:none;font-family:system-ui,sans-serif;}
-#loader{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,14,26,0.85);color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;font-family:system-ui,sans-serif;z-index:9999;pointer-events:none;}
-#zoomhint{display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(10,14,26,0.82);color:rgba(255,255,255,0.85);font-size:12px;padding:7px 14px;border-radius:14px;font-family:system-ui,sans-serif;z-index:9999;pointer-events:none;white-space:nowrap;}
-</style>
-</head>
-<body>
-<div id="map"></div>
-<div id="loader">⏳ جارٍ التحميل...</div>
-<div id="zoomhint">🔍 قرّب الخريطة لرؤية الأماكن</div>
-<script>
-var ALL=${data};
-var COLORS=${colors};
-var STATIC_TYPES=['mosque','heritage','nature','entertainment','hotel'];
-var DYNAMIC_TYPES=['restaurant','cafe','mall','hotel','apartment','serviced'];
-var OVERPASS_Q={
-  restaurant:'node["amenity"="restaurant"]',
-  cafe:'node["amenity"="cafe"]',
-  mall:'node["shop"="mall"]',
-  hotel:'node["tourism"="hotel"]',
-  apartment:'node["tourism"="apartment"]',
-  serviced:'node["tourism"="serviced_apartment"]'
-};
-var MIN_ZOOM=13;
-var CACHE_GRID=0.04;
-var sM={},dM={},bboxCache={},selId=null,curFilter='all',fetchTimer=null;
-
-var map=L.map('map',{center:[23.8859,45.0792],zoom:5,zoomControl:false,attributionControl:false});
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(map);
-
-function post(obj){try{window.parent.postMessage(JSON.stringify(obj),'*');}catch(e){}}
-function mkIcon(color,sz){var h=sz||30,hh=h/2;return L.divIcon({html:'<div class="cd" style="width:'+h+'px;height:'+h+'px;background:'+color+'"></div>',className:'',iconSize:[h,h],iconAnchor:[hh,hh]});}
-function mkLbl(text){return L.divIcon({html:'<div class="lbl">'+text+'</div>',className:'',iconAnchor:[-6,-20]});}
-
-function clearSel(){document.querySelectorAll('.cd.sel').forEach(function(el){el.classList.remove('sel');});selId=null;}
-
-function addSM(spot){
-  var color=COLORS[spot.type]||'#888',sz=spot.type==='mosque'?36:30;
-  var m=L.marker([spot.lat,spot.lng],{icon:mkIcon(color,sz)});
-  var lb=L.marker([spot.lat,spot.lng],{icon:mkLbl(spot.nameAr),interactive:false,zIndexOffset:-1});
-  m.on('click',function(e){
-    L.DomEvent.stopPropagation(e);clearSel();selId=spot.id;
-    var el=m.getElement();if(el)el.querySelector('.cd').classList.add('sel');
-    map.panTo([spot.lat,spot.lng],{animate:true,duration:0.5});
-    post({type:'select',id:spot.id,spotType:spot.type,nameAr:spot.nameAr,city:spot.city,desc:spot.desc,lat:spot.lat,lng:spot.lng});
-  });
-  m.addTo(map);lb.addTo(map);sM[spot.id]={m:m,l:lb};
-}
-function clearSM(){Object.values(sM).forEach(function(p){map.removeLayer(p.m);map.removeLayer(p.l);});sM={};}
-
-function addDM(id,type,name,city,lat,lng){
-  var key='d'+id;if(dM[key])return;
-  var color=COLORS[type]||'#888';
-  var m=L.marker([lat,lng],{icon:mkIcon(color,22)});
-  m.on('click',function(e){
-    L.DomEvent.stopPropagation(e);clearSel();selId=key;
-    var el=m.getElement();if(el)el.querySelector('.cd').classList.add('sel');
-    map.panTo([lat,lng],{animate:true,duration:0.5});
-    post({type:'select',id:key,spotType:type,nameAr:name,city:city,desc:'',lat:lat,lng:lng});
-  });
-  m.addTo(map);dM[key]={m:m};
-}
-function clearDM(){Object.values(dM).forEach(function(p){map.removeLayer(p.m);});dM={};}
-
-function osmType(tags){
-  if(tags.amenity==='restaurant')return 'restaurant';
-  if(tags.amenity==='cafe'||tags.amenity==='coffee_shop')return 'cafe';
-  if(tags.shop==='mall'||tags.building==='mall')return 'mall';
-  if(tags.tourism==='hotel')return 'hotel';
-  if(tags.tourism==='serviced_apartment')return 'serviced';
-  if(tags.tourism==='apartment'||tags.tourism==='guest_house')return 'apartment';
-  return null;
-}
-
-var loader=document.getElementById('loader');
-var zoomhint=document.getElementById('zoomhint');
-
-function roundedBbox(){
-  var b=map.getBounds(),r=CACHE_GRID;
-  return [
-    (Math.floor(b.getSouth()/r)*r).toFixed(2),
-    (Math.floor(b.getWest()/r)*r).toFixed(2),
-    (Math.ceil(b.getNorth()/r)*r).toFixed(2),
-    (Math.ceil(b.getEast()/r)*r).toFixed(2)
-  ];
-}
-
-function renderCached(items){
-  clearDM();
-  items.forEach(function(el){addDM(el.id,el.type,el.name,el.city,el.lat,el.lng);});
-}
-
-function fetchDynamic(){
-  var needDyn=(curFilter==='all'||DYNAMIC_TYPES.indexOf(curFilter)>=0);
-  if(!needDyn){clearDM();return;}
-  if(map.getZoom()<MIN_ZOOM){
-    clearDM();zoomhint.style.display='block';return;
-  }
-  zoomhint.style.display='none';
-  var rb=roundedBbox();
-  var cacheKey=rb.join(',')+':'+curFilter;
-  if(bboxCache[cacheKey]){renderCached(bboxCache[cacheKey]);return;}
-  var bbox=rb[0]+','+rb[1]+','+rb[2]+','+rb[3];
-  var types=(curFilter==='all')?DYNAMIC_TYPES:[curFilter];
-  var ql='[out:json][timeout:15];('+types.map(function(t){return OVERPASS_Q[t]+'('+bbox+');';}).join('')+');out body 150;';
-  loader.style.display='block';
-  post({type:'loading',value:true});
-  fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:ql})
-    .then(function(r){return r.json();})
-    .then(function(d){
-      var items=[];
-      d.elements.forEach(function(el){
-        if(!el.lat||!el.lon)return;
-        var name=(el.tags['name:ar']||el.tags.name||'').trim();
-        if(!name||name.length<2)return;
-        var t=osmType(el.tags);if(!t)return;
-        if(curFilter!=='all'&&t!==curFilter)return;
-        var city=el.tags['addr:city']||el.tags['addr:suburb']||'';
-        items.push({id:el.id,type:t,name:name,city:city,lat:el.lat,lng:el.lon});
-      });
-      bboxCache[cacheKey]=items;
-      renderCached(items);
-      loader.style.display='none';
-      post({type:'loading',value:false});
-    })
-    .catch(function(){loader.style.display='none';post({type:'loading',value:false});});
-}
-
-function scheduleFetch(){clearTimeout(fetchTimer);fetchTimer=setTimeout(fetchDynamic,1200);}
-
-function applyFilter(typeId){
-  curFilter=typeId;clearSel();clearSM();
-  var showSt=(typeId==='all'||STATIC_TYPES.indexOf(typeId)>=0);
-  if(showSt){(typeId==='all'?ALL:ALL.filter(function(s){return s.type===typeId;})).forEach(addSM);}
-  clearDM();zoomhint.style.display='none';
-  var showDyn=(typeId==='all'||DYNAMIC_TYPES.indexOf(typeId)>=0);
-  if(showDyn)scheduleFetch();
-}
-
-function doLocate(lat,lng){
-  map.setView([lat,lng],14);
-  if(window._ld)window._ld.remove();
-  window._ld=L.circleMarker([lat,lng],{radius:9,color:'#fff',weight:2,fillColor:'#3b82f6',fillOpacity:1}).addTo(map);
-}
-
-applyFilter('all');
-map.on('click',function(){clearSel();post({type:'deselect'});});
-map.on('moveend',scheduleFetch);
-map.on('zoomend',scheduleFetch);
-
-window.addEventListener('message',function(e){
-  try{var d=JSON.parse(e.data);if(d.type==='filter')applyFilter(d.value);if(d.type==='locate')doLocate(d.lat,d.lng);}catch(e){}
-});
-post({type:'ready'});
-<\/script>
-</body></html>`;
+function getMapSrc(): string {
+  if (typeof window === "undefined") return "";
+  // Replace last path segment so the URL works in both dev and production.
+  const loc = window.location;
+  const parts = loc.pathname.split("/");
+  parts[parts.length - 1] = "lwmap.html";
+  return loc.origin + parts.join("/");
 }
 
 interface Props {
@@ -221,15 +58,33 @@ interface Props {
   centerCoords?:  { lat: number; lng: number };
 }
 
-export default function TourismMapWebView({ spots, activeFilter, onSelect, onDeselect, onLoadingChange, centerCoords }: Props) {
-  const iframeRef     = useRef<HTMLIFrameElement>(null);
-  const html          = useRef(buildHTML(spots)).current;
+export default function TourismMapWebView({
+  spots,
+  activeFilter,
+  onSelect,
+  onDeselect,
+  onLoadingChange,
+  centerCoords,
+}: Props) {
+  const iframeRef     = useRef<HTMLIFrameElement | null>(null);
   const prevFilter    = useRef("all");
   const isReady       = useRef(false);
   const pendingLocate = useRef<{ lat: number; lng: number } | null>(null);
+  const spotsRef      = useRef(spots);
+  const mapSrc        = useRef(getMapSrc());
 
-  function pm(msg: object) { iframeRef.current?.contentWindow?.postMessage(JSON.stringify(msg), "*"); }
+  spotsRef.current = spots;
+
+  function pm(msg: object) {
+    try { iframeRef.current?.contentWindow?.postMessage(JSON.stringify(msg), "*"); } catch { /* ok */ }
+  }
   function sendLocate(lat: number, lng: number) { pm({ type: "locate", lat, lng }); }
+
+  // Send spots on iframe load
+  function handleLoad() {
+    isReady.current = false;
+    pm({ type: "init", spots: spotsRef.current, colors: CATEGORY_COLOR });
+  }
 
   useEffect(() => {
     if (prevFilter.current === activeFilter) return;
@@ -247,9 +102,13 @@ export default function TourismMapWebView({ spots, activeFilter, onSelect, onDes
     function onMsg(e: MessageEvent) {
       try {
         const raw = JSON.parse(e.data as string) as Record<string, unknown>;
+
         if (raw.type === "ready") {
           isReady.current = true;
-          if (pendingLocate.current) { sendLocate(pendingLocate.current.lat, pendingLocate.current.lng); pendingLocate.current = null; }
+          if (pendingLocate.current) {
+            sendLocate(pendingLocate.current.lat, pendingLocate.current.lng);
+            pendingLocate.current = null;
+          }
           if (prevFilter.current !== "all") pm({ type: "filter", value: prevFilter.current });
         }
         if (raw.type === "select") onSelect({
@@ -263,7 +122,7 @@ export default function TourismMapWebView({ spots, activeFilter, onSelect, onDes
         });
         if (raw.type === "deselect") onDeselect();
         if (raw.type === "loading") onLoadingChange?.(raw.value as boolean);
-      } catch {}
+      } catch { /* ok */ }
     }
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
@@ -274,10 +133,11 @@ export default function TourismMapWebView({ spots, activeFilter, onSelect, onDes
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <iframe
         ref={iframeRef as any}
-        srcDoc={html}
+        src={mapSrc.current}
         style={{ width: "100%", height: "100%", border: "none" }}
-        sandbox="allow-scripts allow-same-origin"
-        title="tourism-map"
+        title="tourism-spots-map"
+        allow="geolocation"
+        onLoad={handleLoad}
       />
     </View>
   );
