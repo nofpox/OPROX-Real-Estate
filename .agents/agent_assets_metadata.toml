@@ -60,6 +60,12 @@ uri = "file://attached_assets/logo_v2_concept_3.png"
 type = "image"
 title = "esteti-logo-key-shield"
 
+[[generated]]
+id = "6ah8__aPvYG25mzmpSx26"
+uri = "file://attached_assets/logo_final.png"
+type = "image"
+title = "esteti-in-final-logo"
+
 [[outputs]]
 id = "jCktAW9goz3sn4e0SeBUs"
 uri = "file://artifacts/rkz/qr.png"
@@ -359,3 +365,9 @@ id = "OjUeBPmkJn_dqZWHMGHfL"
 uri = "file://attached_assets/logo_v2_concept_3.png"
 type = "image"
 title = "المقترح 3 — مفتاح ذهبي مع درع أزرق"
+
+[[outputs]]
+id = "SHbjOhSjF_WHqu-P1Dc-H"
+uri = "file://attached_assets/logo_final.png"
+type = "image"
+title = "ESTETI IN — الشعار النهائي"
