@@ -371,3 +371,9 @@ id = "SHbjOhSjF_WHqu-P1Dc-H"
 uri = "file://attached_assets/logo_final.png"
 type = "image"
 title = "ESTETI IN — الشعار النهائي"
+
+[[outputs]]
+id = "Wk91r01eSHHIso-CMPkhy"
+uri = "file://exports/esteti-studies.zip"
+type = "unspecified"
+title = "الدراسات الثلاث — ESTETI IN (HTML محدّثة)"
