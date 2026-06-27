@@ -56,7 +56,7 @@ export const ROLES: RoleDefinition[] = [
     id: "admin_manager",
     label: "Company",
     description: "Corporate-level access — company-wide management, financial oversight, and reporting",
-    allowedNav: ["/", "/properties", "/guest-requests", "/analytics", "/user-management", "/admin-settings", "/content-manager", "/preview-links"],
+    allowedNav: ["/", "/properties", "/rooms", "/guest-requests", "/analytics", "/user-management", "/admin-settings", "/content-manager", "/preview-links"],
     taskCategories: null,
   },
   // 3 — Management tier: Property & operational management
@@ -64,7 +64,7 @@ export const ROLES: RoleDefinition[] = [
     id: "manager",
     label: "Manager",
     description: "Management-level oversight — property performance, team coordination, and scheduling",
-    allowedNav: ["/", "/properties", "/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log", "/analytics", "/preview-links"],
+    allowedNav: ["/", "/properties", "/rooms", "/maintenance", "/staff", "/tasks", "/guest-requests", "/activity-log", "/analytics", "/preview-links"],
     taskCategories: null,
   },
   // 4 — Departmental Administrator: Reporting, unit data, operational monitoring
@@ -72,7 +72,7 @@ export const ROLES: RoleDefinition[] = [
     id: "administrator",
     label: "Administrator (Departmental)",
     description: "Departmental administration — reporting, unit data, service request tracking, and billing",
-    allowedNav: ["/", "/properties", "/guest-requests", "/analytics", "/user-management", "/admin-settings", "/activity-log", "/content-manager", "/preview-links"],
+    allowedNav: ["/", "/properties", "/rooms", "/guest-requests", "/analytics", "/user-management", "/admin-settings", "/activity-log", "/content-manager", "/preview-links"],
     taskCategories: null,
   },
   // 5 — Supervisor: Field operations oversight
