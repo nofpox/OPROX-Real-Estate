@@ -7,19 +7,37 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body,#map{height:100%;width:100%;background:#0f2040;}
-#filter-bar{position:absolute;top:115px;left:10px;z-index:1000;display:flex;flex-direction:column;gap:5px;}
-#filter-bar.rtl-bar{left:auto;right:10px;}
-.fbtn{padding:4px 13px;border-radius:13px;border:1px solid rgba(255,255,255,0.22);background:rgba(10,22,40,0.84);color:#cbd5e1;font-size:11px;font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;font-weight:600;cursor:pointer;white-space:nowrap;min-width:74px;text-align:center;-webkit-tap-highlight-color:transparent;user-select:none;transition:background .12s,border-color .12s;}
+
+/* ── Filter bar — horizontal scroll at top ── */
+#filter-bar{
+  position:absolute;top:10px;left:8px;right:8px;
+  z-index:1000;display:flex;flex-direction:row;gap:6px;
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  flex-wrap:nowrap;padding:4px 0;
+}
+#filter-bar::-webkit-scrollbar{display:none;}
+.fbtn{
+  flex-shrink:0;padding:6px 13px;border-radius:20px;
+  border:1.5px solid rgba(255,255,255,0.22);
+  background:rgba(10,22,40,0.86);color:#cbd5e1;
+  font-size:12px;font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;font-weight:700;
+  cursor:pointer;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+  transition:background .12s,border-color .12s;
+}
 .fbtn.active{background:rgba(15,52,96,0.95);border-color:#C9A84C;color:#C9A84C;}
 .fbtn.active-apt{background:rgba(55,20,100,0.95);border-color:#A855F7;color:#A855F7;}
 .fbtn:hover{opacity:.85;}
-#legend{position:absolute;bottom:52px;left:10px;z-index:1000;background:rgba(10,22,40,0.88);border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:7px 11px;font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;}
-#legend.rtl-leg{left:auto;right:10px;}
-.l-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}.l-row:last-child{margin-bottom:0;}
-.ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.l-lbl{font-size:10.5px;color:#e2e8f0;font-weight:600;}
-#status-bar{position:absolute;top:72px;left:0;right:0;z-index:1001;display:none;align-items:center;justify-content:center;pointer-events:none;}
+
+/* ── Status pill ── */
+#status-bar{position:absolute;top:60px;left:0;right:0;z-index:1001;display:none;align-items:center;justify-content:center;pointer-events:none;}
 #status-pill{background:rgba(10,22,40,0.92);border:1px solid rgba(201,168,76,.4);border-radius:20px;padding:5px 14px;font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;font-size:12px;color:#C9A84C;font-weight:600;}
+
+/* ── Zoom hint ── */
+#zoom-hint{position:absolute;top:60px;left:0;right:0;z-index:1001;display:none;align-items:center;justify-content:center;pointer-events:none;}
+#zoom-pill{background:rgba(10,22,40,0.88);border:1px solid rgba(255,255,255,0.14);border-radius:20px;padding:5px 14px;font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;font-size:12px;color:rgba(255,255,255,0.7);font-weight:600;}
+
+/* ── Spot icons ── */
 .spot-icon{overflow:visible!important;background:none!important;border:none!important;}
 .spot-wrap{display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%);cursor:pointer;}
 .spot-pin{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;font-size:18px;position:relative;box-shadow:0 4px 14px rgba(0,0,0,.7);border:2px solid rgba(255,255,255,.18);background:rgba(10,22,40,.55);}
@@ -32,6 +50,8 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
 @keyframes pulse-red{0%,100%{box-shadow:0 0 4px rgba(239,68,68,.3);}50%{box-shadow:0 0 12px rgba(239,68,68,.8);}}
 .star-lbl{margin-top:4px;padding:2px 8px;border-radius:9px;font-size:10px;white-space:nowrap;font-weight:700;font-family:-apple-system,'Segoe UI',sans-serif;background:rgba(10,22,40,.82);color:#fbbf24;border:1px solid rgba(212,168,67,.3);box-shadow:0 2px 6px rgba(0,0,0,.5);}
 .star-lbl.dim{color:#94a3b8;border-color:rgba(148,163,184,.2);}
+
+/* ── Popups ── */
 .lf-popup .leaflet-popup-content-wrapper{background:#0f2040;border:1.5px solid #C9A84C;border-radius:14px;box-shadow:0 8px 26px rgba(0,0,0,.65);color:#f1f5f9;padding:0;font-family:-apple-system,'Segoe UI',Tahoma,sans-serif;}
 .lf-popup .leaflet-popup-tip-container{display:none;}
 .lf-popup .leaflet-popup-content{margin:14px;min-width:190px;max-width:255px;}
@@ -62,18 +82,22 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
 .ride-uber{background:#000;color:#fff;}
 .ride-bolt{background:#34D399;color:#000;}
 .ride-careem{background:#00B140;color:#fff;}
+
+/* ── Leaflet controls ── */
 .leaflet-control-container>*{display:none!important;}
 .leaflet-control-container .leaflet-bottom.leaflet-right{display:block!important;}
 .leaflet-control-attribution{background:rgba(10,22,40,.7)!important;color:#475569!important;font-size:9px!important;display:block!important;}
 .leaflet-control-attribution a{color:#C9A84C!important;}
 .leaflet-tile-container img{width:256.5px!important;height:256.5px!important;}
+
 #loading-overlay{position:absolute;inset:0;background:#0f2040;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;color:#C9A84C;font-size:14px;}
 </style>
 </head>
 <body>
-<div id="loading-overlay">...</div>
+<div id="loading-overlay">جاري التحميل…</div>
 <div id="map"></div>
 <div id="status-bar"><div id="status-pill"></div></div>
+<div id="zoom-hint"><div id="zoom-pill"></div></div>
 <div id="filter-bar">
   <button class="fbtn active" id="btn-all"></button>
   <button class="fbtn" id="btn-att"></button>
@@ -82,21 +106,16 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
   <button class="fbtn" id="btn-cafe"></button>
   <button class="fbtn" id="btn-apt"></button>
 </div>
-<div id="legend">
-  <div class="l-row"><span class="ldot" style="background:#6366F1;border:1.5px solid #fff"></span><span class="l-lbl" id="leg-you"></span></div>
-  <div class="l-row"><span class="ldot" style="background:#D4A843"></span><span class="l-lbl" id="leg-spots"></span></div>
-  <div class="l-row"><span class="ldot" style="background:#16A34A"></span><span class="l-lbl" id="leg-tour"></span></div>
-  <div class="l-row"><span class="ldot" style="background:#3B82F6"></span><span class="l-lbl" id="leg-hotel"></span></div>
-  <div class="l-row"><span class="ldot" style="background:#EF4444"></span><span class="l-lbl" id="leg-rest"></span></div>
-  <div class="l-row"><span class="ldot" style="background:#92400E"></span><span class="l-lbl" id="leg-cafe"></span></div>
-  <div class="l-row"><span class="ldot" style="background:#A855F7"></span><span class="l-lbl" id="leg-apt"></span></div>
-</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function(){
   var map, tourismLayer, poiLayer;
-  var IS_AR=false, USER_LAT=24.7136, USER_LNG=46.6753, API_BASE='', SPOTS=[];
+  var IS_AR=false, USER_LAT=24.7136, USER_LNG=46.6753, SPOTS=[];
   var APTS={};
+  var currentFilter=null;
+  var poiXhr=null;
+
+  /* ── Busy-level simulation ── */
   var PAT={cultural:[[8,11,55],[11,14,45],[14,17,70],[17,21,78],[21,23,42]],events:[[9,12,25],[12,15,20],[15,17,40],[17,20,88],[20,23,82]],nature:[[6,9,68],[9,12,58],[12,15,38],[15,18,62],[18,20,30]],entertainment:[[10,13,32],[13,16,48],[16,19,65],[19,22,92],[22,24,72]],religious:[[4,6,82],[11,13,95],[14,16,72],[17,20,88],[20,22,68]]};
   var WKD=[5,6];
   function ksaH(){return(new Date().getUTCHours()+3)%24;}
@@ -109,70 +128,151 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
   var CAT_CLR={cultural:'#60A5FA',events:'#A78BFA',nature:'#4ADE80',entertainment:'#FB923C',religious:'#D4A843'};
   var CAT_AR={cultural:'ثقافي',events:'فعاليات',nature:'طبيعة',entertainment:'ترفيه',religious:'ديني'};
   var CAT_EN={cultural:'Cultural',events:'Events',nature:'Nature',entertainment:'Entertainment',religious:'Religious'};
-  var POI_CFG={attraction:{clr:'#16A34A',emoji:'🎯',arName:'سياحي',enName:'Tourism'},hotel:{clr:'#3B82F6',emoji:'🏨',arName:'فندق',enName:'Hotel'},restaurant:{clr:'#EF4444',emoji:'🍽️',arName:'مطعم',enName:'Restaurant'},cafe:{clr:'#92400E',emoji:'☕',arName:'كافيه',enName:'Café'},historic:{clr:'#D97706',emoji:'🏛️',arName:'تاريخي',enName:'Historic'}};
-
-  function post(obj){try{window.parent.postMessage(JSON.stringify(obj),'*');}catch(e){}}
-
-  function makeEmojiIcon(s,pct){var info=busyInfo(pct);var clr=CAT_CLR[s.category]||'#D4A843';var fc=s.featured?' feat':'';var rlbl=s.rating?'<div class="star-lbl">⭐ '+s.rating.toFixed(1)+'</div>':'<div class="star-lbl dim">—</div>';return L.divIcon({html:'<div class="spot-wrap"><div class="spot-pin'+fc+'" style="border-color:'+clr+'">'+s.emoji+'<div class="busy-ring ring-'+info.cls+'"></div></div>'+rlbl+'</div>',className:'spot-icon',iconSize:[0,0],iconAnchor:[0,0]});}
-  function makeTourismPopup(s,pct){var info=busyInfo(pct);var clr=CAT_CLR[s.category]||'#D4A843';var catL=IS_AR?(CAT_AR[s.category]||s.category):(CAT_EN[s.category]||s.category);var barH=pct!==null?'<div class="pop-bar-track"><div class="pop-bar-fill" style="width:'+pct+'%;background:'+info.clr+'"></div></div>':'';var stH=s.rating?'<div class="pop-stars-row"><span class="pop-stars">'+stars(s.rating)+'</span><span class="pop-rating-num">'+s.rating.toFixed(1)+'</span></div>':'';return '<span class="pop-type" style="color:'+clr+'">'+esc(catL)+'</span><div class="pop-name">'+esc(IS_AR?s.nameAr:s.nameEn)+'</div><div class="pop-city">📍 '+esc(IS_AR?s.cityAr:s.cityEn)+'</div>'+stH+'<div class="pop-desc">'+esc(IS_AR?s.descAr:s.descEn)+'</div><div class="pop-busy"><div class="pop-busy-row"><span class="pop-busy-title">'+(IS_AR?'الزحمة':'Busyness')+'</span><span class="pop-busy-val" style="color:'+info.clr+'">'+info.dot+' '+info.lbl+'</span></div>'+barH+'</div><a class="pop-btn" href="'+s.mapsUrl+'" target="_blank">🗺️ '+(IS_AR?'افتح الخريطة':'Open Maps')+'</a>';}
-  function renderTourism(){tourismLayer.clearLayers();SPOTS.forEach(function(s){var pct=calcBusy(s.id,s.category);L.marker([s.lat,s.lng],{icon:makeEmojiIcon(s,pct)}).bindPopup(makeTourismPopup(s,pct),{className:'lf-popup',maxWidth:275,closeButton:true}).addTo(tourismLayer);});}
-
-  window.openRide=function(app,apId){var d=APTS[apId];if(!d)return;var urls={uber:'uber://?action=setPickup&pickup=my_location&dropoff[latitude]='+d.lat+'&dropoff[longitude]='+d.lng+'&dropoff[nickname]='+encodeURIComponent(d.name),bolt:'bolt://pickup=my_location&dropoff_lat='+d.lat+'&dropoff_lon='+d.lng,careem:'careem://booking/pickup/current/dropoff/'+d.lat+'/'+d.lng};window.open(urls[app],'_system');};
-
-  function makeAptPopup(p){var name=p.nameAr||p.nameEn||'—';var tags=p.tags||{};var price=tags.price_per_night?'SAR '+Number(tags.price_per_night).toLocaleString('en')+(IS_AR?' / ليلة':' / night'):'';var phone=tags.phone||'';var apId='apt_'+p.osmId;APTS[apId]={lat:p.lat,lng:p.lng,name:name};var h='<span class="pop-type" style="color:#A855F7">🏠 '+(IS_AR?'شقة مفروشة':'Furnished Apt.')+'</span>';h+='<div class="pop-name">'+esc(name)+'</div>';if(price)h+='<div class="apt-price">💰 '+price+'</div>';h+=phone?'<a class="pop-call" href="tel:'+phone.replace(/\s/g,'')+'">📞 '+(IS_AR?'اتصال':'Call')+'</a>':'<div class="pop-no-phone">'+(IS_AR?'لا يوجد هاتف':'No phone')+'</div>';h+='<div class="ride-btns">';h+='<button class="ride-btn ride-uber" onclick="openRide(\'uber\',\''+apId+'\')">🚗 '+(IS_AR?'أوبر':'Uber')+'</button>';h+='<button class="ride-btn ride-bolt" onclick="openRide(\'bolt\',\''+apId+'\')">⚡ '+(IS_AR?'بولت':'Bolt')+'</button>';h+='<button class="ride-btn ride-careem" onclick="openRide(\'careem\',\''+apId+'\')">🟢 '+(IS_AR?'كريم':'Careem')+'</button>';h+='</div>';return h;}
-  function makePOIPopup(p,cfg){var name=IS_AR?(p.nameAr||p.nameEn||''):(p.nameEn||p.nameAr||'');if(!name)name=IS_AR?'اسم غير متاح':'N/A';var tags=p.tags||{};var phone=tags.phone||tags['contact:phone']||tags['contact:mobile']||'';var addr=tags['addr:full']||'';if(!addr){var ap=[];if(tags['addr:city'])ap.push(tags['addr:city']);if(tags['addr:street'])ap.push(tags['addr:street']);addr=ap.join(' — ');}var h='<div class="pop-type" style="color:'+cfg.clr+'">'+cfg.emoji+' '+(IS_AR?cfg.arName:cfg.enName)+'</div>';h+='<div class="pop-name">'+esc(name)+'</div>';if(addr)h+='<div class="pop-addr">📍 '+esc(addr)+'</div>';h+=phone?'<a class="pop-call" href="tel:'+phone.replace(/\s/g,'')+'">📞 '+(IS_AR?'اتصال':'Call')+'</a>':'<div class="pop-no-phone">'+(IS_AR?'لا يوجد هاتف':'No phone')+'</div>';return h;}
+  var POI_CLR={attraction:'#16A34A',hotel:'#3B82F6',restaurant:'#EF4444',cafe:'#92400E',apartment:'#A855F7',historic:'#D97706'};
 
   function showStatus(msg){var bar=document.getElementById('status-bar');var pill=document.getElementById('status-pill');if(msg){pill.textContent=msg;bar.style.display='flex';}else{bar.style.display='none';}}
-
-  function loadPoi(type){
-    var url=API_BASE+'/api/poi?lat='+USER_LAT+'&lng='+USER_LNG+'&radius_km=20&limit=300';
-    if(type)url+='&type='+type;
-    showStatus(IS_AR?'جاري التحميل…':'Loading…');
-    fetch(url).then(function(r){return r.json();}).then(function(data){
-      poiLayer.clearLayers();Object.keys(APTS).forEach(function(k){delete APTS[k];});
-      var places=data.places||[];
-      places.forEach(function(p){
-        if(!p.lat||!p.lng)return;
-        var html,clr;
-        if(p.type==='apartment'){html=makeAptPopup(p);clr='#A855F7';}
-        else{var cfg=POI_CFG[p.type];if(!cfg)return;html=makePOIPopup(p,cfg);clr=cfg.clr;}
-        L.circleMarker([p.lat,p.lng],{radius:7,fillColor:clr,color:'#fff',weight:1.5,opacity:1,fillOpacity:.88}).bindPopup(html,{className:'lf-popup',maxWidth:270,closeButton:true}).addTo(poiLayer);
-      });
-      var cnt=places.length;
-      showStatus(IS_AR?cnt+' نتيجة':cnt+' results');
-      setTimeout(function(){showStatus(null);},2200);
-    }).catch(function(){showStatus(IS_AR?'خطأ':'Error');setTimeout(function(){showStatus(null);},2200);});
+  function showZoomHint(show){
+    var el=document.getElementById('zoom-hint');
+    var pill=document.getElementById('zoom-pill');
+    if(show){pill.textContent=IS_AR?'🔍 زوم للداخل لرؤية الأماكن':'🔍 Zoom in to see places';el.style.display='flex';}
+    else{el.style.display='none';}
   }
 
+  /* ── Tourism landmark icons ── */
+  function makeEmojiIcon(s,pct){var info=busyInfo(pct);var clr=CAT_CLR[s.category]||'#D4A843';var fc=s.featured?' feat':'';var rlbl=s.rating?'<div class="star-lbl">⭐ '+s.rating.toFixed(1)+'</div>':'<div class="star-lbl dim">—</div>';return L.divIcon({html:'<div class="spot-wrap"><div class="spot-pin'+fc+'" style="border-color:'+clr+'">'+s.emoji+'<div class="busy-ring ring-'+info.cls+'"></div></div>'+rlbl+'</div>',className:'spot-icon',iconSize:[0,0],iconAnchor:[0,0]});}
+  function makeTourismPopup(s,pct){var info=busyInfo(pct);var clr=CAT_CLR[s.category]||'#D4A843';var catL=IS_AR?(CAT_AR[s.category]||s.category):(CAT_EN[s.category]||s.category);var barH=pct!==null?'<div class="pop-bar-track"><div class="pop-bar-fill" style="width:'+pct+'%;background:'+info.clr+'"></div></div>':'';var stH=s.rating?'<div class="pop-stars-row"><span class="pop-stars">'+stars(s.rating)+'</span><span class="pop-rating-num">'+s.rating.toFixed(1)+'</span></div>':'';return '<span class="pop-type" style="color:'+clr+'">'+esc(catL)+'</span><div class="pop-name">'+esc(IS_AR?s.nameAr:s.nameEn)+'</div><div class="pop-city">📍 '+esc(IS_AR?s.cityAr:s.cityEn)+'</div>'+stH+'<div class="pop-desc">'+esc(IS_AR?(s.descAr||''):(s.descEn||''))+'</div>'+(pct!==null?'<div class="pop-busy"><div class="pop-busy-row"><span class="pop-busy-title">'+(IS_AR?'الزحمة':'Busyness')+'</span><span class="pop-busy-val" style="color:'+info.clr+'">'+info.dot+' '+info.lbl+'</span></div>'+barH+'</div>':'')+'<a class="pop-btn" href="'+s.mapsUrl+'" target="_blank">🗺️ '+(IS_AR?'افتح في الخريطة':'Open Maps')+'</a>';}
+  function renderTourism(){
+    if(!tourismLayer)return;
+    tourismLayer.clearLayers();
+    SPOTS.forEach(function(s){
+      var pct=calcBusy(s.id,s.category);
+      L.marker([s.lat,s.lng],{icon:makeEmojiIcon(s,pct)})
+        .bindPopup(makeTourismPopup(s,pct),{className:'lf-popup',maxWidth:275,closeButton:true})
+        .addTo(tourismLayer);
+    });
+  }
+
+  /* ── Apt popup with ride buttons ── */
+  window.openRide=function(app,apId){var d=APTS[apId];if(!d)return;var urls={uber:'uber://?action=setPickup&pickup=my_location&dropoff[latitude]='+d.lat+'&dropoff[longitude]='+d.lng+'&dropoff[nickname]='+encodeURIComponent(d.name),bolt:'bolt://pickup=my_location&dropoff_lat='+d.lat+'&dropoff_lon='+d.lng,careem:'careem://booking/pickup/current/dropoff/'+d.lat+'/'+d.lng};window.open(urls[app],'_system');};
+  function makeAptPopup(el){var tags=el.tags||{};var name=IS_AR?(tags['name:ar']||tags.name||''):(tags['name:en']||tags.name||'');if(!name)name=IS_AR?'شقة مفروشة':'Furnished Apt.';var phone=tags.phone||tags['contact:phone']||'';var apId='apt_'+el.id;APTS[apId]={lat:el.lat,lng:el.lon,name:name};var h='<span class="pop-type" style="color:#A855F7">🏠 '+(IS_AR?'شقة مفروشة':'Furnished Apt.')+'</span>';h+='<div class="pop-name">'+esc(name)+'</div>';h+=phone?'<a class="pop-call" href="tel:'+phone.replace(/\s/g,'')+'">📞 '+(IS_AR?'اتصال':'Call')+'</a>':'<div class="pop-no-phone">'+(IS_AR?'لا يوجد هاتف':'No phone')+'</div>';h+='<div class="ride-btns"><button class="ride-btn ride-uber" onclick="openRide(\'uber\',\''+apId+'\')">🚗 Uber</button><button class="ride-btn ride-bolt" onclick="openRide(\'bolt\',\''+apId+'\')">⚡ Bolt</button><button class="ride-btn ride-careem" onclick="openRide(\'careem\',\''+apId+'\')">🟢 Careem</button></div>';return h;}
+
+  /* ── Generic POI popup ── */
+  function makePOIPopup(el,type){var tags=el.tags||{};var name=IS_AR?(tags['name:ar']||tags.name||''):(tags['name:en']||tags.name||'');if(!name)name=IS_AR?'اسم غير متاح':'N/A';var phone=tags.phone||tags['contact:phone']||tags['contact:mobile']||'';var addr='';var ap=[];if(tags['addr:city'])ap.push(tags['addr:city']);if(tags['addr:street'])ap.push(tags['addr:street']);addr=ap.join(' — ');var clr=POI_CLR[type]||'#64748B';var emojiMap={attraction:'🎯',hotel:'🏨',restaurant:'🍽️',cafe:'☕',apartment:'🏠',historic:'🏛️'};var emoji=emojiMap[type]||'📍';var arName={attraction:'سياحي',hotel:'فندق',restaurant:'مطعم',cafe:'كافيه',apartment:'شقق',historic:'تاريخي'};var enName={attraction:'Tourism',hotel:'Hotel',restaurant:'Restaurant',cafe:'Café',apartment:'Apt.',historic:'Historic'};var h='<div class="pop-type" style="color:'+clr+'">'+emoji+' '+(IS_AR?(arName[type]||type):(enName[type]||type))+'</div>';h+='<div class="pop-name">'+esc(name)+'</div>';if(addr)h+='<div class="pop-addr">📍 '+esc(addr)+'</div>';h+=phone?'<a class="pop-call" href="tel:'+phone.replace(/\s/g,'')+'">📞 '+(IS_AR?'اتصال':'Call')+'</a>':'<div class="pop-no-phone">'+(IS_AR?'لا يوجد هاتف':'No phone')+'</div>';return h;}
+
+  /* ── Overpass POI loading ── */
+  function buildOverpassQuery(type,bounds){
+    var s=bounds.getSouth(),w=bounds.getWest(),n=bounds.getNorth(),e=bounds.getEast();
+    var bb='('+s+','+w+','+n+','+e+')';
+    var q='[out:json][timeout:25];(';
+    if(!type||type==='all'){
+      q+='node["amenity"="restaurant"]'+bb+';';
+      q+='node["amenity"~"cafe|coffee_shop"]'+bb+';';
+      q+='node["tourism"~"hotel|motel|resort"]'+bb+';';
+      q+='node["tourism"="attraction"]'+bb+';';
+      q+='node["historic"]'+bb+';';
+    }else if(type==='attraction'){
+      q+='node["tourism"="attraction"]'+bb+';';
+      q+='node["historic"]'+bb+';';
+    }else if(type==='hotel'){
+      q+='node["tourism"~"hotel|motel|resort"]'+bb+';';
+    }else if(type==='restaurant'){
+      q+='node["amenity"="restaurant"]'+bb+';';
+    }else if(type==='cafe'){
+      q+='node["amenity"~"cafe|coffee_shop"]'+bb+';';
+    }else if(type==='apartment'){
+      q+='node["tourism"~"apartment|guest_house|hostel"]'+bb+';';
+    }
+    return q+');out 150;';
+  }
+
+  function getPoiType(el){
+    var t=el.tags||{};
+    if(t.tourism==='attraction')return 'attraction';
+    if(t.tourism&&['hotel','motel','resort'].indexOf(t.tourism)!==-1)return 'hotel';
+    if(t.amenity==='restaurant')return 'restaurant';
+    if(t.amenity==='cafe'||t.amenity==='coffee_shop')return 'cafe';
+    if(t.tourism&&['apartment','guest_house','hostel'].indexOf(t.tourism)!==-1)return 'apartment';
+    if(t.historic)return 'historic';
+    return null;
+  }
+
+  function renderPoiElements(elements,filterType){
+    if(!poiLayer)return;
+    poiLayer.clearLayers();
+    Object.keys(APTS).forEach(function(k){delete APTS[k];});
+    var count=0;
+    elements.forEach(function(el){
+      if(!el.lat||!el.lon)return;
+      var type=getPoiType(el);
+      if(!type)return;
+      /* colour override if filtering */
+      var clr=POI_CLR[type]||'#64748B';
+      var html;
+      if(type==='apartment'){
+        html=makeAptPopup(el);
+      }else{
+        html=makePOIPopup(el,type);
+      }
+      L.circleMarker([el.lat,el.lon],{radius:7,fillColor:clr,color:'#fff',weight:1.5,opacity:1,fillOpacity:.9})
+        .bindPopup(html,{className:'lf-popup',maxWidth:270,closeButton:true})
+        .addTo(poiLayer);
+      count++;
+    });
+    showStatus(IS_AR?count+' نتيجة':count+' results');
+    setTimeout(function(){showStatus(null);},2000);
+  }
+
+  function loadPoi(type){
+    if(!map)return;
+    var zoom=map.getZoom();
+    if(zoom<10){
+      poiLayer&&poiLayer.clearLayers();
+      showZoomHint(true);
+      return;
+    }
+    showZoomHint(false);
+
+    /* abort previous request */
+    if(poiXhr){try{poiXhr.abort();}catch(e){}poiXhr=null;}
+
+    var query=buildOverpassQuery(type,map.getBounds());
+    showStatus(IS_AR?'جاري التحميل…':'Loading…');
+
+    var xhr=new XMLHttpRequest();
+    poiXhr=xhr;
+    xhr.open('POST','https://overpass-api.de/api/interpreter',true);
+    xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+    xhr.timeout=30000;
+    xhr.onload=function(){
+      if(xhr!==poiXhr)return;
+      poiXhr=null;
+      try{renderPoiElements(JSON.parse(xhr.responseText).elements||[],type);}catch(e){showStatus(null);}
+    };
+    xhr.onerror=xhr.ontimeout=function(){poiXhr=null;showStatus(null);};
+    xhr.send('data='+encodeURIComponent(query));
+  }
+
+  /* Re-query on map move/zoom */
+  var moveTimer=null;
+
+  /* ── Language setup ── */
   function setLang(ar){
     IS_AR=ar;
     var dir=ar?'rtl':'ltr';
     document.documentElement.dir=dir;
-    var fb=document.getElementById('filter-bar');
-    var leg=document.getElementById('legend');
-    if(ar){if(fb)fb.classList.add('rtl-bar');if(leg)leg.classList.add('rtl-leg');}
-    else{if(fb)fb.classList.remove('rtl-bar');if(leg)leg.classList.remove('rtl-leg');}
-    var closeBtns=document.querySelectorAll('.lf-popup .leaflet-popup-close-button');
-    closeBtns.forEach(function(b){b.style.cssText=ar?'left:8px;right:auto!important;':'right:8px;';});
-    document.getElementById('btn-all').textContent=ar?'الكل':'All';
-    document.getElementById('btn-att').textContent=ar?'سياحة':'Tourism';
-    document.getElementById('btn-hot').textContent=ar?'فنادق':'Hotels';
-    document.getElementById('btn-rest').textContent=ar?'مطاعم':'Rest.';
-    document.getElementById('btn-cafe').textContent=ar?'كافيهات':'Cafes';
+    document.getElementById('btn-all').textContent=ar?'🌍 الكل':'🌍 All';
+    document.getElementById('btn-att').textContent=ar?'🏛 سياحة':'🏛 Tourism';
+    document.getElementById('btn-hot').textContent=ar?'🏨 فنادق':'🏨 Hotels';
+    document.getElementById('btn-rest').textContent=ar?'🍽 مطاعم':'🍽 Rest.';
+    document.getElementById('btn-cafe').textContent=ar?'☕ كافيهات':'☕ Cafes';
     document.getElementById('btn-apt').textContent=ar?'🏠 شقق':'🏠 Apts';
-    document.getElementById('leg-you').textContent=ar?'موقعك':'You';
-    document.getElementById('leg-spots').textContent=ar?'أماكن':'Spots';
-    document.getElementById('leg-tour').textContent=ar?'سياحة':'Tourism';
-    document.getElementById('leg-hotel').textContent=ar?'فندق':'Hotel';
-    document.getElementById('leg-rest').textContent=ar?'مطعم':'Rest.';
-    document.getElementById('leg-cafe').textContent=ar?'كافيه':'Cafe';
-    document.getElementById('leg-apt').textContent=ar?'شقق':'Apt.';
   }
 
+  /* ── Filter buttons ── */
   function clearActive(){document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active','active-apt');});}
-  window.filterAll=function(btn){clearActive();btn.classList.add('active');if(map)map.addLayer(tourismLayer);loadPoi(null);};
-  window.filterPoi=function(btn,type){clearActive();btn.classList.add('active');if(map)map.addLayer(tourismLayer);loadPoi(type);};
-  window.filterApt=function(btn){clearActive();btn.classList.add('active-apt');if(map)map.removeLayer(tourismLayer);loadPoi('apartment');};
+  window.filterAll=function(btn){clearActive();btn.classList.add('active');currentFilter=null;if(map)map.addLayer(tourismLayer);loadPoi(null);};
+  window.filterPoi=function(btn,type){clearActive();btn.classList.add('active');currentFilter=type;if(map)map.addLayer(tourismLayer);loadPoi(type);};
+  window.filterApt=function(btn){clearActive();btn.classList.add('active-apt');currentFilter='apartment';if(map)map.removeLayer(tourismLayer);loadPoi('apartment');};
 
   document.getElementById('btn-all').onclick=function(){window.filterAll(this);};
   document.getElementById('btn-att').onclick=function(){window.filterPoi(this,'attraction');};
@@ -186,28 +286,27 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
   function initMap(cfg){
     var newLat=cfg.userLat||24.7136;
     var newLng=cfg.userLng||46.6753;
-    var newAr=cfg.isAr||false;
-    var newApiBase=cfg.apiBase||'';
+    var newAr=!!cfg.isAr;
     var newSpots=cfg.spots||[];
 
-    /* ── Already initialised: just update what changed ── */
+    /* Already initialised — just update */
     if(map){
       var langChanged=(newAr!==IS_AR);
       var locChanged=(newLat!==USER_LAT||newLng!==USER_LNG);
-      IS_AR=newAr; USER_LAT=newLat; USER_LNG=newLng; API_BASE=newApiBase; SPOTS=newSpots;
+      IS_AR=newAr;USER_LAT=newLat;USER_LNG=newLng;SPOTS=newSpots;
       if(langChanged)setLang(IS_AR);
       if(locChanged){
         map.setView([USER_LAT,USER_LNG]);
         if(userMarker){map.removeLayer(userMarker);}
-        userMarker=L.circleMarker([USER_LAT,USER_LNG],{radius:10,fillColor:'#6366F1',color:'#fff',weight:2.5,opacity:1,fillOpacity:.95}).bindPopup('<div class="pop-name">'+(IS_AR?'📍 موقعك الحالي':'📍 Your Location')+'</div>',{className:'lf-popup'}).addTo(map);
-        if(tourismLayer){renderTourism();}
-        loadPoi(null);
+        userMarker=L.circleMarker([USER_LAT,USER_LNG],{radius:10,fillColor:'#6366F1',color:'#fff',weight:2.5,opacity:1,fillOpacity:.95}).addTo(map);
+        if(SPOTS.length)renderTourism();
+        loadPoi(currentFilter);
       }
       return;
     }
 
-    /* ── First init ── */
-    IS_AR=newAr; USER_LAT=newLat; USER_LNG=newLng; API_BASE=newApiBase; SPOTS=newSpots;
+    /* First init */
+    IS_AR=newAr;USER_LAT=newLat;USER_LNG=newLng;SPOTS=newSpots;
     setLang(IS_AR);
 
     var ov=document.getElementById('loading-overlay');
@@ -218,17 +317,20 @@ html,body,#map{height:100%;width:100%;background:#0f2040;}
     tourismLayer=L.layerGroup().addTo(map);
     poiLayer=L.layerGroup().addTo(map);
 
-    userMarker=L.circleMarker([USER_LAT,USER_LNG],{radius:10,fillColor:'#6366F1',color:'#fff',weight:2.5,opacity:1,fillOpacity:.95}).bindPopup('<div class="pop-name">'+(IS_AR?'📍 موقعك الحالي':'📍 Your Location')+'</div>',{className:'lf-popup'}).addTo(map);
+    userMarker=L.circleMarker([USER_LAT,USER_LNG],{radius:10,fillColor:'#6366F1',color:'#fff',weight:2.5,opacity:1,fillOpacity:.95}).bindPopup('<div class="pop-name">📍 '+(IS_AR?'موقعك الحالي':'Your Location')+'</div>',{className:'lf-popup'}).addTo(map);
 
     if(SPOTS.length){renderTourism();setInterval(renderTourism,15*60*1000);}
     loadPoi(null);
+
+    /* Re-load POI after panning / zooming */
+    map.on('moveend',function(){
+      clearTimeout(moveTimer);
+      moveTimer=setTimeout(function(){loadPoi(currentFilter);},800);
+    });
   }
 
   window.addEventListener('message',function(e){
-    try{
-      var d=JSON.parse(e.data);
-      if(d.type==='init')initMap(d);
-    }catch(err){}
+    try{var d=JSON.parse(e.data);if(d.type==='init')initMap(d);}catch(err){}
   });
 
 })();

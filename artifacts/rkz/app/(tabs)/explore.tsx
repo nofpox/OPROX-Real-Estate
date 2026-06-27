@@ -1,14 +1,17 @@
 /**
  * explore.tsx — Map-First Tourism & Booking
- * الخريطة السياحية تظهر أولاً مع فلاتر (معالم/فنادق/مطاعم...).
- * شريط أفقي سفلي للفنادق والشقق المفروشة مع حجز مباشر.
+ * الخريطة السياحية تظهر مباشرة.
+ * فلاتر داخل الخريطة (Overpass API).
+ * شريط أفقي سفلي للفنادق والشقق.
+ * رابط روح السعودية في الأعلى.
  */
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Dimensions,
   Image,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,23 +20,34 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import TourismMapView from "@/components/TourismMapView";
+import TourismMapView, { type TourismSpot } from "@/components/TourismMapView";
 import { useLocale } from "@/hooks/useLocale";
 import { HOTEL_LISTINGS } from "@/constants/mockTourism";
 
 const NAVY = "#0f2040";
-const GOLD = "#c9a84c";
+const GOLD  = "#c9a84c";
 const { width: SW } = Dimensions.get("window");
-const CARD_W = SW * 0.72;
+const CARD_W = SW * 0.70;
+
+// ── Convert HotelListing → TourismSpot (for the map layer) ─────────────────
+function hotelToSpot(h: (typeof HOTEL_LISTINGS)[0]): TourismSpot {
+  return {
+    id:       h.id,
+    emoji:    h.type === "hotel" ? "🏨" : "🏠",
+    nameAr:   h.nameAr,
+    nameEn:   h.nameEn,
+    cityAr:   h.city,
+    cityEn:   h.cityEn,
+    category: "entertainment",
+    lat:      h.lat,
+    lng:      h.lng,
+    mapsUrl:  `https://maps.google.com/?q=${encodeURIComponent(h.nameEn)}`,
+  };
+}
 
 // ── Hotel strip card ──────────────────────────────────────────────────────────
-function HotelStripCard({
-  item,
-  isAr,
-  bookNow,
-  perNight,
-  hotelType,
-  aptType,
+function HotelCard({
+  item, isAr, bookNow, perNight, hotelType, aptType,
 }: {
   item: (typeof HOTEL_LISTINGS)[0];
   isAr: boolean;
@@ -51,7 +65,6 @@ function HotelStripCard({
       onPress={() => router.push(`/hotel/${item.id}` as never)}
     >
       <Image source={{ uri: item.image }} style={s.hotelImg} />
-      {/* Type badge */}
       <View style={s.typeBadge}>
         <Text style={s.typeTxt}>{typeLabel}</Text>
       </View>
@@ -87,21 +100,26 @@ function HotelStripCard({
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function TourismScreen() {
-  const { t, isAr } = useLocale();
-  const insets = useSafeAreaInsets();
-  const tour = t.tourism;
-
-  // Show/hide hotel strip
+  const { t, isAr }  = useLocale();
+  const insets        = useSafeAreaInsets();
+  const tour          = t.tourism;
   const [stripOpen, setStripOpen] = useState(true);
 
-  // filterBarTopPx = how far from top of map the Leaflet filter bar sits
-  // = safe-area top + a little gap
-  const filterBarTopPx = insets.top + 56;
+  // Spots to render as pins on the map
+  const spots: TourismSpot[] = useMemo(
+    () => HOTEL_LISTINGS.map(hotelToSpot),
+    [],
+  );
+
+  // filterBarTopPx = where the Leaflet filter bar sits inside the WebView
+  // just below the safe area + روح السعودية button
+  const filterBarTopPx = insets.top + 48;
 
   return (
     <View style={s.root}>
-      {/* ── Full-screen tourism map (absoluteFill, no overflow:hidden) ── */}
+      {/* ── Full-screen tourism map ── */}
       <TourismMapView
+        spots={spots}
         isAr={isAr}
         showTourismSpots
         initialZoom={6}
@@ -109,41 +127,46 @@ export default function TourismScreen() {
         hasTabs
       />
 
-      {/* ── Overlay: title strip at top ── */}
+      {/* ── روح السعودية badge — top overlay, small & non-intrusive ── */}
       <View
-        style={[s.topStrip, { top: insets.top + 8 }]}
+        style={[s.topRow, { top: insets.top + 8 }]}
         pointerEvents="box-none"
       >
-        <View style={s.topCard} pointerEvents="box-none">
-          <View style={s.topRow}>
-            <MaterialIcons name="explore" size={18} color={GOLD} />
-            <Text style={s.topTitle}>{tour.title}</Text>
-          </View>
-          <Text style={s.topSub}>{tour.subtitle}</Text>
-        </View>
+        <Pressable
+          style={s.visitBtn}
+          pointerEvents="auto"
+          onPress={() => Linking.openURL("https://www.visitsaudi.com").catch(() => {})}
+        >
+          <Text style={s.visitIcon}>🌴</Text>
+          <Text style={s.visitTxt}>{isAr ? "روح السعودية" : "Visit Saudi"}</Text>
+          <MaterialIcons name="open-in-new" size={11} color="rgba(201,168,76,0.8)" />
+        </Pressable>
       </View>
 
       {/* ── Bottom hotel strip ── */}
-      <View style={[s.bottomArea, { paddingBottom: insets.bottom + 78 }]} pointerEvents="box-none">
-        {/* Toggle handle */}
+      <View
+        style={[s.bottomArea, { paddingBottom: insets.bottom + 76 }]}
+        pointerEvents="box-none"
+      >
+        {/* Handle / toggle */}
         <Pressable
           style={s.handle}
           pointerEvents="auto"
           onPress={() => setStripOpen((v) => !v)}
         >
           <View style={s.handleBar} />
-          <View style={s.handleContent}>
+          <View style={[s.handleContent, isAr && { flexDirection: "row-reverse" }]}>
             <MaterialIcons name="hotel" size={15} color={GOLD} />
             <Text style={s.handleTxt}>{tour.bookStay}</Text>
             <MaterialIcons
               name={stripOpen ? "keyboard-arrow-down" : "keyboard-arrow-up"}
               size={18}
-              color="rgba(15,32,64,0.5)"
+              color="rgba(15,32,64,0.45)"
             />
           </View>
         </Pressable>
 
-        {/* Cards */}
+        {/* Hotel cards */}
         {stripOpen && (
           <ScrollView
             horizontal
@@ -155,7 +178,7 @@ export default function TourismScreen() {
             ]}
           >
             {HOTEL_LISTINGS.map((h) => (
-              <HotelStripCard
+              <HotelCard
                 key={h.id}
                 item={h}
                 isAr={isAr}
@@ -176,33 +199,35 @@ export default function TourismScreen() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: NAVY },
 
-  // Top overlay
-  topStrip: {
+  // VisitSaudi badge
+  topRow: {
     position: "absolute",
     left: 12,
     right: 12,
+    flexDirection: "row",
+    justifyContent: "flex-end",
   },
-  topCard: {
+  visitBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     backgroundColor: "rgba(15,32,64,0.82)",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    gap: 2,
-    alignSelf: "flex-start",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "rgba(201,168,76,0.35)",
   },
-  topRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  topTitle: { fontSize: 14, fontFamily: "Inter_700Bold", color: "#fff" },
-  topSub:   { fontSize: 11, fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.65)" },
+  visitIcon: { fontSize: 13 },
+  visitTxt:  { fontSize: 12, fontFamily: "Inter_700Bold", color: GOLD },
 
-  // Bottom area
+  // Bottom strip
   bottomArea: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
   },
-
-  // Handle
   handle: {
     backgroundColor: "rgba(255,255,255,0.97)",
     borderTopLeftRadius: 20,
@@ -211,14 +236,14 @@ const s = StyleSheet.create({
     paddingBottom: 6,
     paddingHorizontal: 16,
     shadowColor: "#000",
-    shadowOpacity: 0.16,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: -4 },
     elevation: 12,
   },
   handleBar: {
     width: 36, height: 4, borderRadius: 2,
-    backgroundColor: "rgba(15,32,64,0.15)",
+    backgroundColor: "rgba(15,32,64,0.12)",
     alignSelf: "center",
     marginBottom: 8,
   },
@@ -234,7 +259,6 @@ const s = StyleSheet.create({
     color: NAVY,
   },
 
-  // Strip
   stripContent: {
     gap: 12,
     paddingHorizontal: 12,
@@ -252,9 +276,8 @@ const s = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
-    position: "relative",
   },
-  hotelImg: { width: CARD_W, height: 110 },
+  hotelImg: { width: CARD_W, height: 100 },
   typeBadge: {
     position: "absolute",
     top: 8,
@@ -264,15 +287,13 @@ const s = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
-  typeTxt: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#fff" },
-
+  typeTxt:  { fontSize: 10, fontFamily: "Inter_700Bold", color: "#fff" },
   hotelBody: { padding: 10, gap: 4 },
   hotelName: { fontSize: 13, fontFamily: "Inter_700Bold", color: NAVY },
   hotelRow:  { flexDirection: "row", alignItems: "center", gap: 4 },
   stars:     { fontSize: 10, color: GOLD, letterSpacing: -1 },
   ratingTxt: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: NAVY },
   cityTxt:   { fontSize: 11, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.5)", flex: 1 },
-
   hotelFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -282,10 +303,9 @@ const s = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "rgba(15,32,64,0.07)",
   },
-  priceNum: { fontSize: 16, fontFamily: "Inter_700Bold", color: NAVY },
+  priceNum: { fontSize: 15, fontFamily: "Inter_700Bold", color: NAVY },
   priceSub: { fontSize: 11, fontFamily: "Inter_400Regular", color: NAVY },
   perNight: { fontSize: 10, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.45)" },
-
   bookBtn: {
     backgroundColor: GOLD,
     borderRadius: 10,
