@@ -33,9 +33,7 @@ export default function Login({ onLogin }: LoginProps) {
               fontSize: 38,
               fontWeight: 800,
               letterSpacing: "-0.5px",
-              background: "linear-gradient(135deg, #C9A84C 0%, #f0d080 50%, #C9A84C 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              color: "#C9A84C",
             }}
           >
             HousIn

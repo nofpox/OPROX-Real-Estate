@@ -165,9 +165,9 @@ const DEFAULTS: SiteContent = {
     { href: "/contact",  labelEn: "Contact",    labelAr: "اتصل بنا" },
   ],
   contact: {
-    email: "info@housin.com",
-    salesEmail: "sales@housin.com",
-    supportEmail: "support@housin.com",
+    email: "info@housin.info",
+    salesEmail: "sales@housin.info",
+    supportEmail: "support@housin.info",
     phone: "+966 11 234 5678",
     fax: "+966 11 234 5679",
     supportPhone: "9200 12345",

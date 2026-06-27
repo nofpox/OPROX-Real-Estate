@@ -28,7 +28,7 @@ export function Contact() {
             <div className="space-y-5">
               {[{ icon: MapPin, label: isRtl ? 'العنوان' : 'Address', value: isRtl ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia' },
                 { icon: Phone, label: isRtl ? 'الهاتف' : 'Phone', value: '+966 11 000 0000' },
-                { icon: Mail, label: isRtl ? 'البريد الإلكتروني' : 'Email', value: 'info@rozoz.com' }
+                { icon: Mail, label: isRtl ? 'البريد الإلكتروني' : 'Email', value: 'info@housin.info' }
               ].map(item => (
                 <div key={item.label} className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-[#c9a84c]/10 flex items-center justify-center shrink-0">

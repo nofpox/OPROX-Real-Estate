@@ -182,7 +182,7 @@ export default function ProfileScreen() {
           <MenuItem
             icon="headset-mic"
             label={t.profile.contactUs}
-            onPress={() => Linking.openURL("mailto:info@rozoz.sa").catch(() => {})}
+            onPress={() => Linking.openURL("mailto:info@housin.info").catch(() => {})}
           />
         </View>
 

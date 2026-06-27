@@ -28,11 +28,23 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
 
 function RozozLogo({ className = '' }: { className?: string }) {
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <div className="w-8 h-8 rounded-md bg-[#c9a84c] flex items-center justify-center flex-shrink-0">
-        <Building2 className="w-5 h-5 text-[#0f2040]" />
+    <div className={`flex items-center gap-2.5 ${className}`}>
+      <img
+        src="/realestate/housin-logo.png"
+        alt="HousIn"
+        className="h-9 w-9 object-contain flex-shrink-0 rounded-sm"
+      />
+      <div className="flex flex-col leading-none">
+        <span
+          className="font-bold text-xl tracking-tight"
+          style={{ color: '#c9a84c' }}
+        >
+          HousIn
+        </span>
+        <span className="text-[9px] text-white/50 tracking-widest uppercase mt-0.5">
+          منصة العقارات الذكية
+        </span>
       </div>
-      <span className="font-bold text-xl tracking-tight text-white">HousIn</span>
     </div>
   );
 }
@@ -202,7 +214,7 @@ function PublicFooter() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                <span>info@housin.com</span>
+                <span>info@housin.info</span>
               </li>
             </ul>
           </div>

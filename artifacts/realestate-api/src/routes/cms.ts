@@ -66,7 +66,7 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     imageUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop",
   },
   contact: {
-    email: "info@rozoz.com",
+    email: "info@housin.info",
     phone: "+966 11 234 5678",
     whatsapp: "",
     addressEn: "King Fahd Road, Olaya District\nRiyadh, Saudi Arabia",
@@ -74,14 +74,14 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
   },
   announcements: [],
   about: {
-    titleEn: "About Rozoz Smart Solutions",
-    titleAr: "عن روزوز للحلول الذكية",
-    body: "Rozoz Smart Solutions is a leading property management company in Saudi Arabia.",
+    titleEn: "About HousIn",
+    titleAr: "عن هاوسِن",
+    body: "HousIn is a leading real estate platform in Saudi Arabia.",
     imageUrl: "",
   },
   branding: {
-    companyNameEn: "Rozoz Smart Solutions",
-    companyNameAr: "روزوز للحلول الذكية",
+    companyNameEn: "HousIn",
+    companyNameAr: "هاوسِن",
     taglineEn: "Premium Property Management",
     taglineAr: "إدارة عقارات متميزة",
     logoUrl: "",
