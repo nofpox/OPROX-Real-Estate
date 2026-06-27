@@ -259,12 +259,6 @@ type = "audio"
 title = "خيار 3 — قانون وأوركسترا (رؤية 2030)"
 
 [[outputs]]
-id = "R2DVBL_tDoNFs0tuKcQZh"
-uri = "file://exports/rozoz-platform-study.pdf"
-type = "pdf"
-title = "دراسة منصة روزوز للحلول الذكية"
-
-[[outputs]]
 id = "jEO_v2vtHhHnd0G_S6AWU"
 uri = "file://rozoz-source.tar.gz"
 type = "unspecified"
@@ -281,12 +275,6 @@ id = "ksqM0ahSH2MT6X6QhoYza"
 uri = "file://attached_assets/rozoz-business-study.md"
 type = "text"
 title = "دراسة روزوز الشاملة — خريطة الطريق"
-
-[[outputs]]
-id = "wMbGd-KhWiqAZMAxHWWRF"
-uri = "file://attached_assets/rozoz-business-study.pdf"
-type = "pdf"
-title = "دراسة روزوز الشاملة — PDF"
 
 [[outputs]]
 id = "ZfkL4RcbvB7acouLwAZw6"
