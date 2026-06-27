@@ -94,7 +94,7 @@ export function WelcomeScreen({ onComplete }: Props) {
         textAlign: "center",
       }}>
         <img
-          src={`${typeof import.meta !== "undefined" ? import.meta.env.BASE_URL : "/grand-pms/"}esteti-logo.png`}
+          src={`${typeof import.meta !== "undefined" ? import.meta.env.BASE_URL : "/grand-pms/"}housin-logo.png`}
           alt="HousIn"
           style={{ height: 80, width: "auto", objectFit: "contain", margin: "0 auto", display: "block" }}
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}

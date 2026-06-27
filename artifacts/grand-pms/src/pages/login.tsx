@@ -26,9 +26,21 @@ export default function Login({ onLogin }: LoginProps) {
 
       {/* Logo */}
       <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center justify-center w-28 h-28 rounded-2xl bg-[#C9A84C]/10 border border-[#C9A84C]/20">
+        <div className="flex items-center justify-center w-28 h-28 rounded-2xl bg-white/90 border border-[#C9A84C]/30 shadow-[0_0_40px_rgba(201,168,76,0.15)]">
+          <img
+            src="/grand-pms/housin-logo.png"
+            alt="HousIn"
+            className="w-20 h-20 object-contain"
+            onError={(e) => {
+              const el = e.currentTarget;
+              el.style.display = "none";
+              const fallback = el.nextElementSibling as HTMLElement | null;
+              if (fallback) fallback.style.display = "block";
+            }}
+          />
           <span
             style={{
+              display: "none",
               fontFamily: "'Georgia', 'Times New Roman', serif",
               fontSize: 38,
               fontWeight: 800,
@@ -36,7 +48,7 @@ export default function Login({ onLogin }: LoginProps) {
               color: "#C9A84C",
             }}
           >
-            HousIn
+            H
           </span>
         </div>
         <p className="text-xs text-white/40 tracking-[0.25em] uppercase">
