@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
-  Image,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -25,7 +24,6 @@ import { useLocale } from "@/hooks/useLocale";
 const { width } = Dimensions.get("window");
 
 const NAVY   = "#0F2040";
-const LOGO = require("@/assets/images/esteti-logo.png");
 const GOLD   = "#C9A84C";
 const BLUE   = "#2563EB";
 const TEAL   = "#0D9488";
@@ -209,7 +207,7 @@ export default function RegisterModal() {
         >
           {/* ── Header ── */}
           <View style={s.header}>
-            <Image source={LOGO} style={{ width: 140, height: 105 }} resizeMode="contain" />
+            <Text style={{ fontSize: 36, fontFamily: "Inter_700Bold", color: GOLD, letterSpacing: 2 }}>HousIn</Text>
             <Pressable style={s.closeBtn} onPress={handleClose} hitSlop={12}>
               <Ionicons name="close" size={22} color="rgba(255,255,255,0.55)" />
             </Pressable>
@@ -355,7 +353,7 @@ export default function RegisterModal() {
           {step === "role" && (
             <View style={s.body}>
               <Text style={s.title}>
-                {isAr ? "كيف تريد الاستخدام؟" : "How will you use Esteti In?"}
+                {isAr ? "كيف تريد الاستخدام؟" : "How will you use Housin?"}
               </Text>
               <Text style={s.subtitle}>
                 {isAr
