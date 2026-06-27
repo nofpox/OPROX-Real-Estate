@@ -146,6 +146,21 @@ export default function ProfileScreen() {
           />
         </View>
 
+        {/* ── Financing calculator ── */}
+        <SectionHeader title={isAr ? "الأدوات المالية" : "Financial Tools"} />
+        <View style={s.section}>
+          <MenuItem
+            icon="calculate"
+            label={isAr ? "حاسبة التمويل الإسلامي" : "Islamic Finance Calculator"}
+            onPress={() => router.push("/(tabs)/ai-concierge" as never)}
+          />
+          <MenuItem
+            icon="account-balance"
+            label={isAr ? "مقارنة البنوك" : "Compare Banks"}
+            onPress={() => router.push("/(tabs)/ai-concierge" as never)}
+          />
+        </View>
+
         {/* ── Support ── */}
         <SectionHeader title={t.profile.support} />
         <View style={s.section}>

@@ -78,11 +78,6 @@ export default function TabLayout() {
       icon:  (color: string) => <MaterialIcons name="favorite-border" size={24} color={color} />,
     },
     {
-      name:  "ai-concierge",
-      title: t.tabs.financing,
-      icon:  (color: string) => <MaterialIcons name="calculate" size={24} color={color} />,
-    },
-    {
       name:  "settings",
       title: t.tabs.profile,
       icon:  (color: string) => <MaterialIcons name="person-outline" size={26} color={color} />,
@@ -145,6 +140,11 @@ export default function TabLayout() {
           }}
         />
       ))}
+      {/* Hidden tab — reachable via router.push but not shown in tab bar */}
+      <Tabs.Screen
+        name="ai-concierge"
+        options={{ href: null, title: t.tabs.financing }}
+      />
     </Tabs>
   );
 }
