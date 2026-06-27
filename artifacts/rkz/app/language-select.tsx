@@ -1,285 +1,122 @@
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useRef } from "react";
+import React, { useState } from "react";
 import {
-  Animated,
-  Dimensions,
-  Image,
-  Platform,
+  I18nManager,
   Pressable,
   StatusBar,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 
-const LOGO   = require("@/assets/images/rozoz-logo-eagle.png");
-const { width } = Dimensions.get("window");
-const LOGO_W = Math.min(width * 0.55, 220);
-const LOGO_H = Math.round(LOGO_W / 2.6);
-
-const NAVY  = "#0F2040";
-const GOLD  = "#C9A84C";
-const WHITE = "#F5F0E8";
-
-const LANGS = [
-  {
-    id:    "ar" as const,
-    flag:  "🇸🇦",
-    name:  "العربية",
-    sub:   "اضغط للمتابعة بالعربية",
-    dir:   "rtl" as const,
-    badge: "AR",
-  },
-  {
-    id:    "en" as const,
-    flag:  "🇺🇸",
-    name:  "English",
-    sub:   "Continue in English",
-    dir:   "ltr" as const,
-    badge: "EN",
-  },
-];
+const NAVY = "#0f2040";
+const GOLD = "#c9a84c";
 
 export default function LanguageSelectScreen() {
-  const insets     = useSafeAreaInsets();
-  const { setAppLang } = useApp();
+  const { setAppLang, setLangChosen } = useApp();
+  const [selected, setSelected] = useState<"ar" | "en">("ar");
 
-  const bgAnim   = useRef(new Animated.Value(0)).current;
-  const logoAnim = useRef(new Animated.Value(0)).current;
-  const cardsAnim = useRef(new Animated.Value(0)).current;
-  const titleAnim = useRef(new Animated.Value(0)).current;
+  const pick = (lang: "ar" | "en") => {
+    setSelected(lang);
+    Haptics.selectionAsync().catch(() => {});
+  };
 
-  React.useEffect(() => {
-    Animated.sequence([
-      Animated.timing(bgAnim,    { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.timing(logoAnim,  { toValue: 1, duration: 400, useNativeDriver: true }),
-      Animated.parallel([
-        Animated.timing(titleAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
-        Animated.timing(cardsAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
-      ]),
-    ]).start();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  function choose(lang: "ar" | "en") {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setAppLang(lang);
+  const onContinue = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    await setAppLang(selected);
+    await setLangChosen(true);
+    I18nManager.forceRTL(selected === "ar");
     router.replace("/(tabs)" as never);
-  }
-
-  const topPad = insets.top + (Platform.OS === "web" ? 20 : 0);
+  };
 
   return (
-    <Animated.View style={[s.root, { opacity: bgAnim, paddingTop: topPad }]}>
+    <SafeAreaView style={s.safe}>
       <StatusBar barStyle="light-content" backgroundColor={NAVY} />
 
-      {/* ── Logo ─────────────────────────────────────────────────────────────── */}
-      <Animated.View style={[s.logoWrap, { opacity: logoAnim, transform: [{ scale: logoAnim }] }]}>
-        <Image source={LOGO} style={{ width: LOGO_W, height: LOGO_H }} resizeMode="contain" />
-      </Animated.View>
-
-      {/* ── Title ────────────────────────────────────────────────────────────── */}
-      <Animated.View style={[s.titleWrap, { opacity: titleAnim, transform: [{ translateY: titleAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }]}>
-        <Text style={s.titleAr}>اختر لغتك</Text>
-        <Text style={s.titleEn}>Choose your language</Text>
-        <View style={s.divider} />
-      </Animated.View>
-
-      {/* ── Language Cards ────────────────────────────────────────────────────── */}
-      <Animated.View style={[s.cards, { opacity: cardsAnim, transform: [{ translateY: cardsAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }]}>
-        {LANGS.map((lang) => (
-          <LangCard key={lang.id} lang={lang} onPress={() => choose(lang.id)} />
-        ))}
-      </Animated.View>
-
-      {/* ── Bottom note ──────────────────────────────────────────────────────── */}
-      <Animated.Text style={[s.note, { opacity: cardsAnim }]}>
-        يمكنك تغيير اللغة لاحقاً من الإعدادات · You can change this later in Settings
-      </Animated.Text>
-    </Animated.View>
-  );
-}
-
-function LangCard({
-  lang,
-  onPress,
-}: {
-  lang: typeof LANGS[number];
-  onPress: () => void;
-}) {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  function handlePressIn() {
-    Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 30, bounciness: 4 }).start();
-  }
-  function handlePressOut() {
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 6 }).start();
-  }
-
-  return (
-    <Pressable
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      style={({ pressed }) => [s.cardPressable, pressed && { opacity: 0.9 }]}
-    >
-      <Animated.View style={[s.card, { transform: [{ scale }] }]}>
-        {/* Badge */}
-        <View style={s.badge}>
-          <Text style={s.badgeText}>{lang.badge}</Text>
+      <View style={s.container}>
+        {/* Logo */}
+        <View style={s.logoWrap}>
+          <Text style={s.logoText}>روزوز</Text>
+          <Text style={s.logoEn}>Rozoz</Text>
         </View>
 
-        {/* Flag */}
-        <Text style={s.flag}>{lang.flag}</Text>
+        <Text style={s.heading}>اختر اللغة · Choose Language</Text>
 
-        {/* Name */}
-        <Text style={[s.langName, lang.dir === "rtl" && s.rtl]}>{lang.name}</Text>
-        <Text style={[s.langSub,  lang.dir === "rtl" && s.rtl]}>{lang.sub}</Text>
-
-        {/* Arrow */}
-        <View style={s.arrowWrap}>
-          <Text style={[s.arrow, lang.dir === "rtl" ? s.arrowRtl : s.arrowLtr]}>
-            {lang.dir === "rtl" ? "←" : "→"}
-          </Text>
+        {/* Options */}
+        <View style={s.options}>
+          {([
+            { lang: "ar" as const, label: "العربية", sub: "Arabic" },
+            { lang: "en" as const, label: "English", sub: "الإنجليزية" },
+          ] as const).map((opt) => (
+            <Pressable
+              key={opt.lang}
+              style={[s.option, selected === opt.lang && s.optionSelected]}
+              onPress={() => pick(opt.lang)}
+            >
+              <Text style={[s.optLabel, selected === opt.lang && s.optLabelSel]}>
+                {opt.label}
+              </Text>
+              <Text style={[s.optSub, selected === opt.lang && s.optSubSel]}>
+                {opt.sub}
+              </Text>
+              {selected === opt.lang && <View style={s.dot} />}
+            </Pressable>
+          ))}
         </View>
-      </Animated.View>
-    </Pressable>
+
+        <Pressable style={s.btn} onPress={onContinue}>
+          <Text style={s.btnText}>متابعة · Continue</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: NAVY,
-    alignItems:      "center",
-    justifyContent:  "center",
-    paddingHorizontal: 24,
-    paddingBottom:   32,
+  safe:    { flex: 1, backgroundColor: NAVY },
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+    gap: 32,
   },
-
-  logoWrap: {
-    alignItems:   "center",
-    marginBottom: 36,
+  logoWrap: { alignItems: "center", gap: 4 },
+  logoText: { fontSize: 48, fontFamily: "Inter_700Bold", color: GOLD, letterSpacing: 2 },
+  logoEn:   { fontSize: 16, fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.6)" },
+  heading:  { fontSize: 16, color: "rgba(255,255,255,0.8)", textAlign: "center" },
+  options:  { width: "100%", gap: 16 },
+  option: {
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.2)",
+    borderRadius: 16,
+    padding: 20,
+    alignItems: "center",
+    gap: 4,
   },
-
-  titleWrap: {
-    alignItems:   "center",
-    marginBottom: 32,
-  },
-  titleAr: {
-    color:      GOLD,
-    fontSize:   26,
-    fontFamily: "Inter_700Bold",
-    textAlign:  "center",
-    letterSpacing: 0.3,
-  },
-  titleEn: {
-    color:      "rgba(245,240,232,0.50)",
-    fontSize:   14,
-    fontFamily: "Inter_400Regular",
-    textAlign:  "center",
-    marginTop:  6,
-    letterSpacing: 0.5,
-  },
-  divider: {
-    width:           44,
-    height:          1.5,
+  optionSelected: { borderColor: GOLD, backgroundColor: "rgba(201,168,76,0.12)" },
+  optLabel:    { fontSize: 22, fontFamily: "Inter_600SemiBold", color: "#fff" },
+  optLabelSel: { color: GOLD },
+  optSub:      { fontSize: 13, color: "rgba(255,255,255,0.5)" },
+  optSubSel:   { color: "rgba(201,168,76,0.8)" },
+  dot: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: GOLD,
-    opacity:         0.35,
-    borderRadius:    1,
-    marginTop:       20,
   },
-
-  cards: {
-    width:  "100%",
-    gap:    16,
-    marginBottom: 28,
-  },
-
-  cardPressable: {
+  btn: {
     width: "100%",
+    backgroundColor: GOLD,
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: "center",
   },
-  card: {
-    backgroundColor:   "rgba(255,255,255,0.04)",
-    borderWidth:       1.5,
-    borderColor:       "rgba(201,168,76,0.22)",
-    borderRadius:      22,
-    paddingVertical:   26,
-    paddingHorizontal: 28,
-    alignItems:        "center",
-    gap:               8,
-    position:          "relative",
-  },
-
-  badge: {
-    position:          "absolute",
-    top:               14,
-    right:             16,
-    backgroundColor:   "rgba(201,168,76,0.15)",
-    borderWidth:       1,
-    borderColor:       "rgba(201,168,76,0.30)",
-    borderRadius:      8,
-    paddingHorizontal: 8,
-    paddingVertical:   2,
-  },
-  badgeText: {
-    color:      GOLD,
-    fontSize:   11,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 1.2,
-  },
-
-  flag: {
-    fontSize:    44,
-    lineHeight:  52,
-    marginBottom: 2,
-  },
-
-  langName: {
-    color:      WHITE,
-    fontSize:   24,
-    fontFamily: "Inter_700Bold",
-    textAlign:  "center",
-  },
-  langSub: {
-    color:      "rgba(245,240,232,0.45)",
-    fontSize:   13,
-    fontFamily: "Inter_400Regular",
-    textAlign:  "center",
-  },
-  rtl: {
-    writingDirection: "rtl",
-  },
-
-  arrowWrap: {
-    marginTop:       6,
-    width:           40,
-    height:          40,
-    borderRadius:    20,
-    backgroundColor: "rgba(201,168,76,0.12)",
-    borderWidth:     1,
-    borderColor:     "rgba(201,168,76,0.25)",
-    alignItems:      "center",
-    justifyContent:  "center",
-  },
-  arrow: {
-    color:      GOLD,
-    fontSize:   20,
-    lineHeight: 22,
-    fontFamily: "Inter_700Bold",
-  },
-  arrowRtl: {},
-  arrowLtr: {},
-
-  note: {
-    color:      "rgba(245,240,232,0.22)",
-    fontSize:   11,
-    fontFamily: "Inter_400Regular",
-    textAlign:  "center",
-    lineHeight: 17,
-    maxWidth:   300,
-  },
+  btnText: { fontSize: 17, fontFamily: "Inter_700Bold", color: NAVY },
 });

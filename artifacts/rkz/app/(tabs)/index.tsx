@@ -1,1020 +1,349 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
-import * as Location from "expo-location";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   Dimensions,
-  Linking,
-  Platform,
+  Image,
   Pressable,
-  RefreshControl,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { router } from "expo-router";
-
-import { ADMIN_EVENTS_KEY } from "@/hooks/useAIAssistant";
-import { useColors } from "@/hooks/useColors";
-import { useLocale } from "@/hooks/useLocale";
-import { useConfig } from "@/context/DynamicConfig";
 import { useApp } from "@/context/AppContext";
-import AnimatedScreen from "@/components/AnimatedScreen";
-import PropertyMapWebView from "@/components/PropertyMapWebView";
+import { useLocale } from "@/hooks/useLocale";
+import { formatPrice, MOCK_LISTINGS, type Listing } from "@/constants/mockListings";
 
-const NEGOTIATION_KEY      = "rozoz_negotiation_requests";
-const DISCOVERY_FILTER_KEY = "rozoz_discovery_filter";
-const TEST_WHATSAPP        = "https://wa.me/966551234567"; // رقم تجريبي للاختبار
+const NAVY = "#0f2040";
+const GOLD = "#c9a84c";
+const W    = Dimensions.get("window").width;
 
-const { width: SCREEN_W } = Dimensions.get("window");
-
-// ── Static discovery listings ──────────────────────────────────────────────
-interface Listing {
-  id: string;
-  type: string;
-  city: string;
-  district: string;
-  price: number;
-  area: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  badge?: string;
+// ── API fetch ─────────────────────────────────────────────────────────────────
+async function fetchListings(): Promise<Listing[]> {
+  try {
+    const domain = process.env.EXPO_PUBLIC_DOMAIN;
+    if (!domain) return MOCK_LISTINGS;
+    const res = await fetch(`https://${domain}/realestate-api/listings?status=active&limit=50`);
+    if (!res.ok) return MOCK_LISTINGS;
+    const json = await res.json();
+    const items = Array.isArray(json) ? json : (json.listings ?? json.data ?? []);
+    if (!items.length) return MOCK_LISTINGS;
+    return items.map((l: Record<string, unknown>) => ({
+      id:       String(l.id ?? l._id),
+      titleAr:  String(l.title_ar ?? l.title ?? l.titleAr ?? ""),
+      titleEn:  String(l.title_en ?? l.titleEn ?? l.title ?? ""),
+      type:     String(l.property_type ?? l.type ?? "apartment") as Listing["type"],
+      status:   String(l.listing_type ?? l.status ?? "sale") === "rent" ? "rent" : "sale",
+      price:    Number(l.price ?? 0),
+      currency: "SAR",
+      city:     String(l.city ?? "الرياض"),
+      district: String(l.district ?? l.neighborhood ?? ""),
+      beds:     l.bedrooms != null ? Number(l.bedrooms) : undefined,
+      baths:    l.bathrooms != null ? Number(l.bathrooms) : undefined,
+      area:     l.area_sqm != null ? Number(l.area_sqm) : undefined,
+      lat:      Number(l.lat ?? l.latitude ?? 24.7136),
+      lng:      Number(l.lng ?? l.longitude ?? 46.6753),
+      image:    String(l.main_image ?? l.image ?? MOCK_LISTINGS[0].image),
+      featured: Boolean(l.featured),
+      agentName:  String(l.agent_name ?? "وكيل روزوز"),
+      agentPhone: String(l.agent_phone ?? "0500000000"),
+      description: String(l.description ?? ""),
+      listedAt:   String(l.created_at ?? l.listedAt ?? "2026-01-01"),
+    })) as Listing[];
+  } catch {
+    return MOCK_LISTINGS;
+  }
 }
 
-const ALL_LISTINGS: Listing[] = [
-  { id: "d01", type: "villa",      city: "الرياض",       district: "النرجس",      price: 2_850_000, area: 450, bedrooms: 6, bathrooms: 7 },
-  { id: "d02", type: "apartment",  city: "جدة",           district: "الروضة",      price: 680_000,   area: 180, bedrooms: 3, bathrooms: 2 },
-  { id: "d03", type: "villa",      city: "الدمام",        district: "الشاطئ",      price: 1_950_000, area: 380, bedrooms: 5, bathrooms: 5 },
-  { id: "d04", type: "apartment",  city: "الرياض",       district: "الملقا",      price: 540_000,   area: 140, bedrooms: 2, bathrooms: 2 },
-  { id: "d05", type: "land",       city: "مكة المكرمة",  district: "العزيزية",    price: 3_200_000, area: 600 },
-  { id: "d06", type: "commercial", city: "الرياض",       district: "العليا",      price: 8_500_000, area: 1200 },
-  { id: "d07", type: "compound",   city: "الخبر",        district: "الكورنيش",    price: 4_600_000, area: 2000 },
-  { id: "d08", type: "villa",      city: "المدينة المنورة", district: "الورود",  price: 1_200_000, area: 300, bedrooms: 4, bathrooms: 3 },
-  { id: "d09", type: "apartment",  city: "الدمام",        district: "الراكة",      price: 420_000,   area: 120, bedrooms: 2, bathrooms: 1 },
-  { id: "d10", type: "warehouse",  city: "الرياض",       district: "الصناعية",    price: 6_800_000, area: 5000 },
-  { id: "d11", type: "farm",       city: "الطائف",        district: "الهضيبة",     price: 1_800_000, area: 10000 },
-  { id: "d12", type: "villa",      city: "جدة",           district: "التعمير",     price: 3_400_000, area: 520, bedrooms: 7, bathrooms: 6, badge: "جديد" },
-  { id: "d13", type: "apartment",  city: "الرياض",       district: "الياسمين",    price: 590_000,   area: 155, bedrooms: 3, bathrooms: 2 },
-  { id: "d14", type: "land",       city: "الخبر",        district: "الأمواج",     price: 5_100_000, area: 900 },
-  { id: "d15", type: "rest_house", city: "الطائف",        district: "الشفا",       price: 2_100_000, area: 800, bedrooms: 5 },
-  { id: "d16", type: "palace",     city: "الرياض",       district: "الحمراء",     price: 18_000_000, area: 2400, bedrooms: 12, bathrooms: 14, badge: "حصري" },
-];
-
-const TYPE_LABELS: Record<string, string> = {
-  villa: "فيلا", apartment: "شقة", land: "أرض", commercial: "تجاري",
-  compound: "مجمع", floor: "دور", warehouse: "مستودع", farm: "مزرعة",
-  rest_house: "استراحة", palace: "قصر",
-};
-
-const TYPE_ICON: Record<string, keyof typeof MaterialIcons.glyphMap> = {
-  villa:      "home",
-  apartment:  "apartment",
-  land:       "terrain",
-  commercial: "storefront",
-  compound:   "location-city",
-  floor:      "layers",
-  warehouse:  "warehouse",
-  farm:       "grass",
-  rest_house: "weekend",
-  palace:     "castle",
-};
-
-function fmtPrice(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}م`;
-  if (n >= 1_000)     return `${(n / 1_000).toFixed(0)}ك`;
-  return String(n);
-}
-
-// ── Property Card ─────────────────────────────────────────────────────────
-function PropertyCard({
-  listing,
-  onRequest,
-  s,
-  colors,
-}: {
-  listing: Listing;
-  onRequest: (l: Listing) => void;
-  s: ReturnType<typeof makeStyles>;
-  colors: ReturnType<typeof useColors>;
-}) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const onPressIn  = () => Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
-  const onPressOut = () => Animated.spring(scaleAnim, { toValue: 1,    useNativeDriver: true }).start();
-
-  const iconName = TYPE_ICON[listing.type] ?? "home";
+// ── Property card ─────────────────────────────────────────────────────────────
+function PropCard({ listing, isAr }: { listing: Listing; isAr: boolean }) {
+  const { t }               = useLocale();
+  const { isFavorite, toggleFavorite } = useApp();
+  const title               = isAr ? listing.titleAr : listing.titleEn;
+  const isFav               = isFavorite(listing.id);
 
   return (
-    <Animated.View style={[s.card, { transform: [{ scale: scaleAnim }] }]}>
-      {/* Thumbnail placeholder */}
-      <View style={s.cardThumb}>
-        <MaterialIcons name={iconName} size={36} color={colors.gold} />
-        {listing.badge ? (
-          <View style={s.badgeChip}>
-            <Text style={s.badgeText}>{listing.badge}</Text>
+    <Pressable
+      style={s.card}
+      onPress={() => router.push(`/property/${listing.id}` as never)}
+    >
+      <View style={s.cardImgWrap}>
+        <Image source={{ uri: listing.image }} style={s.cardImg} resizeMode="cover" />
+        {listing.featured && (
+          <View style={s.badge}>
+            <Text style={s.badgeText}>{t.prop.featured}</Text>
           </View>
-        ) : null}
+        )}
+        <Pressable
+          style={s.heartBtn}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+            toggleFavorite(listing.id);
+          }}
+        >
+          <MaterialIcons name={isFav ? "favorite" : "favorite-border"} size={22} color={isFav ? "#e53e3e" : "#fff"} />
+        </Pressable>
       </View>
 
       <View style={s.cardBody}>
-        {/* Type + City */}
-        <View style={s.cardRow}>
-          <View style={s.typeChip}>
-            <Text style={s.typeChipText}>{TYPE_LABELS[listing.type] ?? listing.type}</Text>
-          </View>
-          <Text style={s.cityText} numberOfLines={1}>{listing.city}</Text>
+        <View style={[s.row, { justifyContent: "space-between" }]}>
+          <Text style={s.cardStatus}>
+            {listing.status === "sale" ? t.prop.forSale : t.prop.forRent}
+          </Text>
+          <Text style={s.cardCity}>{listing.city}</Text>
         </View>
-
-        {/* District */}
-        <Text style={s.districtText} numberOfLines={1}>{listing.district}</Text>
-
-        {/* Price */}
-        <Text style={s.priceText}>{fmtPrice(listing.price)} <Text style={s.sarText}>ريال</Text></Text>
-
-        {/* Area + Beds */}
-        <View style={s.metaRow}>
-          <View style={s.metaItem}>
-            <MaterialIcons name="straighten" size={12} color="#94A3B8" />
-            <Text style={s.metaText}>{listing.area.toLocaleString()} م²</Text>
-          </View>
-          {listing.bedrooms ? (
-            <View style={s.metaItem}>
-              <MaterialIcons name="hotel" size={12} color="#94A3B8" />
-              <Text style={s.metaText}>{listing.bedrooms} غرف</Text>
-            </View>
-          ) : null}
+        <Text style={s.cardTitle} numberOfLines={1}>{title}</Text>
+        <Text style={s.cardPrice}>
+          {formatPrice(listing.price, isAr)} {isAr ? "ر.س" : "SAR"}
+          {listing.status === "rent" && (isAr ? "/سنة" : "/yr")}
+        </Text>
+        <View style={s.row}>
+          {listing.beds   && <Tag icon="hotel"       label={t.prop.beds(listing.beds)} />}
+          {listing.baths  && <Tag icon="bathtub"     label={t.prop.baths(listing.baths)} />}
+          {listing.area   && <Tag icon="square-foot" label={t.prop.sqm(listing.area)} />}
         </View>
-
-        {/* Request Negotiation CTA */}
-        <Pressable
-          onPressIn={onPressIn}
-          onPressOut={onPressOut}
-          onPress={() => onRequest(listing)}
-          style={({ pressed }) => [s.reqBtn, pressed && { opacity: 0.85 }]}
-        >
-          <MaterialIcons name="handshake" size={15} color="#0F2040" />
-          <Text style={s.reqBtnText}>طلب تفاوض</Text>
-        </Pressable>
-
-        {/* WhatsApp CTA */}
-        <Pressable
-          onPress={() => {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            void Linking.openURL(TEST_WHATSAPP);
-          }}
-          style={({ pressed }) => [s.waBtn, pressed && { opacity: 0.8 }]}
-        >
-          <MaterialIcons name="chat" size={14} color="#25D366" />
-          <Text style={s.waBtnText}>واتساب</Text>
-        </Pressable>
       </View>
-    </Animated.View>
+    </Pressable>
   );
 }
 
-// ── Main Screen ───────────────────────────────────────────────────────────
-export default function DiscoveryMapScreen() {
-  const colors      = useColors();
-  const insets      = useSafeAreaInsets();
-  const { t, isAr } = useLocale();
-  const { config } = useConfig();
-  const { setUser, clearAppMode } = useApp();
+function Tag({ icon, label }: { icon: string; label: string }) {
+  return (
+    <View style={s.tag}>
+      <MaterialIcons name={icon as never} size={13} color={NAVY} />
+      <Text style={s.tagText}>{label}</Text>
+    </View>
+  );
+}
 
-  const handleLogout = () => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const doLogout = () => {
-      setUser(null);
-      clearAppMode();
-      router.replace("/mode-select" as never);
-    };
-    if (Platform.OS === "web") {
-      const ok = typeof window !== "undefined" ? window.confirm("هل تريد تسجيل الخروج؟") : true;
-      if (ok) doLogout();
-      return;
+// ── City pill ─────────────────────────────────────────────────────────────────
+const CITIES = ["الرياض", "جدة", "الدمام", "مكة المكرمة", "المدينة المنورة", "الخبر"];
+const CITIES_EN = ["Riyadh", "Jeddah", "Dammam", "Makkah", "Madinah", "Al-Khobar"];
+
+// ── Main screen ───────────────────────────────────────────────────────────────
+export default function HomeScreen() {
+  const { t, isAr } = useLocale();
+  const insets       = useSafeAreaInsets();
+  const [listings, setListings]       = useState<Listing[]>(MOCK_LISTINGS);
+  const [activeTab, setActiveTab]     = useState<"sale" | "rent">("sale");
+  const [query, setQuery]             = useState("");
+  const fadeAnim                      = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    fetchListings().then(setListings);
+    Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }).start();
+  }, []);
+
+  const featured = listings.filter((l) => l.featured && l.status === activeTab).slice(0, 5);
+  const rest     = listings.filter((l) => !l.featured && l.status === activeTab).slice(0, 6);
+
+  const onSearch = () => {
+    if (query.trim()) {
+      router.push({ pathname: "/(tabs)/add", params: { q: query } } as never);
+    } else {
+      router.push("/(tabs)/add" as never);
     }
-    Alert.alert("تسجيل الخروج", "هل تريد تسجيل الخروج من ESTETI IN؟", [
-      { text: "إلغاء", style: "cancel" },
-      { text: "خروج", style: "destructive", onPress: doLogout },
-    ]);
   };
 
-  const topPad      = insets.top    + (Platform.OS === "web" ? 67  : 0);
-  const TAB_H       = Platform.OS === "web" ? 84 : 64;
-  const bottomPad   = insets.bottom + TAB_H + 20;
-
-  // Build type filter list from config (matches DynamicConfig propertyTypes)
-  const filterTypes = ["all", ...config.propertyTypes.map((pt) => pt.id)];
-
-  const [activeType,   setActiveType]   = useState("all");
-  const [refreshing,   setRefreshing]   = useState(false);
-  const [viewMode,     setViewMode]     = useState<"map" | "list">("map");
-  const [selectedId,   setSelectedId]   = useState<string | null>(null);
-  const [userCoords,   setUserCoords]   = useState<{ lat: number; lng: number } | null>(null);
-  const [locLoading,   setLocLoading]   = useState(false);
-
-  // Load pre-selected filter from entry gate (set by role selection or previous session)
-  useEffect(() => {
-    AsyncStorage.getItem(DISCOVERY_FILTER_KEY).then((saved) => {
-      if (saved && filterTypes.includes(saved)) setActiveType(saved);
-    }).catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const saveFilter = useCallback((type: string) => {
-    setActiveType(type);
-    void AsyncStorage.setItem(DISCOVERY_FILTER_KEY, type);
-  }, []);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setRefreshing(false);
-  }, []);
-
-  const handleLocate = useCallback(async () => {
-    if (locLoading) return;
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setLocLoading(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          isAr ? "الإذن مرفوض" : "Permission denied",
-          isAr ? "يرجى السماح بالوصول للموقع من الإعدادات" : "Please allow location access in settings.",
-          [{ text: isAr ? "حسناً" : "OK" }],
-        );
-        return;
-      }
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-    } catch {
-      Alert.alert(isAr ? "تعذّر تحديد الموقع" : "Location unavailable", "");
-    } finally {
-      setLocLoading(false);
-    }
-  }, [locLoading, isAr]);
-
-  const handleRequest = useCallback(async (listing: Listing) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      // Log to admin events
-      const evRaw = await AsyncStorage.getItem(ADMIN_EVENTS_KEY);
-      const events = evRaw ? JSON.parse(evRaw) : [];
-      const newId  = Date.now().toString();
-      events.push({
-        id:          newId,
-        type:        "pending_search",
-        description: `طلب تفاوض: ${TYPE_LABELS[listing.type] ?? listing.type} في ${listing.city} — ${listing.price.toLocaleString()} ريال`,
-        timestamp:   new Date().toISOString(),
-      });
-      await AsyncStorage.setItem(ADMIN_EVENTS_KEY, JSON.stringify(events));
-
-      // Save to negotiation requests (read in طلباتي tab)
-      const reqRaw = await AsyncStorage.getItem(NEGOTIATION_KEY);
-      const reqs   = reqRaw ? JSON.parse(reqRaw) : [];
-      reqs.push({
-        id:     newId,
-        type:   listing.type,
-        city:   listing.city,
-        price:  listing.price,
-        ts:     new Date().toISOString(),
-        status: "pending",
-      });
-      await AsyncStorage.setItem(NEGOTIATION_KEY, JSON.stringify(reqs));
-    } catch {}
-
-    Alert.alert(
-      "تم إرسال الطلب",
-      "تم استلام طلبك، سيتم التواصل معك قريباً.",
-      [{ text: "حسناً", style: "default" }],
-    );
-  }, []);
-
-  const filtered = useMemo(
-    () => activeType === "all" ? ALL_LISTINGS : ALL_LISTINGS.filter((l) => l.type === activeType),
-    [activeType],
-  );
-
-  const selectedListing = useMemo(
-    () => selectedId ? ALL_LISTINGS.find((l) => l.id === selectedId) ?? null : null,
-    [selectedId],
-  );
-
-  const s = useMemo(() => makeStyles(colors, isAr, topPad, bottomPad), [colors, isAr, topPad, bottomPad]);
-
-  // ── Header row ────────────────────────────────────────────────────────────
-  const headerRow = (glass: boolean) => (
-    <View style={[s.headerRow, isAr && { flexDirection: "row-reverse" }]}>
-      <Pressable style={[s.logoutBtn, glass && s.logoutBtnGlass]} onPress={handleLogout} hitSlop={10}>
-        <MaterialIcons name="logout" size={18} color="rgba(255,255,255,0.80)" />
-        <Text style={s.logoutBtnText}>{isAr ? "خروج" : "Sign out"}</Text>
-      </Pressable>
-      <View style={{ flex: 1 }}>
-        <Text style={[s.headerTitle, isAr && { textAlign: "right" }]}>
-          {isAr ? "استكشف العقارات" : "Discover Properties"}
-        </Text>
-        <View style={[s.locationRow, isAr && { flexDirection: "row-reverse" }]}>
-          <MaterialIcons name="location-on" size={14} color={colors.gold} />
-          <Text style={s.locationText}>{isAr ? "المملكة العربية السعودية" : "Saudi Arabia"}</Text>
-        </View>
-      </View>
-    </View>
-  );
-
-  // ── Filter pills ─────────────────────────────────────────────────────────
-  const filterPills = (glass: boolean) => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={[s.filterScroll, isAr && { flexDirection: "row-reverse" }]}
-    >
-      <Pressable
-        onPress={() => saveFilter("all")}
-        style={[s.pill, glass && s.glassPill, activeType === "all" && s.pillActive]}
-      >
-        <Text style={[s.pillText, glass && s.glassPillText, activeType === "all" && s.pillTextActive]}>
-          {isAr ? "الكل" : "All"}
-        </Text>
-      </Pressable>
-      {config.propertyTypes.map((pt) => {
-        const isActive = activeType === pt.id;
-        return (
-          <Pressable
-            key={pt.id}
-            onPress={() => saveFilter(pt.id)}
-            style={[s.pill, glass && s.glassPill, isActive && s.pillActive]}
-          >
-            <MaterialIcons
-              name={TYPE_ICON[pt.id] ?? "home"}
-              size={14}
-              color={isActive ? "#0F2040" : (glass ? "#FFFFFF" : colors.mutedForeground)}
-            />
-            <Text style={[s.pillText, glass && s.glassPillText, isActive && s.pillTextActive]}>
-              {isAr ? pt.labelAr : pt.labelEn}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-  );
-
-  // ── MAP VIEW ──────────────────────────────────────────────────────────────
-  if (viewMode === "map") {
-    return (
-      <View style={[s.container, { position: "relative" }]}>
-
-        {/* Leaflet map fills the screen */}
-        <PropertyMapWebView
-          listings={filtered}
-          activeFilter={activeType}
-          onSelect={(id) => { setSelectedId(id); void Haptics.selectionAsync(); }}
-          onDeselect={() => setSelectedId(null)}
-          centerCoords={userCoords ?? undefined}
-        />
-
-        {/* ── Floating header (gradient fade) ── */}
-        <View style={[s.glassHeader, { paddingTop: topPad + 10 }]} pointerEvents="box-none">
-          <View style={s.glassHeaderBg} />
-          {headerRow(true)}
-        </View>
-
-        {/* ── Filter pills overlay ── */}
-        <View style={s.glassFilterWrap} pointerEvents="box-none">
-          {filterPills(true)}
-        </View>
-
-        {/* ── "موقعي" location button — bottom left above قائمة ── */}
-        <Pressable
-          style={[s.locBtn, { bottom: bottomPad + 68 }]}
-          onPress={() => { void handleLocate(); }}
-          hitSlop={8}
-        >
-          {locLoading
-            ? <MaterialIcons name="sync" size={20} color="#3b82f6" />
-            : <MaterialIcons name="my-location" size={20} color={userCoords ? "#3b82f6" : "rgba(255,255,255,0.80)"} />}
-        </Pressable>
-
-        {/* ── "قائمة" button — bottom left ── */}
-        <Pressable
-          style={[s.glassListBtn, { bottom: bottomPad + 16 }]}
-          onPress={() => { void Haptics.selectionAsync(); setViewMode("list"); setSelectedId(null); }}
-        >
-          <MaterialIcons name="view-list" size={18} color={colors.gold} />
-          <Text style={s.glassListBtnText}>{isAr ? "قائمة" : "List"}</Text>
-        </Pressable>
-
-
-        {/* ── Property detail card (appears when marker tapped) ── */}
-        {selectedListing && (
-          <View style={[s.detailCard, { bottom: bottomPad + 20 }]}>
-            <Pressable style={s.closeBtn} onPress={() => setSelectedId(null)} hitSlop={12}>
-              <MaterialIcons name="close" size={18} color="#94a3b8" />
-            </Pressable>
-            <View style={[s.detailHeader, isAr && { flexDirection: "row-reverse" }]}>
-              <View style={s.detailTypeChip}>
-                <Text style={s.detailTypeText}>{TYPE_LABELS[selectedListing.type] ?? selectedListing.type}</Text>
-              </View>
-              {selectedListing.badge ? (
-                <View style={s.detailBadge}><Text style={s.detailBadgeText}>{selectedListing.badge}</Text></View>
-              ) : null}
-            </View>
-            <Text style={[s.detailTitle, isAr && { textAlign: "right" }]}>
-              {TYPE_LABELS[selectedListing.type] ?? selectedListing.type} {selectedListing.district}
-            </Text>
-            <Text style={[s.detailCity, isAr && { textAlign: "right" }]}>
-              {selectedListing.city} — {selectedListing.district}
-            </Text>
-            <View style={[s.detailStats, isAr && { flexDirection: "row-reverse" }]}>
-              <View style={s.detailStatItem}>
-                <Text style={s.detailStatVal}>{fmtPrice(selectedListing.price)}</Text>
-                <Text style={s.detailStatLbl}>ريال</Text>
-              </View>
-              <View style={s.detailDivider} />
-              <View style={s.detailStatItem}>
-                <Text style={s.detailStatVal}>{selectedListing.area.toLocaleString()}</Text>
-                <Text style={s.detailStatLbl}>م²</Text>
-              </View>
-              {selectedListing.bedrooms ? (
-                <>
-                  <View style={s.detailDivider} />
-                  <View style={s.detailStatItem}>
-                    <Text style={s.detailStatVal}>{selectedListing.bedrooms}</Text>
-                    <Text style={s.detailStatLbl}>غرف</Text>
-                  </View>
-                </>
-              ) : null}
-            </View>
-            <Pressable
-              style={s.detailCta}
-              onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setViewMode("list"); setSelectedId(null); }}
-            >
-              <Text style={s.detailCtaText}>{isAr ? "عرض في القائمة ←" : "View in List →"}</Text>
-            </Pressable>
-          </View>
-        )}
-      </View>
-    );
-  }
-
-  // ── LIST VIEW ─────────────────────────────────────────────────────────────
   return (
-    <AnimatedScreen>
-    <View style={s.container}>
-      {/* ── Header ────────────────────────────────────────────────────────── */}
-      <View style={s.header}>{headerRow(false)}</View>
+    <View style={{ flex: 1, backgroundColor: "#f5f7fa" }}>
+      <StatusBar barStyle="light-content" backgroundColor={NAVY} />
 
-      {/* ── Type Filter Pills ─────────────────────────────────────────────── */}
-      <View style={s.filterWrap}>{filterPills(false)}</View>
-
-      {/* ── Map toggle button ─────────────────────────────────────────────── */}
-      <View style={[s.mapToggleBar, isAr && { flexDirection: "row-reverse" }]}>
-        <Pressable
-          style={s.mapToggleBtn}
-          onPress={() => { void Haptics.selectionAsync(); setViewMode("map"); }}
-        >
-          <MaterialIcons name="map" size={16} color={colors.gold} />
-          <Text style={s.mapToggleText}>{isAr ? "الخريطة" : "Map view"}</Text>
-        </Pressable>
-      </View>
-
-      {/* ── Property Grid ─────────────────────────────────────────────────── */}
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={s.gridContent}
+        contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />
-        }
       >
-        {filtered.length === 0 ? (
-          <View style={s.empty}>
-            <MaterialIcons name="search-off" size={48} color={colors.gold + "40"} />
-            <Text style={s.emptyText}>{isAr ? "لا توجد عقارات في هذه الفئة" : "No listings in this category"}</Text>
+        {/* ── Hero header ── */}
+        <View style={[s.hero, { paddingTop: insets.top + 16 }]}>
+          <View style={[s.row, { justifyContent: "space-between", alignItems: "center" }]}>
+            <Text style={s.logo}>روزوز</Text>
+            <Text style={s.logoSub}>Rozoz</Text>
           </View>
-        ) : (
-          <View style={s.grid}>
-            {filtered.map((listing) => (
-              <PropertyCard
-                key={listing.id}
-                listing={listing}
-                onRequest={handleRequest}
-                s={s}
-                colors={colors}
-              />
+          <Text style={s.heroTitle}>{t.home.hero}</Text>
+          <Text style={s.heroSub}>{t.home.sub}</Text>
+
+          {/* Buy / Rent */}
+          <View style={s.tabs}>
+            {(["sale", "rent"] as const).map((tab) => (
+              <Pressable
+                key={tab}
+                style={[s.tabBtn, activeTab === tab && s.tabBtnActive]}
+                onPress={() => setActiveTab(tab)}
+              >
+                <Text style={[s.tabBtnText, activeTab === tab && s.tabBtnTextActive]}>
+                  {tab === "sale" ? t.home.tabBuy : t.home.tabRent}
+                </Text>
+              </Pressable>
             ))}
           </View>
-        )}
+
+          {/* Search bar */}
+          <View style={s.searchRow}>
+            <View style={[s.searchBar, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+              <MaterialIcons name="search" size={20} color={NAVY} style={{ opacity: 0.5 }} />
+              <TextInput
+                style={[s.searchInput, { textAlign: isAr ? "right" : "left" }]}
+                placeholder={t.home.searchPlaceholder}
+                placeholderTextColor="rgba(15,32,64,0.4)"
+                value={query}
+                onChangeText={setQuery}
+                onSubmitEditing={onSearch}
+                returnKeyType="search"
+              />
+            </View>
+            <Pressable style={s.searchBtn} onPress={onSearch}>
+              <MaterialIcons name="search" size={20} color={NAVY} />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* ── Featured ── */}
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <View style={[s.sectionHeader, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+            <Text style={s.sectionTitle}>{t.home.featured}</Text>
+            <Pressable onPress={() => router.push("/(tabs)/add" as never)}>
+              <Text style={s.viewAll}>{t.home.viewAll}</Text>
+            </Pressable>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.cardScroll}>
+            {featured.map((l) => (
+              <View key={l.id} style={{ width: W * 0.72, marginRight: 12 }}>
+                <PropCard listing={l} isAr={isAr} />
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* ── Cities ── */}
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>{t.home.cities}</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.cardScroll}>
+            {CITIES.map((city, i) => (
+              <Pressable
+                key={city}
+                style={s.cityPill}
+                onPress={() => router.push({ pathname: "/(tabs)/add", params: { city } } as never)}
+              >
+                <Text style={s.cityIcon}>🏙️</Text>
+                <Text style={s.cityLabel}>{isAr ? city : CITIES_EN[i]}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          {/* ── More properties ── */}
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>{isAr ? "عقارات أخرى" : "More Properties"}</Text>
+          </View>
+          <View style={s.gridWrap}>
+            {rest.map((l) => (
+              <View key={l.id} style={{ width: (W - 48) / 2 }}>
+                <SmallCard listing={l} isAr={isAr} />
+              </View>
+            ))}
+          </View>
+
+          {/* ── Estimate Banner ── */}
+          <Pressable style={s.estimateBanner}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.estimateTitle}>{t.home.estimate}</Text>
+              <Text style={s.estimateDesc}>{t.home.estimateDesc}</Text>
+              <Text style={s.estimateCta}>{t.home.estimateCta} ←</Text>
+            </View>
+            <Text style={{ fontSize: 48 }}>🏡</Text>
+          </Pressable>
+        </Animated.View>
       </ScrollView>
     </View>
-    </AnimatedScreen>
   );
 }
 
-function makeStyles(
-  colors: ReturnType<typeof useColors>,
-  isAr: boolean,
-  topPad: number,
-  bottomPad: number,
-) {
-  const CARD_W = (SCREEN_W - 48) / 2; // 2-column grid with padding
+function SmallCard({ listing, isAr }: { listing: Listing; isAr: boolean }) {
+  const { t }                          = useLocale();
+  const { isFavorite, toggleFavorite } = useApp();
+  const isFav                          = isFavorite(listing.id);
+  const title                          = isAr ? listing.titleAr : listing.titleEn;
 
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-
-    // ── Glass overlays (map mode) ──────────────────────────────────────────
-    glassHeader: {
-      position:          "absolute",
-      top:               0,
-      left:              0,
-      right:             0,
-      backgroundColor:   "transparent",
-      paddingHorizontal: 18,
-      paddingBottom:     14,
-      zIndex:            10,
-    },
-    glassFilterWrap: {
-      position:        "absolute",
-      left:            0,
-      right:           0,
-      top:             topPad + 96,
-      backgroundColor: "transparent",
-      zIndex:          9,
-    },
-    glassPill: {
-      backgroundColor: "rgba(15,32,64,0.72)",
-      borderColor:     "rgba(201,168,76,0.65)",
-    },
-    glassPillText: {
-      color: "#FFFFFF",
-    },
-    glassListBtn: {
-      position:          "absolute",
-      left:              16,
-      flexDirection:     "row",
-      alignItems:        "center",
-      gap:               6,
-      backgroundColor:   "rgba(8, 16, 34, 0.82)",
-      borderWidth:       1,
-      borderColor:       colors.gold + "55",
-      borderRadius:      22,
-      paddingHorizontal: 16,
-      paddingVertical:   10,
-      zIndex:            10,
-    },
-    glassListBtnText: {
-      color:      colors.gold,
-      fontSize:   13,
-      fontFamily: "Inter_700Bold",
-    },
-    glassCountChip: {
-      position:          "absolute",
-      right:             16,
-      flexDirection:     "row",
-      alignItems:        "center",
-      gap:               5,
-      backgroundColor:   "rgba(8, 16, 34, 0.75)",
-      borderWidth:       1,
-      borderColor:       "rgba(255,255,255,0.10)",
-      borderRadius:      20,
-      paddingHorizontal: 12,
-      paddingVertical:   8,
-      zIndex:            10,
-    },
-    glassCountText: {
-      color:      "rgba(255,255,255,0.65)",
-      fontSize:   11,
-      fontFamily: "Inter_400Regular",
-    },
-
-    // ── Header ────────────────────────────────────────────────────────────
-    header: {
-      backgroundColor:   colors.navy,
-      paddingTop:        topPad + 14,
-      paddingBottom:     18,
-      paddingHorizontal: 18,
-    },
-    headerRow: {
-      flexDirection: "row",
-      alignItems:    "center",
-    },
-    headerTitle: {
-      color:            "#FFFFFF",
-      fontSize:         22,
-      fontFamily:       "Inter_700Bold",
-      letterSpacing:    0.3,
-      textShadowColor:  "rgba(0,0,0,0.90)",
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 6,
-    },
-    locationRow: {
-      flexDirection: "row",
-      alignItems:    "center",
-      gap:           3,
-      marginTop:     4,
-    },
-    locationText: {
-      color:            "#FFFFFF",
-      fontSize:         12,
-      fontFamily:       "Inter_400Regular",
-      textShadowColor:  "rgba(0,0,0,0.90)",
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 4,
-    },
-    countBadge: {
-      backgroundColor:   "rgba(8,16,34,0.80)",
-      borderRadius:      12,
-      paddingHorizontal: 12,
-      paddingVertical:   8,
-      alignItems:        "center",
-      borderWidth:       1,
-      borderColor:       colors.gold + "55",
-    },
-    countText: {
-      color:      colors.gold,
-      fontSize:   20,
-      fontFamily: "Inter_700Bold",
-    },
-    countLabel: {
-      color:      colors.gold,
-      fontSize:   10,
-      fontFamily: "Inter_400Regular",
-    },
-    logoutBtn: {
-      flexDirection:     "row",
-      alignItems:        "center",
-      gap:               3,
-      backgroundColor:   "rgba(8,16,34,0.80)",
-      borderRadius:      8,
-      paddingHorizontal: 7,
-      paddingVertical:   4,
-      marginRight:       8,
-      borderWidth:       1,
-      borderColor:       "rgba(255,255,255,0.15)",
-    },
-    logoutBtnText: {
-      color:            "#FFFFFF",
-      fontSize:         11,
-      fontFamily:       "Inter_600SemiBold",
-      textShadowColor:  "rgba(0,0,0,0.80)",
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 3,
-    },
-
-    // ── Filter ────────────────────────────────────────────────────────────
-    filterWrap: {
-      backgroundColor:   colors.background,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    filterScroll: {
-      paddingHorizontal: 14,
-      paddingVertical:   10,
-      gap:               8,
-      flexDirection:     "row",
-    },
-    pill: {
-      flexDirection:   "row",
-      alignItems:      "center",
-      gap:             4,
-      backgroundColor: colors.card,
-      borderWidth:     1,
-      borderColor:     colors.border,
-      borderRadius:    20,
-      paddingHorizontal: 10,
-      paddingVertical:   5,
-    },
-    pillActive: {
-      backgroundColor: colors.gold,
-      borderColor:     colors.gold,
-    },
-    pillText: {
-      fontSize:   12,
-      fontFamily: "Inter_600SemiBold",
-      color:      colors.mutedForeground,
-    },
-    pillTextActive: { color: "#0F2040" },
-
-    // ── View Toggle ─────────────────────────────────────────────────────────
-    toggleBar: {
-      flexDirection:     "row",
-      gap:               8,
-      paddingHorizontal: 16,
-      paddingTop:        12,
-      paddingBottom:     4,
-      backgroundColor:   colors.background,
-    },
-    toggleSeg: {
-      flex:            1,
-      flexDirection:   "row",
-      alignItems:      "center",
-      justifyContent:  "center",
-      gap:             6,
-      backgroundColor: colors.card,
-      borderWidth:     1,
-      borderColor:     colors.border,
-      borderRadius:    12,
-      paddingVertical: 10,
-    },
-    toggleSegActive: { backgroundColor: colors.gold, borderColor: colors.gold },
-    toggleText: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
-    toggleTextActive: { color: "#0F2040" },
-
-    // ── Heatmap metric bar (sits above the WebView map) ─────────────────────
-    metricBar: {
-      flexDirection:     "row",
-      alignItems:        "center",
-      gap:               8,
-      paddingHorizontal: 12,
-      paddingVertical:   10,
-      backgroundColor:   colors.background,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    metricPill: {
-      flexDirection:     "row",
-      alignItems:        "center",
-      gap:               5,
-      backgroundColor:   colors.card,
-      borderWidth:       1,
-      borderColor:       colors.border,
-      borderRadius:      18,
-      paddingHorizontal: 14,
-      paddingVertical:   7,
-    },
-    metricPillActive:     { backgroundColor: colors.gold, borderColor: colors.gold },
-    metricPillText:       { fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground },
-    metricPillTextActive: { color: "#0F2040" },
-    metricHint:     { flex: 1, flexDirection: "row", alignItems: "center", gap: 4, justifyContent: "flex-end" },
-    metricHintText: { fontSize: 11, fontFamily: "Inter_400Regular", color: colors.mutedForeground },
-    legendDot:      { width: 8, height: 8, borderRadius: 4 },
-
-    // ── Grid ──────────────────────────────────────────────────────────────
-    gridContent: {
-      padding:       16,
-      paddingBottom: bottomPad,
-    },
-    grid: {
-      flexDirection:  "row",
-      flexWrap:       "wrap",
-      justifyContent: "space-between",
-      gap:            12,
-    },
-
-    // ── Card ──────────────────────────────────────────────────────────────
-    card: {
-      width:           CARD_W,
-      backgroundColor: colors.card,
-      borderRadius:    16,
-      overflow:        "hidden",
-      shadowColor:     "#000",
-      shadowOpacity:   0.06,
-      shadowRadius:    8,
-      elevation:       2,
-    },
-    cardThumb: {
-      height:          110,
-      backgroundColor: colors.navy,
-      alignItems:      "center",
-      justifyContent:  "center",
-      position:        "relative",
-    },
-    badgeChip: {
-      position:        "absolute",
-      top:             8,
-      right:           8,
-      backgroundColor: colors.gold,
-      borderRadius:    6,
-      paddingHorizontal: 7,
-      paddingVertical:   2,
-    },
-    badgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#0F2040" },
-
-    cardBody: { padding: 12 },
-
-    cardRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      alignItems:    "center",
-      justifyContent:"space-between",
-      marginBottom:  4,
-    },
-    typeChip: {
-      backgroundColor: colors.gold + "20",
-      borderRadius:    6,
-      paddingHorizontal: 7,
-      paddingVertical:   2,
-    },
-    typeChipText: { fontSize: 10, fontFamily: "Inter_700Bold", color: colors.gold },
-    cityText: {
-      fontSize:   11,
-      fontFamily: "Inter_400Regular",
-      color:      "#94A3B8",
-      flex:       1,
-      textAlign:  isAr ? "left" : "right",
-    },
-    districtText: {
-      fontSize:   12,
-      fontFamily: "Inter_500Medium",
-      color:      colors.foreground,
-      marginBottom: 6,
-      textAlign:  isAr ? "right" : "left",
-    },
-    priceText: {
-      fontSize:   16,
-      fontFamily: "Inter_700Bold",
-      color:      colors.gold,
-      textAlign:  isAr ? "right" : "left",
-    },
-    sarText: { fontSize: 12, fontFamily: "Inter_400Regular", color: "#94A3B8" },
-
-    metaRow: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      gap:           10,
-      marginTop:     6,
-      marginBottom:  10,
-    },
-    metaItem: {
-      flexDirection: "row",
-      alignItems:    "center",
-      gap:           3,
-    },
-    metaText: { fontSize: 11, fontFamily: "Inter_400Regular", color: "#94A3B8" },
-
-    reqBtn: {
-      flexDirection:   "row",
-      alignItems:      "center",
-      justifyContent:  "center",
-      gap:             5,
-      backgroundColor: colors.gold,
-      borderRadius:    10,
-      paddingVertical: 9,
-    },
-    reqBtnText: { fontSize: 12, fontFamily: "Inter_700Bold", color: "#0F2040" },
-
-    waBtn: {
-      flexDirection:   "row",
-      alignItems:      "center",
-      justifyContent:  "center",
-      gap:             5,
-      backgroundColor: "#25D36618",
-      borderWidth:     1,
-      borderColor:     "#25D36650",
-      borderRadius:    10,
-      paddingVertical: 7,
-      marginTop:       6,
-    },
-    waBtnText: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#25D366" },
-
-    // ── Empty ──────────────────────────────────────────────────────────────
-    empty: {
-      alignItems:  "center",
-      paddingTop:  80,
-      gap:         12,
-    },
-    emptyText: {
-      fontSize:   15,
-      fontFamily: "Inter_500Medium",
-      color:      "#94A3B8",
-      textAlign:  "center",
-    },
-
-    // ── "موقعي" location button ──────────────────────────────────────────────
-    locBtn: {
-      position:        "absolute",
-      left:            16,
-      width:           42,
-      height:          42,
-      borderRadius:    21,
-      backgroundColor: "rgba(8,14,30,0.80)",
-      borderWidth:     1.5,
-      borderColor:     "rgba(255,255,255,0.18)",
-      alignItems:      "center",
-      justifyContent:  "center",
-      zIndex:          12,
-      ...Platform.select({
-        android: { elevation: 6 },
-        ios:     { shadowColor: "#000", shadowOpacity: 0.30, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
-        default: {},
-      }),
-    },
-
-    // ── Map mode — glass header overlay ────────────────────────────────────
-    glassHeaderBg: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(8,14,30,0.72)",
-    },
-    logoutBtnGlass: {
-      backgroundColor: "rgba(8,16,34,0.70)",
-      borderColor:     "rgba(255,255,255,0.18)",
-    },
-    countBadgeGlass: {
-      backgroundColor: "rgba(8,16,34,0.70)",
-      borderColor:     colors.gold + "55",
-    },
-
-    // ── Map mode — property detail card ────────────────────────────────────
-    detailCard: {
-      position:        "absolute",
-      left:            14,
-      right:           14,
-      backgroundColor: "#0F2040",
-      borderRadius:    18,
-      padding:         18,
-      borderWidth:     1.5,
-      borderColor:     colors.gold,
-      zIndex:          20,
-      ...Platform.select({
-        android: { elevation: 14 },
-        ios:     { shadowColor: "#000", shadowOpacity: 0.55, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } },
-        default: {},
-      }),
-    },
-    closeBtn: {
-      position:        "absolute",
-      top:             12,
-      left:            14,
-      zIndex:          30,
-      width:           30,
-      height:          30,
-      alignItems:      "center",
-      justifyContent:  "center",
-    },
-    detailHeader: {
-      flexDirection:  "row",
-      alignItems:     "center",
-      gap:            6,
-      marginBottom:   6,
-    },
-    detailTypeChip: {
-      backgroundColor: colors.gold + "22",
-      borderRadius:    8,
-      paddingHorizontal: 8,
-      paddingVertical:   3,
-    },
-    detailTypeText: { fontSize: 11, fontFamily: "Inter_700Bold", color: colors.gold },
-    detailBadge: {
-      backgroundColor: colors.gold,
-      borderRadius:    8,
-      paddingHorizontal: 7,
-      paddingVertical:   2,
-    },
-    detailBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#0F2040" },
-    detailTitle: {
-      fontSize:   15,
-      fontFamily: "Inter_700Bold",
-      color:      "#FFFFFF",
-      marginBottom: 2,
-    },
-    detailCity: {
-      fontSize:   11,
-      fontFamily: "Inter_400Regular",
-      color:      "#94A3B8",
-      marginBottom: 12,
-    },
-    detailStats: {
-      flexDirection: "row",
-      alignItems:    "center",
-      marginBottom:  14,
-    },
-    detailStatItem:  { flex: 1, alignItems: "center" },
-    detailDivider:   { width: 1, height: 28, backgroundColor: "rgba(255,255,255,0.12)" },
-    detailStatVal:   { fontSize: 17, fontFamily: "Inter_700Bold", color: colors.gold },
-    detailStatLbl:   { fontSize: 10, fontFamily: "Inter_400Regular", color: "#94A3B8", marginTop: 2 },
-    detailCta: {
-      backgroundColor: colors.gold,
-      borderRadius:    10,
-      paddingVertical: 10,
-      alignItems:      "center",
-    },
-    detailCtaText: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#0F2040" },
-
-    // ── List mode — map toggle bar ──────────────────────────────────────────
-    mapToggleBar: {
-      flexDirection:     "row",
-      paddingHorizontal: 16,
-      paddingTop:        10,
-      paddingBottom:     4,
-      backgroundColor:   colors.background,
-    },
-    mapToggleBtn: {
-      flexDirection:     "row",
-      alignItems:        "center",
-      gap:               6,
-      backgroundColor:   colors.card,
-      borderWidth:       1,
-      borderColor:       colors.gold + "55",
-      borderRadius:      20,
-      paddingHorizontal: 14,
-      paddingVertical:   7,
-    },
-    mapToggleText: {
-      fontSize:   12,
-      fontFamily: "Inter_600SemiBold",
-      color:      colors.gold,
-    },
-  });
+  return (
+    <Pressable style={s.smallCard} onPress={() => router.push(`/property/${listing.id}` as never)}>
+      <Image source={{ uri: listing.image }} style={s.smallImg} resizeMode="cover" />
+      <Pressable
+        style={s.smallHeart}
+        onPress={() => toggleFavorite(listing.id)}
+      >
+        <MaterialIcons name={isFav ? "favorite" : "favorite-border"} size={18} color={isFav ? "#e53e3e" : "#fff"} />
+      </Pressable>
+      <View style={s.smallBody}>
+        <Text style={s.smallTitle} numberOfLines={1}>{title}</Text>
+        <Text style={s.smallPrice}>{formatPrice(listing.price, isAr)} {isAr ? "ر.س" : "SAR"}</Text>
+        {listing.beds != null && (
+          <Text style={s.smallMeta}>{t.prop.beds(listing.beds)}</Text>
+        )}
+      </View>
+    </Pressable>
+  );
 }
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  hero:          { backgroundColor: NAVY, paddingHorizontal: 20, paddingBottom: 24, gap: 12 },
+  logo:          { fontSize: 28, fontFamily: "Inter_700Bold", color: GOLD, letterSpacing: 1 },
+  logoSub:       { fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "Inter_400Regular" },
+  heroTitle:     { fontSize: 24, fontFamily: "Inter_700Bold", color: "#fff", marginTop: 8 },
+  heroSub:       { fontSize: 13, color: "rgba(255,255,255,0.65)", fontFamily: "Inter_400Regular" },
+
+  tabs:          { flexDirection: "row", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 12, padding: 3, gap: 2 },
+  tabBtn:        { flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: "center" },
+  tabBtnActive:  { backgroundColor: GOLD },
+  tabBtnText:    { fontSize: 14, fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.7)" },
+  tabBtnTextActive: { color: NAVY },
+
+  searchRow:     { flexDirection: "row", gap: 8 },
+  searchBar:     { flex: 1, backgroundColor: "#fff", borderRadius: 12, paddingHorizontal: 12, alignItems: "center", gap: 8, height: 48 },
+  searchInput:   { flex: 1, fontSize: 14, color: NAVY, fontFamily: "Inter_400Regular" },
+  searchBtn:     { width: 48, height: 48, backgroundColor: GOLD, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingTop: 24, paddingBottom: 12 },
+  sectionTitle:  { fontSize: 18, fontFamily: "Inter_700Bold", color: NAVY },
+  viewAll:       { fontSize: 13, color: GOLD, fontFamily: "Inter_600SemiBold" },
+
+  cardScroll:    { paddingHorizontal: 20 },
+  card:          { backgroundColor: "#fff", borderRadius: 16, overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, elevation: 3, marginBottom: 2 },
+  cardImgWrap:   { position: "relative" },
+  cardImg:       { width: "100%", height: 180 },
+  badge:         { position: "absolute", top: 10, left: 10, backgroundColor: GOLD, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  badgeText:     { fontSize: 11, fontFamily: "Inter_700Bold", color: NAVY },
+  heartBtn:      { position: "absolute", top: 10, right: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.35)", alignItems: "center", justifyContent: "center" },
+  cardBody:      { padding: 14, gap: 6 },
+  cardStatus:    { fontSize: 11, fontFamily: "Inter_600SemiBold", color: GOLD, backgroundColor: "rgba(201,168,76,0.12)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, alignSelf: "flex-start" },
+  cardCity:      { fontSize: 11, color: "rgba(15,32,64,0.5)", fontFamily: "Inter_400Regular" },
+  cardTitle:     { fontSize: 15, fontFamily: "Inter_700Bold", color: NAVY },
+  cardPrice:     { fontSize: 17, fontFamily: "Inter_700Bold", color: GOLD },
+  row:           { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  tag:           { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "#f0f4f8", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  tagText:       { fontSize: 11, color: NAVY, fontFamily: "Inter_400Regular" },
+
+  cityPill:      { alignItems: "center", gap: 6, marginRight: 12, backgroundColor: "#fff", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
+  cityIcon:      { fontSize: 22 },
+  cityLabel:     { fontSize: 12, fontFamily: "Inter_600SemiBold", color: NAVY },
+
+  gridWrap:      { flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, gap: 12 },
+  smallCard:     { backgroundColor: "#fff", borderRadius: 14, overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.07, shadowRadius: 8, elevation: 2 },
+  smallImg:      { width: "100%", height: 120 },
+  smallHeart:    { position: "absolute", top: 8, right: 8, width: 30, height: 30, borderRadius: 15, backgroundColor: "rgba(0,0,0,0.3)", alignItems: "center", justifyContent: "center" },
+  smallBody:     { padding: 10, gap: 3 },
+  smallTitle:    { fontSize: 12, fontFamily: "Inter_600SemiBold", color: NAVY },
+  smallPrice:    { fontSize: 13, fontFamily: "Inter_700Bold", color: GOLD },
+  smallMeta:     { fontSize: 11, color: "rgba(15,32,64,0.5)" },
+
+  estimateBanner: { margin: 20, backgroundColor: NAVY, borderRadius: 16, padding: 20, flexDirection: "row", alignItems: "center", gap: 12 },
+  estimateTitle:  { fontSize: 16, fontFamily: "Inter_700Bold", color: GOLD, marginBottom: 4 },
+  estimateDesc:   { fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 18, marginBottom: 8 },
+  estimateCta:    { fontSize: 13, fontFamily: "Inter_600SemiBold", color: GOLD },
+});

@@ -1,575 +1,321 @@
+// Financing calculator — replaces old AI Concierge tab
 import { MaterialIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Haptics from "expo-haptics";
-import * as Linking from "expo-linking";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
-  Alert,
-  Animated,
-  FlatList,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { useApp } from "@/context/AppContext";
-import { useColors } from "@/hooks/useColors";
 import { useLocale } from "@/hooks/useLocale";
-import AnimatedScreen from "@/components/AnimatedScreen";
 
-// ── Constants ──────────────────────────────────────────────────────────────────
-const ESTETI_WHATSAPP = "https://wa.me/966500000000";
-const SERVICE_REQUESTS_KEY = "rozoz_service_requests";
-const DELEGATION_KEY       = "rozoz_delegation_status";
+const NAVY = "#0f2040";
+const GOLD = "#c9a84c";
 
-interface ServiceProvider {
-  id: number;
+interface BankOffer {
   name: string;
   nameEn: string;
-  specialty: string;
-  specialtyEn: string;
-  category: "maintenance" | "construction" | "cleaning" | "landscaping" | "electrical" | "plumbing";
-  rating: number;
-  phone: string;
+  rate: number;
+  logo: string;
 }
 
-interface ServiceRequest {
-  id: string;
-  providerId: number;
-  providerName: string;
-  type: "direct" | "rozoz";
-  status: "pending" | "in_progress" | "done";
-  ts: string;
-  note?: string;
-}
-
-const PROVIDERS: ServiceProvider[] = [
-  { id: 1, name: "شركة الفارس للإنشاءات",   nameEn: "Al-Faris Construction",    specialty: "إنشاء وتجديد وتشطيبات",  specialtyEn: "Construction & Renovation", category: "construction", rating: 4.8, phone: "+966500011001" },
-  { id: 2, name: "شركة المدينة للسباكة",     nameEn: "Al-Madinah Plumbing",      specialty: "سباكة وصرف صحي",         specialtyEn: "Plumbing & Drainage",       category: "plumbing",     rating: 4.6, phone: "+966500022002" },
-  { id: 3, name: "مؤسسة نور الكهرباء",      nameEn: "Nour Electrical",          specialty: "كهرباء وأنظمة ذكية",      specialtyEn: "Electrical & Smart Systems",category: "electrical",   rating: 4.7, phone: "+966500033003" },
-  { id: 4, name: "جرين سكيب للتشجير",      nameEn: "Green Scape Landscaping",  specialty: "تشجير وتجميل المباني",    specialtyEn: "Landscaping",               category: "landscaping",  rating: 4.3, phone: "+966500044004" },
-  { id: 5, name: "مؤسسة النظافة المتكاملة", nameEn: "Total Clean Services",     specialty: "تنظيف عام وصيانة دورية", specialtyEn: "Cleaning & Upkeep",         category: "cleaning",     rating: 4.5, phone: "+966500055005" },
-  { id: 6, name: "شركة الديار للصيانة",     nameEn: "Al-Diyar Maintenance",     specialty: "صيانة عامة ومتكاملة",    specialtyEn: "General Maintenance",       category: "maintenance",  rating: 4.9, phone: "+966500066006" },
+const BANKS: BankOffer[] = [
+  { name: "بنك الإنماء",   nameEn: "Alinma Bank",        rate: 3.85, logo: "🌟" },
+  { name: "البنك الأهلي", nameEn: "Al-Ahli Bank",        rate: 3.99, logo: "🏦" },
+  { name: "مصرف الراجحي", nameEn: "Al-Rajhi Bank",       rate: 4.00, logo: "💰" },
+  { name: "بنك الرياض",   nameEn: "Riyad Bank",          rate: 4.15, logo: "🏛️" },
+  { name: "البنك العربي", nameEn: "Arab National Bank",  rate: 4.30, logo: "🏢" },
 ];
 
-const CATEGORY_ICONS: Record<ServiceProvider["category"], string> = {
-  maintenance:  "build",
-  construction: "apartment",
-  cleaning:     "cleaning-services",
-  landscaping:  "park",
-  electrical:   "bolt",
-  plumbing:     "water-drop",
-};
-
-type TabKey = "services" | "requests";
-
-// ── OTP Delegation Modal ───────────────────────────────────────────────────────
-interface DelegationModalProps {
-  visible: boolean;
-  onClose: () => void;
-  colors: ReturnType<typeof useColors>;
-  isAr: boolean;
-  phone: string;
-  onSuccess: () => void;
+function calcMonthly(principal: number, annualRate: number, years: number): number {
+  if (principal <= 0 || years <= 0) return 0;
+  const r = annualRate / 100 / 12;
+  const n = years * 12;
+  if (r === 0) return principal / n;
+  return (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
 }
 
-function DelegationModal({ visible, onClose, colors, isAr, phone, onSuccess }: DelegationModalProps) {
-  const [step, setStep]     = useState<"terms" | "otp" | "success">("terms");
-  const [otp, setOtp]       = useState("");
-  const [sentOtp, setSentOtp] = useState("");
-  const [loading, setLoading] = useState(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible) {
-      setStep("terms");
-      setOtp("");
-      Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }).start();
-    } else {
-      fadeAnim.setValue(0);
-    }
-  }, [visible]);
-
-  const handleAgree = useCallback(() => {
-    const code = String(Math.floor(1000 + Math.random() * 9000));
-    setSentOtp(code);
-    setStep("otp");
-    if (Platform.OS !== "web") {
-      Alert.alert(
-        isAr ? "تم إرسال الرمز" : "Code Sent",
-        isAr ? `رمز التفويض: ${code}\n(في التطبيق الحقيقي يُرسَل لجوالك)` : `Authorization code: ${code}\n(In production, sent via SMS)`,
-      );
-    }
-  }, [isAr]);
-
-  const handleVerify = useCallback(async () => {
-    if (otp.trim() !== sentOtp) {
-      if (Platform.OS !== "web") Alert.alert(isAr ? "رمز خاطئ" : "Wrong code", isAr ? "يرجى إعادة المحاولة" : "Please try again.");
-      return;
-    }
-    setLoading(true);
-    await AsyncStorage.setItem(DELEGATION_KEY, JSON.stringify({ active: true, ts: new Date().toISOString(), phone }));
-    setLoading(false);
-    setStep("success");
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setTimeout(() => { onSuccess(); onClose(); }, 1800);
-  }, [otp, sentOtp, phone, isAr, onSuccess, onClose]);
-
-  const s = dlgStyles(colors, isAr);
-
-  return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <Animated.View style={[s.overlay, { opacity: fadeAnim }]}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.sheet}>
-          {step === "terms" && (
-            <>
-              <View style={s.handle} />
-              <View style={s.iconRow}>
-                <View style={[s.iconBox, { backgroundColor: colors.gold + "22" }]}>
-                  <MaterialIcons name="verified-user" size={32} color={colors.gold} />
-                </View>
-              </View>
-              <Text style={s.title}>{isAr ? "طلب تفويض Esteti In" : "Authorize Esteti In"}</Text>
-              <Text style={s.body}>
-                {isAr
-                  ? "بالموافقة، تُفوّض Esteti In للتواصل مع شركات الخدمات نيابةً عنك، وتنسيق الصيانة والإصلاحات. يمكنك إلغاء التفويض في أي وقت من الإعدادات."
-                  : "By agreeing, you authorize Esteti In to contact service companies on your behalf and coordinate maintenance. You can revoke this authorization anytime from Settings."}
-              </Text>
-              <Pressable style={({ pressed }) => [s.primaryBtn, pressed && { opacity: 0.85 }]} onPress={handleAgree}>
-                <MaterialIcons name="check" size={18} color="#0F2040" />
-                <Text style={s.primaryBtnText}>{isAr ? "أوافق — أرسل رمز التأكيد" : "Agree — Send Confirmation Code"}</Text>
-              </Pressable>
-              <Pressable style={({ pressed }) => [s.cancelBtn, pressed && { opacity: 0.7 }]} onPress={onClose}>
-                <Text style={s.cancelText}>{isAr ? "إلغاء" : "Cancel"}</Text>
-              </Pressable>
-            </>
-          )}
-          {step === "otp" && (
-            <>
-              <View style={s.handle} />
-              <View style={s.iconRow}>
-                <View style={[s.iconBox, { backgroundColor: "#DBEAFE" }]}>
-                  <MaterialIcons name="sms" size={32} color="#2563EB" />
-                </View>
-              </View>
-              <Text style={s.title}>{isAr ? "أدخل رمز التأكيد" : "Enter Confirmation Code"}</Text>
-              <Text style={s.body}>
-                {isAr ? `أُرسل رمز مكوّن من 4 أرقام إلى ${phone}` : `A 4-digit code was sent to ${phone}`}
-              </Text>
-              <TextInput
-                style={[s.otpInput, { color: colors.foreground, borderColor: colors.gold }]}
-                value={otp}
-                onChangeText={setOtp}
-                keyboardType="number-pad"
-                maxLength={4}
-                textAlign="center"
-                placeholder="○ ○ ○ ○"
-                placeholderTextColor="#94A3B8"
-              />
-              <Pressable
-                style={({ pressed }) => [s.primaryBtn, pressed && { opacity: 0.85 }, (!otp || otp.length < 4) && { opacity: 0.5 }]}
-                onPress={handleVerify}
-                disabled={loading || otp.length < 4}
-              >
-                <Text style={s.primaryBtnText}>{isAr ? loading ? "جارٍ التحقق…" : "تأكيد التفويض" : loading ? "Verifying…" : "Confirm Authorization"}</Text>
-              </Pressable>
-            </>
-          )}
-          {step === "success" && (
-            <View style={s.successBox}>
-              <View style={[s.iconBox, { backgroundColor: "#DCFCE7" }]}>
-                <MaterialIcons name="check-circle" size={40} color="#16A34A" />
-              </View>
-              <Text style={[s.title, { color: "#16A34A" }]}>{isAr ? "تم التفويض بنجاح!" : "Authorization Confirmed!"}</Text>
-              <Text style={s.body}>{isAr ? "ستتواصل معك Esteti In قريباً." : "Esteti In will contact you shortly."}</Text>
-            </View>
-          )}
-        </KeyboardAvoidingView>
-      </Animated.View>
-    </Modal>
-  );
+function fmtSAR(n: number, isAr: boolean): string {
+  const s = Math.round(n).toLocaleString("en-US");
+  return isAr ? `${s} ر.س` : `SAR ${s}`;
 }
 
-// ── Main Screen ────────────────────────────────────────────────────────────────
-export default function ServicesScreen() {
-  const colors  = useColors();
-  const insets  = useSafeAreaInsets();
-  const { isAr } = useLocale();
-  const { user }  = useApp();
-
-  const [activeTab,     setActiveTab]     = useState<TabKey>("services");
-  const [requests,      setRequests]      = useState<ServiceRequest[]>([]);
-  const [delegated,     setDelegated]     = useState(false);
-  const [showDlgModal,  setShowDlgModal]  = useState(false);
-  const [selectedProv,  setSelectedProv]  = useState<ServiceProvider | null>(null);
-
-  const topPad    = insets.top    + (Platform.OS === "web" ? 67 : 0);
-  const bottomPad = insets.bottom + (Platform.OS === "web" ? 34 : 100);
-
-  useEffect(() => {
-    AsyncStorage.getItem(SERVICE_REQUESTS_KEY).then(raw => {
-      if (raw) setRequests(JSON.parse(raw) as ServiceRequest[]);
-    }).catch(() => {});
-    AsyncStorage.getItem(DELEGATION_KEY).then(raw => {
-      if (raw) setDelegated((JSON.parse(raw) as { active: boolean }).active === true);
-    }).catch(() => {});
-  }, []);
-
-  const saveRequest = useCallback(async (req: ServiceRequest) => {
-    const updated = [req, ...requests];
-    setRequests(updated);
-    await AsyncStorage.setItem(SERVICE_REQUESTS_KEY, JSON.stringify(updated)).catch(() => {});
-  }, [requests]);
-
-  const handleDirectContact = useCallback(async (provider: ServiceProvider) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const waUrl = `https://wa.me/${provider.phone.replace(/\D/g, "")}`;
-    const canOpen = await Linking.canOpenURL(waUrl);
-    if (canOpen) {
-      await Linking.openURL(waUrl);
-    } else {
-      await Linking.openURL(`tel:${provider.phone}`);
-    }
-    const req: ServiceRequest = {
-      id: Date.now().toString(),
-      providerId: provider.id,
-      providerName: provider.name,
-      type: "direct",
-      status: "pending",
-      ts: new Date().toISOString(),
-    };
-    void saveRequest(req);
-  }, [saveRequest]);
-
-  const handleDelegateEstetiIn = useCallback((provider: ServiceProvider) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedProv(provider);
-    setShowDlgModal(true);
-  }, []);
-
-  const handleDelegationSuccess = useCallback(async () => {
-    setDelegated(true);
-    if (selectedProv) {
-      const req: ServiceRequest = {
-        id: Date.now().toString(),
-        providerId: selectedProv.id,
-        providerName: selectedProv.name,
-        type: "rozoz",
-        status: "pending",
-        ts: new Date().toISOString(),
-      };
-      await saveRequest(req);
-    }
-  }, [selectedProv, saveRequest]);
-
-  const openWhatsApp = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Linking.openURL(ESTETI_WHATSAPP);
-  }, []);
-
-  const s = styles(colors, isAr, topPad, bottomPad);
-
+// Simple stepper row
+function Stepper({
+  label,
+  value,
+  display,
+  onDec,
+  onInc,
+}: {
+  label: string;
+  value: number;
+  display: string;
+  onDec: () => void;
+  onInc: () => void;
+}) {
   return (
-    <AnimatedScreen>
-    <View style={s.root}>
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <View style={s.header}>
-        <View>
-          <Text style={s.headerTitle}>{isAr ? "الخدمات" : "Services"}</Text>
-          <Text style={s.headerSub}>{isAr ? "دليل شركاء الخدمة وطلباتك" : "Service partners & your requests"}</Text>
-        </View>
-        <Pressable
-          onPress={openWhatsApp}
-          style={({ pressed }) => [s.waBtn, pressed && { opacity: 0.8 }]}
-        >
-          <MaterialIcons name="chat" size={18} color="#FFFFFF" />
-          <Text style={s.waBtnText}>{isAr ? "تواصل معنا" : "Contact Us"}</Text>
+    <View style={s.stepperCard}>
+      <Text style={s.stepperLabel}>{label}</Text>
+      <View style={s.stepperRow}>
+        <Pressable style={s.stepBtn} onPress={onDec}>
+          <MaterialIcons name="remove" size={22} color={NAVY} />
+        </Pressable>
+        <Text style={s.stepValue}>{display}</Text>
+        <Pressable style={s.stepBtn} onPress={onInc}>
+          <MaterialIcons name="add" size={22} color={NAVY} />
         </Pressable>
       </View>
-
-      {/* ── Delegation Banner ───────────────────────────────────────────────── */}
-      {delegated && (
-        <View style={s.delegatedBanner}>
-          <MaterialIcons name="verified" size={18} color="#16A34A" />
-          <Text style={[s.delegatedText, isAr && { textAlign: "right" }]}>
-            {isAr ? "Esteti In مفوّضة للتواصل مع شركات الخدمة نيابةً عنك" : "Esteti In is authorized to coordinate services on your behalf"}
-          </Text>
-        </View>
-      )}
-
-      {/* ── Tab Bar ────────────────────────────────────────────────────────── */}
-      <View style={s.tabBar}>
-        {(["services", "requests"] as TabKey[]).map(key => (
-          <Pressable key={key} onPress={() => setActiveTab(key)} style={[s.tabItem, activeTab === key && s.tabActive]}>
-            <MaterialIcons
-              name={key === "services" ? "build-circle" : "assignment"}
-              size={16}
-              color={activeTab === key ? colors.gold : "#94A3B8"}
-            />
-            <Text style={[s.tabLabel, activeTab === key && s.tabLabelActive]}>
-              {key === "services" ? (isAr ? "دليل الخدمات" : "Service Directory") : (isAr ? "طلباتي" : "My Requests")}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {/* ── Services Tab ───────────────────────────────────────────────────── */}
-      {activeTab === "services" ? (
-        <FlatList
-          data={PROVIDERS}
-          keyExtractor={item => String(item.id)}
-          contentContainerStyle={s.listContent}
-          showsVerticalScrollIndicator={false}
-          ListHeaderComponent={
-            <View style={s.sectionNote}>
-              <MaterialIcons name="info-outline" size={14} color="#64748B" />
-              <Text style={[s.sectionNoteText, isAr && { textAlign: "right" }]}>
-                {isAr
-                  ? "يمكنك التواصل مباشرة مع الشركة، أو تفويض Esteti In للتنسيق نيابةً عنك."
-                  : "Contact the company directly, or delegate Esteti In to coordinate on your behalf."}
-              </Text>
-            </View>
-          }
-          renderItem={({ item }) => (
-            <View style={[s.provCard, isAr && { flexDirection: "row-reverse" }]}>
-              <View style={[s.provIcon, { backgroundColor: colors.gold + "1A" }]}>
-                <MaterialIcons name={CATEGORY_ICONS[item.category] as any} size={22} color={colors.gold} />
-              </View>
-              <View style={{ flex: 1, marginHorizontal: 12 }}>
-                <Text style={[s.provName, isAr && { textAlign: "right" }]}>{isAr ? item.name : item.nameEn}</Text>
-                <Text style={[s.provSpec, isAr && { textAlign: "right" }]}>{isAr ? item.specialty : item.specialtyEn}</Text>
-                <View style={[s.ratingRow, isAr && { flexDirection: "row-reverse" }]}>
-                  <MaterialIcons name="star" size={13} color="#F59E0B" />
-                  <Text style={s.ratingText}>{item.rating}</Text>
-                </View>
-              </View>
-              <View style={s.actionCol}>
-                <Pressable
-                  onPress={() => handleDirectContact(item)}
-                  style={({ pressed }) => [s.directBtn, pressed && { opacity: 0.8 }]}
-                >
-                  <MaterialIcons name="call" size={14} color="#FFFFFF" />
-                  <Text style={s.directBtnText}>{isAr ? "مباشر" : "Direct"}</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => handleDelegateEstetiIn(item)}
-                  style={({ pressed }) => [s.delegateBtn, pressed && { opacity: 0.8 }]}
-                >
-                  <MaterialIcons name="handshake" size={14} color={colors.gold} />
-                  <Text style={[s.delegateBtnText, { color: colors.gold }]}>{isAr ? "فوّض" : "Delegate"}</Text>
-                </Pressable>
-              </View>
-            </View>
-          )}
-        />
-      ) : (
-        /* ── Requests Tab ──────────────────────────────────────────────────── */
-        <ScrollView contentContainerStyle={s.listContent} showsVerticalScrollIndicator={false}>
-          {requests.length === 0 ? (
-            <View style={s.empty}>
-              <View style={[s.emptyIcon, { backgroundColor: colors.gold + "18" }]}>
-                <MaterialIcons name="assignment" size={36} color={colors.gold} />
-              </View>
-              <Text style={s.emptyTitle}>{isAr ? "لا توجد طلبات بعد" : "No requests yet"}</Text>
-              <Text style={s.emptySub}>
-                {isAr ? "تواصل مع شركة أو فوّض Esteti In من دليل الخدمات" : "Contact a company or delegate Esteti In from the directory"}
-              </Text>
-            </View>
-          ) : (
-            requests.map(req => (
-              <View key={req.id} style={[s.reqCard, isAr && { flexDirection: "row-reverse" }]}>
-                <View style={[s.reqIconBox, { backgroundColor: req.type === "rozoz" ? colors.gold + "22" : "#DBEAFE" }]}>
-                  <MaterialIcons
-                    name={req.type === "rozoz" ? "handshake" : "call"}
-                    size={18}
-                    color={req.type === "rozoz" ? colors.gold : "#2563EB"}
-                  />
-                </View>
-                <View style={{ flex: 1, marginHorizontal: 12 }}>
-                  <Text style={[s.reqName, isAr && { textAlign: "right" }]}>{req.providerName}</Text>
-                  <Text style={[s.reqType, isAr && { textAlign: "right" }]}>
-                    {req.type === "rozoz" ? (isAr ? "عبر Esteti In" : "via Esteti In") : (isAr ? "تواصل مباشر" : "Direct contact")}
-                  </Text>
-                  <Text style={[s.reqDate, isAr && { textAlign: "right" }]}>
-                    {new Date(req.ts).toLocaleDateString(isAr ? "ar-SA" : "en-GB")}
-                  </Text>
-                </View>
-                <View style={s.statusChip}>
-                  <Text style={s.statusText}>{isAr ? "قيد المراجعة" : "Pending"}</Text>
-                </View>
-              </View>
-            ))
-          )}
-        </ScrollView>
-      )}
-
-      {/* ── Delegation Modal ────────────────────────────────────────────────── */}
-      <DelegationModal
-        visible={showDlgModal}
-        onClose={() => setShowDlgModal(false)}
-        colors={colors}
-        isAr={isAr}
-        phone={user?.phone ?? "+966XXXXXXXXX"}
-        onSuccess={handleDelegationSuccess}
-      />
     </View>
-    </AnimatedScreen>
   );
 }
 
-// ── Styles ─────────────────────────────────────────────────────────────────────
-function styles(
-  colors: ReturnType<typeof useColors>,
-  isAr: boolean,
-  topPad: number,
-  bottomPad: number,
-) {
-  return StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.background },
+export default function FinancingScreen() {
+  const { t, isAr } = useLocale();
+  const insets       = useSafeAreaInsets();
 
-    header: {
-      backgroundColor:   colors.navy,
-      paddingTop:        topPad + 16,
-      paddingBottom:     20,
-      paddingHorizontal: 20,
-      flexDirection:     isAr ? "row-reverse" : "row",
-      alignItems:        "center",
-      justifyContent:    "space-between",
-    },
-    headerTitle: { color: "#FFFFFF", fontSize: 24, fontFamily: "Inter_700Bold" },
-    headerSub:   { color: "rgba(255,255,255,0.5)", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 4 },
+  const [priceStr,  setPriceStr]  = useState("1500000");
+  const [downPct,   setDownPct]   = useState(20);   // 5..50 step 5
+  const [years,     setYears]     = useState(20);   // 5..30 step 5
+  const [rate,      setRate]      = useState(400);  // stored ×100 to avoid float drift
+  const [income,    setIncome]    = useState("");
+  const [activeTab, setActiveTab] = useState<"calc" | "afford">("calc");
 
-    waBtn: {
-      flexDirection:   isAr ? "row-reverse" : "row",
-      alignItems:      "center",
-      gap:             6,
-      backgroundColor: "#25D366",
-      paddingHorizontal: 14,
-      paddingVertical:   9,
-      borderRadius:    12,
-    },
-    waBtnText: { color: "#FFFFFF", fontSize: 13, fontFamily: "Inter_700Bold" },
+  const price    = Number(priceStr.replace(/[^0-9]/g, "")) || 0;
+  const downAmt  = (price * downPct) / 100;
+  const loanAmt  = price - downAmt;
+  const rateReal = rate / 100;
+  const monthly  = useMemo(() => calcMonthly(loanAmt, rateReal, years), [loanAmt, rateReal, years]);
+  const total    = monthly * years * 12;
+  const profit   = total - loanAmt;
 
-    delegatedBanner: {
-      flexDirection:   isAr ? "row-reverse" : "row",
-      alignItems:      "center",
-      gap:             8,
-      backgroundColor: "#F0FDF4",
-      paddingHorizontal: 16,
-      paddingVertical:   10,
-      borderBottomWidth: 1,
-      borderBottomColor: "#BBF7D0",
-    },
-    delegatedText: { flex: 1, fontSize: 13, fontFamily: "Inter_500Medium", color: "#166534" },
+  const incomeNum   = Number(income.replace(/[^0-9]/g, "")) || 0;
+  const maxMonthly  = incomeNum * 0.33;
+  const affordAmt   = useMemo(() => {
+    if (maxMonthly <= 0) return 0;
+    const r = rateReal / 100 / 12;
+    const n = years * 12;
+    if (r === 0) return maxMonthly * n;
+    return (maxMonthly * (Math.pow(1 + r, n) - 1)) / (r * Math.pow(1 + r, n));
+  }, [maxMonthly, rateReal, years]);
 
-    tabBar: {
-      flexDirection: isAr ? "row-reverse" : "row",
-      backgroundColor: colors.background,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    tabItem: {
-      flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
-      gap: 6, paddingVertical: 14,
-      borderBottomWidth: 2, borderBottomColor: "transparent",
-    },
-    tabActive:      { borderBottomColor: colors.gold },
-    tabLabel:       { fontSize: 13, fontFamily: "Inter_500Medium", color: "#94A3B8" },
-    tabLabelActive: { color: colors.gold, fontFamily: "Inter_700Bold" },
+  return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <StatusBar barStyle="light-content" backgroundColor={NAVY} />
 
-    listContent: { padding: 16, paddingBottom: bottomPad },
+      {/* Header */}
+      <View style={[s.header, { paddingTop: insets.top + 8 }]}>
+        <Text style={s.headerTitle}>{t.financing.title}</Text>
+        <Text style={s.headerSub}>{t.financing.subtitle}</Text>
+        <View style={s.tabRow}>
+          {(["calc", "afford"] as const).map((tab) => (
+            <Pressable key={tab} style={[s.tab, activeTab === tab && s.tabActive]} onPress={() => setActiveTab(tab)}>
+              <Text style={[s.tabText, activeTab === tab && s.tabTextActive]}>
+                {tab === "calc"
+                  ? (isAr ? "حاسبة التمويل" : "Calculator")
+                  : (isAr ? "قدرتي الشرائية" : "Affordability")}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
 
-    sectionNote: {
-      flexDirection:   isAr ? "row-reverse" : "row",
-      alignItems:      "flex-start",
-      gap:             8,
-      backgroundColor: colors.card,
-      borderRadius:    12,
-      padding:         12,
-      marginBottom:    12,
-    },
-    sectionNoteText: { flex: 1, fontSize: 12, fontFamily: "Inter_400Regular", color: "#64748B", lineHeight: 18 },
+      <ScrollView contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 100 }}>
+        {activeTab === "calc" ? (
+          <>
+            {/* Price */}
+            <View style={s.inputCard}>
+              <Text style={s.inputLabel}>{t.financing.propPrice}</Text>
+              <TextInput
+                style={[s.priceInput, { textAlign: isAr ? "right" : "left" }]}
+                value={price > 0 ? price.toLocaleString("en-US") : ""}
+                onChangeText={(v) => setPriceStr(v.replace(/[^0-9]/g, ""))}
+                keyboardType="numeric"
+                placeholder="1,500,000"
+                placeholderTextColor="rgba(15,32,64,0.3)"
+              />
+            </View>
 
-    provCard: {
-      flexDirection: "row", alignItems: "center",
-      backgroundColor: colors.card, borderRadius: 16, padding: 14, marginBottom: 10,
-      shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 1,
-    },
-    provIcon:   { width: 46, height: 46, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-    provName:   { fontSize: 14, fontFamily: "Inter_700Bold", color: colors.foreground },
-    provSpec:   { fontSize: 12, fontFamily: "Inter_400Regular", color: "#64748B", marginTop: 2 },
-    ratingRow:  { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 4 },
-    ratingText: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#F59E0B" },
+            {/* Down payment */}
+            <Stepper
+              label={`${t.financing.downPayment}  (${downPct}%  —  ${fmtSAR(downAmt, isAr)})`}
+              value={downPct}
+              display={`${downPct}%`}
+              onDec={() => setDownPct((p) => Math.max(5, p - 5))}
+              onInc={() => setDownPct((p) => Math.min(50, p + 5))}
+            />
 
-    actionCol:   { gap: 6, alignItems: "flex-end" },
-    directBtn:   {
-      flexDirection: "row", alignItems: "center", gap: 4,
-      backgroundColor: "#2563EB", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8,
-    },
-    directBtnText:   { fontSize: 12, fontFamily: "Inter_700Bold", color: "#FFFFFF" },
-    delegateBtn:     {
-      flexDirection: "row", alignItems: "center", gap: 4,
-      borderWidth: 1.5, borderColor: colors.gold,
-      paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8,
-    },
-    delegateBtnText: { fontSize: 12, fontFamily: "Inter_700Bold" },
+            {/* Years */}
+            <Stepper
+              label={t.financing.years}
+              value={years}
+              display={t.financing.yearsLabel(years)}
+              onDec={() => setYears((y) => Math.max(5, y - 5))}
+              onInc={() => setYears((y) => Math.min(30, y + 5))}
+            />
 
-    empty:     { alignItems: "center", paddingTop: 70, gap: 12 },
-    emptyIcon: { width: 80, height: 80, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-    emptyTitle: { fontSize: 18, fontFamily: "Inter_700Bold", color: colors.foreground, textAlign: "center" },
-    emptySub:   { fontSize: 14, fontFamily: "Inter_400Regular", color: "#64748B", textAlign: "center", paddingHorizontal: 32, lineHeight: 20 },
+            {/* Rate */}
+            <Stepper
+              label={t.financing.rate}
+              value={rate}
+              display={`${rateReal.toFixed(2)}%`}
+              onDec={() => setRate((r) => Math.max(200, r - 25))}
+              onInc={() => setRate((r) => Math.min(800, r + 25))}
+            />
 
-    reqCard:   {
-      flexDirection: "row", alignItems: "center",
-      backgroundColor: colors.card, borderRadius: 14, padding: 14, marginBottom: 10,
-    },
-    reqIconBox: { width: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-    reqName:    { fontSize: 14, fontFamily: "Inter_700Bold", color: colors.foreground },
-    reqType:    { fontSize: 12, fontFamily: "Inter_400Regular", color: "#64748B", marginTop: 2 },
-    reqDate:    { fontSize: 11, fontFamily: "Inter_400Regular", color: "#94A3B8", marginTop: 2 },
-    statusChip: { backgroundColor: "#FEF3C7", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-    statusText: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: "#92400E" },
-  });
+            {/* Result */}
+            <View style={s.resultCard}>
+              <View style={s.resultMain}>
+                <Text style={s.resultLabel}>{t.financing.monthly}</Text>
+                <Text style={s.resultAmount}>{fmtSAR(monthly, isAr)}</Text>
+                <Text style={s.resultSub}>{isAr ? "في الشهر" : "per month"}</Text>
+              </View>
+              <View style={s.resultDivider} />
+              <View style={s.resultRows}>
+                {[
+                  { label: t.financing.loanAmt,   value: fmtSAR(loanAmt, isAr) },
+                  { label: t.financing.downAmt,    value: fmtSAR(downAmt, isAr) },
+                  { label: t.financing.bankProfit, value: fmtSAR(profit, isAr) },
+                  { label: t.financing.totalCost,  value: fmtSAR(total, isAr) },
+                ].map((row) => (
+                  <View key={row.label} style={s.resultRow}>
+                    <Text style={s.resultRowLabel}>{row.label}</Text>
+                    <Text style={s.resultRowValue}>{row.value}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <Text style={s.disclaimer}>{t.financing.disclaimer}</Text>
+
+            {/* Banks */}
+            <Text style={s.sectionTitle}>{t.financing.banks}</Text>
+            {BANKS.map((bank) => {
+              const m = calcMonthly(loanAmt, bank.rate, years);
+              const cheapest = bank.rate === Math.min(...BANKS.map((b) => b.rate));
+              return (
+                <View key={bank.name} style={[s.bankRow, cheapest && s.bankRowBest]}>
+                  <Text style={s.bankLogo}>{bank.logo}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.bankName}>{isAr ? bank.name : bank.nameEn}</Text>
+                    <Text style={s.bankRate}>{bank.rate}%</Text>
+                  </View>
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text style={s.bankMonthly}>{fmtSAR(m, isAr)}</Text>
+                    <Text style={s.bankMo}>{isAr ? "/شهر" : "/mo"}</Text>
+                  </View>
+                  {cheapest && (
+                    <View style={s.bestBadge}>
+                      <Text style={s.bestBadgeText}>{isAr ? "الأفضل" : "Best"}</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </>
+        ) : (
+          <>
+            <View style={s.inputCard}>
+              <Text style={s.inputLabel}>{t.financing.monthlyIncome}</Text>
+              <TextInput
+                style={[s.priceInput, { textAlign: isAr ? "right" : "left" }]}
+                value={income}
+                onChangeText={setIncome}
+                keyboardType="numeric"
+                placeholder="15,000"
+                placeholderTextColor="rgba(15,32,64,0.3)"
+              />
+            </View>
+
+            <Stepper
+              label={t.financing.years}
+              value={years}
+              display={t.financing.yearsLabel(years)}
+              onDec={() => setYears((y) => Math.max(5, y - 5))}
+              onInc={() => setYears((y) => Math.min(30, y + 5))}
+            />
+
+            {affordAmt > 0 && (
+              <View style={s.affordCard}>
+                <MaterialIcons name="home" size={44} color={GOLD} />
+                <Text style={s.affordAmount}>{fmtSAR(affordAmt + affordAmt * (downPct / 100), isAr)}</Text>
+                <Text style={s.affordDesc}>
+                  {isAr
+                    ? `بناءً على 33% من راتبك، تستطيع تمويل عقار بقيمة تصل إلى ${fmtSAR(affordAmt + affordAmt * (downPct / 100), isAr)}`
+                    : `Based on 33% of your income, you can afford a property up to ${fmtSAR(affordAmt + affordAmt * (downPct / 100), false)}`}
+                </Text>
+                <View style={s.affordDetail}>
+                  <Text style={s.affordDetailText}>
+                    {isAr ? `قسط شهري: ${fmtSAR(maxMonthly, isAr)}` : `Monthly: ${fmtSAR(maxMonthly, false)}`}
+                  </Text>
+                  <Text style={s.affordDetailText}>
+                    {isAr ? `دفعة أولى (${downPct}%): ${fmtSAR(affordAmt * (downPct / 100), isAr)}` : `Down (${downPct}%): ${fmtSAR(affordAmt * (downPct / 100), false)}`}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            <Text style={s.disclaimer}>{t.financing.disclaimer}</Text>
+          </>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
 }
 
-// ── Delegation Modal Styles ────────────────────────────────────────────────────
-function dlgStyles(colors: ReturnType<typeof useColors>, isAr: boolean) {
-  return StyleSheet.create({
-    overlay: {
-      flex: 1, backgroundColor: "rgba(0,0,0,0.55)",
-      justifyContent: "flex-end",
-    },
-    sheet: {
-      backgroundColor: colors.background,
-      borderTopLeftRadius: 28, borderTopRightRadius: 28,
-      paddingHorizontal: 24, paddingBottom: 40, paddingTop: 12,
-      alignItems: "center",
-    },
-    handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: "#E2E8F0", marginBottom: 20 },
-    iconRow: { marginBottom: 16 },
-    iconBox: { width: 72, height: 72, borderRadius: 20, alignItems: "center", justifyContent: "center" },
-    title:   { fontSize: 20, fontFamily: "Inter_700Bold", color: colors.foreground, marginBottom: 10, textAlign: "center" },
-    body:    { fontSize: 14, fontFamily: "Inter_400Regular", color: "#64748B", textAlign: isAr ? "right" : "left", lineHeight: 22, marginBottom: 24 },
-    otpInput: {
-      width: 160, height: 60, borderWidth: 2, borderRadius: 16,
-      fontSize: 32, fontFamily: "Inter_700Bold",
-      backgroundColor: colors.card, marginBottom: 24,
-    },
-    primaryBtn: {
-      flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
-      backgroundColor: colors.gold, borderRadius: 14,
-      paddingVertical: 16, paddingHorizontal: 24, width: "100%", marginBottom: 10,
-    },
-    primaryBtnText: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#0F2040" },
-    cancelBtn:  { paddingVertical: 12 },
-    cancelText: { fontSize: 14, fontFamily: "Inter_500Medium", color: "#64748B" },
-    successBox: { alignItems: "center", paddingVertical: 20, gap: 12 },
-  });
-}
+const s = StyleSheet.create({
+  header:       { backgroundColor: NAVY, paddingHorizontal: 20, paddingBottom: 16, gap: 6 },
+  headerTitle:  { fontSize: 24, fontFamily: "Inter_700Bold", color: "#fff" },
+  headerSub:    { fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 18 },
+  tabRow:       { flexDirection: "row", backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 10, padding: 3, marginTop: 8, gap: 2 },
+  tab:          { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: "center" },
+  tabActive:    { backgroundColor: GOLD },
+  tabText:      { fontSize: 12, fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.7)" },
+  tabTextActive: { color: NAVY },
+
+  inputCard:    { backgroundColor: "#fff", borderRadius: 16, padding: 16, gap: 8, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  inputLabel:   { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "rgba(15,32,64,0.6)" },
+  priceInput:   { fontSize: 22, fontFamily: "Inter_700Bold", color: NAVY, borderBottomWidth: 2, borderBottomColor: GOLD, paddingBottom: 6 },
+
+  stepperCard:  { backgroundColor: "#fff", borderRadius: 16, padding: 16, gap: 12, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  stepperLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "rgba(15,32,64,0.65)" },
+  stepperRow:   { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  stepBtn:      { width: 44, height: 44, borderRadius: 12, backgroundColor: "rgba(15,32,64,0.07)", alignItems: "center", justifyContent: "center" },
+  stepValue:    { fontSize: 22, fontFamily: "Inter_700Bold", color: NAVY, minWidth: 80, textAlign: "center" },
+
+  resultCard:   { backgroundColor: NAVY, borderRadius: 20, padding: 20, gap: 16 },
+  resultMain:   { alignItems: "center", gap: 4 },
+  resultLabel:  { fontSize: 14, color: "rgba(255,255,255,0.7)" },
+  resultAmount: { fontSize: 36, fontFamily: "Inter_700Bold", color: GOLD },
+  resultSub:    { fontSize: 12, color: "rgba(255,255,255,0.5)" },
+  resultDivider: { height: 1, backgroundColor: "rgba(255,255,255,0.1)" },
+  resultRows:   { gap: 10 },
+  resultRow:    { flexDirection: "row", justifyContent: "space-between" },
+  resultRowLabel: { fontSize: 13, color: "rgba(255,255,255,0.65)" },
+  resultRowValue: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#fff" },
+
+  disclaimer:   { fontSize: 11, color: "rgba(15,32,64,0.45)", textAlign: "center", lineHeight: 16 },
+  sectionTitle: { fontSize: 18, fontFamily: "Inter_700Bold", color: NAVY },
+
+  bankRow:      { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 14, padding: 14, gap: 12, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+  bankRowBest:  { borderWidth: 2, borderColor: GOLD },
+  bankLogo:     { fontSize: 28 },
+  bankName:     { fontSize: 13, fontFamily: "Inter_600SemiBold", color: NAVY },
+  bankRate:     { fontSize: 11, color: "rgba(15,32,64,0.5)" },
+  bankMonthly:  { fontSize: 15, fontFamily: "Inter_700Bold", color: GOLD },
+  bankMo:       { fontSize: 10, color: "rgba(15,32,64,0.45)" },
+  bestBadge:    { position: "absolute", top: -1, right: -1, backgroundColor: GOLD, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, borderTopRightRadius: 14 },
+  bestBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: NAVY },
+
+  affordCard:   { backgroundColor: "#fff", borderRadius: 20, padding: 24, alignItems: "center", gap: 12, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, elevation: 3 },
+  affordAmount: { fontSize: 30, fontFamily: "Inter_700Bold", color: NAVY },
+  affordDesc:   { fontSize: 13, color: "rgba(15,32,64,0.6)", textAlign: "center", lineHeight: 20 },
+  affordDetail: { width: "100%", gap: 6, borderTopWidth: 1, borderTopColor: "rgba(15,32,64,0.08)", paddingTop: 12, marginTop: 4 },
+  affordDetailText: { fontSize: 12, color: "rgba(15,32,64,0.6)", textAlign: "center" },
+});

@@ -10,16 +10,15 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AppProvider } from "@/context/AppContext";
-import { ConfigProvider } from "@/context/DynamicConfig";
 
 SplashScreen.preventAutoHideAsync();
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, staleTime: 5 * 60 * 1000 } },
+});
 
 function RootLayoutNav() {
   return (
@@ -33,19 +32,9 @@ function RootLayoutNav() {
         gestureDirection: "horizontal",
       }}
     >
-      <Stack.Screen name="consent"         options={{ animation: "fade", animationDuration: 300, gestureEnabled: false }} />
+      <Stack.Screen name="(tabs)"          options={{ animation: "none" }} />
       <Stack.Screen name="language-select" options={{ animation: "fade", animationDuration: 300, gestureEnabled: false }} />
-      <Stack.Screen name="terms"          options={{ animation: "slide_from_left", gestureEnabled: false }} />
-      <Stack.Screen name="privacy"        options={{ animation: "slide_from_left", gestureEnabled: false }} />
-      <Stack.Screen name="login"          options={{ animation: "fade", animationDuration: 220 }} />
-      <Stack.Screen name="gate"           options={{ animation: "fade", animationDuration: 220, gestureEnabled: false }} />
-      <Stack.Screen name="mode-select"   options={{ animation: "fade", animationDuration: 350, gestureEnabled: false }} />
-      <Stack.Screen name="welcome"        options={{ animation: "fade", animationDuration: 220, gestureEnabled: false }} />
-      <Stack.Screen name="(tabs)"         options={{ animation: "none" }} />
-      <Stack.Screen name="admin-dashboard" options={{ presentation: "card",  animation: "slide_from_right" }} />
-      <Stack.Screen name="admin"          options={{ presentation: "card",  animation: "slide_from_right" }} />
-      <Stack.Screen name="investor-portal" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
-      <Stack.Screen name="leases"         options={{ presentation: "card",  animation: "slide_from_right" }} />
+      <Stack.Screen name="property/[id]"   options={{ animation: "slide_from_right" }} />
     </Stack>
   );
 }
@@ -68,19 +57,13 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <KeyboardProvider>
-              <ConfigProvider>
-                <AppProvider>
-                  <RootLayoutNav />
-                </AppProvider>
-              </ConfigProvider>
-            </KeyboardProvider>
-          </GestureHandlerRootView>
-        </QueryClientProvider>
-      </ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <AppProvider>
+            <RootLayoutNav />
+          </AppProvider>
+        </GestureHandlerRootView>
+      </QueryClientProvider>
     </SafeAreaProvider>
   );
 }
