@@ -127,21 +127,16 @@ export default function TourismScreen() {
         hasTabs
       />
 
-      {/* ── روح السعودية badge — top overlay, small & non-intrusive ── */}
-      <View
-        style={[s.topRow, { top: insets.top + 8 }]}
-        pointerEvents="box-none"
+      {/* ── روح السعودية — bottom-left floating button ── */}
+      <Pressable
+        style={[s.visitBtn, { bottom: insets.bottom + 82, left: 12 }]}
+        pointerEvents="auto"
+        onPress={() => Linking.openURL("https://www.visitsaudi.com").catch(() => {})}
       >
-        <Pressable
-          style={s.visitBtn}
-          pointerEvents="auto"
-          onPress={() => Linking.openURL("https://www.visitsaudi.com").catch(() => {})}
-        >
-          <Text style={s.visitIcon}>🌴</Text>
-          <Text style={s.visitTxt}>{isAr ? "روح السعودية" : "Visit Saudi"}</Text>
-          <MaterialIcons name="open-in-new" size={11} color="rgba(201,168,76,0.8)" />
-        </Pressable>
-      </View>
+        <Text style={s.visitIcon}>🌴</Text>
+        <Text style={s.visitTxt}>{isAr ? "روح السعودية" : "Visit Saudi"}</Text>
+        <MaterialIcons name="open-in-new" size={11} color="rgba(201,168,76,0.8)" />
+      </Pressable>
 
       {/* ── Bottom hotel strip ── */}
       <View
@@ -199,24 +194,22 @@ export default function TourismScreen() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: NAVY },
 
-  // VisitSaudi badge
-  topRow: {
-    position: "absolute",
-    left: 12,
-    right: 12,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
+  // VisitSaudi badge — absolute, bottom-left
   visitBtn: {
+    position: "absolute",
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "rgba(15,32,64,0.82)",
+    backgroundColor: "rgba(15,32,64,0.85)",
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: "rgba(201,168,76,0.35)",
+    borderColor: "rgba(201,168,76,0.4)",
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 6,
   },
   visitIcon: { fontSize: 13 },
   visitTxt:  { fontSize: 12, fontFamily: "Inter_700Bold", color: GOLD },
