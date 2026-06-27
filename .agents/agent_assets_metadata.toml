@@ -377,3 +377,9 @@ id = "Wk91r01eSHHIso-CMPkhy"
 uri = "file://exports/esteti-studies.zip"
 type = "unspecified"
 title = "الدراسات الثلاث — ESTETI IN (HTML محدّثة)"
+
+[[outputs]]
+id = "2Rrd4c6Tzz6nn3vxXT5wt"
+uri = "file://artifacts/realestate-portal/public/housin-studies.tar.gz"
+type = "unspecified"
+title = "الدراسات الثلاث محدثة — HousIn (tar.gz)"

@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>دراسة الأعمال الشاملة — منظومة هاوسِن</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      direction: rtl;
+    }
+
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      background: #fff;
+      min-height: 100vh;
+    }
+
+    /* ─── COVER ─── */
+    .cover {
+      background: linear-gradient(145deg, #0F3460 0%, #16213e 60%, #0d2137 100%);
+      color: #fff;
+      padding: 80px 60px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -80px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(200,169,81,0.18) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .cover::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; right: -60px;
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, rgba(200,169,81,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .cover-badge {
+      display: inline-block;
+      background: rgba(200,169,81,0.2);
+      border: 1px solid #C8A951;
+      color: #C8A951;
+      padding: 6px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+    .cover h1 {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1.3;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .cover h1 span { color: #C8A951; }
+    .cover .subtitle {
+      font-size: 18px;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 40px;
+      position: relative;
+      z-index: 1;
+    }
+    .cover-meta {
+      display: flex;
+      gap: 32px;
+      position: relative;
+      z-index: 1;
+      flex-wrap: wrap;
+    }
+    .cover-meta-item {
+      text-align: center;
+    }
+    .cover-meta-item .val {
+      font-size: 28px;
+      font-weight: 900;
+      color: #C8A951;
+      line-height: 1;
+    }
+    .cover-meta-item .lbl {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 4px;
+    }
+
+    /* ─── ECOSYSTEM ─── */
+    .ecosystem-bar {
+      background: #0F3460;
+      padding: 32px 60px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+    }
+    .eco-item {
+      background: rgba(255,255,255,0.06);
+      padding: 20px 16px;
+      text-align: center;
+      color: #fff;
+    }
+    .eco-item:first-child { border-radius: 0 8px 8px 0; }
+    .eco-item:last-child  { border-radius: 8px 0 0 8px; }
+    .eco-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .eco-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #C8A951;
+      margin-bottom: 4px;
+    }
+    .eco-desc {
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.5;
+    }
+    .eco-type {
+      display: inline-block;
+      background: rgba(200,169,81,0.15);
+      border: 1px solid rgba(200,169,81,0.3);
+      color: #C8A951;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-top: 6px;
+    }
+
+    /* ─── CONTENT ─── */
+    .content { padding: 52px 60px; }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: #0F3460;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid #C8A951;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title .num {
+      background: #0F3460;
+      color: #C8A951;
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    /* ─── PRODUCT CARDS ─── */
+    .product-card {
+      border: 1px solid #e8edf3;
+      border-radius: 16px;
+      margin-bottom: 32px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .product-card-header {
+      background: linear-gradient(135deg, #0F3460, #16213e);
+      padding: 24px 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .product-icon {
+      font-size: 36px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .product-card-header h3 {
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .product-type-badge {
+      display: inline-block;
+      background: rgba(200,169,81,0.25);
+      border: 1px solid #C8A951;
+      color: #C8A951;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 10px;
+    }
+    .product-card-body { padding: 24px 28px; }
+    .product-desc {
+      font-size: 14px;
+      color: #444;
+      line-height: 1.9;
+      margin-bottom: 20px;
+      background: #f8fafc;
+      padding: 16px 18px;
+      border-radius: 10px;
+      border-right: 4px solid #C8A951;
+    }
+
+    /* ─── TABLES ─── */
+    .tbl-wrap { overflow-x: auto; margin-bottom: 20px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead tr {
+      background: #0F3460;
+      color: #C8A951;
+    }
+    thead th {
+      padding: 10px 14px;
+      font-weight: 700;
+      text-align: right;
+    }
+    tbody tr:nth-child(even) { background: #f7f9fc; }
+    tbody tr:hover { background: #eef2f8; }
+    tbody td {
+      padding: 9px 14px;
+      color: #333;
+      border-bottom: 1px solid #eee;
+    }
+    tbody td strong { color: #0F3460; }
+
+    /* ─── INVESTOR QUOTE ─── */
+    .investor-quote {
+      background: linear-gradient(135deg, #0F3460, #16213e);
+      color: #fff;
+      padding: 20px 24px;
+      border-radius: 12px;
+      margin-top: 16px;
+      position: relative;
+    }
+    .investor-quote::before {
+      content: '"';
+      position: absolute;
+      top: -10px; right: 20px;
+      font-size: 60px;
+      color: #C8A951;
+      font-family: serif;
+      line-height: 1;
+    }
+    .investor-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #C8A951;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .investor-quote p {
+      font-size: 13.5px;
+      line-height: 1.8;
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* ─── BENEFITS GRID ─── */
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .benefit-item {
+      background: #f7faff;
+      border: 1px solid #dce8f8;
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .benefit-dot {
+      width: 8px; height: 8px;
+      background: #C8A951;
+      border-radius: 50%;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+    .benefit-title { font-size: 13px; font-weight: 700; color: #0F3460; }
+    .benefit-val { font-size: 12px; color: #666; margin-top: 2px; }
+
+    /* ─── ROADMAP ─── */
+    .roadmap { display: flex; flex-direction: column; gap: 0; }
+    .phase {
+      display: flex;
+      gap: 0;
+      position: relative;
+    }
+    .phase:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      right: 29px; top: 52px; bottom: 0;
+      width: 2px;
+      background: #e0e8f0;
+      z-index: 0;
+    }
+    .phase-marker {
+      flex-shrink: 0;
+      width: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 4px;
+      position: relative;
+      z-index: 1;
+    }
+    .phase-circle {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .phase-circle.red    { background: #fee2e2; }
+    .phase-circle.yellow { background: #fef9c3; }
+    .phase-circle.green  { background: #dcfce7; }
+    .phase-circle.blue   { background: #dbeafe; }
+    .phase-content {
+      flex: 1;
+      padding: 4px 0 28px 0;
+      margin-right: 16px;
+    }
+    .phase-title {
+      font-size: 15px;
+      font-weight: 900;
+      color: #0F3460;
+      margin-bottom: 8px;
+    }
+    .phase-items {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .phase-items li {
+      font-size: 13px;
+      color: #555;
+      padding: 6px 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border-right: 3px solid #C8A951;
+      line-height: 1.6;
+    }
+
+    /* ─── BUDGET TABLE ─── */
+    .budget-total {
+      background: #C8A951 !important;
+      color: #0F3460 !important;
+      font-weight: 900;
+      font-size: 15px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .budget-total td {
+      color: #0F3460 !important;
+      background: #C8A951 !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .budget-total td strong { color: #0F3460 !important; }
+    .budget-total td small  { color: #4a3000 !important; }
+
+    /* ─── KPI GRID ─── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: linear-gradient(135deg, #f7f9fc, #eef2f8);
+      border: 1px solid #dce8f8;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .kpi-val {
+      font-size: 20px;
+      font-weight: 900;
+      color: #0F3460;
+      line-height: 1.1;
+    }
+    .kpi-lbl {
+      font-size: 11.5px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .kpi-highlight { color: #C8A951 !important; }
+
+    /* ─── TIMELINE STRIP ─── */
+    .timeline-strip {
+      background: #0F3460;
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 28px;
+    }
+    .timeline-strip h4 {
+      color: #C8A951;
+      font-size: 16px;
+      margin-bottom: 20px;
+      font-weight: 900;
+    }
+    .tl-rows { display: flex; flex-direction: column; gap: 8px; }
+    .tl-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .tl-month {
+      background: rgba(200,169,81,0.2);
+      border: 1px solid rgba(200,169,81,0.4);
+      color: #C8A951;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      min-width: 72px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .tl-text {
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.5;
+    }
+
+    /* ─── COMPETITIVE TABLE ─── */
+    .comp-table thead th { background: #16213e; }
+    .comp-adv { color: #059669; font-weight: 700; }
+
+    /* ─── SECTION SPACER ─── */
+    .section-gap { margin-bottom: 48px; }
+
+    /* ─── INTRO BLOCK ─── */
+    .intro-block {
+      background: #f0f4fa;
+      border-right: 5px solid #0F3460;
+      border-radius: 0 12px 12px 0;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+    }
+    .intro-block p {
+      font-size: 14.5px;
+      color: #333;
+      line-height: 1.9;
+    }
+    .intro-block strong { color: #0F3460; }
+
+    /* ─── ORG CHART ─── */
+    .org-chart {
+      background: #0F3460;
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 28px;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .org-chart h4 {
+      color: #C8A951;
+      font-size: 15px;
+      margin-bottom: 18px;
+      font-weight: 900;
+    }
+    .org-ceo {
+      background: #C8A951;
+      color: #0F3460;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 14px;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+    .org-reports {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .org-role {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: rgba(255,255,255,0.85);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .org-dot {
+      width: 6px; height: 6px;
+      background: #C8A951;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ─── DISTRIBUTION PIE ─── */
+    .dist-bars { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .dist-row { display: flex; align-items: center; gap: 12px; }
+    .dist-label { font-size: 12.5px; color: #555; min-width: 180px; text-align: right; }
+    .dist-bar-wrap { flex: 1; background: #eef2f8; border-radius: 4px; height: 20px; overflow: hidden; }
+    .dist-bar { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-right: 8px; }
+    .dist-bar span { font-size: 11px; font-weight: 700; color: #fff; }
+    .dist-pct { font-size: 12.5px; font-weight: 700; color: #0F3460; min-width: 36px; }
+
+    /* ─── LEGAL ─── */
+    .legal {
+      background: #fffbeb;
+      border: 1.5px solid #f59e0b;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .legal-badge {
+      font-size: 13px;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 10px;
+    }
+    .legal p { font-size: 13px; color: #78350f; line-height: 1.8; }
+    .legal .sub { font-size: 11.5px; color: #a16207; margin-top: 10px; }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      background: #0F3460;
+      color: rgba(255,255,255,0.65);
+      text-align: center;
+      padding: 18px;
+      font-size: 12px;
+    }
+    .footer strong { color: #C8A951; }
+
+    @media print {
+      #print-btn-bar { display: none !important; }
+      body { background: #fff !important; }
+      .page { box-shadow: none !important; border-radius: 0 !important; margin: 0 !important; max-width: 100% !important; }
+      .footer { position: fixed; bottom: 0; width: 100%; }
+      @page { size: A4; margin: 10mm; }
+      .print-btn { display: none !important; }
+    }
+  .print-btn {
+    position: fixed; bottom: 28px; left: 28px; z-index: 9999;
+    background: linear-gradient(135deg,#0f2044,#2355a0);
+    color: #fff; border: none; border-radius: 50px;
+    padding: 14px 28px; font-size: 16px; font-weight: 700;
+    cursor: pointer; box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+    font-family: 'Cairo', sans-serif; direction: rtl;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .print-btn:hover { background: linear-gradient(135deg,#1a3a6b,#3366cc); transform: scale(1.04); }
+  </style>
+</head>
+<body>
+<button class="print-btn" onclick="window.print()">🖨️ حفظ كـ PDF</button>
+<div style="background:linear-gradient(135deg,#0F3460,#16213e);color:#fff;text-align:center;padding:14px 20px;font-family:'Segoe UI',sans-serif;letter-spacing:0.5px;border-bottom:3px solid #C8A951;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
+  <div style="font-size:17px;font-weight:800;color:#C8A951;letter-spacing:1px;">NADA ALBULAYHi</div>
+  <div style="font-size:13px;color:rgba(255,255,255,0.80);margin-top:4px;">Business Analyst | Information Systems - IS</div>
+</div>
+<div class="page">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-badge">وثيقة داخلية سرية — يونيو 2026</div>
+    <h1>دراسة الأعمال الشاملة<br/><span>منظومة هاوسِن</span></h1>
+    <p class="subtitle">أربعة منتجات · سوق واحد · منظومة متكاملة</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="val">+5B</div>
+        <div class="lbl">ريال حجم السوق</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="val">4</div>
+        <div class="lbl">منتجات متكاملة</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="val">12:1</div>
+        <div class="lbl">نسبة LTV/CAC</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="val">1-1.5M</div>
+        <div class="lbl">ريال رأس المال</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ECOSYSTEM BAR -->
+  <div class="ecosystem-bar">
+    <div class="eco-item">
+      <div class="eco-icon">🏘️</div>
+      <div class="eco-name">HousIn PMS</div>
+      <div class="eco-desc">إدارة المجمعات والعقارات</div>
+      <div class="eco-type">B2B SaaS</div>
+    </div>
+    <div class="eco-item">
+      <div class="eco-icon">🔧</div>
+      <div class="eco-name">HousIn Ops</div>
+      <div class="eco-desc">الصيانة والتشغيل الميداني</div>
+      <div class="eco-type">B2B + خدمة مُدارة</div>
+    </div>
+    <div class="eco-item">
+      <div class="eco-icon">📱</div>
+      <div class="eco-name">HousIn App</div>
+      <div class="eco-desc">تطبيق العقارات الذكي</div>
+      <div class="eco-type">B2C Mobile</div>
+    </div>
+    <div class="eco-item">
+      <div class="eco-icon">🌐</div>
+      <div class="eco-name">HousIn Portal</div>
+      <div class="eco-desc">بوابة الاستثمار والإدارة</div>
+      <div class="eco-type">B2C + B2B Web</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <div class="intro-block">
+      <p>
+        <strong>هاوسِن ليست فقط تطبيقاً</strong> — هي منظومة متكاملة تجمع بين <strong>SaaS</strong> يُباع للملاك وشركات الإدارة،
+        و<strong>خدمة مُدارة</strong> تتولى فيها هاوسِن الإدارة الكاملة للملاك الذين لا يريدون التعقيد،
+        و<strong>منصة وساطة</strong> تربط الملاك بالمستأجرين والمستثمرين — كل ذلك على API مشترك وقاعدة بيانات موحدة.
+      </p>
+    </div>
+
+    <!-- SECTION 1: PRODUCTS -->
+    <div class="section-gap">
+      <div class="section-title">
+        <span class="num">١</span>
+        كل منتج على حدة
+      </div>
+
+      <!-- PMS -->
+      <div class="product-card">
+        <div class="product-card-header">
+          <div class="product-icon">🏘️</div>
+          <div>
+            <h3>HousIn PMS — نظام إدارة المجمعات والعقارات</h3>
+            <span class="product-type-badge">B2B SaaS · اشتراك شهري</span>
+          </div>
+        </div>
+        <div class="product-card-body">
+          <p class="product-desc">
+            نظام إدارة متكامل مصمم خصيصاً للمجمعات السكنية، الفلل، الأبراج السكنية، الفنادق الصغيرة والمتوسطة، والشقق المفروشة.
+            يُدير الوحدات والحجوزات وعقود الإيجار، الصيانة، الموظفين، الماليات، والمهام اليومية — كل شيء من مكان واحد.
+            <br/><br/>
+            <strong>المحور الأساسي: المجمعات السكنية</strong> — تضم عشرات إلى مئات الوحدات في موقع واحد، تحتاج إدارة عمليات يومية متكاملة، وميزانيات خدمات أعلى، وشريحة سريعة النمو بفضل Vision 2030.
+          </p>
+
+          <div class="benefits-grid">
+            <div class="benefit-item">
+              <div class="benefit-dot"></div>
+              <div>
+                <div class="benefit-title">توفير الوقت</div>
+                <div class="benefit-val">4-6 ساعات يومياً للمدير</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-dot"></div>
+              <div>
+                <div class="benefit-title">مراقبة الأداء</div>
+                <div class="benefit-val">لوحة تحكم لحظية لكل وحدة</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-dot"></div>
+              <div>
+                <div class="benefit-title">إدارة الفرق</div>
+                <div class="benefit-val">توزيع المهام على الأمن والنظافة والصيانة</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-dot"></div>
+              <div>
+                <div class="benefit-title">تقليل الأخطاء</div>
+                <div class="benefit-val">صفر فوضى في تنسيق الصيانة والحجوزات</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-dot"></div>
+              <div>
+                <div class="benefit-title">الماليات</div>
+                <div class="benefit-val">تقارير دخل ومصاريف ورسوم خدمات تلقائية</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-dot"></div>
+              <div>
+                <div class="benefit-title">رضا السكان</div>
+                <div class="benefit-val">تطبيق للسكان لرفع الطلبات ومتابعتها</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>الباقة</th><th>السعر الشهري</th><th>المستهدف</th></tr></thead>
+              <tbody>
+                <tr><td>أساسية</td><td><strong>499 ريال</strong></td><td>مجمع صغير / استراحة كبيرة</td></tr>
+                <tr><td>احترافية</td><td><strong>1,200 ريال</strong></td><td>مجمع متوسط / برج سكني</td></tr>
+                <tr><td>مؤسسية</td><td><strong>3,000+ ريال</strong></td><td>مجمع كبير / محفظة عقارات</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="investor-quote">
+            <div class="investor-label">رسالة المستثمر</div>
+            <p>نستهدف +8,000 مجمع ومنشأة سكنية في السعودية لا تستخدم نظاماً متكاملاً. متوسط الاشتراك السنوي 14,000 ريال. 1% من السوق = <strong style="color:#C8A951">11 مليون ريال سنوياً</strong>. هذا الرقم بدون احتساب خدمة الإدارة والتشغيل المُدارة.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPS -->
+      <div class="product-card">
+        <div class="product-card-header">
+          <div class="product-icon">🔧</div>
+          <div>
+            <h3>HousIn Ops — تطبيق الصيانة والتشغيل</h3>
+            <span class="product-type-badge">B2B SaaS + خدمة مُدارة</span>
+          </div>
+        </div>
+        <div class="product-card-body">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>النموذج</th><th>الوصف</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><strong>SaaS</strong></td>
+                  <td>صاحب شركة الإدارة يشتري التطبيق — إدارة الفرق، تتبع الطلبات، جدولة الصيانة الوقائية، تقارير التكاليف</td>
+                </tr>
+                <tr>
+                  <td><strong>خدمة مُدارة</strong></td>
+                  <td>هاوسِن تتولى التشغيل الكامل للمالك — الفريق + النظام + التقارير. المالك يستلم إيراداته فقط. هاوسِن تأخذ 8-12% من الإيرادات</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>النموذج</th><th>السعر</th></tr></thead>
+              <tbody>
+                <tr><td>SaaS لشركة الإدارة</td><td><strong>800–2,500 ريال/شهر</strong></td></tr>
+                <tr><td>إدارة وتشغيل مُدارة</td><td><strong>8–12%</strong> من إيرادات العقار شهرياً</td></tr>
+                <tr><td>عقد سنوي ثابت</td><td><strong>50,000–200,000 ريال/سنة</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="investor-quote">
+            <div class="investor-label">رسالة المستثمر</div>
+            <p>نموذجان للربح في نفس المنتج. المجمع بـ 100 وحدة، إيجار متوسط 3,000 ريال/وحدة = 300,000 ريال شهرياً. <strong style="color:#C8A951">10% عمولة = 30,000 ريال/شهر</strong> من مجمع واحد.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- APP -->
+      <div class="product-card">
+        <div class="product-card-header">
+          <div class="product-icon">📱</div>
+          <div>
+            <h3>HousIn App — تطبيق العقارات والسياحة الذكي</h3>
+            <span class="product-type-badge">B2C Mobile · iOS &amp; Android | عقار + سياحة + دليل سفر</span>
+          </div>
+        </div>
+        <div class="product-card-body">
+          <p class="product-desc">
+            تطبيق هاوسِن ليس تطبيق عقارات فقط — هو <strong>رفيق السائح الذكي</strong> في المملكة العربية السعودية.
+            يخدم شريحتين في آنٍ واحد: <strong>الباحث عن عقار</strong> (شراء، إيجار، استثمار) و<strong>السائح الدولي</strong>
+            (زوار إكسبو 2030، مشجعو كأس العالم 2034، السياح التراثيون) — كل ذلك بخريطة تفاعلية ذكية ومساعد AI بـ 15 لغة.
+          </p>
+
+          <div style="background:linear-gradient(135deg,#0f2044,#1e3a6b);border-radius:10px;padding:16px;margin-bottom:16px;color:#fff;">
+            <div style="font-size:13px;font-weight:800;color:#C8A951;margin-bottom:10px;">🌍 هاوسِن للسائح — فرصة إضافية ضخمة</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;line-height:1.7;">
+              <div><strong style="color:#C8A951;">إكسبو الرياض 2030</strong><br/>٤٠ مليون زائر يحتاجون: أين أنام؟ ماذا أزور؟ كيف أصل؟ هاوسِن يجيب في تطبيق واحد بلغة السائح.</div>
+              <div><strong style="color:#C8A951;">كأس العالم 2034</strong><br/>٥ مدن مضيفة — الرياض · جدة · نيوم · الخبر · أبها. خريطة موحدة للإقامة والملاعب والمرافق.</div>
+              <div><strong style="color:#C8A951;">المعالم التراثية</strong><br/>الدرعية · العلا · مدائن صالح · الأحساء الأثرية · بوابة الرياض — مع إقامة قريبة ووصف بـ 15 لغة.</div>
+              <div><strong style="color:#C8A951;">سياحة البحر الأحمر</strong><br/>مشروع البحر الأحمر · كورنيش جدة · جزر الأمواج — حجز مباشر مع مزودي الإقامة الشركاء.</div>
+            </div>
+          </div>
+
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>مصدر الإيراد</th><th>التفاصيل</th></tr></thead>
+              <tbody>
+                <tr><td>إعلانات البائعين</td><td>100–300 ريال/إعلان</td></tr>
+                <tr><td>اشتراك الوكلاء</td><td>499 ريال/شهر — ظهور مميز + أدوات متقدمة</td></tr>
+                <tr><td>عمولة عند البيع/الإيجار</td><td>0.5–1% من قيمة الصفقة</td></tr>
+                <tr><td>إعلانات المطورين</td><td>بانرات وظهور مميز للمشاريع الجديدة</td></tr>
+                <tr><td>إيرادات السياحة</td><td>عمولة 2–3% على حجوزات السياح عبر التطبيق أثناء الفعاليات الكبرى</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="investor-quote">
+            <div class="investor-label">رسالة المستثمر</div>
+            <p>سوق العقارات السعودي تجاوز 400 مليار ريال سنوياً، وإكسبو 2030 يُحضر ٤٠ مليون زائر وكأس العالم 2034 يُحضر ٥ مليون مشجع — كل هؤلاء يحتاجون تطبيق هاوسِن. <strong style="color:#C8A951;">نحن لا نستهدف سوقاً واحداً بل سوقين: العقارات والسياحة في آنٍ واحد.</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PORTAL -->
+      <div class="product-card">
+        <div class="product-card-header">
+          <div class="product-icon">🌐</div>
+          <div>
+            <h3>HousIn Portal — بوابة الاستثمار والإدارة العقارية</h3>
+            <span class="product-type-badge">B2C + B2B Web Platform</span>
+          </div>
+        </div>
+        <div class="product-card-body">
+          <p class="product-desc">
+            موقع ويب يخدم شريحتين: <strong>للعموم</strong> — عرض العقارات، مدخل SEO يجذب زوار Google.
+            <strong>للمستثمرين وملاك العقارات</strong> — المالك الذي يملك مجمعاً يجد هاوسِن على Google، يرى خدمة الإدارة والتشغيل، ويتواصل مباشرة. تحويل الزائر لعميل إدارة وتشغيل = <strong>أعلى LTV في المنظومة كلها.</strong>
+          </p>
+
+          <div class="benefits-grid">
+            <div class="benefit-item">
+              <div class="benefit-dot"></div>
+              <div>
+                <div class="benefit-title">SEO قوي</div>
+                <div class="benefit-val">"إدارة مجمعات سكنية السعودية"</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-dot"></div>
+              <div>
+                <div class="benefit-title">بوابة المستثمر</div>
+                <div class="benefit-val">متابعة العقارات المُدارة لحظياً</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-dot"></div>
+              <div>
+                <div class="benefit-title">جذب الخليجيين</div>
+                <div class="benefit-val">للمستثمرين الراغبين في السوق السعودي</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-dot"></div>
+              <div>
+                <div class="benefit-title">مرجع مؤسسي</div>
+                <div class="benefit-val">للصحافة والشراكات والتقارير</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: OPERATIONS -->
+    <div class="section-gap">
+      <div class="section-title">
+        <span class="num">٢</span>
+        كيف تُدار المنظومة حتى تنجح
+      </div>
+
+      <div class="org-chart">
+        <h4>الهيكل التنظيمي — السنة الأولى</h4>
+        <div class="org-ceo">المدير التنفيذي (المؤسس)</div>
+        <div class="org-reports">
+          <div class="org-role"><div class="org-dot"></div>مدير تقني / مطور أول</div>
+          <div class="org-role"><div class="org-dot"></div>مدير عمليات الإدارة والتشغيل (ميداني)</div>
+          <div class="org-role"><div class="org-dot"></div>مندوبا مبيعات B2B (ميدانيان)</div>
+          <div class="org-role"><div class="org-dot"></div>خدمة عملاء وتوثيق (واتساب + دعم)</div>
+          <div class="org-role"><div class="org-dot"></div>محاسب جزئي (عن بُعد)</div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-val">30</div>
+          <div class="kpi-lbl">مجمع وعقار نشط (PMS)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-val">5</div>
+          <div class="kpi-lbl">عقود إدارة وتشغيل مُدارة</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-val kpi-highlight">80K</div>
+          <div class="kpi-lbl">ريال MRR — PMS + Ops SaaS</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-val kpi-highlight">150K+</div>
+          <div class="kpi-lbl">ريال/شهر إيرادات التشغيل</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-val">15K</div>
+          <div class="kpi-lbl">تحميل تطبيق هاوسِن</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-val">&lt;4%</div>
+          <div class="kpi-lbl">معدل Churn شهري (PMS)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: ROADMAP -->
+    <div class="section-gap">
+      <div class="section-title">
+        <span class="num">٣</span>
+        خريطة الطريق الكاملة
+      </div>
+
+      <div class="roadmap">
+        <div class="phase">
+          <div class="phase-marker">
+            <div class="phase-circle red">🔴</div>
+          </div>
+          <div class="phase-content">
+            <div class="phase-title">المرحلة الأولى: التأسيس (الشهر 1–3)</div>
+            <ul class="phase-items">
+              <li>تأسيس شركة م.م. عبر منصة "مارس"</li>
+              <li>تسجيل العلامة التجارية "هاوسِن" في هيئة SAIP</li>
+              <li>مكتب احترافي في الرياض (حي العليا أو طريق الملك فهد)</li>
+              <li>تسجيل ضريبة القيمة المضافة + حساب بنكي تجاري</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="phase">
+          <div class="phase-marker">
+            <div class="phase-circle yellow">🟡</div>
+          </div>
+          <div class="phase-content">
+            <div class="phase-title">المرحلة الثانية: الإطلاق (الشهر 4–6)</div>
+            <ul class="phase-items">
+              <li>3–5 عقود إدارة وتشغيل مجمعات — يولّد دخلاً فورياً وكبيراً</li>
+              <li>10 عملاء PMS تجريبيين ثم تحويلهم لمدفوعين</li>
+              <li>رفع التطبيق على App Store وGoogle Play</li>
+              <li>حملة محتوى متخصص — يوتيوب وتيك توك عن إدارة المجمعات</li>
+              <li>حملة Google Ads: "إدارة مجمعات سكنية" + "نظام تشغيل عقارات"</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="phase">
+          <div class="phase-marker">
+            <div class="phase-circle green">🟢</div>
+          </div>
+          <div class="phase-content">
+            <div class="phase-title">المرحلة الثالثة: النمو (الشهر 7–18)</div>
+            <ul class="phase-items">
+              <li>تحويل كل عملاء التجريبي لاشتراكات مدفوعة</li>
+              <li>فريق عمليات ميداني في الرياض (3–5 موظفين)</li>
+              <li>الانتشار في جدة والدمام والخبر</li>
+              <li>شراكات مع شركات التطوير الكبرى</li>
+              <li>جولة استثمارية Seed بعد إثبات النموذج بأرقام حقيقية</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="phase">
+          <div class="phase-marker">
+            <div class="phase-circle blue">🔵</div>
+          </div>
+          <div class="phase-content">
+            <div class="phase-title">المرحلة الرابعة: التوسع (السنة 2+)</div>
+            <ul class="phase-items">
+              <li>دخول دول الخليج — الإمارات، الكويت، قطر، البحرين</li>
+              <li>تكامل مع وزارة الإسكان ومنصة إتمام ووزارة السياحة</li>
+              <li>فتح خط استثمار للملاك الراغبين في توسيع محافظهم</li>
+              <li>جولة Series A لتوسيع الجغرافيا والمنتج</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: BUDGET -->
+    <div class="section-gap">
+      <div class="section-title">
+        <span class="num">٤</span>
+        الميزانية التأسيسية — البناء الصحيح من اليوم الأول
+      </div>
+
+      <div style="background:linear-gradient(135deg,#f0f5ff,#eef2f8);border-right:5px solid #0F3460;border-radius:10px;padding:18px 22px;margin-bottom:22px;font-size:14px;line-height:2;color:#1a2a4a;">
+        <strong>لماذا نستثمر ١ – ١.٢ مليون ريال من البداية؟</strong><br/>
+        هاوسِن تستهدف عملاء B2B من أصحاب المجمعات والمطورين والمستثمرين الكبار — هؤلاء لا يثقون إلا بشركة تبدو راسخة ومحترفة. كل ريال يُستثمر في التأسيس الصحيح يُوفّر ١٠ ريالات لاحقاً من تكاليف الإصلاح وإعادة البناء. <strong>الشركة التي تبدأ بضعف تنتهي بضعف.</strong>
+      </div>
+
+      <p style="font-weight:800; color:#0F3460; margin-bottom:12px; font-size:14px;">التكاليف التأسيسية (مرة واحدة) — الإجمالي: ١,٠٠٠,٠٠٠ – ١,٢٠٠,٠٠٠ ريال</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>البند</th>
+              <th>التكلفة (ريال)</th>
+              <th>السبب والمبرر</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>🏢 إيجار مكتب احترافي — سنة أولى<br/><small style="color:#888;font-size:11px;">حي العليا أو طريق الملك فهد، الرياض — ودائع ٣ أشهر + ١٢ شهر</small></td>
+              <td><strong>١٥٠,٠٠٠</strong></td>
+              <td>أصحاب المجمعات والمستثمرون يريدون زيارة مكتب حقيقي في حي الأعمال — الحضور المادي يُغلق الصفقات الكبرى ويبني الثقة المؤسسية الضرورية للعقود B2B.</td>
+            </tr>
+            <tr>
+              <td>🛋️ تأثيث وتجهيز المكتب<br/><small style="color:#888;font-size:11px;">أثاث عصري + غرفة اجتماعات مجهزة + شاشة عرض + بيئة عمل متكاملة</small></td>
+              <td><strong>١٥٠,٠٠٠</strong></td>
+              <td>المكتب المجهز احترافياً هو أداة تسويق بحد ذاتها — يعكس هوية الشركة أمام العملاء ويُثبت الجدية والاستقرار في أول لقاء مع الشريك أو المستثمر.</td>
+            </tr>
+            <tr>
+              <td>💻 أجهزة وبنية تقنية<br/><small style="color:#888;font-size:11px;">٥ حواسيب عالية الأداء + شاشات + شبكة + أجهزة عرض</small></td>
+              <td><strong>٨٠,٠٠٠</strong></td>
+              <td>الفريق التقني يحتاج أجهزة عالية الأداء — التأخر بسبب أجهزة ضعيفة يكلف أضعاف هذا المبلغ في وقت ضائع وفرص سوقية فائتة لا تعوَّض.</td>
+            </tr>
+            <tr>
+              <td>⚙️ تطوير المنصة والتطبيق — المرحلة الأولى<br/><small style="color:#888;font-size:11px;">PMS + بوابة + تطبيق iOS/Android + خريطة تفاعلية + AI</small></td>
+              <td><strong>٢٠٠,٠٠٠</strong></td>
+              <td>البناء الصحيح من البداية يتجنب الديون التقنية. المنتج الأول هو بطاقة الزيارة للمستثمرين — لا تسامح في الجودة من الإصدار الأول.</td>
+            </tr>
+            <tr>
+              <td>⚖️ تسجيل وتراخيص وعلامة تجارية<br/><small style="color:#888;font-size:11px;">شركة م.م. + SAIP + Zatca + مستشار قانوني + براءات اختراع</small></td>
+              <td><strong>٦٠,٠٠٠</strong></td>
+              <td>الحماية القانونية من اليوم الأول تصون الأفكار المبتكرة الثلاث غير المُفصح عنها وتمنع الاستنساخ — ضرورة حتمية قبل الإطلاق العلني.</td>
+            </tr>
+            <tr>
+              <td>📣 تسويق الإطلاق والهوية البصرية<br/><small style="color:#888;font-size:11px;">هوية احترافية + موقع تسويقي + حملة إطلاق + محتوى + حضور رقمي</small></td>
+              <td><strong>١٢٠,٠٠٠</strong></td>
+              <td>الانطباع الأول لا يتكرر — الهوية الاحترافية تُفرِّق بين شركة مجهولة وبديل موثوق أمام عملاء B2B. التسويق المبكر يبني قاعدة عملاء قبل الإطلاق.</td>
+            </tr>
+            <tr>
+              <td>👥 رواتب الفريق المؤسس<br/><small style="color:#888;font-size:11px;">٣ أشهر كاملة قبل بدء التدفق النقدي الفعلي</small></td>
+              <td><strong>١٨٠,٠٠٠</strong></td>
+              <td>الفريق الذي يعمل بقلق مالي لا يبني منتجاً استثنائياً — توفير الرواتب قبل الإيرادات يضمن التركيز الكامل على البناء والتميز.</td>
+            </tr>
+            <tr>
+              <td>🛡️ احتياطي طوارئ ونقدية تشغيلية<br/><small style="color:#888;font-size:11px;">٦ أشهر احتياطي مضمون لمواجهة المفاجآت</small></td>
+              <td><strong>٢٦٠,٠٠٠</strong></td>
+              <td>الشركات الناشئة تفشل في معظمها بسبب نقص السيولة لا بسبب ضعف الفكرة — الاحتياطي يمنح هامش أمان حقيقياً للنمو بدون ضغط وجودي.</td>
+            </tr>
+            <tr class="budget-total">
+              <td><strong>الإجمالي التأسيسي</strong></td>
+              <td><strong>١,٢٠٠,٠٠٠ ريال</strong></td>
+              <td><strong>قاعدة صلبة لشركة بتقييم ٢٢٠ مليون ريال بحلول كأس العالم ٢٠٣٤</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="font-weight:800; color:#0F3460; margin:22px 0 12px; font-size:14px;">التكاليف التشغيلية الشهرية (بعد مرحلة التأسيس)</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>البند</th><th>ريال / شهر</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>رواتب الفريق (مدير + مطورون + مبيعات + دعم)</td><td>٧٠,٠٠٠ – ٩٠,٠٠٠</td></tr>
+            <tr><td>إيجار المكتب الشهري</td><td>١٢,٥٠٠</td></tr>
+            <tr><td>تسويق رقمي مستمر (Ads + محتوى + SEO)</td><td>١٥,٠٠٠ – ٢٥,٠٠٠</td></tr>
+            <tr><td>خوادم واستضافة وAPIs وذكاء اصطناعي</td><td>٤,٠٠٠ – ٧,٠٠٠</td></tr>
+            <tr><td>متنوعات تشغيلية ومصاريف إدارية</td><td>٥,٠٠٠ – ٩,٠٠٠</td></tr>
+            <tr class="budget-total"><td><strong>الإجمالي الشهري</strong></td><td><strong>١٠٦,٥٠٠ – ١٤٣,٥٠٠ ريال</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="font-weight:800; color:#0F3460; margin:22px 0 12px; font-size:14px;">التوقعات المالية — ٥ سنوات + التقييم السوقي</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>السنة</th><th>الإيرادات × المعامل</th><th>التقييم السوقي للشركة</th><th style="color:#7c3aed;">جولة Seed (١٠٪)</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>🔴 السنة الأولى ٢٠٢٧<br/><small style="color:#888;">التأسيس والإطلاق</small></td>
+              <td>٧٠٠,٠٠٠ × ٣</td>
+              <td style="font-weight:800; color:#0F3460;">٢,١٠٠,٠٠٠ ريال</td>
+              <td style="color:#7c3aed; font-weight:700;">٢١٠,٠٠٠ ريال</td>
+            </tr>
+            <tr>
+              <td>🟢 السنة الثانية ٢٠٢٨<br/><small style="color:#888;">رؤية ٢٠٣٠ تبدأ — قديّة + البحر الأحمر + الدرعية</small></td>
+              <td>١,٨٠٠,٠٠٠ × ٤</td>
+              <td style="font-weight:800; color:#0F3460;">٧,٢٠٠,٠٠٠ ريال</td>
+              <td style="color:#7c3aed; font-weight:700;">٧٢٠,٠٠٠ ريال</td>
+            </tr>
+            <tr>
+              <td>🚀 السنة الثالثة ٢٠٢٩<br/><small style="color:#888;">إكسبو ٢٠٣٠ + التجهيز لكأس العالم ٢٠٣٤</small></td>
+              <td>٤,٥٠٠,٠٠٠ × ٦</td>
+              <td style="font-weight:800; color:#0F3460;">٢٧,٠٠٠,٠٠٠ ريال</td>
+              <td style="color:#7c3aed; font-weight:700;">٢,٧٠٠,٠٠٠ ريال</td>
+            </tr>
+            <tr>
+              <td>🌍 إكسبو الرياض ٢٠٣٠<br/><small style="color:#888;">٤٠ مليون زائر — ذروة الطلب</small></td>
+              <td>١٢,٠٠٠,٠٠٠ × ٩</td>
+              <td style="font-weight:800; color:#0F3460;">١٠٨,٠٠٠,٠٠٠ ريال</td>
+              <td style="color:#7c3aed; font-weight:700;">١٠,٨٠٠,٠٠٠ ريال</td>
+            </tr>
+            <tr class="budget-total">
+              <td><strong>⚽ كأس العالم ٢٠٣٤<br/><small>الهدف الاستراتيجي الكبير</small></strong></td>
+              <td><strong>٢٠,٠٠٠,٠٠٠ × ١١</strong></td>
+              <td><strong>🏆 ٢٢٠,٠٠٠,٠٠٠ ريال</strong></td>
+              <td style="color:#7c3aed; font-weight:800;"><strong>٢٢,٠٠٠,٠٠٠ ريال</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:11px; color:#9ca3af; text-align:center; margin-top:8px; padding-top:6px; border-top:1px solid #e5e7eb;">* المعاملات مأخوذة من متوسط صفقات SaaS السعودية 2024-2025</p>
+
+      <p style="font-weight:800; color:#0F3460; margin:22px 0 12px; font-size:14px;">توزيع رأس المال التأسيسي</p>
+      <div class="dist-bars">
+        <div class="dist-row">
+          <div class="dist-label">مكتب وتأثيث وتجهيز (بداية قوية)</div>
+          <div class="dist-bar-wrap"><div class="dist-bar" style="width:25%;background:#0F3460;"><span>25%</span></div></div>
+          <div class="dist-pct">25%</div>
+        </div>
+        <div class="dist-row">
+          <div class="dist-label">رواتب الفريق المؤسس (٣ أشهر)</div>
+          <div class="dist-bar-wrap"><div class="dist-bar" style="width:15%;background:#C8A951;"><span>15%</span></div></div>
+          <div class="dist-pct">15%</div>
+        </div>
+        <div class="dist-row">
+          <div class="dist-label">تطوير المنصة والتطبيق</div>
+          <div class="dist-bar-wrap"><div class="dist-bar" style="width:17%;background:#16213e;"><span>17%</span></div></div>
+          <div class="dist-pct">17%</div>
+        </div>
+        <div class="dist-row">
+          <div class="dist-label">تسويق وهوية وإطلاق</div>
+          <div class="dist-bar-wrap"><div class="dist-bar" style="width:10%;background:#2355a0;"><span>10%</span></div></div>
+          <div class="dist-pct">10%</div>
+        </div>
+        <div class="dist-row">
+          <div class="dist-label">أجهزة وبنية تقنية</div>
+          <div class="dist-bar-wrap"><div class="dist-bar" style="width:7%;background:#6b7a9a;"><span>7%</span></div></div>
+          <div class="dist-pct">7%</div>
+        </div>
+        <div class="dist-row">
+          <div class="dist-label">احتياطي طوارئ ونقدية (٦ أشهر)</div>
+          <div class="dist-bar-wrap"><div class="dist-bar" style="width:22%;background:#059669;"><span>22%</span></div></div>
+          <div class="dist-pct">22%</div>
+        </div>
+        <div class="dist-row">
+          <div class="dist-label">تراخيص وقانوني وعلامة تجارية</div>
+          <div class="dist-bar-wrap"><div class="dist-bar" style="width:5%;background:#9ca3af;"><span>5%</span></div></div>
+          <div class="dist-pct">5%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: INVESTOR -->
+    <div class="section-gap">
+      <div class="section-title">
+        <span class="num">٥</span>
+        عرض المستثمر — الأرقام المقنعة
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-val kpi-highlight">+5B</div>
+          <div class="kpi-lbl">ريال حجم سوق الإدارة</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-val">12,000</div>
+          <div class="kpi-lbl">مجمع ومنشأة مستهدفة</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-val">+15%</div>
+          <div class="kpi-lbl">نمو سنوي (Vision 2030)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-val kpi-highlight">300K</div>
+          <div class="kpi-lbl">ريال MRR بعد 18 شهراً</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-val kpi-highlight">10M</div>
+          <div class="kpi-lbl">ريال ARR بعد 3 سنوات</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-val">12:1</div>
+          <div class="kpi-lbl">نسبة LTV/CAC (ممتاز)</div>
+        </div>
+      </div>
+
+      <div class="timeline-strip">
+        <h4>خط زمني ما يجب فعله الآن</h4>
+        <div class="tl-rows">
+          <div class="tl-row"><div class="tl-month">الشهر 1</div><div class="tl-text">تأسيس الشركة + العلامة التجارية + استئجار المكتب</div></div>
+          <div class="tl-row"><div class="tl-month">الشهر 2</div><div class="tl-text">تعيين الفريق الأساسي + بدء مفاوضات أول 3 مجمعات</div></div>
+          <div class="tl-row"><div class="tl-month">الشهر 3</div><div class="tl-text">أول عقد إدارة وتشغيل مُدار + 5 عملاء PMS تجريبيين</div></div>
+          <div class="tl-row"><div class="tl-month">الشهر 4</div><div class="tl-text">رفع التطبيق على المتاجر + بدء حملة التسويق</div></div>
+          <div class="tl-row"><div class="tl-month">الشهر 6</div><div class="tl-text">3 عقود إدارة وتشغيل نشطة + 15 عميل PMS مدفوع</div></div>
+          <div class="tl-row"><div class="tl-month">الشهر 9</div><div class="tl-text">دخول جدة + أول جولة pitch للمستثمرين</div></div>
+          <div class="tl-row"><div class="tl-month">الشهر 12</div><div class="tl-text">5 عقود تشغيل + 30 عميل PMS + 15,000 مستخدم تطبيق</div></div>
+          <div class="tl-row"><div class="tl-month">الشهر 18</div><div class="tl-text">جولة استثمارية Seed + التوسع للخليج</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: COMPETITIVE -->
+    <div class="section-gap">
+      <div class="section-title">
+        <span class="num">٦</span>
+        ملخص تنافسي — لماذا هاوسِن تنجح؟
+      </div>
+
+      <div class="tbl-wrap">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>المنافس</th>
+              <th>نقطة ضعفه</th>
+              <th>ميزة هاوسِن</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>أنظمة PMS عالمية (Opera, Cloudbeds)</td>
+              <td>غير عربية، غالية، معقدة</td>
+              <td class="comp-adv">عربي 100%، مصمم للسوق السعودي، سعر مناسب</td>
+            </tr>
+            <tr>
+              <td>شركات إدارة تقليدية</td>
+              <td>لا شفافية، بدون تقنية</td>
+              <td class="comp-adv">المالك يرى كل شيء لحظياً</td>
+            </tr>
+            <tr>
+              <td>منصات العقارات (مستودع، عقار)</td>
+              <td>فقط قوائم، لا إدارة</td>
+              <td class="comp-adv">قوائم + إدارة + تشغيل في منظومة واحدة</td>
+            </tr>
+            <tr>
+              <td>Excel والواتساب</td>
+              <td>فوضى وأخطاء وضياع وقت</td>
+              <td class="comp-adv">نظام موحد بدون فوضى، موثّق ومؤتمت</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LEGAL -->
+    <div class="legal">
+      <div class="legal-badge">⚠️ ملاحظة قانونية هامة</div>
+      <p>
+        يتضمن هذا المشروع <strong>ثلاث أفكار وابتكارات محمية</strong><br/>
+        لا يمكن الإفصاح عنها أو عرضها في هذه الدراسة<br/>
+        حمايةً لحقوق صاحب المشروع الفكرية والابتكارية
+      </p>
+      <div class="sub">
+        جميع الحقوق محفوظة © 2026 — هاوسِن للحلول الذكية<br/>
+        يُحظر الاطلاع أو النسخ أو إعادة الاستخدام دون إذن كتابي مسبق
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <strong>هاوسِن للحلول الذكية</strong> &nbsp;·&nbsp; HousIn Smart Solutions &nbsp;·&nbsp;
+    دراسة الأعمال الشاملة — يونيو 2026 &nbsp;|&nbsp; وثيقة داخلية سرية
+  </div>
+
+</div>
+
+<!-- زر التحميل -->
+<div id="print-btn-bar" style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:9999;">
+  <button onclick="window.print()" style="background:#0F3460;color:#C8A951;border:2px solid #C8A951;border-radius:12px;padding:14px 32px;font-family:'Cairo',Tahoma,sans-serif;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+    ⬇ تحميل كـ PDF
+  </button>
+</div>
+
+</body>
+</html>
