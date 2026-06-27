@@ -69,7 +69,7 @@ export default function SuspendedPage({ onSignOut }: SuspendedPageProps) {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          استيتي إن للحلول الذكية · Account status is managed by your system administrator.
+          HousIn للحلول الذكية · Account status is managed by your system administrator.
         </p>
       </div>
     </div>

@@ -250,14 +250,14 @@ export function Home() {
         </div>
       </section>
 
-      {/* ── Rozoz Estimate CTA ────────────────────────────────────────────────── */}
+      {/* ── HousIn Estimate CTA ────────────────────────────────────────────────── */}
       <section className="py-16 bg-[#0f2040]">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-10">
             <div className="w-48 h-48 rounded-full bg-white/5 border border-[#c9a84c]/30 flex items-center justify-center shrink-0">
               <div className="text-center">
                 <TrendingUp className="w-12 h-12 text-[#c9a84c] mx-auto mb-2" />
-                <div className="text-white font-bold text-lg">Rozoz</div>
+                <div className="text-white font-bold text-lg">HousIn</div>
                 <div className="text-[#c9a84c] text-sm font-semibold">Estimate™</div>
               </div>
             </div>

@@ -98,7 +98,7 @@ export function WelcomeScreen({ onComplete }: Props) {
           Real Estate Platform
         </div>
         <div style={{ color: TEXT_PRI, fontSize: 28, fontWeight: 700, letterSpacing: "-0.5px" }}>
-          استيتي إن · Esteti In
+          HousIn · هاوسن
         </div>
       </div>
 
@@ -179,7 +179,7 @@ export function WelcomeScreen({ onComplete }: Props) {
         transition: "opacity 0.5s ease, transform 0.5s ease",
       }}>
         <span style={{ color: TEXT_PRI, fontSize: 14, letterSpacing: "0.4px", textAlign: "center" }}>
-          Download the Esteti In app now
+          Download the HousIn app now
         </span>
         <div style={{ width: 32, height: 1.5, background: GOLD, borderRadius: 1 }} />
       </div>

@@ -20,13 +20,13 @@ const SECTIONS: { num: string; ar: string; en: string; body: string }[] = [
     num: "١",
     ar: "الموافقة على الشروط",
     en: "Acceptance of Terms",
-    body: 'بمجرد قيام المستخدم بالتسجيل في منصة "استيتي إن" واستخدامها، فإن ذلك يعد موافقة صريحة على جميع بنود هذه الشروط والأحكام. وفي حال عدم الموافقة، يجب على المستخدم الامتناع عن استخدام المنصة.\n\nBy registering and using the ESTETI IN platform, the user expressly agrees to all these Terms & Conditions. If you do not agree, you must refrain from using the platform.',
+    body: 'بمجرد قيام المستخدم بالتسجيل في منصة HousIn واستخدامها، فإن ذلك يعد موافقة صريحة على جميع بنود هذه الشروط والأحكام. وفي حال عدم الموافقة، يجب على المستخدم الامتناع عن استخدام المنصة.\n\nBy registering and using the HousIn platform, the user expressly agrees to all these Terms & Conditions. If you do not agree, you must refrain from using the platform.',
   },
   {
     num: "٢",
     ar: "طبيعة الخدمة",
     en: "Nature of Service",
-    body: "توفر استيتي إن منصة إلكترونية لإدارة العقارات وتوثيق العقود الإيجارية وإرسال التنبيهات المتعلقة بالدفع. تعمل الشركة كوسيط تقني فقط ولا تتحمل أي مسؤولية قانونية أو تعاقدية تنشأ بين المؤجر والمستأجر أو البائع والمشتري.\n\nESTETI IN provides an electronic platform for property management, lease documentation and payment notifications. The company acts as a technology intermediary only and bears no legal or contractual liability arising between landlord and tenant or seller and buyer.",
+    body: "توفر HousIn منصة إلكترونية لإدارة العقارات وتوثيق العقود الإيجارية وإرسال التنبيهات المتعلقة بالدفع. تعمل الشركة كوسيط تقني فقط ولا تتحمل أي مسؤولية قانونية أو تعاقدية تنشأ بين المؤجر والمستأجر أو البائع والمشتري.\n\nHousIn provides an electronic platform for property management, lease documentation and payment notifications. The company acts as a technology intermediary only and bears no legal or contractual liability arising between landlord and tenant or seller and buyer.",
   },
   {
     num: "٣",
@@ -50,7 +50,7 @@ const SECTIONS: { num: string; ar: string; en: string; body: string }[] = [
     num: "٦",
     ar: "حقوق الملكية الفكرية",
     en: "Intellectual Property",
-    body: 'جميع الحقوق المتعلقة بمنصة "استيتي إن" من تصميم وشفرة برمجية وشعار ومحتوى هي ملك حصري للشركة. يحظر نسخ أو إعادة توزيع أو تعديل أي جزء من المنصة دون الحصول على موافقة خطية مسبقة.\n\nAll rights relating to the ESTETI IN platform — design, code, logo and content — are the exclusive property of the company. Copying, redistributing or modifying any part of the platform without prior written consent is strictly prohibited.',
+    body: 'جميع الحقوق المتعلقة بمنصة HousIn من تصميم وشفرة برمجية وشعار ومحتوى هي ملك حصري للشركة. يحظر نسخ أو إعادة توزيع أو تعديل أي جزء من المنصة دون الحصول على موافقة خطية مسبقة.\n\nAll rights relating to the HousIn platform — design, code, logo and content — are the exclusive property of the company. Copying, redistributing or modifying any part of the platform without prior written consent is strictly prohibited.',
   },
   {
     num: "٧",
@@ -87,7 +87,7 @@ export default function TermsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={s.badge}>
-          <Text style={s.badgeText}>استيتي إن · ESTETI IN</Text>
+          <Text style={s.badgeText}>HousIn · هاوسن</Text>
         </View>
         <Text style={s.lastUpdated}>آخر تحديث: يناير 2025 · Last updated: January 2025</Text>
 

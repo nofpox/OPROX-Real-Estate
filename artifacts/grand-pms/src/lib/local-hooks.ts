@@ -476,7 +476,7 @@ const LOCAL_SERVICE_CATEGORIES: ServiceCategory[] = [
   { id: 3, slug: "cleaning", label: "Cleaning", icon: "brush", color: "green", isActive: true, responseTimeMin: 30, sortOrder: 3 },
 ];
 const LOCAL_TENANTS: Tenant[] = [
-  { id: 1, slug: "rozozpms", name: "Esteti In", status: "active", createdAt: new Date().toISOString() },
+  { id: 1, slug: "housin", name: "HousIn", status: "active", createdAt: new Date().toISOString() },
 ];
 
 export function useListUsers(_?: any) {

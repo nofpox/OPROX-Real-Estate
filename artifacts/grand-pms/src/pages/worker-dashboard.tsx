@@ -35,7 +35,7 @@ export default function WorkerDashboard({ onLogout }: { onLogout: () => void }) 
       <div className="flex-1 overflow-auto pb-20">
         <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <img src={`${import.meta.env.BASE_URL}rkz-logo.jpg`} alt="Esteti In" className="h-7 w-auto object-contain" />
+            <img src={`${import.meta.env.BASE_URL}rkz-logo.jpg`} alt="HousIn" className="h-7 w-auto object-contain" />
           </div>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />

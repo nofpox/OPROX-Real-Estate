@@ -28,12 +28,12 @@ export default function Login({ onLogin }: LoginProps) {
       <div className="flex flex-col items-center gap-3">
         <img
           src={`${import.meta.env.BASE_URL}esteti-logo.png`}
-          alt="ESTETI IN"
+          alt="HousIn"
           className="h-28 w-auto object-contain"
           onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
         />
         <p className="text-xs text-white/40 tracking-[0.25em] uppercase">
-          Smart Solutions · استيتي إن للحلول الذكية
+          Smart Solutions · HousIn للحلول الذكية
         </p>
       </div>
 
@@ -68,11 +68,11 @@ export default function Login({ onLogin }: LoginProps) {
       </button>
 
       <p className="text-white/20 text-[11px] tracking-widest uppercase">
-        Smart Solutions · استيتي إن للحلول الذكية
+        Smart Solutions · HousIn للحلول الذكية
       </p>
 
       <p className="text-white/15 text-[10px] tracking-wide">
-        © {new Date().getFullYear()} جميع الحقوق محفوظة لـ Esteti In
+        © {new Date().getFullYear()} جميع الحقوق محفوظة لـ HousIn
       </p>
     </div>
   );

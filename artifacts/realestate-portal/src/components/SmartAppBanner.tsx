@@ -3,8 +3,8 @@ import { X, Building } from 'lucide-react';
 
 const DISMISSED_KEY = 'rozoz_app_banner_dismissed';
 
-const APP_STORE_URL   = 'https://apps.apple.com/app/rozoz/id000000000';
-const PLAY_STORE_URL  = 'https://play.google.com/store/apps/details?id=com.rozoz.msrep';
+const APP_STORE_URL   = 'https://apps.apple.com/app/housin/id000000000';
+const PLAY_STORE_URL  = 'https://play.google.com/store/apps/details?id=com.housin.app';
 
 export function SmartAppBanner() {
   const [visible, setVisible]   = useState(false);
@@ -21,7 +21,7 @@ export function SmartAppBanner() {
       const plat = isIOS ? 'ios' : 'android';
       setPlatform(plat);
       // Heuristic: if the user came from a deep-link referrer, app is likely installed
-      setInstalled(document.referrer.includes('rozoz-msrep://'));
+      setInstalled(document.referrer.includes('housin://'));
       setVisible(true);
     }
   }, []);
@@ -33,7 +33,7 @@ export function SmartAppBanner() {
 
   function handleAction() {
     if (installed) {
-      window.location.href = 'rozoz-msrep://open';
+      window.location.href = 'housin://open';
       setTimeout(() => {
         window.open(platform === 'ios' ? APP_STORE_URL : PLAY_STORE_URL, '_blank');
       }, 1500);
@@ -60,7 +60,7 @@ export function SmartAppBanner() {
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-sm leading-tight">استيتي إن · Esteti In</p>
+        <p className="font-bold text-sm leading-tight">HousIn · هاوسن</p>
         <p className="text-[11px] text-white/55 leading-tight mt-0.5">
           {platform === 'ios' ? '★★★★★  App Store' : '★★★★★  Google Play'}
         </p>

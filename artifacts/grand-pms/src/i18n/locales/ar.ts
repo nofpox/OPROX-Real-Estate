@@ -451,7 +451,7 @@ const ar: Translations = {
     },
     fields: {
       name: "اسم العقار",
-      namePlaceholder: "فندق استيتي إن الرئيسي",
+      namePlaceholder: "فندق HousIn الرئيسي",
       type: "تصنيف العقار",
       selectType: "اختر التصنيف",
       status: "الحالة",
@@ -1188,8 +1188,8 @@ const ar: Translations = {
     systemInfo: {
       title: "معلومات النظام",
       subtitle: "بيانات الشركة المعروضة في جميع أنحاء النظام.",
-      companyName: "اسم الشركة", companyNamePlaceholder: "مثال: مجموعة استيتي إن للعقارات",
-      contactEmail: "البريد الإلكتروني للتواصل", contactEmailPlaceholder: "مثال: info@rozoz.com",
+      companyName: "اسم الشركة", companyNamePlaceholder: "مثال: مجموعة HousIn للعقارات",
+      contactEmail: "البريد الإلكتروني للتواصل", contactEmailPlaceholder: "مثال: info@housin.com",
       contactPhone: "رقم الهاتف", contactPhonePlaceholder: "مثال: +971 50 000 0000",
       contactAddress: "العنوان", contactAddressPlaceholder: "مثال: دبي، الإمارات",
       saveBtn: "حفظ المعلومات", saved: "تم حفظ معلومات النظام.", error: "فشل الحفظ. يرجى المحاولة مجدداً.",

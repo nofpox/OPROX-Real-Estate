@@ -188,7 +188,7 @@ export default function ProfileScreen() {
 
         {/* App version */}
         <View style={s.versionWrap}>
-          <Text style={s.logoText}>روزوز / Rozoz</Text>
+          <Text style={s.logoText}>HousIn</Text>
           <Text style={s.versionText}>{t.profile.version} {APP_VERSION}</Text>
         </View>
       </ScrollView>

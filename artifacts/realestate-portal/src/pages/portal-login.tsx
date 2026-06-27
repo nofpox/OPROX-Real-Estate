@@ -16,7 +16,7 @@ function EstetiInLogo({ className = "" }: { className?: string }) {
   return (
     <img
       src="/realestate/esteti-logo.png"
-      alt="Esteti In"
+      alt="HousIn"
       className={`object-contain ${className}`}
       onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
     />
@@ -112,7 +112,7 @@ export const PortalLogin: React.FC = () => {
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <Helmet>
-        <title>{isRtl ? 'غرفة التحكم | استيتي إن' : 'Admin Control Room | Esteti In'}</title>
+        <title>{isRtl ? 'غرفة التحكم | HousIn' : 'Admin Control Room | HousIn'}</title>
       </Helmet>
 
       {/* ── Official Brand Mark ─────────────────────────────────────────────── */}
@@ -281,7 +281,7 @@ export const PortalLogin: React.FC = () => {
         >
           <Compass className="h-5 w-5 text-secondary shrink-0 group-hover:rotate-12 transition-transform duration-300" />
           <span className="text-secondary font-semibold text-sm tracking-wide text-center leading-snug">
-            استكشف تجربة Esteti In&nbsp;&nbsp;|&nbsp;&nbsp;Explore Esteti In Experience
+            استكشف تجربة HousIn&nbsp;&nbsp;|&nbsp;&nbsp;Explore HousIn Experience
           </span>
         </button>
         <p className="text-white/20 text-[10px] text-center mt-2 tracking-wide">
@@ -290,7 +290,7 @@ export const PortalLogin: React.FC = () => {
       </div>
 
       <p className="mt-8 text-xs text-white/20 text-center">
-        © {new Date().getFullYear()} Esteti In Smart Solutions
+        © {new Date().getFullYear()} HousIn Smart Solutions
       </p>
     </div>
   );

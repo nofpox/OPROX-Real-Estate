@@ -24,7 +24,7 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
   );
 }
 
-// ── Rozoz Logo ─────────────────────────────────────────────────────────────────
+// ── HousIn Logo ─────────────────────────────────────────────────────────────────
 
 function RozozLogo({ className = '' }: { className?: string }) {
   return (
@@ -32,8 +32,7 @@ function RozozLogo({ className = '' }: { className?: string }) {
       <div className="w-8 h-8 rounded-md bg-[#c9a84c] flex items-center justify-center flex-shrink-0">
         <Building2 className="w-5 h-5 text-[#0f2040]" />
       </div>
-      <span className="font-bold text-xl tracking-tight text-white">روزوز</span>
-      <span className="font-bold text-xl tracking-tight text-white hidden sm:inline">| Rozoz</span>
+      <span className="font-bold text-xl tracking-tight text-white">HousIn</span>
     </div>
   );
 }
@@ -203,7 +202,7 @@ function PublicFooter() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#c9a84c] shrink-0" />
-                <span>info@rozoz.com</span>
+                <span>info@housin.com</span>
               </li>
             </ul>
           </div>

@@ -39,8 +39,8 @@ export default function LanguageSelectScreen() {
       <View style={s.container}>
         {/* Logo */}
         <View style={s.logoWrap}>
-          <Text style={s.logoText}>روزوز</Text>
-          <Text style={s.logoEn}>Rozoz</Text>
+          <Text style={s.logoText}>HousIn</Text>
+          <Text style={s.logoEn}>هاوسن</Text>
         </View>
 
         <Text style={s.heading}>اختر اللغة · Choose Language</Text>

@@ -22,7 +22,7 @@ export default function ForcePasswordChange({ username, onSuccess }: Props) {
     if (!valid) return;
     setLoading(true);
     await new Promise(r => setTimeout(r, 300));
-    toast({ title: "Password updated. Welcome to Esteti In." });
+    toast({ title: "Password updated. Welcome to HousIn." });
     onSuccess();
     setLoading(false);
   }

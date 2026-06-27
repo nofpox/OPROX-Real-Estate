@@ -8,13 +8,13 @@ const TERMS_SECTIONS = [
     num: "١ · 1",
     ar: "الموافقة على الشروط",
     en: "Acceptance of Terms",
-    body: "بمجرد قيام المستخدم بالتسجيل في منصة \"استيتي إن\" واستخدامها، فإن ذلك يعد موافقة صريحة على جميع بنود هذه الشروط. By registering and using ESTETI IN, the user expressly agrees to all these Terms.",
+    body: "بمجرد قيام المستخدم بالتسجيل في منصة HousIn واستخدامها، فإن ذلك يعد موافقة صريحة على جميع بنود هذه الشروط. By registering and using HousIn, the user expressly agrees to all these Terms.",
   },
   {
     num: "٢ · 2",
     ar: "طبيعة الخدمة",
     en: "Nature of Service",
-    body: "توفر استيتي إن منصة إلكترونية لإدارة العقارات وتوثيق العقود وإرسال التنبيهات. تعمل الشركة كوسيط تقني فقط. ESTETI IN provides an electronic platform for property management and lease documentation. The company acts as a technology intermediary only.",
+    body: "توفر HousIn منصة إلكترونية لإدارة العقارات وتوثيق العقود وإرسال التنبيهات. تعمل الشركة كوسيط تقني فقط. HousIn provides an electronic platform for property management and lease documentation. The company acts as a technology intermediary only.",
   },
   {
     num: "٣ · 3",
@@ -104,8 +104,8 @@ export function ConsentScreen({
           <div className="w-16 h-16 bg-[#C9A84C]/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">🏠</span>
           </div>
-          <h1 className="text-white font-bold text-xl">أهلاً في استيتي إن الرقمية</h1>
-          <p className="text-[#C9A84C] text-sm mt-0.5 tracking-wide">Welcome to ESTETI IN</p>
+          <h1 className="text-white font-bold text-xl">أهلاً في HousIn</h1>
+          <p className="text-[#C9A84C] text-sm mt-0.5 tracking-wide">Welcome to HousIn</p>
           <p className="text-white/50 text-xs mt-2">يرجى مراجعة الشروط قبل المتابعة · Please review the terms before continuing</p>
         </div>
 
@@ -181,8 +181,8 @@ export function ConsentScreen({
               )}
             </div>
             <span className="text-gray-700 text-sm leading-6">
-              أوافق على الشروط والأحكام وسياسة الخصوصية لمنصة استيتي إن الرقمية
-              <span className="block text-gray-400 text-xs mt-0.5">I agree to the Terms &amp; Conditions and Privacy Policy of ESTETI IN</span>
+              أوافق على الشروط والأحكام وسياسة الخصوصية لمنصة HousIn
+              <span className="block text-gray-400 text-xs mt-0.5">I agree to the Terms &amp; Conditions and Privacy Policy of HousIn</span>
             </span>
           </label>
 

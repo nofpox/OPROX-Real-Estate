@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ESTETI IN",
+    "name": "HousIn",
     "slug": "rozoz-msrep",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.rozoz.app",
+      "bundleIdentifier": "com.housin.app",
       "infoPlist": {
         "LSApplicationQueriesSchemes": ["uber", "bolt", "careem"]
       }
@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/images/rozoz-icon.png",
         "backgroundColor": "#0F2040"
       },
-      "package": "com.rozoz.app",
+      "package": "com.housin.app",
       "intentFilters": []
     },
     "web": {
@@ -43,14 +43,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "استيتي إن تحتاج للوصول إلى صورك لإضافة صور العقارات.",
-          "cameraPermission": "استيتي إن تحتاج الكاميرا لالتقاط صور العقارات."
+          "photosPermission": "HousIn تحتاج للوصول إلى صورك لإضافة صور العقارات.",
+          "cameraPermission": "HousIn تحتاج الكاميرا لالتقاط صور العقارات."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "استيتي إن تستخدم موقعك لتعبئة عنوان العقار تلقائياً."
+          "locationWhenInUsePermission": "HousIn تستخدم موقعك لتعبئة عنوان العقار تلقائياً."
         }
       ]
     ],

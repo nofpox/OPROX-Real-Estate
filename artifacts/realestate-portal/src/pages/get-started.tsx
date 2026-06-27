@@ -106,10 +106,10 @@ export const GetStarted: React.FC = () => {
   return (
     <div className="flex flex-col w-full" dir={dir}>
       <Helmet>
-        <title>{isRtl ? 'ابدأ معنا — استيتي إن' : 'Get Started — Esteti In'}</title>
+        <title>{isRtl ? 'ابدأ معنا — HousIn' : 'Get Started — HousIn'}</title>
         <meta name="description" content={isRtl
-          ? 'فوّض إدارة عقارك لفريق استيتي إن المحترف — فنادق، مجمعات، مرافق مؤسسية'
-          : 'Delegate your property management to the Esteti In professional team — hotels, compounds, corporate facilities'} />
+          ? 'فوّض إدارة عقارك لفريق HousIn المحترف — فنادق، مجمعات، مرافق مؤسسية'
+          : 'Delegate your property management to the HousIn professional team — hotels, compounds, corporate facilities'} />
       </Helmet>
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
@@ -120,7 +120,7 @@ export const GetStarted: React.FC = () => {
             {isRtl ? 'شريكك الموثوق في إدارة العقارات' : 'Your trusted property management partner'}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-5 leading-tight">
-            {isRtl ? 'ابدأ الشراكة مع استيتي إن' : 'Start Your Partnership with Esteti In'}
+            {isRtl ? 'ابدأ الشراكة مع HousIn' : 'Start Your Partnership with HousIn'}
           </h1>
           <p className="text-white/70 text-lg max-w-2xl mx-auto leading-relaxed">
             {isRtl
@@ -198,8 +198,8 @@ export const GetStarted: React.FC = () => {
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-8 text-sm">
                 {isRtl
-                  ? 'بمجرد توقيع عقد الإدارة، يتولى فريق استيتي إن كل شيء ويزودك بتقارير دورية شفافة.'
-                  : "Once the management agreement is signed, the Esteti In team handles everything and provides transparent periodic reports."}
+                  ? 'بمجرد توقيع عقد الإدارة، يتولى فريق HousIn كل شيء ويزودك بتقارير دورية شفافة.'
+                  : "Once the management agreement is signed, the HousIn team handles everything and provides transparent periodic reports."}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {benefits.map((b, i) => {
@@ -218,8 +218,8 @@ export const GetStarted: React.FC = () => {
                 <BarChart3 className="h-5 w-5 text-secondary shrink-0 mt-0.5" />
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {isRtl
-                    ? 'استيتي إن تُدير فنادق ومجمعات ومرافق في المملكة العربية السعودية — عملاؤنا يرونون نتائج حقيقية في أول 90 يوماً.'
-                    : 'Esteti In manages hotels, compounds, and facilities in Saudi Arabia — our clients see real results in the first 90 days.'}
+                    ? 'HousIn تُدير فنادق ومجمعات ومرافق في المملكة العربية السعودية — عملاؤنا يرونون نتائج حقيقية في أول 90 يوماً.'
+                    : 'HousIn manages hotels, compounds, and facilities in Saudi Arabia — our clients see real results in the first 90 days.'}
                 </p>
               </div>
             </div>

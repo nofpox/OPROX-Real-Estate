@@ -1,9 +1,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Rozoz Real Estate — Bilingual strings (ar / en)
+// HousIn Real Estate — Bilingual strings (ar / en)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const ar = {
-  app: { name: "روزوز", tagline: "أكبر منصة عقارية في السعودية" },
+  app: { name: "HousIn", tagline: "أكبر منصة عقارية في السعودية" },
   tabs: {
     home: "الرئيسية",
     search: "البحث",
@@ -22,10 +22,10 @@ export const ar = {
     featured: "عقارات مميزة",
     viewAll: "عرض الكل",
     cities: "تصفح بالمدينة",
-    estimate: "Rozoz Estimate™",
+    estimate: "HousIn Estimate™",
     estimateDesc: "تقييم ذكي لعقارك بناءً على بيانات السوق الفعلية",
     estimateCta: "اعرف قيمة عقارك",
-    welcome: "أهلاً بك في روزوز",
+    welcome: "أهلاً بك في HousIn",
   },
   search: {
     title: "البحث",
@@ -89,7 +89,7 @@ export const ar = {
       call: "اتصال",
     },
     estimate: {
-      title: "Rozoz Estimate™",
+      title: "HousIn Estimate™",
       subtitle: "تقييم بالذكاء الاصطناعي",
       range: "النطاق المتوقع",
       pricePerSqm: "سعر المتر",
@@ -142,7 +142,7 @@ export const ar = {
     notifications: "الإشعارات",
     privacy: "سياسة الخصوصية",
     terms: "الشروط والأحكام",
-    about: "عن روزوز",
+    about: "عن HousIn",
     savedSearches: "البحوثات المحفوظة",
     version: "الإصدار",
     account: "الحساب",
@@ -210,7 +210,7 @@ export const ar = {
 };
 
 export const en: typeof ar = {
-  app: { name: "Rozoz", tagline: "Saudi Arabia's Largest Real Estate Platform" },
+  app: { name: "HousIn", tagline: "Saudi Arabia's Largest Real Estate Platform" },
   tabs: {
     home: "Home",
     search: "Search",
@@ -229,10 +229,10 @@ export const en: typeof ar = {
     featured: "Featured Properties",
     viewAll: "View All",
     cities: "Browse by City",
-    estimate: "Rozoz Estimate™",
+    estimate: "HousIn Estimate™",
     estimateDesc: "AI-powered property valuation based on real market data",
     estimateCta: "Get Your Estimate",
-    welcome: "Welcome to Rozoz",
+    welcome: "Welcome to HousIn",
   },
   search: {
     title: "Search",
@@ -296,7 +296,7 @@ export const en: typeof ar = {
       call: "Call",
     },
     estimate: {
-      title: "Rozoz Estimate™",
+      title: "HousIn Estimate™",
       subtitle: "AI-powered market valuation",
       range: "Estimated Range",
       pricePerSqm: "Price per m²",
@@ -349,7 +349,7 @@ export const en: typeof ar = {
     notifications: "Notifications",
     privacy: "Privacy Policy",
     terms: "Terms of Service",
-    about: "About Rozoz",
+    about: "About HousIn",
     savedSearches: "Saved Searches",
     version: "Version",
     account: "Account",

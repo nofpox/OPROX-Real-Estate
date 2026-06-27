@@ -50,7 +50,7 @@ async function fetchListings(): Promise<Listing[]> {
       lng:      Number(l.lng ?? l.longitude ?? 46.6753),
       image:    String(l.main_image ?? l.image ?? MOCK_LISTINGS[0].image),
       featured: Boolean(l.featured),
-      agentName:  String(l.agent_name ?? "وكيل روزوز"),
+      agentName:  String(l.agent_name ?? "وكيل HousIn"),
       agentPhone: String(l.agent_phone ?? "0500000000"),
       description: String(l.description ?? ""),
       listedAt:   String(l.created_at ?? l.listedAt ?? "2026-01-01"),
@@ -162,8 +162,8 @@ export default function HomeScreen() {
         {/* ── Hero header ── */}
         <View style={[s.hero, { paddingTop: insets.top + 16 }]}>
           <View style={[s.row, { justifyContent: "space-between", alignItems: "center" }]}>
-            <Text style={s.logo}>روزوز</Text>
-            <Text style={s.logoSub}>Rozoz</Text>
+            <Text style={s.logo}>HousIn</Text>
+            <Text style={s.logoSub}>هاوسن</Text>
           </View>
           <Text style={s.heroTitle}>{t.home.hero}</Text>
           <Text style={s.heroSub}>{t.home.sub}</Text>

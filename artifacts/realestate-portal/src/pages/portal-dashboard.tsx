@@ -457,7 +457,7 @@ export const PortalDashboard: React.FC = () => {
             {isRtl ? 'لا توجد عقارات مضافة بعد' : 'No listings added yet'}
           </p>
           <p className="text-xs text-muted-foreground/70 mt-1">
-            {isRtl ? 'أضف عقارات عبر لوحة التحكم الرئيسية' : 'Add listings via Esteti In'}
+            {isRtl ? 'أضف عقارات عبر لوحة التحكم الرئيسية' : 'Add listings via HousIn'}
           </p>
         </div>
       );
@@ -859,7 +859,7 @@ export const PortalDashboard: React.FC = () => {
         </Button>
 
         <p className="text-center text-xs text-muted-foreground/60 pt-2">
-          Esteti In Smart Solutions © {new Date().getFullYear()}
+          HousIn Smart Solutions © {new Date().getFullYear()}
         </p>
       </div>
     );
@@ -870,7 +870,7 @@ export const PortalDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-muted/40" dir={isRtl ? 'rtl' : 'ltr'}>
       <Helmet>
-        <title>{isRtl ? 'غرفة التحكم | استيتي إن' : 'Admin Control Room | Esteti In'}</title>
+        <title>{isRtl ? 'غرفة التحكم | HousIn' : 'Admin Control Room | HousIn'}</title>
       </Helmet>
 
       {/* Top header */}
