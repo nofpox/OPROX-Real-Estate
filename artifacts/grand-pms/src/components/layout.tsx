@@ -55,7 +55,7 @@ import { useTour } from "@/components/tour/tour-context";
 const NAV_ITEMS = [
   { href: "/",               labelKey: "nav.dashboard",      icon: LayoutDashboard, section: "main",       featureKey: null       },
   { href: "/properties",     labelKey: "nav.properties",     icon: Building2,       section: "main",       featureKey: "properties" },
-  // /rooms (حالة الوحدات) hidden — UI on hold, backend/DB intact
+  { href: "/rooms",          labelKey: "nav.rooms",          icon: DoorOpen,        section: "main",       featureKey: null },
   // unit-map hidden — UI on hold, backend/DB intact
   { href: "/maintenance",    labelKey: "nav.maintenance",    icon: Wrench,          section: "operations", featureKey: "maintenance" },
   { href: "/facilities",     labelKey: "nav.facilities",     icon: Dumbbell,        section: "operations", featureKey: "facilities" },

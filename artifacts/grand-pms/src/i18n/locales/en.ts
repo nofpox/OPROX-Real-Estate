@@ -3,7 +3,7 @@ const en = {
     dashboard: "Dashboard",
     bookings: "Bookings",
     properties: "Properties",
-    rooms: "Unit Status",
+    rooms: "Units",
     guests: "Guests",
     finance: "Finance",
     maintenance: "Maintenance",

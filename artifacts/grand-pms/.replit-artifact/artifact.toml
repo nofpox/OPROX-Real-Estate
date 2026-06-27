@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/grand-pms/"
-title = "Rozoz PMS"
+title = "HousIn PMS"
 version = "1.0.0"
 id = "artifacts/grand-pms"
 router = "path"
@@ -10,7 +10,7 @@ name = "react-vite"
 version = "1.0.0"
 
 [[services]]
-name = "Rozoz PMS"
+name = "HousIn PMS"
 paths = [ "/grand-pms/", "/grand-pms" ]
 localPort = 14320
 

@@ -1,31 +1,31 @@
 kind = "web"
-  previewPath = "/realestate/"
-  title = "Rozoz Portal"
-  version = "1.0.0"
-  id = "artifacts/realestate-portal"
-  router = "path"
+previewPath = "/realestate/"
+title = "HousIn Portal"
+version = "1.0.0"
+id = "artifacts/realestate-portal"
+router = "path"
 
-  [[integratedSkills]]
-  name = "react-vite"
-  version = "1.0.0"
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
 
-  [[services]]
-  name = "Rozoz Portal"
-  paths = [ "/realestate/" ]
-  localPort = 19855
+[[services]]
+name = "HousIn Portal"
+paths = [ "/realestate/" ]
+localPort = 19855
 
-  [services.development]
-  run = "pnpm --filter @workspace/rozoz-portal run dev"
+[services.development]
+run = "pnpm --filter @workspace/rozoz-portal run dev"
 
-  [services.production]
-  build = [ "pnpm", "--filter", "@workspace/rozoz-portal", "run", "build" ]
-  publicDir = "artifacts/realestate-portal/dist/public"
-  serve = "static"
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/rozoz-portal", "run", "build" ]
+publicDir = "artifacts/realestate-portal/dist/public"
+serve = "static"
 
-  [[services.production.rewrites]]
-  from = "/*"
-  to = "/index.html"
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
 
-  [services.env]
-  PORT = "19855"
-  BASE_PATH = "/realestate/"
+[services.env]
+PORT = "19855"
+BASE_PATH = "/realestate/"

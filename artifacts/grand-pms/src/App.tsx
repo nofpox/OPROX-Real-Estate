@@ -16,6 +16,7 @@ import Dashboard from "@/pages/dashboard";
 import NotFound from "@/pages/not-found";
 import Properties from "@/pages/properties";
 import PropertyDetail from "@/pages/property-detail";
+import Rooms from "@/pages/rooms";
 import Maintenance from "@/pages/maintenance";
 import Facilities from "@/pages/facilities";
 import Staff from "@/pages/staff";
@@ -64,6 +65,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/properties" component={Properties} />
       <Route path="/properties/:id" component={PropertyDetail} />
+      <Route path="/rooms" component={Rooms} />
       <Route path="/maintenance" component={Maintenance} />
       <Route path="/facilities" component={Facilities} />
       <Route path="/staff" component={Staff} />

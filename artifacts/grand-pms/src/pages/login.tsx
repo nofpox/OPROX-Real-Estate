@@ -26,14 +26,23 @@ export default function Login({ onLogin }: LoginProps) {
 
       {/* Logo */}
       <div className="flex flex-col items-center gap-3">
-        <img
-          src={`${import.meta.env.BASE_URL}esteti-logo.png`}
-          alt="HousIn"
-          className="h-28 w-auto object-contain"
-          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
-        />
+        <div className="flex items-center justify-center w-28 h-28 rounded-2xl bg-[#C9A84C]/10 border border-[#C9A84C]/20">
+          <span
+            style={{
+              fontFamily: "'Georgia', 'Times New Roman', serif",
+              fontSize: 38,
+              fontWeight: 800,
+              letterSpacing: "-0.5px",
+              background: "linear-gradient(135deg, #C9A84C 0%, #f0d080 50%, #C9A84C 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            HousIn
+          </span>
+        </div>
         <p className="text-xs text-white/40 tracking-[0.25em] uppercase">
-          Smart Solutions · HousIn للحلول الذكية
+          HousIn · للحلول الذكية
         </p>
       </div>
 

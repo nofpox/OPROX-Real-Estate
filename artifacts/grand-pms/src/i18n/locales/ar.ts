@@ -5,7 +5,7 @@ const ar: Translations = {
     dashboard: "لوحة التحكم",
     bookings: "الحجوزات",
     properties: "العقارات",
-    rooms: "حالة الوحدات",
+    rooms: "الوحدات",
     guests: "النزلاء",
     finance: "المالية",
     maintenance: "الصيانة",
