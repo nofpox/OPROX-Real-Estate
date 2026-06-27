@@ -1,228 +1,237 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
-import { useCms } from '@/lib/cms-context';
-import { Building, Menu, X, Globe, MapPin, Mail, Phone, KeyRound, ArrowLeft, ArrowRight } from 'lucide-react';
-import { SmartAssistant } from './assistant';
-import { SmartAppBanner } from './SmartAppBanner';
+import {
+  Building2, Search, Heart, Bell, Globe, Menu, X,
+  ChevronDown, Phone, Mail, MapPin, ArrowLeft, ArrowRight,
+  Facebook, Twitter, Instagram, Linkedin, Youtube
+} from 'lucide-react';
 
-export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { language, setLanguage, isRtl } = useLanguage();
-  const { content } = useCms();
-  const [location]      = useLocation();
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
-  const { nav, branding, footer, contact } = content;
+function NavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={`px-4 py-2 text-sm font-medium transition-colors rounded-sm whitespace-nowrap ${
+        active
+          ? 'text-[#c9a84c] border-b-2 border-[#c9a84c]'
+          : 'text-white/80 hover:text-white'
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
 
-  const toggleLanguage = () => setLanguage(language === 'en' ? 'ar' : 'en');
+// ── Rozoz Logo ─────────────────────────────────────────────────────────────────
 
-  const isActive = (href: string) =>
-    href === '/' ? location === '/' || location === '' : location.startsWith(href);
+function RozozLogo({ className = '' }: { className?: string }) {
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <div className="w-8 h-8 rounded-md bg-[#c9a84c] flex items-center justify-center flex-shrink-0">
+        <Building2 className="w-5 h-5 text-[#0f2040]" />
+      </div>
+      <span className="font-bold text-xl tracking-tight text-white">روزوز</span>
+      <span className="font-bold text-xl tracking-tight text-white hidden sm:inline">| Rozoz</span>
+    </div>
+  );
+}
 
-  // Center nav: only Properties, Services, Contact — no home, no portal
-  const ALLOWED_HREFS = ['/listings', '/about', '/services', '/contact'];
-  const centerNav = nav.filter(n => ALLOWED_HREFS.includes(n.href));
+// ── Public Navbar (Zillow-style) ───────────────────────────────────────────────
+
+function PublicNavbar() {
+  const { t, language, setLanguage, isRtl } = useLanguage();
+  const [location] = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isActive = (path: string) => location === path || location.startsWith(path + '?');
+
+  const tabs = [
+    { key: 'buy',       href: '/search?type=sale',  label: t('nav.buy') },
+    { key: 'rent',      href: '/search?type=rent',  label: t('nav.rent') },
+    { key: 'sell',      href: '/sell',               label: t('nav.sell') },
+    { key: 'financing', href: '/financing',          label: t('nav.financing') },
+    { key: 'agents',    href: '/agents',             label: t('nav.agents') },
+  ];
 
   return (
-    <div className="h-dvh overflow-auto flex flex-col font-sans">
+    <header className="sticky top-0 z-50 w-full bg-[#0f2040] shadow-md">
+      <div className="container mx-auto px-4">
+        <div className="h-16 flex items-center justify-between gap-4">
 
-      {/* ── Smart App Banner (mobile only, dismissible) ─────────────────────── */}
-      <SmartAppBanner />
-
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
-
-          {/* ── LEFT: Logo ──────────────────────────────────────────────── */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            {branding.logoUrl
-              ? <img src={branding.logoUrl} alt={branding.companyNameEn} className="h-8 w-8 object-contain" />
-              : <Building className="h-5 w-5 text-secondary" />
-            }
-            <span className="font-bold text-lg tracking-tight text-primary">
-              {isRtl ? branding.companyNameAr || 'استيتي إن' : branding.companyNameEn || 'Esteti In'}
-            </span>
+          {/* Logo */}
+          <Link href="/">
+            <RozozLogo />
           </Link>
 
-          {/* ── CENTER: Main Nav (desktop) ───────────────────────────────── */}
-          <nav className="hidden md:flex items-center gap-1 flex-1 justify-center" aria-label="Main navigation">
-            {centerNav.map(({ href, labelEn, labelAr }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`relative px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive(href)
-                    ? 'text-secondary bg-secondary/10'
-                    : 'text-foreground/60 hover:text-primary hover:bg-muted'
-                }`}
-              >
-                {isRtl ? labelAr : labelEn}
-                {isActive(href) && (
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-secondary rounded-full" />
-                )}
-              </Link>
+          {/* Desktop nav tabs */}
+          <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
+            {tabs.map(tab => (
+              <NavLink key={tab.key} href={tab.href} label={tab.label} active={isActive(tab.href.split('?')[0])} />
             ))}
           </nav>
 
-          {/* ── RIGHT: Language toggle + CTA + Admin (desktop) ───────────── */}
-          <div className="hidden md:flex items-center gap-2 shrink-0">
-            <button
-              onClick={toggleLanguage}
-              className="p-2 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
-              aria-label="Toggle language"
-            >
-              <Globe className="h-4 w-4" />
-            </button>
-            <Link
-              href="/get-started"
-              className="flex items-center gap-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm"
-            >
-              {isRtl ? 'ابدأ معنا' : 'Get Started'}
-              {isRtl
-                ? <ArrowLeft  className="h-3.5 w-3.5" />
-                : <ArrowRight className="h-3.5 w-3.5" />}
+          {/* Right actions */}
+          <div className="flex items-center gap-2">
+            <Link href="/favorites" className="hidden md:flex items-center gap-1 px-3 py-1.5 text-sm text-white/80 hover:text-white transition-colors">
+              <Heart className="w-4 h-4" />
+              <span className="hidden lg:inline">{t('nav.favorites')}</span>
             </Link>
-            <Link
-              href="/portal"
-              className="flex items-center gap-2 border border-border text-muted-foreground hover:text-primary hover:border-primary/40 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-            >
-              <KeyRound className="h-3.5 w-3.5" />
-              {isRtl ? 'الإدارة' : 'Admin'}
+            <Link href="/updates" className="hidden md:flex items-center gap-1 px-3 py-1.5 text-sm text-white/80 hover:text-white transition-colors">
+              <Bell className="w-4 h-4" />
+              <span className="hidden lg:inline">{t('nav.updates')}</span>
             </Link>
-          </div>
 
-          {/* ── MOBILE: Globe + Hamburger ────────────────────────────────── */}
-          <div className="flex items-center gap-1 md:hidden">
+            {/* Language toggle */}
             <button
-              onClick={toggleLanguage}
-              className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
+              onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
+              className="flex items-center gap-1 px-2 py-1.5 text-sm text-white/80 hover:text-white transition-colors border border-white/20 rounded"
             >
-              <Globe className="h-4 w-4" />
+              <Globe className="w-3.5 h-3.5" />
+              <span>{language === 'ar' ? 'EN' : 'ع'}</span>
             </button>
+
+            {/* Portal link */}
+            <Link href="/portal" className="hidden md:inline-flex items-center px-3 py-1.5 bg-[#c9a84c] text-[#0f2040] text-sm font-semibold rounded hover:bg-[#b8963f] transition-colors">
+              {t('nav.signin')}
+            </Link>
+
+            {/* Mobile menu toggle */}
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
+              onClick={() => setMobileOpen(v => !v)}
+              className="md:hidden p-2 text-white/80 hover:text-white"
+              aria-label="Menu"
             >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
+      </div>
 
-        {/* ── Mobile nav drawer ───────────────────────────────────────────── */}
-        {isMenuOpen && (
-          <div className="md:hidden border-t border-border/60 bg-background shadow-lg">
-            <nav className="p-3 flex flex-col gap-1">
-              {centerNav.map(({ href, labelEn, labelAr }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(href)
-                      ? 'bg-secondary/10 text-secondary'
-                      : 'text-foreground/70 hover:bg-muted hover:text-primary'
-                  }`}
-                >
-                  {isRtl ? labelAr : labelEn}
-                </Link>
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-white/10 bg-[#0f2040]">
+          <nav className="container mx-auto px-4 py-3 flex flex-col gap-1">
+            {tabs.map(tab => (
+              <Link
+                key={tab.key}
+                href={tab.href}
+                onClick={() => setMobileOpen(false)}
+                className={`px-3 py-2 text-sm font-medium rounded ${
+                  isActive(tab.href.split('?')[0]) ? 'text-[#c9a84c] bg-white/5' : 'text-white/80'
+                }`}
+              >
+                {tab.label}
+              </Link>
+            ))}
+            <hr className="border-white/10 my-1" />
+            <Link href="/favorites" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm text-white/80 flex items-center gap-2">
+              <Heart className="w-4 h-4" />{t('nav.favorites')}
+            </Link>
+            <Link href="/updates" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm text-white/80 flex items-center gap-2">
+              <Bell className="w-4 h-4" />{t('nav.updates')}
+            </Link>
+            <Link href="/portal" onClick={() => setMobileOpen(false)} className="mt-1 mx-3 py-2 text-center bg-[#c9a84c] text-[#0f2040] text-sm font-semibold rounded">
+              {t('nav.signin')}
+            </Link>
+          </nav>
+        </div>
+      )}
+    </header>
+  );
+}
+
+// ── Public Footer ──────────────────────────────────────────────────────────────
+
+function PublicFooter() {
+  const { t, isRtl } = useLanguage();
+
+  return (
+    <footer className="bg-[#0a1628] text-white/70">
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+
+          {/* Brand */}
+          <div className="md:col-span-1">
+            <RozozLogo className="mb-4" />
+            <p className="text-sm leading-relaxed">{t('footer.tagline')}</p>
+            <div className="flex gap-3 mt-5">
+              {[Facebook, Twitter, Instagram, Linkedin, Youtube].map((Icon, i) => (
+                <a key={i} href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#c9a84c] hover:text-[#0f2040] transition-colors">
+                  <Icon className="w-4 h-4" />
+                </a>
               ))}
-              <div className="mt-1 pt-2 border-t border-border/60 flex flex-col gap-1">
-                <Link
-                  href="/get-started"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors"
-                >
-                  {isRtl ? 'ابدأ معنا' : 'Get Started'}
-                  {isRtl
-                    ? <ArrowLeft  className="h-4 w-4" />
-                    : <ArrowRight className="h-4 w-4" />}
-                </Link>
-                <Link
-                  href="/portal"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
-                >
-                  <KeyRound className="h-4 w-4" />
-                  {isRtl ? 'الإدارة' : 'Admin'}
-                </Link>
-              </div>
-            </nav>
-          </div>
-        )}
-      </header>
-
-      {/* ── Content ─────────────────────────────────────────────────────────── */}
-      <main className="flex-1">
-        {children}
-      </main>
-
-      {/* ── Smart Assistant (floating) ───────────────────────────────────────── */}
-      <SmartAssistant />
-
-      {/* ── Footer ──────────────────────────────────────────────────────────── */}
-      <footer className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 py-14 max-w-3xl">
-
-          {/* Brand + description */}
-          <div className="flex items-center gap-2 mb-4">
-            {branding.logoUrl
-              ? <img src={branding.logoUrl} alt="" className="h-6 w-6 object-contain" />
-              : <Building className="h-5 w-5 text-secondary" />
-            }
-            <span className="font-bold text-lg text-white">
-              {isRtl ? branding.companyNameAr : branding.companyNameEn}
-            </span>
-          </div>
-          <p className="text-primary-foreground/60 text-sm leading-relaxed max-w-sm">
-            {isRtl ? footer.descriptionAr : footer.descriptionEn}
-          </p>
-
-          {/* Contact info only */}
-          <ul className="mt-6 space-y-2 text-sm text-primary-foreground/60">
-            {(isRtl ? contact.addressAr : contact.addressEn) && (
-              <li className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-secondary shrink-0" />
-                {isRtl ? contact.addressAr : contact.addressEn}
-              </li>
-            )}
-            {contact.email && (
-              <li className="flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5 text-secondary shrink-0" />
-                <a href={`mailto:${contact.email}`} className="hover:text-secondary transition-colors">
-                  {contact.email}
-                </a>
-              </li>
-            )}
-            {contact.phone && (
-              <li className="flex items-center gap-2">
-                <Phone className="h-3.5 w-3.5 text-secondary shrink-0" />
-                <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="hover:text-secondary transition-colors" dir="ltr">
-                  {contact.phone}
-                </a>
-              </li>
-            )}
-          </ul>
-        </div>
-
-        {/* Legal bar — copyright + legal links */}
-        <div className="border-t border-primary-foreground/10">
-          <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-primary-foreground/40">
-            <span>
-              © {new Date().getFullYear()} {isRtl ? branding.companyNameAr : branding.companyNameEn}.{' '}
-              {isRtl ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
-            </span>
-            <div className="flex items-center gap-4">
-              <Link href="/privacy" className="hover:text-secondary transition-colors">
-                {isRtl ? 'سياسة الخصوصية' : 'Privacy Policy'}
-              </Link>
-              <span className="opacity-40">·</span>
-              <Link href="/terms" className="hover:text-secondary transition-colors">
-                {isRtl ? 'الشروط والأحكام' : 'Terms & Conditions'}
-              </Link>
             </div>
           </div>
+
+          {/* Quick links */}
+          <div>
+            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">{isRtl ? 'روابط سريعة' : 'Quick Links'}</h4>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/search?type=sale" className="hover:text-[#c9a84c] transition-colors">{t('footer.buy')}</Link></li>
+              <li><Link href="/search?type=rent" className="hover:text-[#c9a84c] transition-colors">{t('footer.rent')}</Link></li>
+              <li><Link href="/sell" className="hover:text-[#c9a84c] transition-colors">{t('footer.sell')}</Link></li>
+              <li><Link href="/financing" className="hover:text-[#c9a84c] transition-colors">{t('footer.financing')}</Link></li>
+              <li><Link href="/agents" className="hover:text-[#c9a84c] transition-colors">{t('footer.agents')}</Link></li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">{isRtl ? 'الشركة' : 'Company'}</h4>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/about" className="hover:text-[#c9a84c] transition-colors">{t('footer.about')}</Link></li>
+              <li><Link href="/contact" className="hover:text-[#c9a84c] transition-colors">{t('footer.contact')}</Link></li>
+              <li><Link href="/portal" className="hover:text-[#c9a84c] transition-colors">{isRtl ? 'بوابة العملاء' : 'Client Portal'}</Link></li>
+              <li><Link href="/privacy" className="hover:text-[#c9a84c] transition-colors">{t('footer.privacy')}</Link></li>
+              <li><Link href="/terms" className="hover:text-[#c9a84c] transition-colors">{t('footer.terms')}</Link></li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">{isRtl ? 'تواصل معنا' : 'Contact'}</h4>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-[#c9a84c] shrink-0 mt-0.5" />
+                <span>{isRtl ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia'}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-[#c9a84c] shrink-0" />
+                <span dir="ltr">+966 11 000 0000</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-[#c9a84c] shrink-0" />
+                <span>info@rozoz.com</span>
+              </li>
+            </ul>
+          </div>
         </div>
-      </footer>
+
+        <div className="border-t border-white/10 pt-6 text-center text-xs text-white/40">
+          {t('footer.rights')}
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ── Main Layout ────────────────────────────────────────────────────────────────
+
+export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [location] = useLocation();
+  const isPortal = location.startsWith('/portal') || location.startsWith('/preview');
+
+  if (isPortal) {
+    return <>{children}</>;
+  }
+
+  return (
+    <div className="min-h-dvh flex flex-col bg-background">
+      <PublicNavbar />
+      <main className="flex-1">{children}</main>
+      <PublicFooter />
     </div>
   );
 };
