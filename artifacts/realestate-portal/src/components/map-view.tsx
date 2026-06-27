@@ -74,6 +74,16 @@ function createPriceMarker(price: number | null, currency: string | null): L.Div
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+function MapSizeInvalidator() {
+  const map = useMap();
+  useEffect(() => {
+    // Force Leaflet to recalculate container size after first paint
+    const id = setTimeout(() => map.invalidateSize(), 100);
+    return () => clearTimeout(id);
+  }, [map]);
+  return null;
+}
+
 function BoundsController({ points }: { points: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
@@ -315,6 +325,7 @@ export function MapView({ open, onClose, filters, isRtl }: MapViewProps) {
               maxZoom={19}
             />
 
+            <MapSizeInvalidator />
             <BoundsController points={points} />
 
             {mappable.map(listing => (
