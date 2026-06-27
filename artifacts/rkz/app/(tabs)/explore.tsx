@@ -1,26 +1,33 @@
 /**
  * explore.tsx — Map-First Tourism & Booking
- * الخريطة السياحية تظهر مباشرة.
- * فلاتر داخل الخريطة (Overpass API).
+ * خانة بحث native في الأعلى فوق أيقونات الفئات.
+ * الفلاتر داخل الخريطة (Overpass API).
  * شريط أفقي سفلي للفنادق والشقق.
- * رابط روح السعودية في الأعلى.
  */
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   Dimensions,
+  FlatList,
   Image,
+  Keyboard,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import TourismMapView, { type TourismSpot } from "@/components/TourismMapView";
+import TourismMapView, {
+  SPOTS,
+  type TourismMapHandle,
+  type TourismSpot,
+} from "@/components/TourismMapView";
 import { useLocale } from "@/hooks/useLocale";
 import { HOTEL_LISTINGS } from "@/constants/mockTourism";
 
@@ -29,7 +36,36 @@ const GOLD  = "#c9a84c";
 const { width: SW } = Dimensions.get("window");
 const CARD_W = SW * 0.70;
 
-// ── Convert HotelListing → TourismSpot (for the map layer) ─────────────────
+// ── Search item type ───────────────────────────────────────────────────────────
+interface SearchItem {
+  id:     string;
+  nameAr: string;
+  nameEn: string;
+  cityAr: string;
+  cityEn: string;
+  lat:    number;
+  lng:    number;
+  kind:   "landmark" | "hotel";
+  emoji:  string;
+}
+
+// ── Build combined search pool ─────────────────────────────────────────────────
+const SEARCH_POOL: SearchItem[] = [
+  ...SPOTS.map((s): SearchItem => ({
+    id: s.id, nameAr: s.nameAr, nameEn: s.nameEn,
+    cityAr: s.cityAr, cityEn: s.cityEn,
+    lat: s.lat, lng: s.lng,
+    kind: "landmark", emoji: s.emoji,
+  })),
+  ...HOTEL_LISTINGS.map((h): SearchItem => ({
+    id: h.id, nameAr: h.nameAr, nameEn: h.nameEn,
+    cityAr: h.city, cityEn: h.cityEn,
+    lat: h.lat, lng: h.lng,
+    kind: "hotel", emoji: h.type === "hotel" ? "🏨" : "🏠",
+  })),
+];
+
+// ── Convert HotelListing → TourismSpot ────────────────────────────────────────
 function hotelToSpot(h: (typeof HOTEL_LISTINGS)[0]): TourismSpot {
   return {
     id:       h.id,
@@ -45,7 +81,7 @@ function hotelToSpot(h: (typeof HOTEL_LISTINGS)[0]): TourismSpot {
   };
 }
 
-// ── Hotel strip card ──────────────────────────────────────────────────────────
+// ── Hotel strip card ───────────────────────────────────────────────────────────
 function HotelCard({
   item, isAr, bookNow, perNight, hotelType, aptType,
 }: {
@@ -99,11 +135,50 @@ function HotelCard({
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
+const SEARCH_BAR_H = 52; // height of the native search bar row
+
 export default function TourismScreen() {
   const { t, isAr }  = useLocale();
   const insets        = useSafeAreaInsets();
   const tour          = t.tourism;
   const [stripOpen, setStripOpen] = useState(true);
+
+  // ── search state ────────────────────────────────────────────────────────────
+  const [query, setQuery]         = useState("");
+  const [focused, setFocused]     = useState(false);
+  const inputRef = useRef<TextInput>(null);
+  const mapRef   = useRef<TourismMapHandle>(null);
+
+  const results: SearchItem[] = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return SEARCH_POOL.filter(
+      (item) =>
+        item.nameAr.includes(q) ||
+        item.nameEn.toLowerCase().includes(q) ||
+        item.cityAr.includes(q) ||
+        item.cityEn.toLowerCase().includes(q),
+    ).slice(0, 8);
+  }, [query]);
+
+  const showDropdown = focused && results.length > 0;
+
+  function selectResult(item: SearchItem) {
+    setQuery(isAr ? item.nameAr : item.nameEn);
+    setFocused(false);
+    Keyboard.dismiss();
+    // Fly the Leaflet map to the chosen location
+    const zoom = item.kind === "hotel" ? 14 : 13;
+    mapRef.current?.injectJavaScript(
+      `window.__lmap && window.__lmap.flyTo([${item.lat}, ${item.lng}], ${zoom}, {animate:true, duration:1.2}); true;`,
+    );
+  }
+
+  function clearSearch() {
+    setQuery("");
+    setFocused(false);
+    Keyboard.dismiss();
+  }
 
   // Spots to render as pins on the map
   const spots: TourismSpot[] = useMemo(
@@ -111,14 +186,18 @@ export default function TourismScreen() {
     [],
   );
 
-  // filterBarTopPx = where the Leaflet filter bar sits inside the WebView
-  // just below the safe area + روح السعودية button
-  const filterBarTopPx = insets.top + 48;
+  // filterBarTopPx: below safe area + search bar
+  const filterBarTopPx = insets.top + SEARCH_BAR_H + 8;
+
+  const searchPlaceholder = isAr
+    ? "ابحث عن مكان أو فندق…"
+    : "Search for a place or hotel…";
 
   return (
     <View style={s.root}>
       {/* ── Full-screen tourism map ── */}
       <TourismMapView
+        ref={mapRef}
         spots={spots}
         isAr={isAr}
         showTourismSpots
@@ -126,6 +205,95 @@ export default function TourismScreen() {
         filterBarTopPx={filterBarTopPx}
         hasTabs
       />
+
+      {/* ── Native search bar — absolute, top ── */}
+      <View
+        style={[
+          s.searchWrapper,
+          { top: insets.top + 6, left: 10, right: 10 },
+        ]}
+        pointerEvents="box-none"
+      >
+        {/* Input row */}
+        <View
+          style={[
+            s.searchRow,
+            isAr && { flexDirection: "row-reverse" },
+          ]}
+          pointerEvents="auto"
+        >
+          <MaterialIcons
+            name="search"
+            size={20}
+            color={focused ? GOLD : "rgba(15,32,64,0.4)"}
+            style={s.searchIcon}
+          />
+          <TextInput
+            ref={inputRef}
+            style={[s.searchInput, isAr && { textAlign: "right" }]}
+            placeholder={searchPlaceholder}
+            placeholderTextColor="rgba(15,32,64,0.35)"
+            value={query}
+            onChangeText={setQuery}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setTimeout(() => setFocused(false), 150)}
+            returnKeyType="search"
+            clearButtonMode="never"
+            autoCorrect={false}
+            autoComplete="off"
+          />
+          {query.length > 0 && (
+            <Pressable onPress={clearSearch} style={s.clearBtn} hitSlop={8}>
+              <MaterialIcons name="close" size={18} color="rgba(15,32,64,0.4)" />
+            </Pressable>
+          )}
+        </View>
+
+        {/* Dropdown results */}
+        {showDropdown && (
+          <View style={s.dropdown} pointerEvents="auto">
+            <FlatList
+              data={results}
+              keyExtractor={(i) => i.id}
+              keyboardShouldPersistTaps="handled"
+              scrollEnabled={results.length > 5}
+              style={{ maxHeight: 280 }}
+              renderItem={({ item, index }) => (
+                <Pressable
+                  style={[
+                    s.resultRow,
+                    isAr && { flexDirection: "row-reverse" },
+                    index < results.length - 1 && s.resultBorder,
+                  ]}
+                  onPress={() => selectResult(item)}
+                >
+                  <Text style={s.resultEmoji}>{item.emoji}</Text>
+                  <View style={s.resultTexts}>
+                    <Text
+                      style={[s.resultName, isAr && { textAlign: "right" }]}
+                      numberOfLines={1}
+                    >
+                      {isAr ? item.nameAr : item.nameEn}
+                    </Text>
+                    <Text
+                      style={[s.resultCity, isAr && { textAlign: "right" }]}
+                      numberOfLines={1}
+                    >
+                      {isAr ? item.cityAr : item.cityEn}
+                    </Text>
+                  </View>
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={16}
+                    color={GOLD}
+                    style={isAr && { transform: [{ scaleX: -1 }] }}
+                  />
+                </Pressable>
+              )}
+            />
+          </View>
+        )}
+      </View>
 
       {/* ── روح السعودية — bottom-left floating button ── */}
       <Pressable
@@ -194,7 +362,76 @@ export default function TourismScreen() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: NAVY },
 
-  // VisitSaudi badge — absolute, bottom-left
+  // Search bar
+  searchWrapper: {
+    position: "absolute",
+    zIndex: 50,
+  },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.97)",
+    borderRadius: 14,
+    height: SEARCH_BAR_H,
+    paddingHorizontal: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: "rgba(201,168,76,0.25)",
+  },
+  searchIcon: { marginHorizontal: 4 },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    color: NAVY,
+    paddingVertical: 0,
+    marginHorizontal: 6,
+  },
+  clearBtn: { padding: 4 },
+
+  // Dropdown
+  dropdown: {
+    marginTop: 4,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 10,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(15,32,64,0.07)",
+  },
+  resultRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  resultBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(15,32,64,0.08)",
+  },
+  resultEmoji: { fontSize: 20, width: 28, textAlign: "center" },
+  resultTexts: { flex: 1, gap: 2 },
+  resultName: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: NAVY,
+  },
+  resultCity: {
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    color: "rgba(15,32,64,0.45)",
+  },
+
+  // VisitSaudi badge
   visitBtn: {
     position: "absolute",
     flexDirection: "row",
@@ -251,7 +488,6 @@ const s = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     color: NAVY,
   },
-
   stripContent: {
     gap: 12,
     paddingHorizontal: 12,

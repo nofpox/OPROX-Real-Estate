@@ -49,7 +49,7 @@ export interface TourismMapHandle {
 }
 
 /* ── Static 12 Saudi landmarks ───────────────────────────────────────────── */
-const SPOTS: TourismSpot[] = [
+export const SPOTS: TourismSpot[] = [
   { id:"diriyah",         emoji:"🏯", nameAr:"الدرعية التاريخية",    nameEn:"Diriyah",               cityAr:"الرياض",          cityEn:"Riyadh",  category:"cultural",      lat:24.734, lng:46.571, mapsUrl:"https://maps.google.com/?q=Diriyah,Riyadh" },
   { id:"masmak",          emoji:"🏰", nameAr:"قصر المصمك",            nameEn:"Al Masmak Palace",      cityAr:"الرياض",          cityEn:"Riyadh",  category:"cultural",      lat:24.686, lng:46.713, mapsUrl:"https://maps.google.com/?q=Al+Masmak+Palace,Riyadh" },
   { id:"national-museum", emoji:"🏛", nameAr:"المتحف الوطني السعودي", nameEn:"Saudi National Museum", cityAr:"الرياض",          cityEn:"Riyadh",  category:"cultural",      lat:24.699, lng:46.713, mapsUrl:"https://maps.google.com/?q=Saudi+National+Museum,Riyadh" },
