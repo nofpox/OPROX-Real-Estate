@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const ESTETI_WHATSAPP = '';
+const HOUSIN_WHATSAPP = '';
 
 // ── What we manage ────────────────────────────────────────────────────────────
 const MANAGES = {
@@ -311,7 +311,7 @@ export const GetStarted: React.FC = () => {
                   </div>
 
                   <a
-                    href={ESTETI_WHATSAPP}
+                    href={HOUSIN_WHATSAPP}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 w-full h-11 rounded-xl border-2 border-[#25D366] text-[#25D366] font-semibold text-sm hover:bg-[#25D366]/5 transition-colors"

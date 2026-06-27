@@ -93,7 +93,7 @@ export const PortalLogin: React.FC = () => {
     }
   };
 
-  // Guest explore — navigates directly to the public Esteti In portal (view-only by nature)
+  // Guest explore — navigates directly to the public HousIn portal (view-only by nature)
   const handleGuestExplore = () => {
     window.location.href = '/realestate/';
   };
