@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
+  Image,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -25,6 +26,7 @@ const { width } = Dimensions.get("window");
 
 const NAVY   = "#0F2040";
 const GOLD   = "#C9A84C";
+const LOGO   = require("@/assets/images/housin-logo.png");
 const BLUE   = "#2563EB";
 const TEAL   = "#0D9488";
 
@@ -207,7 +209,7 @@ export default function RegisterModal() {
         >
           {/* ── Header ── */}
           <View style={s.header}>
-            <Text style={{ fontSize: 36, fontFamily: "Inter_700Bold", color: GOLD, letterSpacing: 2 }}>HousIn</Text>
+            <Image source={LOGO} style={{ width: 140, height: 140 }} resizeMode="contain" />
             <Pressable style={s.closeBtn} onPress={handleClose} hitSlop={12}>
               <Ionicons name="close" size={22} color="rgba(255,255,255,0.55)" />
             </Pressable>

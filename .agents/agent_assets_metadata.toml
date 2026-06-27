@@ -66,6 +66,12 @@ uri = "file://attached_assets/logo_final.png"
 type = "image"
 title = "esteti-in-final-logo"
 
+[[generated]]
+id = "STqu9uJnwl9TN5TyrC0Ss"
+uri = "file://artifacts/rkz/assets/images/housin-logo.png"
+type = "image"
+title = "housin logo gold navy"
+
 [[outputs]]
 id = "jCktAW9goz3sn4e0SeBUs"
 uri = "file://artifacts/rkz/qr.png"
