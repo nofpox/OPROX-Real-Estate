@@ -70,12 +70,7 @@ export default function TabLayout() {
     {
       name:  "explore",
       title: t.tabs.tourism,
-      icon:  (color: string) => <MaterialIcons name="explore" size={26} color={color} />,
-    },
-    {
-      name:  "listings",
-      title: t.tabs.favorites,
-      icon:  (color: string) => <MaterialIcons name="favorite-border" size={24} color={color} />,
+      icon:  (color: string) => <MaterialIcons name="hotel" size={24} color={color} />,
     },
     {
       name:  "settings",
@@ -140,10 +135,14 @@ export default function TabLayout() {
           }}
         />
       ))}
-      {/* Hidden tab — reachable via router.push but not shown in tab bar */}
+      {/* Hidden tabs — reachable via router.push but not shown in tab bar */}
       <Tabs.Screen
         name="ai-concierge"
         options={{ href: null, title: t.tabs.financing }}
+      />
+      <Tabs.Screen
+        name="listings"
+        options={{ href: null, title: t.tabs.favorites }}
       />
     </Tabs>
   );

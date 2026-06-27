@@ -10,7 +10,7 @@ export const ar = {
     favorites: "المفضلة",
     financing: "التمويل",
     profile: "حسابي",
-    tourism: "اكتشف",
+    tourism: "احجز إقامتك",
   },
   home: {
     hero: "ابحث عن منزل أحلامك",
@@ -217,7 +217,7 @@ export const en: typeof ar = {
     favorites: "Saved",
     financing: "Finance",
     profile: "Profile",
-    tourism: "Explore",
+    tourism: "Book Stay",
   },
   home: {
     hero: "Find Your Dream Home",
