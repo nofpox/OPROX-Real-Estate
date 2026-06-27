@@ -60,27 +60,32 @@ export default function TabLayout() {
     {
       name:  "index",
       title: t.tabs.home,
-      icon:  (color: string) => <MaterialIcons name="home" size={28} color={color} />,
+      icon:  (color: string) => <MaterialIcons name="home" size={26} color={color} />,
     },
     {
       name:  "add",
       title: t.tabs.search,
-      icon:  (color: string) => <MaterialIcons name="search" size={28} color={color} />,
+      icon:  (color: string) => <MaterialIcons name="search" size={26} color={color} />,
+    },
+    {
+      name:  "explore",
+      title: t.tabs.tourism,
+      icon:  (color: string) => <MaterialIcons name="explore" size={26} color={color} />,
     },
     {
       name:  "listings",
       title: t.tabs.favorites,
-      icon:  (color: string) => <MaterialIcons name="favorite-border" size={26} color={color} />,
+      icon:  (color: string) => <MaterialIcons name="favorite-border" size={24} color={color} />,
     },
     {
       name:  "ai-concierge",
       title: t.tabs.financing,
-      icon:  (color: string) => <MaterialIcons name="calculate" size={26} color={color} />,
+      icon:  (color: string) => <MaterialIcons name="calculate" size={24} color={color} />,
     },
     {
       name:  "settings",
       title: t.tabs.profile,
-      icon:  (color: string) => <MaterialIcons name="person-outline" size={28} color={color} />,
+      icon:  (color: string) => <MaterialIcons name="person-outline" size={26} color={color} />,
     },
   ];
 
@@ -102,7 +107,7 @@ export default function TabLayout() {
           backgroundColor: "transparent",
           borderTopWidth:  0,
           elevation:       0,
-          height:          Platform.OS === "web" ? 90 : 72,
+          height:          Platform.OS === "web" ? 88 : 70,
         },
         tabBarBackground: () =>
           isIOS ? (
@@ -125,7 +130,7 @@ export default function TabLayout() {
                 </AnimatedTabIcon>
                 <Animated.Text
                   style={{
-                    fontSize: 10,
+                    fontSize: 9,
                     fontFamily: focused ? "Inter_700Bold" : "Inter_400Regular",
                     color: focused ? GOLD : "rgba(15,32,64,0.45)",
                     marginTop: 2,
@@ -140,8 +145,6 @@ export default function TabLayout() {
           }}
         />
       ))}
-      {/* Hidden legacy routes — keep files for router but hide from tab bar */}
-      <Tabs.Screen name="explore"    options={{ href: null }} />
     </Tabs>
   );
 }
@@ -150,14 +153,14 @@ const s = StyleSheet.create({
   tabItem: {
     alignItems:     "center",
     justifyContent: "center",
-    paddingTop:     6,
-    gap:            2,
+    paddingTop: 6,
+    gap: 1,
   },
   dot: {
     width:           4,
     height:          4,
     borderRadius:    2,
     backgroundColor: GOLD,
-    marginTop:       3,
+    marginTop:       2,
   },
 });
