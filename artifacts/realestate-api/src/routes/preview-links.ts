@@ -39,17 +39,17 @@ router.post("/cms/preview-links", requireAdmin, async (req: Request, res: Respon
       res.status(400).json({ error: "Invalid portal" });
       return;
     }
-    // All preview links are hard-locked to exactly 1 hour regardless of any client input
     const sessionUser = (req as any).sessionUser as Record<string, unknown>;
     const createdBy = String(sessionUser?.displayName ?? sessionUser?.username ?? "admin");
 
+    const durationHours = typeof hours === "number" && hours >= 1 && hours <= 168 ? hours : 24;
     const rows = await db.execute(sql`
       INSERT INTO preview_links (portal, label, created_by, expires_at)
       VALUES (
         ${portal},
         ${label ?? ""},
         ${createdBy},
-        NOW() + INTERVAL '1 hour'
+        NOW() + (${durationHours} || ' hours')::interval
       )
       RETURNING id, token, portal, label, created_by, expires_at, created_at
     `);
@@ -58,6 +58,37 @@ router.post("/cms/preview-links", requireAdmin, async (req: Request, res: Respon
   } catch (err) {
     req.log?.error(err, "POST /cms/preview-links");
     res.status(500).json({ error: "Failed to create preview link" });
+  }
+});
+
+// ── POST /cms/preview-links/batch — generate all 3 portals at once ────────────
+router.post("/cms/preview-links/batch", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { label, hours } = req.body as { label?: string; hours?: number };
+    const sessionUser = (req as any).sessionUser as Record<string, unknown>;
+    const createdBy = String(sessionUser?.displayName ?? sessionUser?.username ?? "admin");
+    const durationHours = typeof hours === "number" && hours >= 1 && hours <= 168 ? hours : 24;
+
+    const portals = ["rkz", "grand-pms", "rkz-app"];
+    const links: Record<string, unknown>[] = [];
+    for (const portal of portals) {
+      const rows = await db.execute(sql`
+        INSERT INTO preview_links (portal, label, created_by, expires_at)
+        VALUES (
+          ${portal},
+          ${label ?? ""},
+          ${createdBy},
+          NOW() + (${durationHours} || ' hours')::interval
+        )
+        RETURNING id, token, portal, label, created_by, expires_at, created_at
+      `);
+      const link = (rows as any).rows?.[0] ?? (rows as unknown as any[])[0];
+      links.push(link);
+    }
+    res.json({ links });
+  } catch (err) {
+    req.log?.error(err, "POST /cms/preview-links/batch");
+    res.status(500).json({ error: "Failed to create preview links" });
   }
 });
 

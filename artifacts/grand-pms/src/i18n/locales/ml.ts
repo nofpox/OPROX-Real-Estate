@@ -20,6 +20,7 @@ const ml: Translations = {
     contracts: "കരാറുകൾ",
     invoices: "ഇൻവോയ്സുകൾ",
     inventory: "ഇൻവെന്ററി",
+    previewLinks: "പ്രിവ്യൂ ലിങ്കുകൾ",
   },
   common: {
     save: "സംരക്ഷിക്കുക", cancel: "റദ്ദാക്കുക", delete: "ഇല്ലാതാക്കുക",

@@ -20,6 +20,7 @@ const ne: Translations = {
     contracts: "सम्झौताहरू",
     invoices: "बिलहरू",
     inventory: "सूची",
+    previewLinks: "प्रिभ्यू लिङ्कहरू",
   },
   common: {
     save: "सुरक्षित गर्नुहोस्", cancel: "रद्द गर्नुहोस्", delete: "मेट्नुहोस्",

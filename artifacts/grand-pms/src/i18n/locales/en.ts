@@ -27,6 +27,7 @@ const en = {
     contracts: "Contracts",
     invoices: "Invoices",
     inventory: "Inventory",
+    previewLinks: "Preview Links",
   },
   common: {
     save: "Save",

@@ -20,6 +20,7 @@ const hi: Translations = {
     contracts: "अनुबंध",
     invoices: "चालान",
     inventory: "सूची",
+    previewLinks: "प्रीव्यू लिंक",
   },
   common: {
     save: "सहेजें", cancel: "रद्द करें", delete: "हटाएं", edit: "संपादित करें", add: "जोड़ें",

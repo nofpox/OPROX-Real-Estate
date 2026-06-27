@@ -20,6 +20,7 @@ const tl: Translations = {
     contracts: "Mga Kontrata",
     invoices: "Mga Invoice",
     inventory: "Imbentaryo",
+    previewLinks: "Mga Preview Link",
   },
   common: {
     save: "I-save", cancel: "Kanselahin", delete: "Burahin", edit: "I-edit", add: "Idagdag",

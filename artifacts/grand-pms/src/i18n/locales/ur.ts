@@ -20,6 +20,7 @@ const ur: Translations = {
     contracts: "معاہدے",
     invoices: "رسیدیں",
     inventory: "انوینٹری",
+    previewLinks: "پیش نظارہ روابط",
   },
   common: {
     save: "محفوظ کریں", cancel: "منسوخ کریں", delete: "حذف کریں",

@@ -29,6 +29,7 @@ const ar: Translations = {
     contracts: "العقود",
     invoices: "الفواتير",
     inventory: "المخزون",
+    previewLinks: "روابط المعاينة",
   },
   common: {
     save: "حفظ",

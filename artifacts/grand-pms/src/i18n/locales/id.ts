@@ -20,6 +20,7 @@ const id: Translations = {
     contracts: "Kontrak",
     invoices: "Faktur",
     inventory: "Inventaris",
+    previewLinks: "Tautan Pratinjau",
   },
   common: {
     save: "Simpan", cancel: "Batal", delete: "Hapus", edit: "Edit", add: "Tambah",

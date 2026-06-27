@@ -73,6 +73,7 @@ const NAV_ITEMS = [
   { href: "/contracts",         labelKey: "nav.contracts",         icon: FileText,           section: "operations", featureKey: null },
   { href: "/invoices",          labelKey: "nav.invoices",          icon: Receipt,            section: "operations", featureKey: null },
   { href: "/inventory",         labelKey: "nav.inventory",         icon: Package,            section: "operations", featureKey: null },
+  { href: "/preview-links",     labelKey: "nav.previewLinks",      icon: Eye,                section: "operations", featureKey: null },
 ];
 
 /* Role pill colours — solid only, no opacity modifiers */

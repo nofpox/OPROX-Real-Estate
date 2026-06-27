@@ -20,6 +20,7 @@ const zh: Translations = {
     contracts: "合同",
     invoices: "发票",
     inventory: "库存",
+    previewLinks: "预览链接",
   },
   common: {
     save: "保存", cancel: "取消", delete: "删除", edit: "编辑", add: "添加",

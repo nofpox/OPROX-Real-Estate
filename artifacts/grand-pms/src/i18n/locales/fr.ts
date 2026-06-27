@@ -20,6 +20,7 @@ const fr: Translations = {
     contracts: "Contrats",
     invoices: "Factures",
     inventory: "Inventaire",
+    previewLinks: "Liens de prévisualisation",
   },
   common: {
     save: "Enregistrer", cancel: "Annuler", delete: "Supprimer", edit: "Modifier", add: "Ajouter",

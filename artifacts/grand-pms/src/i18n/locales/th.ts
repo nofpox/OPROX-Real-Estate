@@ -20,6 +20,7 @@ const th: Translations = {
     contracts: "สัญญา",
     invoices: "ใบแจ้งหนี้",
     inventory: "คลังสินค้า",
+    previewLinks: "ลิงก์แสดงตัวอย่าง",
   },
   common: {
     save: "บันทึก", cancel: "ยกเลิก", delete: "ลบ", edit: "แก้ไข", add: "เพิ่ม",

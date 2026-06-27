@@ -12,7 +12,7 @@ const BASE = '/realestate-api';
 const PORTAL_META: Record<string, { label: string; labelAr: string; path: string }> = {
   'rkz':       { label: 'HousIn Real Estate Portal', labelAr: 'بوابة HousIn العقارية',  path: '/realestate/' },
   'grand-pms': { label: 'HousIn Dashboard',          labelAr: 'لوحة تحكم HousIn',        path: '/grand-pms/' },
-  'rkz-app':   { label: 'HousIn Mobile App',         labelAr: 'تطبيق HousIn للجوال',    path: '/rkz/' },
+  'rkz-app':   { label: 'HousIn Mobile App',         labelAr: 'تطبيق HousIn للجوال',    path: '/rozoz-msrep/' },
 };
 
 type Status = 'loading' | 'disclaimer' | 'entering' | 'expired' | 'revoked' | 'invalid';

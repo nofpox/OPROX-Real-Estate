@@ -20,6 +20,7 @@ const bn: Translations = {
     contracts: "চুক্তি",
     invoices: "চালান",
     inventory: "ইনভেন্টরি",
+    previewLinks: "প্রিভিউ লিংক",
   },
   common: {
     save: "সংরক্ষণ করুন", cancel: "বাতিল করুন", delete: "মুছুন",
