@@ -1,88 +1,49 @@
+/**
+ * explore.tsx — Map-First Tourism & Booking
+ * الخريطة السياحية تظهر أولاً مع فلاتر (معالم/فنادق/مطاعم...).
+ * شريط أفقي سفلي للفنادق والشقق المفروشة مع حجز مباشر.
+ */
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Dimensions,
-  FlatList,
   Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import TourismMapView from "@/components/TourismMapView";
 import { useLocale } from "@/hooks/useLocale";
-import {
-  ATTRACTIONS,
-  HOTEL_LISTINGS,
-  TOURISM_CITIES,
-  type AttractionCategory,
-} from "@/constants/mockTourism";
+import { HOTEL_LISTINGS } from "@/constants/mockTourism";
 
 const NAVY = "#0f2040";
 const GOLD = "#c9a84c";
 const { width: SW } = Dimensions.get("window");
+const CARD_W = SW * 0.72;
 
-const CARD_W = SW * 0.62;
-const HOTEL_W = SW - 32;
-
-// ── Category pill ─────────────────────────────────────────────────────────────
-type CatKey = "all" | AttractionCategory;
-const CATS: CatKey[] = ["all", "landmark", "entertainment", "restaurant", "shopping"];
-
-function CatPill({
-  label,
-  active,
-  onPress,
+// ── Hotel strip card ──────────────────────────────────────────────────────────
+function HotelStripCard({
+  item,
+  isAr,
+  bookNow,
+  perNight,
+  hotelType,
+  aptType,
 }: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
+  item: (typeof HOTEL_LISTINGS)[0];
+  isAr: boolean;
+  bookNow: string;
+  perNight: string;
+  hotelType: string;
+  aptType: string;
 }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[s.pill, active && s.pillActive]}
-    >
-      <Text style={[s.pillTxt, active && s.pillTxtActive]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-// ── Attraction card ────────────────────────────────────────────────────────────
-function AttractionCard({ item, isAr }: { item: (typeof ATTRACTIONS)[0]; isAr: boolean }) {
-  return (
-    <Pressable style={s.attrCard}>
-      <Image source={{ uri: item.image }} style={s.attrImg} />
-      <View style={s.attrOverlay} />
-      <View style={s.attrBadge}>
-        <Text style={s.attrEmoji}>{item.emoji}</Text>
-      </View>
-      <View style={s.attrInfo}>
-        <Text style={s.attrName} numberOfLines={1}>
-          {isAr ? item.nameAr : item.nameEn}
-        </Text>
-        <View style={s.attrRow}>
-          <MaterialIcons name="location-on" size={12} color={GOLD} />
-          <Text style={s.attrCity}>{isAr ? item.city : item.cityEn}</Text>
-          <Text style={s.attrRating}>★ {item.rating.toFixed(1)}</Text>
-        </View>
-      </View>
-    </Pressable>
-  );
-}
-
-// ── Hotel card ─────────────────────────────────────────────────────────────────
-function HotelCard({ item, isAr, t }: { item: (typeof HOTEL_LISTINGS)[0]; isAr: boolean; t: Record<string, unknown> }) {
-  const tour = t as typeof import("@/constants/i18n").ar.tourism;
-
-  const typeLabel =
-    item.type === "hotel" ? tour.hotelType : tour.apartmentType;
-
-  const stars = "★".repeat(item.stars) + "☆".repeat(5 - item.stars);
+  const stars = "★".repeat(item.stars);
+  const typeLabel = item.type === "hotel" ? hotelType : aptType;
 
   return (
     <Pressable
@@ -90,50 +51,33 @@ function HotelCard({ item, isAr, t }: { item: (typeof HOTEL_LISTINGS)[0]; isAr: 
       onPress={() => router.push(`/hotel/${item.id}` as never)}
     >
       <Image source={{ uri: item.image }} style={s.hotelImg} />
+      {/* Type badge */}
+      <View style={s.typeBadge}>
+        <Text style={s.typeTxt}>{typeLabel}</Text>
+      </View>
       <View style={s.hotelBody}>
-        {/* Type badge */}
-        <View style={s.typeBadge}>
-          <Text style={s.typeTxt}>{typeLabel}</Text>
-        </View>
-        <Text style={s.hotelName} numberOfLines={2}>
+        <Text style={s.hotelName} numberOfLines={1}>
           {isAr ? item.nameAr : item.nameEn}
         </Text>
-        {/* Stars */}
-        <Text style={s.hotelStars}>{stars}</Text>
-        {/* Location */}
         <View style={s.hotelRow}>
-          <MaterialIcons name="location-on" size={13} color={GOLD} />
-          <Text style={s.hotelCity}>
-            {isAr ? item.city : item.cityEn} · {isAr ? item.district : item.districtEn}
-          </Text>
+          <Text style={s.stars}>{stars}</Text>
+          <Text style={s.ratingTxt}>★ {item.rating.toFixed(1)}</Text>
+          <MaterialIcons name="location-on" size={11} color={GOLD} />
+          <Text style={s.cityTxt}>{isAr ? item.city : item.cityEn}</Text>
         </View>
-        {/* Rating */}
-        <View style={s.hotelRow}>
-          <Text style={s.ratingDot}>★</Text>
-          <Text style={s.ratingVal}>{item.rating.toFixed(1)}</Text>
-          <Text style={s.reviewCnt}>({item.reviewCount.toLocaleString()})</Text>
-        </View>
-        {/* Amenities row */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
-          {(isAr ? item.amenitiesAr : item.amenitiesEn).slice(0, 3).map((a) => (
-            <View key={a} style={s.amenityChip}>
-              <Text style={s.amenityTxt}>{a}</Text>
-            </View>
-          ))}
-        </ScrollView>
-        {/* Price + CTA */}
         <View style={s.hotelFooter}>
           <View>
             <Text style={s.priceNum}>
-              {item.pricePerNight.toLocaleString()} {isAr ? "ر.س" : "SAR"}
+              {item.pricePerNight.toLocaleString()}
+              <Text style={s.priceSub}> {isAr ? "ر.س" : "SAR"}</Text>
             </Text>
-            <Text style={s.perNight}>{tour.perNight}</Text>
+            <Text style={s.perNight}>{perNight}</Text>
           </View>
           <Pressable
             style={s.bookBtn}
             onPress={() => router.push(`/hotel/${item.id}` as never)}
           >
-            <Text style={s.bookBtnTxt}>{tour.bookNow}</Text>
+            <Text style={s.bookTxt}>{bookNow}</Text>
           </Pressable>
         </View>
       </View>
@@ -141,462 +85,212 @@ function HotelCard({ item, isAr, t }: { item: (typeof HOTEL_LISTINGS)[0]; isAr: 
   );
 }
 
-// ── City chip ──────────────────────────────────────────────────────────────────
-function CityChip({
-  nameAr,
-  nameEn,
-  emoji,
-  isAr,
-  onPress,
-}: {
-  nameAr: string;
-  nameEn: string;
-  emoji: string;
-  isAr: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable style={s.cityChip} onPress={onPress}>
-      <Text style={s.cityEmoji}>{emoji}</Text>
-      <Text style={s.cityName}>{isAr ? nameAr : nameEn}</Text>
-    </Pressable>
-  );
-}
-
-// ── Main screen ────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 export default function TourismScreen() {
   const { t, isAr } = useLocale();
+  const insets = useSafeAreaInsets();
   const tour = t.tourism;
 
-  const [query, setQuery] = useState("");
-  const [activeCat, setActiveCat] = useState<CatKey>("all");
-  const [cityFilter, setCityFilter] = useState<string | null>(null);
+  // Show/hide hotel strip
+  const [stripOpen, setStripOpen] = useState(true);
 
-  const catLabels: Record<CatKey, string> = {
-    all:           tour.categories.all,
-    landmark:      tour.categories.landmark,
-    entertainment: tour.categories.entertainment,
-    restaurant:    tour.categories.restaurant,
-    shopping:      tour.categories.shopping,
-  };
-
-  const filteredAttr = useMemo(() => {
-    let list = ATTRACTIONS;
-    if (activeCat !== "all") list = list.filter((a) => a.category === activeCat);
-    if (cityFilter) list = list.filter((a) => a.city === cityFilter || a.cityEn === cityFilter);
-    if (query.trim()) {
-      const q = query.toLowerCase();
-      list = list.filter(
-        (a) =>
-          a.nameAr.includes(q) ||
-          a.nameEn.toLowerCase().includes(q) ||
-          a.city.includes(q) ||
-          a.cityEn.toLowerCase().includes(q),
-      );
-    }
-    return list;
-  }, [activeCat, cityFilter, query]);
-
-  const filteredHotels = useMemo(() => {
-    let list = HOTEL_LISTINGS;
-    if (cityFilter) list = list.filter((h) => h.city === cityFilter || h.cityEn === cityFilter);
-    if (query.trim()) {
-      const q = query.toLowerCase();
-      list = list.filter(
-        (h) =>
-          h.nameAr.includes(q) ||
-          h.nameEn.toLowerCase().includes(q) ||
-          h.city.includes(q) ||
-          h.cityEn.toLowerCase().includes(q),
-      );
-    }
-    return list;
-  }, [cityFilter, query]);
+  // filterBarTopPx = how far from top of map the Leaflet filter bar sits
+  // = safe-area top + a little gap
+  const filterBarTopPx = insets.top + 56;
 
   return (
-    <SafeAreaView style={s.safe} edges={["top"]}>
-      <ScrollView
-        style={s.scroll}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 110 }}
+    <View style={s.root}>
+      {/* ── Full-screen tourism map (absoluteFill, no overflow:hidden) ── */}
+      <TourismMapView
+        isAr={isAr}
+        showTourismSpots
+        initialZoom={6}
+        filterBarTopPx={filterBarTopPx}
+        hasTabs
+      />
+
+      {/* ── Overlay: title strip at top ── */}
+      <View
+        style={[s.topStrip, { top: insets.top + 8 }]}
+        pointerEvents="box-none"
       >
-        {/* ── Hero ── */}
-        <View style={s.hero}>
-          <View style={s.heroOverlay} />
-          <Image
-            source={{ uri: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200" }}
-            style={StyleSheet.absoluteFill}
-            resizeMode="cover"
-          />
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(15,32,64,0.62)" }]} />
-          <Text style={[s.heroTitle, isAr && s.rtl]}>{tour.title}</Text>
-          <Text style={[s.heroSub, isAr && s.rtl]}>{tour.subtitle}</Text>
-
-          {/* Search bar */}
-          <View style={[s.searchBar, isAr && { flexDirection: "row-reverse" }]}>
-            <MaterialIcons name="search" size={20} color="rgba(15,32,64,0.45)" />
-            <TextInput
-              style={[s.searchInput, isAr && { textAlign: "right" }]}
-              placeholder={tour.searchPlaceholder}
-              placeholderTextColor="rgba(15,32,64,0.4)"
-              value={query}
-              onChangeText={setQuery}
-            />
-            {query.length > 0 && (
-              <Pressable onPress={() => setQuery("")}>
-                <MaterialIcons name="close" size={18} color="rgba(15,32,64,0.4)" />
-              </Pressable>
-            )}
+        <View style={s.topCard} pointerEvents="box-none">
+          <View style={s.topRow}>
+            <MaterialIcons name="explore" size={18} color={GOLD} />
+            <Text style={s.topTitle}>{tour.title}</Text>
           </View>
+          <Text style={s.topSub}>{tour.subtitle}</Text>
         </View>
+      </View>
 
-        {/* ── Category pills ── */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[s.pillsRow, isAr && { flexDirection: "row-reverse" }]}
-          style={{ marginTop: 16 }}
+      {/* ── Bottom hotel strip ── */}
+      <View style={[s.bottomArea, { paddingBottom: insets.bottom + 78 }]} pointerEvents="box-none">
+        {/* Toggle handle */}
+        <Pressable
+          style={s.handle}
+          pointerEvents="auto"
+          onPress={() => setStripOpen((v) => !v)}
         >
-          {CATS.map((c) => (
-            <CatPill
-              key={c}
-              label={catLabels[c]}
-              active={activeCat === c}
-              onPress={() => setActiveCat(c)}
+          <View style={s.handleBar} />
+          <View style={s.handleContent}>
+            <MaterialIcons name="hotel" size={15} color={GOLD} />
+            <Text style={s.handleTxt}>{tour.bookStay}</Text>
+            <MaterialIcons
+              name={stripOpen ? "keyboard-arrow-down" : "keyboard-arrow-up"}
+              size={18}
+              color="rgba(15,32,64,0.5)"
             />
-          ))}
-        </ScrollView>
+          </View>
+        </Pressable>
 
-        {/* ── Cities ── */}
-        <View style={s.section}>
-          <Text style={[s.sectionTitle, isAr && s.rtl]}>{tour.cities}</Text>
+        {/* Cards */}
+        {stripOpen && (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[s.cityRow, isAr && { flexDirection: "row-reverse" }]}
+            pointerEvents="auto"
+            contentContainerStyle={[
+              s.stripContent,
+              isAr && { flexDirection: "row-reverse" },
+            ]}
           >
-            {/* "All" chip */}
-            <Pressable
-              style={[s.cityChip, !cityFilter && s.cityChipActive]}
-              onPress={() => setCityFilter(null)}
-            >
-              <Text style={s.cityEmoji}>🗺️</Text>
-              <Text style={[s.cityName, !cityFilter && { color: NAVY, fontFamily: "Inter_700Bold" }]}>
-                {tour.categories.all}
-              </Text>
-            </Pressable>
-            {TOURISM_CITIES.map((c) => (
-              <CityChip
-                key={c.nameEn}
-                nameAr={c.nameAr}
-                nameEn={c.nameEn}
-                emoji={c.emoji}
+            {HOTEL_LISTINGS.map((h) => (
+              <HotelStripCard
+                key={h.id}
+                item={h}
                 isAr={isAr}
-                onPress={() =>
-                  setCityFilter(
-                    cityFilter === c.nameAr || cityFilter === c.nameEn ? null : isAr ? c.nameAr : c.nameEn,
-                  )
-                }
+                bookNow={tour.bookNow}
+                perNight={tour.perNight}
+                hotelType={tour.hotelType}
+                aptType={tour.apartmentType}
               />
             ))}
           </ScrollView>
-        </View>
-
-        {/* ── Featured attractions ── */}
-        <View style={s.section}>
-          <Text style={[s.sectionTitle, isAr && s.rtl]}>{tour.featured}</Text>
-          {filteredAttr.length === 0 ? (
-            <View style={s.emptyBox}>
-              <Text style={s.emptyTxt}>{tour.noResults}</Text>
-              <Text style={s.emptyHint}>{tour.noResultsHint}</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={filteredAttr}
-              keyExtractor={(i) => i.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={[s.attrList, isAr && { flexDirection: "row-reverse" }]}
-              renderItem={({ item }) => <AttractionCard item={item} isAr={isAr} />}
-            />
-          )}
-        </View>
-
-        {/* ── Book your stay ── */}
-        <View style={s.stayHeader}>
-          <View style={s.stayBadge}>
-            <MaterialIcons name="hotel" size={18} color={GOLD} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[s.stayTitle, isAr && s.rtl]}>{tour.bookStay}</Text>
-            <Text style={[s.staySub, isAr && s.rtl]}>{tour.bookStaySub}</Text>
-          </View>
-        </View>
-
-        {filteredHotels.length === 0 ? (
-          <View style={s.emptyBox}>
-            <Text style={s.emptyTxt}>{tour.noResults}</Text>
-          </View>
-        ) : (
-          filteredHotels.map((h) => (
-            <HotelCard key={h.id} item={h} isAr={isAr} t={tour as unknown as Record<string, unknown>} />
-          ))
         )}
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </View>
   );
 }
 
-// ── Styles ─────────────────────────────────────────────────────────────────────
+// ── Styles ────────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: "#f7f7f9" },
-  scroll: { flex: 1 },
+  root: { flex: 1, backgroundColor: NAVY },
 
-  // Hero
-  hero: {
-    height: 240,
-    justifyContent: "flex-end",
-    padding: 16,
-    overflow: "hidden",
-  },
-  heroOverlay: { ...StyleSheet.absoluteFillObject },
-  heroTitle: {
-    color: "#fff",
-    fontSize: 24,
-    fontFamily: "Inter_700Bold",
-    marginBottom: 4,
-  },
-  heroSub: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    marginBottom: 14,
-  },
-
-  // Search
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-    color: NAVY,
-    padding: 0,
-  },
-
-  // Pills
-  pillsRow: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  pill: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "rgba(15,32,64,0.12)",
-  },
-  pillActive: {
-    backgroundColor: NAVY,
-    borderColor: NAVY,
-  },
-  pillTxt: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    color: NAVY,
-  },
-  pillTxtActive: {
-    color: "#fff",
-  },
-
-  // Section
-  section: { marginTop: 20, paddingHorizontal: 16 },
-  sectionTitle: {
-    fontSize: 17,
-    fontFamily: "Inter_700Bold",
-    color: NAVY,
-    marginBottom: 12,
-  },
-
-  // Cities
-  cityRow: { gap: 10, paddingRight: 4 },
-  cityChip: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 72,
-    paddingVertical: 10,
-    borderRadius: 14,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "rgba(15,32,64,0.1)",
-    gap: 4,
-  },
-  cityChipActive: {
-    borderColor: NAVY,
-    backgroundColor: "rgba(15,32,64,0.06)",
-  },
-  cityEmoji: { fontSize: 22 },
-  cityName: {
-    fontSize: 10,
-    fontFamily: "Inter_500Medium",
-    color: "rgba(15,32,64,0.6)",
-    textAlign: "center",
-  },
-
-  // Attraction card
-  attrList: { gap: 12, paddingRight: 4 },
-  attrCard: {
-    width: CARD_W,
-    height: 180,
-    borderRadius: 16,
-    overflow: "hidden",
-    backgroundColor: "#ddd",
-    position: "relative",
-  },
-  attrImg: { ...StyleSheet.absoluteFillObject, width: undefined, height: undefined },
-  attrOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(15,32,64,0.38)",
-  },
-  attrBadge: {
+  // Top overlay
+  topStrip: {
     position: "absolute",
-    top: 10,
-    right: 10,
-    backgroundColor: "rgba(255,255,255,0.92)",
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    left: 12,
+    right: 12,
   },
-  attrEmoji: { fontSize: 16 },
-  attrInfo: {
+  topCard: {
+    backgroundColor: "rgba(15,32,64,0.82)",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    gap: 2,
+    alignSelf: "flex-start",
+  },
+  topRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  topTitle: { fontSize: 14, fontFamily: "Inter_700Bold", color: "#fff" },
+  topSub:   { fontSize: 11, fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.65)" },
+
+  // Bottom area
+  bottomArea: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 12,
   },
-  attrName: {
-    color: "#fff",
-    fontSize: 14,
-    fontFamily: "Inter_700Bold",
-    marginBottom: 4,
-  },
-  attrRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  attrCity: { color: "rgba(255,255,255,0.85)", fontSize: 11, fontFamily: "Inter_400Regular", flex: 1 },
-  attrRating: { color: GOLD, fontSize: 11, fontFamily: "Inter_600SemiBold" },
 
-  // Stay header
-  stayHeader: {
+  // Handle
+  handle: {
+    backgroundColor: "rgba(255,255,255,0.97)",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 8,
+    paddingBottom: 6,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 12,
+  },
+  handleBar: {
+    width: 36, height: 4, borderRadius: 2,
+    backgroundColor: "rgba(15,32,64,0.15)",
+    alignSelf: "center",
+    marginBottom: 8,
+  },
+  handleContent: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginTop: 28,
-    marginHorizontal: 16,
-    marginBottom: 14,
+    gap: 6,
   },
-  stayBadge: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: "rgba(201,168,76,0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stayTitle: {
-    fontSize: 17,
+  handleTxt: {
+    flex: 1,
+    fontSize: 13,
     fontFamily: "Inter_700Bold",
     color: NAVY,
   },
-  staySub: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    color: "rgba(15,32,64,0.5)",
-    marginTop: 2,
+
+  // Strip
+  stripContent: {
+    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: "rgba(255,255,255,0.97)",
   },
 
   // Hotel card
   hotelCard: {
-    marginHorizontal: 16,
-    marginBottom: 16,
+    width: CARD_W,
     backgroundColor: "#fff",
-    borderRadius: 18,
+    borderRadius: 16,
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOpacity: 0.07,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    elevation: 4,
+    position: "relative",
   },
-  hotelImg: { width: HOTEL_W, height: 180 },
-  hotelBody: { padding: 14 },
+  hotelImg: { width: CARD_W, height: 110 },
   typeBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(15,32,64,0.08)",
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: NAVY,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    marginBottom: 8,
   },
-  typeTxt: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: NAVY },
-  hotelName: {
-    fontSize: 15,
-    fontFamily: "Inter_700Bold",
-    color: NAVY,
-    marginBottom: 4,
-  },
-  hotelStars: { fontSize: 12, color: GOLD, marginBottom: 6 },
-  hotelRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 4 },
-  hotelCity: { fontSize: 12, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.6)" },
-  ratingDot: { color: GOLD, fontSize: 13 },
-  ratingVal: { fontSize: 13, fontFamily: "Inter_700Bold", color: NAVY },
-  reviewCnt: { fontSize: 12, color: "rgba(15,32,64,0.45)", fontFamily: "Inter_400Regular" },
+  typeTxt: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#fff" },
 
-  // Amenity
-  amenityChip: {
-    backgroundColor: "rgba(15,32,64,0.05)",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginRight: 6,
-  },
-  amenityTxt: { fontSize: 11, fontFamily: "Inter_400Regular", color: NAVY },
+  hotelBody: { padding: 10, gap: 4 },
+  hotelName: { fontSize: 13, fontFamily: "Inter_700Bold", color: NAVY },
+  hotelRow:  { flexDirection: "row", alignItems: "center", gap: 4 },
+  stars:     { fontSize: 10, color: GOLD, letterSpacing: -1 },
+  ratingTxt: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: NAVY },
+  cityTxt:   { fontSize: 11, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.5)", flex: 1 },
 
-  // Footer
   hotelFooter: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 12,
-    paddingTop: 12,
+    alignItems: "center",
+    marginTop: 4,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: "rgba(15,32,64,0.07)",
   },
-  priceNum: { fontSize: 18, fontFamily: "Inter_700Bold", color: NAVY },
-  perNight: { fontSize: 11, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.5)" },
+  priceNum: { fontSize: 16, fontFamily: "Inter_700Bold", color: NAVY },
+  priceSub: { fontSize: 11, fontFamily: "Inter_400Regular", color: NAVY },
+  perNight: { fontSize: 10, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.45)" },
+
   bookBtn: {
     backgroundColor: GOLD,
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
   },
-  bookBtnTxt: {
-    fontSize: 13,
-    fontFamily: "Inter_700Bold",
-    color: "#fff",
-  },
-
-  // Empty
-  emptyBox: { alignItems: "center", paddingVertical: 24 },
-  emptyTxt: { fontSize: 15, fontFamily: "Inter_600SemiBold", color: NAVY, marginBottom: 4 },
-  emptyHint: { fontSize: 13, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.5)" },
-
-  rtl: { textAlign: "right" },
+  bookTxt: { fontSize: 12, fontFamily: "Inter_700Bold", color: "#fff" },
 });
