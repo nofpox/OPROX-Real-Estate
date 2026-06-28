@@ -43,7 +43,6 @@ import WebsiteSettings from "@/pages/website-settings";
 import Contracts from "@/pages/contracts";
 import Invoices from "@/pages/invoices";
 import InventoryPage from "@/pages/inventory";
-import PreviewLinksPage from "@/pages/preview-links";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
@@ -84,7 +83,6 @@ function Router() {
       <Route path="/contracts" component={Contracts} />
       <Route path="/invoices" component={Invoices} />
       <Route path="/inventory" component={InventoryPage} />
-      <Route path="/preview-links" component={PreviewLinksPage} />
       <Route component={NotFound} />
     </Switch>
   );
