@@ -60,7 +60,7 @@ export function SmartAppBanner() {
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-sm leading-tight">HousIn · هاوسن</p>
+        <p className="font-bold text-sm leading-tight">HousIn · هاوس إن</p>
         <p className="text-[11px] text-white/55 leading-tight mt-0.5">
           {platform === 'ios' ? '★★★★★  App Store' : '★★★★★  Google Play'}
         </p>
