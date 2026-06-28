@@ -1,6 +1,10 @@
 import { Router } from "express";
+import multer from "multer";
+import { toFile } from "openai";
 import { isAiHalted } from "./aiGovernance.js";
 import { resolveAiClient, resolveAiModel } from "../lib/ai-provider.js";
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 const router = Router();
 
@@ -164,8 +168,35 @@ router.post("/rkz/ai-chat", async (req, res) => {
     const isArabic = /[\u0600-\u06FF]/.test(lastUserMsg);
 
     const systemPrompt = isArabic
-      ? `أنت مساعد عقاري ذكي لمنصة HousIn السعودية. رد باللهجة السعودية العامية الودودة المشجعة. استخدم أسلوب محبب مثل: "يا غالي"، "ابشر"، "تدلل"، "الله يعطيك العافية". ساعد في أسئلة العقارات، الأسعار، المناطق، الإيجار والبيع في السعودية. كن مختصراً وعملياً ولا تطيل.`
-      : `You are a smart real estate assistant for HousIn, Saudi Arabia's premier property platform. Reply in formal, polite, and friendly English. Help with property questions, prices, neighborhoods, rent, and buying in Saudi Arabia. Be concise and practical.`;
+      ? `أنت سكرتير عقار ذكي اسمك "HousIn AI" تعمل لمنصة HousIn العقارية السعودية.
+
+مهمتك: تجمع من المستخدم المعلومات التالية بمحادثة طبيعية ومتدرجة (لا تسأل كلها دفعة وحدة):
+1. نوع العقار (شقة، فيلا، أرض، تجاري)
+2. الحي أو المنطقة المطلوبة
+3. الميزانية
+4. عدد الغرف (إن انطبق)
+
+بعد ما تجمع المعلومات الكافية، قل بالضبط: "تمام بدور لك الحين 🔍"
+
+قواعد:
+- رد باللهجة السعودية العامية الودودة دائماً
+- استخدم: "يا غالي"، "ابشر"، "تدلل"، "الله يعطيك العافية"
+- ابدأ بسؤال واحد فقط كل مرة
+- إذا المستخدم أعطاك معلومات كافية بدون ما تسأل، ما تحتاج تسأل الباقي — فقط قل "تمام بدور لك الحين 🔍"`
+      : `You are "HousIn AI", a smart real estate secretary for HousIn — Saudi Arabia's premier property platform.
+
+Your mission: Collect the following information through natural, progressive conversation (do NOT ask all at once):
+1. Property type (apartment, villa, land, commercial)
+2. Preferred neighborhood or area
+3. Budget
+4. Number of rooms (if applicable)
+
+Once you have enough information, say exactly: "Great, searching for you now! 🔍"
+
+Rules:
+- Reply in formal, warm, and friendly English
+- Ask one question at a time
+- If the user volunteers enough details, skip remaining questions and proceed`;
 
     const [aiClient, aiModel] = await Promise.all([resolveAiClient(1), resolveAiModel(1, "gpt-5.4")]);
 
@@ -182,6 +213,43 @@ router.post("/rkz/ai-chat", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "rkz ai-chat error");
     res.status(500).json({ error: "AI request failed" });
+  }
+});
+
+// POST /rkz/transcribe
+// Public — Whisper STT: accepts multipart audio, returns { text }
+router.post("/rkz/transcribe", upload.single("audio"), async (req, res) => {
+  try {
+    if (await isAiHalted(1)) {
+      res.status(423).json({ error: "AI_HALTED" });
+      return;
+    }
+
+    const file = req.file;
+    if (!file || !file.buffer?.length) {
+      res.status(400).json({ error: "No audio file provided" });
+      return;
+    }
+
+    const ext = file.mimetype.includes("mp4") ? "mp4"
+      : file.mimetype.includes("wav")  ? "wav"
+      : file.mimetype.includes("ogg")  ? "ogg"
+      : file.mimetype.includes("mp3")  ? "mp3"
+      : "webm";
+
+    const aiClient = await resolveAiClient(1);
+    const audioFile = await toFile(Buffer.from(file.buffer), `voice.${ext}`, { type: file.mimetype || "audio/webm" });
+
+    const result = await aiClient.audio.transcriptions.create({
+      file: audioFile,
+      model: "gpt-4o-mini-transcribe",
+      response_format: "json",
+    });
+
+    res.json({ text: result.text ?? "" });
+  } catch (err) {
+    req.log.error({ err }, "rkz transcribe error");
+    res.status(500).json({ error: "Transcription failed" });
   }
 });
 

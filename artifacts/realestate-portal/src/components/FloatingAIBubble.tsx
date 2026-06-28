@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { X, Send, Loader2, Mic, Video } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { X, Send, Loader2, Mic, Video, MicOff } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n';
 
 const NAVY = '#0f2040';
@@ -26,6 +26,15 @@ async function callAiChat(messages: Array<{ role: 'user' | 'assistant'; content:
   return data.reply ?? '';
 }
 
+async function transcribeAudio(blob: Blob): Promise<string> {
+  const form = new FormData();
+  form.append('audio', blob, 'voice.webm');
+  const res = await fetch('/api/rkz/transcribe', { method: 'POST', body: form });
+  if (!res.ok) throw new Error('Transcription failed');
+  const data = await res.json() as { text: string };
+  return data.text ?? '';
+}
+
 function TypingDots() {
   return (
     <div className="flex items-center gap-1 px-3 py-2.5">
@@ -47,6 +56,12 @@ export function FloatingAIBubble() {
   const [loading, setLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipVisible, setTooltipVisible] = useState(false);
+
+  // Mic state
+  const [micState, setMicState] = useState<'idle' | 'recording' | 'processing'>('idle');
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -54,13 +69,12 @@ export function FloatingAIBubble() {
     id: '0',
     role: 'assistant',
     content: isRtl
-      ? 'هلا! أنا مساعدك العقاري الذكي 🤖\nتدلل واسألني عن أي شي — أسعار، مناطق، إيجار أو شراء 😎'
-      : "Hello! I'm your HousIn AI assistant 🤖\nAsk me anything about real estate in Saudi Arabia!",
+      ? 'هلا! أنا HousIn AI سكرتيرك العقاري الذكي 🤖\nتدلل واسألني — ابحث لك عن العقار المناسب 😎'
+      : "Hello! I'm HousIn AI, your smart real estate secretary 🤖\nTell me what you're looking for and I'll find it for you!",
   };
 
   const [messages, setMessages] = useState<Message[]>([greeting]);
 
-  // Tooltip: show once per browser session
   useEffect(() => {
     const seen = localStorage.getItem('housin_ai_bubble_seen');
     if (!seen) {
@@ -87,45 +101,91 @@ export function FloatingAIBubble() {
         inputRef.current?.focus();
       }, 80);
     }
-  }, [open, messages]);
+  }, [open, messages, loading]);
 
-  async function handleSend() {
-    const text = input.trim();
-    if (!text || loading) return;
+  const sendText = useCallback(async (text: string) => {
+    if (!text.trim() || loading) return;
     setInput('');
 
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text };
-    const updated = [...messages, userMsg];
-    setMessages(updated);
-    setLoading(true);
+    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text.trim() };
+    setMessages(prev => {
+      const updated = [...prev, userMsg];
+      (async () => {
+        setLoading(true);
+        try {
+          const history = updated
+            .filter(m => m.id !== '0')
+            .map(m => ({ role: m.role, content: m.content }));
+          const reply = await callAiChat(history);
+          setMessages(p => [...p, { id: Date.now().toString() + 'r', role: 'assistant', content: reply }]);
+        } catch {
+          setMessages(p => [...p, {
+            id: Date.now().toString() + 'e', role: 'assistant',
+            content: isRtl
+              ? '⚠️ عذراً يا غالي، ما قدرت أتواصل. حاول مرة ثانية 🙏'
+              : '⚠️ Sorry, could not reach the server. Please try again.',
+          }]);
+        } finally {
+          setLoading(false);
+        }
+      })();
+      return updated;
+    });
+  }, [loading, isRtl]);
 
-    try {
-      const history = updated
-        .filter(m => m.id !== '0')
-        .map(m => ({ role: m.role, content: m.content }));
-      const reply = await callAiChat(history);
-      setMessages(prev => [
-        ...prev,
-        { id: Date.now().toString() + 'r', role: 'assistant', content: reply },
-      ]);
-    } catch {
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Date.now().toString() + 'e',
-          role: 'assistant',
-          content: isRtl
-            ? '⚠️ عذراً يا غالي، ما قدرت أتواصل مع الخادم. حاول مرة ثانية 🙏'
-            : '⚠️ Sorry, could not reach the server. Please try again.',
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+  async function handleSend() {
+    await sendText(input);
   }
 
   function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  }
+
+  // ── Mic recording ──────────────────────────────────────────────────────────
+  async function toggleMic() {
+    if (micState === 'recording') {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+    if (micState === 'processing') return;
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // pick best supported mime
+      const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
+        .find(t => MediaRecorder.isTypeSupported(t)) ?? '';
+
+      const mr = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+
+      mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+
+      mr.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        setMicState('processing');
+        try {
+          const blob = new Blob(chunksRef.current, { type: mime || 'audio/webm' });
+          const text = await transcribeAudio(blob);
+          if (text.trim()) {
+            await sendText(text.trim());
+          }
+        } catch {
+          // silent fail — user can type manually
+        } finally {
+          setMicState('idle');
+        }
+      };
+
+      mediaRecorderRef.current = mr;
+      mr.start();
+      setMicState('recording');
+
+      // auto-stop after 60s
+      setTimeout(() => { if (mr.state === 'recording') mr.stop(); }, 60_000);
+    } catch {
+      alert(isRtl ? 'تعذّر الوصول للميكروفون. تأكد من منح الإذن.' : 'Cannot access microphone. Please allow permission.');
+    }
   }
 
   function openChat() {
@@ -135,10 +195,7 @@ export function FloatingAIBubble() {
   }
 
   const userMessages = messages.filter(m => m.role === 'user' && m.id !== '0');
-  const inputIsAr = isArabic(
-    userMessages.map(m => m.content).join('') || (isRtl ? 'أ' : '')
-  );
-
+  const inputIsAr = isArabic(userMessages.map(m => m.content).join('') || (isRtl ? 'أ' : ''));
   const bubblePos = isRtl ? 'left-5' : 'right-5';
   const panelPos  = isRtl ? 'left-5' : 'right-5';
 
@@ -147,7 +204,6 @@ export function FloatingAIBubble() {
       {/* Floating bubble */}
       {!open && (
         <div className={`fixed bottom-6 ${bubblePos} z-50 flex flex-col items-end gap-2`}>
-          {/* Tooltip */}
           {showTooltip && (
             <div
               className="relative mb-1"
@@ -163,22 +219,14 @@ export function FloatingAIBubble() {
               >
                 الذكاء الاصطناعي: امر تدلل 😎
               </div>
-              {/* Arrow */}
-              <div
-                className="absolute -bottom-1.5 right-5 w-3 h-3 rotate-45 rounded-sm"
-                style={{ backgroundColor: NAVY }}
-              />
+              <div className="absolute -bottom-1.5 right-5 w-3 h-3 rotate-45 rounded-sm" style={{ backgroundColor: NAVY }} />
             </div>
           )}
 
           <button
             onClick={openChat}
             className="w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-110 active:scale-95"
-            style={{
-              backgroundColor: NAVY,
-              border: `2.5px solid ${GOLD}`,
-              boxShadow: `0 6px 24px rgba(15,32,64,0.45)`,
-            }}
+            style={{ backgroundColor: NAVY, border: `2.5px solid ${GOLD}`, boxShadow: `0 6px 24px rgba(15,32,64,0.45)` }}
             aria-label="AI Chat"
           >
             <span className="text-2xl">🤖</span>
@@ -189,11 +237,7 @@ export function FloatingAIBubble() {
       {/* Chat panel */}
       {open && (
         <>
-          {/* Backdrop (mobile) */}
-          <div
-            className="fixed inset-0 z-40 md:hidden bg-black/20"
-            onClick={() => setOpen(false)}
-          />
+          <div className="fixed inset-0 z-40 md:hidden bg-black/20" onClick={() => setOpen(false)} />
 
           <div
             className={`fixed bottom-5 ${panelPos} z-50 flex flex-col rounded-2xl shadow-2xl overflow-hidden`}
@@ -206,24 +250,15 @@ export function FloatingAIBubble() {
             dir={isRtl ? 'rtl' : 'ltr'}
           >
             {/* Header */}
-            <div
-              className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
-              style={{ backgroundColor: NAVY }}
-            >
+            <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ backgroundColor: NAVY }}>
               <span className="text-2xl">🤖</span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-white leading-tight truncate">
-                  {isRtl ? 'مساعد HousIn الذكي' : 'HousIn AI Assistant'}
-                </p>
+                <p className="text-sm font-bold text-white leading-tight">HousIn AI</p>
                 <p className="text-xs leading-tight" style={{ color: 'rgba(255,255,255,0.55)' }}>
-                  {isRtl ? 'يكتشف لغتك تلقائياً · متاح دائماً' : 'Auto-detects your language · Always on'}
+                  {isRtl ? 'سكرتيرك العقاري الذكي · متاح دائماً' : 'Your Smart Real Estate Secretary · Always on'}
                 </p>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
-                style={{ color: 'rgba(255,255,255,0.7)' }}
-              >
+              <button onClick={() => setOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 <X size={15} />
               </button>
             </div>
@@ -234,10 +269,7 @@ export function FloatingAIBubble() {
                 const user = msg.role === 'user';
                 const ar = isArabic(msg.content);
                 return (
-                  <div
-                    key={msg.id}
-                    className={`flex items-end gap-2 ${user ? 'flex-row-reverse' : ''}`}
-                  >
+                  <div key={msg.id} className={`flex items-end gap-2 ${user ? 'flex-row-reverse' : ''}`}>
                     {!user && <span className="text-xl flex-shrink-0 mb-0.5">🤖</span>}
                     <div
                       className="max-w-[78%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap"
@@ -260,10 +292,7 @@ export function FloatingAIBubble() {
               {loading && (
                 <div className="flex items-end gap-2">
                   <span className="text-xl flex-shrink-0 mb-0.5">🤖</span>
-                  <div
-                    className="rounded-2xl rounded-bl-sm"
-                    style={{ backgroundColor: '#fff', boxShadow: '0 1px 6px rgba(0,0,0,0.07)' }}
-                  >
+                  <div className="rounded-2xl rounded-bl-sm" style={{ backgroundColor: '#fff', boxShadow: '0 1px 6px rgba(0,0,0,0.07)' }}>
                     <TypingDots />
                   </div>
                 </div>
@@ -273,25 +302,37 @@ export function FloatingAIBubble() {
             </div>
 
             {/* Input bar */}
-            <div
-              className="flex items-end gap-2 px-3 py-2.5 flex-shrink-0"
-              style={{ backgroundColor: '#fff', borderTop: '1px solid rgba(15,32,64,0.08)' }}
-            >
+            <div className="flex items-end gap-2 px-3 py-2.5 flex-shrink-0" style={{ backgroundColor: '#fff', borderTop: '1px solid rgba(15,32,64,0.08)' }}>
               {/* Camera — disabled */}
-              <button
-                disabled
-                className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 opacity-30 cursor-not-allowed"
-                title={isRtl ? 'كاميرا (قريباً)' : 'Camera (coming soon)'}
-              >
+              <button disabled className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 opacity-30 cursor-not-allowed" title={isRtl ? 'قريباً' : 'Coming soon'}>
                 <Video size={16} style={{ color: NAVY }} />
               </button>
 
-              {/* Mic — placeholder */}
+              {/* Mic button */}
               <button
-                className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 transition-colors hover:bg-slate-200"
-                title={isRtl ? 'الإدخال الصوتي' : 'Voice input'}
+                onClick={toggleMic}
+                disabled={micState === 'processing' || loading}
+                className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                  micState === 'recording'
+                    ? 'bg-red-500 animate-pulse shadow-lg'
+                    : micState === 'processing'
+                    ? 'bg-amber-400'
+                    : 'bg-slate-100 hover:bg-slate-200'
+                }`}
+                title={
+                  micState === 'recording'
+                    ? (isRtl ? 'اضغط لإيقاف التسجيل' : 'Tap to stop recording')
+                    : micState === 'processing'
+                    ? (isRtl ? 'جارٍ التحويل...' : 'Transcribing...')
+                    : (isRtl ? 'تحدث' : 'Speak')
+                }
               >
-                <Mic size={16} style={{ color: NAVY }} />
+                {micState === 'recording'
+                  ? <MicOff size={16} className="text-white" />
+                  : micState === 'processing'
+                  ? <Loader2 size={16} className="animate-spin text-white" />
+                  : <Mic size={16} style={{ color: NAVY }} />
+                }
               </button>
 
               <textarea
@@ -300,21 +341,21 @@ export function FloatingAIBubble() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKey}
-                placeholder={isRtl ? 'اكتب رسالتك...' : 'Type your message...'}
-                disabled={loading}
+                placeholder={
+                  micState === 'recording'
+                    ? (isRtl ? '🔴 جارٍ التسجيل...' : '🔴 Recording...')
+                    : micState === 'processing'
+                    ? (isRtl ? '⏳ جارٍ التحويل...' : '⏳ Transcribing...')
+                    : (isRtl ? 'اكتب أو تحدث...' : 'Type or speak...')
+                }
+                disabled={loading || micState !== 'idle'}
                 className="flex-1 resize-none rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 min-h-[38px] max-h-28 bg-slate-50"
-                style={{
-                  borderColor: 'rgba(15,32,64,0.12)',
-                  color: NAVY,
-                  direction: inputIsAr ? 'rtl' : 'ltr',
-                  textAlign: inputIsAr ? 'right' : 'left',
-                  focusRingColor: GOLD,
-                }}
+                style={{ borderColor: 'rgba(15,32,64,0.12)', color: NAVY, direction: inputIsAr ? 'rtl' : 'ltr', textAlign: inputIsAr ? 'right' : 'left' }}
               />
 
               <button
                 onClick={handleSend}
-                disabled={!input.trim() || loading}
+                disabled={!input.trim() || loading || micState !== 'idle'}
                 className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-opacity disabled:opacity-40"
                 style={{ backgroundColor: GOLD }}
               >
