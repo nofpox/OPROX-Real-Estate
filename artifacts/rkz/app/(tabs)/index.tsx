@@ -257,7 +257,7 @@ export default function HomeScreen() {
           {/* ── Estimate Banner ── */}
           <Pressable
             style={s.estimateBanner}
-            onPress={() => router.push("/(tabs)/ai-concierge" as never)}
+            onPress={() => router.push("/valuation" as never)}
           >
             <View style={{ flex: 1 }}>
               <Text style={s.estimateTitle}>{t.home.estimate}</Text>

@@ -161,11 +161,6 @@ export default function ProfileScreen() {
             label={isAr ? "حاسبة التمويل الإسلامي" : "Islamic Finance Calculator"}
             onPress={() => router.push("/(tabs)/ai-concierge" as never)}
           />
-          <MenuItem
-            icon="account-balance"
-            label={isAr ? "مقارنة البنوك" : "Compare Banks"}
-            onPress={() => router.push("/(tabs)/ai-concierge" as never)}
-          />
         </View>
 
         {/* ── Support ── */}
