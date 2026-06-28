@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
+import { SmartAppBanner } from './SmartAppBanner';
 import {
   Building2, Search, Heart, Bell, Globe, Menu, X,
   ChevronDown, Phone, Mail, MapPin, ArrowLeft, ArrowRight,
@@ -241,6 +242,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div className="min-h-dvh flex flex-col bg-background">
+      <SmartAppBanner />
       <PublicNavbar />
       <main className="flex-1">{children}</main>
       <PublicFooter />
