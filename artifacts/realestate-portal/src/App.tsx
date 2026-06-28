@@ -32,6 +32,7 @@ import { Updates } from "@/pages/updates";
 import { Financing } from "@/pages/financing";
 import { Agents } from "@/pages/agents";
 import { Sell } from "@/pages/sell";
+import { FloatingAIBubble } from "@/components/FloatingAIBubble";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -97,6 +98,7 @@ function App() {
                 <Layout>
                   <Router />
                 </Layout>
+                <FloatingAIBubble />
               </WouterRouter>
               <Toaster />
             </TooltipProvider>
