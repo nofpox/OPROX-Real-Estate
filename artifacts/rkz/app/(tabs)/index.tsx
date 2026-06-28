@@ -162,8 +162,13 @@ export default function HomeScreen() {
         {/* ── Hero header ── */}
         <View style={[s.hero, { paddingTop: insets.top + 16 }]}>
           <View style={[s.row, { justifyContent: "space-between", alignItems: "center" }]}>
-            <Text style={s.logo}>HousIn</Text>
-            <Text style={s.logoSub}>هاوسن</Text>
+            <View style={{ backgroundColor: "#fff", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6 }}>
+              <Image
+                source={require("@/assets/images/housin-logo.png")}
+                style={{ width: 90, height: 30 }}
+                resizeMode="contain"
+              />
+            </View>
           </View>
           <Text style={s.heroTitle}>{t.home.hero}</Text>
           <Text style={s.heroSub}>{t.home.sub}</Text>

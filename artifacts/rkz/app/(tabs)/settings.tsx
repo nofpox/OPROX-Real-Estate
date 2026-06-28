@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import React from "react";
 import {
   I18nManager,
+  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -188,7 +189,11 @@ export default function ProfileScreen() {
 
         {/* App version */}
         <View style={s.versionWrap}>
-          <Text style={s.logoText}>HousIn</Text>
+          <Image
+            source={require("@/assets/images/housin-logo.png")}
+            style={{ width: 80, height: 26, marginBottom: 4 }}
+            resizeMode="contain"
+          />
           <Text style={s.versionText}>{t.profile.version} {APP_VERSION}</Text>
         </View>
       </ScrollView>

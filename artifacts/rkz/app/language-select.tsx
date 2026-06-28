@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   I18nManager,
+  Image,
   Pressable,
   StatusBar,
   StyleSheet,
@@ -39,8 +40,13 @@ export default function LanguageSelectScreen() {
       <View style={s.container}>
         {/* Logo */}
         <View style={s.logoWrap}>
-          <Text style={s.logoText}>HousIn</Text>
-          <Text style={s.logoEn}>هاوسن</Text>
+          <View style={{ backgroundColor: "#fff", borderRadius: 16, paddingHorizontal: 24, paddingVertical: 12 }}>
+            <Image
+              source={require("@/assets/images/housin-logo.png")}
+              style={{ width: 150, height: 50 }}
+              resizeMode="contain"
+            />
+          </View>
         </View>
 
         <Text style={s.heading}>اختر اللغة · Choose Language</Text>
