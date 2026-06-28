@@ -52,7 +52,7 @@ function formatSAR(n: number, isAr: boolean): string {
 export default function ValuationScreen() {
   const { t, isAr } = useLocale();
   const insets = useSafeAreaInsets();
-  const te = isAr ? (t as any).property.estimate : (t as any).property.estimate;
+  const te = t.detail.estimate;
 
   const [city, setCity]     = useState("");
   const [area, setArea]     = useState("");

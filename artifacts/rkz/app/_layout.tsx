@@ -36,6 +36,7 @@ function RootLayoutNav() {
       <Stack.Screen name="language-select" options={{ animation: "fade", animationDuration: 300, gestureEnabled: false }} />
       <Stack.Screen name="property/[id]"   options={{ animation: "slide_from_right" }} />
       <Stack.Screen name="hotel/[id]"      options={{ animation: "slide_from_right" }} />
+      <Stack.Screen name="valuation"       options={{ animation: "slide_from_right" }} />
     </Stack>
   );
 }
