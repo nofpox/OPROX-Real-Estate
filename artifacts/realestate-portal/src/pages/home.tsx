@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
 import { useQuery } from '@tanstack/react-query';
-import { Search, TrendingUp, Users, Building2, MapPin, Star, ArrowLeft, ArrowRight, Heart } from 'lucide-react';
+import { Search, TrendingUp, Users, Building2, MapPin, Star, ArrowLeft, ArrowRight, Heart, Hotel } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 interface Listing {
   id: number; title: string; price: number | null; areaSqm: number | null;
@@ -103,6 +105,72 @@ const MOCK_LISTINGS: Listing[] = [
   { id: 105, title: 'فيلا تاون هاوس الدمام', price: 1900000, areaSqm: 280, bedrooms: 4, bathrooms: 3, city: 'الدمام', district: 'العنود', propertyType: 'villa', listingType: 'sale', media: [{ url: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=80', caption: '' }], featured: false, currency: 'SAR' },
   { id: 106, title: 'أرض سكنية شمال الرياض', price: 2800000, areaSqm: 750, bedrooms: null, bathrooms: null, city: 'الرياض', district: 'شمال الرياض', propertyType: 'land', listingType: 'sale', media: [{ url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80', caption: '' }], featured: false, currency: 'SAR' },
 ];
+
+// ── Tourism Destinations ────────────────────────────────────────────────────────
+const TOURISM_SPOTS = [
+  { nameAr: 'الرياض', nameEn: 'Riyadh', lat: 24.7136, lng: 46.6753, hotels: 320, tag: 'العاصمة', img: 'https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?w=400&q=80' },
+  { nameAr: 'جدة', nameEn: 'Jeddah', lat: 21.5433, lng: 39.1728, hotels: 280, tag: 'الكورنيش', img: 'https://images.unsplash.com/photo-1519817650390-64a93db51149?w=400&q=80' },
+  { nameAr: 'مكة المكرمة', nameEn: 'Makkah', lat: 21.3891, lng: 39.8579, hotels: 450, tag: 'الحرمين', img: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=400&q=80' },
+  { nameAr: 'المدينة المنورة', nameEn: 'Madinah', lat: 24.4686, lng: 39.6142, hotels: 380, tag: 'الحرمين', img: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=400&q=80' },
+  { nameAr: 'العُلا', nameEn: 'AlUla', lat: 26.6202, lng: 37.9218, hotels: 45, tag: 'التراث', img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400&q=80' },
+  { nameAr: 'أبها', nameEn: 'Abha', lat: 18.2164, lng: 42.5053, hotels: 90, tag: 'الجبال', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80' },
+  { nameAr: 'نيوم', nameEn: 'NEOM', lat: 28.0339, lng: 35.1339, hotels: 30, tag: 'المستقبل', img: 'https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=400&q=80' },
+  { nameAr: 'الدرعية', nameEn: 'Diriyah', lat: 24.7342, lng: 46.5738, hotels: 25, tag: 'التراث', img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&q=80' },
+];
+
+function TourismMap({ isRtl }: { isRtl: boolean }) {
+  const mapRef = useRef<L.Map | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState<typeof TOURISM_SPOTS[0] | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    const map = L.map(containerRef.current, {
+      center: [23.8859, 45.0792],
+      zoom: 5,
+      zoomControl: true,
+      preferCanvas: true,
+      scrollWheelZoom: false,
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 18,
+      updateWhenZooming: false,
+      updateWhenIdle: true,
+    } as L.TileLayerOptions).addTo(map);
+
+    TOURISM_SPOTS.forEach(spot => {
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="background:#0f2040;color:#c9a84c;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid #c9a84c;font-family:sans-serif;">${spot.nameAr}</div>`,
+        iconAnchor: [0, 0],
+      });
+      L.marker([spot.lat, spot.lng], { icon }).addTo(map)
+        .on('click', () => { setActive(spot); map.flyTo([spot.lat, spot.lng], 8, { duration: 0.8 }); });
+    });
+
+    setTimeout(() => { map.invalidateSize(); }, 200);
+    mapRef.current = map;
+    return () => { map.remove(); mapRef.current = null; };
+  }, []);
+
+  return (
+    <div className="relative w-full rounded-2xl overflow-hidden shadow-xl" style={{ height: 420 }}>
+      <div ref={containerRef} className="w-full h-full" />
+      {active && (
+        <div className={`absolute bottom-4 ${isRtl ? 'right-4' : 'left-4'} z-[1000] bg-white rounded-xl shadow-lg p-3 flex gap-3 max-w-xs`}>
+          <img src={active.img} alt={active.nameAr} className="w-20 h-20 object-cover rounded-lg shrink-0" />
+          <div className="min-w-0">
+            <div className="font-bold text-[#0f2040] text-sm">{isRtl ? active.nameAr : active.nameEn}</div>
+            <div className="text-xs text-[#c9a84c] font-semibold mb-1">{active.tag}</div>
+            <div className="text-xs text-gray-500 flex items-center gap-1"><Hotel className="w-3 h-3" />{active.hotels}+ {isRtl ? 'فندق' : 'Hotels'}</div>
+            <button onClick={() => setActive(null)} className="mt-1.5 text-xs text-gray-400 hover:text-gray-600">✕ {isRtl ? 'إغلاق' : 'Close'}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Home() {
   const { t, isRtl, language } = useLanguage();
@@ -264,10 +332,55 @@ export function Home() {
             <div className={isRtl ? 'text-right' : 'text-left'}>
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">{t('home.estimate.title')}</h2>
               <p className="text-white/70 mb-6 leading-relaxed">{t('home.estimate.subtitle')}</p>
-              <Link href="/search" className="inline-flex items-center gap-2 bg-[#c9a84c] hover:bg-[#b8963f] text-[#0f2040] font-bold px-6 py-3 rounded-lg transition-colors">
+              <Link href="/sell" className="inline-flex items-center gap-2 bg-[#c9a84c] hover:bg-[#b8963f] text-[#0f2040] font-bold px-6 py-3 rounded-lg transition-colors">
                 {t('home.estimate.cta')}<Arrow className="w-4 h-4" />
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Tourism Map ───────────────────────────────────────────────────────── */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className={`flex items-center gap-3 mb-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
+            <div className="w-10 h-10 rounded-xl bg-[#0f2040] flex items-center justify-center shrink-0">
+              <Hotel className="w-5 h-5 text-[#c9a84c]" />
+            </div>
+            <div>
+              <h2 className={`text-2xl md:text-3xl font-bold text-[#0f2040] font-serif ${isRtl ? 'text-right' : 'text-left'}`}>
+                {isRtl ? 'للسياحة وحجز الفنادق' : 'Tourism & Hotel Booking'}
+              </h2>
+              <p className={`text-gray-500 text-sm mt-1 ${isRtl ? 'text-right' : 'text-left'}`}>
+                {isRtl ? 'استكشف أبرز الوجهات السياحية في المملكة العربية السعودية' : 'Explore the top tourist destinations across Saudi Arabia'}
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-6 overflow-x-auto">
+            <div className="flex gap-2 pb-1 min-w-max md:min-w-0 md:flex-wrap">
+              {TOURISM_SPOTS.map(spot => (
+                <div key={spot.nameAr} className="relative rounded-xl overflow-hidden w-28 h-20 shrink-0 cursor-pointer group">
+                  <img src={spot.img} alt={spot.nameAr} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f2040]/80 to-transparent" />
+                  <div className="absolute bottom-1.5 inset-x-0 text-center text-white text-xs font-bold">{isRtl ? spot.nameAr : spot.nameEn}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <TourismMap isRtl={isRtl} />
+
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+            {TOURISM_SPOTS.slice(0, 4).map(spot => (
+              <div key={spot.nameAr} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-3">
+                <Hotel className="w-5 h-5 text-[#c9a84c] shrink-0" />
+                <div className="min-w-0">
+                  <div className="font-semibold text-[#0f2040] text-sm truncate">{isRtl ? spot.nameAr : spot.nameEn}</div>
+                  <div className="text-xs text-gray-500">{spot.hotels}+ {isRtl ? 'فندق' : 'hotels'}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

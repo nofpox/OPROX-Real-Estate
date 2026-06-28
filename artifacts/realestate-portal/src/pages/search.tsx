@@ -40,8 +40,8 @@ const MOCK_LISTINGS: Listing[] = [
 ];
 
 // ── Leaflet Map with Price Bubbles ─────────────────────────────────────────────
-function PriceMap({ listings, selectedId, onSelect }: {
-  listings: Listing[]; selectedId: number | null; onSelect: (id: number) => void;
+function PriceMap({ listings, selectedId, onSelect, visible }: {
+  listings: Listing[]; selectedId: number | null; onSelect: (id: number) => void; visible: boolean;
 }) {
   const { isRtl } = useLanguage();
   const mapRef = useRef<L.Map | null>(null);
@@ -54,13 +54,24 @@ function PriceMap({ listings, selectedId, onSelect }: {
       center: [24.7136, 46.6753],
       zoom: 10,
       zoomControl: true,
+      preferCanvas: true,
     });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
-    }).addTo(map);
+      maxZoom: 18,
+      updateWhenZooming: false,
+      updateWhenIdle: true,
+    } as L.TileLayerOptions).addTo(map);
     mapRef.current = map;
+    setTimeout(() => { map.invalidateSize(); }, 100);
     return () => { map.remove(); mapRef.current = null; };
   }, []);
+
+  useEffect(() => {
+    if (visible && mapRef.current) {
+      setTimeout(() => { mapRef.current?.invalidateSize(); }, 50);
+    }
+  }, [visible]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -210,7 +221,7 @@ function FiltersBar({ filters, onChange }: {
 // ── Search Page ────────────────────────────────────────────────────────────────
 export function SearchPage() {
   const { t, isRtl } = useLanguage();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [view, setView] = useState<'list' | 'map'>('list');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [saveMsg, setSaveMsg] = useState('');
@@ -327,14 +338,14 @@ export function SearchPage() {
                 <div className="text-sm text-gray-500">{t('search.noResultsHint')}</div>
               </div>
             ) : listings.map(l => (
-              <ListingCard key={l.id} listing={l} selected={l.id === selectedId} onClick={() => setSelectedId(l.id === selectedId ? null : l.id)} />
+              <ListingCard key={l.id} listing={l} selected={l.id === selectedId} onClick={() => setLocation(`/property/${l.id}`)} />
             ))}
           </div>
         </div>
 
         {/* Map */}
         <div className={`${view === 'list' ? 'hidden md:block' : 'block'} flex-1 relative`}>
-          <PriceMap listings={listings} selectedId={selectedId} onSelect={id => setSelectedId(id === selectedId ? null : id)} />
+          <PriceMap listings={listings} selectedId={selectedId} onSelect={id => setSelectedId(id === selectedId ? null : id)} visible={view === 'map'} />
         </div>
       </div>
     </div>

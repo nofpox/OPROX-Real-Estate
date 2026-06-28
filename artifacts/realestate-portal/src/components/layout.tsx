@@ -169,7 +169,7 @@ function PublicFooter() {
             <p className="text-sm leading-relaxed">{t('footer.tagline')}</p>
             <div className="flex gap-3 mt-5">
               {[Facebook, Twitter, Instagram, Linkedin, Youtube].map((Icon, i) => (
-                <a key={i} href="#" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#c9a84c] hover:text-[#0f2040] transition-colors">
+                <a key={i} href="" onClick={e => e.preventDefault()} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#c9a84c] hover:text-[#0f2040] transition-colors">
                   <Icon className="w-4 h-4" />
                 </a>
               ))}
