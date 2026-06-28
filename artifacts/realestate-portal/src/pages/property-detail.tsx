@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRoute, Link, useLocation } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -184,6 +184,31 @@ export function PropertyDetail() {
     } catch { /* ignore */ }
   }, [listing.id]);
 
+  // ── Swipe-right-to-go-back gesture ─────────────────────────────────────────
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  useEffect(() => {
+    function onTouchStart(e: TouchEvent) {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+    }
+    function onTouchEnd(e: TouchEvent) {
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+      // Only trigger on a clear rightward swipe (RTL: leftward)
+      const threshold = 80;
+      if (isRtl ? dx < -threshold : dx > threshold) {
+        if (dy < 60) setLocation('/search');
+      }
+    }
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isRtl, setLocation]);
+
   function toggleFav() {
     try {
       const f: number[] = JSON.parse(localStorage.getItem('rozoz_favorites') || '[]');
@@ -218,6 +243,18 @@ export function PropertyDetail() {
 
   return (
     <div className="font-sans">
+      {/* ── Floating X close button (mobile-first, always visible) ───────────── */}
+      <button
+        onClick={() => setLocation('/search')}
+        aria-label={isRtl ? 'إغلاق' : 'Close'}
+        className="fixed z-50 top-20 md:top-24 right-4 md:right-6 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 hover:shadow-xl active:scale-95 transition-all duration-150"
+        style={{ direction: 'ltr' }}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
       {/* ── Back nav ────────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-100 py-2 px-4">
         <div className="container mx-auto flex items-center gap-4">

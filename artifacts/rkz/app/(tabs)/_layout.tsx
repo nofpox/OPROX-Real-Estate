@@ -1,5 +1,5 @@
 import { BlurView } from "expo-blur";
-import { Tabs, router } from "expo-router";
+import { Tabs, router, usePathname } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect } from "react";
 import {
@@ -14,6 +14,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 import { useApp } from "@/context/AppContext";
 import { useLocale } from "@/hooks/useLocale";
@@ -42,10 +43,14 @@ function AnimatedTabIcon({ focused, children }: { focused: boolean; children: Re
 }
 
 // ── Root layout ───────────────────────────────────────────────────────────────
+// ── Tab order (logical, LTR) ──────────────────────────────────────────────────
+const TAB_ROUTES = ["index", "add", "explore", "settings"] as const;
+
 export default function TabLayout() {
   const { langChosen, isLoading } = useApp();
   const { t, isAr }               = useLocale();
   const isIOS                     = Platform.OS === "ios";
+  const pathname                  = usePathname();
 
   useEffect(() => {
     if (isLoading) return;
@@ -82,7 +87,33 @@ export default function TabLayout() {
   // RTL: reverse tab order for Arabic
   const ordered = isAr ? [...tabDefs].reverse() : tabDefs;
 
+  // ── Swipe between tabs ──────────────────────────────────────────────────────
+  // Determine current logical index (0=home 1=search 2=tourism 3=profile)
+  const currentTabIdx = TAB_ROUTES.findIndex((name) =>
+    pathname === `/(tabs)/${name}` || pathname === `/${name}` ||
+    (name === "index" && (pathname === "/" || pathname === "/(tabs)"))
+  );
+
+  const swipeGesture = Gesture.Pan()
+    .activeOffsetX(isAr ? [15, -15] : [-15, 15])
+    .failOffsetY([-12, 12])
+    .runOnJS(true)
+    .onEnd((e) => {
+      if (Math.abs(e.translationX) < 60) return;
+      // Swipe direction: left = forward (next), right = back (prev)
+      // In RTL, directions are reversed visually
+      const goForward = isAr ? e.translationX > 0 : e.translationX < 0;
+      const idx = currentTabIdx >= 0 ? currentTabIdx : 0;
+      const nextIdx = goForward
+        ? Math.min(idx + 1, TAB_ROUTES.length - 1)
+        : Math.max(idx - 1, 0);
+      if (nextIdx === idx) return;
+      const target = TAB_ROUTES[nextIdx];
+      router.navigate(target === "index" ? "/" : `/${target}` as never);
+    });
+
   return (
+    <GestureDetector gesture={swipeGesture}>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -145,6 +176,7 @@ export default function TabLayout() {
         options={{ href: null, title: t.tabs.favorites }}
       />
     </Tabs>
+    </GestureDetector>
   );
 }
 
