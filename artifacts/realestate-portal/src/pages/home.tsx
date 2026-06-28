@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useLanguage } from '@/lib/i18n';
 import { useQuery } from '@tanstack/react-query';
-import { Search, TrendingUp, Users, Building2, MapPin, Star, ArrowLeft, ArrowRight, Heart, Hotel } from 'lucide-react';
+import { Search, TrendingUp, Users, Building2, MapPin, Star, ArrowLeft, ArrowRight, Heart, Hotel, Calendar, ChevronDown } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -177,6 +177,16 @@ export function Home() {
   const [, setLocation] = useLocation();
   const [searchQ, setSearchQ] = useState('');
   const [activeTab, setActiveTab] = useState<'sale' | 'rent' | 'tourism'>('sale');
+
+  // ── Tourism search state ────────────────────────────────────────────────────
+  const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+  const tomorrowStr = () => { const d = new Date(); d.setDate(d.getDate()+1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+  const [tourCity,    setTourCity]    = useState('');
+  const [tourType,    setTourType]    = useState<'hotel' | 'apartment'>('hotel');
+  const [tourCheckin,  setTourCheckin]  = useState(todayStr);
+  const [tourCheckout, setTourCheckout] = useState(tomorrowStr);
+  const [tourGuests,   setTourGuests]   = useState(2);
+  const [tourSearched, setTourSearched] = useState(false);
 
   const { data: featuredData } = useQuery({
     queryKey: ['featured-listings'],
@@ -392,10 +402,129 @@ export function Home() {
             </div>
           </div>
 
+          {/* ── Hotel / Stay search form ──────────────────────────────────── */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 mb-6">
+            {/* Type toggle */}
+            <div className="flex gap-2 mb-4">
+              {(['hotel', 'apartment'] as const).map(type => (
+                <button
+                  key={type}
+                  onClick={() => setTourType(type)}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${tourType === type ? 'bg-[#0f2040] text-white border-[#0f2040]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#c9a84c]'}`}
+                >
+                  <Hotel className="w-3.5 h-3.5" />
+                  {type === 'hotel' ? (isRtl ? 'فندق' : 'Hotel') : (isRtl ? 'شقة فندقية' : 'Apartment')}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              {/* Destination */}
+              <div className="relative">
+                <label className="block text-xs text-gray-400 mb-1 font-medium">{isRtl ? 'الوجهة' : 'Destination'}</label>
+                <div className="relative">
+                  <MapPin className="absolute top-2.5 right-3 w-4 h-4 text-[#c9a84c]" style={{ left: isRtl ? 'auto' : 12, right: isRtl ? 12 : 'auto' }} />
+                  <input
+                    type="text"
+                    value={tourCity}
+                    onChange={e => setTourCity(e.target.value)}
+                    placeholder={isRtl ? 'اختر المدينة أو الوجهة...' : 'City or destination...'}
+                    className="w-full border border-gray-200 rounded-xl py-2.5 text-sm outline-none focus:border-[#c9a84c] transition-colors"
+                    style={{ paddingRight: isRtl ? 36 : 12, paddingLeft: isRtl ? 12 : 36 }}
+                    dir={isRtl ? 'rtl' : 'ltr'}
+                    list="tour-city-list"
+                  />
+                  <datalist id="tour-city-list">
+                    {TOURISM_SPOTS.map(s => <option key={s.nameAr} value={isRtl ? s.nameAr : s.nameEn} />)}
+                  </datalist>
+                </div>
+              </div>
+
+              {/* Check-in */}
+              <div>
+                <label className="block text-xs text-gray-400 mb-1 font-medium">{isRtl ? 'تاريخ الوصول' : 'Check-in'}</label>
+                <div className="relative">
+                  <Calendar className="absolute top-2.5 w-4 h-4 text-gray-400 pointer-events-none" style={{ left: isRtl ? 'auto' : 10, right: isRtl ? 10 : 'auto' }} />
+                  <input
+                    type="date"
+                    value={tourCheckin}
+                    min={todayStr()}
+                    onChange={e => setTourCheckin(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl py-2.5 text-sm outline-none focus:border-[#c9a84c] transition-colors"
+                    style={{ paddingRight: isRtl ? 36 : 10, paddingLeft: isRtl ? 10 : 36 }}
+                  />
+                </div>
+              </div>
+
+              {/* Check-out */}
+              <div>
+                <label className="block text-xs text-gray-400 mb-1 font-medium">{isRtl ? 'تاريخ المغادرة' : 'Check-out'}</label>
+                <div className="relative">
+                  <Calendar className="absolute top-2.5 w-4 h-4 text-gray-400 pointer-events-none" style={{ left: isRtl ? 'auto' : 10, right: isRtl ? 10 : 'auto' }} />
+                  <input
+                    type="date"
+                    value={tourCheckout}
+                    min={tourCheckin}
+                    onChange={e => setTourCheckout(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl py-2.5 text-sm outline-none focus:border-[#c9a84c] transition-colors"
+                    style={{ paddingRight: isRtl ? 36 : 10, paddingLeft: isRtl ? 10 : 36 }}
+                  />
+                </div>
+              </div>
+
+              {/* Guests + Search */}
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-400 mb-1 font-medium">{isRtl ? 'الضيوف' : 'Guests'}</label>
+                  <div className="relative">
+                    <Users className="absolute top-2.5 w-4 h-4 text-gray-400 pointer-events-none" style={{ left: isRtl ? 'auto' : 10, right: isRtl ? 10 : 'auto' }} />
+                    <select
+                      value={tourGuests}
+                      onChange={e => setTourGuests(Number(e.target.value))}
+                      className="w-full border border-gray-200 rounded-xl py-2.5 text-sm outline-none focus:border-[#c9a84c] transition-colors appearance-none bg-white"
+                      style={{ paddingRight: isRtl ? 36 : 10, paddingLeft: isRtl ? 10 : 36 }}
+                    >
+                      {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} {isRtl ? (n===1?'ضيف':'ضيوف') : (n===1?'Guest':'Guests')}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-col justify-end">
+                  <label className="block text-xs text-transparent mb-1">_</label>
+                  <button
+                    onClick={() => setTourSearched(true)}
+                    className="bg-[#c9a84c] hover:bg-[#b8963f] text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Search className="w-4 h-4" />
+                    {isRtl ? 'بحث' : 'Search'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Search result hint */}
+            {tourSearched && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-[#0f2040] bg-[#c9a84c]/10 rounded-lg px-3 py-2">
+                <Hotel className="w-4 h-4 text-[#c9a84c] shrink-0" />
+                <span>
+                  {isRtl
+                    ? `${TOURISM_SPOTS.find(s=>s.nameAr===tourCity||s.nameEn===tourCity)?.hotels ?? '300'}+ ${tourType === 'hotel' ? 'فندق' : 'شقة فندقية'} متاح${tourCity ? ` في ${tourCity}` : ''} · ${tourGuests} ${tourGuests===1?'ضيف':'ضيوف'}`
+                    : `${TOURISM_SPOTS.find(s=>s.nameAr===tourCity||s.nameEn===tourCity)?.hotels ?? '300'}+ ${tourType === 'hotel' ? 'hotels' : 'apartments'} available${tourCity ? ` in ${tourCity}` : ''} · ${tourGuests} ${tourGuests===1?'guest':'guests'}`
+                  }
+                </span>
+                <button onClick={() => setTourSearched(false)} className="ms-auto text-gray-400 hover:text-gray-600">✕</button>
+              </div>
+            )}
+          </div>
+
+          {/* ── Destination thumbnails ─────────────────────────────────────── */}
           <div className="mb-6 overflow-x-auto">
             <div className="flex gap-2 pb-1 min-w-max md:min-w-0 md:flex-wrap">
               {TOURISM_SPOTS.map(spot => (
-                <div key={spot.nameAr} className="relative rounded-xl overflow-hidden w-28 h-20 shrink-0 cursor-pointer group">
+                <div
+                  key={spot.nameAr}
+                  className="relative rounded-xl overflow-hidden w-28 h-20 shrink-0 cursor-pointer group"
+                  onClick={() => { setTourCity(isRtl ? spot.nameAr : spot.nameEn); setTourSearched(true); }}
+                >
                   <img src={spot.img} alt={spot.nameAr} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0f2040]/80 to-transparent" />
                   <div className="absolute bottom-1.5 inset-x-0 text-center text-white text-xs font-bold">{isRtl ? spot.nameAr : spot.nameEn}</div>
