@@ -1,6 +1,8 @@
 import { Router } from "express";
 import multer from "multer";
 import { toFile } from "openai";
+import { eq, and, ilike, lte, gte, desc, or } from "drizzle-orm";
+import { db, listingsTable } from "@workspace/db";
 import { isAiHalted } from "./aiGovernance.js";
 import { resolveAiClient, resolveAiModel } from "../lib/ai-provider.js";
 
@@ -213,6 +215,133 @@ Rules:
   } catch (err) {
     req.log.error({ err }, "rkz ai-chat error");
     res.status(500).json({ error: "AI request failed" });
+  }
+});
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+function parseJsonSafe<T>(str: string | null | undefined, fallback: T): T {
+  if (!str) return fallback;
+  try { return JSON.parse(str) as T; } catch { return fallback; }
+}
+
+function formatListingForAi(l: typeof listingsTable.$inferSelect) {
+  const media = parseJsonSafe<{ url: string; caption?: string }[]>(l.media, []);
+  return {
+    id:           l.id,
+    title:        l.title,
+    propertyType: l.propertyType,
+    listingType:  l.listingType,
+    price:        l.price   ? Number(l.price) : null,
+    currency:     l.currency,
+    areaSqm:      l.areaSqm ? Number(l.areaSqm) : null,
+    bedrooms:     l.bedrooms,
+    bathrooms:    l.bathrooms,
+    district:     l.district,
+    city:         l.city,
+    address:      l.address,
+    image:        media[0]?.url ?? null,
+    featured:     l.featured,
+  };
+}
+
+interface SearchParams {
+  propertyType?: string;
+  listingType?: string;
+  district?: string;
+  city?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  bedrooms?: number;
+}
+
+async function extractSearchParams(
+  messages: Array<{ role: string; content: string }>,
+  aiClient: import("openai").default,
+  model: string,
+): Promise<SearchParams> {
+  const extraction = await aiClient.chat.completions.create({
+    model,
+    messages: [
+      {
+        role: "system",
+        content: `You are a JSON extractor. Read this real estate conversation and extract search parameters.
+Return ONLY a valid JSON object with these optional fields (omit fields not clearly mentioned):
+{
+  "propertyType": "villa|apartment|commercial|land|hotel|compound",
+  "listingType": "sale|rent",
+  "district": "neighborhood/district name in Arabic or English",
+  "city": "city name",
+  "minPrice": number,
+  "maxPrice": number,
+  "bedrooms": number
+}
+ONLY return JSON. No explanation. No markdown.`,
+      },
+      ...messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+    ],
+  });
+
+  const raw = extraction.choices[0]?.message?.content?.trim() ?? "{}";
+  // strip potential ```json fences
+  const clean = raw.replace(/^```[a-z]*\n?/, "").replace(/\n?```$/, "").trim();
+  return parseJsonSafe<SearchParams>(clean, {});
+}
+
+// POST /rkz/search-listings
+// Public — extract params from conversation → query DB → return top 3 listings
+router.post("/rkz/search-listings", async (req, res) => {
+  try {
+    if (await isAiHalted(1)) { res.status(423).json({ error: "AI_HALTED" }); return; }
+
+    const { messages } = req.body as { messages: Array<{ role: string; content: string }> };
+    if (!Array.isArray(messages)) { res.status(400).json({ error: "messages required" }); return; }
+
+    const [aiClient, aiModel] = await Promise.all([resolveAiClient(1), resolveAiModel(1, "gpt-5.4")]);
+
+    // Extract structured params from conversation
+    const params = await extractSearchParams(messages, aiClient, aiModel);
+    req.log.info({ params }, "rkz search-listings params");
+
+    // Build query conditions — active listings only
+    const conds: import("drizzle-orm").SQL[] = [eq(listingsTable.status, "active")];
+
+    if (params.propertyType) conds.push(eq(listingsTable.propertyType, params.propertyType));
+    if (params.listingType)  conds.push(eq(listingsTable.listingType,  params.listingType));
+    if (params.bedrooms)     conds.push(eq(listingsTable.bedrooms,     params.bedrooms));
+    if (params.maxPrice)     conds.push(lte(listingsTable.price,       params.maxPrice.toString()));
+    if (params.minPrice)     conds.push(gte(listingsTable.price,       params.minPrice.toString()));
+
+    if (params.district || params.city) {
+      const locationConds: import("drizzle-orm").SQL[] = [];
+      if (params.district) locationConds.push(ilike(listingsTable.district, `%${params.district}%`));
+      if (params.city)     locationConds.push(ilike(listingsTable.city, `%${params.city}%`));
+      conds.push(or(...locationConds)!);
+    }
+
+    let rows = await db
+      .select()
+      .from(listingsTable)
+      .where(and(...conds))
+      .orderBy(desc(listingsTable.featured))
+      .limit(3);
+
+    // Fallback: relax location if no results
+    if (!rows.length && (params.district || params.city)) {
+      const relaxed = [eq(listingsTable.status, "active")];
+      if (params.propertyType) relaxed.push(eq(listingsTable.propertyType, params.propertyType));
+      if (params.listingType)  relaxed.push(eq(listingsTable.listingType,  params.listingType));
+      rows = await db.select().from(listingsTable).where(and(...relaxed)).orderBy(desc(listingsTable.featured)).limit(3);
+    }
+
+    // Final fallback: any active featured listings
+    if (!rows.length) {
+      rows = await db.select().from(listingsTable).where(eq(listingsTable.status, "active")).orderBy(desc(listingsTable.featured)).limit(3);
+    }
+
+    res.json({ listings: rows.map(formatListingForAi), params });
+  } catch (err) {
+    req.log.error({ err }, "rkz search-listings error");
+    res.status(500).json({ error: "Search failed" });
   }
 });
 
