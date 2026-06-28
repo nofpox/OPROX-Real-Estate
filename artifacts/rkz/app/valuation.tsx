@@ -18,14 +18,25 @@ const NAVY = "#0f2040";
 const GOLD = "#c9a84c";
 
 const CITY_PRICE_PER_SQM: Record<string, number> = {
-  "الرياض": 4800, "Riyadh": 4800,
-  "جدة": 4200,   "Jeddah": 4200,
-  "الدمام": 3100, "Dammam": 3100,
-  "أبها": 2400,   "Abha": 2400,
-  "مكة": 5200,   "Makkah": 5200,
-  "المدينة": 3800, "Madinah": 3800,
-  "نيوم": 8500,   "Neom": 8500,
-  "القصيم": 1900, "Qassim": 1900,
+  "الرياض": 4800,       "Riyadh": 4800,
+  "جدة": 4200,          "Jeddah": 4200,
+  "الدمام": 3100,       "Dammam": 3100,
+  "أبها": 2400,         "Abha": 2400,
+  "مكة": 5200,          "Makkah": 5200,
+  "المدينة": 3800,      "Madinah": 3800,
+  "نيوم": 8500,         "Neom": 8500,
+  "القصيم": 1900,       "Qassim": 1900,
+  "بريدة": 2100,        "Buraidah": 2100,
+  "عنيزة": 1800,        "Unaizah": 1800,
+  "تبوك": 2300,         "Tabuk": 2300,
+  "الخبر": 3400,        "Khobar": 3400,
+  "الخرج": 2000,        "Alkharj": 2000,
+  "نجران": 1700,        "Najran": 1700,
+  "جيزان": 1600,        "Jizan": 1600,
+  "خميس مشيط": 2200,   "Khamis Mushait": 2200,
+  "المجمعة": 1500,      "Majmaah": 1500,
+  "شقراء": 1400,        "Shaqra": 1400,
+  "الخفجي": 2600,       "Khafji": 2600,
 };
 
 const TYPE_MULT: Record<string, number> = {
@@ -49,6 +60,16 @@ export default function ValuationScreen() {
   const [rooms, setRooms]   = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult]   = useState<null | { low: number; high: number; mid: number; perSqm: number; trend: string; confidence: string }>(null);
+
+  const CITIES_AR = [
+    "الرياض","جدة","الدمام","الخبر","مكة","المدينة","أبها","خميس مشيط",
+    "تبوك","بريدة","عنيزة","الخرج","نجران","جيزان","المجمعة","شقراء","الخفجي","نيوم",
+  ];
+  const CITIES_EN = [
+    "Riyadh","Jeddah","Dammam","Khobar","Makkah","Madinah","Abha","Khamis Mushait",
+    "Tabuk","Buraidah","Unaizah","Alkharj","Najran","Jizan","Majmaah","Shaqra","Khafji","Neom",
+  ];
+  const cityList = isAr ? CITIES_AR : CITIES_EN;
 
   const types = [
     { key: "apartment", labelAr: "شقة",        labelEn: "Apartment" },
