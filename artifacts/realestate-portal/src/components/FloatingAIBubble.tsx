@@ -485,7 +485,7 @@ export function FloatingAIBubble() {
   const inputIsAr = isArabicText(userMessages.map(m => m.content).join('') || (isRtl ? 'أ' : ''));
   const bubblePos = isRtl ? 'left-5' : 'right-5';
   const panelPos  = isRtl ? 'left-5' : 'right-5';
-  const aiAvatarUrl = `${import.meta.env.BASE_URL}ai-avatar.png`;
+  const aiAvatarUrl = `${import.meta.env.BASE_URL}ai-avatar.png?v=2`;
 
   return (
     <>
