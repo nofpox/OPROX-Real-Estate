@@ -59,11 +59,12 @@ function PublicNavbar() {
   const isActive = (path: string) => location === path || location.startsWith(path + '?');
 
   const tabs = [
-    { key: 'buy',       href: '/search?type=sale',  label: t('nav.buy') },
-    { key: 'rent',      href: '/search?type=rent',  label: t('nav.rent') },
-    { key: 'sell',      href: '/sell',               label: t('nav.sell') },
-    { key: 'financing', href: '/financing',          label: t('nav.financing') },
-    { key: 'agents',    href: '/agents',             label: t('nav.agents') },
+    { key: 'buy',       href: '/search?type=sale',       label: t('nav.buy') },
+    { key: 'rent',      href: '/search?type=rent',       label: t('nav.rent') },
+    { key: 'sell',      href: '/sell',                    label: t('nav.sell') },
+    { key: 'tourism',   href: '/#tourism-section',        label: t('nav.tourism') },
+    { key: 'financing', href: '/financing',               label: t('nav.financing') },
+    { key: 'agents',    href: '/agents',                  label: t('nav.agents') },
   ];
 
   return (

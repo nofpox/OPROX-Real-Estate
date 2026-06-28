@@ -38,6 +38,7 @@ const translations = {
     'nav.sell':      'Sell',
     'nav.financing': 'Financing',
     'nav.agents':    'Find Agent',
+    'nav.tourism':   'Tourism',
     'nav.signin':    'Sign In',
     'nav.favorites': 'Favorites',
     'nav.updates':   'Updates',
@@ -48,9 +49,10 @@ const translations = {
     'home.hero.subtitle': 'The largest real estate marketplace in Saudi Arabia',
     'home.hero.searchPlaceholder': 'City, district, or property name...',
     'home.hero.searchBtn': 'Search',
-    'home.hero.tabBuy':  'Buy',
-    'home.hero.tabRent': 'Rent',
-    'home.hero.tabSell': 'Sell Home',
+    'home.hero.tabBuy':     'Buy',
+    'home.hero.tabRent':    'Rent',
+    'home.hero.tabTourism': 'Book Stay',
+    'home.hero.tabSell':    'Sell Home',
 
     // ── Home – sections ─────────────────────────────────────────────────────
     'home.featured.title':   'Featured Properties',
@@ -627,6 +629,7 @@ const translations = {
     'nav.sell':      'بيع',
     'nav.financing': 'تمويل عقاري',
     'nav.agents':    'وكلاء عقاريون',
+    'nav.tourism':   'سياحة',
     'nav.signin':    'تسجيل الدخول',
     'nav.favorites': 'المفضلة',
     'nav.updates':   'التحديثات',
@@ -637,9 +640,10 @@ const translations = {
     'home.hero.subtitle': 'أكبر منصة عقارية في المملكة العربية السعودية',
     'home.hero.searchPlaceholder': 'المدينة أو الحي أو اسم العقار...',
     'home.hero.searchBtn': 'بحث',
-    'home.hero.tabBuy':  'للبيع',
-    'home.hero.tabRent': 'للإيجار',
-    'home.hero.tabSell': 'بيع عقارك',
+    'home.hero.tabBuy':     'للبيع',
+    'home.hero.tabRent':    'للإيجار',
+    'home.hero.tabTourism': 'حجز إقامتك',
+    'home.hero.tabSell':    'بيع عقارك',
 
     // ── Home – sections ─────────────────────────────────────────────────────
     'home.featured.title':   'عقارات مميزة',

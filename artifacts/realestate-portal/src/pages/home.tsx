@@ -176,7 +176,7 @@ export function Home() {
   const { t, isRtl, language } = useLanguage();
   const [, setLocation] = useLocation();
   const [searchQ, setSearchQ] = useState('');
-  const [activeTab, setActiveTab] = useState<'sale' | 'rent'>('sale');
+  const [activeTab, setActiveTab] = useState<'sale' | 'rent' | 'tourism'>('sale');
 
   const { data: featuredData } = useQuery({
     queryKey: ['featured-listings'],
@@ -191,8 +191,14 @@ export function Home() {
   const listings = featuredData && featuredData.length > 0 ? featuredData : MOCK_LISTINGS;
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
+  function scrollToTourism() {
+    const el = document.getElementById('tourism-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
+    if (activeTab === 'tourism') { scrollToTourism(); return; }
     const params = new URLSearchParams({ type: activeTab });
     if (searchQ) params.set('q', searchQ);
     setLocation(`/search?${params.toString()}`);
@@ -210,17 +216,46 @@ export function Home() {
           <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="flex border-b border-gray-100">
               {(['sale', 'rent'] as const).map(tab => (
-                <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeTab === tab ? 'text-[#0f2040] border-b-2 border-[#c9a84c] bg-white' : 'text-gray-500 bg-gray-50 hover:bg-gray-100'}`}>
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeTab === tab ? 'text-[#0f2040] border-b-2 border-[#c9a84c] bg-white' : 'text-gray-500 bg-gray-50 hover:bg-gray-100'}`}
+                >
                   {tab === 'sale' ? t('home.hero.tabBuy') : t('home.hero.tabRent')}
                 </button>
               ))}
-              <Link href="/sell" className="flex-1 py-3 text-sm font-semibold text-gray-500 bg-gray-50 hover:bg-gray-100 transition-colors text-center">{t('home.hero.tabSell')}</Link>
+              {/* ── Tourism / Book Stay tab ─────────────────────────────────── */}
+              <button
+                onClick={() => { setActiveTab('tourism'); scrollToTourism(); }}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeTab === 'tourism' ? 'text-[#0f2040] border-b-2 border-[#c9a84c] bg-white' : 'text-gray-500 bg-gray-50 hover:bg-gray-100'}`}
+              >
+                {t('home.hero.tabTourism')}
+              </button>
+              <Link href="/sell" className="flex-1 py-3 text-sm font-semibold text-gray-500 bg-gray-50 hover:bg-gray-100 transition-colors text-center">
+                {t('home.hero.tabSell')}
+              </Link>
             </div>
             <form onSubmit={handleSearch} className="flex items-center gap-2 p-4">
               <MapPin className="w-5 h-5 text-[#c9a84c] shrink-0" />
-              <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder={t('home.hero.searchPlaceholder')} className="flex-1 text-sm outline-none placeholder:text-gray-400 text-gray-800" dir={isRtl ? 'rtl' : 'ltr'} />
-              <button type="submit" className="bg-[#c9a84c] hover:bg-[#b8963f] text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2 shrink-0">
-                <Search className="w-4 h-4" />{t('home.hero.searchBtn')}
+              {activeTab === 'tourism' ? (
+                <span className="flex-1 text-sm text-gray-400 select-none">
+                  {isRtl ? 'استكشف الوجهات السياحية في المملكة ↓' : 'Explore Saudi tourism destinations ↓'}
+                </span>
+              ) : (
+                <input
+                  value={searchQ}
+                  onChange={e => setSearchQ(e.target.value)}
+                  placeholder={t('home.hero.searchPlaceholder')}
+                  className="flex-1 text-sm outline-none placeholder:text-gray-400 text-gray-800"
+                  dir={isRtl ? 'rtl' : 'ltr'}
+                />
+              )}
+              <button
+                type="submit"
+                className="bg-[#c9a84c] hover:bg-[#b8963f] text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2 shrink-0"
+              >
+                <Search className="w-4 h-4" />
+                {activeTab === 'tourism' ? (isRtl ? 'عرض' : 'View') : t('home.hero.searchBtn')}
               </button>
             </form>
           </div>
@@ -341,7 +376,7 @@ export function Home() {
       </section>
 
       {/* ── Tourism Map ───────────────────────────────────────────────────────── */}
-      <section className="py-16 bg-gray-50">
+      <section id="tourism-section" className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className={`flex items-center gap-3 mb-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
             <div className="w-10 h-10 rounded-xl bg-[#0f2040] flex items-center justify-center shrink-0">
