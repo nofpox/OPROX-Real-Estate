@@ -19,6 +19,7 @@ import { useLocale } from "@/hooks/useLocale";
 
 const NAVY = "#0f2040";
 const GOLD = "#c9a84c";
+const aiAvatar = require("../assets/ai-avatar.png");
 
 const TRIGGER_RE_AR  = "تمام بدور لك الحين";
 const TRIGGER_RE_EN  = "Great, searching for you now";
@@ -495,7 +496,7 @@ export default function AiChatScreen() {
           <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={22} color="#fff" />
         </Pressable>
         <View style={s.headerCenter}>
-          <Text style={{ fontSize: 28 }}>🤖</Text>
+          <Image source={aiAvatar} style={{ width: 36, height: 36, resizeMode: 'contain' }} />
           <View>
             <Text style={s.headerTitle}>HousIn AI</Text>
             <Text style={s.headerSub}>
@@ -517,7 +518,7 @@ export default function AiChatScreen() {
           if (item.id === "__typing__") {
             return (
               <View style={s.row}>
-                <Text style={s.avatar}>🤖</Text>
+                <Image source={aiAvatar} style={s.avatarImg} />
                 <TypingDots />
               </View>
             );
@@ -527,7 +528,7 @@ export default function AiChatScreen() {
           if (item.role === "searching") {
             return (
               <View style={s.row}>
-                <Text style={s.avatar}>🤖</Text>
+                <Image source={aiAvatar} style={s.avatarImg} />
                 <SearchingCard isAr={isAr} />
               </View>
             );
@@ -555,7 +556,7 @@ export default function AiChatScreen() {
             return (
               <View style={{ gap: 8 }}>
                 <View style={[s.row, { alignItems: "center" }]}>
-                  <Text style={s.avatar}>{isTourist ? "🏨" : "🤖"}</Text>
+                  {isTourist ? <Text style={s.avatar}>🏨</Text> : <Image source={aiAvatar} style={s.avatarImg} />}
                   <Text style={s.resultsMeta}>{label}</Text>
                 </View>
                 {item.listings.map((l) => (
@@ -570,7 +571,7 @@ export default function AiChatScreen() {
           const msgAr = isArabic(item.content);
           return (
             <View style={[s.row, isUser && s.rowReverse]}>
-              {!isUser && <Text style={s.avatar}>🤖</Text>}
+              {!isUser && <Image source={aiAvatar} style={s.avatarImg} />}
               <View style={[s.bubble, isUser ? s.userBubble : s.botBubble]}>
                 <Text style={[isUser ? s.userText : s.botText, { textAlign: msgAr ? "right" : "left" }]}>
                   {item.content}
@@ -665,6 +666,7 @@ const s = StyleSheet.create({
   row:        { flexDirection: "row", alignItems: "flex-end", gap: 8 },
   rowReverse: { flexDirection: "row-reverse" },
   avatar:     { fontSize: 22, marginBottom: 2 },
+  avatarImg:  { width: 30, height: 30, resizeMode: 'contain', marginBottom: 2 },
   resultsMeta: { fontSize: 12, color: "rgba(15,32,64,0.5)", fontFamily: "Inter_500Medium" },
 
   bubble: { maxWidth: "78%", borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },

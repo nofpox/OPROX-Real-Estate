@@ -485,6 +485,7 @@ export function FloatingAIBubble() {
   const inputIsAr = isArabicText(userMessages.map(m => m.content).join('') || (isRtl ? 'أ' : ''));
   const bubblePos = isRtl ? 'left-5' : 'right-5';
   const panelPos  = isRtl ? 'left-5' : 'right-5';
+  const aiAvatarUrl = `${import.meta.env.BASE_URL}ai-avatar.png`;
 
   return (
     <>
@@ -501,10 +502,10 @@ export function FloatingAIBubble() {
             </div>
           )}
           <button onClick={openChat}
-            className="w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-110 active:scale-95"
+            className="w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-110 active:scale-95 overflow-hidden"
             style={{ backgroundColor: NAVY, border: `2.5px solid ${GOLD}`, boxShadow: '0 6px 24px rgba(15,32,64,0.45)' }}
             aria-label="AI Chat">
-            <span className="text-2xl">🤖</span>
+            <img src={aiAvatarUrl} className="w-11 h-11 object-contain drop-shadow" alt="AI" />
           </button>
         </div>
       )}
@@ -523,7 +524,7 @@ export function FloatingAIBubble() {
 
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ backgroundColor: NAVY }}>
-              <span className="text-2xl">🤖</span>
+              <img src={aiAvatarUrl} className="w-9 h-9 object-contain flex-shrink-0" alt="AI" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-white leading-tight">HousIn AI</p>
                 <p className="text-xs leading-tight" style={{ color: 'rgba(255,255,255,0.55)' }}>
@@ -544,7 +545,7 @@ export function FloatingAIBubble() {
                 if (msg.role === 'searching') {
                   return (
                     <div key={msg.id} className="flex items-end gap-2">
-                      <span className="text-xl flex-shrink-0 mb-0.5">🤖</span>
+                      <img src={aiAvatarUrl} className="w-7 h-7 object-contain flex-shrink-0 mb-0.5" alt="AI" />
                       <SearchingCard isRtl={isRtl} />
                     </div>
                   );
@@ -570,7 +571,7 @@ export function FloatingAIBubble() {
                   return (
                     <div key={msg.id} className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xl">{msg.mode === 'tourist' ? '🏨' : '🤖'}</span>
+                        {msg.mode === 'tourist' ? <span className="text-xl">🏨</span> : <img src={aiAvatarUrl} className="w-6 h-6 object-contain" alt="AI" />}
                         <span className="text-xs font-medium" style={{ color: 'rgba(15,32,64,0.5)' }}>
                           {msg.mode === 'tourist'
                             ? (isRtl ? 'خيارات الإقامة' : 'Stay Options')
@@ -587,7 +588,7 @@ export function FloatingAIBubble() {
                 const ar = isArabicText(msg.content);
                 return (
                   <div key={msg.id} className={`flex items-end gap-2 ${isUser ? 'flex-row-reverse' : ''}`}>
-                    {!isUser && <span className="text-xl flex-shrink-0 mb-0.5">🤖</span>}
+                    {!isUser && <img src={aiAvatarUrl} className="w-7 h-7 object-contain flex-shrink-0 mb-0.5" alt="AI" />}
                     <div className="max-w-[82%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap"
                       style={{
                         backgroundColor: isUser ? NAVY : '#fff',
@@ -606,7 +607,7 @@ export function FloatingAIBubble() {
 
               {loading && (
                 <div className="flex items-end gap-2">
-                  <span className="text-xl flex-shrink-0 mb-0.5">🤖</span>
+                  <img src={aiAvatarUrl} className="w-7 h-7 object-contain flex-shrink-0 mb-0.5" alt="AI" />
                   <div className="rounded-2xl rounded-bl-sm" style={{ backgroundColor: '#fff', boxShadow: '0 1px 6px rgba(0,0,0,0.07)' }}>
                     <TypingDots />
                   </div>
