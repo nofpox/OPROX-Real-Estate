@@ -37,6 +37,7 @@ function RootLayoutNav() {
       <Stack.Screen name="property/[id]"   options={{ animation: "slide_from_right" }} />
       <Stack.Screen name="hotel/[id]"      options={{ animation: "slide_from_right" }} />
       <Stack.Screen name="valuation"       options={{ animation: "slide_from_right" }} />
+      <Stack.Screen name="ai-chat"         options={{ animation: "slide_from_bottom" }} />
     </Stack>
   );
 }

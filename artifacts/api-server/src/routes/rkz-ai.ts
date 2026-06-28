@@ -142,4 +142,47 @@ router.post("/rkz/generate-description", async (req, res) => {
   }
 });
 
+// POST /rkz/ai-chat
+// Public — bilingual real estate AI chat (auto-detects AR/EN)
+router.post("/rkz/ai-chat", async (req, res) => {
+  try {
+    if (await isAiHalted(1)) {
+      res.status(423).json({ error: "AI_HALTED" });
+      return;
+    }
+
+    const { messages } = req.body as {
+      messages: Array<{ role: "user" | "assistant"; content: string }>;
+    };
+
+    if (!Array.isArray(messages) || messages.length === 0) {
+      res.status(400).json({ error: "messages array required" });
+      return;
+    }
+
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
+    const isArabic = /[\u0600-\u06FF]/.test(lastUserMsg);
+
+    const systemPrompt = isArabic
+      ? `أنت مساعد عقاري ذكي لمنصة HousIn السعودية. رد باللهجة السعودية العامية الودودة المشجعة. استخدم أسلوب محبب مثل: "يا غالي"، "ابشر"، "تدلل"، "الله يعطيك العافية". ساعد في أسئلة العقارات، الأسعار، المناطق، الإيجار والبيع في السعودية. كن مختصراً وعملياً ولا تطيل.`
+      : `You are a smart real estate assistant for HousIn, Saudi Arabia's premier property platform. Reply in formal, polite, and friendly English. Help with property questions, prices, neighborhoods, rent, and buying in Saudi Arabia. Be concise and practical.`;
+
+    const [aiClient, aiModel] = await Promise.all([resolveAiClient(1), resolveAiModel(1, "gpt-5.4")]);
+
+    const response = await aiClient.chat.completions.create({
+      model: aiModel,
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...messages.slice(-10),
+      ],
+    });
+
+    const reply = response.choices[0]?.message?.content ?? "";
+    res.json({ reply });
+  } catch (err) {
+    req.log.error({ err }, "rkz ai-chat error");
+    res.status(500).json({ error: "AI request failed" });
+  }
+});
+
 export default router;

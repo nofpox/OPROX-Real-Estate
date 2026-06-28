@@ -14,6 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { useLocale } from "@/hooks/useLocale";
@@ -133,10 +134,32 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab]     = useState<"sale" | "rent">("sale");
   const [query, setQuery]             = useState("");
   const fadeAnim                      = useRef(new Animated.Value(0)).current;
+  const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipAnim                   = useRef(new Animated.Value(0)).current;
+  const bubbleAnim                    = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     fetchListings().then(setListings);
     Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }).start();
+
+    // Bubble entrance
+    Animated.spring(bubbleAnim, { toValue: 1, useNativeDriver: true, delay: 800, friction: 5 }).start();
+
+    // Tooltip: show once per install
+    AsyncStorage.getItem("ai_bubble_seen").then((seen) => {
+      if (!seen) {
+        setTimeout(() => {
+          setShowTooltip(true);
+          Animated.timing(tooltipAnim, { toValue: 1, duration: 280, useNativeDriver: true }).start();
+          setTimeout(() => {
+            Animated.timing(tooltipAnim, { toValue: 0, duration: 280, useNativeDriver: true }).start(() => {
+              setShowTooltip(false);
+              AsyncStorage.setItem("ai_bubble_seen", "1");
+            });
+          }, 4000);
+        }, 1800);
+      }
+    });
   }, []);
 
   const featured = listings.filter((l) => l.featured && l.status === activeTab).slice(0, 5);
@@ -149,6 +172,12 @@ export default function HomeScreen() {
       router.push("/(tabs)/add" as never);
     }
   };
+
+  function openAiChat() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowTooltip(false);
+    router.push("/ai-chat" as never);
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f7fa" }}>
@@ -268,6 +297,28 @@ export default function HomeScreen() {
           </Pressable>
         </Animated.View>
       </ScrollView>
+
+      {/* ── Floating AI Bubble ── */}
+      <Animated.View
+        style={[
+          s.aiBubbleWrap,
+          { bottom: insets.bottom + 80 },
+          { transform: [{ scale: bubbleAnim }], opacity: bubbleAnim },
+        ]}
+        pointerEvents="box-none"
+      >
+        {/* Tooltip */}
+        {showTooltip && (
+          <Animated.View style={[s.aiTooltip, { opacity: tooltipAnim }]}>
+            <Text style={s.aiTooltipText}>{"الذكاء الاصطناعي: امر تدلل 😎"}</Text>
+            <View style={s.aiTooltipArrow} />
+          </Animated.View>
+        )}
+
+        <Pressable style={s.aiBubble} onPress={openAiChat}>
+          <Text style={s.aiBubbleEmoji}>🤖</Text>
+        </Pressable>
+      </Animated.View>
     </View>
   );
 }
@@ -354,4 +405,56 @@ const s = StyleSheet.create({
   estimateTitle:  { fontSize: 16, fontFamily: "Inter_700Bold", color: GOLD, marginBottom: 4 },
   estimateDesc:   { fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 18, marginBottom: 8 },
   estimateCta:    { fontSize: 13, fontFamily: "Inter_600SemiBold", color: GOLD },
+
+  // Floating AI Bubble
+  aiBubbleWrap: {
+    position: "absolute",
+    right: 20,
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  aiBubble: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: NAVY,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: NAVY,
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 12,
+    borderWidth: 2.5,
+    borderColor: GOLD,
+  },
+  aiBubbleEmoji: { fontSize: 28 },
+  aiTooltip: {
+    backgroundColor: NAVY,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    maxWidth: 220,
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 8,
+    alignItems: "flex-end",
+  },
+  aiTooltipText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    color: GOLD,
+    textAlign: "right",
+  },
+  aiTooltipArrow: {
+    position: "absolute",
+    bottom: -7,
+    right: 24,
+    width: 14,
+    height: 14,
+    backgroundColor: NAVY,
+    transform: [{ rotate: "45deg" }],
+    borderRadius: 2,
+  },
 });
