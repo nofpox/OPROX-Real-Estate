@@ -170,35 +170,63 @@ router.post("/rkz/ai-chat", async (req, res) => {
     const isArabic = /[\u0600-\u06FF]/.test(lastUserMsg);
 
     const systemPrompt = isArabic
-      ? `أنت سكرتير عقار ذكي اسمك "HousIn AI" تعمل لمنصة HousIn العقارية السعودية.
+      ? `أنت HousIn AI — مساعد ذكي لمنصة HousIn العقارية السعودية. تعمل في وضعين حسب طلب المستخدم.
 
-مهمتك: تجمع من المستخدم المعلومات التالية بمحادثة طبيعية ومتدرجة (لا تسأل كلها دفعة وحدة):
-1. نوع العقار (شقة، فيلا، أرض، تجاري)
-2. الحي أو المنطقة المطلوبة
-3. الميزانية
+━━━ البداية ━━━
+إذا كانت هذه أول رسالة في المحادثة، ابدأ بـ: "يا هلا والله 👋 تدور سكن دايم ولا إقامة سياحية؟"
+
+━━━ وضع 1: سكرتير عقاري (سكن دايم / شراء / إيجار) ━━━
+إذا أشار المستخدم لشراء، إيجار، أو سكن دائم:
+اجمع هذه المعلومات تدريجياً (سؤال واحد كل مرة):
+1. نوع العقار (شقة، فيلا، أرض، تجاري، مجمع)
+2. الحي أو المنطقة
+3. الميزانية الكاملة
 4. عدد الغرف (إن انطبق)
+بعد جمع المعلومات الكافية، قل بالضبط: "تمام بدور لك الحين 🔍"
 
-بعد ما تجمع المعلومات الكافية، قل بالضبط: "تمام بدور لك الحين 🔍"
+━━━ وضع 2: كونسيرج سياحي (فندق / إقامة مؤقتة / سياحة) ━━━
+إذا ذكر المستخدم: سياحة، فندق، يوم، أيام، أسبوع، إجازة، رحلة، عمرة، مؤقت، ليلة:
+اجمع هذه المعلومات تدريجياً (سؤال واحد كل مرة):
+1. عدد الأشخاص
+2. الميزانية بالليلة (بالريال)
+3. مدة الإقامة (عدد الليالي أو الأيام)
+4. خدمات مطلوبة (مسبح، فطور، موقف، سبا...)
+5. المدينة أو الوجهة
+بعد جمع المعلومات الكافية، قل بالضبط: "تمام جهزت لك اقتراحات إقامتك 🏨"
 
-قواعد:
+━━━ قواعد مشتركة ━━━
 - رد باللهجة السعودية العامية الودودة دائماً
 - استخدم: "يا غالي"، "ابشر"، "تدلل"، "الله يعطيك العافية"
-- ابدأ بسؤال واحد فقط كل مرة
-- إذا المستخدم أعطاك معلومات كافية بدون ما تسأل، ما تحتاج تسأل الباقي — فقط قل "تمام بدور لك الحين 🔍"`
-      : `You are "HousIn AI", a smart real estate secretary for HousIn — Saudi Arabia's premier property platform.
+- سؤال واحد فقط كل مرة — لا تسأل كلها دفعة وحدة
+- إذا أعطاك المستخدم معلومات كافية تلقائياً، لا تسأل الباقي — فقط أعلن البحث`
+      : `You are HousIn AI — a smart real estate and hospitality assistant for HousIn, Saudi Arabia's premier property platform. You operate in two modes.
 
-Your mission: Collect the following information through natural, progressive conversation (do NOT ask all at once):
-1. Property type (apartment, villa, land, commercial)
-2. Preferred neighborhood or area
-3. Budget
+━━━ START ━━━
+If this is the first message, open with: "Welcome! 👋 Are you looking for permanent housing or a tourist stay?"
+
+━━━ Mode 1: Real Estate Secretary (permanent / buy / rent) ━━━
+If the user mentions buying, renting, or permanent housing:
+Collect progressively (one question at a time):
+1. Property type (apartment, villa, land, commercial, compound)
+2. Preferred neighborhood / area
+3. Total budget
 4. Number of rooms (if applicable)
+Once ready, say exactly: "Great, searching for you now! 🔍"
 
-Once you have enough information, say exactly: "Great, searching for you now! 🔍"
+━━━ Mode 2: Tourist Concierge (hotel / short stay / tourism) ━━━
+If the user mentions: hotel, tourism, days, week, vacation, trip, Umrah, temporary, nights:
+Collect progressively (one question at a time):
+1. Number of guests
+2. Budget per night (SAR)
+3. Duration (nights or days)
+4. Desired services (pool, breakfast, parking, spa...)
+5. City / destination
+Once ready, say exactly: "Perfect, here are your stay options! 🏨"
 
-Rules:
-- Reply in formal, warm, and friendly English
+━━━ Shared Rules ━━━
+- Reply in warm, friendly English
 - Ask one question at a time
-- If the user volunteers enough details, skip remaining questions and proceed`;
+- If the user volunteers enough details upfront, skip remaining questions and proceed`;
 
     const [aiClient, aiModel] = await Promise.all([resolveAiClient(1), resolveAiModel(1, "gpt-5.4")]);
 
@@ -245,6 +273,7 @@ function formatListingForAi(l: typeof listingsTable.$inferSelect) {
 }
 
 interface SearchParams {
+  mode?: "real_estate" | "tourist";
   propertyType?: string;
   listingType?: string;
   district?: string;
@@ -252,6 +281,10 @@ interface SearchParams {
   minPrice?: number;
   maxPrice?: number;
   bedrooms?: number;
+  // tourist-specific
+  budgetPerNight?: number;
+  persons?: number;
+  nights?: number;
 }
 
 async function extractSearchParams(
@@ -264,25 +297,29 @@ async function extractSearchParams(
     messages: [
       {
         role: "system",
-        content: `You are a JSON extractor. Read this real estate conversation and extract search parameters.
-Return ONLY a valid JSON object with these optional fields (omit fields not clearly mentioned):
+        content: `You are a JSON extractor for a Saudi real estate and hotel platform. Read this conversation and extract search parameters.
+Return ONLY a valid JSON object with these optional fields (omit fields not mentioned):
 {
+  "mode": "tourist" or "real_estate",
   "propertyType": "villa|apartment|commercial|land|hotel|compound",
-  "listingType": "sale|rent",
-  "district": "neighborhood/district name in Arabic or English",
-  "city": "city name",
+  "listingType": "sale|rent|operational",
+  "district": "neighborhood name",
+  "city": "city name in Arabic",
   "minPrice": number,
   "maxPrice": number,
-  "bedrooms": number
+  "bedrooms": number,
+  "budgetPerNight": number,
+  "persons": number,
+  "nights": number
 }
-ONLY return JSON. No explanation. No markdown.`,
+Set mode="tourist" if the conversation is about hotels, tourism, short stays, Umrah, vacation, days, or nights. Otherwise mode="real_estate".
+ONLY return JSON. No markdown.`,
       },
       ...messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
     ],
   });
 
   const raw = extraction.choices[0]?.message?.content?.trim() ?? "{}";
-  // strip potential ```json fences
   const clean = raw.replace(/^```[a-z]*\n?/, "").replace(/\n?```$/, "").trim();
   return parseJsonSafe<SearchParams>(clean, {});
 }
@@ -302,43 +339,74 @@ router.post("/rkz/search-listings", async (req, res) => {
     const params = await extractSearchParams(messages, aiClient, aiModel);
     req.log.info({ params }, "rkz search-listings params");
 
-    // Build query conditions — active listings only
-    const conds: import("drizzle-orm").SQL[] = [eq(listingsTable.status, "active")];
+    const isTourist = params.mode === "tourist";
+    let rows: typeof listingsTable.$inferSelect[] = [];
 
-    if (params.propertyType) conds.push(eq(listingsTable.propertyType, params.propertyType));
-    if (params.listingType)  conds.push(eq(listingsTable.listingType,  params.listingType));
-    if (params.bedrooms)     conds.push(eq(listingsTable.bedrooms,     params.bedrooms));
-    if (params.maxPrice)     conds.push(lte(listingsTable.price,       params.maxPrice.toString()));
-    if (params.minPrice)     conds.push(gte(listingsTable.price,       params.minPrice.toString()));
+    if (isTourist) {
+      // ── Tourist mode: search hotels / operational listings ─────────────────
+      const conds: import("drizzle-orm").SQL[] = [
+        eq(listingsTable.status, "active"),
+        or(eq(listingsTable.listingType, "operational"), eq(listingsTable.propertyType, "hotel"))!,
+      ];
 
-    if (params.district || params.city) {
-      const locationConds: import("drizzle-orm").SQL[] = [];
-      if (params.district) locationConds.push(ilike(listingsTable.district, `%${params.district}%`));
-      if (params.city)     locationConds.push(ilike(listingsTable.city, `%${params.city}%`));
-      conds.push(or(...locationConds)!);
+      if (params.city)           conds.push(ilike(listingsTable.city, `%${params.city}%`));
+      if (params.budgetPerNight) conds.push(lte(listingsTable.price, params.budgetPerNight.toString()));
+      // if large group needs more bedrooms
+      if (params.persons && params.persons > 4)
+        conds.push(gte(listingsTable.bedrooms, Math.ceil(params.persons / 2)));
+
+      rows = await db.select().from(listingsTable).where(and(...conds)).orderBy(desc(listingsTable.featured)).limit(3);
+
+      // Relax budget if no results
+      if (!rows.length) {
+        const relaxed: import("drizzle-orm").SQL[] = [
+          eq(listingsTable.status, "active"),
+          or(eq(listingsTable.listingType, "operational"), eq(listingsTable.propertyType, "hotel"))!,
+        ];
+        if (params.city) relaxed.push(ilike(listingsTable.city, `%${params.city}%`));
+        rows = await db.select().from(listingsTable).where(and(...relaxed)).orderBy(desc(listingsTable.featured)).limit(3);
+      }
+
+      // Final fallback: any hotel/operational
+      if (!rows.length) {
+        rows = await db.select().from(listingsTable)
+          .where(and(eq(listingsTable.status, "active"), or(eq(listingsTable.listingType, "operational"), eq(listingsTable.propertyType, "hotel"))!))
+          .orderBy(desc(listingsTable.featured)).limit(3);
+      }
+    } else {
+      // ── Real-estate mode: buy / rent ───────────────────────────────────────
+      const conds: import("drizzle-orm").SQL[] = [eq(listingsTable.status, "active")];
+
+      if (params.propertyType) conds.push(eq(listingsTable.propertyType, params.propertyType));
+      if (params.listingType)  conds.push(eq(listingsTable.listingType,  params.listingType));
+      if (params.bedrooms)     conds.push(eq(listingsTable.bedrooms,     params.bedrooms));
+      if (params.maxPrice)     conds.push(lte(listingsTable.price,       params.maxPrice.toString()));
+      if (params.minPrice)     conds.push(gte(listingsTable.price,       params.minPrice.toString()));
+
+      if (params.district || params.city) {
+        const loc: import("drizzle-orm").SQL[] = [];
+        if (params.district) loc.push(ilike(listingsTable.district, `%${params.district}%`));
+        if (params.city)     loc.push(ilike(listingsTable.city, `%${params.city}%`));
+        conds.push(or(...loc)!);
+      }
+
+      rows = await db.select().from(listingsTable).where(and(...conds)).orderBy(desc(listingsTable.featured)).limit(3);
+
+      // Relax location
+      if (!rows.length && (params.district || params.city)) {
+        const relaxed = [eq(listingsTable.status, "active")];
+        if (params.propertyType) relaxed.push(eq(listingsTable.propertyType, params.propertyType));
+        if (params.listingType)  relaxed.push(eq(listingsTable.listingType,  params.listingType));
+        rows = await db.select().from(listingsTable).where(and(...relaxed)).orderBy(desc(listingsTable.featured)).limit(3);
+      }
+
+      // Final fallback
+      if (!rows.length) {
+        rows = await db.select().from(listingsTable).where(eq(listingsTable.status, "active")).orderBy(desc(listingsTable.featured)).limit(3);
+      }
     }
 
-    let rows = await db
-      .select()
-      .from(listingsTable)
-      .where(and(...conds))
-      .orderBy(desc(listingsTable.featured))
-      .limit(3);
-
-    // Fallback: relax location if no results
-    if (!rows.length && (params.district || params.city)) {
-      const relaxed = [eq(listingsTable.status, "active")];
-      if (params.propertyType) relaxed.push(eq(listingsTable.propertyType, params.propertyType));
-      if (params.listingType)  relaxed.push(eq(listingsTable.listingType,  params.listingType));
-      rows = await db.select().from(listingsTable).where(and(...relaxed)).orderBy(desc(listingsTable.featured)).limit(3);
-    }
-
-    // Final fallback: any active featured listings
-    if (!rows.length) {
-      rows = await db.select().from(listingsTable).where(eq(listingsTable.status, "active")).orderBy(desc(listingsTable.featured)).limit(3);
-    }
-
-    res.json({ listings: rows.map(formatListingForAi), params });
+    res.json({ listings: rows.map(formatListingForAi), params, mode: isTourist ? "tourist" : "real_estate" });
   } catch (err) {
     req.log.error({ err }, "rkz search-listings error");
     res.status(500).json({ error: "Search failed" });

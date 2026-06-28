@@ -20,17 +20,22 @@ interface ListingResult {
   areaSqm: number | null;
 }
 
+type ChatMode = 'real_estate' | 'tourist';
+
 type ChatMessage =
   | { id: string; role: 'user' | 'assistant'; content: string }
-  | { id: string; role: 'listings'; listings: ListingResult[]; searching?: false }
+  | { id: string; role: 'listings'; listings: ListingResult[]; mode: ChatMode }
   | { id: string; role: 'searching' };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const TRIGGER_AR = 'تمام بدور لك الحين';
-const TRIGGER_EN = 'Great, searching for you now';
+const TRIGGER_RE_AR  = 'تمام بدور لك الحين';
+const TRIGGER_RE_EN  = 'Great, searching for you now';
+const TRIGGER_TUR_AR = 'جهزت لك اقتراحات إقامتك';
+const TRIGGER_TUR_EN = 'here are your stay options';
 
 function hasTrigger(text: string) {
-  return text.includes(TRIGGER_AR) || text.includes(TRIGGER_EN);
+  return text.includes(TRIGGER_RE_AR)  || text.includes(TRIGGER_RE_EN) ||
+         text.includes(TRIGGER_TUR_AR) || text.includes(TRIGGER_TUR_EN);
 }
 
 function isArabicText(text: string) {
@@ -58,15 +63,15 @@ async function callAiChat(messages: Array<{ role: 'user' | 'assistant'; content:
   return data.reply ?? '';
 }
 
-async function searchListings(messages: Array<{ role: string; content: string }>): Promise<ListingResult[]> {
+async function searchListings(messages: Array<{ role: string; content: string }>): Promise<{ listings: ListingResult[]; mode: ChatMode }> {
   const res = await fetch('/api/rkz/search-listings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages }),
   });
   if (!res.ok) throw new Error('Search failed');
-  const data = await res.json() as { listings: ListingResult[] };
-  return data.listings ?? [];
+  const data = await res.json() as { listings: ListingResult[]; mode: ChatMode };
+  return { listings: data.listings ?? [], mode: data.mode ?? 'real_estate' };
 }
 
 async function transcribeAudio(blob: Blob): Promise<string> {
@@ -100,10 +105,14 @@ function SearchingCard({ isRtl }: { isRtl: boolean }) {
   );
 }
 
-function ListingCard({ listing, isRtl }: { listing: ListingResult; isRtl: boolean }) {
+function ListingCard({ listing, isRtl, isTourist }: { listing: ListingResult; isRtl: boolean; isTourist: boolean }) {
   const ptLabel = isRtl
     ? (PT_LABELS[listing.propertyType] ?? listing.propertyType)
     : listing.propertyType;
+
+  const priceLabel = isTourist
+    ? `${fmtPrice(listing.price, listing.currency)}${isRtl ? '/ليلة' : '/night'}`
+    : fmtPrice(listing.price, listing.currency);
 
   return (
     <div className="rounded-xl overflow-hidden"
@@ -114,13 +123,21 @@ function ListingCard({ listing, isRtl }: { listing: ListingResult; isRtl: boolea
           <img src={listing.image} alt={listing.title}
             className="w-full h-full object-cover" loading="lazy" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-3xl">🏠</div>
+          <div className="w-full h-full flex items-center justify-center text-3xl">
+            {isTourist ? '🏨' : '🏠'}
+          </div>
         )}
         <span className="absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded-full"
           style={{ backgroundColor: NAVY, color: GOLD }}>
           {ptLabel}
         </span>
-        {listing.listingType === 'rent' && (
+        {isTourist && (
+          <span className="absolute top-2 right-2 text-xs font-semibold px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: '#0891b2', color: '#fff' }}>
+            {isRtl ? '🏨 إقامة' : '🏨 Stay'}
+          </span>
+        )}
+        {!isTourist && listing.listingType === 'rent' && (
           <span className="absolute top-2 right-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-600 text-white">
             {isRtl ? 'إيجار' : 'Rent'}
           </span>
@@ -142,7 +159,7 @@ function ListingCard({ listing, isRtl }: { listing: ListingResult; isRtl: boolea
 
         <div className="flex items-center justify-between">
           <p className="text-sm font-bold" style={{ color: GOLD }}>
-            {fmtPrice(listing.price, listing.currency)}
+            {priceLabel}
           </p>
           {listing.bedrooms != null && (
             <div className="flex items-center gap-1 text-xs" style={{ color: 'rgba(15,32,64,0.55)' }}>
@@ -163,13 +180,15 @@ function ListingCard({ listing, isRtl }: { listing: ListingResult; isRtl: boolea
   );
 }
 
-function ListingsGroup({ listings, isRtl }: { listings: ListingResult[]; isRtl: boolean }) {
+function ListingsGroup({ listings, isRtl, mode }: { listings: ListingResult[]; isRtl: boolean; mode: ChatMode }) {
+  const isTourist = mode === 'tourist';
+  const label = isTourist
+    ? (isRtl ? `وجدت ${listings.length} خيار إقامة يناسبك 🏨` : `Found ${listings.length} stay options for you 🏨`)
+    : (isRtl ? `وجدت ${listings.length} عقار يناسبك 🏡` : `Found ${listings.length} matching properties 🏡`);
   return (
     <div className="w-full space-y-2">
-      <p className="text-xs font-semibold" style={{ color: 'rgba(15,32,64,0.45)' }}>
-        {isRtl ? `وجدت ${listings.length} عقار يناسبك 🏡` : `Found ${listings.length} matching properties 🏡`}
-      </p>
-      {listings.map(l => <ListingCard key={l.id} listing={l} isRtl={isRtl} />)}
+      <p className="text-xs font-semibold" style={{ color: 'rgba(15,32,64,0.45)' }}>{label}</p>
+      {listings.map(l => <ListingCard key={l.id} listing={l} isRtl={isRtl} isTourist={isTourist} />)}
     </div>
   );
 }
@@ -192,8 +211,8 @@ export function FloatingAIBubble() {
   const greeting: ChatMessage = {
     id: '0', role: 'assistant',
     content: isRtl
-      ? 'هلا! أنا HousIn AI سكرتيرك العقاري الذكي 🤖\nتدلل واسألني — ابحث لك عن العقار المناسب 😎'
-      : "Hello! I'm HousIn AI, your smart real estate secretary 🤖\nTell me what you're looking for and I'll find it for you!",
+      ? 'يا هلا والله 👋\nتدور سكن دايم ولا إقامة سياحية؟'
+      : 'Welcome! 👋\nAre you looking for permanent housing or a tourist stay?',
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([greeting]);
@@ -201,17 +220,18 @@ export function FloatingAIBubble() {
   useEffect(() => {
     const seen = localStorage.getItem('housin_ai_bubble_seen');
     if (!seen) {
+      let t2: ReturnType<typeof setTimeout> | undefined;
       const t1 = setTimeout(() => {
         setShowTooltip(true);
         requestAnimationFrame(() => setTooltipVisible(true));
-        const t2 = setTimeout(() => {
+        t2 = setTimeout(() => {
           setTooltipVisible(false);
           setTimeout(() => { setShowTooltip(false); localStorage.setItem('housin_ai_bubble_seen', '1'); }, 300);
         }, 4500);
-        return () => clearTimeout(t2);
       }, 1500);
-      return () => clearTimeout(t1);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
+    return undefined;
   }, []);
 
   useEffect(() => {
@@ -223,15 +243,14 @@ export function FloatingAIBubble() {
   // After AI says the trigger, fetch listings and inject them as a card
   const fetchAndShowListings = useCallback(async (history: Array<{ role: 'user' | 'assistant'; content: string }>) => {
     const searchId = `search_${Date.now()}`;
-    // show searching indicator
     setMessages(prev => [...prev, { id: searchId, role: 'searching' }]);
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
 
     try {
-      const listings = await searchListings(history);
+      const { listings, mode } = await searchListings(history);
       setMessages(prev => [
         ...prev.filter(m => m.id !== searchId),
-        { id: `listings_${Date.now()}`, role: 'listings', listings },
+        { id: `listings_${Date.now()}`, role: 'listings', listings, mode },
       ]);
     } catch {
       setMessages(prev => prev.filter(m => m.id !== searchId));
@@ -388,12 +407,14 @@ export function FloatingAIBubble() {
                   return (
                     <div key={msg.id} className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xl">🤖</span>
+                        <span className="text-xl">{msg.mode === 'tourist' ? '🏨' : '🤖'}</span>
                         <span className="text-xs font-medium" style={{ color: 'rgba(15,32,64,0.5)' }}>
-                          {isRtl ? 'النتائج' : 'Results'}
+                          {msg.mode === 'tourist'
+                            ? (isRtl ? 'خيارات الإقامة' : 'Stay Options')
+                            : (isRtl ? 'نتائج البحث' : 'Search Results')}
                         </span>
                       </div>
-                      <ListingsGroup listings={msg.listings} isRtl={isRtl} />
+                      <ListingsGroup listings={msg.listings} isRtl={isRtl} mode={msg.mode} />
                     </div>
                   );
                 }

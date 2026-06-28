@@ -20,8 +20,10 @@ import { useLocale } from "@/hooks/useLocale";
 const NAVY = "#0f2040";
 const GOLD = "#c9a84c";
 
-const TRIGGER_AR = "تمام بدور لك الحين";
-const TRIGGER_EN = "Great, searching for you now";
+const TRIGGER_RE_AR  = "تمام بدور لك الحين";
+const TRIGGER_RE_EN  = "Great, searching for you now";
+const TRIGGER_TUR_AR = "جهزت لك اقتراحات إقامتك";
+const TRIGGER_TUR_EN = "here are your stay options";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface ListingResult {
@@ -37,16 +39,19 @@ interface ListingResult {
   image: string | null;
 }
 
+type ChatMode = "real_estate" | "tourist";
+
 type ChatMessage =
   | { id: string; role: "user" | "assistant"; content: string }
-  | { id: string; role: "listings"; listings: ListingResult[] }
+  | { id: string; role: "listings"; listings: ListingResult[]; mode: ChatMode }
   | { id: string; role: "searching" };
 
 type MicState = "idle" | "recording" | "processing";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function hasTrigger(text: string) {
-  return text.includes(TRIGGER_AR) || text.includes(TRIGGER_EN);
+  return text.includes(TRIGGER_RE_AR)  || text.includes(TRIGGER_RE_EN) ||
+         text.includes(TRIGGER_TUR_AR) || text.includes(TRIGGER_TUR_EN);
 }
 
 function isArabic(text: string) {
@@ -85,15 +90,15 @@ async function callAiChat(
 async function searchListings(
   messages: Array<{ role: string; content: string }>,
   domain: string,
-): Promise<ListingResult[]> {
+): Promise<{ listings: ListingResult[]; mode: ChatMode }> {
   const res = await fetch(`${apiBase(domain)}/api/rkz/search-listings`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messages }),
   });
   if (!res.ok) throw new Error("Search failed");
-  const data = (await res.json()) as { listings: ListingResult[] };
-  return data.listings ?? [];
+  const data = (await res.json()) as { listings: ListingResult[]; mode: ChatMode };
+  return { listings: data.listings ?? [], mode: data.mode ?? "real_estate" };
 }
 
 async function transcribeAudio(blob: Blob, domain: string): Promise<string> {
@@ -126,10 +131,15 @@ function SearchingCard({ isAr }: { isAr: boolean }) {
   );
 }
 
-function ListingCard({ listing, isAr, domain }: { listing: ListingResult; isAr: boolean; domain: string }) {
+function ListingCard({ listing, isAr, domain, isTourist }: {
+  listing: ListingResult; isAr: boolean; domain: string; isTourist: boolean;
+}) {
   const ptLabel = isAr ? (PT_LABELS[listing.propertyType] ?? listing.propertyType) : listing.propertyType;
   const portalBase = domain ? `https://${domain}` : "";
   const url = `${portalBase}/listings/${listing.id}`;
+  const priceLabel = isTourist
+    ? `${fmtPrice(listing.price, listing.currency)}${isAr ? "/ليلة" : "/night"}`
+    : fmtPrice(listing.price, listing.currency);
 
   return (
     <View style={s.listingCard}>
@@ -137,14 +147,19 @@ function ListingCard({ listing, isAr, domain }: { listing: ListingResult; isAr: 
         <Image source={{ uri: listing.image }} style={s.listingImg} resizeMode="cover" />
       ) : (
         <View style={[s.listingImg, s.listingImgFallback]}>
-          <Text style={{ fontSize: 28 }}>🏠</Text>
+          <Text style={{ fontSize: 28 }}>{isTourist ? "🏨" : "🏠"}</Text>
         </View>
       )}
 
       <View style={s.listingBadge}>
         <Text style={s.listingBadgeText}>{ptLabel}</Text>
       </View>
-      {listing.listingType === "rent" && (
+      {isTourist && (
+        <View style={[s.listingBadge, { right: 8, left: undefined, backgroundColor: "#0891b2" }]}>
+          <Text style={s.listingBadgeText}>{isAr ? "🏨 إقامة" : "🏨 Stay"}</Text>
+        </View>
+      )}
+      {!isTourist && listing.listingType === "rent" && (
         <View style={[s.listingBadge, { right: 8, left: undefined, backgroundColor: "#059669" }]}>
           <Text style={s.listingBadgeText}>{isAr ? "إيجار" : "Rent"}</Text>
         </View>
@@ -161,7 +176,7 @@ function ListingCard({ listing, isAr, domain }: { listing: ListingResult; isAr: 
         </View>
 
         <View style={[s.listingRow, { justifyContent: "space-between" }]}>
-          <Text style={s.listingPrice}>{fmtPrice(listing.price, listing.currency)}</Text>
+          <Text style={s.listingPrice}>{priceLabel}</Text>
           {listing.bedrooms != null && (
             <View style={s.listingRow}>
               <MaterialIcons name="bed" size={13} color="rgba(15,32,64,0.45)" />
@@ -189,8 +204,8 @@ export default function AiChatScreen() {
   const greeting: ChatMessage = {
     id: "0", role: "assistant",
     content: isAr
-      ? "هلا! أنا HousIn AI سكرتيرك العقاري الذكي 🤖\nتدلل واسألني — ابحث لك عن العقار المناسب 😎"
-      : "Hello! I'm HousIn AI, your smart real estate secretary 🤖\nTell me what you're looking for and I'll find it for you!",
+      ? "يا هلا والله 👋\nتدور سكن دايم ولا إقامة سياحية؟"
+      : "Welcome! 👋\nAre you looking for permanent housing or a tourist stay?",
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([greeting]);
@@ -212,10 +227,10 @@ export default function AiChatScreen() {
       setMessages((prev) => [...prev, { id: searchId, role: "searching" }]);
       scrollBottom();
       try {
-        const listings = await searchListings(history, domain);
+        const { listings, mode } = await searchListings(history, domain);
         setMessages((prev) => [
           ...prev.filter((m) => m.id !== searchId),
-          { id: `listings_${Date.now()}`, role: "listings", listings },
+          { id: `listings_${Date.now()}`, role: "listings", listings, mode },
         ]);
       } catch {
         setMessages((prev) => prev.filter((m) => m.id !== searchId));
@@ -366,16 +381,18 @@ export default function AiChatScreen() {
 
           // Listings cards
           if (item.role === "listings") {
+            const isTourist = item.mode === "tourist";
+            const label = isTourist
+              ? (isAr ? `وجدت ${item.listings.length} خيار إقامة يناسبك 🏨` : `Found ${item.listings.length} stay options 🏨`)
+              : (isAr ? `وجدت ${item.listings.length} عقار يناسبك 🏡` : `Found ${item.listings.length} matching properties 🏡`);
             return (
               <View style={{ gap: 8 }}>
                 <View style={[s.row, { alignItems: "center" }]}>
-                  <Text style={s.avatar}>🤖</Text>
-                  <Text style={s.resultsMeta}>
-                    {isAr ? `وجدت ${item.listings.length} عقار يناسبك 🏡` : `Found ${item.listings.length} matching properties 🏡`}
-                  </Text>
+                  <Text style={s.avatar}>{isTourist ? "🏨" : "🤖"}</Text>
+                  <Text style={s.resultsMeta}>{label}</Text>
                 </View>
                 {item.listings.map((l) => (
-                  <ListingCard key={l.id} listing={l} isAr={isAr} domain={domain} />
+                  <ListingCard key={l.id} listing={l} isAr={isAr} domain={domain} isTourist={isTourist} />
                 ))}
               </View>
             );
