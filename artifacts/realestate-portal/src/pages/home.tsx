@@ -108,14 +108,26 @@ const MOCK_LISTINGS: Listing[] = [
 
 // ── Tourism Destinations ────────────────────────────────────────────────────────
 const TOURISM_SPOTS = [
-  { nameAr: 'الرياض', nameEn: 'Riyadh', lat: 24.7136, lng: 46.6753, hotels: 320, tag: 'العاصمة', img: 'https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?w=400&q=80' },
-  { nameAr: 'جدة', nameEn: 'Jeddah', lat: 21.5433, lng: 39.1728, hotels: 280, tag: 'الكورنيش', img: 'https://images.unsplash.com/photo-1519817650390-64a93db51149?w=400&q=80' },
-  { nameAr: 'مكة المكرمة', nameEn: 'Makkah', lat: 21.3891, lng: 39.8579, hotels: 450, tag: 'الحرمين', img: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=400&q=80' },
-  { nameAr: 'المدينة المنورة', nameEn: 'Madinah', lat: 24.4686, lng: 39.6142, hotels: 380, tag: 'الحرمين', img: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=400&q=80' },
-  { nameAr: 'العُلا', nameEn: 'AlUla', lat: 26.6202, lng: 37.9218, hotels: 45, tag: 'التراث', img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400&q=80' },
-  { nameAr: 'أبها', nameEn: 'Abha', lat: 18.2164, lng: 42.5053, hotels: 90, tag: 'الجبال', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80' },
-  { nameAr: 'نيوم', nameEn: 'NEOM', lat: 28.0339, lng: 35.1339, hotels: 30, tag: 'المستقبل', img: 'https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=400&q=80' },
-  { nameAr: 'الدرعية', nameEn: 'Diriyah', lat: 24.7342, lng: 46.5738, hotels: 25, tag: 'التراث', img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&q=80' },
+  { nameAr: 'الرياض',        nameEn: 'Riyadh',         lat: 24.7136, lng: 46.6753, hotels: 320, tag: 'العاصمة',  img: 'https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?w=400&q=80' },
+  { nameAr: 'جدة',           nameEn: 'Jeddah',          lat: 21.5433, lng: 39.1728, hotels: 280, tag: 'الكورنيش', img: 'https://images.unsplash.com/photo-1519817650390-64a93db51149?w=400&q=80' },
+  { nameAr: 'مكة المكرمة',   nameEn: 'Makkah',          lat: 21.3891, lng: 39.8579, hotels: 450, tag: 'الحرمين',  img: 'https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=400&q=80' },
+  { nameAr: 'المدينة المنورة',nameEn: 'Madinah',         lat: 24.4686, lng: 39.6142, hotels: 380, tag: 'الحرمين',  img: 'https://images.unsplash.com/photo-1608889825103-eb5ed706fc64?w=400&q=80' },
+  { nameAr: 'العُلا',        nameEn: 'AlUla',            lat: 26.6202, lng: 37.9218, hotels: 45,  tag: 'التراث',   img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400&q=80' },
+  { nameAr: 'أبها',          nameEn: 'Abha',             lat: 18.2164, lng: 42.5053, hotels: 90,  tag: 'الجبال',   img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80' },
+  { nameAr: 'نيوم',          nameEn: 'NEOM',             lat: 28.0339, lng: 35.1339, hotels: 30,  tag: 'المستقبل', img: 'https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=400&q=80' },
+  { nameAr: 'الدرعية',       nameEn: 'Diriyah',          lat: 24.7342, lng: 46.5738, hotels: 25,  tag: 'التراث',   img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&q=80' },
+  { nameAr: 'الخبر',         nameEn: 'Khobar',           lat: 26.2172, lng: 50.1971, hotels: 110, tag: 'الخليج',   img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
+  { nameAr: 'الدمام',        nameEn: 'Dammam',           lat: 26.4207, lng: 50.0888, hotels: 140, tag: 'الشرقية',  img: 'https://images.unsplash.com/photo-1565118531796-763e5082d113?w=400&q=80' },
+  { nameAr: 'تبوك',          nameEn: 'Tabuk',            lat: 28.3998, lng: 36.5700, hotels: 65,  tag: 'الشمال',   img: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=400&q=80' },
+  { nameAr: 'بريدة',         nameEn: 'Buraidah',         lat: 26.3260, lng: 43.9750, hotels: 55,  tag: 'القصيم',   img: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?w=400&q=80' },
+  { nameAr: 'خميس مشيط',    nameEn: 'Khamis Mushait',   lat: 18.3063, lng: 42.7295, hotels: 70,  tag: 'عسير',     img: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&q=80' },
+  { nameAr: 'جيزان',         nameEn: 'Jizan',            lat: 16.8892, lng: 42.5611, hotels: 40,  tag: 'الجنوب',   img: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=80' },
+  { nameAr: 'نجران',         nameEn: 'Najran',           lat: 17.4930, lng: 44.1277, hotels: 35,  tag: 'الجنوب',   img: 'https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=400&q=80' },
+  { nameAr: 'الخرج',         nameEn: 'Alkharj',          lat: 24.1462, lng: 47.3282, hotels: 30,  tag: 'الوسط',    img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&q=80' },
+  { nameAr: 'عنيزة',         nameEn: 'Unaizah',          lat: 26.0840, lng: 43.9940, hotels: 25,  tag: 'القصيم',   img: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=400&q=80' },
+  { nameAr: 'المجمعة',       nameEn: 'Majmaah',          lat: 25.9038, lng: 45.3437, hotels: 18,  tag: 'سدير',     img: 'https://images.unsplash.com/photo-1504198266287-1659872e6590?w=400&q=80' },
+  { nameAr: 'شقراء',         nameEn: 'Shaqra',           lat: 25.2490, lng: 45.2530, hotels: 15,  tag: 'الوسط',    img: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400&q=80' },
+  { nameAr: 'الخفجي',        nameEn: 'Khafji',           lat: 28.3340, lng: 48.4940, hotels: 22,  tag: 'الشمالية', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80' },
 ];
 
 function TourismMap({ isRtl }: { isRtl: boolean }) {

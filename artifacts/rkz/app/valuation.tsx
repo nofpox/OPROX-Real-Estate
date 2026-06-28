@@ -134,11 +134,19 @@ export default function ValuationScreen() {
             <Text style={s.label}>{isAr ? "المدينة" : "City"}</Text>
             <TextInput
               style={[s.input, isAr && { textAlign: "right" }]}
-              placeholder={isAr ? "مثال: الرياض، جدة..." : "e.g. Riyadh, Jeddah..."}
+              placeholder={isAr ? "اختر أو اكتب المدينة..." : "Pick or type a city..."}
               placeholderTextColor="rgba(15,32,64,0.35)"
               value={city}
               onChangeText={setCity}
             />
+            {/* City chips */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }} contentContainerStyle={{ gap: 6, paddingHorizontal: 0 }}>
+              {cityList.map(c => (
+                <Pressable key={c} onPress={() => setCity(c)} style={[s.cityChip, city === c && s.cityChipActive]}>
+                  <Text style={[s.cityChipText, city === c && s.cityChipTextActive]}>{c}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
 
           {/* Type */}
@@ -319,4 +327,12 @@ const s = StyleSheet.create({
     textAlign: "center", lineHeight: 17, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.1)",
     paddingTop: 10,
   },
+
+  cityChip: {
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+    borderWidth: 1.5, borderColor: "rgba(15,32,64,0.15)", backgroundColor: "#f1f5f9",
+  },
+  cityChipActive:     { backgroundColor: GOLD, borderColor: GOLD },
+  cityChipText:       { fontSize: 12, fontFamily: "Inter_500Medium", color: "rgba(15,32,64,0.6)" },
+  cityChipTextActive: { color: "#fff", fontFamily: "Inter_600SemiBold" },
 });
