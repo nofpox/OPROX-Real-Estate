@@ -93,7 +93,7 @@ export default function ProfileScreen() {
           <View style={s.statDivider} />
           <View style={s.statBox}>
             <Text style={s.statNum}>0</Text>
-            <Text style={s.statLabel}>{isAr ? "بحوثات محفوظة" : "Saved Searches"}</Text>
+            <Text style={s.statLabel}>{t.profile.myListings}</Text>
           </View>
           <View style={s.statDivider} />
           <View style={s.statBox}>
@@ -132,6 +132,12 @@ export default function ProfileScreen() {
             icon="notifications-none"
             label={t.profile.notifications}
             onPress={() => {}}
+          />
+          <MenuItem
+            icon="campaign"
+            label={t.profile.myListings}
+            value="0"
+            onPress={() => router.push("/(tabs)/explore" as never)}
           />
           <MenuItem
             icon="bookmark-border"
