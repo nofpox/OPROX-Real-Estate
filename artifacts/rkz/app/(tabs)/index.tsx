@@ -316,7 +316,7 @@ export default function HomeScreen() {
         )}
 
         <Pressable style={s.aiBubble} onPress={openAiChat}>
-          <Text style={s.aiBubbleEmoji}>🤖</Text>
+          <Image source={require('@/assets/ai-avatar.png')} style={{ width: 38, height: 38 }} resizeMode="contain" />
         </Pressable>
       </Animated.View>
     </View>
@@ -428,7 +428,6 @@ const s = StyleSheet.create({
     borderWidth: 2.5,
     borderColor: GOLD,
   },
-  aiBubbleEmoji: { fontSize: 28 },
   aiTooltip: {
     backgroundColor: NAVY,
     borderRadius: 14,
