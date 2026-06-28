@@ -20,11 +20,23 @@ interface ListingResult {
   areaSqm: number | null;
 }
 
-type ChatMode = 'real_estate' | 'tourist';
+type ChatMode = 'real_estate' | 'tourist' | 'owner';
+
+interface OwnerListingData {
+  title: string;
+  propertyType: string;
+  listingType: string;
+  city: string;
+  district: string;
+  price: number | null;
+  areaSqm: number | null;
+  bedrooms: number | null;
+}
 
 type ChatMessage =
   | { id: string; role: 'user' | 'assistant'; content: string }
   | { id: string; role: 'listings'; listings: ListingResult[]; mode: ChatMode }
+  | { id: string; role: 'owner_summary'; data: OwnerListingData; published?: boolean; publishedId?: number }
   | { id: string; role: 'searching' };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -32,10 +44,15 @@ const TRIGGER_RE_AR  = 'تمام بدور لك الحين';
 const TRIGGER_RE_EN  = 'Great, searching for you now';
 const TRIGGER_TUR_AR = 'جهزت لك اقتراحات إقامتك';
 const TRIGGER_TUR_EN = 'here are your stay options';
+const TRIGGER_OWN_AR = 'جهزت ملخص عقارك';
+const TRIGGER_OWN_EN = 'your listing summary is ready';
 
 function hasTrigger(text: string) {
   return text.includes(TRIGGER_RE_AR)  || text.includes(TRIGGER_RE_EN) ||
          text.includes(TRIGGER_TUR_AR) || text.includes(TRIGGER_TUR_EN);
+}
+function hasOwnerTrigger(text: string) {
+  return text.includes(TRIGGER_OWN_AR) || text.includes(TRIGGER_OWN_EN);
 }
 
 function isArabicText(text: string) {
@@ -74,6 +91,26 @@ async function searchListings(messages: Array<{ role: string; content: string }>
   return { listings: data.listings ?? [], mode: data.mode ?? 'real_estate' };
 }
 
+async function extractOwnerData(messages: Array<{ role: string; content: string }>): Promise<OwnerListingData> {
+  const res = await fetch('/api/rkz/extract-owner-data', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages }),
+  });
+  if (!res.ok) throw new Error('Extraction failed');
+  return res.json() as Promise<OwnerListingData>;
+}
+
+async function submitOwnerListing(data: OwnerListingData): Promise<{ success: boolean; id: number }> {
+  const res = await fetch('/api/rkz/owner-submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Submit failed');
+  return res.json() as Promise<{ success: boolean; id: number }>;
+}
+
 async function transcribeAudio(blob: Blob): Promise<string> {
   const form = new FormData();
   form.append('audio', blob, 'voice.webm');
@@ -81,6 +118,88 @@ async function transcribeAudio(blob: Blob): Promise<string> {
   if (!res.ok) throw new Error('Transcription failed');
   const data = await res.json() as { text: string };
   return data.text ?? '';
+}
+
+const PT_LABELS_EN: Record<string, string> = {
+  villa: 'Villa', apartment: 'Apartment', commercial: 'Commercial',
+  land: 'Land', hotel: 'Hotel', compound: 'Compound',
+};
+const LT_LABELS: Record<string, { ar: string; en: string }> = {
+  sale: { ar: 'بيع', en: 'For Sale' },
+  rent: { ar: 'إيجار', en: 'For Rent' },
+};
+
+function OwnerSummaryCard({
+  msg, isRtl, onPublish,
+}: {
+  msg: Extract<ChatMessage, { role: 'owner_summary' }>;
+  isRtl: boolean;
+  onPublish: (msgId: string) => Promise<void>;
+}) {
+  const [publishing, setPublishing] = useState(false);
+  const d = msg.data;
+  const ptLabel = isRtl ? (PT_LABELS[d.propertyType] ?? d.propertyType) : (PT_LABELS_EN[d.propertyType] ?? d.propertyType);
+  const ltLabel = isRtl ? (LT_LABELS[d.listingType]?.ar ?? d.listingType) : (LT_LABELS[d.listingType]?.en ?? d.listingType);
+  const location = [d.district, d.city].filter(Boolean).join('، ');
+
+  async function handlePublish() {
+    setPublishing(true);
+    try { await onPublish(msg.id); } finally { setPublishing(false); }
+  }
+
+  if (msg.published) {
+    return (
+      <div className="rounded-xl px-4 py-4 text-center space-y-1"
+        style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #22c55e' }}>
+        <p className="text-2xl">✅</p>
+        <p className="text-sm font-bold" style={{ color: '#15803d' }}>
+          {isRtl ? 'تم نشر عقارك بنجاح!' : 'Listing published successfully!'}
+        </p>
+        <a href={`/listings/${msg.publishedId}`} target="_blank" rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-xs underline"
+          style={{ color: NAVY }}>
+          <ExternalLink size={11} />
+          {isRtl ? 'مشاهدة الإعلان' : 'View Listing'}
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl overflow-hidden"
+      style={{ backgroundColor: '#fff', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', border: `1.5px solid ${GOLD}60` }}>
+      <div className="px-4 py-3" style={{ backgroundColor: NAVY }}>
+        <p className="text-sm font-bold" style={{ color: GOLD }}>
+          📋 {isRtl ? 'ملخص عقارك' : 'Your Listing Summary'}
+        </p>
+      </div>
+      <div className="px-4 py-3 space-y-2">
+        {[
+          { label: isRtl ? 'النوع' : 'Type', value: `${ptLabel} — ${ltLabel}` },
+          { label: isRtl ? 'الموقع' : 'Location', value: location || '—' },
+          { label: isRtl ? 'السعر' : 'Price', value: d.price ? `${d.price.toLocaleString('en-SA')} SAR` : '—' },
+          { label: isRtl ? 'المساحة' : 'Area', value: d.areaSqm ? `${d.areaSqm} م²` : '—' },
+          { label: isRtl ? 'الغرف' : 'Rooms', value: d.bedrooms ? String(d.bedrooms) : '—' },
+        ].map(({ label, value }) => (
+          <div key={label} className="flex justify-between text-xs gap-3">
+            <span style={{ color: 'rgba(15,32,64,0.5)' }}>{label}</span>
+            <span className="font-medium text-right" style={{ color: NAVY }}>{value}</span>
+          </div>
+        ))}
+      </div>
+      <div className="px-4 pb-3">
+        <button
+          onClick={handlePublish}
+          disabled={publishing}
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-60"
+          style={{ backgroundColor: GOLD, color: NAVY }}>
+          {publishing
+            ? <><Loader2 size={15} className="animate-spin" />{isRtl ? 'جارٍ النشر...' : 'Publishing...'}</>
+            : <>{isRtl ? '🚀 انشر العقار' : '🚀 Publish Listing'}</>}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -211,8 +330,8 @@ export function FloatingAIBubble() {
   const greeting: ChatMessage = {
     id: '0', role: 'assistant',
     content: isRtl
-      ? 'يا هلا والله 👋\nتدور سكن دايم ولا إقامة سياحية؟'
-      : 'Welcome! 👋\nAre you looking for permanent housing or a tourist stay?',
+      ? 'يا هلا والله 👋\nتبغى تسكن، تسافر، ولا عندك عقار تبي تنشره؟'
+      : 'Welcome! 👋\nLooking to find a home, plan a stay, or list your property?',
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([greeting]);
@@ -258,6 +377,33 @@ export function FloatingAIBubble() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 120);
   }, []);
 
+  const fetchAndShowOwnerSummary = useCallback(async (history: Array<{ role: 'user' | 'assistant'; content: string }>) => {
+    const searchId = `search_${Date.now()}`;
+    setMessages(prev => [...prev, { id: searchId, role: 'searching' }]);
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+    try {
+      const data = await extractOwnerData(history);
+      const summaryId = `owner_${Date.now()}`;
+      setMessages(prev => [
+        ...prev.filter(m => m.id !== searchId),
+        { id: summaryId, role: 'owner_summary', data, published: false },
+      ]);
+    } catch {
+      setMessages(prev => prev.filter(m => m.id !== searchId));
+    }
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 120);
+  }, []);
+
+  const handlePublish = useCallback(async (msgId: string) => {
+    const msg = messages.find(m => m.id === msgId);
+    if (!msg || msg.role !== 'owner_summary') return;
+    const result = await submitOwnerListing(msg.data);
+    setMessages(prev => prev.map(m =>
+      m.id === msgId ? { ...m, published: true, publishedId: result.id } : m
+    ));
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+  }, [messages]);
+
   const sendText = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
     setInput('');
@@ -279,9 +425,11 @@ export function FloatingAIBubble() {
           const replyMsg: ChatMessage = { id: Date.now().toString() + 'r', role: 'assistant', content: reply };
           setMessages(p => [...p, replyMsg]);
 
-          // Trigger listing search when bot signals it found enough info
+          // Trigger listing search or owner summary when bot signals readiness
           if (hasTrigger(reply)) {
             await fetchAndShowListings([...history, { role: 'assistant', content: reply }]);
+          } else if (hasOwnerTrigger(reply)) {
+            await fetchAndShowOwnerSummary([...history, { role: 'assistant', content: reply }]);
           }
         } catch {
           setMessages(p => [...p, {
@@ -296,7 +444,7 @@ export function FloatingAIBubble() {
       })();
       return updated;
     });
-  }, [loading, isRtl, fetchAndShowListings]);
+  }, [loading, isRtl, fetchAndShowListings, fetchAndShowOwnerSummary]);
 
   async function handleSend() { await sendText(input); }
   function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -398,6 +546,21 @@ export function FloatingAIBubble() {
                     <div key={msg.id} className="flex items-end gap-2">
                       <span className="text-xl flex-shrink-0 mb-0.5">🤖</span>
                       <SearchingCard isRtl={isRtl} />
+                    </div>
+                  );
+                }
+
+                // Owner summary card
+                if (msg.role === 'owner_summary') {
+                  return (
+                    <div key={msg.id} className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">🏠</span>
+                        <span className="text-xs font-medium" style={{ color: 'rgba(15,32,64,0.5)' }}>
+                          {isRtl ? 'ملخص العقار' : 'Listing Summary'}
+                        </span>
+                      </div>
+                      <OwnerSummaryCard msg={msg} isRtl={isRtl} onPublish={handlePublish} />
                     </div>
                   );
                 }

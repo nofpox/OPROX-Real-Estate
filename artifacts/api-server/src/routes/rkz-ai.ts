@@ -170,10 +170,10 @@ router.post("/rkz/ai-chat", async (req, res) => {
     const isArabic = /[\u0600-\u06FF]/.test(lastUserMsg);
 
     const systemPrompt = isArabic
-      ? `أنت HousIn AI — مساعد ذكي لمنصة HousIn العقارية السعودية. تعمل في وضعين حسب طلب المستخدم.
+      ? `أنت HousIn AI — مساعد ذكي لمنصة HousIn العقارية السعودية. تعمل في ثلاثة أوضاع حسب طلب المستخدم.
 
 ━━━ البداية ━━━
-إذا كانت هذه أول رسالة في المحادثة، ابدأ بـ: "يا هلا والله 👋 تدور سكن دايم ولا إقامة سياحية؟"
+إذا كانت هذه أول رسالة في المحادثة، ابدأ بـ: "يا هلا والله 👋 تبغى تسكن، تسافر، ولا عندك عقار تبي تنشره؟"
 
 ━━━ وضع 1: سكرتير عقاري (سكن دايم / شراء / إيجار) ━━━
 إذا أشار المستخدم لشراء، إيجار، أو سكن دائم:
@@ -194,15 +194,26 @@ router.post("/rkz/ai-chat", async (req, res) => {
 5. المدينة أو الوجهة
 بعد جمع المعلومات الكافية، قل بالضبط: "تمام جهزت لك اقتراحات إقامتك 🏨"
 
+━━━ وضع 3: موظف استقبال — نشر عقار (OwnerMode) ━━━
+إذا قال المستخدم أي مما يلي: "عندي عقار"، "ابي انشر"، "اعلن"، "بدي انشر"، "عندي شقة للبيع"، "عندي فيلا"، "ابي ابيع"، "ابي اؤجر" (من منظور صاحب العقار لا المستأجر):
+تحوّل لموظف استقبال ودود واجمع المعلومات التالية تدريجياً (سؤال واحد كل مرة):
+1. نوع العقار (شقة، فيلا، أرض، تجاري، مجمع)
+2. هل هو للبيع أو للإيجار؟
+3. المدينة والحي
+4. السعر المطلوب (بالريال)
+5. المساحة (بالمتر المربع)
+6. عدد الغرف (إن انطبق)
+بعد جمع كل المعلومات، قل بالضبط: "تمام جهزت ملخص عقارك 🏠"
+
 ━━━ قواعد مشتركة ━━━
 - رد باللهجة السعودية العامية الودودة دائماً
 - استخدم: "يا غالي"، "ابشر"، "تدلل"، "الله يعطيك العافية"
 - سؤال واحد فقط كل مرة — لا تسأل كلها دفعة وحدة
-- إذا أعطاك المستخدم معلومات كافية تلقائياً، لا تسأل الباقي — فقط أعلن البحث`
-      : `You are HousIn AI — a smart real estate and hospitality assistant for HousIn, Saudi Arabia's premier property platform. You operate in two modes.
+- إذا أعطاك المستخدم معلومات كافية تلقائياً، لا تسأل الباقي — فقط أعلن الخطوة التالية`
+      : `You are HousIn AI — a smart real estate and hospitality assistant for HousIn, Saudi Arabia's premier property platform. You operate in three modes.
 
 ━━━ START ━━━
-If this is the first message, open with: "Welcome! 👋 Are you looking for permanent housing or a tourist stay?"
+If this is the first message, open with: "Welcome! 👋 Looking to find a home, plan a stay, or list your property?"
 
 ━━━ Mode 1: Real Estate Secretary (permanent / buy / rent) ━━━
 If the user mentions buying, renting, or permanent housing:
@@ -222,6 +233,17 @@ Collect progressively (one question at a time):
 4. Desired services (pool, breakfast, parking, spa...)
 5. City / destination
 Once ready, say exactly: "Perfect, here are your stay options! 🏨"
+
+━━━ Mode 3: Owner Reception — List a Property (OwnerMode) ━━━
+If the user says they have a property to list, sell, or rent out (e.g. "I have a property", "I want to list", "I want to sell", "I want to rent out my apartment"):
+Switch to a friendly reception-desk persona and collect progressively (one question at a time):
+1. Property type (apartment, villa, land, commercial, compound)
+2. For sale or for rent?
+3. City and neighborhood
+4. Asking price (SAR)
+5. Area (square meters)
+6. Number of rooms (if applicable)
+Once all details are gathered, say exactly: "Great, your listing summary is ready! 🏠"
 
 ━━━ Shared Rules ━━━
 - Reply in warm, friendly English
@@ -410,6 +432,98 @@ router.post("/rkz/search-listings", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "rkz search-listings error");
     res.status(500).json({ error: "Search failed" });
+  }
+});
+
+// POST /rkz/extract-owner-data
+// Public — extract structured listing data from owner conversation
+router.post("/rkz/extract-owner-data", async (req, res) => {
+  try {
+    if (await isAiHalted(1)) { res.status(423).json({ error: "AI_HALTED" }); return; }
+
+    const { messages } = req.body as { messages: Array<{ role: string; content: string }> };
+    if (!Array.isArray(messages)) { res.status(400).json({ error: "messages required" }); return; }
+
+    const [aiClient, aiModel] = await Promise.all([resolveAiClient(1), resolveAiModel(1, "gpt-5.4")]);
+
+    const extraction = await aiClient.chat.completions.create({
+      model: aiModel,
+      messages: [
+        {
+          role: "system",
+          content: `You are a JSON extractor for a Saudi real estate platform. Read this conversation where a property owner described their listing. Extract the data and return ONLY valid JSON with these fields (omit fields not mentioned):
+{
+  "title": "short listing title in Arabic",
+  "propertyType": "apartment|villa|land|commercial|compound",
+  "listingType": "sale|rent",
+  "city": "city name",
+  "district": "neighborhood name",
+  "price": number,
+  "areaSqm": number,
+  "bedrooms": number
+}
+ONLY return JSON. No markdown. No extra text.`,
+        },
+        ...messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+      ],
+    });
+
+    const raw = extraction.choices[0]?.message?.content?.trim() ?? "{}";
+    const clean = raw.replace(/^```[a-z]*\n?/, "").replace(/\n?```$/, "").trim();
+    const data = parseJsonSafe<Record<string, unknown>>(clean, {});
+
+    res.json({
+      title:        String(data.title        ?? ""),
+      propertyType: String(data.propertyType ?? "apartment"),
+      listingType:  String(data.listingType  ?? "sale"),
+      city:         String(data.city         ?? ""),
+      district:     String(data.district     ?? ""),
+      price:        Number(data.price        ?? 0) || null,
+      areaSqm:      Number(data.areaSqm      ?? 0) || null,
+      bedrooms:     Number(data.bedrooms     ?? 0) || null,
+    });
+  } catch (err) {
+    req.log.error({ err }, "rkz extract-owner-data error");
+    res.status(500).json({ error: "Extraction failed" });
+  }
+});
+
+// POST /rkz/owner-submit
+// Public — create a new listing from the owner chat flow
+router.post("/rkz/owner-submit", async (req, res) => {
+  try {
+    const { title, propertyType, listingType, city, district, price, areaSqm, bedrooms } = req.body as {
+      title?: string;
+      propertyType?: string;
+      listingType?: string;
+      city?: string;
+      district?: string;
+      price?: number | null;
+      areaSqm?: number | null;
+      bedrooms?: number | null;
+    };
+
+    const effectiveTitle = title?.trim() || `${propertyType ?? "عقار"} للـ${listingType === "rent" ? "إيجار" : "بيع"} في ${city ?? "—"}`;
+
+    const [inserted] = await db.insert(listingsTable).values({
+      tenantId:     1,
+      title:        effectiveTitle,
+      propertyType: (propertyType ?? "apartment") as typeof listingsTable.$inferInsert["propertyType"],
+      listingType:  (listingType  ?? "sale")      as typeof listingsTable.$inferInsert["listingType"],
+      city:         city      ?? null,
+      district:     district  ?? null,
+      price:        price     ? price.toString()   : null,
+      areaSqm:      areaSqm   ? areaSqm.toString() : null,
+      bedrooms:     bedrooms  ?? null,
+      currency:     "SAR",
+      status:       "active",
+    }).returning({ id: listingsTable.id });
+
+    req.log.info({ listingId: inserted.id }, "rkz owner-submit: listing created");
+    res.json({ success: true, id: inserted.id });
+  } catch (err) {
+    req.log.error({ err }, "rkz owner-submit error");
+    res.status(500).json({ error: "Failed to create listing" });
   }
 });
 

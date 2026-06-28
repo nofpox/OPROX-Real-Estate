@@ -39,19 +39,37 @@ interface ListingResult {
   image: string | null;
 }
 
-type ChatMode = "real_estate" | "tourist";
+type ChatMode = "real_estate" | "tourist" | "owner";
+
+interface OwnerListingData {
+  title: string;
+  propertyType: string;
+  listingType: string;
+  city: string;
+  district: string;
+  price: number | null;
+  areaSqm: number | null;
+  bedrooms: number | null;
+}
 
 type ChatMessage =
   | { id: string; role: "user" | "assistant"; content: string }
   | { id: string; role: "listings"; listings: ListingResult[]; mode: ChatMode }
+  | { id: string; role: "owner_summary"; data: OwnerListingData; published?: boolean; publishedId?: number }
   | { id: string; role: "searching" };
 
 type MicState = "idle" | "recording" | "processing";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
+const TRIGGER_OWN_AR = "جهزت ملخص عقارك";
+const TRIGGER_OWN_EN = "your listing summary is ready";
+
 function hasTrigger(text: string) {
   return text.includes(TRIGGER_RE_AR)  || text.includes(TRIGGER_RE_EN) ||
          text.includes(TRIGGER_TUR_AR) || text.includes(TRIGGER_TUR_EN);
+}
+function hasOwnerTrigger(text: string) {
+  return text.includes(TRIGGER_OWN_AR) || text.includes(TRIGGER_OWN_EN);
 }
 
 function isArabic(text: string) {
@@ -99,6 +117,26 @@ async function searchListings(
   if (!res.ok) throw new Error("Search failed");
   const data = (await res.json()) as { listings: ListingResult[]; mode: ChatMode };
   return { listings: data.listings ?? [], mode: data.mode ?? "real_estate" };
+}
+
+async function extractOwnerData(messages: Array<{ role: string; content: string }>, domain: string): Promise<OwnerListingData> {
+  const res = await fetch(`${apiBase(domain)}/api/rkz/extract-owner-data`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages }),
+  });
+  if (!res.ok) throw new Error("Extraction failed");
+  return res.json() as Promise<OwnerListingData>;
+}
+
+async function submitOwnerListing(data: OwnerListingData, domain: string): Promise<{ success: boolean; id: number }> {
+  const res = await fetch(`${apiBase(domain)}/api/rkz/owner-submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Submit failed");
+  return res.json() as Promise<{ success: boolean; id: number }>;
 }
 
 async function transcribeAudio(blob: Blob, domain: string): Promise<string> {
@@ -194,6 +232,87 @@ function ListingCard({ listing, isAr, domain, isTourist }: {
   );
 }
 
+const PT_LABELS_EN: Record<string, string> = {
+  villa: "Villa", apartment: "Apartment", commercial: "Commercial",
+  land: "Land", hotel: "Hotel", compound: "Compound",
+};
+const LT_LABELS: Record<string, { ar: string; en: string }> = {
+  sale: { ar: "بيع", en: "For Sale" },
+  rent: { ar: "إيجار", en: "For Rent" },
+};
+
+function OwnerSummaryCard({
+  msg, isAr, domain,
+  onPublish,
+}: {
+  msg: Extract<ChatMessage, { role: "owner_summary" }>;
+  isAr: boolean;
+  domain: string;
+  onPublish: (msgId: string) => Promise<void>;
+}) {
+  const [publishing, setPublishing] = useState(false);
+  const d = msg.data;
+  const ptLabel = isAr ? (PT_LABELS[d.propertyType] ?? d.propertyType) : (PT_LABELS_EN[d.propertyType] ?? d.propertyType);
+  const ltLabel = isAr ? (LT_LABELS[d.listingType]?.ar ?? d.listingType) : (LT_LABELS[d.listingType]?.en ?? d.listingType);
+  const location = [d.district, d.city].filter(Boolean).join("، ");
+  const portalBase = domain ? `https://${domain}` : "";
+
+  async function handlePress() {
+    setPublishing(true);
+    try { await onPublish(msg.id); } finally { setPublishing(false); }
+  }
+
+  if (msg.published) {
+    return (
+      <View style={[s.ownerCard, { backgroundColor: "#f0fdf4", borderColor: "#22c55e" }]}>
+        <Text style={{ fontSize: 28, textAlign: "center" }}>✅</Text>
+        <Text style={[s.ownerSuccess, { color: "#15803d" }]}>
+          {isAr ? "تم نشر عقارك بنجاح!" : "Listing published successfully!"}
+        </Text>
+        <Pressable onPress={() => msg.publishedId && Linking.openURL(`${portalBase}/listings/${msg.publishedId}`)}>
+          <Text style={[s.ownerLink, { color: NAVY }]}>
+            {isAr ? "مشاهدة الإعلان ↗" : "View Listing ↗"}
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const rows = [
+    { label: isAr ? "النوع" : "Type", value: `${ptLabel} — ${ltLabel}` },
+    { label: isAr ? "الموقع" : "Location", value: location || "—" },
+    { label: isAr ? "السعر" : "Price", value: d.price ? `${d.price.toLocaleString("en-SA")} SAR` : "—" },
+    { label: isAr ? "المساحة" : "Area", value: d.areaSqm ? `${d.areaSqm} م²` : "—" },
+    { label: isAr ? "الغرف" : "Rooms", value: d.bedrooms ? String(d.bedrooms) : "—" },
+  ];
+
+  return (
+    <View style={s.ownerCard}>
+      <View style={[s.ownerHeader, { backgroundColor: NAVY }]}>
+        <Text style={[s.ownerHeaderText, { color: GOLD }]}>
+          📋 {isAr ? "ملخص عقارك" : "Your Listing Summary"}
+        </Text>
+      </View>
+      <View style={s.ownerBody}>
+        {rows.map(({ label, value }) => (
+          <View key={label} style={s.ownerRow}>
+            <Text style={s.ownerRowLabel}>{label}</Text>
+            <Text style={s.ownerRowValue}>{value}</Text>
+          </View>
+        ))}
+      </View>
+      <Pressable
+        style={({ pressed }) => [s.publishBtn, { opacity: pressed || publishing ? 0.7 : 1 }]}
+        onPress={handlePress}
+        disabled={publishing}>
+        {publishing
+          ? <ActivityIndicator size="small" color={NAVY} />
+          : <Text style={s.publishBtnText}>{isAr ? "🚀 انشر العقار" : "🚀 Publish Listing"}</Text>}
+      </Pressable>
+    </View>
+  );
+}
+
 // ── Main Screen ────────────────────────────────────────────────────────────────
 export default function AiChatScreen() {
   const { isAr } = useLocale();
@@ -204,8 +323,8 @@ export default function AiChatScreen() {
   const greeting: ChatMessage = {
     id: "0", role: "assistant",
     content: isAr
-      ? "يا هلا والله 👋\nتدور سكن دايم ولا إقامة سياحية؟"
-      : "Welcome! 👋\nAre you looking for permanent housing or a tourist stay?",
+      ? "يا هلا والله 👋\nتبغى تسكن، تسافر، ولا عندك عقار تبي تنشره؟"
+      : "Welcome! 👋\nLooking to find a home, plan a stay, or list your property?",
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([greeting]);
@@ -240,6 +359,39 @@ export default function AiChatScreen() {
     [domain],
   );
 
+  // After owner trigger → extract data → inject owner summary card
+  const fetchAndShowOwnerSummary = useCallback(
+    async (history: Array<{ role: string; content: string }>) => {
+      const searchId = `search_${Date.now()}`;
+      setMessages((prev) => [...prev, { id: searchId, role: "searching" }]);
+      scrollBottom();
+      try {
+        const data = await extractOwnerData(history, domain);
+        setMessages((prev) => [
+          ...prev.filter((m) => m.id !== searchId),
+          { id: `owner_${Date.now()}`, role: "owner_summary", data, published: false },
+        ]);
+      } catch {
+        setMessages((prev) => prev.filter((m) => m.id !== searchId));
+      }
+      scrollBottom();
+    },
+    [domain],
+  );
+
+  const handlePublish = useCallback(
+    async (msgId: string) => {
+      const msg = messages.find((m) => m.id === msgId);
+      if (!msg || msg.role !== "owner_summary") return;
+      const result = await submitOwnerListing(msg.data, domain);
+      setMessages((prev) =>
+        prev.map((m) => m.id === msgId ? { ...m, published: true, publishedId: result.id } : m)
+      );
+      scrollBottom();
+    },
+    [messages, domain],
+  );
+
   const sendText = useCallback(
     async (text: string) => {
       if (!text.trim() || loading) return;
@@ -264,6 +416,8 @@ export default function AiChatScreen() {
 
             if (hasTrigger(reply)) {
               await fetchAndShowListings([...history, { role: "assistant", content: reply }]);
+            } else if (hasOwnerTrigger(reply)) {
+              await fetchAndShowOwnerSummary([...history, { role: "assistant", content: reply }]);
             }
           } catch {
             setMessages((p) => [...p, {
@@ -280,7 +434,7 @@ export default function AiChatScreen() {
         return updated;
       });
     },
-    [loading, domain, isAr, fetchAndShowListings],
+    [loading, domain, isAr, fetchAndShowListings, fetchAndShowOwnerSummary],
   );
 
   // ── Mic (web via MediaRecorder) ────────────────────────────────────────────
@@ -375,6 +529,19 @@ export default function AiChatScreen() {
               <View style={s.row}>
                 <Text style={s.avatar}>🤖</Text>
                 <SearchingCard isAr={isAr} />
+              </View>
+            );
+          }
+
+          // Owner summary card
+          if (item.role === "owner_summary") {
+            return (
+              <View key={item.id} style={{ gap: 8 }}>
+                <View style={[s.row, { alignItems: "center" }]}>
+                  <Text style={s.avatar}>🏠</Text>
+                  <Text style={s.resultsMeta}>{isAr ? "ملخص العقار" : "Listing Summary"}</Text>
+                </View>
+                <OwnerSummaryCard msg={item} isAr={isAr} domain={domain} onPublish={handlePublish} />
               </View>
             );
           }
@@ -573,4 +740,26 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
   },
   sendBtnDisabled: { opacity: 0.4 },
+
+  // Owner summary card
+  ownerCard: {
+    borderRadius: 14, overflow: "hidden",
+    borderWidth: 1.5, borderColor: `${GOLD}99`,
+    backgroundColor: "#fff",
+    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  ownerHeader: { paddingHorizontal: 14, paddingVertical: 10 },
+  ownerHeaderText: { fontSize: 13, fontFamily: "Inter_700Bold" },
+  ownerBody: { paddingHorizontal: 14, paddingVertical: 10, gap: 8 },
+  ownerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 8 },
+  ownerRowLabel: { fontSize: 12, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.5)", flex: 1 },
+  ownerRowValue: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: NAVY, flex: 2, textAlign: "right" },
+  ownerSuccess: { fontSize: 13, fontFamily: "Inter_700Bold", textAlign: "center", marginTop: 4 },
+  ownerLink: { fontSize: 12, fontFamily: "Inter_500Medium", textAlign: "center", marginTop: 6, textDecorationLine: "underline" },
+  publishBtn: {
+    marginHorizontal: 14, marginBottom: 12, paddingVertical: 11, borderRadius: 12,
+    backgroundColor: GOLD, alignItems: "center", justifyContent: "center",
+  },
+  publishBtnText: { fontSize: 14, fontFamily: "Inter_700Bold", color: NAVY },
 });
