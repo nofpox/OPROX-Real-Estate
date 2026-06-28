@@ -434,7 +434,9 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
             <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-sidebar-border">
               <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
                 {settings.logoUrl ? (
-                  <img src={settings.logoUrl} alt={settings.logoText} className="h-8 w-auto object-contain max-w-28" />
+                  <div className="bg-white rounded-lg px-2 py-1">
+                    <img src={settings.logoUrl} alt={settings.logoText} className="h-7 w-auto object-contain max-w-28" />
+                  </div>
                 ) : (
                   <>
                     <span className="text-xl">{settings.logoText}</span>
@@ -460,7 +462,9 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
         <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border">
           <Link href="/" className="flex items-center gap-2 font-serif text-xl font-bold tracking-tight text-sidebar-primary">
             {settings.logoUrl ? (
-              <img src={settings.logoUrl} alt={settings.logoText} className="h-8 w-auto object-contain max-w-28" />
+              <div className="bg-white rounded-lg px-2 py-1">
+                <img src={settings.logoUrl} alt={settings.logoText} className="h-7 w-auto object-contain max-w-28" />
+              </div>
             ) : (
               <>
                 <span className="text-xl">{settings.logoText}</span>
@@ -488,7 +492,9 @@ export function Layout({ children, authUser, onLogout }: LayoutProps) {
             </Button>
             <Link href="/" className="flex items-center">
               {settings.logoUrl ? (
-                <img src={settings.logoUrl} alt={settings.logoText} className="h-7 w-auto object-contain max-w-24" />
+                <div className="bg-white rounded-lg px-2 py-0.5">
+                  <img src={settings.logoUrl} alt={settings.logoText} className="h-7 w-auto object-contain max-w-24" />
+                </div>
               ) : (
                 <span className="font-serif text-lg font-bold">{settings.logoText} {settings.logoSub}</span>
               )}

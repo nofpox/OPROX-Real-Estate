@@ -194,7 +194,7 @@ export const APP_SETTINGS: {
   propertyName: "HousIn",
   logoText: "HousIn",
   logoSub: "",
-  logoUrl: `${import.meta.env.BASE_URL}rkz-logo.jpg`,
+  logoUrl: `${import.meta.env.BASE_URL}housin-logo.png`,
   businessMode: "hotel" as const,
   enabledModules: ["maintenance", "housekeeping", "serviceRequests", "staff", "tasks"],
   navConfig: [],
