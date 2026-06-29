@@ -4,7 +4,9 @@ import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect } from "react";
 import {
   Platform,
+  Pressable,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 import Animated, {
@@ -74,8 +76,9 @@ export default function TabLayout() {
     },
     {
       name:  "explore",
-      title: t.tabs.tourism,
-      icon:  (color: string) => <MaterialIcons name="hotel" size={24} color={color} />,
+      title: isAr ? "المصمم" : "AI Design",
+      icon:  (color: string) => <MaterialIcons name="auto-fix-high" size={24} color={color} />,
+      isAiStaging: true,
     },
     {
       name:  "settings",
@@ -144,25 +147,43 @@ export default function TabLayout() {
           name={tab.name}
           options={{
             title: tab.title,
-            tabBarIcon: ({ color, focused }) => (
-              <View style={s.tabItem}>
-                <AnimatedTabIcon focused={focused}>
-                  {tab.icon(focused ? GOLD : "rgba(15,32,64,0.45)")}
-                </AnimatedTabIcon>
-                <Animated.Text
-                  style={{
-                    fontSize: 9,
-                    fontFamily: focused ? "Inter_700Bold" : "Inter_400Regular",
-                    color: focused ? GOLD : "rgba(15,32,64,0.45)",
-                    marginTop: 2,
-                  }}
-                  numberOfLines={1}
-                >
-                  {tab.title}
-                </Animated.Text>
-                {focused && <View style={s.dot} />}
-              </View>
-            ),
+            // AI Staging tab: override the button to push the modal screen instead of switching tabs
+            ...((tab as any).isAiStaging
+              ? {
+                  tabBarButton: () => (
+                    <Pressable
+                      style={s.stagingTabBtn}
+                      onPress={() => router.push("/ai-staging" as never)}
+                    >
+                      <View style={s.stagingTabInner}>
+                        <MaterialIcons name="auto-fix-high" size={24} color={GOLD} />
+                        <Text style={s.stagingTabLabel}>{isAr ? "المصمم" : "AI Design"}</Text>
+                        <View style={s.stagingTabDot} />
+                      </View>
+                    </Pressable>
+                  ),
+                }
+              : {
+                  tabBarIcon: ({ color, focused }) => (
+                    <View style={s.tabItem}>
+                      <AnimatedTabIcon focused={focused}>
+                        {tab.icon(focused ? GOLD : "rgba(15,32,64,0.45)")}
+                      </AnimatedTabIcon>
+                      <Animated.Text
+                        style={{
+                          fontSize: 9,
+                          fontFamily: focused ? "Inter_700Bold" : "Inter_400Regular",
+                          color: focused ? GOLD : "rgba(15,32,64,0.45)",
+                          marginTop: 2,
+                        }}
+                        numberOfLines={1}
+                      >
+                        {tab.title}
+                      </Animated.Text>
+                      {focused && <View style={s.dot} />}
+                    </View>
+                  ),
+                }),
           }}
         />
       ))}
@@ -193,5 +214,36 @@ const s = StyleSheet.create({
     borderRadius:    2,
     backgroundColor: GOLD,
     marginTop:       2,
+  },
+  // AI Staging tab button — always gold, always visible
+  stagingTabBtn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stagingTabInner: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 6,
+    gap: 2,
+    backgroundColor: "rgba(201,168,76,0.12)",
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingBottom: 6,
+    borderWidth: 1,
+    borderColor: "rgba(201,168,76,0.35)",
+  },
+  stagingTabLabel: {
+    fontSize: 9,
+    fontFamily: "Inter_700Bold",
+    color: GOLD,
+    marginTop: 1,
+  },
+  stagingTabDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: GOLD,
+    marginTop: 1,
   },
 });

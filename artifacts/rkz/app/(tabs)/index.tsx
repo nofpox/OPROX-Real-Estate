@@ -254,6 +254,46 @@ export default function HomeScreen() {
             ))}
           </ScrollView>
 
+          {/* ── AI Staging Hero Banner ── */}
+          <Pressable
+            style={s.heroBanner}
+            onPress={() => router.push("/ai-staging" as never)}
+          >
+            <View style={s.heroBannerLeft}>
+              <View style={s.heroBannerBadge}>
+                <Text style={s.heroBannerBadgeText}>🤖 {isAr ? "ذكاء اصطناعي" : "AI Powered"}</Text>
+              </View>
+              <Text style={s.heroBannerTitle}>
+                {isAr
+                  ? "صمّم بيتك الجديد\nبالذكاء الاصطناعي"
+                  : "Design Your New Home\nwith AI"}
+              </Text>
+              <Text style={s.heroBannerDesc}>
+                {isAr
+                  ? "8 أنماط تصميمية — النتيجة في ثوانٍ"
+                  : "8 design styles — results in seconds"}
+              </Text>
+              <View style={s.heroBannerCta}>
+                <Text style={s.heroBannerCtaText}>{isAr ? "جرّب الآن" : "Try Now"}</Text>
+                <MaterialIcons name={isAr ? "arrow-back-ios" : "arrow-forward-ios"} size={12} color={NAVY} />
+              </View>
+            </View>
+            <View style={s.heroBannerRight}>
+              <Text style={{ fontSize: 46 }}>🛋️</Text>
+              <View style={s.heroBannerSparkle}><Text style={{ fontSize: 20 }}>✨</Text></View>
+              <View style={s.heroBannerStyles}>
+                {(isAr
+                  ? ["مودرن", "كلاسيك", "بوهيمي"]
+                  : ["Modern", "Classic", "Boho"]
+                ).map((n) => (
+                  <View key={n} style={s.heroBannerChip}>
+                    <Text style={s.heroBannerChipText}>{n}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </Pressable>
+
           {/* ── Cities ── */}
           <View style={s.sectionHeader}>
             <Text style={s.sectionTitle}>{t.home.cities}</Text>
@@ -441,6 +481,38 @@ const s = StyleSheet.create({
   stagingCta:      { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   stagingCtaText:  { fontSize: 13, fontFamily: "Inter_700Bold", color: GOLD },
   stagingRight:    { alignItems: "center", justifyContent: "center" },
+
+  // ── Hero Banner (above cities) ──────────────────────────────────────────────
+  heroBanner: {
+    marginHorizontal: 16,
+    marginBottom: 20,
+    borderRadius: 22,
+    backgroundColor: NAVY,
+    overflow: "hidden",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 20,
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: "rgba(201,168,76,0.45)",
+    shadowColor: NAVY,
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  heroBannerLeft:  { flex: 1, gap: 8 },
+  heroBannerBadge: { backgroundColor: "rgba(201,168,76,0.2)", borderRadius: 8, paddingHorizontal: 9, paddingVertical: 3, alignSelf: "flex-start", borderWidth: 1, borderColor: "rgba(201,168,76,0.4)" },
+  heroBannerBadgeText: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: GOLD },
+  heroBannerTitle: { fontSize: 20, fontFamily: "Inter_700Bold", color: "#fff", lineHeight: 28 },
+  heroBannerDesc:  { fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 18 },
+  heroBannerCta:   { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: GOLD, alignSelf: "flex-start", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8, marginTop: 4 },
+  heroBannerCtaText: { fontSize: 13, fontFamily: "Inter_700Bold", color: NAVY },
+  heroBannerRight: { alignItems: "center", gap: 4 },
+  heroBannerSparkle: { position: "absolute", top: 0, right: 0 },
+  heroBannerStyles:  { flexDirection: "row", gap: 4, flexWrap: "wrap", marginTop: 4 },
+  heroBannerChip:    { backgroundColor: "rgba(201,168,76,0.18)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3, borderWidth: 1, borderColor: "rgba(201,168,76,0.3)" },
+  heroBannerChipText:{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: GOLD },
 
   // Floating AI Bubble
   aiBubbleWrap: {
