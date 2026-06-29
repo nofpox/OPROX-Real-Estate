@@ -88,11 +88,53 @@ function hasDecorIntent(text: string): boolean {
     ar("مودرن") || ar("كلاسيك") || ar("مينيماليست") || ar("بوهيمي") ||
     ar("اسكندنافي") || ar("أرت ديكو") || ar("صناعي") || ar("سعودي حديث") ||
     ar("المصمم الذكي") || ar("تأثيث ذكي") || ar("تأثيث بالذكاء") ||
+    ar("صمم") || ar("أصمم") || ar("تصميم بيت") || ar("شكل الغرفة") ||
     en("decor") || en("furnish") || en("interior design") || en("staging") ||
     en("furniture") || en("room design") || en("modern style") ||
     en("bohemian") || en("minimalist") || en("scandinavian") ||
     en("art deco") || en("industrial style") || en("ai staging")
   );
+}
+
+/**
+ * Returns true for messages clearly outside real estate + design scope.
+ * Uses a scope-first check: if any real-estate/design keyword present → in-scope.
+ * Only then checks for explicit off-topic signals.
+ */
+function isOutOfScope(text: string): boolean {
+  const t = text.toLowerCase();
+  const ar = (kw: string) => text.includes(kw);
+  const en = (kw: string) => t.includes(kw);
+
+  // Always in scope — real estate & design anchors
+  const inScope =
+    ar("عقار") || ar("شقة") || ar("فيلا") || ar("إيجار") || ar("إيجاري") ||
+    ar("بيع") || ar("بيت") || ar("سكن") || ar("فندق") || ar("غرفة") ||
+    ar("مجمع") || ar("أرض") || ar("استثمار") || ar("ديكور") ||
+    ar("تأثيث") || ar("أثاث") || ar("تصميم") || ar("مصمم") ||
+    ar("مودرن") || ar("بوهيمي") || ar("كلاسيك") || ar("اسكندنافي") ||
+    ar("سياحة") || ar("سفر") || ar("عمرة") || ar("رحلة") || ar("إقامة") ||
+    en("property") || en("apartment") || en("villa") || en("rent") ||
+    en("buy") || en("estate") || en("hotel") || en("room") ||
+    en("design") || en("decor") || en("staging") || en("furnish") ||
+    en("invest") || en("travel") || en("stay") || en("tourism");
+
+  if (inScope) return false;
+
+  // Explicit off-topic signals
+  const offTopic =
+    ar("وصفة") || ar("طبخ") || ar("أكلة") || ar("مطعم") || ar("طعام") ||
+    ar("مباراة") || ar("كرة قدم") || ar("الدوري") || ar("لاعب") ||
+    ar("طب") || ar("دكتور") || ar("علاج") || ar("مرض") || ar("دواء") ||
+    ar("سياسة") || ar("انتخابات") || ar("حكومة") ||
+    ar("فيلم") || ar("مسلسل") || ar("أغنية") || ar("موسيقى") ||
+    ar("برمجة") || ar("مدرسة") || ar("جامعة") || ar("دراسة") ||
+    en("recipe") || en("cooking") || en("football") || en("soccer") ||
+    en("medicine") || en("doctor") || en("politics") || en("election") ||
+    en("movie") || en("music") || en("song") || en("programming") ||
+    en("school") || en("university");
+
+  return offTopic;
 }
 
 function fmtPrice(price: number | null, currency = "SAR") {
@@ -283,7 +325,7 @@ function StagingCtaCard({ isAr }: { isAr: boolean }) {
         ))}
       </View>
       <View style={stg.btn}>
-        <Text style={stg.btnText}>{isAr ? "🪄 افتح المُصمّم الذكي" : "🪄 Open AI Staging"}</Text>
+        <Text style={stg.btnText}>{isAr ? "🪄 جرب المصمم الذكي الآن" : "🪄 Try AI Staging Now"}</Text>
       </View>
     </Pressable>
   );
@@ -475,16 +517,27 @@ export default function AiChatScreen() {
 
         // ── Local décor/staging intent — no API call needed ───────────────
         if (hasDecorIntent(trimmed)) {
-          const arReply = isAr;
           const ctaReply: ChatMessage = {
             id: (Date.now() + 1).toString(),
             role: "assistant",
             stagingCta: true,
-            content: arReply
-              ? `🪄 **المُصمّم الذكي — أثّث غرفتك بالذكاء الاصطناعي!**\n\nاختر من **8 أنماط**: مودرن، كلاسيك، سعودي حديث، بوهيمي، صناعي، مينيماليست، اسكندنافي، أرت ديكو.\n\nصوّر الغرفة الفارغة واحصل على نتيجة احترافية خلال ثوانٍ مع مقارنة قبل/بعد تفاعلية. 👇`
-              : `🪄 **AI Staging — Furnish any room with AI!**\n\nChoose from **8 styles**: Modern, Classic, Modern Saudi, Bohemian, Industrial, Minimalist, Scandinavian, Luxury Art Deco.\n\nPhoto the empty room and get a professional result in seconds with an interactive before/after slider. 👇`,
+            content: isAr
+              ? "يا هلا! 🪄 تبي تغيّر شكل غرفتك؟ جرّب المصمم الذكي — صوّر الغرفة الفارغة واختر من 8 أنماط جاهزة، والنتيجة جاهزة في ثوانٍ مع مقارنة قبل/بعد! 👇"
+              : "Hey! 🪄 Want to redesign your room? Try AI Staging — photo the empty room, pick a style, and get a pro result in seconds with a before/after slider! 👇",
           };
           return [...updated, ctaReply];
+        }
+
+        // ── Out-of-scope guard — no API call, instant canned reply ────────────
+        if (isOutOfScope(trimmed)) {
+          const scopeReply: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: isAr
+              ? "عذراً، أنا متخصص في العقارات والتصاميم، كيف أقدر أساعدك في واحد منهم؟"
+              : "Sorry, I specialize in real estate and design. How can I help you with one of them?",
+          };
+          return [...updated, scopeReply];
         }
 
         (async () => {
