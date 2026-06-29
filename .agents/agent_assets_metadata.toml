@@ -383,3 +383,15 @@ id = "NeUyfzLZu60jt7G1W0DR_"
 uri = "file://docs/housin-investment-brief.md"
 type = "text"
 title = "HousIn — الدليل الاستثماري الشامل"
+
+[[outputs]]
+id = "c38iWH-YG_oyayiOi9KNw"
+uri = "file://attached_assets/poc_before.jpg"
+type = "image"
+title = "قبل — الغرفة الفارغة (صورة الإدخال)"
+
+[[outputs]]
+id = "jlpnCKfojEZvVQStMnCBC"
+uri = "file://attached_assets/poc_after.png"
+type = "image"
+title = "بعد — النتيجة: مؤثَّثة بنمط مودرن (gpt-image-1)"

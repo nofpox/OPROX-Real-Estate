@@ -283,6 +283,32 @@ export default function HomeScreen() {
             ))}
           </View>
 
+          {/* ── AI Staging Banner ── */}
+          <Pressable
+            style={s.stagingBanner}
+            onPress={() => router.push("/ai-staging" as never)}
+          >
+            <View style={s.stagingLeft}>
+              <View style={s.stagingBadge}>
+                <Text style={s.stagingBadgeText}>{isAr ? "جديد" : "NEW"}</Text>
+              </View>
+              <Text style={s.stagingTitle}>{isAr ? "🪄 المُصمّم الذكي" : "🪄 AI Staging"}</Text>
+              <Text style={s.stagingDesc}>
+                {isAr
+                  ? "صوّر غرفتك الفارغة وشاهدها مؤثَّثة باحترافية"
+                  : "Photograph your empty room and see it furnished"}
+              </Text>
+              <View style={s.stagingCta}>
+                <Text style={s.stagingCtaText}>{isAr ? "جرّب الآن" : "Try Now"}</Text>
+                <MaterialIcons name={isAr ? "arrow-back" : "arrow-forward"} size={14} color={GOLD} />
+              </View>
+            </View>
+            <View style={s.stagingRight}>
+              <Text style={{ fontSize: 52 }}>🛋️</Text>
+              <Text style={{ fontSize: 26, marginTop: -10, marginLeft: -16 }}>✨</Text>
+            </View>
+          </Pressable>
+
           {/* ── Estimate Banner ── */}
           <Pressable
             style={s.estimateBanner}
@@ -401,10 +427,20 @@ const s = StyleSheet.create({
   smallPrice:    { fontSize: 13, fontFamily: "Inter_700Bold", color: GOLD },
   smallMeta:     { fontSize: 11, color: "rgba(15,32,64,0.5)" },
 
-  estimateBanner: { margin: 20, backgroundColor: NAVY, borderRadius: 16, padding: 20, flexDirection: "row", alignItems: "center", gap: 12 },
+  estimateBanner: { margin: 20, marginTop: 0, backgroundColor: NAVY, borderRadius: 16, padding: 20, flexDirection: "row", alignItems: "center", gap: 12 },
   estimateTitle:  { fontSize: 16, fontFamily: "Inter_700Bold", color: GOLD, marginBottom: 4 },
   estimateDesc:   { fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 18, marginBottom: 8 },
   estimateCta:    { fontSize: 13, fontFamily: "Inter_600SemiBold", color: GOLD },
+
+  stagingBanner:   { marginHorizontal: 20, marginBottom: 12, borderRadius: 20, overflow: "hidden", backgroundColor: "#0a1628", borderWidth: 1.5, borderColor: "rgba(201,168,76,0.4)", flexDirection: "row", alignItems: "center", padding: 18, gap: 12 },
+  stagingLeft:     { flex: 1, gap: 6 },
+  stagingBadge:    { backgroundColor: GOLD, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, alignSelf: "flex-start" },
+  stagingBadgeText:{ fontSize: 10, fontFamily: "Inter_700Bold", color: NAVY },
+  stagingTitle:    { fontSize: 18, fontFamily: "Inter_700Bold", color: "#fff" },
+  stagingDesc:     { fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 18 },
+  stagingCta:      { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
+  stagingCtaText:  { fontSize: 13, fontFamily: "Inter_700Bold", color: GOLD },
+  stagingRight:    { alignItems: "center", justifyContent: "center" },
 
   // Floating AI Bubble
   aiBubbleWrap: {
