@@ -74,13 +74,13 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
   },
   announcements: [],
   about: {
-    titleEn: "About HousIn",
+    titleEn: "About Housin",
     titleAr: "عن هاوسِن",
-    body: "HousIn is a leading real estate platform in Saudi Arabia.",
+    body: "Housin is a leading real estate platform in Saudi Arabia.",
     imageUrl: "",
   },
   branding: {
-    companyNameEn: "HousIn",
+    companyNameEn: "Housin",
     companyNameAr: "هاوسِن",
     taglineEn: "Premium Property Management",
     taglineAr: "إدارة عقارات متميزة",

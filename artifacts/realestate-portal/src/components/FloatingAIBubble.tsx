@@ -526,7 +526,7 @@ export function FloatingAIBubble() {
             <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ backgroundColor: NAVY }}>
               <img src={aiAvatarUrl} className="w-9 h-9 object-contain flex-shrink-0" alt="AI" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-white leading-tight">HousIn AI</p>
+                <p className="text-sm font-bold text-white leading-tight">Housin AI</p>
                 <p className="text-xs leading-tight" style={{ color: 'rgba(255,255,255,0.55)' }}>
                   {isRtl ? 'سكرتيرك العقاري الذكي · متاح دائماً' : 'Your Smart Real Estate Secretary · Always on'}
                 </p>

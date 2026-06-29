@@ -10,9 +10,9 @@ import { Button } from '@/components/ui/button';
 const BASE = '/realestate-api';
 
 const PORTAL_META: Record<string, { label: string; labelAr: string; path: string }> = {
-  'rkz':       { label: 'HousIn Real Estate Portal', labelAr: 'بوابة HousIn العقارية',  path: '/realestate/' },
-  'grand-pms': { label: 'HousIn Dashboard',          labelAr: 'لوحة تحكم HousIn',        path: '/grand-pms/' },
-  'rkz-app':   { label: 'HousIn Mobile App',         labelAr: 'تطبيق HousIn للجوال',    path: '/rozoz-msrep/' },
+  'rkz':       { label: 'Housin Real Estate Portal', labelAr: 'بوابة Housin العقارية',  path: '/realestate/' },
+  'grand-pms': { label: 'Housin Dashboard',          labelAr: 'لوحة تحكم Housin',        path: '/grand-pms/' },
+  'rkz-app':   { label: 'Housin Mobile App',         labelAr: 'تطبيق Housin للجوال',    path: '/rozoz-msrep/' },
 };
 
 type Status = 'loading' | 'disclaimer' | 'entering' | 'expired' | 'revoked' | 'invalid';
@@ -53,7 +53,7 @@ const LEGAL_CLAUSES = [
     color: 'text-purple-600',
     bg: 'bg-purple-50 border-purple-200',
     title: 'حماية الحقوق الفكرية والابتكارية',
-    body: 'جميع المعلومات والتصاميم والبيانات المعروضة هي ملكية فكرية وابتكارية حصرية لشركة HousIn للحلول الذكية. يُحظر إعادة نشرها أو استخدامها لأي غرض.',
+    body: 'جميع المعلومات والتصاميم والبيانات المعروضة هي ملكية فكرية وابتكارية حصرية لشركة Housin للحلول الذكية. يُحظر إعادة نشرها أو استخدامها لأي غرض.',
   },
   {
     icon: AlertTriangle,
@@ -139,7 +139,7 @@ export function PreviewToken() {
     const isRevoked = status === 'revoked';
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4" dir="rtl">
-        <Helmet><title>رابط غير صالح | HousIn</title></Helmet>
+        <Helmet><title>رابط غير صالح | Housin</title></Helmet>
         <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl space-y-4">
           <div className="w-14 h-14 rounded-full bg-red-900/40 flex items-center justify-center mx-auto">
             {isRevoked
@@ -177,7 +177,7 @@ export function PreviewToken() {
   // ── Main disclaimer screen ────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-900 px-4 py-8 flex flex-col items-center justify-center" dir="rtl">
-      <Helmet><title>شروط الوصول المؤقت | HousIn</title></Helmet>
+      <Helmet><title>شروط الوصول المؤقت | Housin</title></Helmet>
 
       <div className="w-full max-w-md space-y-4">
 
@@ -265,7 +265,7 @@ export function PreviewToken() {
         </button>
 
         <p className="text-center text-[10px] text-slate-600">
-          HousIn للحلول الذكية — جميع الحقوق محفوظة © {new Date().getFullYear()}
+          Housin للحلول الذكية — جميع الحقوق محفوظة © {new Date().getFullYear()}
         </p>
       </div>
     </div>

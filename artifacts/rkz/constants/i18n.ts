@@ -1,9 +1,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// HousIn Real Estate — Bilingual strings (ar / en)
+// Housin Real Estate — Bilingual strings (ar / en)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const ar = {
-  app: { name: "HousIn", tagline: "أكبر منصة عقارية في السعودية" },
+  app: { name: "Housin", tagline: "أكبر منصة عقارية في السعودية" },
   tabs: {
     home: "الرئيسية",
     search: "البحث",
@@ -22,10 +22,10 @@ export const ar = {
     featured: "عقارات مميزة",
     viewAll: "عرض الكل",
     cities: "تصفح بالمدينة",
-    estimate: "HousIn Estimate™",
+    estimate: "Housin Estimate™",
     estimateDesc: "تقييم ذكي لعقارك بناءً على بيانات السوق الفعلية",
     estimateCta: "اعرف قيمة عقارك",
-    welcome: "أهلاً بك في HousIn",
+    welcome: "أهلاً بك في Housin",
   },
   search: {
     title: "البحث",
@@ -89,7 +89,7 @@ export const ar = {
       call: "اتصال",
     },
     estimate: {
-      title: "HousIn Estimate™",
+      title: "Housin Estimate™",
       subtitle: "تقييم بالذكاء الاصطناعي",
       range: "النطاق المتوقع",
       pricePerSqm: "سعر المتر",
@@ -142,7 +142,7 @@ export const ar = {
     notifications: "الإشعارات",
     privacy: "سياسة الخصوصية",
     terms: "الشروط والأحكام",
-    about: "عن HousIn",
+    about: "عن Housin",
     savedSearches: "البحوثات المحفوظة",
     myListings: "إعلاناتي",
     version: "الإصدار",
@@ -211,7 +211,7 @@ export const ar = {
 };
 
 export const en: typeof ar = {
-  app: { name: "HousIn", tagline: "Saudi Arabia's Largest Real Estate Platform" },
+  app: { name: "Housin", tagline: "Saudi Arabia's Largest Real Estate Platform" },
   tabs: {
     home: "Home",
     search: "Search",
@@ -230,10 +230,10 @@ export const en: typeof ar = {
     featured: "Featured Properties",
     viewAll: "View All",
     cities: "Browse by City",
-    estimate: "HousIn Estimate™",
+    estimate: "Housin Estimate™",
     estimateDesc: "AI-powered property valuation based on real market data",
     estimateCta: "Get Your Estimate",
-    welcome: "Welcome to HousIn",
+    welcome: "Welcome to Housin",
   },
   search: {
     title: "Search",
@@ -297,7 +297,7 @@ export const en: typeof ar = {
       call: "Call",
     },
     estimate: {
-      title: "HousIn Estimate™",
+      title: "Housin Estimate™",
       subtitle: "AI-powered market valuation",
       range: "Estimated Range",
       pricePerSqm: "Price per m²",
@@ -350,7 +350,7 @@ export const en: typeof ar = {
     notifications: "Notifications",
     privacy: "Privacy Policy",
     terms: "Terms of Service",
-    about: "About HousIn",
+    about: "About Housin",
     savedSearches: "Saved Searches",
     myListings: "My Listings",
     version: "Version",

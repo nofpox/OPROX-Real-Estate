@@ -176,13 +176,13 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
   },
   announcements: [],
   about: {
-    titleEn: "About HousIn",
+    titleEn: "About Housin",
     titleAr: "عن هاوسِن",
-    body: "HousIn is a leading property management platform in Saudi Arabia, specializing in hotels, residential compounds, and corporate facilities.",
+    body: "Housin is a leading property management platform in Saudi Arabia, specializing in hotels, residential compounds, and corporate facilities.",
     imageUrl: "",
   },
   branding: {
-    companyNameEn: "HousIn",
+    companyNameEn: "Housin",
     companyNameAr: "هاوسِن",
     taglineEn: "Premium Property Management",
     taglineAr: "إدارة عقارات متميزة",
@@ -264,7 +264,7 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     pageTitleAr: "العقارات",
     subtitleEn: "Discover our curated selection of properties across Saudi Arabia.",
     subtitleAr: "اكتشف مجموعة عقاراتنا المختارة في المملكة العربية السعودية.",
-    metaDescription: "Browse properties for sale, rent, and under professional management by HousIn.",
+    metaDescription: "Browse properties for sale, rent, and under professional management by Housin.",
   },
   nav: [
     { href: "/",         labelEn: "Home",             labelAr: "الرئيسية"         },
@@ -281,8 +281,8 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
   cta: {
     headlineEn: "Ready to Maximise Your Property's Potential?",
     headlineAr: "هل أنت مستعد لتعظيم قيمة عقارك؟",
-    subtitleEn: "Get in touch with our team today and discover how HousIn can transform your property assets into a performing investment.",
-    subtitleAr: "تواصل مع فريقنا اليوم واكتشف كيف يمكن لـ HousIn أن يحول أصولك العقارية إلى استثمار مثمر.",
+    subtitleEn: "Get in touch with our team today and discover how Housin can transform your property assets into a performing investment.",
+    subtitleAr: "تواصل مع فريقنا اليوم واكتشف كيف يمكن لـ Housin أن يحول أصولك العقارية إلى استثمار مثمر.",
     buttonEn: "Contact Us",
     buttonAr: "تواصل معنا",
   },

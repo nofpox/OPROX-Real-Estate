@@ -45,7 +45,7 @@ const TYPE_LABELS: Record<string, { ar: string; en: string }> = {
   commercial: { ar: 'تجاري', en: 'Commercial' },
 };
 
-// ── HousIn Estimate Widget ─────────────────────────────────────────────────────
+// ── Housin Estimate Widget ─────────────────────────────────────────────────────
 function RozozEstimate({ price, areaSqm, city }: { price: number | null; areaSqm: number | null; city: string | null }) {
   const { t, isRtl } = useLanguage();
   if (!price) return null;
@@ -422,7 +422,7 @@ export function PropertyDetail() {
 
           {/* ── Right: sidebar ───────────────────────────────────────────── */}
           <div className="lg:col-span-1 space-y-5">
-            {/* HousIn Estimate */}
+            {/* Housin Estimate */}
             <RozozEstimate price={listing.price} areaSqm={listing.areaSqm} city={listing.city} />
 
             {/* Contact form */}

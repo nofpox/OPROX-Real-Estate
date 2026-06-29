@@ -57,7 +57,7 @@ export interface AppConfig {
 
 export const DEFAULT_CONFIG: AppConfig = {
   branding: {
-    appName: "HousIn",
+    appName: "Housin",
     logoUrl: null,
     primaryColor: "#D4A843",
     navyColor: "#0F2040",
@@ -70,8 +70,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   content: {
     welcomeTaglineAr: "محرك النشر العقاري الفوري",
     welcomeTaglineEn: "Instant Real Estate Publishing Engine",
-    welcomeHeadlineAr: 'أهلاً بك في HousIn.. نحن وكيلك الحصري!',
-    welcomeHeadlineEn: 'Welcome to HousIn — Your Exclusive Digital Agent!',
+    welcomeHeadlineAr: 'أهلاً بك في Housin.. نحن وكيلك الحصري!',
+    welcomeHeadlineEn: 'Welcome to Housin — Your Exclusive Digital Agent!',
     welcomeCtaAr: "لنبدأ الآن",
     welcomeCtaEn: "Let's Get Started",
     features: [

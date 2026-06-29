@@ -8,14 +8,14 @@ export function About() {
   return (
     <div className="font-sans">
       <div className="bg-[#0f2040] py-16 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">{isRtl ? 'عن HousIn' : 'About HousIn'}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">{isRtl ? 'عن Housin' : 'About Housin'}</h1>
         <p className="text-white/70 max-w-xl mx-auto">{isRtl ? 'منصة عقارية رائدة في المملكة العربية السعودية والعالم العربي' : 'Leading real estate platform in Saudi Arabia and the Arab world'}</p>
       </div>
       <div className="container mx-auto px-4 py-16 max-w-4xl">
         <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
           <div>
             <h2 className="text-2xl font-bold text-[#0f2040] mb-4">{isRtl ? 'قصتنا' : 'Our Story'}</h2>
-            <p className="text-gray-600 leading-relaxed mb-4">{isRtl ? 'HousIn هي منصة عقارية متكاملة تأسست لتكون الأكبر والأكثر موثوقية في المملكة العربية السعودية والعالم العربي. نربط المشترين والمستأجرين والبائعين بأفضل الفرص العقارية.' : 'HousIn is a comprehensive real estate platform founded to be the largest and most trusted in Saudi Arabia and the Arab world. We connect buyers, renters, and sellers with the best real estate opportunities.'}</p>
+            <p className="text-gray-600 leading-relaxed mb-4">{isRtl ? 'Housin هي منصة عقارية متكاملة تأسست لتكون الأكبر والأكثر موثوقية في المملكة العربية السعودية والعالم العربي. نربط المشترين والمستأجرين والبائعين بأفضل الفرص العقارية.' : 'Housin is a comprehensive real estate platform founded to be the largest and most trusted in Saudi Arabia and the Arab world. We connect buyers, renters, and sellers with the best real estate opportunities.'}</p>
             <p className="text-gray-600 leading-relaxed">{isRtl ? 'نؤمن أن كل شخص يستحق أن يجد منزله المثالي بسهولة وشفافية وثقة. لذلك بنينا منصة تجمع أحدث التقنيات مع الخبرة العميقة في السوق العقاري السعودي.' : "We believe everyone deserves to find their perfect home easily, transparently, and with confidence. That's why we built a platform combining the latest technology with deep expertise in the Saudi real estate market."}</p>
           </div>
           <div className="bg-gray-50 rounded-2xl p-8">

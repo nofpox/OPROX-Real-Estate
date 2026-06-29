@@ -375,14 +375,14 @@ export function Home() {
         </div>
       </section>
 
-      {/* ── HousIn Estimate CTA ────────────────────────────────────────────────── */}
+      {/* ── Housin Estimate CTA ────────────────────────────────────────────────── */}
       <section className="py-16 bg-[#0f2040]">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-10">
             <div className="w-48 h-48 rounded-full bg-white/5 border border-[#c9a84c]/30 flex items-center justify-center shrink-0">
               <div className="text-center">
                 <TrendingUp className="w-12 h-12 text-[#c9a84c] mx-auto mb-2" />
-                <div className="text-white font-bold text-lg">HousIn</div>
+                <div className="text-white font-bold text-lg">Housin</div>
                 <div className="text-[#c9a84c] text-sm font-semibold">Estimate™</div>
               </div>
             </div>
@@ -573,8 +573,8 @@ export function Home() {
               <div className="relative w-52 h-80 bg-[#0a1628] rounded-[2.5rem] border-4 border-[#c9a84c]/50 shadow-2xl flex flex-col items-center justify-center overflow-hidden">
                 {/* screen content mockup */}
                 <div className="absolute inset-2 rounded-[2rem] bg-gradient-to-b from-[#0f2040] to-[#1a3060] flex flex-col items-center justify-center gap-3 p-4">
-                  <img src="/realestate/housin-logo.png" alt="HousIn" className="w-14 h-14 object-contain rounded-xl" />
-                  <div className="text-[#c9a84c] font-bold text-lg">HousIn</div>
+                  <img src="/realestate/housin-logo.png" alt="Housin" className="w-14 h-14 object-contain rounded-xl" />
+                  <div className="text-[#c9a84c] font-bold text-lg">Housin</div>
                   <div className="text-white/60 text-xs text-center">منصة العقارات الذكية</div>
                   <div className="w-full bg-[#c9a84c]/20 rounded-xl p-2 mt-2 text-center">
                     <div className="text-[#c9a84c] text-xs font-bold">+20,000 عقار</div>
@@ -594,7 +594,7 @@ export function Home() {
                 {isRtl ? '📱 متاح الآن' : '📱 Available Now'}
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
-                {isRtl ? <>حمّل تطبيق <span className="text-[#c9a84c]">HousIn</span></> : <>Download the <span className="text-[#c9a84c]">HousIn</span> App</>}
+                {isRtl ? <>حمّل تطبيق <span className="text-[#c9a84c]">Housin</span></> : <>Download the <span className="text-[#c9a84c]">Housin</span> App</>}
               </h2>
               <p className="text-white/60 text-base mb-8 max-w-md mx-auto md:mx-0">
                 {isRtl

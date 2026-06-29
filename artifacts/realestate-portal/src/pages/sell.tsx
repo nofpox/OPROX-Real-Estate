@@ -17,18 +17,18 @@ export function Sell() {
   const STEPS = isRtl
     ? [{ n: '1', t: 'تقييم العقار', d: 'نقدم لك تقييماً مجانياً فورياً لعقارك بناءً على بيانات السوق الحالية.' },
        { n: '2', t: 'اختيار الوكيل', d: 'نربطك بأفضل الوكلاء المعتمدين في منطقتك لضمان أفضل سعر بأسرع وقت.' },
-       { n: '3', t: 'نشر الإعلان', d: 'ينتشر إعلانك على منصة HousIn ويصل لآلاف المشترين المحتملين.' },
+       { n: '3', t: 'نشر الإعلان', d: 'ينتشر إعلانك على منصة Housin ويصل لآلاف المشترين المحتملين.' },
        { n: '4', t: 'إتمام الصفقة', d: 'نساعدك في إتمام جميع الإجراءات القانونية وتوثيق الصفقة بأمان.' }]
     : [{ n: '1', t: 'Property Valuation', d: 'Get a free instant AI-powered valuation for your property.' },
        { n: '2', t: 'Agent Matching', d: 'We match you with the best certified agents in your area.' },
-       { n: '3', t: 'Listing Publication', d: 'Your listing goes live on HousIn reaching thousands of buyers.' },
+       { n: '3', t: 'Listing Publication', d: 'Your listing goes live on Housin reaching thousands of buyers.' },
        { n: '4', t: 'Close the Deal', d: 'We assist with all legal procedures to close safely and securely.' }];
 
   return (
     <div className="font-sans">
       <div className="bg-[#0f2040] py-14 text-center">
         <Home className="w-10 h-10 text-[#c9a84c] mx-auto mb-3" />
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{isRtl ? 'بيع عقارك مع HousIn' : 'Sell Your Property with HousIn'}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{isRtl ? 'بيع عقارك مع Housin' : 'Sell Your Property with Housin'}</h1>
         <p className="text-white/70 text-sm max-w-md mx-auto">{isRtl ? 'أسرع وأفضل طريقة لبيع عقارك بأعلى سعر في السوق' : 'The fastest and best way to sell your property at the best market price'}</p>
       </div>
 
@@ -47,7 +47,7 @@ export function Sell() {
         <div className="grid md:grid-cols-2 gap-10">
           {/* Why sell with us */}
           <div>
-            <h2 className="text-xl font-bold text-[#0f2040] mb-5">{isRtl ? 'لماذا HousIn؟' : 'Why HousIn?'}</h2>
+            <h2 className="text-xl font-bold text-[#0f2040] mb-5">{isRtl ? 'لماذا Housin؟' : 'Why Housin?'}</h2>
             <ul className="space-y-3">
               {(isRtl ? ['أكبر قاعدة مشترين في المملكة', 'تقييم مجاني بالذكاء الاصطناعي', 'وكلاء معتمدون من هيئة العقار', 'إجراءات قانونية مبسطة وآمنة', 'متابعة يومية حتى إتمام البيع'] : ['Largest buyer base in Saudi Arabia', 'Free AI-powered valuation', 'Agents certified by Real Estate Authority', 'Simplified and secure legal procedures', 'Daily follow-up until sale is complete']).map(item => (
                 <li key={item} className="flex items-start gap-3">

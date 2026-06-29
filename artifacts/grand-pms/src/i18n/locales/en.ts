@@ -450,7 +450,7 @@ const en = {
     },
     fields: {
       name: "Property Name",
-      namePlaceholder: "HousIn",
+      namePlaceholder: "Housin",
       type: "Property Type",
       selectType: "Select type",
       status: "Status",

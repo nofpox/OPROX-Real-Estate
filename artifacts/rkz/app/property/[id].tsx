@@ -27,7 +27,7 @@ const NAVY = "#0f2040";
 const GOLD = "#c9a84c";
 const W    = Dimensions.get("window").width;
 
-// ── HousIn Estimate™ helper ────────────────────────────────────────────────────
+// ── Housin Estimate™ helper ────────────────────────────────────────────────────
 function getEstimate(listing: Listing) {
   const base = listing.price;
   const lo   = Math.round(base * 0.93 / 1000) * 1000;
@@ -69,7 +69,7 @@ async function fetchListing(id: string): Promise<Listing | null> {
       lng:         Number(l.lng ?? 46.6753),
       image:       String(l.main_image ?? l.image ?? MOCK_LISTINGS[0].image),
       featured:    Boolean(l.featured),
-      agentName:   String(l.agent_name ?? "وكيل HousIn"),
+      agentName:   String(l.agent_name ?? "وكيل Housin"),
       agentPhone:  String(l.agent_phone ?? "0500000000"),
       description: String(l.description ?? ""),
       listedAt:    String(l.created_at ?? l.listedAt ?? ""),
@@ -218,7 +218,7 @@ export default function PropertyDetailScreen() {
             </View>
           ) : null}
 
-          {/* ── HousIn Estimate™ ── */}
+          {/* ── Housin Estimate™ ── */}
           {est && (
             <View style={s.estimateCard}>
               <View style={s.estimateHeader}>

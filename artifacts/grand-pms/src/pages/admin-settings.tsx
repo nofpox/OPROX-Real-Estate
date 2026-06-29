@@ -1236,7 +1236,7 @@ function AppearanceTab() {
               id="ap-company"
               value={companyName}
               onChange={(e) => { setCompanyName(e.target.value); setDirty(true); }}
-              placeholder="HousIn للحلول الذكية"
+              placeholder="Housin للحلول الذكية"
             />
             <p className="text-xs text-muted-foreground">Used in PDF report headers and the login screen.</p>
           </div>
@@ -1257,7 +1257,7 @@ function AppearanceTab() {
               id="ap-logosub"
               value={logoSub}
               onChange={(e) => { setLogoSub(e.target.value); setDirty(true); }}
-              placeholder="HousIn"
+              placeholder="Housin"
             />
             <p className="text-xs text-muted-foreground">Smaller text next to the logo text in the sidebar.</p>
           </div>
@@ -1669,9 +1669,9 @@ function PreviewLinksTab() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold">HousIn Preview Links</p>
+              <p className="font-semibold">Housin Preview Links</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Temporary 1-hour access links — HousIn only
+                Temporary 1-hour access links — Housin only
               </p>
             </div>
             <Button
@@ -1702,7 +1702,7 @@ function PreviewLinksTab() {
                 className="h-9 text-sm"
               />
               <Button className="w-full" onClick={generate} disabled={genLoading}>
-                {genLoading ? "Generating…" : "Create HousIn Preview Link"}
+                {genLoading ? "Generating…" : "Create Housin Preview Link"}
               </Button>
             </div>
           )}

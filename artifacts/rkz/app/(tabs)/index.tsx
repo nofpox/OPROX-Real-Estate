@@ -51,7 +51,7 @@ async function fetchListings(): Promise<Listing[]> {
       lng:      Number(l.lng ?? l.longitude ?? 46.6753),
       image:    String(l.main_image ?? l.image ?? MOCK_LISTINGS[0].image),
       featured: Boolean(l.featured),
-      agentName:  String(l.agent_name ?? "وكيل HousIn"),
+      agentName:  String(l.agent_name ?? "وكيل Housin"),
       agentPhone: String(l.agent_phone ?? "0500000000"),
       description: String(l.description ?? ""),
       listedAt:   String(l.created_at ?? l.listedAt ?? "2026-01-01"),

@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/rozoz-msrep/"
-title = "HousIn"
+title = "Housin"
 version = "1.0.0"
 id = "artifacts/rkz"
 router = "expo-domain"
@@ -11,7 +11,7 @@ version = "1.0.0"
 
 [[services]]
 ensurePreviewReachable = "/status"
-name = "HousIn"
+name = "Housin"
 paths = [ "/rozoz-msrep/", "/rozoz-msrep" ]
 localPort = 26232
 

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "HousIn",
+    "name": "Housin",
     "slug": "rozoz-msrep",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -43,14 +43,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "HousIn تحتاج للوصول إلى صورك لإضافة صور العقارات.",
-          "cameraPermission": "HousIn تحتاج الكاميرا لالتقاط صور العقارات."
+          "photosPermission": "Housin تحتاج للوصول إلى صورك لإضافة صور العقارات.",
+          "cameraPermission": "Housin تحتاج الكاميرا لالتقاط صور العقارات."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "HousIn تستخدم موقعك لتعبئة عنوان العقار تلقائياً."
+          "locationWhenInUsePermission": "Housin تستخدم موقعك لتعبئة عنوان العقار تلقائياً."
         }
       ]
     ],

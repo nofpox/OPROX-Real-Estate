@@ -25,14 +25,14 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
   );
 }
 
-// ── HousIn Logo ─────────────────────────────────────────────────────────────────
+// ── Housin Logo ─────────────────────────────────────────────────────────────────
 
 function RozozLogo({ className = '' }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <img
         src="/realestate/housin-logo.png"
-        alt="HousIn"
+        alt="Housin"
         className="h-9 w-9 object-contain flex-shrink-0 rounded-sm"
       />
       <div className="flex flex-col leading-none">
@@ -40,7 +40,7 @@ function RozozLogo({ className = '' }: { className?: string }) {
           className="font-bold text-xl tracking-tight"
           style={{ color: '#c9a84c' }}
         >
-          HousIn
+          Housin
         </span>
         <span className="text-[9px] text-white/50 tracking-widest uppercase mt-0.5">
           منصة العقارات الذكية

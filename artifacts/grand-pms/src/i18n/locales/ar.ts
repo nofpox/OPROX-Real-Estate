@@ -452,7 +452,7 @@ const ar: Translations = {
     },
     fields: {
       name: "اسم العقار",
-      namePlaceholder: "فندق HousIn الرئيسي",
+      namePlaceholder: "فندق Housin الرئيسي",
       type: "تصنيف العقار",
       selectType: "اختر التصنيف",
       status: "الحالة",
@@ -1189,7 +1189,7 @@ const ar: Translations = {
     systemInfo: {
       title: "معلومات النظام",
       subtitle: "بيانات الشركة المعروضة في جميع أنحاء النظام.",
-      companyName: "اسم الشركة", companyNamePlaceholder: "مثال: مجموعة HousIn للعقارات",
+      companyName: "اسم الشركة", companyNamePlaceholder: "مثال: مجموعة Housin للعقارات",
       contactEmail: "البريد الإلكتروني للتواصل", contactEmailPlaceholder: "مثال: info@housin.com",
       contactPhone: "رقم الهاتف", contactPhonePlaceholder: "مثال: +971 50 000 0000",
       contactAddress: "العنوان", contactAddressPlaceholder: "مثال: دبي، الإمارات",

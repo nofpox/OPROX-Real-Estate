@@ -110,8 +110,8 @@ export interface SiteContent {
 
 const DEFAULTS: SiteContent = {
   branding: {
-    companyNameEn: "HousIn Smart Solutions",
-    companyNameAr: "HousIn للحلول الذكية",
+    companyNameEn: "Housin Smart Solutions",
+    companyNameAr: "Housin للحلول الذكية",
     taglineEn: "Premium Property Management",
     taglineAr: "إدارة عقارات متميزة",
     logoUrl: "",
@@ -182,14 +182,14 @@ const DEFAULTS: SiteContent = {
   cta: {
     headlineEn: "Ready to Maximise Your Property's Potential?",
     headlineAr: "هل أنت مستعد لتعظيم قيمة عقارك؟",
-    subtitleEn: "Get in touch with our team today and discover how HousIn can transform your property assets into a performing investment.",
-    subtitleAr: "تواصل مع فريقنا اليوم واكتشف كيف يمكن لـ HousIn أن يحول أصولك العقارية إلى استثمار مثمر.",
+    subtitleEn: "Get in touch with our team today and discover how Housin can transform your property assets into a performing investment.",
+    subtitleAr: "تواصل مع فريقنا اليوم واكتشف كيف يمكن لـ Housin أن يحول أصولك العقارية إلى استثمار مثمر.",
     buttonEn: "Contact Us",
     buttonAr: "تواصل معنا",
   },
   about: {
-    titleEn: "About HousIn Smart Solutions",
-    titleAr: "عن HousIn للحلول الذكية",
+    titleEn: "About Housin Smart Solutions",
+    titleAr: "عن Housin للحلول الذكية",
     body: "",
     imageUrl: "",
   },
@@ -198,8 +198,8 @@ const DEFAULTS: SiteContent = {
     pageTitleEn: "Our Managed Portfolio",
     pageTitleAr: "محفظتنا المُدارة",
     subtitleEn: "Explore the properties we manage across Saudi Arabia.",
-    subtitleAr: "استعرض العقارات التي تُديرها HousIn في المملكة العربية السعودية.",
-    metaDescription: "Browse properties for sale, rent, and under professional management by HousIn Smart Solutions.",
+    subtitleAr: "استعرض العقارات التي تُديرها Housin في المملكة العربية السعودية.",
+    metaDescription: "Browse properties for sale, rent, and under professional management by Housin Smart Solutions.",
   },
 };
 

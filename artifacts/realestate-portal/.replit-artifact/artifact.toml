@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/realestate/"
-title = "HousIn Portal"
+title = "Housin Portal"
 version = "1.0.0"
 id = "artifacts/realestate-portal"
 router = "path"
@@ -10,7 +10,7 @@ name = "react-vite"
 version = "1.0.0"
 
 [[services]]
-name = "HousIn Portal"
+name = "Housin Portal"
 paths = [ "/realestate/" ]
 localPort = 19855
 

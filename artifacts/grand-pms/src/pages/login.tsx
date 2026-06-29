@@ -29,7 +29,7 @@ export default function Login({ onLogin }: LoginProps) {
         <div className="flex items-center justify-center w-28 h-28 rounded-2xl bg-white/90 border border-[#C9A84C]/30 shadow-[0_0_40px_rgba(201,168,76,0.15)]">
           <img
             src="/grand-pms/housin-logo.png"
-            alt="HousIn"
+            alt="Housin"
             className="w-20 h-20 object-contain"
             onError={(e) => {
               const el = e.currentTarget;
@@ -52,7 +52,7 @@ export default function Login({ onLogin }: LoginProps) {
           </span>
         </div>
         <p className="text-xs text-white/40 tracking-[0.25em] uppercase">
-          HousIn · للحلول الذكية
+          Housin · للحلول الذكية
         </p>
       </div>
 
@@ -87,11 +87,11 @@ export default function Login({ onLogin }: LoginProps) {
       </button>
 
       <p className="text-white/20 text-[11px] tracking-widest uppercase">
-        Smart Solutions · HousIn للحلول الذكية
+        Smart Solutions · Housin للحلول الذكية
       </p>
 
       <p className="text-white/15 text-[10px] tracking-wide">
-        © {new Date().getFullYear()} جميع الحقوق محفوظة لـ HousIn
+        © {new Date().getFullYear()} جميع الحقوق محفوظة لـ Housin
       </p>
     </div>
   );

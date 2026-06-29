@@ -1,5 +1,5 @@
 /**
- * LOCAL DATA STORE — HousIn PMS Standalone
+ * LOCAL DATA STORE — Housin PMS Standalone
  * All data lives in memory. No server, no network calls.
  * CRUD operations mutate these arrays and trigger React Query cache invalidation.
  */
@@ -191,8 +191,8 @@ export const APP_SETTINGS: {
   contactAddress?: string;
   [key: string]: unknown;
 } = {
-  propertyName: "HousIn",
-  logoText: "HousIn",
+  propertyName: "Housin",
+  logoText: "Housin",
   logoSub: "",
   logoUrl: `${import.meta.env.BASE_URL}housin-logo.png`,
   businessMode: "hotel" as const,
@@ -201,7 +201,7 @@ export const APP_SETTINGS: {
   permissionMatrix: {},
   primaryColor: "",
   secondaryColor: "",
-  companyName: "HousIn",
+  companyName: "Housin",
 };
 
 // ── ID counter ────────────────────────────────────────────────────────────────

@@ -8,8 +8,8 @@ const SECTIONS = [
   {
     ar: "مقدمة",
     en: "Introduction",
-    body_ar: "تلتزم منصة HousIn بحماية خصوصية مستخدميها. توضّح هذه السياسة كيفية جمع بياناتك واستخدامها والحفاظ عليها عند استخدام منصتنا وتطبيقاتنا.",
-    body_en: "HousIn is committed to protecting the privacy of its users. This policy explains how we collect, use and safeguard your data when you use our platform and applications.",
+    body_ar: "تلتزم منصة Housin بحماية خصوصية مستخدميها. توضّح هذه السياسة كيفية جمع بياناتك واستخدامها والحفاظ عليها عند استخدام منصتنا وتطبيقاتنا.",
+    body_en: "Housin is committed to protecting the privacy of its users. This policy explains how we collect, use and safeguard your data when you use our platform and applications.",
   },
   {
     ar: "البيانات التي نجمعها",
@@ -44,8 +44,8 @@ const SECTIONS = [
   {
     ar: "التواصل معنا",
     en: "Contact Us",
-    body_ar: "لأي استفسار بخصوص سياسة الخصوصية، تواصل معنا عبر صفحة التواصل أو عبر البريد الإلكتروني الرسمي لمنصة HousIn.",
-    body_en: "For any privacy-related enquiries, contact us through our contact page or via HousIn's official email address.",
+    body_ar: "لأي استفسار بخصوص سياسة الخصوصية، تواصل معنا عبر صفحة التواصل أو عبر البريد الإلكتروني الرسمي لمنصة Housin.",
+    body_en: "For any privacy-related enquiries, contact us through our contact page or via Housin's official email address.",
   },
 ];
 
@@ -57,7 +57,7 @@ export const Privacy: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{isRtl ? 'سياسة الخصوصية — HousIn' : 'Privacy Policy — HousIn'}</title>
+        <title>{isRtl ? 'سياسة الخصوصية — Housin' : 'Privacy Policy — Housin'}</title>
       </Helmet>
 
       {/* Hero */}
@@ -65,7 +65,7 @@ export const Privacy: React.FC = () => {
         <div className="container mx-auto max-w-3xl text-center">
           <div className="inline-flex items-center gap-2 bg-secondary/20 text-secondary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-            {'HousIn · هاوسن'}
+            {'Housin · هاوسن'}
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
             {isRtl ? 'سياسة الخصوصية' : 'Privacy Policy'}

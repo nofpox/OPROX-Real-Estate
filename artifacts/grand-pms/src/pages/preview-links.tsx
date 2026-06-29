@@ -10,9 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 const API = "/realestate-api";
 
 const PORTAL_INFO: Record<string, { labelAr: string; labelEn: string; icon: React.ElementType; color: string }> = {
-  "rkz":       { labelAr: "بوابة HousIn العقارية",  labelEn: "HousIn Portal",     icon: Globe,            color: "bg-blue-500/10 text-blue-600 border-blue-200" },
-  "grand-pms": { labelAr: "لوحة تحكم HousIn",        labelEn: "HousIn PMS",        icon: LayoutDashboard,  color: "bg-amber-500/10 text-amber-600 border-amber-200" },
-  "rkz-app":   { labelAr: "تطبيق HousIn للجوال",    labelEn: "HousIn Mobile App", icon: Smartphone,       color: "bg-emerald-500/10 text-emerald-600 border-emerald-200" },
+  "rkz":       { labelAr: "بوابة Housin العقارية",  labelEn: "Housin Portal",     icon: Globe,            color: "bg-blue-500/10 text-blue-600 border-blue-200" },
+  "grand-pms": { labelAr: "لوحة تحكم Housin",        labelEn: "Housin PMS",        icon: LayoutDashboard,  color: "bg-amber-500/10 text-amber-600 border-amber-200" },
+  "rkz-app":   { labelAr: "تطبيق Housin للجوال",    labelEn: "Housin Mobile App", icon: Smartphone,       color: "bg-emerald-500/10 text-emerald-600 border-emerald-200" },
 };
 
 interface PreviewLink {
