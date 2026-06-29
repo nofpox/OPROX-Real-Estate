@@ -254,46 +254,6 @@ export default function HomeScreen() {
             ))}
           </ScrollView>
 
-          {/* ── AI Staging Hero Banner ── */}
-          <Pressable
-            style={s.heroBanner}
-            onPress={() => router.push("/ai-staging" as never)}
-          >
-            <View style={s.heroBannerLeft}>
-              <View style={s.heroBannerBadge}>
-                <Text style={s.heroBannerBadgeText}>🤖 {isAr ? "ذكاء اصطناعي" : "AI Powered"}</Text>
-              </View>
-              <Text style={s.heroBannerTitle}>
-                {isAr
-                  ? "صمّم بيتك الجديد\nبالذكاء الاصطناعي"
-                  : "Design Your New Home\nwith AI"}
-              </Text>
-              <Text style={s.heroBannerDesc}>
-                {isAr
-                  ? "8 أنماط تصميمية — النتيجة في ثوانٍ"
-                  : "8 design styles — results in seconds"}
-              </Text>
-              <View style={s.heroBannerCta}>
-                <Text style={s.heroBannerCtaText}>{isAr ? "جرّب الآن" : "Try Now"}</Text>
-                <MaterialIcons name={isAr ? "arrow-back-ios" : "arrow-forward-ios"} size={12} color={NAVY} />
-              </View>
-            </View>
-            <View style={s.heroBannerRight}>
-              <Text style={{ fontSize: 46 }}>🛋️</Text>
-              <View style={s.heroBannerSparkle}><Text style={{ fontSize: 20 }}>✨</Text></View>
-              <View style={s.heroBannerStyles}>
-                {(isAr
-                  ? ["مودرن", "كلاسيك", "بوهيمي"]
-                  : ["Modern", "Classic", "Boho"]
-                ).map((n) => (
-                  <View key={n} style={s.heroBannerChip}>
-                    <Text style={s.heroBannerChipText}>{n}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </Pressable>
-
           {/* ── Cities ── */}
           <View style={s.sectionHeader}>
             <Text style={s.sectionTitle}>{t.home.cities}</Text>

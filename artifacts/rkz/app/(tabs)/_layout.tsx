@@ -4,9 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect } from "react";
 import {
   Platform,
-  Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 import Animated, {
@@ -76,9 +74,8 @@ export default function TabLayout() {
     },
     {
       name:  "explore",
-      title: isAr ? "المصمم" : "AI Design",
-      icon:  (color: string) => <MaterialIcons name="auto-fix-high" size={24} color={color} />,
-      isAiStaging: true,
+      title: t.tabs.tourism,
+      icon:  (color: string) => <MaterialIcons name="hotel" size={26} color={color} />,
     },
     {
       name:  "settings",
@@ -147,43 +144,25 @@ export default function TabLayout() {
           name={tab.name}
           options={{
             title: tab.title,
-            // AI Staging tab: override the button to push the modal screen instead of switching tabs
-            ...((tab as any).isAiStaging
-              ? {
-                  tabBarButton: () => (
-                    <Pressable
-                      style={s.stagingTabBtn}
-                      onPress={() => router.push("/ai-staging" as never)}
-                    >
-                      <View style={s.stagingTabInner}>
-                        <MaterialIcons name="auto-fix-high" size={24} color={GOLD} />
-                        <Text style={s.stagingTabLabel}>{isAr ? "المصمم" : "AI Design"}</Text>
-                        <View style={s.stagingTabDot} />
-                      </View>
-                    </Pressable>
-                  ),
-                }
-              : {
-                  tabBarIcon: ({ color, focused }) => (
-                    <View style={s.tabItem}>
-                      <AnimatedTabIcon focused={focused}>
-                        {tab.icon(focused ? GOLD : "rgba(15,32,64,0.45)")}
-                      </AnimatedTabIcon>
-                      <Animated.Text
-                        style={{
-                          fontSize: 9,
-                          fontFamily: focused ? "Inter_700Bold" : "Inter_400Regular",
-                          color: focused ? GOLD : "rgba(15,32,64,0.45)",
-                          marginTop: 2,
-                        }}
-                        numberOfLines={1}
-                      >
-                        {tab.title}
-                      </Animated.Text>
-                      {focused && <View style={s.dot} />}
-                    </View>
-                  ),
-                }),
+            tabBarIcon: ({ focused }) => (
+              <View style={s.tabItem}>
+                <AnimatedTabIcon focused={focused}>
+                  {tab.icon(focused ? GOLD : "rgba(15,32,64,0.45)")}
+                </AnimatedTabIcon>
+                <Animated.Text
+                  style={{
+                    fontSize: 9,
+                    fontFamily: focused ? "Inter_700Bold" : "Inter_400Regular",
+                    color: focused ? GOLD : "rgba(15,32,64,0.45)",
+                    marginTop: 2,
+                  }}
+                  numberOfLines={1}
+                >
+                  {tab.title}
+                </Animated.Text>
+                {focused && <View style={s.dot} />}
+              </View>
+            ),
           }}
         />
       ))}
