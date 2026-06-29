@@ -335,8 +335,10 @@ export default function AiChatScreen() {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const userScrolledUp = useRef(false);
 
-  function scrollBottom() {
+  function scrollBottom(force = false) {
+    if (!force && userScrolledUp.current) return;
     setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 80);
   }
 
@@ -397,13 +399,14 @@ export default function AiChatScreen() {
     async (text: string) => {
       if (!text.trim() || loading) return;
       setInput("");
+      userScrolledUp.current = false;
 
       const userMsg: ChatMessage = { id: Date.now().toString(), role: "user", content: text.trim() };
       setMessages((prev) => {
         const updated = [...prev, userMsg];
         (async () => {
           setLoading(true);
-          scrollBottom();
+          scrollBottom(true);
           try {
             const history = updated
               .filter((m): m is { id: string; role: "user" | "assistant"; content: string } =>
@@ -512,7 +515,17 @@ export default function AiChatScreen() {
         data={listData}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 12 }}
-        onContentSizeChange={scrollBottom}
+        onScrollBeginDrag={() => { userScrolledUp.current = true; }}
+        onScrollEndDrag={(e) => {
+          const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+          const atBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 40;
+          if (atBottom) userScrolledUp.current = false;
+        }}
+        onMomentumScrollEnd={(e) => {
+          const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+          const atBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 40;
+          if (atBottom) userScrolledUp.current = false;
+        }}
         renderItem={({ item }) => {
           // Typing indicator
           if (item.id === "__typing__") {
