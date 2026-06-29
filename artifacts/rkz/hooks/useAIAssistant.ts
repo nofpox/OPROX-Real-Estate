@@ -15,6 +15,8 @@ export interface Message {
   content: string;
   ts: number;
   quickReplies?: QuickReply[];
+  /** When true the chat renders a Deep-Link CTA card to the AI Staging screen */
+  stagingCta?: boolean;
 }
 
 // ── Admin event logging ───────────────────────────────────────────────────────
@@ -93,7 +95,7 @@ function localReply(
   text: string,
   ctx: PortfolioContext,
   isAr: boolean
-): { reply: string; quickReplies: QuickReply[] } {
+): { reply: string; quickReplies: QuickReply[]; stagingCta?: boolean } {
   const lower = text.toLowerCase();
   const hasAr = (kw: string) => text.includes(kw);
   const hasEn = (kw: string) => lower.includes(kw);
@@ -119,6 +121,38 @@ function localReply(
     hasAr("عقار للبيع") || hasAr("عقار للإيجار") || hasEn("looking for") ||
     hasEn("find a property") || hasEn("want to buy") || hasEn("looking to buy") ||
     hasEn("looking to rent") || hasEn("search for");
+
+  const isStaging =
+    hasAr("ديكور") || hasAr("تأثيث") || hasAr("تصميم داخلي") || hasAr("أثاث") ||
+    hasAr("تجهيز") || hasAr("ترتيب الغرفة") || hasAr("تصميم الغرفة") ||
+    hasAr("مودرن") || hasAr("كلاسيك") || hasAr("مينيماليست") || hasAr("بوهيمي") ||
+    hasAr("اسكندنافي") || hasAr("أرت ديكو") || hasAr("صناعي") || hasAr("سعودي حديث") ||
+    hasAr("تصميم ذكي") || hasAr("المصمم الذكي") || hasAr("تأثيث بالذكاء") ||
+    hasEn("decor") || hasEn("furnish") || hasEn("interior design") || hasEn("staging") ||
+    hasEn("furniture") || hasEn("modern style") || hasEn("room design") ||
+    hasEn("bohemian") || hasEn("minimalist") || hasEn("scandinavian") ||
+    hasEn("art deco") || hasEn("industrial style") || hasEn("ai staging");
+
+  // ── AI Staging Deep Link ──────────────────────────────────────────────────
+  if (isStaging) {
+    return isAr
+      ? {
+          reply: `🪄 **المُصمّم الذكي — أثّث غرفتك بالذكاء الاصطناعي!**\n\nيمكنني مساعدتك في:\n• **8 أنماط تصميمية** — مودرن، كلاسيك، سعودي حديث، بوهيمي، صناعي، مينيماليست، اسكندنافي، أرت ديكو\n• **تأثيث فوري** — صوّر الغرفة الفارغة واحصل على نتيجة احترافية في ثوانٍ\n• **مقارنة قبل/بعد** تفاعلية\n\nافتح المُصمّم الذكي الآن وجرّبه مباشرة! 👇`,
+          quickReplies: [
+            { label: "🪄 افتح المُصمّم الذكي", value: "__open_staging__" },
+            { label: "أنماط أخرى", value: "ما هي أنماط التصميم المتاحة؟" },
+          ],
+          stagingCta: true,
+        }
+      : {
+          reply: `🪄 **AI Staging — Furnish any room intelligently!**\n\nI can help you with:\n• **8 design styles** — Modern, Classic, Modern Saudi, Bohemian, Industrial, Minimalist, Scandinavian, Luxury Art Deco\n• **Instant staging** — photograph the empty room and get a professional result in seconds\n• Interactive **Before/After** comparison slider\n\nOpen AI Staging now and try it! 👇`,
+          quickReplies: [
+            { label: "🪄 Open AI Staging", value: "__open_staging__" },
+            { label: "More styles", value: "What design styles are available?" },
+          ],
+          stagingCta: true,
+        };
+  }
 
   // ── Expert Valuation ──────────────────────────────────────────────────────
   if (isValuation) {
@@ -408,7 +442,7 @@ export function useAIAssistant() {
 
       await new Promise((r) => setTimeout(r, 600 + Math.random() * 600));
 
-      const { reply, quickReplies } = localReply(trimmed, context, isAr);
+      const { reply, quickReplies, stagingCta } = localReply(trimmed, context, isAr);
 
       setMessages((prev) => [
         ...prev,
@@ -418,6 +452,7 @@ export function useAIAssistant() {
           content: reply,
           ts: Date.now(),
           quickReplies,
+          stagingCta,
         },
       ]);
       setIsThinking(false);

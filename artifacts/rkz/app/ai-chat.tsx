@@ -54,7 +54,7 @@ interface OwnerListingData {
 }
 
 type ChatMessage =
-  | { id: string; role: "user" | "assistant"; content: string }
+  | { id: string; role: "user" | "assistant"; content: string; stagingCta?: boolean }
   | { id: string; role: "listings"; listings: ListingResult[]; mode: ChatMode }
   | { id: string; role: "owner_summary"; data: OwnerListingData; published?: boolean; publishedId?: number }
   | { id: string; role: "searching" };
@@ -75,6 +75,24 @@ function hasOwnerTrigger(text: string) {
 
 function isArabic(text: string) {
   return /[\u0600-\u06FF]/.test(text);
+}
+
+/** Returns true when the user's message is about décor / furnishing / interior design */
+function hasDecorIntent(text: string): boolean {
+  const t = text.toLowerCase();
+  const ar = (kw: string) => text.includes(kw);
+  const en = (kw: string) => t.includes(kw);
+  return (
+    ar("ديكور") || ar("تأثيث") || ar("تصميم داخلي") || ar("أثاث") ||
+    ar("ترتيب الغرفة") || ar("تصميم الغرفة") || ar("تجهيز الغرفة") ||
+    ar("مودرن") || ar("كلاسيك") || ar("مينيماليست") || ar("بوهيمي") ||
+    ar("اسكندنافي") || ar("أرت ديكو") || ar("صناعي") || ar("سعودي حديث") ||
+    ar("المصمم الذكي") || ar("تأثيث ذكي") || ar("تأثيث بالذكاء") ||
+    en("decor") || en("furnish") || en("interior design") || en("staging") ||
+    en("furniture") || en("room design") || en("modern style") ||
+    en("bohemian") || en("minimalist") || en("scandinavian") ||
+    en("art deco") || en("industrial style") || en("ai staging")
+  );
 }
 
 function fmtPrice(price: number | null, currency = "SAR") {
@@ -242,6 +260,49 @@ const LT_LABELS: Record<string, { ar: string; en: string }> = {
   rent: { ar: "إيجار", en: "For Rent" },
 };
 
+// ── Staging CTA Card ────────────────────────────────────────────────────────
+function StagingCtaCard({ isAr }: { isAr: boolean }) {
+  return (
+    <Pressable
+      style={stg.card}
+      onPress={() => router.push("/ai-staging" as never)}
+    >
+      <View style={stg.top}>
+        <Text style={stg.emoji}>🪄</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={stg.title}>{isAr ? "المُصمّم الذكي" : "AI Staging"}</Text>
+          <Text style={stg.sub}>{isAr ? "أثّث غرفتك بالذكاء الاصطناعي" : "Furnish your room with AI"}</Text>
+        </View>
+        <MaterialIcons name={isAr ? "arrow-back" : "arrow-forward"} size={20} color="#c9a84c" />
+      </View>
+      <View style={stg.styles}>
+        {["مودرن", "كلاسيك", "سعودي", "بوهيمي", "مينيمال", "اسكندنافي", "صناعي", "أرت ديكو"].map((n) => (
+          <View key={n} style={stg.chip}>
+            <Text style={stg.chipText}>{n}</Text>
+          </View>
+        ))}
+      </View>
+      <View style={stg.btn}>
+        <Text style={stg.btnText}>{isAr ? "🪄 افتح المُصمّم الذكي" : "🪄 Open AI Staging"}</Text>
+      </View>
+    </Pressable>
+  );
+}
+const GOLD_C = "#c9a84c";
+const NAVY_C = "#0f2040";
+const stg = StyleSheet.create({
+  card: { backgroundColor: `${NAVY_C}`, borderRadius: 18, padding: 16, gap: 12, borderWidth: 1.5, borderColor: `${GOLD_C}55`, overflow: "hidden" },
+  top:  { flexDirection: "row", alignItems: "center", gap: 10 },
+  emoji:{ fontSize: 28 },
+  title:{ fontSize: 15, fontFamily: "Inter_700Bold", color: "#fff" },
+  sub:  { fontSize: 11, color: `${GOLD_C}bb`, marginTop: 1 },
+  styles:{ flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  chip: { backgroundColor: `${GOLD_C}22`, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: `${GOLD_C}44` },
+  chipText:{ fontSize: 10, color: GOLD_C, fontFamily: "Inter_600SemiBold" },
+  btn:  { backgroundColor: GOLD_C, borderRadius: 12, paddingVertical: 12, alignItems: "center" },
+  btnText:{ fontSize: 14, fontFamily: "Inter_700Bold", color: NAVY_C },
+});
+
 function OwnerSummaryCard({
   msg, isAr, domain,
   onPublish,
@@ -398,12 +459,34 @@ export default function AiChatScreen() {
   const sendText = useCallback(
     async (text: string) => {
       if (!text.trim() || loading) return;
+      const trimmed = text.trim();
       setInput("");
       userScrolledUp.current = false;
 
-      const userMsg: ChatMessage = { id: Date.now().toString(), role: "user", content: text.trim() };
+      // ── Staging deep-link shortcut ────────────────────────────────────────
+      if (trimmed === "__open_staging__") {
+        router.push("/ai-staging" as never);
+        return;
+      }
+
+      const userMsg: ChatMessage = { id: Date.now().toString(), role: "user", content: trimmed };
       setMessages((prev) => {
         const updated = [...prev, userMsg];
+
+        // ── Local décor/staging intent — no API call needed ───────────────
+        if (hasDecorIntent(trimmed)) {
+          const arReply = isAr;
+          const ctaReply: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            stagingCta: true,
+            content: arReply
+              ? `🪄 **المُصمّم الذكي — أثّث غرفتك بالذكاء الاصطناعي!**\n\nاختر من **8 أنماط**: مودرن، كلاسيك، سعودي حديث، بوهيمي، صناعي، مينيماليست، اسكندنافي، أرت ديكو.\n\nصوّر الغرفة الفارغة واحصل على نتيجة احترافية خلال ثوانٍ مع مقارنة قبل/بعد تفاعلية. 👇`
+              : `🪄 **AI Staging — Furnish any room with AI!**\n\nChoose from **8 styles**: Modern, Classic, Modern Saudi, Bohemian, Industrial, Minimalist, Scandinavian, Luxury Art Deco.\n\nPhoto the empty room and get a professional result in seconds with an interactive before/after slider. 👇`,
+          };
+          return [...updated, ctaReply];
+        }
+
         (async () => {
           setLoading(true);
           scrollBottom(true);
@@ -572,25 +655,29 @@ export default function AiChatScreen() {
                   {isTourist ? <Text style={s.avatar}>🏨</Text> : <Image source={aiAvatar} style={s.avatarImg} />}
                   <Text style={s.resultsMeta}>{label}</Text>
                 </View>
-                {item.listings.map((l) => (
+                {item.listings.map((l: ListingResult) => (
                   <ListingCard key={l.id} listing={l} isAr={isAr} domain={domain} isTourist={isTourist} />
                 ))}
               </View>
             );
           }
 
-          // Normal text message
+          // Normal text message (+ optional staging CTA card)
           const isUser = item.role === "user";
           const msgAr = isArabic(item.content);
+          const hasStagingCta = !isUser && (item as any).stagingCta === true;
           return (
-            <View style={[s.row, isUser && s.rowReverse]}>
-              {!isUser && <Image source={aiAvatar} style={s.avatarImg} />}
-              <View style={[s.bubble, isUser ? s.userBubble : s.botBubble]}>
-                <Text style={[isUser ? s.userText : s.botText, { textAlign: msgAr ? "right" : "left" }]}>
-                  {item.content}
-                </Text>
+            <View style={{ gap: 8 }}>
+              <View style={[s.row, isUser && s.rowReverse]}>
+                {!isUser && <Image source={aiAvatar} style={s.avatarImg} />}
+                <View style={[s.bubble, isUser ? s.userBubble : s.botBubble]}>
+                  <Text style={[isUser ? s.userText : s.botText, { textAlign: msgAr ? "right" : "left" }]}>
+                    {item.content}
+                  </Text>
+                </View>
+                {isUser && <Text style={s.avatar}>👤</Text>}
               </View>
-              {isUser && <Text style={s.avatar}>👤</Text>}
+              {hasStagingCta && <StagingCtaCard isAr={isAr} />}
             </View>
           );
         }}
