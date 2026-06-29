@@ -209,6 +209,30 @@ export class ObjectStorageService {
   }
 }
 
+/**
+ * Upload a Buffer to the private GCS dir and return a signed GET URL
+ * that expires after `ttlSec` seconds (default 7 days).
+ */
+export async function uploadBufferGetSignedUrl(
+  buffer: Buffer,
+  filename: string,
+  contentType: string,
+  ttlSec = 7 * 24 * 3600,
+): Promise<string> {
+  const privateDir = process.env.PRIVATE_OBJECT_DIR ?? "";
+  if (!privateDir) throw new Error("PRIVATE_OBJECT_DIR not set");
+
+  const objectId = randomUUID();
+  const fullPath = `${privateDir}/staging/${objectId}-${filename}`;
+  const { bucketName, objectName } = parseObjectPath(fullPath);
+
+  const bucket = objectStorageClient.bucket(bucketName);
+  const file = bucket.file(objectName);
+  await file.save(buffer, { contentType, resumable: false });
+
+  return signObjectURL({ bucketName, objectName, method: "GET", ttlSec });
+}
+
 function parseObjectPath(path: string): {
   bucketName: string;
   objectName: string;
