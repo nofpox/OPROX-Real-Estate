@@ -1,0 +1,47 @@
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+
+const TRIP0_API_URL = 'https://api.tripo3d.ai/v2/openapi/generate/task';
+
+export default function AIArchitectView({ mode, prompt, setPrompt, apiKey, brain }: any) {
+  const [loading, setLoading] = useState(false);
+  const [modelUrl, setModelUrl] = useState<string | null>(null);
+
+  const generate3D = async () => {
+    // هنا تربط فحص الرصيد مع Supabase قبل لا تبدأ
+    // if(brain.rules.new_design_cost > user.credits) return alert('رصيدك خلص')
+    
+    setLoading(true);
+    setModelUrl(null);
+    try {
+      const postRes = await fetch(TRIP0_API_URL, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: `${prompt} style: ${mode}`, model_version: 'v2.5' })
+      });
+      const { data: { task_id } = await postRes.json();
+
+      const poll = setInterval(async () => {
+        const getRes = await fetch(`https://api.tripo3d.ai/v2/openapi/task/${task_id}`, { headers: { 'Authorization': `Bearer ${apiKey}` } });
+        const result = await getRes.json();
+        if (result.data.status === 'success') {
+          clearInterval(poll);
+          setModelUrl(result.data.output.model_url); // GLB
+          setLoading(false);
+          // خصم 1 رصيد من Supabase الحين
+        }
+        if (result.data.status === 'failed') { clearInterval(poll); setLoading(false); alert('فشل'); }
+      }, 4000);
+    } catch (e) { setLoading(false); alert('خطأ'); }
+  };
+
+  return (
+    <View>
+      <TextInput value={prompt} onChangeText={setPrompt} style={{borderWidth:1, padding:10, borderRadius:8, marginBottom:10}} />
+      <TouchableOpacity style={{backgroundColor:'#000', padding:15, borderRadius:8, alignItems:'center'}} onPress={generate3D} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff"/> : <Text style={{color:'#fff', fontWeight:'bold'}}>إنشاء موديل 3D</Text>}
+      </TouchableOpacity>
+      {modelUrl && <Text>تم. رابط GLB: {modelUrl} \n حط <model-viewer> هنا</Text>}
+    </View>
+  );
+}

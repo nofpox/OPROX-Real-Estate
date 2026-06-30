@@ -1,0 +1,58 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import AIArchitectView from '@/components/AIArchitectView';
+
+// ========= المخ = قانون التسعير. ممنوع التعديل =========
+export const brain = {
+  plans: [
+    { code: 'sketch', ar_name: 'سكيتش', en_name: 'Sketch', price: 0, credits: 1, bonus: 0 },
+    { code: 'concept', ar_name: 'كونسبت', en_name: 'Concept', price: 39, credits: 5, bonus: 0 },
+    { code: 'plan', ar_name: 'مخط', en_name: 'Plan', price: 78, credits: 10, bonus: 2 },
+    { code: 'executive', ar_name: 'تنفيذي', en_name: 'Executive', price: 156, credits: 20, bonus: 4 },
+    { code: 'studio', ar_name: 'استوديو', en_name: 'Studio', price: 312, credits: 40, bonus: 8 },
+  ],
+  rules: { guest_login: false, new_design_cost: 1, edit_cost: 0 }
+};
+// =======================================================
+
+export default function AIArchitectScreen() {
+  const [mode, setMode] = useState<'auto' | 'level' | 'manual'>('auto');
+  const [prompt, setPrompt] = useState('فيلا مودرن صالة مفتوحة');
+  const [apiKey, setApiKey] = useState('');
+
+  useEffect(() => {
+    AsyncStorage.getItem('TRIP0_KEY').then(key => { if (key) setApiKey(key); });
+  }, []);
+
+  const saveKey = async (key: string) => {
+    await AsyncStorage.setItem('TRIP0_KEY', key);
+    setApiKey(key);
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>AI Architect V2</Text>
+      {!apiKey && (
+        <TextInput 
+          placeholder="حط مفتاح Tripo3D هنا مرة وحدة"
+          style={styles.input}
+          onSubmitEditing={(e) => saveKey(e.nativeEvent.text)}
+        />
+      )}
+      <View style={styles.tabs}>
+        <TouchableOpacity onPress={() => setMode('auto')}><Text style={mode==='auto' && styles.active}>أوتو</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => setMode('level')}><Text style={mode==='level' && styles.active}>مستوى</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => setMode('manual')}><Text style={mode==='manual' && styles.active}>يدوي</Text></TouchableOpacity>
+      </View>
+      {apiKey && <AIArchitectView mode={mode} prompt={prompt} setPrompt={setPrompt} apiKey={apiKey} brain={brain} />}
+    </View>
+  );
+}
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  tabs: { flexDirection: 'row', gap: 20, marginBottom: 20 },
+  active: { fontWeight: 'bold', color: '#007AFF' },
+  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, borderRadius: 8, marginBottom: 10 },
+});
