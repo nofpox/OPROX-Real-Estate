@@ -1,8 +1,7 @@
 /**
- * explore.tsx — Map-First Tourism & Booking
- * خانة بحث native في الأعلى فوق أيقونات الفئات.
- * الفلاتر داخل الخريطة (Overpass API).
- * شريط أفقي سفلي للفنادق والشقق.
+ * explore.tsx — Map + Gesture-Driven Bottom Sheet
+ * Swipe UP on handle → full hotel list
+ * Swipe DOWN on handle/sheet → collapses back to map
  */
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -15,12 +14,18 @@ import {
   Linking,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  runOnJS,
+} from "react-native-reanimated";
+import { Gesture, GestureDetector, ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import TourismMapView, {
@@ -33,10 +38,19 @@ import { HOTEL_LISTINGS } from "@/constants/mockTourism";
 
 const NAVY = "#0f2040";
 const GOLD  = "#c9a84c";
-const { width: SW } = Dimensions.get("window");
-const CARD_W = SW * 0.70;
+const { width: SW, height: SH } = Dimensions.get("window");
 
-// ── Search item type ───────────────────────────────────────────────────────────
+const HANDLE_H  = 64;   // height of the draggable handle bar
+const TAB_BAR_H = Platform.OS === "web" ? 88 : 70;
+const SEARCH_BAR_H = 52;
+
+// ── Snap points (translateY of the sheet) ──────────────────────────────────────
+// PEEK: sheet almost fully hidden, only handle visible above tab bar
+const SNAP_PEEK = SH - HANDLE_H - TAB_BAR_H;
+// FULL: sheet slides up to just below the search bar
+const SNAP_FULL_OFFSET = 110; // approximate top inset + search bar height
+
+// ── Search ────────────────────────────────────────────────────────────────────
 interface SearchItem {
   id:     string;
   nameAr: string;
@@ -49,7 +63,6 @@ interface SearchItem {
   emoji:  string;
 }
 
-// ── Build combined search pool ─────────────────────────────────────────────────
 const SEARCH_POOL: SearchItem[] = [
   ...SPOTS.map((s): SearchItem => ({
     id: s.id, nameAr: s.nameAr, nameEn: s.nameEn,
@@ -65,7 +78,6 @@ const SEARCH_POOL: SearchItem[] = [
   })),
 ];
 
-// ── Convert HotelListing → TourismSpot ────────────────────────────────────────
 function hotelToSpot(h: (typeof HOTEL_LISTINGS)[0]): TourismSpot {
   return {
     id:       h.id,
@@ -81,71 +93,63 @@ function hotelToSpot(h: (typeof HOTEL_LISTINGS)[0]): TourismSpot {
   };
 }
 
-// ── Hotel strip card ───────────────────────────────────────────────────────────
-function HotelCard({
+// ── Hotel card — grid tile ─────────────────────────────────────────────────────
+function HotelTile({
   item, isAr, bookNow, perNight, hotelType, aptType,
 }: {
-  item: (typeof HOTEL_LISTINGS)[0];
-  isAr: boolean;
-  bookNow: string;
-  perNight: string;
+  item:      (typeof HOTEL_LISTINGS)[0];
+  isAr:      boolean;
+  bookNow:   string;
+  perNight:  string;
   hotelType: string;
-  aptType: string;
+  aptType:   string;
 }) {
-  const stars = "★".repeat(item.stars);
+  const stars    = "★".repeat(item.stars);
   const typeLabel = item.type === "hotel" ? hotelType : aptType;
-
   return (
     <Pressable
-      style={s.hotelCard}
+      style={s.tile}
       onPress={() => router.push(`/hotel/${item.id}` as never)}
     >
-      <Image source={{ uri: item.image }} style={s.hotelImg} />
-      <View style={s.typeBadge}>
-        <Text style={s.typeTxt}>{typeLabel}</Text>
+      <Image source={{ uri: item.image }} style={s.tileImg} />
+      <View style={s.tileBadge}>
+        <Text style={s.tileBadgeTxt}>{typeLabel}</Text>
       </View>
-      <View style={s.hotelBody}>
-        <Text style={s.hotelName} numberOfLines={1}>
+      <View style={s.tileBody}>
+        <Text style={[s.tileName, isAr && { textAlign: "right" }]} numberOfLines={2}>
           {isAr ? item.nameAr : item.nameEn}
         </Text>
-        <View style={s.hotelRow}>
+        <View style={[s.tileRow, isAr && { flexDirection: "row-reverse" }]}>
           <Text style={s.stars}>{stars}</Text>
-          <Text style={s.ratingTxt}>★ {item.rating.toFixed(1)}</Text>
-          <MaterialIcons name="location-on" size={11} color={GOLD} />
-          <Text style={s.cityTxt}>{isAr ? item.city : item.cityEn}</Text>
+          <Text style={s.ratingTxt}> {item.rating.toFixed(1)}</Text>
         </View>
-        <View style={s.hotelFooter}>
-          <View>
-            <Text style={s.priceNum}>
-              {item.pricePerNight.toLocaleString()}
-              <Text style={s.priceSub}> {isAr ? "ر.س" : "SAR"}</Text>
-            </Text>
-            <Text style={s.perNight}>{perNight}</Text>
-          </View>
-          <Pressable
-            style={s.bookBtn}
-            onPress={() => router.push(`/hotel/${item.id}` as never)}
-          >
-            <Text style={s.bookTxt}>{bookNow}</Text>
-          </Pressable>
+        <View style={[s.tileFooter, isAr && { flexDirection: "row-reverse" }]}>
+          <Text style={s.priceNum}>
+            {item.pricePerNight.toLocaleString()}
+            <Text style={s.priceSub}> {isAr ? "ر.س" : "SAR"}</Text>
+          </Text>
+          <Text style={s.perNight}>{perNight}</Text>
         </View>
+        <Pressable
+          style={s.bookBtn}
+          onPress={() => router.push(`/hotel/${item.id}` as never)}
+        >
+          <Text style={s.bookTxt}>{bookNow}</Text>
+        </Pressable>
       </View>
     </Pressable>
   );
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-const SEARCH_BAR_H = 52; // height of the native search bar row
-
 export default function TourismScreen() {
   const { t, isAr }  = useLocale();
   const insets        = useSafeAreaInsets();
   const tour          = t.tourism;
-  const [stripOpen, setStripOpen] = useState(true);
 
-  // ── search state ────────────────────────────────────────────────────────────
-  const [query, setQuery]         = useState("");
-  const [focused, setFocused]     = useState(false);
+  // ── Search state ─────────────────────────────────────────────────────────────
+  const [query, setQuery]     = useState("");
+  const [focused, setFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const mapRef   = useRef<TourismMapHandle>(null);
 
@@ -167,7 +171,6 @@ export default function TourismScreen() {
     setQuery(isAr ? item.nameAr : item.nameEn);
     setFocused(false);
     Keyboard.dismiss();
-    // Fly the Leaflet map to the chosen location
     const zoom = item.kind === "hotel" ? 14 : 13;
     mapRef.current?.injectJavaScript(
       `window.__lmap && window.__lmap.flyTo([${item.lat}, ${item.lng}], ${zoom}, {animate:true, duration:1.2}); true;`,
@@ -180,14 +183,53 @@ export default function TourismScreen() {
     Keyboard.dismiss();
   }
 
-  // Spots to render as pins on the map
-  const spots: TourismSpot[] = useMemo(
-    () => HOTEL_LISTINGS.map(hotelToSpot),
-    [],
-  );
-
-  // filterBarTopPx: below safe area + search bar
+  const spots: TourismSpot[] = useMemo(() => HOTEL_LISTINGS.map(hotelToSpot), []);
   const filterBarTopPx = insets.top + SEARCH_BAR_H + 8;
+
+  // ── Bottom sheet gesture ──────────────────────────────────────────────────────
+  const SNAP_FULL = SNAP_FULL_OFFSET + insets.top;
+  const sheetY    = useSharedValue(SNAP_PEEK);
+  const savedY    = useSharedValue(SNAP_PEEK);
+  const [expanded, setExpanded] = useState(false);
+
+  // Refs so gesture callbacks can read latest values
+  const expandedRef = useRef(false);
+  expandedRef.current = expanded;
+
+  function snapTo(y: number) {
+    sheetY.value = withSpring(y, { damping: 22, stiffness: 220, mass: 0.8 });
+    savedY.value = y;
+    setExpanded(y < SNAP_PEEK / 2);
+  }
+
+  const panGesture = Gesture.Pan()
+    .activeOffsetY([-8, 8])
+    .failOffsetX([-20, 20])
+    .runOnJS(true)
+    .onUpdate((e) => {
+      const next = Math.max(SNAP_FULL, Math.min(SNAP_PEEK, savedY.value + e.translationY));
+      sheetY.value = next;
+    })
+    .onEnd((e) => {
+      const mid = (SNAP_FULL + SNAP_PEEK) / 2;
+      const goFull = sheetY.value < mid || e.velocityY < -500;
+      const target = goFull ? SNAP_FULL : SNAP_PEEK;
+      runOnJS(snapTo)(target);
+    });
+
+  // Tap handle to toggle
+  const tapGesture = Gesture.Tap()
+    .runOnJS(true)
+    .onEnd(() => {
+      const target = expandedRef.current ? SNAP_PEEK : SNAP_FULL;
+      snapTo(target);
+    });
+
+  const handleGesture = Gesture.Simultaneous(panGesture, tapGesture);
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: sheetY.value }],
+  }));
 
   const searchPlaceholder = isAr
     ? "ابحث عن مكان أو فندق…"
@@ -195,7 +237,7 @@ export default function TourismScreen() {
 
   return (
     <View style={s.root}>
-      {/* ── Full-screen tourism map ── */}
+      {/* ── Full-screen map ── */}
       <TourismMapView
         ref={mapRef}
         spots={spots}
@@ -206,20 +248,13 @@ export default function TourismScreen() {
         hasTabs
       />
 
-      {/* ── Native search bar — absolute, top ── */}
+      {/* ── Search bar ── */}
       <View
-        style={[
-          s.searchWrapper,
-          { top: insets.top + 6, left: 10, right: 10 },
-        ]}
+        style={[s.searchWrapper, { top: insets.top + 6, left: 10, right: 10 }]}
         pointerEvents="box-none"
       >
-        {/* Input row */}
         <View
-          style={[
-            s.searchRow,
-            isAr && { flexDirection: "row-reverse" },
-          ]}
+          style={[s.searchRow, isAr && { flexDirection: "row-reverse" }]}
           pointerEvents="auto"
         >
           <MaterialIcons
@@ -249,7 +284,6 @@ export default function TourismScreen() {
           )}
         </View>
 
-        {/* Dropdown results */}
         {showDropdown && (
           <View style={s.dropdown} pointerEvents="auto">
             <FlatList
@@ -269,16 +303,10 @@ export default function TourismScreen() {
                 >
                   <Text style={s.resultEmoji}>{item.emoji}</Text>
                   <View style={s.resultTexts}>
-                    <Text
-                      style={[s.resultName, isAr && { textAlign: "right" }]}
-                      numberOfLines={1}
-                    >
+                    <Text style={[s.resultName, isAr && { textAlign: "right" }]} numberOfLines={1}>
                       {isAr ? item.nameAr : item.nameEn}
                     </Text>
-                    <Text
-                      style={[s.resultCity, isAr && { textAlign: "right" }]}
-                      numberOfLines={1}
-                    >
+                    <Text style={[s.resultCity, isAr && { textAlign: "right" }]} numberOfLines={1}>
                       {isAr ? item.cityAr : item.cityEn}
                     </Text>
                   </View>
@@ -295,10 +323,9 @@ export default function TourismScreen() {
         )}
       </View>
 
-      {/* ── روح السعودية — bottom-left floating button ── */}
+      {/* ── Visit Saudi badge ── */}
       <Pressable
         style={[s.visitBtn, { bottom: insets.bottom + 82, left: 12 }]}
-        pointerEvents="auto"
         onPress={() => Linking.openURL("https://www.visitsaudi.com").catch(() => {})}
       >
         <Text style={s.visitIcon}>🌴</Text>
@@ -306,42 +333,39 @@ export default function TourismScreen() {
         <MaterialIcons name="open-in-new" size={11} color="rgba(201,168,76,0.8)" />
       </Pressable>
 
-      {/* ── Bottom hotel strip ── */}
-      <View
-        style={[s.bottomArea, { paddingBottom: insets.bottom + 76 }]}
-        pointerEvents="box-none"
-      >
-        {/* Handle / toggle */}
-        <Pressable
-          style={s.handle}
-          pointerEvents="auto"
-          onPress={() => setStripOpen((v) => !v)}
-        >
-          <View style={s.handleBar} />
-          <View style={[s.handleContent, isAr && { flexDirection: "row-reverse" }]}>
-            <MaterialIcons name="hotel" size={15} color={GOLD} />
-            <Text style={s.handleTxt}>{tour.bookStay}</Text>
-            <MaterialIcons
-              name={stripOpen ? "keyboard-arrow-down" : "keyboard-arrow-up"}
-              size={18}
-              color="rgba(15,32,64,0.45)"
-            />
-          </View>
-        </Pressable>
+      {/* ── Animated bottom sheet ── */}
+      <Animated.View style={[s.sheet, sheetStyle]}>
 
-        {/* Hotel cards */}
-        {stripOpen && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            pointerEvents="auto"
-            contentContainerStyle={[
-              s.stripContent,
-              isAr && { flexDirection: "row-reverse" },
-            ]}
-          >
+        {/* Handle — draggable + tappable */}
+        <GestureDetector gesture={handleGesture}>
+          <View style={s.handle}>
+            <View style={s.handleBar} />
+            <View style={[s.handleContent, isAr && { flexDirection: "row-reverse" }]}>
+              <MaterialIcons name="hotel" size={15} color={GOLD} />
+              <Text style={s.handleTxt}>{tour.bookStay}</Text>
+              <MaterialIcons
+                name={expanded ? "keyboard-arrow-down" : "keyboard-arrow-up"}
+                size={20}
+                color="rgba(15,32,64,0.4)"
+              />
+            </View>
+          </View>
+        </GestureDetector>
+
+        {/* Hotel grid — only interactive when expanded */}
+        <ScrollView
+          style={s.listArea}
+          contentContainerStyle={[
+            s.listContent,
+            { paddingBottom: insets.bottom + TAB_BAR_H + 16 },
+          ]}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={expanded}
+          bounces={false}
+        >
+          <View style={[s.grid, isAr && { flexDirection: "row-reverse", flexWrap: "wrap" }]}>
             {HOTEL_LISTINGS.map((h) => (
-              <HotelCard
+              <HotelTile
                 key={h.id}
                 item={h}
                 isAr={isAr}
@@ -351,22 +375,21 @@ export default function TourismScreen() {
                 aptType={tour.apartmentType}
               />
             ))}
-          </ScrollView>
-        )}
-      </View>
+          </View>
+        </ScrollView>
+      </Animated.View>
     </View>
   );
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
+const TILE_W = (SW - 36) / 2;
+
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: NAVY },
 
-  // Search bar
-  searchWrapper: {
-    position: "absolute",
-    zIndex: 50,
-  },
+  // Search
+  searchWrapper: { position: "absolute", zIndex: 50 },
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -382,7 +405,7 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(201,168,76,0.25)",
   },
-  searchIcon: { marginHorizontal: 4 },
+  searchIcon:  { marginHorizontal: 4 },
   searchInput: {
     flex: 1,
     fontSize: 14,
@@ -420,20 +443,12 @@ const s = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "rgba(15,32,64,0.08)",
   },
-  resultEmoji: { fontSize: 20, width: 28, textAlign: "center" },
-  resultTexts: { flex: 1, gap: 2 },
-  resultName: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    color: NAVY,
-  },
-  resultCity: {
-    fontSize: 11,
-    fontFamily: "Inter_400Regular",
-    color: "rgba(15,32,64,0.45)",
-  },
+  resultEmoji:  { fontSize: 20, width: 28, textAlign: "center" },
+  resultTexts:  { flex: 1, gap: 2 },
+  resultName:   { fontSize: 13, fontFamily: "Inter_600SemiBold", color: NAVY },
+  resultCity:   { fontSize: 11, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.45)" },
 
-  // VisitSaudi badge
+  // Visit Saudi badge
   visitBtn: {
     position: "absolute",
     flexDirection: "row",
@@ -453,31 +468,39 @@ const s = StyleSheet.create({
   visitIcon: { fontSize: 13 },
   visitTxt:  { fontSize: 12, fontFamily: "Inter_700Bold", color: GOLD },
 
-  // Bottom strip
-  bottomArea: {
+  // ── Bottom sheet ────────────────────────────────────────────────────────────
+  sheet: {
     position: "absolute",
-    bottom: 0,
     left: 0,
     right: 0,
-  },
-  handle: {
-    backgroundColor: "rgba(255,255,255,0.97)",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 8,
-    paddingBottom: 6,
-    paddingHorizontal: 16,
+    top: 0,
+    height: SH,
+    backgroundColor: "#fff",
+    borderTopLeftRadius:  22,
+    borderTopRightRadius: 22,
     shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 12,
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: -6 },
+    elevation: 20,
+    overflow: "hidden",
+  },
+
+  // Handle
+  handle: {
+    paddingTop: 10,
+    paddingBottom: 8,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(15,32,64,0.07)",
   },
   handleBar: {
-    width: 36, height: 4, borderRadius: 2,
-    backgroundColor: "rgba(15,32,64,0.12)",
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(15,32,64,0.13)",
     alignSelf: "center",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   handleContent: {
     flexDirection: "row",
@@ -486,20 +509,27 @@ const s = StyleSheet.create({
   },
   handleTxt: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: "Inter_700Bold",
     color: NAVY,
   },
-  stripContent: {
-    gap: 12,
+
+  // List area
+  listArea: { flex: 1 },
+  listContent: {
+    paddingTop: 12,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: "rgba(255,255,255,0.97)",
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    justifyContent: "space-between",
   },
 
-  // Hotel card
-  hotelCard: {
-    width: CARD_W,
+  // Hotel tile
+  tile: {
+    width: TILE_W,
     backgroundColor: "#fff",
     borderRadius: 16,
     overflow: "hidden",
@@ -507,9 +537,11 @@ const s = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
+    borderWidth: 1,
+    borderColor: "rgba(15,32,64,0.06)",
   },
-  hotelImg: { width: CARD_W, height: 100 },
-  typeBadge: {
+  tileImg: { width: TILE_W, height: 110 },
+  tileBadge: {
     position: "absolute",
     top: 8,
     left: 8,
@@ -518,30 +550,22 @@ const s = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
-  typeTxt:  { fontSize: 10, fontFamily: "Inter_700Bold", color: "#fff" },
-  hotelBody: { padding: 10, gap: 4 },
-  hotelName: { fontSize: 13, fontFamily: "Inter_700Bold", color: NAVY },
-  hotelRow:  { flexDirection: "row", alignItems: "center", gap: 4 },
-  stars:     { fontSize: 10, color: GOLD, letterSpacing: -1 },
-  ratingTxt: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: NAVY },
-  cityTxt:   { fontSize: 11, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.5)", flex: 1 },
-  hotelFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 4,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(15,32,64,0.07)",
-  },
-  priceNum: { fontSize: 15, fontFamily: "Inter_700Bold", color: NAVY },
-  priceSub: { fontSize: 11, fontFamily: "Inter_400Regular", color: NAVY },
-  perNight: { fontSize: 10, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.45)" },
+  tileBadgeTxt: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#fff" },
+  tileBody:     { padding: 10, gap: 5 },
+  tileName:     { fontSize: 12, fontFamily: "Inter_700Bold", color: NAVY, lineHeight: 17 },
+  tileRow:      { flexDirection: "row", alignItems: "center" },
+  stars:        { fontSize: 10, color: GOLD },
+  ratingTxt:    { fontSize: 11, fontFamily: "Inter_600SemiBold", color: NAVY },
+  tileFooter:   { flexDirection: "row", alignItems: "baseline", gap: 3 },
+  priceNum:     { fontSize: 14, fontFamily: "Inter_700Bold", color: NAVY },
+  priceSub:     { fontSize: 10, fontFamily: "Inter_400Regular", color: NAVY },
+  perNight:     { fontSize: 10, fontFamily: "Inter_400Regular", color: "rgba(15,32,64,0.45)" },
   bookBtn: {
     backgroundColor: GOLD,
     borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingVertical: 6,
+    alignItems: "center",
+    marginTop: 2,
   },
   bookTxt: { fontSize: 12, fontFamily: "Inter_700Bold", color: "#fff" },
 });
