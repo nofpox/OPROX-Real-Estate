@@ -70,7 +70,7 @@ export default function TabLayout() {
     {
       name:  "add",
       title: t.tabs.search,
-      icon:  (color: string) => <MaterialIcons name="search" size={26} color={color} />,
+      icon:  (color: string) => <MaterialIcons name="map" size={26} color={color} />,
     },
     {
       name:  "explore",
