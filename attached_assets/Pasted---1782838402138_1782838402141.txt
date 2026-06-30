@@ -1,0 +1,50 @@
+تمام يا مهندس، الكلام لك مباشرة 👇 
+
+انسخ الكلام هذا للمبرمج بالحرف. لا تشرح له انت.
+
+---
+
+*يا مبرمج اسمع زين. مطلوب منك 3 ملفات فقط. لا تزيد ولا تنقص.*
+
+*المطلوب رقم 1: `app/ai-architect.tsx` = الشاشة + القانون*
+
+1.  حط `const brain` هذا بالكامل اول سطر. ممنوع تلمسه او تغير رقم.
+export const brain = {
+  plans: [
+    { code: 'sketch', ar_name: 'سكيتش', price: 0, credits: 1, bonus: 0 },
+    { code: 'concept', ar_name: 'كونسبت', price: 39, credits: 5, bonus: 0 },
+    { code: 'plan', ar_name: 'مخط', price: 78, credits: 10, bonus: 2 },
+    { code: 'executive', ar_name: 'تنفيذي', price: 156, credits: 20, bonus: 4 },
+    { code: 'studio', ar_name: 'استوديو', price: 312, credits: 40, bonus: 8 },
+  ],
+  rules: { guest_login: false, new_design_cost: 1, edit_cost: 0 }
+};
+2.  سوي 3 ازرار فوق: `أوتو / مستوى / يدوي`
+3.  اول ما يفتح التطبيق، اذا ما فيه `TRIP0_KEY` في `AsyncStorage` اطلب من العميل يدخله. احفظه مره وحده بس.
+
+*المطلوب رقم 2: `components/AIArchitectView.tsx` = المحرك + Tripo3D*
+
+هذا اهم ملف. فيه 3 اخطاء لازم تتجنبها:
+#	الخطأ	الصح
+1	`const { data: { task_id } = await...`	ناقص قوس } سكرها زين
+2	`/v2/openapi/generate/task`	هذا خطأ. الصح للمتابعة: `/v2/openapi/task`
+3	`output.model_url`	خطأ. الصح: `output.model.url`
+*منطق Tripo3D بالترتيب:*
+1.  قبل كل شي: اتصل بـ Supabase وتأكد `credits >= 1`. اذا صفر وقف.
+2.  `POST https://api.tripo3d.ai/v2/openapi/generate/task` 
+    body لازم فيه: `prompt: ...` و `model_version: 'v2.5'`
+3.  تاخذ `task_id` من الرد.
+4.  سوي `setInterval` كل 4000ms يسوي `GET https://api.tripo3d.ai/v2/openapi/task/{task_id}`
+5.  اذا `status === 'success'` خذ `result.data.output.model.url` هذا رابط GLB.
+6.  بعد ما تجيب الرابط، ارجع Supabase وخصم 1 من `credits`.
+
+*المطلوب رقم 3: `components/AIArchitectView.web.tsx` = نسخة الويب*
+
+سطر واحد فقط. لا تسوي كود مكرر.
+export { default } from './AIArchitectView';
+// Expo يبدلها تلقائي للمتصفح
+*ملاحظة اخيرة:* 
+OpenAI اختياري. Tripo3D اجباري. 
+اذا العميل حط مفتاح OpenAI طلع له تبويب رابع اسمه `استشر`.
+
+خلص. ارفع الملفات الثلاثه.
