@@ -148,7 +148,12 @@ export default function AIArchitectView({
       });
       const postData = await postRes.json();
 
-      /* 3. Extract task_id — correct destructure (was missing closing }) */
+      /* 3. Extract task_id — guard against missing/error response before destructuring */
+      if (!postRes.ok || !postData?.data) {
+        throw new Error(
+          postData?.message ?? postData?.error ?? `فشل إنشاء الطلب (${postRes.status}) — تحقق من مفتاح Tripo3D`
+        );
+      }
       const { task_id } = postData.data as { task_id: string };
       if (!task_id) throw new Error(postData.message ?? "فشل إنشاء الطلب — تحقق من المفتاح");
 
