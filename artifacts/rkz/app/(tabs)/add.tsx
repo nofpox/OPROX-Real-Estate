@@ -450,10 +450,11 @@ const s = StyleSheet.create({
   searchRow:  { flexDirection: "row", gap: 8, alignItems: "center" },
   searchBar: {
     flex: 1, flexDirection: "row", alignItems: "center",
-    backgroundColor: "rgba(15,32,64,0.06)",
+    backgroundColor: "#ffffff",
     borderRadius: 12, paddingHorizontal: 10, height: 40, gap: 6,
+    borderWidth: 1, borderColor: "rgba(15,32,64,0.12)",
   },
-  searchInput: { flex: 1, fontSize: 13, color: NAVY, fontFamily: "Inter_400Regular" },
+  searchInput: { flex: 1, fontSize: 13, color: NAVY, fontFamily: "Inter_400Regular", backgroundColor: "transparent", outlineStyle: "none" } as any,
 
   modeBtn: {
     width: 40, height: 40, borderRadius: 12,

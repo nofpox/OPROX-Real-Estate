@@ -390,7 +390,9 @@ const s = StyleSheet.create({
     color: NAVY,
     paddingVertical: 0,
     marginHorizontal: 6,
-  },
+    backgroundColor: "transparent",
+    outlineStyle: "none",
+  } as any,
   clearBtn: { padding: 4 },
 
   // Dropdown
