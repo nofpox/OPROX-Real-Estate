@@ -144,7 +144,7 @@ export default function AIArchitectView({
       const postRes  = await fetch(`${TRIPO_BASE}/task`, {
         method:  "POST",
         headers: { Authorization: `Bearer ${tripoKey}`, "Content-Type": "application/json" },
-        body:    JSON.stringify({ type: "text_to_model", prompt: fullPrompt, model_version: "v2.5" }),
+        body:    JSON.stringify({ type: "text_to_model", prompt: fullPrompt, model_version: "v2.5-20250123" }),
       });
       const postData = await postRes.json();
 
