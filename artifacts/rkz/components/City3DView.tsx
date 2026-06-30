@@ -9,15 +9,17 @@ import { StyleSheet, View } from "react-native";
 import WebView, { type WebViewMessageEvent } from "react-native-webview";
 
 interface Props {
-  onReady?: () => void;
+  onReady?:   () => void;
+  onMessage?: (type: string) => void;
 }
 
-export default function City3DView({ onReady }: Props) {
+export default function City3DView({ onReady, onMessage }: Props) {
   const wvRef = useRef<WebView>(null);
   function handleMessage(e: WebViewMessageEvent) {
     try {
       const d = JSON.parse(e.nativeEvent.data) as { type: string };
       if (d.type === "ready") onReady?.();
+      onMessage?.(d.type);
     } catch {}
   }
   return (
@@ -54,8 +56,8 @@ const CITY_HTML = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#050a18;font-family:-apple-system,system-ui,Arial,sans-serif}
-canvas{display:block;width:100%;height:100%}
+html,body{position:fixed;inset:0;overflow:hidden;background:#050a18;font-family:-apple-system,system-ui,Arial,sans-serif}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #lbl{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:rgba(0,5,28,0.88);
   border:1px solid rgba(0,120,255,0.5);color:#5ab4ff;border-radius:12px;
   padding:6px 18px;font-size:12px;font-weight:700;letter-spacing:1px;pointer-events:none;white-space:nowrap}
@@ -100,7 +102,9 @@ canvas{display:block;width:100%;height:100%}
 
 // ── WebGL setup ──────────────────────────────────────────────────────────
 var cv=document.getElementById('c');
-cv.width=window.innerWidth; cv.height=window.innerHeight;
+// Use clientWidth/clientHeight — more reliable than innerWidth/Height on Android WebView
+cv.width=document.documentElement.clientWidth||window.innerWidth;
+cv.height=document.documentElement.clientHeight||window.innerHeight;
 var gl=cv.getContext('webgl')||cv.getContext('experimental-webgl');
 if(!gl){document.body.innerHTML='<div style="color:#5ab4ff;text-align:center;padding:40px;font-size:18px">⚠️ WebGL غير مدعوم على هذا الجهاز</div>';return;}
 
@@ -429,7 +433,8 @@ cv.addEventListener('mousemove',function(e){
 
 // ── Animation loop ────────────────────────────────────────────────────────
 function resize(){
-  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  cv.width=document.documentElement.clientWidth||window.innerWidth;
+  cv.height=document.documentElement.clientHeight||window.innerHeight;
   gl.viewport(0,0,cv.width,cv.height);
 }
 window.addEventListener('resize',resize);
@@ -452,7 +457,7 @@ function animate(){
     lookNow=lerp3(flyFrom.eye,flyTo.look,e3); // start looking from same spot
     if(flyP>=1){
       STATE='room';
-      document.getElementById('iBody').innerHTML=selB.floors+' طوابق<br>عرض الغرفة الداخلية';
+      document.getElementById('iBody').innerHTML=selB.floors+' طوابق<br><button onclick="viewInterior()" style="margin-top:8px;background:linear-gradient(135deg,#0055ff,#0099ff);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;width:100%">عرض الغرفة الداخلية</button>';
     }
   } else if(STATE==='city'){
     var cp=camPos();
@@ -491,6 +496,12 @@ function animate(){
   }
 }
 animate();
+// Re-size after layout completes — fixes Android WebView blank-canvas bug
+setTimeout(function(){resize();proj=persp(FOV,cv.width/cv.height,0.5,600);},300);
+
+window.viewInterior=function(){
+  try{window.ReactNativeWebView.postMessage(JSON.stringify({type:'view_interior'}));}catch(e){}
+};
 
 try{window.ReactNativeWebView.postMessage(JSON.stringify({type:'ready'}));}catch(e){}
 })();

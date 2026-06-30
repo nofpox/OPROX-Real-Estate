@@ -5,6 +5,7 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Platform,
   Pressable,
   StatusBar,
@@ -21,12 +22,25 @@ export default function City3DScreen() {
   const insets       = useSafeAreaInsets();
   const [ready, setReady] = useState(false);
 
+  function handleMessage(type: string) {
+    if (type === "view_interior") {
+      Alert.alert(
+        "ولّد 3D أولاً",
+        "اكتب وصف في شاشة المعماري الذكي واضغط ⚡ إنشاء موديل 3D للدخول.",
+        [
+          { text: "إغلاق", style: "cancel" },
+          { text: "افتح المعماري", onPress: () => router.push("/ai-architect") },
+        ]
+      );
+    }
+  }
+
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor="#040810" />
 
       {/* 3D Scene */}
-      <City3DView onReady={() => setReady(true)} />
+      <City3DView onReady={() => setReady(true)} onMessage={handleMessage} />
 
       {/* Loading overlay */}
       {!ready && (
