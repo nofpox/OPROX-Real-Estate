@@ -283,6 +283,32 @@ export default function HomeScreen() {
             ))}
           </View>
 
+          {/* ── Housin 3D City Banner ── */}
+          <Pressable
+            style={s.city3dBanner}
+            onPress={() => router.push("/city3d" as never)}
+          >
+            <View style={s.city3dLeft}>
+              <View style={s.city3dBadge}>
+                <Text style={s.city3dBadgeText}>{isAr ? "جديد" : "NEW"}</Text>
+              </View>
+              <Text style={s.city3dTitle}>{isAr ? "🏙️ استكشف المدينة 3D" : "🏙️ Housin 3D City"}</Text>
+              <Text style={s.city3dDesc}>
+                {isAr
+                  ? "تجوّل في مدينة الرياض ثلاثية الأبعاد — اضغط أي مبنى لترى الشقة من الداخل"
+                  : "Fly through a 3D city — tap any building to see the interior"}
+              </Text>
+              <View style={s.city3dCta}>
+                <Text style={s.city3dCtaText}>{isAr ? "ابدأ الاستكشاف" : "Explore Now"}</Text>
+                <MaterialIcons name={isAr ? "arrow-back" : "arrow-forward"} size={14} color="#0099ff" />
+              </View>
+            </View>
+            <View style={s.city3dRight}>
+              <Text style={{ fontSize: 48 }}>🌆</Text>
+              <Text style={{ fontSize: 24, marginTop: -8, marginLeft: -12 }}>✨</Text>
+            </View>
+          </Pressable>
+
           {/* ── AI Staging Banner ── */}
           <Pressable
             style={s.stagingBanner}
@@ -473,6 +499,34 @@ const s = StyleSheet.create({
   heroBannerStyles:  { flexDirection: "row", gap: 4, flexWrap: "wrap", marginTop: 4 },
   heroBannerChip:    { backgroundColor: "rgba(201,168,76,0.18)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3, borderWidth: 1, borderColor: "rgba(201,168,76,0.3)" },
   heroBannerChipText:{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: GOLD },
+
+  // ── Housin 3D City Banner ──────────────────────────────────────────────────
+  city3dBanner: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: "#020818",
+    borderWidth: 1.5,
+    borderColor: "rgba(0,120,255,0.5)",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 18,
+    gap: 12,
+    shadowColor: "#0055ff",
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  city3dLeft:      { flex: 1, gap: 6 },
+  city3dBadge:     { backgroundColor: "#0055ff", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, alignSelf: "flex-start" },
+  city3dBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#fff" },
+  city3dTitle:     { fontSize: 18, fontFamily: "Inter_700Bold", color: "#fff" },
+  city3dDesc:      { fontSize: 12, color: "rgba(160,200,255,0.7)", lineHeight: 18 },
+  city3dCta:       { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
+  city3dCtaText:   { fontSize: 13, fontFamily: "Inter_700Bold", color: "#0099ff" },
+  city3dRight:     { alignItems: "center", justifyContent: "center" },
 
   // Floating AI Bubble
   aiBubbleWrap: {
