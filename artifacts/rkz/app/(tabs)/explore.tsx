@@ -202,8 +202,8 @@ export default function TourismScreen() {
     setExpanded(y < SNAP_PEEK / 2);
   }
 
-  const panGesture = Gesture.Pan()
-    .activeOffsetY([-8, 8])
+  const handleGesture = Gesture.Pan()
+    .activeOffsetY([-4, 4])
     .failOffsetX([-20, 20])
     .runOnJS(true)
     .onUpdate((e) => {
@@ -211,21 +211,17 @@ export default function TourismScreen() {
       sheetY.value = next;
     })
     .onEnd((e) => {
+      // Tiny movement = tap → toggle
+      if (Math.abs(e.translationY) < 6 && Math.abs(e.velocityY) < 100) {
+        const target = expandedRef.current ? SNAP_PEEK : SNAP_FULL;
+        runOnJS(snapTo)(target);
+        return;
+      }
+      // Real drag → snap to nearest
       const mid = (SNAP_FULL + SNAP_PEEK) / 2;
       const goFull = sheetY.value < mid || e.velocityY < -500;
-      const target = goFull ? SNAP_FULL : SNAP_PEEK;
-      runOnJS(snapTo)(target);
+      runOnJS(snapTo)(goFull ? SNAP_FULL : SNAP_PEEK);
     });
-
-  // Tap handle to toggle
-  const tapGesture = Gesture.Tap()
-    .runOnJS(true)
-    .onEnd(() => {
-      const target = expandedRef.current ? SNAP_PEEK : SNAP_FULL;
-      snapTo(target);
-    });
-
-  const handleGesture = Gesture.Simultaneous(panGesture, tapGesture);
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetY.value }],
@@ -336,18 +332,20 @@ export default function TourismScreen() {
       {/* ── Animated bottom sheet ── */}
       <Animated.View style={[s.sheet, sheetStyle]}>
 
-        {/* Handle — draggable + tappable */}
+        {/* Handle — drag up/down OR tap to toggle */}
         <GestureDetector gesture={handleGesture}>
           <View style={s.handle}>
             <View style={s.handleBar} />
             <View style={[s.handleContent, isAr && { flexDirection: "row-reverse" }]}>
               <MaterialIcons name="hotel" size={15} color={GOLD} />
               <Text style={s.handleTxt}>{tour.bookStay}</Text>
-              <MaterialIcons
-                name={expanded ? "keyboard-arrow-down" : "keyboard-arrow-up"}
-                size={20}
-                color="rgba(15,32,64,0.4)"
-              />
+              <View style={s.toggleBtn}>
+                <Text style={s.toggleBtnTxt}>
+                  {isAr
+                    ? (expanded ? "أخفِ ↓" : "اضغط هنا ↑")
+                    : (expanded ? "Hide ↓" : "Tap here ↑")}
+                </Text>
+              </View>
             </View>
           </View>
         </GestureDetector>
@@ -512,6 +510,17 @@ const s = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Inter_700Bold",
     color: NAVY,
+  },
+  toggleBtn: {
+    backgroundColor: GOLD,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  toggleBtnTxt: {
+    fontSize: 12,
+    fontFamily: "Inter_700Bold",
+    color: "#fff",
   },
 
   // List area
