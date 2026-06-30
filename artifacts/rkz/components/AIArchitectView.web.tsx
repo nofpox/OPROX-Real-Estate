@@ -1,1 +1,1 @@
-export { default } from './AIArchitectView';
+export { default } from './AIArchitectViewImpl';
