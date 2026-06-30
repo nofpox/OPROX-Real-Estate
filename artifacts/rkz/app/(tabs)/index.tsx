@@ -309,6 +309,32 @@ export default function HomeScreen() {
             </View>
           </Pressable>
 
+          {/* ── Villa 4D Banner ── */}
+          <Pressable
+            style={s.villa4dBanner}
+            onPress={() => router.push("/villa4d" as never)}
+          >
+            <View style={s.villa4dLeft}>
+              <View style={s.villa4dBadge}>
+                <Text style={s.villa4dBadgeText}>{isAr ? "جديد" : "NEW"}</Text>
+              </View>
+              <Text style={s.villa4dTitle}>{isAr ? "🏠 الفيلا الرباعية الأبعاد" : "🏠 4D Villa Experience"}</Text>
+              <Text style={s.villa4dDesc}>
+                {isAr
+                  ? "شاهد فيلتك بين النهار والليل والمطر — تجربة غامرة ثلاثية الأبعاد"
+                  : "See your villa in day, night & rain — an immersive 4D experience"}
+              </Text>
+              <View style={s.villa4dCta}>
+                <Text style={s.villa4dCtaText}>{isAr ? "جرّب الآن" : "Try Now"}</Text>
+                <MaterialIcons name={isAr ? "arrow-back" : "arrow-forward"} size={14} color={GOLD} />
+              </View>
+            </View>
+            <View style={s.villa4dRight}>
+              <Text style={{ fontSize: 44 }}>🏡</Text>
+              <Text style={{ fontSize: 20, marginTop: -6, marginLeft: -10 }}>🌧️</Text>
+            </View>
+          </Pressable>
+
           {/* ── AI Staging Banner ── */}
           <Pressable
             style={s.stagingBanner}
@@ -527,6 +553,34 @@ const s = StyleSheet.create({
   city3dCta:       { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   city3dCtaText:   { fontSize: 13, fontFamily: "Inter_700Bold", color: "#0099ff" },
   city3dRight:     { alignItems: "center", justifyContent: "center" },
+
+  // ── Villa 4D Banner ───────────────────────────────────────────────────────
+  villa4dBanner: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: "#0f2040",
+    borderWidth: 1.5,
+    borderColor: "rgba(201,168,76,0.4)",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 18,
+    gap: 12,
+    shadowColor: "#c9a84c",
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 7,
+  },
+  villa4dLeft:      { flex: 1, gap: 6 },
+  villa4dBadge:     { backgroundColor: GOLD, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, alignSelf: "flex-start" },
+  villa4dBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#0f2040" },
+  villa4dTitle:     { fontSize: 17, fontFamily: "Inter_700Bold", color: "#fff" },
+  villa4dDesc:      { fontSize: 12, color: "rgba(201,168,76,0.65)", lineHeight: 18 },
+  villa4dCta:       { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
+  villa4dCtaText:   { fontSize: 13, fontFamily: "Inter_700Bold", color: GOLD },
+  villa4dRight:     { alignItems: "center", justifyContent: "center" },
 
   // Floating AI Bubble
   aiBubbleWrap: {
