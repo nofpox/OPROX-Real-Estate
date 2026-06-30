@@ -335,6 +335,32 @@ export default function HomeScreen() {
             </View>
           </Pressable>
 
+          {/* ── AI Architect Banner ── */}
+          <Pressable
+            style={s.aiArchBanner}
+            onPress={() => router.push("/ai-architect" as never)}
+          >
+            <View style={s.aiArchLeft}>
+              <View style={s.aiArchBadge}>
+                <Text style={s.aiArchBadgeText}>{isAr ? "AI" : "AI"}</Text>
+              </View>
+              <Text style={s.aiArchTitle}>{isAr ? "🤖 المعماري الذكي" : "🤖 AI Architect"}</Text>
+              <Text style={s.aiArchDesc}>
+                {isAr
+                  ? "صف فيلتك بالكلام — يبنيها الذكاء الاصطناعي موديل 3D كامل"
+                  : "Describe your villa — AI builds a full 3D model in 60 seconds"}
+              </Text>
+              <View style={s.aiArchCta}>
+                <Text style={s.aiArchCtaText}>{isAr ? "صمم الآن" : "Design Now"}</Text>
+                <MaterialIcons name={isAr ? "arrow-back" : "arrow-forward"} size={14} color="#0099ff" />
+              </View>
+            </View>
+            <View style={s.aiArchRight}>
+              <Text style={{ fontSize: 44 }}>🏗️</Text>
+              <Text style={{ fontSize: 20, marginTop: -6, marginLeft: -10 }}>✨</Text>
+            </View>
+          </Pressable>
+
           {/* ── AI Staging Banner ── */}
           <Pressable
             style={s.stagingBanner}
@@ -581,6 +607,33 @@ const s = StyleSheet.create({
   villa4dCta:       { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   villa4dCtaText:   { fontSize: 13, fontFamily: "Inter_700Bold", color: GOLD },
   villa4dRight:     { alignItems: "center", justifyContent: "center" },
+
+  // ── AI Architect Banner ──────────────────────────────────────────────────
+  aiArchBanner: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: "#07122e",
+    borderWidth: 1.5,
+    borderColor: "rgba(0,153,255,0.35)",
+    flexDirection: "row",
+    padding: 18,
+    gap: 12,
+    shadowColor: "#0055ff",
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 7,
+  },
+  aiArchLeft:      { flex: 1, gap: 6 },
+  aiArchBadge:     { backgroundColor: "#0055ff", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, alignSelf: "flex-start" },
+  aiArchBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#fff" },
+  aiArchTitle:     { fontSize: 17, fontFamily: "Inter_700Bold", color: "#fff" },
+  aiArchDesc:      { fontSize: 12, color: "rgba(100,180,255,0.65)", lineHeight: 18 },
+  aiArchCta:       { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
+  aiArchCtaText:   { fontSize: 13, fontFamily: "Inter_700Bold", color: "#0099ff" },
+  aiArchRight:     { alignItems: "center", justifyContent: "center" },
 
   // Floating AI Bubble
   aiBubbleWrap: {

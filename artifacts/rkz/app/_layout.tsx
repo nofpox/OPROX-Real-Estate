@@ -40,6 +40,7 @@ function RootLayoutNav() {
       <Stack.Screen name="ai-chat"         options={{ animation: "slide_from_bottom" }} />
       <Stack.Screen name="city3d"          options={{ animation: "fade", animationDuration: 350, gestureEnabled: false }} />
       <Stack.Screen name="villa4d"         options={{ animation: "fade", animationDuration: 350, gestureEnabled: false }} />
+      <Stack.Screen name="ai-architect"    options={{ animation: "fade", animationDuration: 350, gestureEnabled: false }} />
     </Stack>
   );
 }
