@@ -412,7 +412,12 @@ window._doGenerate = function(fp) {
   fetch('https://api.tripo3d.ai/v2/openapi/task', {
     method:'POST',
     headers:{'Authorization':'Bearer '+tripoKey,'Content-Type':'application/json'},
-    body:JSON.stringify({type:'text_to_model',prompt:fp})
+    /* ── Credit deduction hook (Supabase/backend):
+       Before this fetch, the native layer already verified credits via
+       the generate_request / onGenerateApproved message protocol.
+       To wire Supabase: call your edge-function here and await it
+       before proceeding with the Tripo3D request.             ── */
+    body:JSON.stringify({type:'text_to_model', prompt:fp, model_version:'v2.5'})
   })
   .then(function(r){return r.json();})
   .then(function(data){
