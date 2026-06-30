@@ -1,0 +1,66 @@
+import React, { useRef, useState, useEffect } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Sky, Environment, Stars } from '@react-three/drei';
+
+function Villa({ style }) {
+  // 5 ستايلات سعودية 100%
+  const mats = {
+    modern: { wall: '#f8fafc', sofa: '#e5e7eb', wood: '#92400e', name: 'مودرن' }, // رمادي ابيض
+    classic: { wall: '#fefce8', sofa: '#b45309', wood: '#78350f', name: 'كلاسيك' }, // ذهبي رخام
+    neo: { wall: '#f1f5f9', sofa: '#1e293b', wood: '#a16207', name: 'نيو كلاسيك' }, // كحلي ذهبي
+    shaabi: { wall: '#f5f5f4', sofa: '#78716c', wood: '#451a03', name: 'شعبي' }, // مجلس ارضي بني
+    farm: { wall: '#ecfccb', sofa: '#4d7c0f', wood: '#365314', name: 'مزرعة' } // اخضر خشب
+  };
+  const m = mats[style];
+  return (
+    <group>
+      <mesh position={[0, 0, 0]}><boxGeometry args={[4, 2, 4]} /><meshStandardMaterial color={m.wall} /></mesh>
+      <mesh position={[-1, style==='shaabi'?-1:-0.5, 1]}><boxGeometry args={[1.8, style==='shaabi'?0.3:0.5, 0.9]} /><meshStandardMaterial color={m.sofa} /></mesh>
+      <mesh position={[1, -0.8, 1]}><boxGeometry args={[0.9, 0.4, 0.9]} /><meshStandardMaterial color={m.wood} /></mesh>
+      <mesh position={[0, -1, -2]}><boxGeometry args={[3, 0.2, 2]} /><meshStandardMaterial color={style==='farm'? '#22c55e' : '#06b6d4'} emissive={style==='farm'? '#15803d' : '#0891b2'} /></mesh>
+    </group>
+  );
+}
+
+function FourDEffects({ isNight, isRaining }) {
+  const rainRef = useRef();
+  const audioRef = useRef(null);
+  useEffect(() => { isRaining? audioRef.current?.play() : audioRef.current?.pause(); }, [isRaining]);
+  useFrame((_, delta) => { if (isRaining && rainRef.current) { rainRef.current.position.y -= delta * 10; if (rainRef.current.position.y < -5) rainRef.current.position.y = 5; } });
+  return (
+    <>
+      <Sky sunPosition={isNight? [0, -1, 0] : [0, 1, 0]} />
+      {isNight? <Stars /> : null}
+      {isRaining && <mesh ref={rainRef} position={[0, 5, 0]}><boxGeometry args={[0.05, 0.5, 0.05]} /><meshBasicMaterial color="lightblue" transparent opacity={0.5} /></mesh>}
+      <audio ref={audioRef} src="https://cdn.freesound.org/previews/612/612708_10813652-lq.mp3" loop />
+    </>
+  );
+}
+
+export default function App() {
+  const [isNight, setIsNight] = useState(false);
+  const [isRaining, setIsRaining] = useState(false);
+  const [style, setStyle] = useState('modern');
+
+  const styles = ['modern', 'classic', 'neo', 'shaabi', 'farm'];
+
+  return (
+    <div style={{ width: '100vw', height: '100vh', background: 'black' }}>
+      <Canvas camera={{ position: [10, 5, 10] }}>
+        <ambientLight intensity={isNight? 0.2 : 0.5} />
+        <directionalLight position={[5, 5, 5]} intensity={isNight? 0.3 : 1} />
+        <Environment preset="city" />
+        <Villa style={style} />
+        <FourDEffects isNight={isNight} isRaining={isRaining} />
+        <OrbitControls />
+      </Canvas>
+
+      <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 1, display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '10px' }}>
+        <h3 style={{color: 'white', margin: 0}}>Housin3D السعودية</h3>
+        <button onClick={() => setIsNight(!isNight)}>{isNight? '☀️ نهار' : '🌙 ليل'}</button>
+        <button onClick={() => setIsRaining(!isRaining)}>{isRaining? '⛔ وقف المطر' : '🌧️ مطر'}</button>
+        {styles.map(s => <button key={s} onClick={() => setStyle(s)} style={{background: style===s?'#06b6d4':'white'}}>{s==='modern'?'مودرن':s==='classic'?'كلاسيك':s==='neo'?'نيو كلاسيك':s==='shaabi'?'شعبي':'مزرعة'}</button>)}
+      </div>
+    </div>
+  );
+}
