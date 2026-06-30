@@ -4,7 +4,7 @@
     "slug": "rozoz-msrep",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/rozoz-icon.png",
+    "icon": "./assets/images/housin-icon-new.png",
     "scheme": "rozoz-msrep",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -22,14 +22,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/rozoz-icon.png",
-        "backgroundColor": "#0F2040"
+        "foregroundImage": "./assets/images/housin-icon-new.png",
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.housin.app",
       "intentFilters": []
     },
     "web": {
-      "favicon": "./assets/images/rozoz-icon.png"
+      "favicon": "./assets/images/housin-icon-new.png"
     },
     "plugins": [
       [
