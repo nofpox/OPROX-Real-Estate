@@ -126,11 +126,20 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // ── Health check ───────────────────────────────────────────────────────────
-  if (pathname === "/healthz" || pathname === "/status") {
-    res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify({ ok: true }));
-    return;
+  // ── Health check (also catches base-path probe before dist is ready) ───────
+  if (pathname === "/healthz" || pathname === "/status" || pathname === "/" || pathname === "") {
+    const indexExists = fs.existsSync(path.join(WEB_ROOT, "index.html"));
+    if (!indexExists && (pathname === "/healthz" || pathname === "/status")) {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true, building: true }));
+      return;
+    }
+    if (pathname === "/healthz" || pathname === "/status") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true }));
+      return;
+    }
+    // "/" — fall through to serve index.html
   }
 
   const platform = req.headers["expo-platform"];
