@@ -8,6 +8,7 @@ import {
   Dimensions,
   Image,
   PanResponder,
+  Platform,
   Pressable,
   ScrollView,
   Share,
@@ -212,36 +213,80 @@ export default function AiStagingScreen() {
   const [lightOk,       setLightOk]       = useState(true);
   const [qualityScore,  setQualityScore]  = useState(0);
   const [checkingQuality, setCheckingQuality] = useState(false);
+  // Web only: hold the actual File object so FormData works correctly in browser
+  const [webFile, setWebFile] = useState<File | null>(null);
 
   const styleDef = STYLES.find((s) => s.id === selectedStyle)!;
 
   // ── Open camera / gallery ──────────────────────────────────────────────────
   async function openCapture(source: "camera" | "gallery") {
-    let result: ImagePicker.ImagePickerResult;
+    // ── Web: use native <input type="file"> — reliable in all browsers ─────
+    if (Platform.OS === "web") {
+      const input = document.createElement("input");
+      input.type  = "file";
+      input.accept = "image/*";
+      // On mobile web, "environment" opens rear camera directly
+      if (source === "camera") input.setAttribute("capture", "environment");
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        const uri = URL.createObjectURL(file);
+        setWebFile(file);
+        setCapturedUri(uri);
+        await checkQualityWeb(file);
+      };
+      input.click();
+      return;
+    }
 
+    // ── Native: expo-image-picker ──────────────────────────────────────────
+    let result: ImagePicker.ImagePickerResult;
     if (source === "camera") {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) { source = "gallery"; }
     }
-
     if (source === "camera") {
-      result = await ImagePicker.launchCameraAsync({
-        mediaTypes: "images", quality: 0.92,
-      });
+      result = await ImagePicker.launchCameraAsync({ mediaTypes: "images", quality: 0.92 });
     } else {
       await ImagePicker.requestMediaLibraryPermissionsAsync();
-      result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images", quality: 0.92,
-      });
+      result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", quality: 0.92 });
     }
-
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
+    setWebFile(null);
     setCapturedUri(asset.uri);
     await checkQuality(asset);
   }
 
-  // ── Server-side quality check ──────────────────────────────────────────────
+  // ── Quality check: web (File object) ───────────────────────────────────────
+  async function checkQualityWeb(file: File) {
+    setCheckingQuality(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file, file.name);
+      const res = await fetch(`https://${domain}/api/rkz/check-image-quality`, {
+        method: "POST", body: formData,
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { blurOk: boolean; lightOk: boolean; score: number };
+        setBlurOk(data.blurOk);
+        setLightOk(data.lightOk);
+        setQualityScore(data.score);
+        setPhase(!data.blurOk || !data.lightOk ? "quality_fail" : "preview");
+      } else {
+        // Fallback: skip quality gate, let user proceed
+        setBlurOk(true); setLightOk(true); setQualityScore(80);
+        setPhase("preview");
+      }
+    } catch {
+      setBlurOk(true); setLightOk(true); setQualityScore(80);
+      setPhase("preview");
+    } finally {
+      setCheckingQuality(false);
+    }
+  }
+
+  // ── Quality check: native (ImagePickerAsset) ────────────────────────────────
   async function checkQuality(asset: ImagePicker.ImagePickerAsset) {
     setCheckingQuality(true);
     try {
@@ -289,8 +334,13 @@ export default function AiStagingScreen() {
     setPhase("processing");
     try {
       const formData = new FormData();
-      const filename = capturedUri.split("/").pop() ?? "room.jpg";
-      formData.append("image", { uri: capturedUri, name: filename, type: "image/jpeg" } as any);
+      // Web: append the real File object; Native: use RN-style {uri,name,type}
+      if (Platform.OS === "web" && webFile) {
+        formData.append("image", webFile, webFile.name);
+      } else {
+        const filename = capturedUri.split("/").pop() ?? "room.jpg";
+        formData.append("image", { uri: capturedUri, name: filename, type: "image/jpeg" } as any);
+      }
       formData.append("style", selectedStyle);
 
       const res = await fetch(`https://${domain}/api/rkz/virtual-staging`, {
