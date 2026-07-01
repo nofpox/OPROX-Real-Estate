@@ -309,6 +309,27 @@ export default function HomeScreen() {
             </View>
           </Pressable>
 
+          {/* ── City3D (Mapbox) Banner — disabled until token is provided ── */}
+          <Pressable
+            style={s.mapCity3dBanner}
+            onPress={() => router.push("/city3d-live" as never)}
+          >
+            <View style={s.mapCity3dLeft}>
+              <View style={s.mapCity3dBadge}>
+                <Text style={s.mapCity3dBadgeText}>{isAr ? "قريباً" : "SOON"}</Text>
+              </View>
+              <Text style={s.mapCity3dTitle}>{isAr ? "🗺️ City3D — خريطة واقعية" : "🗺️ City3D — Real Map"}</Text>
+              <Text style={s.mapCity3dDesc}>
+                {isAr
+                  ? "خريطة ثلاثية الأبعاد حقيقية لمباني الرياض — قريباً"
+                  : "A real 3D map of Riyadh's buildings — coming soon"}
+              </Text>
+            </View>
+            <View style={s.mapCity3dRight}>
+              <Text style={{ fontSize: 40 }}>🗺️</Text>
+            </View>
+          </Pressable>
+
           {/* ── Villa 4D Banner ── */}
           <Pressable
             style={s.villa4dBanner}
@@ -579,6 +600,28 @@ const s = StyleSheet.create({
   city3dCta:       { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   city3dCtaText:   { fontSize: 13, fontFamily: "Inter_700Bold", color: "#0099ff" },
   city3dRight:     { alignItems: "center", justifyContent: "center" },
+
+  // ── City3D (Mapbox) Banner ───────────────────────────────────────────────
+  mapCity3dBanner: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: "#101418",
+    borderWidth: 1.5,
+    borderColor: "rgba(160,170,185,0.3)",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 18,
+    gap: 12,
+    opacity: 0.85,
+  },
+  mapCity3dLeft:      { flex: 1, gap: 6 },
+  mapCity3dBadge:     { backgroundColor: "rgba(160,170,185,0.25)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, alignSelf: "flex-start" },
+  mapCity3dBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold", color: "#c7ccd4" },
+  mapCity3dTitle:     { fontSize: 17, fontFamily: "Inter_700Bold", color: "#fff" },
+  mapCity3dDesc:      { fontSize: 12, color: "rgba(200,205,215,0.6)", lineHeight: 18 },
+  mapCity3dRight:     { alignItems: "center", justifyContent: "center" },
 
   // ── Villa 4D Banner ───────────────────────────────────────────────────────
   villa4dBanner: {
