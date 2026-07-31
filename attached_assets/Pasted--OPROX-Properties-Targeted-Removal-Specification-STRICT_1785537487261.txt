@@ -1,0 +1,131 @@
+# OPROX Properties – Targeted Removal Specification (STRICT)
+
+IMPORTANT:
+This is NOT a redesign.
+This is NOT a refactor.
+This is NOT a cleanup of unrelated code.
+
+Your task is ONLY to remove the Hotel Booking module from OPROX Properties.
+
+====================================================
+DO NOT TOUCH (KEEP EXACTLY AS THEY ARE)
+====================================================
+
+The following features are part of the Real Estate platform and MUST remain unchanged:
+
+✓ Home Screen
+✓ Property Listings
+✓ Property Details
+✓ Property Search
+✓ Property Categories
+✓ Property Filters
+✓ Property Map (Real Estate Map)
+✓ Favorites
+✓ User Profile
+✓ AI Chat
+✓ AI Valuation
+✓ Housin Estimate
+✓ AI Architect
+✓ AI Designer
+✓ Housin 3D
+✓ City3D
+✓ Villa4D
+✓ Real Estate 3D Experience
+✓ All AI features
+✓ All Property APIs
+✓ All Property Database tables
+✓ All Property navigation
+✓ All Property components
+
+Do NOT rename them.
+Do NOT move them.
+Do NOT refactor them.
+Do NOT replace them.
+
+====================================================
+REMOVE ONLY
+====================================================
+
+Delete ONLY the Hotel Booking module.
+
+This includes ONLY:
+
+1. Bottom Navigation tab:
+   - "Book Stay"
+   - "احجز إقامتك"
+
+2. Hotel Booking screen.
+
+3. Hotel Booking map.
+
+4. Hotel markers.
+
+5. Hotel search.
+
+6. Hotel booking routes.
+
+7. Hotel reservation flow.
+
+8. Hotel booking APIs.
+
+9. Hotel booking database models.
+
+10. Hotel booking services.
+
+11. Hotel booking components.
+
+12. Hotel booking state management.
+
+13. Hotel booking assets.
+
+14. Any navigation pointing to Hotel Booking.
+
+====================================================
+DO NOT DELETE
+====================================================
+
+DO NOT delete:
+
+- City3D
+- Housin 3D
+- Villa4D
+- AI Architect
+- AI Designer
+- Housin Estimate
+- AI Chat
+- AI Valuation
+- Property Map
+- Property Search
+- Property Cards
+- Property Details
+- Property Database
+- Property APIs
+- Property Navigation
+
+====================================================
+FINAL REQUIREMENT
+====================================================
+
+After removal:
+
+The application must compile successfully.
+
+No broken imports.
+
+No broken routes.
+
+No TypeScript errors.
+
+No blank screens.
+
+No orphan files.
+
+Only the Hotel Booking module should disappear.
+
+Everything else must work exactly as before.
+
+Finally, provide:
+
+- List of deleted files
+- List of modified files
+- Confirmation that all Real Estate features are still working.

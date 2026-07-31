@@ -44,7 +44,7 @@ function AnimatedTabIcon({ focused, children }: { focused: boolean; children: Re
 
 // ── Root layout ───────────────────────────────────────────────────────────────
 // ── Tab order (logical, LTR) ──────────────────────────────────────────────────
-const TAB_ROUTES = ["index", "add", "explore", "settings"] as const;
+const TAB_ROUTES = ["index", "add", "settings"] as const;
 
 export default function TabLayout() {
   const { langChosen, isLoading } = useApp();
@@ -71,11 +71,6 @@ export default function TabLayout() {
       name:  "add",
       title: t.tabs.search,
       icon:  (color: string) => <MaterialIcons name="map" size={26} color={color} />,
-    },
-    {
-      name:  "explore",
-      title: t.tabs.tourism,
-      icon:  (color: string) => <MaterialIcons name="hotel" size={26} color={color} />,
     },
     {
       name:  "settings",

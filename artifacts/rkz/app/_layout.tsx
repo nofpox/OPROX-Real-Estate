@@ -35,7 +35,6 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)"          options={{ animation: "none" }} />
       <Stack.Screen name="language-select" options={{ animation: "fade", animationDuration: 300, gestureEnabled: false }} />
       <Stack.Screen name="property/[id]"   options={{ animation: "slide_from_right" }} />
-      <Stack.Screen name="hotel/[id]"      options={{ animation: "slide_from_right" }} />
       <Stack.Screen name="valuation"       options={{ animation: "slide_from_right" }} />
       <Stack.Screen name="ai-chat"         options={{ animation: "slide_from_bottom" }} />
       <Stack.Screen name="city3d"          options={{ animation: "fade", animationDuration: 350, gestureEnabled: false }} />
