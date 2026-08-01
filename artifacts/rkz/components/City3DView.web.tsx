@@ -53,7 +53,7 @@ canvas{display:block;width:100%;height:100%}
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="lbl">HOUSIN 3D · مدينة الرياض</div>
+<div id="lbl">OPROX 3D · مدينة الرياض</div>
 <button id="backBtn" onclick="goBack()">← العودة</button>
 <div id="info"><h3 id="iTitle"></h3><div id="iBody"></div></div>
 <div id="tip"></div>
