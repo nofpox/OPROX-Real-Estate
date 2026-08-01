@@ -20,7 +20,7 @@ export default function City3DView({ onReady }: Props) {
   return (
     <View style={StyleSheet.absoluteFill}>
       <iframe
-        title="Housin 3D City"
+        title="OPROX 3D City"
         srcDoc={CITY_HTML_WEB}
         style={{ width: "100%", height: "100%", border: "none", background: "#050a18" }}
         allow="accelerometer; autoplay"

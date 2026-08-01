@@ -355,7 +355,7 @@ export default function RegisterModal() {
           {step === "role" && (
             <View style={s.body}>
               <Text style={s.title}>
-                {isAr ? "كيف تريد الاستخدام؟" : "How will you use Housin?"}
+                {isAr ? "كيف تريد الاستخدام؟" : "How will you use OPROX Properties?"}
               </Text>
               <Text style={s.subtitle}>
                 {isAr

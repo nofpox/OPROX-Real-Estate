@@ -47,7 +47,7 @@ export default function City3DScreen() {
         <View style={s.loading}>
           <ActivityIndicator size="large" color="#0078ff" />
           <Text style={s.loadingText}>جارٍ تحميل المدينة الثلاثية الأبعاد...</Text>
-          <Text style={s.loadingHint}>Housin 3D · Riyadh</Text>
+          <Text style={s.loadingHint}>OPROX 3D · Riyadh</Text>
         </View>
       )}
 

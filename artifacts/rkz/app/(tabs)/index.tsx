@@ -51,7 +51,7 @@ async function fetchListings(): Promise<Listing[]> {
       lng:      Number(l.lng ?? l.longitude ?? 46.6753),
       image:    String(l.main_image ?? l.image ?? MOCK_LISTINGS[0].image),
       featured: Boolean(l.featured),
-      agentName:  String(l.agent_name ?? "وكيل Housin"),
+      agentName:  String(l.agent_name ?? "وكيل OPROX"),
       agentPhone: String(l.agent_phone ?? "0500000000"),
       description: String(l.description ?? ""),
       listedAt:   String(l.created_at ?? l.listedAt ?? "2026-01-01"),
@@ -283,7 +283,7 @@ export default function HomeScreen() {
             ))}
           </View>
 
-          {/* ── Housin 3D City Banner ── */}
+          {/* ── OPROX 3D City Banner ── */}
           <Pressable
             style={s.city3dBanner}
             onPress={() => router.push("/city3d" as never)}
@@ -292,7 +292,7 @@ export default function HomeScreen() {
               <View style={s.city3dBadge}>
                 <Text style={s.city3dBadgeText}>{isAr ? "جديد" : "NEW"}</Text>
               </View>
-              <Text style={s.city3dTitle}>{isAr ? "🏙️ استكشف المدينة 3D" : "🏙️ Housin 3D City"}</Text>
+              <Text style={s.city3dTitle}>{isAr ? "🏙️ استكشف المدينة 3D" : "🏙️ OPROX 3D City"}</Text>
               <Text style={s.city3dDesc}>
                 {isAr
                   ? "تجوّل في مدينة الرياض ثلاثية الأبعاد — اضغط أي مبنى لترى الشقة من الداخل"
@@ -573,7 +573,7 @@ const s = StyleSheet.create({
   heroBannerChip:    { backgroundColor: "rgba(201,168,76,0.18)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3, borderWidth: 1, borderColor: "rgba(201,168,76,0.3)" },
   heroBannerChipText:{ fontSize: 10, fontFamily: "Inter_600SemiBold", color: GOLD },
 
-  // ── Housin 3D City Banner ──────────────────────────────────────────────────
+  // ── OPROX 3D City Banner ──────────────────────────────────────────────────
   city3dBanner: {
     marginHorizontal: 20,
     marginBottom: 12,

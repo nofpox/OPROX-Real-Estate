@@ -47,7 +47,7 @@ const DEFAULT_LNG = 46.6753;
 function getMapSrc(): string {
   if (typeof window === "undefined") return "";
   // Replace last path segment with the filename so the URL works in both
-  // dev (Expo dev domain, no base prefix) and production (/rozoz-msrep/ prefix).
+  // dev (Expo dev domain, no base prefix) and production (/oprox-properties/ prefix).
   const loc = window.location;
   const parts = loc.pathname.split("/");
   parts[parts.length - 1] = "lmap.html";

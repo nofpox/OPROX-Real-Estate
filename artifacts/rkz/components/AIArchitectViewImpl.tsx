@@ -107,7 +107,7 @@ export default function AIArchitectView({
   const [chatInput,   setChatInput]   = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [chatMsgs,    setChatMsgs]    = useState<{ role: "user" | "ai"; text: string }[]>([
-    { role: "ai", text: "مرحباً! أنا Housin3D، مستشارك المعماري.\nاسألني عن التصميم، الطراز السعودي، أو أي شيء عن مشروعك 🏠" },
+    { role: "ai", text: "مرحباً! أنا OPROX 3D، مستشارك المعماري.\nاسألني عن التصميم، الطراز السعودي، أو أي شيء عن مشروعك 🏠" },
   ]);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -225,7 +225,7 @@ export default function AIArchitectView({
           messages: [
             {
               role:    "system",
-              content: "أنت Housin3D، مستشار معماري متخصص في التصميم السعودي المعاصر والفلل الفاخرة. أجب باللغة العربية، باختصار وعملية.",
+              content: "أنت OPROX 3D، مستشار معماري متخصص في التصميم السعودي المعاصر والفلل الفاخرة. أجب باللغة العربية، باختصار وعملية.",
             },
             ...chatMsgs.map((m) => ({
               role:    m.role === "user" ? "user" : ("assistant" as const),
@@ -253,7 +253,7 @@ export default function AIArchitectView({
           <Pressable style={s.chatBack} onPress={() => setShowChat(false)}>
             <Text style={s.chatBackText}>← رجوع</Text>
           </Pressable>
-          <Text style={s.chatTitle}>💬 استشر Housin3D</Text>
+          <Text style={s.chatTitle}>💬 استشر OPROX 3D</Text>
         </View>
 
         <ScrollView

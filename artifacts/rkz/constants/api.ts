@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const TOKEN_KEY = "rozoz_auth_token";
+const TOKEN_KEY = "oprox_auth_token";
 
 export async function getAuthToken(): Promise<string | null> {
   try { return await AsyncStorage.getItem(TOKEN_KEY); } catch { return null; }

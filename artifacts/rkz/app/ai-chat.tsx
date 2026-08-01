@@ -637,7 +637,7 @@ export default function AiChatScreen() {
         <View style={s.headerCenter}>
           <Image source={aiAvatar} style={{ width: 36, height: 36, resizeMode: 'contain' }} />
           <View>
-            <Text style={s.headerTitle}>Housin AI</Text>
+            <Text style={s.headerTitle}>OPROX AI</Text>
             <Text style={s.headerSub}>
               {isAr ? "سكرتيرك العقاري الذكي · متاح دائماً" : "Your Smart Real Estate Secretary · Always on"}
             </Text>

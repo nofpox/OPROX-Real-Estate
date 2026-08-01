@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Housin",
-    "slug": "rozoz-msrep",
+    "name": "OPROX Properties",
+    "slug": "oprox-properties",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/housin-icon-new.png",
-    "scheme": "rozoz-msrep",
+    "scheme": "oprox-properties",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.housin.app",
+      "bundleIdentifier": "com.oprox.properties",
       "infoPlist": {
         "LSApplicationQueriesSchemes": ["uber", "bolt", "careem"]
       }
@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/images/housin-icon-new.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.housin.app",
+      "package": "com.oprox.properties",
       "intentFilters": []
     },
     "web": {
@@ -43,21 +43,21 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Housin تحتاج للوصول إلى صورك لإضافة صور العقارات.",
-          "cameraPermission": "Housin تحتاج الكاميرا لالتقاط صور العقارات."
+          "photosPermission": "OPROX Properties تحتاج للوصول إلى صورك لإضافة صور العقارات.",
+          "cameraPermission": "OPROX Properties تحتاج الكاميرا لالتقاط صور العقارات."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Housin تستخدم موقعك لتعبئة عنوان العقار تلقائياً."
+          "locationWhenInUsePermission": "OPROX Properties تستخدم موقعك لتعبئة عنوان العقار تلقائياً."
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true,
-      "baseUrl": "/rozoz-msrep"
+      "baseUrl": "/oprox-properties"
     }
   }
 }

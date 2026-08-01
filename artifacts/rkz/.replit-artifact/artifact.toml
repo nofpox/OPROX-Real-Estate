@@ -1,6 +1,6 @@
 kind = "mobile"
-previewPath = "/rozoz-msrep/"
-title = "Housin"
+previewPath = "/oprox-properties/"
+title = "OPROX Properties"
 version = "1.0.0"
 id = "artifacts/rkz"
 router = "expo-domain"
@@ -11,17 +11,17 @@ version = "1.0.0"
 
 [[services]]
 ensurePreviewReachable = "/status"
-name = "Housin"
-paths = [ "/rozoz-msrep/", "/rozoz-msrep" ]
+name = "OPROX Properties"
+paths = [ "/oprox-properties/", "/oprox-properties" ]
 localPort = 26232
 
 [services.development]
-run = "pnpm --filter @workspace/rozoz-msrep run dev"
+run = "pnpm --filter @workspace/oprox-properties run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/rozoz-msrep", "run", "build" ]
-run = [ "pnpm", "--filter", "@workspace/rozoz-msrep", "run", "serve" ]
+build = [ "pnpm", "--filter", "@workspace/oprox-properties", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/oprox-properties", "run", "serve" ]
 
 [services.env]
 PORT = "26232"
-BASE_PATH = "/rozoz-msrep/"
+BASE_PATH = "/oprox-properties/"

@@ -361,7 +361,7 @@ export default function AiStagingScreen() {
     try {
       await Share.share({
         url: resultUri.startsWith("data:") ? undefined : resultUri,
-        message: isAr ? "شاهد تصميمي الذكي من Housin 🏠✨" : "My AI-staged room from Housin 🏠✨",
+        message: isAr ? "شاهد تصميمي الذكي من OPROX Properties 🏠✨" : "My AI-staged room from OPROX Properties 🏠✨",
       });
     } catch {}
   }

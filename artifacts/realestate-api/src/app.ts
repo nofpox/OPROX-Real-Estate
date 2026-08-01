@@ -254,7 +254,7 @@ app.get("/realestate-api/watch", (_req, res) => {
 
 <footer class="footer">
   <div class="footer-logo">رزوز</div>
-  <div class="footer-sub">ROZOZ · SMART REAL ESTATE SOLUTIONS</div>
+  <div class="footer-sub">OPROX · SMART REAL ESTATE SOLUTIONS</div>
 </footer>
 
 <div class="protect-note">🔒 محتوى محمي — جميع الحقوق محفوظة لشركة رزوز</div>

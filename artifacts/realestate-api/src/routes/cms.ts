@@ -74,13 +74,13 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
   },
   announcements: [],
   about: {
-    titleEn: "About Housin",
+    titleEn: "About OPROX Properties",
     titleAr: "عن هاوسِن",
-    body: "Housin is a leading real estate platform in Saudi Arabia.",
+    body: "OPROX Properties is a leading real estate platform in Saudi Arabia.",
     imageUrl: "",
   },
   branding: {
-    companyNameEn: "Housin",
+    companyNameEn: "OPROX Properties",
     companyNameAr: "هاوسِن",
     taglineEn: "Premium Property Management",
     taglineAr: "إدارة عقارات متميزة",
@@ -117,7 +117,7 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     pageTitleAr: "محفظتنا المُدارة",
     subtitleEn: "Explore the properties we manage across Saudi Arabia.",
     subtitleAr: "استعرض العقارات التي تُديرها روزوز في المملكة العربية السعودية.",
-    metaDescription: "Browse properties managed by Rozoz Smart Solutions.",
+    metaDescription: "Browse properties managed by OPROX Smart Solutions.",
   },
   nav: [
     { href: "/",         labelEn: "Home",       labelAr: "الرئيسية" },
@@ -139,9 +139,9 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
     buttonAr: "تواصل معنا",
   },
   leadEmail: {
-    subject: "Welcome to Rozoz – Your Visit Confirmation",
-    intro: "Thank you for your interest in Rozoz Smart Solutions. We are pleased to confirm that we have received your request.\n\nOur team is currently reviewing your inquiry and will contact you shortly.",
-    mapsUrl: "https://www.google.com/maps/search/Rozoz+Smart+Solutions+Riyadh+Saudi+Arabia",
+    subject: "Welcome to OPROX Properties – Your Visit Confirmation",
+    intro: "Thank you for your interest in OPROX Smart Solutions. We are pleased to confirm that we have received your request.\n\nOur team is currently reviewing your inquiry and will contact you shortly.",
+    mapsUrl: "https://www.google.com/maps/search/OPROX+Properties+Riyadh+Saudi+Arabia",
     bccEmail: "",
   },
 };

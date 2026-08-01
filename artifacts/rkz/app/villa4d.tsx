@@ -33,7 +33,7 @@ export default function Villa4DScreen() {
         <View style={s.loading}>
           <ActivityIndicator size="large" color="#c9a84c" />
           <Text style={s.loadingText}>جارٍ تحميل الفيلا الثلاثية الأبعاد...</Text>
-          <Text style={s.loadingHint}>Housin 4D Villa</Text>
+          <Text style={s.loadingHint}>OPROX 4D Villa</Text>
         </View>
       )}
 

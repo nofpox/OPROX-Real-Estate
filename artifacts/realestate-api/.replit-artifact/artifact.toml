@@ -1,21 +1,21 @@
 kind = "api"
 previewPath = "/realestate-api"
-title = "Rozoz Portal API"
+title = "OPROX Properties API"
 version = "1.0.0"
 id = "artifacts/realestate-api"
 
 [[services]]
 localPort = 8099
-name = "Rozoz Portal API"
+name = "OPROX Properties API"
 paths = ["/realestate-api"]
 
 [services.development]
-run = "pnpm --filter @workspace/rozoz-portal-api run dev"
+run = "pnpm --filter @workspace/oprox-properties-api run dev"
 
 [services.production]
 
 [services.production.build]
-args = ["pnpm", "--filter", "@workspace/rozoz-portal-api", "run", "build"]
+args = ["pnpm", "--filter", "@workspace/oprox-properties-api", "run", "build"]
 
 [services.production.build.env]
 NODE_ENV = "production"
