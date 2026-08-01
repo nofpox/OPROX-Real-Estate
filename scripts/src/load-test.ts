@@ -22,7 +22,7 @@ async function getSessionCookie(): Promise<string | null> {
     const res = await fetch(`${BASE}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tenantSlug: "rakez", username: "admin", password: "admin123" }),
+      body: JSON.stringify({ tenantSlug: "rakez", username: "admin", password: process.env.LOAD_TEST_PASSWORD ?? "" }),
     });
     const cookies = res.headers.getSetCookie?.() ?? [];
     const sid = cookies.find((c) => c.startsWith("sid=") || c.startsWith("connect.sid="));

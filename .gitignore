@@ -47,3 +47,18 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Environment secrets — never commit actual env files
+.env
+.env.*
+!.env.example
+
+# Archives, backups, and binary exports — not source code
+archive/
+attached_assets/
+exports/
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.gz
