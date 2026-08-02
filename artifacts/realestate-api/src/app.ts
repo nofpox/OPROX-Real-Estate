@@ -23,7 +23,7 @@ app.use(compression());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-const WORKSPACE_ROOT = "/home/runner/workspace";
+const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT || process.cwd();
 
 app.get("/realestate-api/media/:filename", (req, res) => {
   const allowed = [

@@ -2,7 +2,7 @@ import sharp from 'sharp';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-const ROOT = '/home/runner/workspace';
+const ROOT = process.env.WORKSPACE_ROOT || process.cwd();
 const ICON_IN  = resolve(ROOT, '/tmp/rozoz-icon-nobg.png');
 const ICON_OUT  = resolve(ROOT, 'artifacts/rkz/assets/images/rozoz-icon.png');
 const SPLASH_OUT = resolve(ROOT, 'artifacts/rkz/assets/images/rozoz-splash.png');

@@ -14,9 +14,9 @@ interface LeadEmailTemplate {
 }
 
 const DEFAULT_LEAD_EMAIL: LeadEmailTemplate = {
-  subject: "Welcome to Rkaz – Your Visit Confirmation",
-  intro: "Thank you for your interest in Rkaz. We are pleased to confirm that we have received your request.\n\nOur team is currently reviewing your inquiry and will contact you shortly to finalize the details of your visit.",
-  mapsUrl: "https://www.google.com/maps/search/Rkaz+Riyadh+Saudi+Arabia",
+  subject: "Welcome to OPROX Properties – Your Visit Confirmation",
+  intro: "Thank you for your interest in OPROX Properties. We are pleased to confirm that we have received your request.\n\nOur team is currently reviewing your inquiry and will contact you shortly to finalize the details of your visit.",
+  mapsUrl: "https://www.google.com/maps/search/OPROX+Properties+Riyadh+Saudi+Arabia",
   bccEmail: "",
 };
 
@@ -49,8 +49,8 @@ async function sendLeadWelcomeEmail(to: string, name: string, tenantId = 1): Pro
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:580px;margin:0 auto;background:#f5f5f5;padding:20px 0">
       <div style="background:#1a2744;padding:28px 36px;border-radius:12px 12px 0 0;text-align:center">
-        <p style="margin:0;font-size:22px;font-weight:800;color:#c8a84b;letter-spacing:1px">RKAZ</p>
-        <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.6);letter-spacing:0.5px">SMART SOLUTIONS</p>
+        <p style="margin:0;font-size:22px;font-weight:800;color:#c8a84b;letter-spacing:1px">OPROX PROPERTIES</p>
+        <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.6);letter-spacing:0.5px">SMART REAL ESTATE</p>
       </div>
       <div style="background:#ffffff;padding:36px;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb">
         <h2 style="margin:0 0 20px;font-size:18px;font-weight:700;color:#1a2744">Dear ${name},</h2>
@@ -77,10 +77,10 @@ async function sendLeadWelcomeEmail(to: string, name: string, tenantId = 1): Pro
           </table>
         </div>
         <p style="margin:0 0 6px;font-size:14px;color:#444;line-height:1.7">We look forward to welcoming you to our offices.</p>
-        <p style="margin:24px 0 0;font-size:14px;color:#444">Best regards,<br/><strong style="color:#1a2744">The Rkaz Management Team</strong></p>
+        <p style="margin:24px 0 0;font-size:14px;color:#444">Best regards,<br/><strong style="color:#1a2744">The OPROX Properties Team</strong></p>
       </div>
       <div style="background:#f5f5f5;padding:16px 36px;border-radius:0 0 12px 12px;border:1px solid #e5e7eb;border-top:none;text-align:center">
-        <p style="margin:0;font-size:11px;color:#aaa">© ${year} Rkaz Smart Solutions — All rights reserved</p>
+        <p style="margin:0;font-size:11px;color:#aaa">© ${year} OPROX Properties — All rights reserved</p>
       </div>
     </div>
   `;
