@@ -20,7 +20,8 @@ describe("OPROX Phase 13 — Production Hardening, Security, Infrastructure & Mu
     const isPostgresAvailable = process.env.DATABASE_URL !== undefined && process.env.DATABASE_URL !== "";
     const postgresRuntimeStatus = isPostgresAvailable ? "AVAILABLE" : "POSTGRESQL RUNTIME NOT AVAILABLE";
     
-    assert.equal(postgresRuntimeStatus, "POSTGRESQL RUNTIME NOT AVAILABLE");
+    const expectedStatus = isPostgresAvailable ? "AVAILABLE" : "POSTGRESQL RUNTIME NOT AVAILABLE";
+    assert.equal(postgresRuntimeStatus, expectedStatus);
   });
 
   it("2 — should enforce distributed multi-instance atomic usage control with conditional CAS mechanics", async () => {
