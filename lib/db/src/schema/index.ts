@@ -39,3 +39,4 @@ export * from "./inventoryItems";
 export * from "./analytics";
 export * from "./poiPlaces";
 export * from "./apartments";
+export * from "./architectProjects";

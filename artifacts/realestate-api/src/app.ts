@@ -264,5 +264,7 @@ app.get("/realestate-api/watch", (_req, res) => {
 });
 
 app.use("/realestate-api", router);
+app.use("/api", router);
+app.use(router);
 
 export default app;

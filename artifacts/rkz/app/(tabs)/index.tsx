@@ -198,6 +198,23 @@ export default function HomeScreen() {
                 resizeMode="contain"
               />
             </View>
+            <Pressable
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                backgroundColor: GOLD,
+                paddingHorizontal: 12,
+                paddingVertical: 7,
+                borderRadius: 12,
+              }}
+              onPress={() => router.push("/add-listing" as never)}
+            >
+              <MaterialIcons name="add" size={18} color={NAVY} />
+              <Text style={{ color: NAVY, fontSize: 12, fontFamily: "Inter_700Bold" }}>
+                {isAr ? "نشر عقار" : "Add Property"}
+              </Text>
+            </Pressable>
           </View>
           <Text style={s.heroTitle}>{t.home.hero}</Text>
           <Text style={s.heroSub}>{t.home.sub}</Text>

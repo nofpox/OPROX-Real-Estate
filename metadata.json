@@ -1,0 +1,6 @@
+{
+  "name": "OPROX Properties",
+  "description": "Comprehensive Real Estate Operating Platform & Analytics",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

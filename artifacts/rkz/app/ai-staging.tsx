@@ -258,13 +258,20 @@ export default function AiStagingScreen() {
     await checkQuality(asset);
   }
 
+  function apiBase(d: string) {
+    if (Platform.OS === "web") return "";
+    if (!d) return "";
+    if (d.startsWith("http://") || d.startsWith("https://")) return d;
+    return `https://${d}`;
+  }
+
   // ── Quality check: web (File object) ───────────────────────────────────────
   async function checkQualityWeb(file: File) {
     setCheckingQuality(true);
     try {
       const formData = new FormData();
       formData.append("image", file, file.name);
-      const res = await fetch(`https://${domain}/api/rkz/check-image-quality`, {
+      const res = await fetch(`${apiBase(domain)}/api/rkz/check-image-quality`, {
         method: "POST", body: formData,
       });
       if (res.ok) {
@@ -294,7 +301,7 @@ export default function AiStagingScreen() {
       const filename = asset.uri.split("/").pop() ?? "room.jpg";
       formData.append("image", { uri: asset.uri, name: filename, type: "image/jpeg" } as any);
 
-      const res = await fetch(`https://${domain}/api/rkz/check-image-quality`, {
+      const res = await fetch(`${apiBase(domain)}/api/rkz/check-image-quality`, {
         method: "POST", body: formData,
       });
 
@@ -343,7 +350,7 @@ export default function AiStagingScreen() {
       }
       formData.append("style", selectedStyle);
 
-      const res = await fetch(`https://${domain}/api/rkz/virtual-staging`, {
+      const res = await fetch(`${apiBase(domain)}/api/rkz/virtual-staging`, {
         method: "POST", body: formData,
       });
       if (!res.ok) throw new Error(await res.text());

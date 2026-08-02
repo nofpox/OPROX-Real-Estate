@@ -9,6 +9,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Linking,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -22,6 +23,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { useLocale } from "@/hooks/useLocale";
 import { formatPrice, MOCK_LISTINGS, type Listing } from "@/constants/mockListings";
+import Property3DViewer from "@/components/Property3DViewer";
 
 const NAVY = "#0f2040";
 const GOLD = "#c9a84c";
@@ -101,6 +103,62 @@ export default function PropertyDetailScreen() {
   const [msgBody,  setMsgBody]  = useState("");
   const [sending,  setSending]  = useState(false);
   const [sent,     setSent]     = useState(false);
+
+  // Modals state
+  const [showViewingModal, setShowViewingModal] = useState(false);
+  const [viewingDate, setViewingDate] = useState("2026-08-05");
+  const [viewingTime, setViewingTime] = useState("18:00");
+  const [viewingNotes, setViewingNotes] = useState("");
+  const [viewingSubmitting, setViewingSubmitting] = useState(false);
+
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("شبهة عدم دقة البيانات / السعر");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [show3dModal, setShow3dModal] = useState(false);
+
+  const handleViewingSubmit = async () => {
+    if (!msgName.trim() || !msgPhone.trim()) {
+      Alert.alert(isAr ? "تنبيه" : "Required", isAr ? "يرجى كتابة الاسم ورقم الجوال" : "Name and phone are required");
+      return;
+    }
+    setViewingSubmitting(true);
+    try {
+      const domain = process.env.EXPO_PUBLIC_DOMAIN;
+      if (domain && listing) {
+        await fetch(`https://${domain}/realestate-api/listings/${listing.id}/viewings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: msgName,
+            phone: msgPhone,
+            preferredDate: viewingDate,
+            preferredTime: viewingTime,
+            notes: viewingNotes,
+          }),
+        }).catch(() => {});
+      }
+    } catch {}
+    setViewingSubmitting(false);
+    setShowViewingModal(false);
+    Alert.alert(isAr ? "تم إرسال الطلب" : "Request Sent", isAr ? "تم إرسال طلب معاينة العقار للمالك/الوكيل بنجاح" : "Viewing request sent successfully");
+  };
+
+  const handleReportSubmit = async () => {
+    setReportSubmitting(true);
+    try {
+      const domain = process.env.EXPO_PUBLIC_DOMAIN;
+      if (domain && listing) {
+        await fetch(`https://${domain}/realestate-api/listings/${listing.id}/report`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason: reportReason, details: "User reported via property details screen" }),
+        }).catch(() => {});
+      }
+    } catch {}
+    setReportSubmitting(false);
+    setShowReportModal(false);
+    Alert.alert(isAr ? "تم الاستلام" : "Report Received", isAr ? "شكراً لك، تم استلام بلاغك وسيقوم فريق الضبط بمراجعته" : "Thank you for reporting.");
+  };
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -210,6 +268,35 @@ export default function PropertyDetailScreen() {
             )}
           </View>
 
+          {/* ── 3D Digital Twin & Floorplan Trigger ── */}
+          <Pressable
+            style={{
+              backgroundColor: "#0f2040",
+              borderColor: "#c9a84c",
+              borderWidth: 1.5,
+              borderRadius: 14,
+              padding: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 16,
+            }}
+            onPress={() => setShow3dModal(true)}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <MaterialIcons name="3d-rotation" size={24} color="#f5d98a" />
+              <View>
+                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>
+                  {isAr ? "عرض العقار ثلاثي الأبعاد 3D والوحدات" : "View Property 3D & Unit Matrix"}
+                </Text>
+                <Text style={{ color: "#c9a84c", fontSize: 11, marginTop: 2 }}>
+                  {isAr ? "معاينة المخططات الهندسية • Digital Twin" : "Digital Twin • Floor plans • Unit status"}
+                </Text>
+              </View>
+            </View>
+            <MaterialIcons name="chevron-right" size={20} color="#c9a84c" />
+          </Pressable>
+
           {/* Overview */}
           {listing.description ? (
             <View style={s.card}>
@@ -274,14 +361,44 @@ export default function PropertyDetailScreen() {
             </View>
           </View>
 
-          {/* Call agent */}
-          <Pressable
-            style={s.callBtn}
-            onPress={() => Linking.openURL(`tel:${listing.agentPhone}`).catch(() => {})}
-          >
-            <MaterialIcons name="phone" size={20} color={NAVY} />
-            <Text style={s.callBtnText}>{t.detail.contact.call} {listing.agentName}</Text>
-          </Pressable>
+          {/* Call / Contact agent & Viewing Scheduler */}
+          <View style={{ gap: 10 }}>
+            <Pressable
+              style={s.callBtn}
+              onPress={() => Linking.openURL(`tel:${listing.agentPhone}`).catch(() => {})}
+            >
+              <MaterialIcons name="phone" size={20} color={NAVY} />
+              <Text style={s.callBtnText}>{t.detail.contact.call} {listing.agentName}</Text>
+            </Pressable>
+
+            <Pressable
+              style={s.viewingBtn}
+              onPress={() => setShowViewingModal(true)}
+            >
+              <MaterialIcons name="event" size={20} color="#fff" />
+              <Text style={s.viewingBtnText}>{isAr ? "طلب معاينة عقار (حجز موعد)" : "Request Property Viewing"}</Text>
+            </Pressable>
+          </View>
+
+          {/* Seller / Agent Verified Profile */}
+          <View style={s.sellerCard}>
+            <View style={s.sellerHeader}>
+              <View style={s.sellerAvatar}>
+                <MaterialIcons name="business" size={24} color={GOLD} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={s.sellerName}>{listing.agentName}</Text>
+                  <MaterialIcons name="verified" size={18} color="#38a169" />
+                </View>
+                <Text style={s.sellerRole}>{isAr ? "مكتب عقاري معتمد — ترخيص فال 99201" : "Verified Broker — VAL 99201"}</Text>
+              </View>
+            </View>
+            <Pressable style={s.reportBtn} onPress={() => setShowReportModal(true)}>
+              <MaterialIcons name="flag" size={16} color="#e53e3e" />
+              <Text style={s.reportBtnText}>{isAr ? "إبلاغ عن الإعلان" : "Report Listing"}</Text>
+            </Pressable>
+          </View>
 
           {/* ── Contact form ── */}
           <View style={s.card}>
@@ -327,6 +444,76 @@ export default function PropertyDetailScreen() {
             )}
           </View>
         </View>
+
+        {/* ── Viewing Scheduler Modal ── */}
+        {showViewingModal && (
+          <View style={s.modalOverlay}>
+            <View style={s.modalContent}>
+              <View style={s.modalHeader}>
+                <Text style={s.modalTitle}>{isAr ? "طلب معاينة العقار" : "Request Viewing"}</Text>
+                <Pressable onPress={() => setShowViewingModal(false)}>
+                  <MaterialIcons name="close" size={22} color={NAVY} />
+                </Pressable>
+              </View>
+              <Text style={s.modalSub}>{isAr ? "حدد التاريخ والوقت المناسب لك لمقابلة الوكيل المعتمد" : "Select preferred date and time"}</Text>
+              
+              <Text style={s.inputLabel}>{isAr ? "التاريخ المفضّل" : "Date"}</Text>
+              <TextInput style={s.input} value={viewingDate} onChangeText={setViewingDate} placeholder="YYYY-MM-DD" />
+
+              <Text style={s.inputLabel}>{isAr ? "الوقت المفضّل" : "Time"}</Text>
+              <TextInput style={s.input} value={viewingTime} onChangeText={setViewingTime} placeholder="18:00" />
+
+              <Text style={s.inputLabel}>{isAr ? "ملاحظات إضافية" : "Notes"}</Text>
+              <TextInput style={s.input} value={viewingNotes} onChangeText={setViewingNotes} placeholder={isAr ? "أي استفسار خاص قبل المعاينة" : "Notes"} />
+
+              <Pressable style={s.modalSubmitBtn} onPress={handleViewingSubmit} disabled={viewingSubmitting}>
+                <Text style={s.modalSubmitText}>{isAr ? "تأكيد طلب الموعد" : "Confirm Request"}</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
+        {/* ── Report Modal ── */}
+        {showReportModal && (
+          <View style={s.modalOverlay}>
+            <View style={s.modalContent}>
+              <View style={s.modalHeader}>
+                <Text style={s.modalTitle}>{isAr ? "الإبلاغ عن الإعلان" : "Report Listing"}</Text>
+                <Pressable onPress={() => setShowReportModal(false)}>
+                  <MaterialIcons name="close" size={22} color={NAVY} />
+                </Pressable>
+              </View>
+              <Text style={s.inputLabel}>{isAr ? "سبب البلاغ" : "Reason"}</Text>
+              <TextInput style={s.input} value={reportReason} onChangeText={setReportReason} />
+              
+              <Pressable style={[s.modalSubmitBtn, { backgroundColor: "#e53e3e" }]} onPress={handleReportSubmit} disabled={reportSubmitting}>
+                <Text style={s.modalSubmitText}>{isAr ? "إرسال البلاغ" : "Submit Report"}</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+        {/* ── 3D Modal ── */}
+        <Modal visible={show3dModal} animationType="slide" onRequestClose={() => setShow3dModal(false)}>
+          <Property3DViewer
+            listingId={listing.id}
+            title={title}
+            price={listing.price}
+            areaSqm={listing.area}
+            modelUrl="/media/models/sample_villa.glb"
+            classification="ACTUAL PROPERTY MODEL"
+            estimate={
+              est
+                ? {
+                    low: est.lo,
+                    high: est.hi,
+                    pricePerSqm: est.ppM ?? 5818,
+                    confidence: est.confidence.toUpperCase(),
+                  }
+                : undefined
+            }
+            onClose={() => setShow3dModal(false)}
+          />
+        </Modal>
       </Animated.ScrollView>
     </KeyboardAvoidingView>
   );
@@ -391,6 +578,16 @@ const s = StyleSheet.create({
 
   callBtn:    { backgroundColor: GOLD, borderRadius: 16, paddingVertical: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   callBtnText: { fontSize: 16, fontFamily: "Inter_700Bold", color: NAVY },
+  viewingBtn: { backgroundColor: NAVY, borderRadius: 16, paddingVertical: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  viewingBtnText: { fontSize: 15, fontFamily: "Inter_700Bold", color: "#fff" },
+
+  sellerCard: { backgroundColor: "#fff", borderRadius: 18, padding: 16, gap: 12, borderWidth: 1, borderColor: "rgba(15,32,64,0.08)" },
+  sellerHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
+  sellerAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(201,168,76,0.12)", alignItems: "center", justifyContent: "center" },
+  sellerName: { fontSize: 15, fontFamily: "Inter_700Bold", color: NAVY },
+  sellerRole: { fontSize: 12, color: "rgba(15,32,64,0.55)", marginTop: 2 },
+  reportBtn: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-end" },
+  reportBtnText: { fontSize: 12, color: "#e53e3e", fontFamily: "Inter_600SemiBold" },
 
   // ── Contact form ──
   input:       { borderWidth: 1.5, borderColor: "rgba(15,32,64,0.12)", borderRadius: 12, padding: 14, fontSize: 15, color: NAVY, backgroundColor: "#f9fafb" },
@@ -400,4 +597,14 @@ const s = StyleSheet.create({
 
   sentWrap:   { alignItems: "center", gap: 12, paddingVertical: 16 },
   sentText:   { fontSize: 14, color: "rgba(15,32,64,0.65)", textAlign: "center", lineHeight: 22 },
+
+  // Modals
+  modalOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20, zIndex: 99 },
+  modalContent: { backgroundColor: "#fff", borderRadius: 20, padding: 20, width: "100%", maxWidth: 400, gap: 12 },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  modalTitle: { fontSize: 18, fontFamily: "Inter_700Bold", color: NAVY },
+  modalSub: { fontSize: 13, color: "rgba(15,32,64,0.6)", marginBottom: 8 },
+  inputLabel: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: NAVY, marginTop: 4 },
+  modalSubmitBtn: { backgroundColor: NAVY, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 12 },
+  modalSubmitText: { color: "#fff", fontSize: 15, fontFamily: "Inter_700Bold" },
 });

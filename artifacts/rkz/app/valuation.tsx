@@ -10,6 +10,7 @@ import {
   Text,
   TextInput,
   View,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "@/hooks/useLocale";
@@ -17,36 +18,62 @@ import { useLocale } from "@/hooks/useLocale";
 const NAVY = "#0f2040";
 const GOLD = "#c9a84c";
 
-const CITY_PRICE_PER_SQM: Record<string, number> = {
-  "الرياض": 4800,       "Riyadh": 4800,
-  "جدة": 4200,          "Jeddah": 4200,
-  "الدمام": 3100,       "Dammam": 3100,
-  "أبها": 2400,         "Abha": 2400,
-  "مكة": 5200,          "Makkah": 5200,
-  "المدينة": 3800,      "Madinah": 3800,
-  "نيوم": 8500,         "Neom": 8500,
-  "القصيم": 1900,       "Qassim": 1900,
-  "بريدة": 2100,        "Buraidah": 2100,
-  "عنيزة": 1800,        "Unaizah": 1800,
-  "تبوك": 2300,         "Tabuk": 2300,
-  "الخبر": 3400,        "Khobar": 3400,
-  "الخرج": 2000,        "Alkharj": 2000,
-  "نجران": 1700,        "Najran": 1700,
-  "جيزان": 1600,        "Jizan": 1600,
-  "خميس مشيط": 2200,   "Khamis Mushait": 2200,
-  "المجمعة": 1500,      "Majmaah": 1500,
-  "شقراء": 1400,        "Shaqra": 1400,
-  "الخفجي": 2600,       "Khafji": 2600,
-};
-
-const TYPE_MULT: Record<string, number> = {
-  villa: 1.35, apartment: 1.0, land: 0.55, commercial: 1.2,
-};
-
 function formatSAR(n: number, isAr: boolean): string {
+  if (!n || isNaN(n)) return isAr ? "0 ر.س" : "SAR 0";
   if (n >= 1_000_000) return isAr ? `${(n / 1_000_000).toFixed(2)} مليون ر.س` : `SAR ${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return isAr ? `${Math.round(n / 1_000)} ألف ر.س` : `SAR ${Math.round(n / 1_000)}K`;
-  return isAr ? `${n} ر.س` : `SAR ${n}`;
+  return isAr ? `${n.toLocaleString("en-US")} ر.س` : `SAR ${n.toLocaleString("en-US")}`;
+}
+
+interface ValuationResult {
+  estimatedMidpoint: number;
+  estimatedLow: number;
+  estimatedHigh: number;
+  estimatedPricePerSqm: number;
+  confidence: string;
+  confidenceScore: number;
+  askingPricePosition: string;
+  comparablesUsedCount: number;
+  comparables: Array<{
+    id: number;
+    title: string;
+    price: number;
+    areaSqm: number;
+    pricePerSqm: number;
+    district: string;
+    similarityScore: number;
+  }>;
+  factors: Array<{
+    titleAr: string;
+    titleEn: string;
+    impactAr: string;
+    impactEn: string;
+  }>;
+}
+
+interface InvestmentResult {
+  metrics: {
+    purchasePrice: number;
+    downPaymentSAR: number;
+    loanAmountSAR: number;
+    monthlyMortgageSAR: number;
+    grossYieldPercent: number;
+    netYieldPercent: number;
+    grossAnnualRentSAR: number;
+    netOperatingIncomeAnnualSAR: number;
+    annualNetCashFlowSAR: number;
+  };
+  scenarios: Array<{
+    id: string;
+    titleAr: string;
+    titleEn: string;
+    metrics: {
+      downPaymentSAR: number;
+      monthlyMortgageSAR: number;
+      netYieldPercent: number;
+      annualNetCashFlowSAR: number;
+    };
+  }>;
 }
 
 export default function ValuationScreen() {
@@ -54,59 +81,79 @@ export default function ValuationScreen() {
   const insets = useSafeAreaInsets();
   const te = t.detail.estimate;
 
-  const [city, setCity]     = useState("");
-  const [area, setArea]     = useState("");
-  const [propType, setType] = useState<"villa" | "apartment" | "land" | "commercial">("apartment");
-  const [rooms, setRooms]   = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult]   = useState<null | { low: number; high: number; mid: number; perSqm: number; trend: string; confidence: string }>(null);
+  const [activeTab, setActiveTab] = useState<"valuation" | "investment">("valuation");
 
-  const CITIES_AR = [
-    "الرياض","جدة","الدمام","الخبر","مكة","المدينة","أبها","خميس مشيط",
-    "تبوك","بريدة","عنيزة","الخرج","نجران","جيزان","المجمعة","شقراء","الخفجي","نيوم",
-  ];
-  const CITIES_EN = [
-    "Riyadh","Jeddah","Dammam","Khobar","Makkah","Madinah","Abha","Khamis Mushait",
-    "Tabuk","Buraidah","Unaizah","Alkharj","Najran","Jizan","Majmaah","Shaqra","Khafji","Neom",
-  ];
+  // Inputs
+  const [city, setCity]         = useState("الرياض");
+  const [district, setDistrict] = useState("");
+  const [area, setArea]         = useState("350");
+  const [propType, setType]     = useState<"villa" | "apartment" | "land" | "commercial">("villa");
+  const [rooms, setRooms]       = useState("4");
+  const [askingPrice, setAskingPrice] = useState("2800000");
+
+  const [loading, setLoading]       = useState(false);
+  const [valResult, setValResult]   = useState<ValuationResult | null>(null);
+  const [invResult, setInvResult]   = useState<InvestmentResult | null>(null);
+
+  const CITIES_AR = ["الرياض", "جدة", "الدمام", "الخبر", "مكة", "المدينة", "أبها", "نيوم"];
+  const CITIES_EN = ["Riyadh", "Jeddah", "Dammam", "Khobar", "Makkah", "Madinah", "Abha", "Neom"];
   const cityList = isAr ? CITIES_AR : CITIES_EN;
 
   const types = [
-    { key: "apartment", labelAr: "شقة",        labelEn: "Apartment" },
     { key: "villa",     labelAr: "فيلا",        labelEn: "Villa" },
+    { key: "apartment", labelAr: "شقة",        labelEn: "Apartment" },
     { key: "land",      labelAr: "أرض",         labelEn: "Land" },
     { key: "commercial",labelAr: "تجاري",       labelEn: "Commercial" },
   ] as const;
 
-  function calculate() {
+  async function calculate() {
     const sqm = parseFloat(area);
     if (!city.trim() || isNaN(sqm) || sqm <= 0) return;
     setLoading(true);
-    setTimeout(() => {
-      const basePpm = CITY_PRICE_PER_SQM[city.trim()] ?? 3500;
-      const mult    = TYPE_MULT[propType] ?? 1.0;
-      const roomBonus = propType !== "land" ? (parseInt(rooms) || 0) * 0.03 : 0;
-      const mid     = Math.round(sqm * basePpm * mult * (1 + roomBonus));
-      const variance = 0.12;
-      setResult({
-        low:  Math.round(mid * (1 - variance)),
-        high: Math.round(mid * (1 + variance)),
-        mid,
-        perSqm: Math.round(basePpm * mult),
-        trend: basePpm > 4000 ? "up" : basePpm > 2500 ? "flat" : "down",
-        confidence: sqm > 100 && city.trim().length > 2 ? "high" : "medium",
+
+    try {
+      const ask = parseFloat(askingPrice) || undefined;
+
+      // 1. Fetch Valuation Estimate
+      const valRes = await fetch("/api/valuation/estimate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city,
+          district: district.trim() || undefined,
+          areaSqm: sqm,
+          propertyType: propType,
+          bedrooms: parseInt(rooms, 10) || 4,
+          askingPrice: ask,
+        }),
       });
+
+      if (valRes.ok) {
+        const data = await valRes.json();
+        setValResult(data);
+      }
+
+      // 2. Fetch Investment Metrics
+      const purchasePrice = ask || valResult?.estimatedMidpoint || sqm * 4500;
+      const invRes = await fetch("/api/valuation/investment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          purchasePrice,
+          areaSqm: sqm,
+        }),
+      });
+
+      if (invRes.ok) {
+        const invData = await invRes.json();
+        setInvResult(invData);
+      }
+    } catch (err) {
+      console.warn("Valuation error:", err);
+    } finally {
       setLoading(false);
-    }, 1400);
+    }
   }
-
-  const trendLabel = result
-    ? result.trend === "up"   ? te.trendUp
-    : result.trend === "down" ? te.trendDown
-    : te.trendFlat
-    : "";
-
-  const confLabel = result?.confidence === "high" ? te.high : te.medium;
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f7fa" }}>
@@ -118,30 +165,62 @@ export default function ValuationScreen() {
           <MaterialIcons name={isAr ? "arrow-forward" : "arrow-back"} size={22} color="#fff" />
         </Pressable>
         <View>
-          <Text style={s.headerTitle}>{te.title}</Text>
-          <Text style={s.headerSub}>{te.subtitle}</Text>
+          <Text style={s.headerTitle}>OPROX Estimate™</Text>
+          <Text style={s.headerSub}>{isAr ? "التقييم العقاري ومحرك الاستثمار الذكي" : "Property Valuation & Investment Engine"}</Text>
         </View>
+      </View>
+
+      {/* Subnav Tabs */}
+      <View style={s.tabContainer}>
+        <Pressable
+          onPress={() => setActiveTab("valuation")}
+          style={[s.tabBtn, activeTab === "valuation" && s.tabBtnActive]}
+        >
+          <MaterialIcons name="assessment" size={18} color={activeTab === "valuation" ? NAVY : "rgba(15,32,64,0.6)"} />
+          <Text style={[s.tabText, activeTab === "valuation" && s.tabTextActive]}>
+            {isAr ? "تقدير القيمة السوقية" : "Valuation Estimate"}
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setActiveTab("investment")}
+          style={[s.tabBtn, activeTab === "investment" && s.tabBtnActive]}
+        >
+          <MaterialIcons name="trending-up" size={18} color={activeTab === "investment" ? NAVY : "rgba(15,32,64,0.6)"} />
+          <Text style={[s.tabText, activeTab === "investment" && s.tabTextActive]}>
+            {isAr ? "حاسبة العائد والاستثمار" : "Investment Yield"}
+          </Text>
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, gap: 14, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
 
-        {/* Input card */}
+        {/* Input Card */}
         <View style={s.card}>
-          <Text style={s.cardTitle}>{isAr ? "بيانات العقار" : "Property Details"}</Text>
+          <Text style={s.cardTitle}>{isAr ? "بيانات العقار والمنطقة" : "Property & Location Inputs"}</Text>
 
           {/* City */}
           <View style={s.field}>
-            <Text style={s.label}>{isAr ? "المدينة" : "City"}</Text>
-            <TextInput
-              style={[s.input, isAr && { textAlign: "right" }]}
-              placeholder={isAr ? "اختر أو اكتب المدينة..." : "Pick or type a city..."}
-              placeholderTextColor="rgba(15,32,64,0.35)"
-              value={city}
-              onChangeText={setCity}
-            />
+            <Text style={s.label}>{isAr ? "المدينة والحي" : "City & District"}</Text>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <TextInput
+                style={[s.input, { flex: 1 }, isAr && { textAlign: "right" }]}
+                placeholder={isAr ? "المدينة..." : "City..."}
+                placeholderTextColor="rgba(15,32,64,0.35)"
+                value={city}
+                onChangeText={setCity}
+              />
+              <TextInput
+                style={[s.input, { flex: 1 }, isAr && { textAlign: "right" }]}
+                placeholder={isAr ? "الحي (مثال: النرجس)..." : "District (e.g. Al Narjis)..."}
+                placeholderTextColor="rgba(15,32,64,0.35)"
+                value={district}
+                onChangeText={setDistrict}
+              />
+            </View>
+
             {/* City chips */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }} contentContainerStyle={{ gap: 6, paddingHorizontal: 0 }}>
-              {cityList.map(c => (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }} contentContainerStyle={{ gap: 6 }}>
+              {cityList.map((c) => (
                 <Pressable key={c} onPress={() => setCity(c)} style={[s.cityChip, city === c && s.cityChipActive]}>
                   <Text style={[s.cityChipText, city === c && s.cityChipTextActive]}>{c}</Text>
                 </Pressable>
@@ -153,7 +232,7 @@ export default function ValuationScreen() {
           <View style={s.field}>
             <Text style={s.label}>{isAr ? "نوع العقار" : "Property Type"}</Text>
             <View style={s.typeRow}>
-              {types.map(tp => (
+              {types.map((tp) => (
                 <Pressable
                   key={tp.key}
                   onPress={() => setType(tp.key)}
@@ -167,60 +246,70 @@ export default function ValuationScreen() {
             </View>
           </View>
 
-          {/* Area */}
-          <View style={s.field}>
-            <Text style={s.label}>{isAr ? "المساحة (م²)" : "Area (m²)"}</Text>
-            <TextInput
-              style={[s.input, isAr && { textAlign: "right" }]}
-              placeholder={isAr ? "مثال: 200" : "e.g. 200"}
-              placeholderTextColor="rgba(15,32,64,0.35)"
-              keyboardType="numeric"
-              value={area}
-              onChangeText={setArea}
-            />
-          </View>
-
-          {/* Rooms (not for land) */}
-          {propType !== "land" && (
-            <View style={s.field}>
-              <Text style={s.label}>{isAr ? "عدد الغرف" : "Bedrooms"}</Text>
-              <View style={s.typeRow}>
-                {["1","2","3","4","5+"].map(n => (
-                  <Pressable key={n} onPress={() => setRooms(n)} style={[s.typeBtn, rooms === n && s.typeBtnActive]}>
-                    <Text style={[s.typeBtnText, rooms === n && s.typeBtnTextActive]}>{n}</Text>
-                  </Pressable>
-                ))}
-              </View>
+          {/* Area & Asking Price */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={[s.field, { flex: 1 }]}>
+              <Text style={s.label}>{isAr ? "المساحة (م²)" : "Area (m²)"}</Text>
+              <TextInput
+                style={[s.input, isAr && { textAlign: "right" }]}
+                placeholder="350"
+                placeholderTextColor="rgba(15,32,64,0.35)"
+                keyboardType="numeric"
+                value={area}
+                onChangeText={setArea}
+              />
             </View>
-          )}
+
+            <View style={[s.field, { flex: 1 }]}>
+              <Text style={s.label}>{isAr ? "السعر المعروض (ر.س)" : "Asking Price (SAR)"}</Text>
+              <TextInput
+                style={[s.input, isAr && { textAlign: "right" }]}
+                placeholder="2,800,000"
+                placeholderTextColor="rgba(15,32,64,0.35)"
+                keyboardType="numeric"
+                value={askingPrice}
+                onChangeText={setAskingPrice}
+              />
+            </View>
+          </View>
 
           <Pressable
             style={[s.calcBtn, (!city.trim() || !area.trim()) && s.calcBtnDisabled]}
             onPress={calculate}
             disabled={!city.trim() || !area.trim() || loading}
           >
-            {loading
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={s.calcBtnText}>{isAr ? "احسب التقييم" : "Calculate Estimate"}</Text>
-            }
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={s.calcBtnText}>
+                {isAr ? "حساب التقييم والاستثمار" : "Calculate Valuation & Yield"}
+              </Text>
+            )}
           </Pressable>
         </View>
 
-        {/* Result card */}
-        {result && (
+        {/* Tab 1: Valuation Results */}
+        {activeTab === "valuation" && valResult && (
           <View style={s.resultCard}>
-            <Text style={s.resultTitle}>{te.range}</Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Text style={s.resultTitle}>{isAr ? "نطاق التقدير السوقي" : "Market Valuation Range"}</Text>
+              <View style={s.confBadge}>
+                <Text style={s.confBadgeText}>
+                  {isAr ? `درجة الثقة: ${valResult.confidence}` : `Confidence: ${valResult.confidence}`}
+                </Text>
+              </View>
+            </View>
 
-            <Text style={s.resultMid}>{formatSAR(result.mid, isAr)}</Text>
+            <Text style={s.resultMid}>{formatSAR(valResult.estimatedMidpoint, isAr)}</Text>
 
             <View style={s.rangeRow}>
               <View style={s.rangePill}>
-                <Text style={s.rangePillLabel}>{isAr ? "أدنى" : "Low"}</Text>
-                <Text style={s.rangePillValue}>{formatSAR(result.low, isAr)}</Text>
+                <Text style={s.rangePillLabel}>{isAr ? "الحد الأدنى" : "Low Range"}</Text>
+                <Text style={s.rangePillValue}>{formatSAR(valResult.estimatedLow, isAr)}</Text>
               </View>
               <View style={[s.rangePill, s.rangePillHigh]}>
-                <Text style={s.rangePillLabel}>{isAr ? "أعلى" : "High"}</Text>
-                <Text style={[s.rangePillValue, { color: NAVY }]}>{formatSAR(result.high, isAr)}</Text>
+                <Text style={s.rangePillLabel}>{isAr ? "الحد الأعلى" : "High Range"}</Text>
+                <Text style={[s.rangePillValue, { color: NAVY }]}>{formatSAR(valResult.estimatedHigh, isAr)}</Text>
               </View>
             </View>
 
@@ -228,31 +317,81 @@ export default function ValuationScreen() {
               <View style={s.statBox}>
                 <MaterialIcons name="straighten" size={18} color={GOLD} />
                 <Text style={s.statLabel}>{te.pricePerSqm}</Text>
-                <Text style={s.statValue}>{formatSAR(result.perSqm, isAr)}</Text>
+                <Text style={s.statValue}>{formatSAR(valResult.estimatedPricePerSqm, isAr)}/م²</Text>
               </View>
               <View style={s.statDivider} />
               <View style={s.statBox}>
-                <MaterialIcons
-                  name={result.trend === "up" ? "trending-up" : result.trend === "down" ? "trending-down" : "trending-flat"}
-                  size={18}
-                  color={result.trend === "up" ? "#22c55e" : result.trend === "down" ? "#ef4444" : "#f59e0b"}
-                />
-                <Text style={s.statLabel}>{te.marketTrend}</Text>
-                <Text style={[s.statValue, { color: result.trend === "up" ? "#22c55e" : result.trend === "down" ? "#ef4444" : "#f59e0b" }]}>
-                  {trendLabel}
-                </Text>
-              </View>
-              <View style={s.statDivider} />
-              <View style={s.statBox}>
-                <MaterialIcons name="verified" size={18} color={NAVY} />
-                <Text style={s.statLabel}>{te.confidence}</Text>
-                <Text style={s.statValue}>{confLabel}</Text>
+                <MaterialIcons name="grid-on" size={18} color="#22c55e" />
+                <Text style={s.statLabel}>{isAr ? "العقارات المماثلة" : "Comparables"}</Text>
+                <Text style={s.statValue}>{valResult.comparablesUsedCount} عقارات</Text>
               </View>
             </View>
 
-            <Text style={s.disclaimer}>{te.disclaimer}</Text>
+            {/* Factors */}
+            {valResult.factors && valResult.factors.length > 0 && (
+              <View style={s.factorsBox}>
+                <Text style={s.factorsTitle}>{isAr ? "عوامل تؤثر في التقييم:" : "Key Valuation Factors:"}</Text>
+                {valResult.factors.map((f, i) => (
+                  <View key={i} style={s.factorItem}>
+                    <MaterialIcons name="check-circle" size={16} color={GOLD} />
+                    <Text style={s.factorText}>{isAr ? f.titleAr : f.titleEn}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <Text style={s.disclaimer}>
+              {isAr
+                ? "تم حساب التقييم باستخدام خوارزميات OPROX Estimate™ بناءً على العروض الحقيقية والمقارنات الجغرافية."
+                : "Valuation computed by OPROX Estimate™ using grounded market inventory and spatial comparables."}
+            </Text>
           </View>
         )}
+
+        {/* Tab 2: Investment Results */}
+        {activeTab === "investment" && invResult && (
+          <View style={s.invCard}>
+            <Text style={s.invTitle}>{isAr ? "مؤشرات العائد والأداء المالي" : "Investment & Yield Performance"}</Text>
+
+            <View style={s.invGrid}>
+              <View style={s.invStatBox}>
+                <Text style={s.invStatLabel}>{isAr ? "العائد الإجمالي (Gross Yield)" : "Gross Yield"}</Text>
+                <Text style={s.invStatVal}>{invResult.metrics.grossYieldPercent}%</Text>
+              </View>
+              <View style={s.invStatBox}>
+                <Text style={s.invStatLabel}>{isAr ? "العائد الصافي (Net Yield)" : "Net Yield"}</Text>
+                <Text style={[s.invStatVal, { color: "#22c55e" }]}>{invResult.metrics.netYieldPercent}%</Text>
+              </View>
+              <View style={s.invStatBox}>
+                <Text style={s.invStatLabel}>{isAr ? "القسط الشهري (20% دفعة)" : "Monthly Mortgage"}</Text>
+                <Text style={s.invStatVal}>{formatSAR(invResult.metrics.monthlyMortgageSAR, isAr)}</Text>
+              </View>
+              <View style={s.invStatBox}>
+                <Text style={s.invStatLabel}>{isAr ? "التدفق النقدي السنوي" : "Annual Cash Flow"}</Text>
+                <Text style={s.invStatVal}>{formatSAR(invResult.metrics.annualNetCashFlowSAR, isAr)}</Text>
+              </View>
+            </View>
+
+            {/* Scenarios */}
+            <Text style={[s.factorsTitle, { marginTop: 14 }]}>{isAr ? "خيارات سيناريو التمويل:" : "Financing Scenarios:"}</Text>
+            {invResult.scenarios.map((sc) => (
+              <View key={sc.id} style={s.scenarioBox}>
+                <Text style={s.scenarioName}>{isAr ? sc.titleAr : sc.titleEn}</Text>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
+                  <Text style={s.scenarioSub}>
+                    {isAr
+                      ? `قسط شهري: ${formatSAR(sc.metrics.monthlyMortgageSAR, isAr)}`
+                      : `Monthly: ${formatSAR(sc.metrics.monthlyMortgageSAR, isAr)}`}
+                  </Text>
+                  <Text style={s.scenarioSubBold}>
+                    {isAr ? `صافي العائد: ${sc.metrics.netYieldPercent}%` : `Net Yield: ${sc.metrics.netYieldPercent}%`}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
       </ScrollView>
     </View>
   );
@@ -260,12 +399,24 @@ export default function ValuationScreen() {
 
 const s = StyleSheet.create({
   header: {
-    backgroundColor: NAVY, paddingHorizontal: 20, paddingBottom: 20,
+    backgroundColor: NAVY, paddingHorizontal: 20, paddingBottom: 16,
     flexDirection: "row", alignItems: "center", gap: 12,
   },
   backBtn:      { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
   headerTitle:  { fontSize: 20, fontFamily: "Inter_700Bold", color: "#fff" },
   headerSub:    { fontSize: 12, color: "rgba(255,255,255,0.65)", fontFamily: "Inter_400Regular", marginTop: 1 },
+
+  tabContainer: {
+    flexDirection: "row", backgroundColor: "#fff", padding: 6, marginHorizontal: 20, marginTop: 12,
+    borderRadius: 14, borderWidth: 1, borderColor: "rgba(15,32,64,0.1)", gap: 6,
+  },
+  tabBtn: {
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+    paddingVertical: 10, borderRadius: 10, gap: 6, backgroundColor: "#f8fafc",
+  },
+  tabBtnActive: { backgroundColor: "rgba(201,168,76,0.15)" },
+  tabText: { fontSize: 13, fontFamily: "Inter_500Medium", color: "rgba(15,32,64,0.6)" },
+  tabTextActive: { color: NAVY, fontFamily: "Inter_700Bold" },
 
   card: {
     backgroundColor: "#fff", borderRadius: 18, padding: 18,
@@ -297,15 +448,17 @@ const s = StyleSheet.create({
     alignItems: "center", marginTop: 4,
   },
   calcBtnDisabled: { opacity: 0.45 },
-  calcBtnText:     { fontSize: 16, fontFamily: "Inter_700Bold", color: "#fff" },
+  calcBtnText:     { fontSize: 15, fontFamily: "Inter_700Bold", color: "#fff" },
 
   resultCard: {
     backgroundColor: NAVY, borderRadius: 18, padding: 20,
     shadowColor: NAVY, shadowOpacity: 0.25, shadowRadius: 14, elevation: 5,
     gap: 12,
   },
-  resultTitle: { fontSize: 13, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.6)", textAlign: "center" },
-  resultMid:   { fontSize: 34, fontFamily: "Inter_700Bold", color: GOLD, textAlign: "center" },
+  resultTitle: { fontSize: 13, fontFamily: "Inter_500Medium", color: "rgba(255,255,255,0.6)" },
+  confBadge: { backgroundColor: "rgba(201,168,76,0.2)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  confBadgeText: { fontSize: 11, color: GOLD, fontFamily: "Inter_600SemiBold" },
+  resultMid:   { fontSize: 32, fontFamily: "Inter_700Bold", color: GOLD, textAlign: "center" },
 
   rangeRow: { flexDirection: "row", gap: 10 },
   rangePill: {
@@ -322,11 +475,37 @@ const s = StyleSheet.create({
   statLabel:   { fontSize: 10, color: "rgba(255,255,255,0.5)", fontFamily: "Inter_400Regular", textAlign: "center" },
   statValue:   { fontSize: 12, fontFamily: "Inter_600SemiBold", color: "#fff", textAlign: "center" },
 
+  factorsBox: { backgroundColor: "rgba(255,255,255,0.06)", padding: 12, borderRadius: 12, gap: 8 },
+  factorsTitle: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: GOLD },
+  factorItem: { flexDirection: "row", alignItems: "center", gap: 8 },
+  factorText: { fontSize: 12, color: "#fff", fontFamily: "Inter_400Regular", flex: 1 },
+
   disclaimer: {
     fontSize: 11, color: "rgba(255,255,255,0.4)", fontFamily: "Inter_400Regular",
     textAlign: "center", lineHeight: 17, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.1)",
     paddingTop: 10,
   },
+
+  invCard: {
+    backgroundColor: "#fff", borderRadius: 18, padding: 18,
+    shadowColor: "#000", shadowOpacity: 0.07, shadowRadius: 10, elevation: 3, gap: 12,
+  },
+  invTitle: { fontSize: 15, fontFamily: "Inter_700Bold", color: NAVY },
+  invGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  invStatBox: {
+    width: "48%", backgroundColor: "#f8fafc", padding: 12, borderRadius: 12,
+    borderWidth: 1, borderColor: "rgba(15,32,64,0.08)", gap: 4,
+  },
+  invStatLabel: { fontSize: 11, color: "rgba(15,32,64,0.6)", fontFamily: "Inter_500Medium" },
+  invStatVal: { fontSize: 16, fontFamily: "Inter_700Bold", color: NAVY },
+
+  scenarioBox: {
+    backgroundColor: "#f8fafc", padding: 12, borderRadius: 12,
+    borderWidth: 1, borderColor: "rgba(15,32,64,0.08)", marginTop: 4,
+  },
+  scenarioName: { fontSize: 13, fontFamily: "Inter_600SemiBold", color: NAVY },
+  scenarioSub: { fontSize: 12, color: "rgba(15,32,64,0.6)" },
+  scenarioSubBold: { fontSize: 12, fontFamily: "Inter_700Bold", color: GOLD },
 
   cityChip: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,

@@ -149,21 +149,31 @@ const PT_LABELS: Record<string, string> = {
 
 // ── API helpers ────────────────────────────────────────────────────────────────
 function apiBase(domain: string) {
-  return domain ? `https://${domain}` : "";
+  if (Platform.OS === "web") return "";
+  if (!domain) return "";
+  if (domain.startsWith("http://") || domain.startsWith("https://")) return domain;
+  return `https://${domain}`;
 }
 
 async function callAiChat(
   messages: Array<{ role: "user" | "assistant"; content: string }>,
   domain: string,
-): Promise<string> {
+  currentCriteria?: Record<string, any>
+): Promise<{
+  reply: string;
+  criteria?: Record<string, any>;
+  listings?: ListingResult[];
+  actions?: Array<{ action: string; payload?: any }>;
+  isZeroResultAlternative?: boolean;
+  comparison?: any;
+}> {
   const res = await fetch(`${apiBase(domain)}/api/rkz/ai-chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ messages, currentCriteria }),
   });
   if (!res.ok) throw new Error("API error");
-  const data = (await res.json()) as { reply: string };
-  return data.reply ?? "";
+  return res.json();
 }
 
 async function searchListings(
@@ -439,6 +449,7 @@ export default function AiChatScreen() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const userScrolledUp = useRef(false);
+  const currentCriteriaRef = useRef<Record<string, any>>({});
 
   function scrollBottom(force = false) {
     if (!force && userScrolledUp.current) return;
@@ -550,14 +561,23 @@ export default function AiChatScreen() {
               .filter((m) => m.id !== "0")
               .map((m) => ({ role: m.role, content: m.content }));
 
-            const reply = await callAiChat(history, domain);
-            const replyMsg: ChatMessage = { id: Date.now().toString() + "r", role: "assistant", content: reply };
-            setMessages((p) => [...p, replyMsg]);
+            const resData = await callAiChat(history, domain, currentCriteriaRef.current);
+            const replyMsg: ChatMessage = { id: Date.now().toString() + "r", role: "assistant", content: resData.reply };
+            setMessages((p) => {
+              const next = [...p, replyMsg];
+              if (resData.listings && resData.listings.length > 0) {
+                next.push({
+                  id: `listings_${Date.now()}`,
+                  role: "listings",
+                  listings: resData.listings,
+                  mode: "real_estate",
+                });
+              }
+              return next;
+            });
 
-            if (hasTrigger(reply)) {
-              await fetchAndShowListings([...history, { role: "assistant", content: reply }]);
-            } else if (hasOwnerTrigger(reply)) {
-              await fetchAndShowOwnerSummary([...history, { role: "assistant", content: reply }]);
+            if (resData.criteria) {
+              currentCriteriaRef.current = resData.criteria;
             }
           } catch {
             setMessages((p) => [...p, {

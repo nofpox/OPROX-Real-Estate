@@ -153,13 +153,25 @@ export default function ProfileScreen() {
           />
         </View>
 
-        {/* ── Financing calculator ── */}
-        <SectionHeader title={isAr ? "الأدوات المالية" : "Financial Tools"} />
+        {/* ── Seller Hub & Publishing ── */}
+        <SectionHeader title={isAr ? "مركز الملاك والعقاريين" : "Seller & Owner Hub"} />
         <View style={s.section}>
           <MenuItem
-            icon="calculate"
-            label={isAr ? "حاسبة التمويل الإسلامي" : "Islamic Finance Calculator"}
-            onPress={() => router.push("/(tabs)/ai-concierge" as never)}
+            icon="add-circle-outline"
+            label={isAr ? "نشر عقار جديد (إضافة إعلان)" : "Publish New Listing"}
+            onPress={() => router.push("/add-listing" as never)}
+          />
+          <MenuItem
+            icon="campaign"
+            label={t.profile.myListings}
+            value="1"
+            onPress={() => router.push("/add-listing" as never)}
+          />
+          <MenuItem
+            icon="storefront"
+            label={isAr ? "الملف الشخصي للمالك / المكتب" : "Seller & Broker Profile"}
+            value={isAr ? "موثق" : "Verified"}
+            onPress={() => {}}
           />
         </View>
 

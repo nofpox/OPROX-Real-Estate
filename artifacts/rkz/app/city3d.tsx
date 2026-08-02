@@ -51,8 +51,16 @@ export default function City3DScreen() {
         </View>
       )}
 
-      {/* Close button */}
+      {/* Close & Handoff buttons */}
       <View style={[s.closeWrap, { top: insets.top + 10 }]} pointerEvents="box-none">
+        <Pressable
+          style={s.mapReturnBtn}
+          onPress={() => router.push("/map-discovery")}
+        >
+          <MaterialIcons name="map" size={18} color="#7bc8ff" />
+          <Text style={s.mapReturnText}>الخريطة 2D</Text>
+        </Pressable>
+
         <Pressable style={s.closeBtn} onPress={() => router.back()}>
           <MaterialIcons name="close" size={20} color="#7bc8ff" />
         </Pressable>
@@ -88,10 +96,30 @@ const s = StyleSheet.create({
   },
   closeWrap: {
     position: "absolute",
+    left: 14,
     right: 14,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     zIndex: 20,
     pointerEvents: "box-none",
   } as never,
+  mapReturnBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,10,40,0.85)",
+    borderWidth: 1.5,
+    borderColor: "rgba(0,120,255,0.45)",
+  },
+  mapReturnText: {
+    color: "#7bc8ff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
   closeBtn: {
     width: 38,
     height: 38,
