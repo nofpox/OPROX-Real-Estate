@@ -94,10 +94,10 @@ const DEFAULT_SITE_CONTENT: Record<SiteSection, unknown> = {
   ],
   services: [
     {
-      titleEn: "Hotel Operations", titleAr: "إدارة الفنادق",
-      descEn: "Comprehensive hospitality management delivering premium guest experiences.",
-      descAr: "إدارة شاملة للأصول الفندقية مع التركيز على رضا الضيوف.",
-      imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2070&auto=format&fit=crop",
+      titleEn: "Investment Intelligence", titleAr: "ذكاء الاستثمار العقاري",
+      descEn: "Advanced valuation and investment intelligence using OPROX Estimate.",
+      descAr: "تقييم عقاري متقدم واستشارات استثمارية باستخدام OPROX Estimate.",
+      imageUrl: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2070&auto=format&fit=crop",
     },
     {
       titleEn: "Compound Management", titleAr: "إدارة المجمعات السكنية",
