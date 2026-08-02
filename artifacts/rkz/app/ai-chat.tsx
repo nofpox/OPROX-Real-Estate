@@ -23,8 +23,6 @@ const aiAvatar = require("../assets/ai-avatar.png");
 
 const TRIGGER_RE_AR  = "تمام بدور لك الحين";
 const TRIGGER_RE_EN  = "Great, searching for you now";
-const TRIGGER_TUR_AR = "جهزت لك اقتراحات إقامتك";
-const TRIGGER_TUR_EN = "here are your stay options";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface ListingResult {
@@ -40,7 +38,7 @@ interface ListingResult {
   image: string | null;
 }
 
-type ChatMode = "real_estate" | "tourist" | "owner";
+type ChatMode = "real_estate" | "owner";
 
 interface OwnerListingData {
   title: string;
@@ -66,8 +64,7 @@ const TRIGGER_OWN_AR = "جهزت ملخص عقارك";
 const TRIGGER_OWN_EN = "your listing summary is ready";
 
 function hasTrigger(text: string) {
-  return text.includes(TRIGGER_RE_AR)  || text.includes(TRIGGER_RE_EN) ||
-         text.includes(TRIGGER_TUR_AR) || text.includes(TRIGGER_TUR_EN);
+  return text.includes(TRIGGER_RE_AR) || text.includes(TRIGGER_RE_EN);
 }
 function hasOwnerTrigger(text: string) {
   return text.includes(TRIGGER_OWN_AR) || text.includes(TRIGGER_OWN_EN);
@@ -109,15 +106,15 @@ function isOutOfScope(text: string): boolean {
   // Always in scope — real estate & design anchors
   const inScope =
     ar("عقار") || ar("شقة") || ar("فيلا") || ar("إيجار") || ar("إيجاري") ||
-    ar("بيع") || ar("بيت") || ar("سكن") || ar("فندق") || ar("غرفة") ||
+    ar("بيع") || ar("بيت") || ar("سكن") || ar("تجاري") ||
     ar("مجمع") || ar("أرض") || ar("استثمار") || ar("ديكور") ||
     ar("تأثيث") || ar("أثاث") || ar("تصميم") || ar("مصمم") ||
     ar("مودرن") || ar("بوهيمي") || ar("كلاسيك") || ar("اسكندنافي") ||
-    ar("سياحة") || ar("سفر") || ar("عمرة") || ar("رحلة") || ar("إقامة") ||
+    ar("تقييم") || ar("تخمين") || ar("مخطط") || ar("معماري") || ar("تمويل") ||
     en("property") || en("apartment") || en("villa") || en("rent") ||
-    en("buy") || en("estate") || en("hotel") || en("room") ||
+    en("buy") || en("estate") || en("commercial") || en("land") ||
     en("design") || en("decor") || en("staging") || en("furnish") ||
-    en("invest") || en("travel") || en("stay") || en("tourism");
+    en("invest") || en("valuation") || en("estimate") || en("architect") || en("interior");
 
   if (inScope) return false;
 
@@ -144,7 +141,7 @@ function fmtPrice(price: number | null, currency = "SAR") {
 
 const PT_LABELS: Record<string, string> = {
   villa: "فيلا", apartment: "شقة", commercial: "تجاري",
-  land: "أرض", hotel: "فندق", compound: "مجمع سكني",
+  land: "أرض", building: "مبنى", compound: "مجمع سكني",
 };
 
 // ── API helpers ────────────────────────────────────────────────────────────────
@@ -240,15 +237,13 @@ function SearchingCard({ isAr }: { isAr: boolean }) {
   );
 }
 
-function ListingCard({ listing, isAr, domain, isTourist }: {
-  listing: ListingResult; isAr: boolean; domain: string; isTourist: boolean;
+function ListingCard({ listing, isAr, domain }: {
+  listing: ListingResult; isAr: boolean; domain: string;
 }) {
-  const ptLabel = isAr ? (PT_LABELS[listing.propertyType] ?? listing.propertyType) : listing.propertyType;
+  const ptLabel = isAr ? (PT_LABELS[listing.propertyType] ?? listing.propertyType) : (PT_LABELS_EN[listing.propertyType] ?? listing.propertyType);
   const portalBase = domain ? `https://${domain}` : "";
   const url = `${portalBase}/listings/${listing.id}`;
-  const priceLabel = isTourist
-    ? `${fmtPrice(listing.price, listing.currency)}${isAr ? "/ليلة" : "/night"}`
-    : fmtPrice(listing.price, listing.currency);
+  const priceLabel = fmtPrice(listing.price, listing.currency);
 
   return (
     <View style={s.listingCard}>
@@ -256,19 +251,14 @@ function ListingCard({ listing, isAr, domain, isTourist }: {
         <Image source={{ uri: listing.image }} style={s.listingImg} resizeMode="cover" />
       ) : (
         <View style={[s.listingImg, s.listingImgFallback]}>
-          <Text style={{ fontSize: 28 }}>{isTourist ? "🏨" : "🏠"}</Text>
+          <Text style={{ fontSize: 28 }}>🏠</Text>
         </View>
       )}
 
       <View style={s.listingBadge}>
         <Text style={s.listingBadgeText}>{ptLabel}</Text>
       </View>
-      {isTourist && (
-        <View style={[s.listingBadge, { right: 8, left: undefined, backgroundColor: "#0891b2" }]}>
-          <Text style={s.listingBadgeText}>{isAr ? "🏨 إقامة" : "🏨 Stay"}</Text>
-        </View>
-      )}
-      {!isTourist && listing.listingType === "rent" && (
+      {listing.listingType === "rent" && (
         <View style={[s.listingBadge, { right: 8, left: undefined, backgroundColor: "#059669" }]}>
           <Text style={s.listingBadgeText}>{isAr ? "إيجار" : "Rent"}</Text>
         </View>
@@ -305,7 +295,7 @@ function ListingCard({ listing, isAr, domain, isTourist }: {
 
 const PT_LABELS_EN: Record<string, string> = {
   villa: "Villa", apartment: "Apartment", commercial: "Commercial",
-  land: "Land", hotel: "Hotel", compound: "Compound",
+  land: "Land", building: "Building", compound: "Compound",
 };
 const LT_LABELS: Record<string, { ar: string; en: string }> = {
   sale: { ar: "بيع", en: "For Sale" },
@@ -353,6 +343,54 @@ const stg = StyleSheet.create({
   chipText:{ fontSize: 10, color: GOLD_C, fontFamily: "Inter_600SemiBold" },
   btn:  { backgroundColor: GOLD_C, borderRadius: 12, paddingVertical: 12, alignItems: "center" },
   btnText:{ fontSize: 14, fontFamily: "Inter_700Bold", color: NAVY_C },
+});
+
+function QuickGuideChips({ isAr, onSelect }: { isAr: boolean; onSelect: (prompt: string) => void }) {
+  const chips = [
+    { labelAr: "🔍 البحث عن عقار", labelEn: "🔍 Search Properties", promptAr: "أبحث عن شقة أو فيلا للبيع في الرياض", promptEn: "Looking for an apartment or villa for sale in Riyadh" },
+    { labelAr: "🏷️ عرض / نشر عقار", labelEn: "🏷️ List Property", promptAr: "أرغب في نشر أو عرض عقار جديد", promptEn: "I want to list a new property" },
+    { labelAr: "📊 تقييم عقار (OPROX Estimate)", labelEn: "📊 Property Valuation", promptAr: "كيف أقدر أحسب قيمة عقاري عبر OPROX Estimate؟", promptEn: "How can I estimate my property value using OPROX Estimate?" },
+    { labelAr: "🏛️ AI Architect", labelEn: "🏛️ AI Architect", promptAr: "أبي فكرة تصميم معماري لمشروعي", promptEn: "I need an architectural design concept for my project" },
+    { labelAr: "🎨 AI Interior", labelEn: "🎨 AI Interior", promptAr: "أبي أغير التصميم الداخلي والديكور للغرفة", promptEn: "I want to redesign my room interior" },
+    { labelAr: "🗺️ استكشاف الخريطة والمناطق", labelEn: "🗺️ Map & Area Discovery", promptAr: "كيف أستكشف العقارات والمناطق على الخريطة؟", promptEn: "How do I discover properties on the map?" },
+    { labelAr: "📈 الاستثمار العقاري", labelEn: "📈 Real Estate Investment", promptAr: "ما هي أفضل الفرص للاستثمار العقاري؟", promptEn: "What are the best real estate investment opportunities?" },
+  ];
+
+  return (
+    <View style={qs.wrap}>
+      <Text style={qs.title}>{isAr ? "اختيارات سريعة للإرشاد:" : "Quick Guide Options:"}</Text>
+      <View style={qs.chipsRow}>
+        {chips.map((chip, idx) => (
+          <Pressable
+            key={idx}
+            style={qs.chipBtn}
+            onPress={() => onSelect(isAr ? chip.promptAr : chip.promptEn)}
+          >
+            <Text style={qs.chipText}>{isAr ? chip.labelAr : chip.labelEn}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const qs = StyleSheet.create({
+  wrap: { marginTop: 8, gap: 6, marginHorizontal: 4 },
+  title: { fontSize: 11, color: "rgba(15,32,64,0.55)", fontFamily: "Inter_600SemiBold" },
+  chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  chipBtn: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: `${GOLD_C}66`,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  chipText: { fontSize: 12, fontFamily: "Inter_600SemiBold", color: NAVY_C },
 });
 
 function OwnerSummaryCard({
@@ -437,8 +475,8 @@ export default function AiChatScreen() {
   const greeting: ChatMessage = {
     id: "0", role: "assistant",
     content: isAr
-      ? "يا هلا والله 👋\nتبغى تسكن، تسافر، ولا عندك عقار تبي تنشره؟"
-      : "Welcome! 👋\nLooking to find a home, plan a stay, or list your property?",
+      ? "يا هلا 👋\nأنا مساعد OPROX العقاري.\nتبحث عن عقار، تبي تعرض عقارك، تعرف تقييمه، أو تحتاج مساعدة في التصميم والاستثمار؟"
+      : "Welcome 👋\nI'm your OPROX property assistant.\nLooking for a property, listing one, checking its estimated value, or exploring design and investment options?",
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([greeting]);
@@ -718,27 +756,28 @@ export default function AiChatScreen() {
 
           // Listings cards
           if (item.role === "listings") {
-            const isTourist = item.mode === "tourist";
-            const label = isTourist
-              ? (isAr ? `وجدت ${item.listings.length} خيار إقامة يناسبك 🏨` : `Found ${item.listings.length} stay options 🏨`)
-              : (isAr ? `وجدت ${item.listings.length} عقار يناسبك 🏡` : `Found ${item.listings.length} matching properties 🏡`);
+            const label = isAr
+              ? `وجدت ${item.listings.length} عقار يناسبك 🏡`
+              : `Found ${item.listings.length} matching properties 🏡`;
             return (
               <View style={{ gap: 8 }}>
                 <View style={[s.row, { alignItems: "center" }]}>
-                  {isTourist ? <Text style={s.avatar}>🏨</Text> : <Image source={aiAvatar} style={s.avatarImg} />}
+                  <Image source={aiAvatar} style={s.avatarImg} />
                   <Text style={s.resultsMeta}>{label}</Text>
                 </View>
                 {item.listings.map((l: ListingResult) => (
-                  <ListingCard key={l.id} listing={l} isAr={isAr} domain={domain} isTourist={isTourist} />
+                  <ListingCard key={l.id} listing={l} isAr={isAr} domain={domain} />
                 ))}
               </View>
             );
           }
 
-          // Normal text message (+ optional staging CTA card)
+          // Normal text message (+ optional quick chips / staging CTA card)
           const isUser = item.role === "user";
           const msgAr = isArabic(item.content);
           const hasStagingCta = !isUser && (item as any).stagingCta === true;
+          const isGreeting = item.id === "0";
+
           return (
             <View style={{ gap: 8 }}>
               <View style={[s.row, isUser && s.rowReverse]}>
@@ -750,6 +789,9 @@ export default function AiChatScreen() {
                 </View>
                 {isUser && <Text style={s.avatar}>👤</Text>}
               </View>
+              {isGreeting && messages.length === 1 && (
+                <QuickGuideChips isAr={isAr} onSelect={(txt) => sendText(txt)} />
+              )}
               {hasStagingCta && <StagingCtaCard isAr={isAr} />}
             </View>
           );

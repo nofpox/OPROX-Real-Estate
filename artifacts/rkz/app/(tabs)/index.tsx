@@ -452,7 +452,7 @@ export default function HomeScreen() {
         {/* Tooltip */}
         {showTooltip && (
           <Animated.View style={[s.aiTooltip, { opacity: tooltipAnim }]}>
-            <Text style={s.aiTooltipText}>{"الذكاء الاصطناعي: امر تدلل 😎"}</Text>
+            <Text style={s.aiTooltipText}>{isAr ? "مساعد OPROX العقاري 👋 كيف أقدر أساعدك؟" : "OPROX Assistant 👋 How can I help?"}</Text>
             <View style={s.aiTooltipArrow} />
           </Animated.View>
         )}
