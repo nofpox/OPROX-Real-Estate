@@ -426,7 +426,7 @@ export async function searchMarketplaceInventory(
           Array.isArray(l.media) && (l.media as any[])[0]?.url
             ? (l.media as any[])[0].url
             : "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800",
-        verified: Boolean(l.verifiedBrokerLicense || l.verifiedOwner),
+        verified: Boolean((l as any).verifiedBrokerLicense || (l as any).verifiedOwner),
         featured: Boolean(l.featured),
         has3D: true,
         hasVR: false,

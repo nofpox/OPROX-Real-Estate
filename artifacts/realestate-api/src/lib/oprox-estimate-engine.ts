@@ -248,11 +248,11 @@ export async function calculatePropertyEstimate(input: ValuationInput): Promise<
           bedrooms: r.bedrooms ?? undefined,
           bathrooms: r.bathrooms ?? undefined,
           similarityScore: Math.min(100, score),
-          verified: Boolean(r.verifiedOwner || r.verifiedBrokerLicense),
+          verified: Boolean((r as any).verifiedOwner || (r as any).verifiedBrokerLicense),
         };
       })
-      .filter((item): item is ComparableListing => item !== null)
-      .sort((a, b) => b.similarityScore - a.similarityScore);
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+      .sort((a, b) => b!.similarityScore - a!.similarityScore);
 
     comparables = mapped;
   } catch (err) {

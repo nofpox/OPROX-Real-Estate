@@ -44,7 +44,7 @@ router.post("/openai/conversations", async (req, res) => {
   const { title } = req.body as { title?: string };
   const [conv] = await db
     .insert(conversations)
-    .values({ title: title || "New Chat", agentType: "portal", userId: null, tenantId: 1 })
+    .values({ title: title || "New Chat" })
     .returning();
   res.status(201).json(conv);
 });

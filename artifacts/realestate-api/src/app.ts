@@ -1,7 +1,9 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import compression from "compression";
 import pinoHttp from "pino-http";
+import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
 import { join } from "path";
 import { logger } from "./lib/logger.js";
 import router from "./routes/index.js";
@@ -10,6 +12,62 @@ const app: Express = express();
 
 app.set("trust proxy", 1);
 
+// ── Security headers ──────────────────────────────────────────────────────────
+app.use(helmet({
+  // Allow inline scripts/styles used by the /watch HTML page
+  contentSecurityPolicy: false,
+  // Cross-Origin headers are handled by the CORS middleware below
+  crossOriginEmbedderPolicy: false,
+}));
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
+// In production, restrict to the configured ALLOWED_ORIGIN.
+// In development, allow all origins for convenience.
+const isProd = process.env.NODE_ENV === "production";
+const allowedOrigin = process.env.ALLOWED_ORIGIN || process.env.APP_URL;
+
+app.use(cors({
+  origin: isProd && allowedOrigin ? allowedOrigin : true,
+  credentials: true,
+}));
+
+// ── Global rate limiter (coarse protection against floods) ────────────────────
+// 600 requests / 5 minutes per IP → 2 req/sec average.
+const globalLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({ error: "Too many requests. Please slow down." });
+  },
+});
+app.use(globalLimiter);
+
+// ── Tight rate limiters for high-cost / abuse-prone endpoints ─────────────────
+/** AI endpoints: 20 req / 5 min per IP (Gemini/OpenAI calls are expensive) */
+const aiLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({ error: "AI rate limit exceeded. Please wait before sending more requests." });
+  },
+});
+
+/** Contact/guest form: 5 submissions / 15 min per IP (spam protection) */
+const contactLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({ error: "Too many contact requests. Please wait before submitting again." });
+  },
+});
+
+// ── Logging ───────────────────────────────────────────────────────────────────
 app.use(pinoHttp({
   logger,
   serializers: {
@@ -18,13 +76,14 @@ app.use(pinoHttp({
   },
 }));
 
-app.use(cors({ origin: true, credentials: true }));
+// ── Body parsers ──────────────────────────────────────────────────────────────
 app.use(compression());
 app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT || process.cwd();
 
+// ── Static media (allowlist-only, no traversal) ───────────────────────────────
 app.get("/realestate-api/media/:filename", (req, res) => {
   const allowed = [
     "rozoz_final.mp4",
@@ -42,6 +101,7 @@ app.get("/realestate-api/media/:filename", (req, res) => {
   res.sendFile(filePath, { headers: { "Content-Type": "video/mp4", "Accept-Ranges": "bytes" } });
 });
 
+// ── Watch page ────────────────────────────────────────────────────────────────
 app.get("/realestate-api/watch", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.end(`<!DOCTYPE html>
@@ -263,8 +323,37 @@ app.get("/realestate-api/watch", (_req, res) => {
 </html>`);
 });
 
+// ── Apply AI rate limiter to all AI/concierge endpoints ───────────────────────
+app.use([
+  "/realestate-api/ai-chat",
+  "/realestate-api/valuation",
+  "/realestate-api/api/valuation",
+  "/realestate-api/openai",
+  "/api/ai-chat",
+  "/api/valuation",
+  "/api/openai",
+  "/ai-chat",
+  "/valuation",
+  "/openai",
+], aiLimiter);
+
+// ── Apply contact rate limiter to guest form endpoints ────────────────────────
+app.use([
+  "/realestate-api/guest/contact",
+  "/api/guest/contact",
+  "/guest/contact",
+], contactLimiter);
+
+// ── API router (mounted under /realestate-api, /api, and bare) ────────────────
 app.use("/realestate-api", router);
 app.use("/api", router);
 app.use(router);
+
+// ── Global error handler (never leaks stack traces) ───────────────────────────
+ 
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  logger.error({ err }, "Unhandled error");
+  res.status(500).json({ error: "Internal server error" });
+});
 
 export default app;

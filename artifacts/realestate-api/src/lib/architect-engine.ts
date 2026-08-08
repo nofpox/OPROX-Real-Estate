@@ -271,7 +271,7 @@ export function parseBriefFromText(
   }
 
   // Bathrooms
-  let bathrooms = Math.max(3, bedrooms + 1);
+  const bathrooms = Math.max(3, bedrooms + 1);
 
   // Saudi Spatial Amenities Detection
   const hasMajlis = text.includes("مجلس") || text.includes("رجال") || text.includes("ضيوف") || t.includes("majlis") || true;

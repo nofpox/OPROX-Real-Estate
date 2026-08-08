@@ -211,7 +211,7 @@ router.post("/owner-submit", async (req: Request, res: Response) => {
           propertyType: data.propertyType || "apartment",
           price: data.price ? String(data.price) : "1000000",
           currency: "SAR",
-          areaSqm: data.areaSqm ? Number(data.areaSqm) : 200,
+          areaSqm: data.areaSqm ? String(Number(data.areaSqm)) : "200",
           bedrooms: data.bedrooms ? Number(data.bedrooms) : 3,
           bathrooms: data.bathrooms ? Number(data.bathrooms) : 3,
           address: data.address || `${data.district ?? "النرجس"}، ${data.city ?? "الرياض"}`,

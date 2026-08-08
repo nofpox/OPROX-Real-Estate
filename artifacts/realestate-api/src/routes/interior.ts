@@ -135,7 +135,7 @@ router.post("/projects", (req: Request, res: Response) => {
 // ── GET /projects/:id ─────────────────────────────────────────────────────────
 router.get("/projects/:id", (req: Request, res: Response) => {
   try {
-    const projectId = parseInt(req.params.id, 10);
+    const projectId = parseInt(req.params["id"] as string, 10);
     const tenantId = parseInt(req.query.tenantId as string, 10) || 1;
     const userId = (req.query.userId as string) || "usr_default";
 
@@ -158,7 +158,7 @@ router.get("/projects/:id", (req: Request, res: Response) => {
 // ── POST /projects/:id/concept ───────────────────────────────────────────────
 router.post("/projects/:id/concept", (req: Request, res: Response) => {
   try {
-    const projectId = parseInt(req.params.id, 10);
+    const projectId = parseInt(req.params["id"] as string, 10);
     const { tenantId, userId, concept } = req.body;
     if (!concept) {
       res.status(400).json({ error: "concept is required" });
@@ -180,9 +180,9 @@ router.post("/projects/:id/concept", (req: Request, res: Response) => {
 // ── POST /projects/:id/concept/:conceptId/restore/:version ──────────────────
 router.post("/projects/:id/concept/:conceptId/restore/:version", (req: Request, res: Response) => {
   try {
-    const projectId = parseInt(req.params.id, 10);
-    const conceptId = req.params.conceptId;
-    const versionNum = parseInt(req.params.version, 10);
+    const projectId = parseInt(req.params["id"] as string, 10);
+    const conceptId = req.params["conceptId"] as string;
+    const versionNum = parseInt(req.params["version"] as string, 10);
     const { tenantId, userId } = req.body;
 
     const secCtx = { tenantId: tenantId || 1, userId: userId || "usr_default" };

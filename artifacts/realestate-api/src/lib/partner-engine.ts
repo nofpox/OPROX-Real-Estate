@@ -170,7 +170,7 @@ export interface PartnerLeadRecord {
 
 // ── IN-MEMORY PARTNER STORE ────────────────────────────────────────────────────
 
-let nextPartnerId = 2000;
+const nextPartnerId = 2000;
 let nextRfqId = 7000;
 let nextQuotationId = 8000;
 let nextHandoffId = 9000;

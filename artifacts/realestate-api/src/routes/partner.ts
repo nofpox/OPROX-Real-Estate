@@ -21,6 +21,16 @@ function extractSecurityContext(req: Request) {
   return { tenantId, userId, isTenantAdmin };
 }
 
+/** Map structured error code prefixes to HTTP status codes without leaking stack details. */
+function handlePartnerError(res: Response, err: unknown): void {
+  const msg = err instanceof Error ? err.message : "";
+  if (msg.startsWith("FORBIDDEN"))       { res.status(403).json({ success: false, error: "Forbidden" }); return; }
+  if (msg.startsWith("NOT_FOUND"))       { res.status(404).json({ success: false, error: "Not found" }); return; }
+  if (msg.startsWith("CONSENT_REQUIRED")){ res.status(400).json({ success: false, error: "Customer consent is required" }); return; }
+  if (msg.startsWith("PERSISTENCE_ERROR")){ res.status(500).json({ success: false, error: "Persistence error" }); return; }
+  res.status(500).json({ success: false, error: "Internal server error" });
+}
+
 // GET /api/partner/search - Search marketplace partners
 router.get("/search", (req: Request, res: Response) => {
   try {
@@ -31,8 +41,8 @@ router.get("/search", (req: Request, res: Response) => {
 
     const partners = searchPartners({ category, city, verificationState, tenantId });
     res.json({ success: true, count: partners.length, partners });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch (err) {
+    handlePartnerError(res, err);
   }
 });
 
@@ -40,18 +50,12 @@ router.get("/search", (req: Request, res: Response) => {
 router.get("/profile/:partnerId", (req: Request, res: Response) => {
   try {
     const context = extractSecurityContext(req);
-    const partnerId = parseInt(req.params.partnerId, 10);
+    const partnerId = parseInt(req.params["partnerId"] as string, 10);
 
     const profile = getPartnerProfile(partnerId, context);
     res.json({ success: true, profile });
-  } catch (err: any) {
-    if (err.message.startsWith("FORBIDDEN")) {
-      res.status(403).json({ success: false, error: err.message });
-    } else if (err.message.startsWith("NOT_FOUND")) {
-      res.status(404).json({ success: false, error: err.message });
-    } else {
-      res.status(500).json({ success: false, error: err.message });
-    }
+  } catch (err) {
+    handlePartnerError(res, err);
   }
 });
 
@@ -59,18 +63,12 @@ router.get("/profile/:partnerId", (req: Request, res: Response) => {
 router.get("/products/:partnerId", (req: Request, res: Response) => {
   try {
     const context = extractSecurityContext(req);
-    const partnerId = parseInt(req.params.partnerId, 10);
+    const partnerId = parseInt(req.params["partnerId"] as string, 10);
 
     const products = getPartnerProducts(partnerId, context);
     res.json({ success: true, count: products.length, products });
-  } catch (err: any) {
-    if (err.message.startsWith("FORBIDDEN")) {
-      res.status(403).json({ success: false, error: err.message });
-    } else if (err.message.startsWith("NOT_FOUND")) {
-      res.status(404).json({ success: false, error: err.message });
-    } else {
-      res.status(500).json({ success: false, error: err.message });
-    }
+  } catch (err) {
+    handlePartnerError(res, err);
   }
 });
 
@@ -92,14 +90,8 @@ router.post("/rfq", (req: Request, res: Response) => {
     });
 
     res.status(201).json({ success: true, rfq });
-  } catch (err: any) {
-    if (err.message.startsWith("CONSENT_REQUIRED")) {
-      res.status(400).json({ success: false, error: err.message });
-    } else if (err.message.startsWith("PERSISTENCE_ERROR")) {
-      res.status(500).json({ success: false, error: err.message });
-    } else {
-      res.status(500).json({ success: false, error: err.message });
-    }
+  } catch (err) {
+    handlePartnerError(res, err);
   }
 });
 
@@ -116,14 +108,8 @@ router.post("/quotation", (req: Request, res: Response) => {
     );
 
     res.status(201).json({ success: true, quotation });
-  } catch (err: any) {
-    if (err.message.startsWith("FORBIDDEN")) {
-      res.status(403).json({ success: false, error: err.message });
-    } else if (err.message.startsWith("NOT_FOUND")) {
-      res.status(404).json({ success: false, error: err.message });
-    } else {
-      res.status(500).json({ success: false, error: err.message });
-    }
+  } catch (err) {
+    handlePartnerError(res, err);
   }
 });
 
@@ -131,18 +117,12 @@ router.post("/quotation", (req: Request, res: Response) => {
 router.get("/rfq/:rfqId/compare", (req: Request, res: Response) => {
   try {
     const context = extractSecurityContext(req);
-    const { rfqId } = req.params;
+    const rfqId = req.params["rfqId"] as string;
 
     const result = compareQuotations(rfqId, context);
     res.json({ success: true, ...result });
-  } catch (err: any) {
-    if (err.message.startsWith("FORBIDDEN")) {
-      res.status(403).json({ success: false, error: err.message });
-    } else if (err.message.startsWith("NOT_FOUND")) {
-      res.status(404).json({ success: false, error: err.message });
-    } else {
-      res.status(500).json({ success: false, error: err.message });
-    }
+  } catch (err) {
+    handlePartnerError(res, err);
   }
 });
 
@@ -161,16 +141,8 @@ router.post("/handoff", (req: Request, res: Response) => {
     });
 
     res.status(200).json({ success: true, handoff });
-  } catch (err: any) {
-    if (err.message.startsWith("CONSENT_REQUIRED")) {
-      res.status(400).json({ success: false, error: err.message });
-    } else if (err.message.startsWith("FORBIDDEN")) {
-      res.status(403).json({ success: false, error: err.message });
-    } else if (err.message.startsWith("NOT_FOUND")) {
-      res.status(404).json({ success: false, error: err.message });
-    } else {
-      res.status(500).json({ success: false, error: err.message });
-    }
+  } catch (err) {
+    handlePartnerError(res, err);
   }
 });
 
@@ -183,8 +155,8 @@ router.get("/entitlements/check", (req: Request, res: Response) => {
 
     const result = checkPartnerEntitlement(tenantId, partnerId, key);
     res.json({ success: true, ...result });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+  } catch {
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
 

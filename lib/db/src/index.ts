@@ -4,12 +4,20 @@ import * as schema from "./schema/index.js";
 
 const { Pool } = pg;
 
-const dbUrl = process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/oprox";
+const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl && process.env.NODE_ENV === "production") {
+  throw new Error(
+    "[OPROX Real Estate] FATAL: DATABASE_URL is required in production but was not set. " +
+    "Cannot start with hardcoded dev credentials. " +
+    "Set DATABASE_URL to your PostgreSQL connection string."
+  );
+}
+const connectionString = dbUrl ?? "postgres://postgres:postgres@localhost:5432/oprox";
 
 const poolMax = parseInt(process.env.POOL_MAX ?? "20", 10);
 
 export const pool = new Pool({
-  connectionString: dbUrl,
+  connectionString,
   max:                         poolMax,
   min:                         2,          // keep 2 warm connections always alive
   idleTimeoutMillis:           30_000,

@@ -22,6 +22,7 @@ import {
 import { eq, and, or, ilike, gte, lte, sql, desc, asc } from "drizzle-orm";
 import { sendSuccess, sendError, parsePagination, buildMeta } from "../utils/response.js";
 import { listingsCache, TTL, queryCacheKey } from "../utils/cache.js";
+import { requireSession, requireAdminSession } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -232,7 +233,7 @@ router.get("/listings", async (req, res) => {
 // ── 2. GET /listings/:id (Single Listing & Similar Properties) ─────────────────
 router.get("/listings/:id", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) { sendError(res, 400, "Invalid listing id"); return; }
 
     const isProd = process.env.NODE_ENV === "production";
@@ -243,9 +244,10 @@ router.get("/listings/:id", async (req, res) => {
 
       db.update(listingsTable).set({ viewCount: sql`${listingsTable.viewCount} + 1` }).where(eq(listingsTable.id, id)).catch(() => {});
       
-      // Fetch similar listings
+      // Fetch similar listings (city filter only applied when city is known)
+      const cityFilter = listing.city ? eq(listingsTable.city, listing.city) : undefined;
       const similarRows = await db.select().from(listingsTable)
-        .where(and(eq(listingsTable.city, listing.city), sql`${listingsTable.id} != ${id}`))
+        .where(and(cityFilter, sql`${listingsTable.id} != ${id}`))
         .limit(4);
 
       const data = {
@@ -274,7 +276,7 @@ router.get("/listings/:id", async (req, res) => {
 });
 
 // ── 3. POST /listings (Seller Create Listing) ─────────────────────────────────
-router.post("/listings", async (req, res) => {
+router.post("/listings", requireSession, async (req, res) => {
   try {
     const parsed = insertListingSchema.safeParse({ ...req.body, tenantId: 1 });
     if (!parsed.success) { sendError(res, 400, parsed.error.message); return; }
@@ -283,6 +285,10 @@ router.post("/listings", async (req, res) => {
       const [created] = await db.insert(listingsTable).values(parsed.data).returning();
       sendSuccess(res, formatListing(created), undefined, 201);
     } catch (dbErr) {
+      if (process.env.NODE_ENV === "production") {
+        req.log?.error({ dbErr }, "POST /listings: database write failed in production");
+        sendError(res, 503, "Database error. Please try again later."); return;
+      }
       req.log?.warn({ dbErr }, "Database insert fallback in dev");
       const fallbackItem = {
         id: Date.now(),
@@ -300,9 +306,9 @@ router.post("/listings", async (req, res) => {
 });
 
 // ── 4. PUT /listings/:id (Update Listing) ───────────────────────────────────────
-router.put("/listings/:id", async (req, res) => {
+router.put("/listings/:id", requireSession, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) { sendError(res, 400, "Invalid listing id"); return; }
 
     const parsed = updateListingSchema.safeParse(req.body);
@@ -317,6 +323,10 @@ router.put("/listings/:id", async (req, res) => {
       if (!updated) { sendError(res, 404, "Listing not found"); return; }
       sendSuccess(res, formatListing(updated));
     } catch (dbErr) {
+      if (process.env.NODE_ENV === "production") {
+        req.log?.error({ dbErr }, "PUT /listings/:id: database write failed in production");
+        sendError(res, 503, "Database error. Please try again later."); return;
+      }
       sendSuccess(res, { id, ...parsed.data, updatedAt: new Date().toISOString(), demoData: true });
     }
   } catch (err) {
@@ -326,9 +336,9 @@ router.put("/listings/:id", async (req, res) => {
 });
 
 // ── 5. PATCH /listings/:id/status (Listing Lifecycle Transition) ─────────────
-router.patch("/listings/:id/status", async (req, res) => {
+router.patch("/listings/:id/status", requireAdminSession, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) { sendError(res, 400, "Invalid listing id"); return; }
 
     const { status } = req.body as { status?: string };
@@ -347,6 +357,10 @@ router.patch("/listings/:id/status", async (req, res) => {
       if (!updated) { sendError(res, 404, "Listing not found"); return; }
       sendSuccess(res, formatListing(updated));
     } catch (dbErr) {
+      if (process.env.NODE_ENV === "production") {
+        req.log?.error({ dbErr }, "PATCH /listings/:id/status: database write failed in production");
+        sendError(res, 503, "Database error. Please try again later."); return;
+      }
       sendSuccess(res, { id, status, updatedAt: new Date().toISOString(), demoData: true });
     }
   } catch (err) {
@@ -356,15 +370,19 @@ router.patch("/listings/:id/status", async (req, res) => {
 });
 
 // ── 6. DELETE /listings/:id ───────────────────────────────────────────────────
-router.delete("/listings/:id", async (req, res) => {
+router.delete("/listings/:id", requireAdminSession, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) { sendError(res, 400, "Invalid listing id"); return; }
 
     try {
       await db.delete(listingsTable).where(eq(listingsTable.id, id));
-    } catch {
-      // Ignored for dev fallback
+    } catch (dbErr) {
+      if (process.env.NODE_ENV === "production") {
+        req.log?.error({ dbErr }, "DELETE /listings/:id: database write failed in production");
+        sendError(res, 503, "Database error. Please try again later."); return;
+      }
+      req.log?.warn({ dbErr }, "DELETE /listings/:id: database error ignored in dev");
     }
     sendSuccess(res, { success: true, id });
   } catch (err) {
@@ -376,7 +394,7 @@ router.delete("/listings/:id", async (req, res) => {
 // ── 7. VIEWING REQUESTS ────────────────────────────────────────────────────────
 router.post("/listings/:id/viewings", async (req, res) => {
   try {
-    const listingId = parseInt(req.params.id);
+    const listingId = parseInt(req.params.id as string);
     if (isNaN(listingId)) { sendError(res, 400, "Invalid listing id"); return; }
 
     const parsed = insertViewingRequestSchema.safeParse({ ...req.body, listingId, tenantId: 1 });
@@ -423,7 +441,7 @@ router.get("/viewings", async (req, res) => {
 // ── 8. LEADS MANAGEMENT ────────────────────────────────────────────────────────
 router.post("/listings/:id/leads", async (req, res) => {
   try {
-    const listingId = parseInt(req.params.id);
+    const listingId = parseInt(req.params.id as string);
     if (isNaN(listingId)) { sendError(res, 400, "Invalid listing id"); return; }
 
     const parsed = insertLeadSchema.safeParse({ ...req.body, listingId, tenantId: 1 });
@@ -468,7 +486,7 @@ router.get("/leads", async (req, res) => {
 
 router.patch("/leads/:id/status", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) { sendError(res, 400, "Invalid lead id"); return; }
 
     const { status } = req.body as { status?: string };
@@ -598,7 +616,7 @@ router.post("/saved-searches", async (req, res) => {
 
 router.delete("/saved-searches/:id", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     try {
       await db.delete(savedSearchesTable).where(eq(savedSearchesTable.id, id));
     } catch {
@@ -613,7 +631,7 @@ router.delete("/saved-searches/:id", async (req, res) => {
 // ── 11. SELLER PROFILES & VERIFICATION ─────────────────────────────────────────
 router.get("/sellers/:id", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     try {
       const [profile] = await db.select().from(sellerProfilesTable).where(eq(sellerProfilesTable.id, id));
       sendSuccess(res, profile ?? {
@@ -643,7 +661,7 @@ router.get("/sellers/:id", async (req, res) => {
 
 router.post("/listings/:id/report", async (req, res) => {
   try {
-    const listingId = parseInt(req.params.id);
+    const listingId = parseInt(req.params.id as string);
     const parsed = insertListingReportSchema.safeParse({ ...req.body, listingId, tenantId: 1 });
     if (!parsed.success) { sendError(res, 400, parsed.error.message); return; }
 

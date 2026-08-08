@@ -53,7 +53,7 @@ async function sendLeadWelcomeEmail(to: string, name: string, tenantId = 1): Pro
         <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.6);letter-spacing:0.5px">SMART REAL ESTATE</p>
       </div>
       <div style="background:#ffffff;padding:36px;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb">
-        <h2 style="margin:0 0 20px;font-size:18px;font-weight:700;color:#1a2744">Dear ${name},</h2>
+        <h2 style="margin:0 0 20px;font-size:18px;font-weight:700;color:#1a2744">Dear ${name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")},</h2>
         ${introParagraphs}
         <div style="background:#f9f6ee;border:1px solid #c8a84b;border-radius:8px;padding:20px 24px;margin:24px 0">
           <p style="margin:0 0 12px;font-size:13px;font-weight:700;color:#1a2744;text-transform:uppercase;letter-spacing:0.5px">Visit Details</p>
